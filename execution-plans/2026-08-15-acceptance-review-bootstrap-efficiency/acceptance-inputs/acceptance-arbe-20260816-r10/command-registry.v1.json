@@ -1,0 +1,16 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py"
+      ],
+      "cwd": ".",
+      "executable": "py",
+      "id": "terminal-full",
+      "shell": false,
+      "timeout_seconds": 7200
+    }
+  ],
+  "schema_version": "ria.command-registry.v1"
+}

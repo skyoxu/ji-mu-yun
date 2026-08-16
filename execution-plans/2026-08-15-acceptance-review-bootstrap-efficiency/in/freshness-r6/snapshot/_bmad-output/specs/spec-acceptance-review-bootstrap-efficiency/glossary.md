@@ -1,0 +1,23 @@
+# Glossary
+
+- **Acceptance**：消费 implementation-complete、拥有验收 scope/route、导入 Bootstrap evidence 并发布 `acceptance-passed` 的控制面能力。
+- **Bootstrap Review**：对 frozen Consumer Closure 执行 profile-defined 多角色语义审查、gate 和必要 verifier 的能力。
+- **Complete Review**：包含 Blind Hunter、Edge Case Hunter 和 Acceptance Auditor 三个隔离 discovery roles 的正式 Bootstrap review。
+- **Changed-set Manifest**：绑定 immutable baseline/current，覆盖修改、新增、删除、重命名和适用未跟踪文件的可复算清单。
+- **Consumer Closure**：一个验收消费者正确判断当前实现所需的最小完整 authority、实现、依赖、prerequisite 和 evidence 集合。
+- **Required Check**：由 implementation contract/command registry 投影并绑定 executable、输入、acceptance 和结果 identity 的 deterministic command。
+- **Range Projection**：parent 从完整 authority 生成的 full-source-bound、hash-bound inclusive byte/line 投影。
+- **Segment Descriptor**：不可变绑定 reviewer segment 的 source、range、role、order、bytes 和 execution context identity 的合同。
+- **Segment-only Snapshot**：只暴露 assigned segment 和最小 validation attestation 的 frozen child workspace。
+- **Process Event**：记录 attempt reservation、start、heartbeat、progress、terminal、stale 和 retry 的 append-only authority。
+- **Effective Progress Event**：controller 验证并绑定当前 identities 的 terminal、有效 evidence/receipt 增量或 policy 注册状态迁移。
+- **Lease Reconciliation**：根据 Process Event 与 current process identity 重建 write-set ownership。
+- **Draft / Plan-ready**：VDD 拥有的 plan 生命周期状态；`plan-ready` 不代表已授权或已实现。
+- **Implementation-authorized**：Maintainer 在验证前置后发布的实现授权状态。
+- **Implementation-complete**：Quick Dev / quick-dev-tdd-adapter 发布并作为 Acceptance 前置的 identity-bound 实现完成 handoff。
+- **Acceptance-passed**：Acceptance 在当前 deterministic evidence 与必要 Bootstrap evidence 闭合后发布的验收通过状态。
+- **Typed Route**：Acceptance 发布的 `deterministic_only`、`focused_repair_verification`、`full_implementation_conformance` 或 `manual_pause`。
+- **Acceptance Mode**：与 Typed Route 正交的 `supervised` 或 `unattended` 执行模式；它既不改变 lifecycle ownership，也不改变 route 的确定语义。
+- **Supervised Semantic-review Decision**：maintainer 发布的 `authorizes=[]` 机器 artifact，绑定 baseline、candidate、consumer closure、required checks、acceptance mode、route、policy 与 spec selection identities，表达人工语义复核已满足；它不携带网页模型 authority。
+- **Advisory Semantic Reviewer**：Web Sol 等只向 maintainer 提供建议、不能发布 lifecycle 或 Acceptance authority 的模型 reviewer。
+- **Non-authorizing result**：不能发布 draft、plan-ready、implementation-authorized、implementation-complete 或 acceptance-passed 的 blocked、repair、review-required 或 recovery 结果。

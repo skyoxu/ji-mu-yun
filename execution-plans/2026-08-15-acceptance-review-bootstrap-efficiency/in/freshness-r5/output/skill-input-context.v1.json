@@ -1,0 +1,37 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:190d80afe9c277490982a76a3c89c68915c58115c777cadbc64d6d7931f8c957",
+  "sections": [
+    {
+      "title": "Architecture and invariants",
+      "content": "The evidence-gated control plane uses immutable, owner-local artifacts. Lifecycle authority remains decentralized: VDD owns draft and plan-ready, the maintainer owns implementation-authorized, Quick Dev owns implementation-complete, and Acceptance owns acceptance-passed. Bootstrap and deterministic checks produce non-authorizing evidence. Canonical identity, strict serialization, path normalization, legacy verification, closure construction, required-check execution, routing, segmentation, recovery, and final import must follow the adopted architecture decisions."
+    },
+    {
+      "title": "Acceptance scope and routing",
+      "content": "Acceptance admits only a current identity-bound implementation-complete handoff, freezes resolved baseline and candidate identities, constructs a complete Changed-set Manifest and fixed-point Consumer Closure, and executes contract-projected checks before semantic review. Acceptance mode is supervised or unattended and is orthogonal to route. Deterministic-only supervised review without a trigger requires a current maintainer decision; unattended deterministic-only runs no Bootstrap. Focused or full routes run Bootstrap, while manual pause is non-authorizing. Registered risk or authority triggers require full conformance or manual pause."
+    },
+    {
+      "title": "Authority projection and review isolation",
+      "content": "Selected authority within the model-visible budget must be delivered completely; Partial reads continue from the reported offset until Complete. Over-budget authority may use only controller-owned, full-source-bound Range Projections whose source, inclusive coordinates, extracted bytes, policy, and relevant acceptance identities are verified. Each reviewer consumes an immutable Segment Descriptor and segment-only frozen snapshot. Assignment, request, receipt, validation, coverage fold, retry, and cache share the descriptor contract, while attempt identity remains separate."
+    },
+    {
+      "title": "Bootstrap semantics",
+      "content": "A Complete Review retains isolated Blind Hunter, Edge Case Hunter, and Acceptance Auditor roles over the same frozen evidence. The independent verifier runs only for gate-accepted P0/P1 findings under existing risk and model policy. Children cannot traverse the live repository or broader artifact view, and executable, model, reasoning, and environment identities inherit from validated access proof. Bootstrap findings and receipts remain non-authorizing and must be imported and validated by Acceptance."
+    },
+    {
+      "title": "Execution and recovery",
+      "content": "Append-only Process Events govern reservation, start, liveness, Effective Progress, terminal classification, stale detection, retry, and recovery. Heartbeats, stdout, polling, and repeated status do not refresh the no-progress window. Lease occupancy requires matching process identity, valid liveness, valid Effective Progress, and no terminal event. Recovery depends only on events, immutable descriptors, current process identity, and the bound runtime policy. Retries are bounded and segment-local; context-budget failure requires repartitioning."
+    },
+    {
+      "title": "Verification and rollout",
+      "content": "Before model launch, Acceptance publishes an identity-bound Review Cost Decision covering closure size, segments, roles, attempts, retry exposure, and launch plan. Cost cannot weaken mandatory authority coverage. Delivery proceeds through M0 recovery and isolation, M1 Acceptance routing, and M2 scale and finalization. Regression evidence must preserve deterministic zero-review behavior, three-role coverage where required, route and trigger semantics, projection boundaries, mutation rejection, attempt bounds, semantic detection parity, and false-authorization rejection. Historical failed runs remain immutable and non-reusable."
+    },
+    {
+      "title": "Deferred policy decisions",
+      "content": "Formal wall-time and Consumer Closure reduction targets remain deferred until stable M2 evidence. Concrete timeouts, progress windows, grace periods, lease settings, retry ceilings, backoff, throttling, output limits, and projection thresholds remain versioned policy data. Phase services, hosted sandboxes, provider selection, pricing, and global token quotas are outside scope."
+    }
+  ],
+  "truncated": true,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T09:04:38.056312Z"
+}

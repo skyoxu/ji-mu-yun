@@ -165,8 +165,6 @@ def _git_changed_paths(repository_root: Path, baseline_commit: str, candidate_co
         "--name-status",
         "-z",
         "--find-renames",
-        "--find-copies",
-        "--find-copies-harder",
         baseline_commit,
         candidate_commit,
     )
@@ -177,7 +175,7 @@ def _git_changed_paths(repository_root: Path, baseline_commit: str, candidate_co
         while index < len(fields):
             status = fields[index].decode("ascii", errors="strict")
             index += 1
-            if status.startswith("R") or status.startswith("C"):
+            if status.startswith("R"):
                 old_path = fields[index].decode("utf-8", errors="strict")
                 new_path = fields[index + 1].decode("utf-8", errors="strict")
                 index += 2
@@ -541,7 +539,7 @@ def candidate_changed_paths(candidate: Any) -> list[str]:
         if item.get("change_type") != "unchanged":
             identities = (
                 (item.get("baseline_path"), item.get("candidate_path"))
-                if item.get("change_type") in {"renamed", "copied"}
+                if item.get("change_type") == "renamed"
                 else (item.get("candidate_path") or item.get("baseline_path"),)
             )
             for path in identities:

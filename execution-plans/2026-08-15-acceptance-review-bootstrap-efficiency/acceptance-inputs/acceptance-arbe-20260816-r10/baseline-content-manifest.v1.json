@@ -1,0 +1,488 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/bmad-spec/scripts/canonical_package.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:2dd56942da0895f386747659a637e092e0df38c2b18bf0f747b20f0d17ef4c68"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:08d1f9b896a3e1f07bae81d791dd2be8f047a4d048761436b71da0d6799c9815"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:08d1f9b896a3e1f07bae81d791dd2be8f047a4d048761436b71da0d6799c9815"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:08d1f9b896a3e1f07bae81d791dd2be8f047a4d048761436b71da0d6799c9815"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:d2aa85225c66761bc68ed3e29276fcf68aea7b1791484a0698d4108b2d326809"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:54550c910d7c98779b927cf18c0e971e50f93263f473bb0c86cc32357c9bf3ef"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:54550c910d7c98779b927cf18c0e971e50f93263f473bb0c86cc32357c9bf3ef"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:54550c910d7c98779b927cf18c0e971e50f93263f473bb0c86cc32357c9bf3ef"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:4661d816c1da182db73c7b949ae5b49e349155224e90d47983d062a9ecbecf7e"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_artifact_composer.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:108f93c0375243b17c1af8bee8dc0b11a70270c8cb9be36de0dc6290fdeba2d1"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:1fc2d4292abc886139f243c08d04afaee3f7b6dc3be89ac64eab5c2093997bf1"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_knowledge_context.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:0d67467a1250fd6a305b5b782f6ba325db639e8d3483f1557f2d84fc1a8c093c"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:c4e4c1a9d908371e3c0bd269fe36ce12e1c36180ec8493de6d7ae188c3f807fb"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:bff22ea5ff1887b532085124f5959b7c6f8d5048137767505cc699df0327f09f"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:88af11576915d536c4df43842d2816c7d704bdad050ed7fe35d401ea00dbd717"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:d260564ae6e36b23ecc6fae06688d55c43ae87bee05dcae5e5f4eb15b2e01106"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:d260564ae6e36b23ecc6fae06688d55c43ae87bee05dcae5e5f4eb15b2e01106"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:d260564ae6e36b23ecc6fae06688d55c43ae87bee05dcae5e5f4eb15b2e01106"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:e5f5ebe2bafb38e4066a8f9ce61c016514767f81aeaed07dbd70f4100051eb04"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ffc8e5d4684e45262d168a12fbd784e07ac6f568d314fd373992e5eb770cf8ec"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-authorization-receipt.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:9314dc6cd2a1b4bc11668ced50e502472adf4235e0b4fea829a4b4126e6b542a"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-authorization-receipt.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:9314dc6cd2a1b4bc11668ced50e502472adf4235e0b4fea829a4b4126e6b542a"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:87ecf0c91498e980ec2b70c62ddaf86fafc4f062bb8ba59c69b019a5734c8353"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:87ecf0c91498e980ec2b70c62ddaf86fafc4f062bb8ba59c69b019a5734c8353"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:87ecf0c91498e980ec2b70c62ddaf86fafc4f062bb8ba59c69b019a5734c8353"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:390d29c735f1195d6142b5b79c3cc45f7684ff1c7bf5beaccc445825cd79df96"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:390d29c735f1195d6142b5b79c3cc45f7684ff1c7bf5beaccc445825cd79df96"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:390d29c735f1195d6142b5b79c3cc45f7684ff1c7bf5beaccc445825cd79df96"
+    },
+    {
+      "inclusion_reason": "immutable baseline commit diff",
+      "path": "scripts/python/launch_skill_input_consumer.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:3b5154ee82e0265a148837d7713fcc4a27cb5da07779dfc170ca49586bc7a7ec"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

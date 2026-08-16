@@ -1,0 +1,69 @@
+{
+  "artifacts": {
+    "catalog_v1": {
+      "bundle_path": "layers/repository-knowledge-catalog.v1.json",
+      "repository_path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "sha256": "sha256:d51e687befe04a498497d501c61fe01eed61b847071e1dc4eb1468514b3f0244"
+    },
+    "catalog_v2": {
+      "bundle_path": "layers/repository-knowledge-catalog.v2.json",
+      "repository_path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "sha256": "sha256:929ce4da94099e389443711fd384d6e5b59f67c640fb7f3b46bb1980e02f0bff"
+    },
+    "exclusions": {
+      "bundle_path": "inputs/source-exclusions.v1.json",
+      "repository_path": "knowledge/policies/source-exclusions.v1.json",
+      "sha256": "sha256:c12514d500252b84c93041ccb2b564419a6d72bc77546af20dfde1e378287f2d"
+    },
+    "policy": {
+      "bundle_path": "inputs/consumer-policies.v2.json",
+      "repository_path": "knowledge/policies/consumer-policies.v2.json",
+      "sha256": "sha256:eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7"
+    },
+    "projections": {
+      "bundle_path": "layers/consumer-projections.v1.json",
+      "repository_path": "knowledge/projections/consumer-projections.v1.json",
+      "sha256": "sha256:13de665852b58087f541390ce6a7fc5518fff996522a8750d76ce3d72bc6e282"
+    },
+    "query_report": {
+      "bundle_path": "evaluation/query-report.v1.json",
+      "repository_path": "logs/knowledge-context",
+      "sha256": "sha256:272ae9dcc726bab137f283a1c6cc467a29edc0a9117f659822f0b833b9b986eb"
+    },
+    "query_suite": {
+      "bundle_path": "inputs/repository-knowledge-query-suite.v1.json",
+      "repository_path": "knowledge/evaluation/repository-knowledge-query-suite.v1.json",
+      "sha256": "sha256:5d1b44a3da527ac39eb966099c6100daae7ae509651ae54bf10bec9d953437a0"
+    },
+    "snapshot": {
+      "bundle_path": "layers/repository-source-snapshot.v1.json",
+      "repository_path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "sha256": "sha256:d1352fea352a143516e697cb3d95c212e8292197036b923ae3aeace87eac4259"
+    }
+  },
+  "evaluation_summary": {
+    "failed": 0,
+    "passed": 108,
+    "protocol_failed": 0,
+    "protocol_passed": 4,
+    "protocol_total": 4,
+    "status": "passed",
+    "total": 108
+  },
+  "generation_id": "1878b9a48c87bd14c8b88936d40c0bd59a8dd3dc4ffa54035f57be497882fd98",
+  "main_commit": "78ded97ad5e741d268c8e269832e658cb38d584f",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "publication_request": {
+    "caller": "maintain-knowledge-base",
+    "request_id": "7e2313db6be74813b4c2f849ec1392f5",
+    "request_sha256": "sha256:5c50cbc05e9076c46b354ba56d7cb06116c55a08a78eb3c3b41ec2a6a070eccf",
+    "source_route": {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context-routes/08a27f98547be52a8093a93b7b8fc706e638a61b3b84b43c059831b53d3ae71e.json",
+      "sha256": "sha256:806359205a99a9f18f1e8726f6a9ae00f4a01df66818a1289d06f25249d4af56"
+    },
+    "target_plan": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+    "trigger": "catalog-stale-maintenance"
+  },
+  "schema_version": "jimuyun.knowledge-publication-generation.v1",
+  "source_snapshot_id": "sha256:6472655f3d78b0fea042a74a25ac89e02d488a9549c05ff4bd4847f67eed0732"
+}

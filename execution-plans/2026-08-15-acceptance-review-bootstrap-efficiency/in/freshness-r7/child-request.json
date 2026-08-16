@@ -1,0 +1,18 @@
+{
+  "schema_version": "skill-input-child-request.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "create",
+  "contract_hash": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+  "source_manifest_hash": "sha256:dfd7c4f8183f79f47e701d001545485182f9ee77fd11d74290321ae1ab816de5",
+  "snapshot_root": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r7/snapshot",
+  "output_root": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r7/output",
+  "execution_identity": "sha256:05109211b8b927f1e3b5a32e0b4be2a1b19354e29035921ad3aa9b9d4df5fcdb",
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 262144,
+  "input_mode": "serialized-snapshot-stdin",
+  "allowed_capabilities": [
+    "read-frozen-snapshot",
+    "write-context-output"
+  ],
+  "authorizes": []
+}

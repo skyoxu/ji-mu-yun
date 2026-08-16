@@ -1,0 +1,37 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:dfd7c4f8183f79f47e701d001545485182f9ee77fd11d74290321ae1ab816de5",
+  "sections": [
+    {
+      "title": "Architecture",
+      "content": "Evidence-gated artifact DAG separates lifecycle authority from Bootstrap execution. Acceptance owns closure, deterministic checks, route, imports, and finalization; Bootstrap emits non-authorizing evidence only. Immutable identity-bound artifacts, complete closures, isolated segments, required-check receipts, event recovery, typed routes, and rollout parity are required."
+    },
+    {
+      "title": "Contract",
+      "content": "Acceptance begins only from a current identity-bound implementation-complete handoff, freezes baseline and candidate, computes complete Consumer Closure, runs contract-projected checks, selects supervised or unattended mode plus typed route, and finalizes only exact-matched current evidence. Candidate or authority changes stale dependent evidence."
+    },
+    {
+      "title": "Lifecycle",
+      "content": "VDD owns draft and plan-ready; maintainer owns implementation-authorized and supervised non-authorizing decisions; Quick Dev owns implementation-complete; Acceptance alone owns acceptance-passed. Deterministic-only routes avoid Bootstrap only under the fixed mode-route matrix; registered risks require full conformance or manual pause."
+    },
+    {
+      "title": "Review Inputs",
+      "content": "Selected authority is delivered whole within budget, with exact continuation of partial reads. Over-budget inputs require controller-owned source-hash-bound range projections. Each child uses an immutable descriptor, frozen segment-only snapshot, absolute path, and inherited access proof; unassigned or mutated scope fails."
+    },
+    {
+      "title": "Execution Recovery",
+      "content": "Append-only Process Events distinguish liveness from validated Effective Progress. Heartbeats, stdout, and polling do not refresh no-progress. Policy-bound watchdog, terminal reconciliation, leases, and bounded segment-local retry produce typed non-authorizing recovery outcomes when evidence is incomplete."
+    },
+    {
+      "title": "Review Semantics",
+      "content": "Complete Bootstrap review retains isolated Blind Hunter, Edge Case Hunter, and Acceptance Auditor roles. Required checks precede semantic work; deterministic failure launches zero reviewers. Independent verification applies only to gate-accepted P0/P1 findings under existing risk/model policy."
+    },
+    {
+      "title": "Verification",
+      "content": "M0 establishes isolation and recovery controls, M1 adds Acceptance strategy, and M2 validates 8-13-scale regression, semantic corpus, cost telemetry, and final import. Optimization cannot omit authority, weaken routes, convert transport failures into semantics, or create false authorization."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T09:09:46.066008Z"
+}

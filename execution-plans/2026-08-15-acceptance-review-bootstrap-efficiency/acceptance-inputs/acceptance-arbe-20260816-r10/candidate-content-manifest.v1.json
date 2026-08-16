@@ -1,0 +1,3484 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": ".agents/skills/bmad-spec/scripts/canonical_package.py",
+      "baseline_sha256": "sha256:2dd56942da0895f386747659a637e092e0df38c2b18bf0f747b20f0d17ef4c68",
+      "candidate_path": ".agents/skills/bmad-spec/scripts/canonical_package.py",
+      "candidate_sha256": "sha256:64be3610a12a868229fd8cf80ca4d559f8e0652eb4384598f8314d7d244ff516",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "baseline_sha256": "sha256:08d1f9b896a3e1f07bae81d791dd2be8f047a4d048761436b71da0d6799c9815",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "candidate_sha256": "sha256:6079f4cf4f479792ac0223c8817164a7d2fdd5108c6b212c29a67a9a2498d0f4",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "baseline_sha256": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "candidate_sha256": "sha256:0d4b8ad763ad4d5b9d6ca5f70df01c87ce374572a5f9b4a52d13708f0fd77625",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+      "baseline_sha256": "sha256:d2aa85225c66761bc68ed3e29276fcf68aea7b1791484a0698d4108b2d326809",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+      "candidate_sha256": "sha256:b8ba2fcacb3a8316579e588e831567538d92b6c2851eb744cbcc4e7bad151814",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "baseline_sha256": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "candidate_sha256": "sha256:e77f1ea1b76aab3bdef2bd44cdd85a4256e6743178a7e71b0c853d5d01dae50b",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "baseline_sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "candidate_sha256": "sha256:591d30cf78631dc1ed53cf658d149c1c9df818e911ab31f4ec47f8f97d5471d1",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/protocol_guards.py",
+      "candidate_sha256": "sha256:e95f583aef75dc23be0f9759645f9989d93f5ecd598df8217587c9662abbf601",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "baseline_sha256": "sha256:54550c910d7c98779b927cf18c0e971e50f93263f473bb0c86cc32357c9bf3ef",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "candidate_sha256": "sha256:8a6b0068e1c740a6adf7dcf3e4e0ffa8fb4ea33c8f364b2348c95a2b4250f6b4",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      "baseline_sha256": "sha256:4661d816c1da182db73c7b949ae5b49e349155224e90d47983d062a9ecbecf7e",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      "candidate_sha256": "sha256:f160e4fca8d56cf376e06a595e12094379a1e0a7f556c9c4cef9e8cb11a07d19",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_artifact_composer.py",
+      "baseline_sha256": "sha256:108f93c0375243b17c1af8bee8dc0b11a70270c8cb9be36de0dc6290fdeba2d1",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_artifact_composer.py",
+      "candidate_sha256": "sha256:62d1e42e4582e236884634296b81113bc57826772a968c14fc0d92b8a3ee3006",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
+      "baseline_sha256": "sha256:1fc2d4292abc886139f243c08d04afaee3f7b6dc3be89ac64eab5c2093997bf1",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
+      "candidate_sha256": "sha256:9e00196e7ca92dc3a03d47eea6b0e7512379cb4e2bc6e9db44db0039419869c8",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_knowledge_context.py",
+      "baseline_sha256": "sha256:0d67467a1250fd6a305b5b782f6ba325db639e8d3483f1557f2d84fc1a8c093c",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_knowledge_context.py",
+      "candidate_sha256": "sha256:2b6dd8965aa67aa54b4da4e3ee05960bc2a9a8bbc501ce8fe14316cab0793880",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "baseline_sha256": "sha256:c4e4c1a9d908371e3c0bd269fe36ce12e1c36180ec8493de6d7ae188c3f807fb",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "candidate_sha256": "sha256:28a41e9924608653df072a4f3de12ff3eb3f3f30eb73963cdf05e0fef09d2648",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/policies/bootstrap-runtime/runtime-policy.v1.json",
+      "candidate_sha256": "sha256:67d5f8006edd814598238b3a15761337bb8589cd08d6b79f772dabc844083b2f",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json",
+      "baseline_sha256": "sha256:bff22ea5ff1887b532085124f5959b7c6f8d5048137767505cc699df0327f09f",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json",
+      "candidate_sha256": "sha256:e3453c6c02d1088b573184294acf38db67118cd357726eb59643c043e7a7c5c1",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "baseline_sha256": "sha256:88af11576915d536c4df43842d2816c7d704bdad050ed7fe35d401ea00dbd717",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "candidate_sha256": "sha256:d422c08ca7fdc8a8761120062ded41f0aea62d4b5487a50109246ae209dbe323",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/projection_and_segmentation.py",
+      "candidate_sha256": "sha256:b3d3ac85dcdba6625e42c022c3332000515f552b818881266a6f49bb7ae3e49e",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/runtime_policy.py",
+      "candidate_sha256": "sha256:bd970a0909632462b6d7321a7f0bc9595a27bc2e903ab2cfc036639724291894",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_projection_and_segmentation.py",
+      "candidate_sha256": "sha256:cf1f80000a611e86c1ebd24a9f9adf95c0a17e2902cb1c1c29bf27e071ef07f2",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_runtime_policy_events.py",
+      "candidate_sha256": "sha256:e62a8b8885f1c5002ba41291116f79e43f4f95f1033d1799e91080d9969c7105",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "baseline_sha256": "sha256:d260564ae6e36b23ecc6fae06688d55c43ae87bee05dcae5e5f4eb15b2e01106",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "candidate_sha256": "sha256:150659166337634ccb619dc7b44021321676cb7040055d2e2fa8cc8b33f850fc",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "baseline_sha256": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "candidate_sha256": "sha256:e46352f7054c658312449a6d08c62ed2b87d62c779ffb4feb6d524bf1565bdcb",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/semantic_import.py",
+      "candidate_sha256": "sha256:37cdd1ce7c7a7d652e6491ad3a977dc2a9c83d6221285dfb8c9956496319d36c",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_import.py",
+      "candidate_sha256": "sha256:3f8428744574228880b9f2521bb0661755d698f2ff7089f7ebd6b9c1f319302a",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_pipeline.py",
+      "candidate_sha256": "sha256:af80c0ccac1f2ab9c088b8832fe0f120655e9f426c492ea9e53a34cad132c648",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+      "baseline_sha256": "sha256:e5f5ebe2bafb38e4066a8f9ce61c016514767f81aeaed07dbd70f4100051eb04",
+      "candidate_path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+      "candidate_sha256": "sha256:c792b5367dcdf9c877fd39d36012354cb12bfa7501ce88246905a858fd7aceac",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+      "baseline_sha256": "sha256:ffc8e5d4684e45262d168a12fbd784e07ac6f568d314fd373992e5eb770cf8ec",
+      "candidate_path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+      "candidate_sha256": "sha256:98d29dc34a6fba2c2806abe9f7cb47f1a76d1fb704dbb725b365a8078dde11d3",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r2/c.json",
+      "candidate_sha256": "sha256:d2cda6c44bb253d55453a3cae8dbaa21a8466358258591cc7426d83decc669c9",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r2/o/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:a9fd5b7681ec740b9bce7dc6668986ce5cdf0aad663c6fa56acdda3ba66adbce",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r2/o/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:0a478364f456121f65bb9c7081711f09968765c08212941dee03d1f58983e0ce",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r2/o/snapshot-read-coverage.v1.json",
+      "candidate_sha256": "sha256:14692fc91e36b086f57716a9a3f709d6be0999120e84f5fb437d5c28ffeeddf6",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r2/r.json",
+      "candidate_sha256": "sha256:4a80db4687a8e96645526f8d43f18dc1ee94ad2d1fcbbb5b12687b4b682dd0ac",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r2/run-result.json",
+      "candidate_sha256": "sha256:233639e65e67dbf2c9e279f3478158183e04d72e04e49d22f5d889d264c61c0b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r2/s/source-manifest.v1.json",
+      "candidate_sha256": "sha256:3017aa5aaf72fbe27d10c5903c2ca51bb7a8a844f7168e3abe38968236049981",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r3/c.json",
+      "candidate_sha256": "sha256:af67e81c4140be015d29aa74b8ae08ac384eb145b3acf1316847446b642f8204",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r3/o/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:4fa147a4710d6b818dcf9f0b3f40e01b5592a6da5ce37efc6b47159071e70d89",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r3/o/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:45d9e8e36f283ec6901959129b73c00b2b0dfc1c4bd87e000e6c694dbca9d017",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r3/o/snapshot-read-coverage.v1.json",
+      "candidate_sha256": "sha256:ef71c071a75c80ff12185e56d68bed62482423a55e4c412e37624398a964a976",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r3/r.json",
+      "candidate_sha256": "sha256:d0a68d3d6e3af01d953ad9e34d562ff3e62e2597bff0009c2f33cecfeb39122a",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r3/run-result.json",
+      "candidate_sha256": "sha256:1e23edf51210dff40c886ea1074cff92455dbb60ea409bb9315396710fc99a0a",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r3/s/source-manifest.v1.json",
+      "candidate_sha256": "sha256:437b491f3d5368a33a976cbf481af4c62d02ffdf9bbbfab3ee78a17d8f5c92f0",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r4/c.json",
+      "candidate_sha256": "sha256:0a14257526bc6ec91000c93fdcac1c7bc4fa2159d7ed94acf7dabdc9a213258f",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r4/o/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:09801109535c719b6ebee63e6309f2b8da60ece85f7ee40f343f8f6f9cde0ac7",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r4/o/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:51a821dfed4cd2b5985b11c1491bd8973f039f36146566dbeafdb71f5eeee51a",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r4/o/snapshot-read-coverage.v1.json",
+      "candidate_sha256": "sha256:27c29e1c098678d7ec90ec2ccf51fe1ae39b08b87d450b50d42fad92e880f79b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r4/r.json",
+      "candidate_sha256": "sha256:f640d2dfd2faf255b6f83f4f1b065d8faad52fdb00a874d45ad5c55eae8a4cc3",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r4/run-result.json",
+      "candidate_sha256": "sha256:059e22afd2363a6b542a4f480250b28700749d82c4cc97db15cadaf47edb412d",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r4/s/source-manifest.v1.json",
+      "candidate_sha256": "sha256:c4a5911d38ffb0fdd435ded8be1e51e6c6d6b7aafab336c4e311d52029dafa9a",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/r.json",
+      "candidate_sha256": "sha256:44832e8c71a5dd59a57de33a907993f64b0180c731d0d9d6e083ac0b1684753e",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/request.json",
+      "candidate_sha256": "sha256:9e5ca8e5045524849a6ac11e81f1820680780a0cc29de6fb0062e12402537619",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "baseline_sha256": "sha256:08d1f9b896a3e1f07bae81d791dd2be8f047a4d048761436b71da0d6799c9815",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "candidate_sha256": "sha256:6079f4cf4f479792ac0223c8817164a7d2fdd5108c6b212c29a67a9a2498d0f4",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md",
+      "candidate_sha256": "sha256:c610abf803a7c514d1220d6842a541be00daed0455d1d26fe1e5d0a809c8d347",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/quick-dev-tdd-adapter/references/knowledge-consumption.md",
+      "candidate_sha256": "sha256:17361fbcf86d93f0d72619589fdf22b40f64709a82c856946d990ed9af741416",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "baseline_sha256": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "candidate_sha256": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "baseline_sha256": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "candidate_sha256": "sha256:e77f1ea1b76aab3bdef2bd44cdd85a4256e6743178a7e71b0c853d5d01dae50b",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "baseline_sha256": "sha256:54550c910d7c98779b927cf18c0e971e50f93263f473bb0c86cc32357c9bf3ef",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "candidate_sha256": "sha256:54550c910d7c98779b927cf18c0e971e50f93263f473bb0c86cc32357c9bf3ef",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "candidate_sha256": "sha256:fa0010ac933813cd3671291af8efea4a2849a3219783f5a2189d100430b13bf0",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+      "candidate_sha256": "sha256:e8a0c40424eb491d5831db5b84136be1bb1ca41d9dae2ae3861b61aa7237af80",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-knowledge-maintenance-route.v1.schema.json",
+      "candidate_sha256": "sha256:475d322f4ca92e91445fcea5277c3ad7f2000ee1d9bed92802dacf7db6efc45c",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json",
+      "candidate_sha256": "sha256:775c6b865e93f62c610149a536d360437493b5439605b10fb85eb88852c08b68",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json",
+      "candidate_sha256": "sha256:9f88fc03dda0c90bd96fb09f2441e06f1d849ad76ac64d99674af5fd9c2f212b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "baseline_sha256": "sha256:d260564ae6e36b23ecc6fae06688d55c43ae87bee05dcae5e5f4eb15b2e01106",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "candidate_sha256": "sha256:5b42c7f976e0e9e3702437de9a143456a575ec9d10d0c339a0f8554b58fc92e3",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "baseline_sha256": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "candidate_sha256": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      "candidate_sha256": "sha256:58f0a10076ee65bff09eee4945708aed7aab48e21b8dde75c17e94407ba99ce8",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+      "candidate_sha256": "sha256:4192e3e7a3f5fbc5c8cbe84abf60c8a2b4733ddd82c27c5308374061ae06e48f",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/.agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
+      "candidate_sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/AGENTS.md",
+      "candidate_sha256": "sha256:4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-15/ARCHITECTURE-SPINE.md",
+      "candidate_sha256": "sha256:67214d4c037af2d9d5d665401acded34e68e3fcd4cafbaabdea50f5cf7bb751b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-14/addendum.md",
+      "candidate_sha256": "sha256:3e79b2f4b2687a5e0024e7f263daaba99fd1cc46956b2d1d117cf85b7abcb3c1",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-14/prd.md",
+      "candidate_sha256": "sha256:5bfacd696f74d89823026801f0e1e5e64872da223dceb749a4a134c7d85b1985",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/specs/canonical-spec-package-selections/current/SPEC-acceptance-review-bootstrap-efficiency.json",
+      "candidate_sha256": "sha256:0aa51999ef3def06b87f4fae8833df396dc2fd1f950cf065d8a76204ac9ab895",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/specs/canonical-spec-package-selections/sha256-d5417f8767a7a8ba52998d4ac7e79b77a6d00a104fe280c1bb8b70ba5d38622b.json",
+      "candidate_sha256": "sha256:96dcf3b0a3e29dc02549ee3e0fd335113f2e306f9f205c4982314948427d8d49",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/.memlog.md",
+      "candidate_sha256": "sha256:4e68c0e665094d554ac12fd30aa9a554607f84abd7d17a8f03058c0d41c119e6",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/SPEC.md",
+      "candidate_sha256": "sha256:d0e0c63bd7fbd10bc2ded759775e4fdb6f58b86fa656d95632a5fd6960687944",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/architecture-diagrams.md",
+      "candidate_sha256": "sha256:a33f24b5e50687e92a28992a81f15cb1d061550a5e5c06c17a73f6803199c114",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-and-lifecycle.md",
+      "candidate_sha256": "sha256:39ee26ec7cf9fffda9c98300325e9af242ea0ab41b7a5309f55efbac09e5a4cf",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-projection-and-segmentation.md",
+      "candidate_sha256": "sha256:ad62a890c28468f63f0cf7b586fd322e6d9414418c79d849a06e0fafb4591d71",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/execution-and-recovery.md",
+      "candidate_sha256": "sha256:77e3a4b4e1b548bc1836ed9955c325513d80b08fd83cafdef69cedc27bdfbc51",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/glossary.md",
+      "candidate_sha256": "sha256:9ac2ba0fe3c6032c0967d857bad92354f631ecad70ec2e2afee1225be9d26d47",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/verification-and-rollout.md",
+      "candidate_sha256": "sha256:85c9de5d4e4a5bb3c09b1109db64cfec4a7ba4088977f9978b1e154e7fc97c8e",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "candidate_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+      "candidate_sha256": "sha256:5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/docs/standards/bootstrap-review-control-plane.md",
+      "candidate_sha256": "sha256:f4d17f1bd099db438b4f793f6b962e876b59fdb18324e577afd537154af49685",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/docs/standards/repository-maintenance-agent-protocol.md",
+      "candidate_sha256": "sha256:3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/00-index.md",
+      "candidate_sha256": "sha256:e11e0c2d75dbe7eef8434bb23f0f385b89dbf445c9f1842dc3ba947a0e1ea422",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/01-requirements-and-acceptance.md",
+      "candidate_sha256": "sha256:4990d198e2d39de2e0b2749d2754f4b6a0f665a57a27b60b037f5bef2828ffba",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/command-registry.v1.json",
+      "candidate_sha256": "sha256:67384623cbc1e4ad5795410e2e7458295820fb396a9f04ab1e4482d2d011e92c",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:339fd17df43948ae799ed5198d81e3ae03ec95eaacf48317f516a935cc63e046",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/plan-state.v1.json",
+      "candidate_sha256": "sha256:789637687db8944015d3a7ad815bf8efd500a37a4e90c94d15fd8e0fb8d14076",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md",
+      "candidate_sha256": "sha256:ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "candidate_sha256": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:edef7d760ff1104be415a04c4c315632d58d1a22ce706ff435fd388db7f4e7f8",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/plan-state.v1.json",
+      "candidate_sha256": "sha256:ec758630a4d6944e633ed1843f230f06d46fed702193b7706d0d10f69f41eaec",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+      "candidate_sha256": "sha256:e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/00-index.md",
+      "candidate_sha256": "sha256:ec170170c5e859f8180f12ae24242db1ea87ae08986c85ca8d180a8bde12587d",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/command-registry.v1.json",
+      "candidate_sha256": "sha256:0a21f7f2324b305db088d74e16c4ea2a4e64bc65fae7a5c35a40b12cd2f28d67",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:edad836baf2a26424bbb47badecaf177294afbe23f58b941fcf092995a28dd19",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/plan-state.v1.json",
+      "candidate_sha256": "sha256:e7e7ec2238f1f2058aded596a5abcaf1e93f9e3e698aa2a86919a14ae8370c12",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/requirements.v1.json",
+      "candidate_sha256": "sha256:eabcea026ab97c3e5ac159766585aa33aad6088830966d0f384b09a11ba29f48",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+      "candidate_sha256": "sha256:4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
+      "candidate_sha256": "sha256:5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-skill-authoring-standard/plan-state.v1.json",
+      "candidate_sha256": "sha256:5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+      "candidate_sha256": "sha256:af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/00-index.md",
+      "candidate_sha256": "sha256:83b2c82fb6a0bc9ed9e3a01c56ce4eb920baa26bdb3be0db63714f59fe8efc46",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/command-registry.v1.json",
+      "candidate_sha256": "sha256:4b8b91ed79531266ebfcecba7a1e868dcade5c4d5ab548f0472e922895b0d0a0",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:5a7a62f2d8bb51df9761b4d7f2f2bf3376d79d5ba184fdbacf901613a1de39dd",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/plan-state.v1.json",
+      "candidate_sha256": "sha256:efc945118340b888943472c80d2508ba9f93c9a243afce019771f108978be209",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/requirements.v1.json",
+      "candidate_sha256": "sha256:477a488e1cf83d5edf0c96f8ee0f74798e63d384985ac3b556d246f7683108f9",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/00-index.md",
+      "candidate_sha256": "sha256:816fe0b06d97fa5860cf00e8c19c7625a9f48d37eaf24a52ca48ab88e4c44d37",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "baseline_sha256": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "candidate_sha256": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/authorization-bootstrap-override-contract.v1.json",
+      "candidate_sha256": "sha256:a57a950afd21a4d16ead5d09e34ec71b1066199b7ed62b4ec538c01863d75af9",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "baseline_sha256": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "candidate_sha256": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/fixtures/current-package-exact-cover-red.v1.json",
+      "candidate_sha256": "sha256:1d0697da5691adc77bd05a24cdb7309ce7a98bd18639eaa2850eff3848446be4",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-authorization-receipt.v1.json",
+      "baseline_sha256": "sha256:9314dc6cd2a1b4bc11668ced50e502472adf4235e0b4fea829a4b4126e6b542a",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-authorization-receipt.v1.json",
+      "candidate_sha256": "sha256:678ee02844f4c9f20c3b0ed9781eaefa61b5103ab04135cc6df95165adae6706",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "baseline_sha256": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/child-repository-root-v2.json",
+      "candidate_sha256": "sha256:fb23cd0d4a04fc77530aa3db0d5247f246a4174ec0f6e43d2637b2166f5b77dc",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/child-repository-root.json",
+      "candidate_sha256": "sha256:c9be13a31180596c1fa0175fc2ae06915a4047678e38ab90597c8fac715fcafa",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r1/child-request.json",
+      "candidate_sha256": "sha256:1742520f3c8390a5506afadb6ace63e9cd03294943de12ba213dcbdf590a6114",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r1/output/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:13d487e55fb48e1d2fe9e1c0b54f81b6e3c490f849799509b8af160a56e45781",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r1/output/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:2706c81441c23e70de9ca1c09fb52ad7df1436e84db580a25661b32b2259ed94",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r1/receipt.json",
+      "candidate_sha256": "sha256:702b504299be22bc076e3cff63960f41efecc70f606e8879130dab615829fb5d",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r1/run-result.json",
+      "candidate_sha256": "sha256:c7eee6a702f89689770980c7cf09e05c29b2c19f54963ce697c698a5afd09532",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r1/snapshot/source-manifest.v1.json",
+      "candidate_sha256": "sha256:c6f7dd73a2d40ebcdcdce21637fba031b8bdad73b4af054ffa542d6c92c96a76",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/child-request.json",
+      "candidate_sha256": "sha256:a6de58606c4019f1082259efa4b2863a368abc9675566ef2eaf1fd0851940bc2",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/output/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:2f44f787d3af3c7afef58b89f4201d6eac21ee43b053f06796f8e5faf87d1e60",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/output/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:6a9bb8b14461d14f93e94e0b44158d37e1313aac532386c20add9c864fb97a87",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/receipt.json",
+      "candidate_sha256": "sha256:ae3de314fe246912fb04d9e01faa57c4caf0029f0e093f613cbb355e57aa0a6f",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/request.json",
+      "candidate_sha256": "sha256:c5e23dfe425ad6a41b727c4cb27e8311880bdbf102374c6128517c2939bef310",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/run-result-attempt-2.json",
+      "candidate_sha256": "sha256:9132384ee6919ed779b686e88b75438c33bbbc330b64c2abd67938e221a846f1",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/snapshot/source-manifest.v1.json",
+      "candidate_sha256": "sha256:6bfb441ee7571f9b5dff46085fb926a63926e0d5290e82189f4dd10a819aaaf0",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/child-request-2.json",
+      "candidate_sha256": "sha256:71f92800c90f5a97382464623dcb3cbd548823b2c34978deb30ec8afecb5bee7",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/output2/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:4ac1688f7503dfee09a01ae730bd3d0e990cc231e7865fe0fbf1c7d3aa75152c",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/output2/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:33c186661b7993defee7bf15ecf51601325374767ffdf8eebc0fd115a573f33e",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/receipt.json",
+      "candidate_sha256": "sha256:78e17bd7e03b4d76eb4c955003e2a81ed9768f78cbfa822a3e30ba9c1a98073f",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/snapshot/source-manifest.v1.json",
+      "candidate_sha256": "sha256:3d9c1f7517a0d7f15615c35a79817a02de8ec379cbde22f5b6fe9bc0eee64b5b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/child-request.json",
+      "candidate_sha256": "sha256:66e684cf6c2848e385133f496b4b3424a9139da00f4d86d11852a8e3ef4858ee",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/output/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:85d9e21d4c62348e46f6d36f252a7f0be70abb18ca6636700a5e2f626ecf3417",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/output/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:b927fd61369e309b87a56f3453c9bc7a131fca8290f2892382b993ec7de3c434",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/receipt.json",
+      "candidate_sha256": "sha256:5a3d4a2e573664a50d84a6d9e3837e4f8d19996cf5d671187653dd443d582cd9",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/request.json",
+      "candidate_sha256": "sha256:c5e23dfe425ad6a41b727c4cb27e8311880bdbf102374c6128517c2939bef310",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/snapshot/source-manifest.v1.json",
+      "candidate_sha256": "sha256:24ec4fbffe784a22732c711e72319225eff9137c058bffb8da2fd1f438f359df",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o2/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:730e45c195274f48b2dd50501d34ea9d46ee2ad710cdbdf63bbaa27d68d2742d",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o2/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:b8c308b1a96110c5b323ed41dacd9794ae35c026d3a7818bdede4d6af358e8ec",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o3/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:8a5aec72c674738520313318ef4f3ba6ea230c600dd97c5fd0a0fa47c47ef517",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o3/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:8eecc787b6686a32f6315a45a289bee9f624eb81039874843b9cfc034cde0d4b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/receipt.json",
+      "candidate_sha256": "sha256:75ceec1187cbfa13eccc3756a35c9530bc3459db08c24dbdbc92dd17b2e2d365",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/request.json",
+      "candidate_sha256": "sha256:29a95aa89c9a2243d0ab0a7a920d015f261e08ae778f480cdce8482777757798",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/result-repository-root.json",
+      "candidate_sha256": "sha256:dcc6cc61a1fd6a54f50849832633ed7474570253b25761359574e07382067223",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/s/source-manifest.v1.json",
+      "candidate_sha256": "sha256:fb246ac23572c53fb17e8386fbb8d3215bbf37ff609aba2a49368665e05246ea",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/s3/source-manifest.v1.json",
+      "candidate_sha256": "sha256:d405b8837296b5b4f5c19b48af9d145248432eecae1de50329aa3926c68713b1",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "baseline_sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.history/08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0.v1.json",
+      "candidate_sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "candidate_sha256": "sha256:f4f81299501e49c89709d51530efa64d449485590f6d6be5a5448a5f880e486b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "baseline_sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.history/08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0.v1.json",
+      "candidate_sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "baseline_sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "candidate_sha256": "sha256:9b52ced172ca84973dd0456b23c78e83e5e69e37a56ab242e7d1697dbb68484a",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/model-route-decision.v1.json",
+      "candidate_sha256": "sha256:f5dcac8fd0a2fd6ec09b9940e46e32c99afb39504c2bdd57903f88ba8b6ba6c6",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "baseline_sha256": "sha256:87ecf0c91498e980ec2b70c62ddaf86fafc4f062bb8ba59c69b019a5734c8353",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "candidate_sha256": "sha256:d4a731681e002a346b3182b585498876f6d9302531b896484dace552502f8c94",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-1/finding-set.json",
+      "candidate_sha256": "sha256:84e2f0347a081e98c49a04520df968809ecd9f0981accb3f676010b1a2b1392d",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-1/repair-closure.json",
+      "candidate_sha256": "sha256:0cb50b1666b38938dbf0b290a9e05e77a3c36c07211c4b62b6b1c7ee960b0d41",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-1/repair-slices.json",
+      "candidate_sha256": "sha256:909aa0eb81e1571b316d96ebbd529c842736089b9741ee7a6cb9aa577f200c0b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-2/source-freeze-manifest.v1.json",
+      "candidate_sha256": "sha256:592c74b2d9619f7004a6f07e039dadfda9e6341e6a622f4a04cbac8f493a4189",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+      "candidate_sha256": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/source-freeze-manifest.v1.json",
+      "candidate_sha256": "sha256:627f25239239b6e1d851e4d17f8e247d8403400e356b115c5ca62d91d4413093",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/supervised-semantic-review-decision-contract.v1.json",
+      "candidate_sha256": "sha256:9df7de8e69c2e3a5825fdc821a4e881a341bef66f12f26df639494441491b748",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "baseline_sha256": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "candidate_sha256": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "baseline_sha256": "sha256:390d29c735f1195d6142b5b79c3cc45f7684ff1c7bf5beaccc445825cd79df96",
+      "candidate_path": "_bmad-output/q/arbe-r5/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "candidate_sha256": "sha256:0eae71cfc7349c59d980946ce02abdeec62bcbbc8fb42d00d4e5ef0d21a0271f",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r5/s/source-manifest.v1.json",
+      "candidate_sha256": "sha256:7b30224bcb8099b5719b8c67b52da2760421b35481c164a94b92baefe8e915a6",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r6/c.json",
+      "candidate_sha256": "sha256:ef0be8a5a7712e4cc7945fe5cbcdd1c5be2bd1f9a62109ad6d65446150669625",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r6/o/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:b6c8a43c3378afb44e4d0e48796a105b43fa0646e25d6359ce87bfba5d92853c",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r6/o/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:0683682cc3b218ec4372f3b57fff68884eecdb49895e6d84af2d24ba79b44f9e",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r6/o/snapshot-read-coverage.v1.json",
+      "candidate_sha256": "sha256:dac10d5b6f13e3e6f4c80a81c05ea2afbe7a0668d5aa9bf26020199c89658169",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r6/r.json",
+      "candidate_sha256": "sha256:f853da4223f8be2dce1ae7a4e68c687cd0bce54b38ece133b5f94d5005cc721d",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r6/run-result-attempt-2.json",
+      "candidate_sha256": "sha256:5b8685fed91c7c119dea7373d7fe8252ab4b61b669bc000bba573f02c7389e4f",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe-r6/s/source-manifest.v1.json",
+      "candidate_sha256": "sha256:f75e19a7a518f125f46ee2879a0297bd6b8463731eb945df681a82f8296b0a1e",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/c.json",
+      "candidate_sha256": "sha256:23858aaa50046aea8a1898d34e0e807606bcbafae76487f500c61a0f419c04d4",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/r.json",
+      "candidate_sha256": "sha256:25811d26bf1cd39e0cc2947579478e67b95fc08b2bc2fd254be8ad7e17756b19",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "baseline_sha256": "sha256:08d1f9b896a3e1f07bae81d791dd2be8f047a4d048761436b71da0d6799c9815",
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "candidate_sha256": "sha256:08d1f9b896a3e1f07bae81d791dd2be8f047a4d048761436b71da0d6799c9815",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md",
+      "candidate_sha256": "sha256:c610abf803a7c514d1220d6842a541be00daed0455d1d26fe1e5d0a809c8d347",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/quick-dev-tdd-adapter/references/knowledge-consumption.md",
+      "candidate_sha256": "sha256:17361fbcf86d93f0d72619589fdf22b40f64709a82c856946d990ed9af741416",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "baseline_sha256": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb",
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "candidate_sha256": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "baseline_sha256": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88",
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "candidate_sha256": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "baseline_sha256": "sha256:54550c910d7c98779b927cf18c0e971e50f93263f473bb0c86cc32357c9bf3ef",
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "candidate_sha256": "sha256:5372633b77578057f6ddbaef4d1d9106b5c344b7359a155421ea86fcef1ce7da",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "candidate_sha256": "sha256:fa0010ac933813cd3671291af8efea4a2849a3219783f5a2189d100430b13bf0",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+      "candidate_sha256": "sha256:e8a0c40424eb491d5831db5b84136be1bb1ca41d9dae2ae3861b61aa7237af80",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-knowledge-maintenance-route.v1.schema.json",
+      "candidate_sha256": "sha256:475d322f4ca92e91445fcea5277c3ad7f2000ee1d9bed92802dacf7db6efc45c",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json",
+      "candidate_sha256": "sha256:775c6b865e93f62c610149a536d360437493b5439605b10fb85eb88852c08b68",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json",
+      "candidate_sha256": "sha256:9f88fc03dda0c90bd96fb09f2441e06f1d849ad76ac64d99674af5fd9c2f212b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "baseline_sha256": "sha256:d260564ae6e36b23ecc6fae06688d55c43ae87bee05dcae5e5f4eb15b2e01106",
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "candidate_sha256": "sha256:5b42c7f976e0e9e3702437de9a143456a575ec9d10d0c339a0f8554b58fc92e3",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "baseline_sha256": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76",
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "candidate_sha256": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      "candidate_sha256": "sha256:58f0a10076ee65bff09eee4945708aed7aab48e21b8dde75c17e94407ba99ce8",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/.agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+      "candidate_sha256": "sha256:4192e3e7a3f5fbc5c8cbe84abf60c8a2b4733ddd82c27c5308374061ae06e48f",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/AGENTS.md",
+      "candidate_sha256": "sha256:4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-15/ARCHITECTURE-SPINE.md",
+      "candidate_sha256": "sha256:67214d4c037af2d9d5d665401acded34e68e3fcd4cafbaabdea50f5cf7bb751b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-14/addendum.md",
+      "candidate_sha256": "sha256:3e79b2f4b2687a5e0024e7f263daaba99fd1cc46956b2d1d117cf85b7abcb3c1",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-14/prd.md",
+      "candidate_sha256": "sha256:5bfacd696f74d89823026801f0e1e5e64872da223dceb749a4a134c7d85b1985",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/specs/canonical-spec-package-selections/current/SPEC-acceptance-review-bootstrap-efficiency.json",
+      "candidate_sha256": "sha256:0aa51999ef3def06b87f4fae8833df396dc2fd1f950cf065d8a76204ac9ab895",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/specs/canonical-spec-package-selections/sha256-d5417f8767a7a8ba52998d4ac7e79b77a6d00a104fe280c1bb8b70ba5d38622b.json",
+      "candidate_sha256": "sha256:96dcf3b0a3e29dc02549ee3e0fd335113f2e306f9f205c4982314948427d8d49",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/.memlog.md",
+      "candidate_sha256": "sha256:4e68c0e665094d554ac12fd30aa9a554607f84abd7d17a8f03058c0d41c119e6",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/SPEC.md",
+      "candidate_sha256": "sha256:d0e0c63bd7fbd10bc2ded759775e4fdb6f58b86fa656d95632a5fd6960687944",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/architecture-diagrams.md",
+      "candidate_sha256": "sha256:a33f24b5e50687e92a28992a81f15cb1d061550a5e5c06c17a73f6803199c114",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-and-lifecycle.md",
+      "candidate_sha256": "sha256:39ee26ec7cf9fffda9c98300325e9af242ea0ab41b7a5309f55efbac09e5a4cf",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-projection-and-segmentation.md",
+      "candidate_sha256": "sha256:ad62a890c28468f63f0cf7b586fd322e6d9414418c79d849a06e0fafb4591d71",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/execution-and-recovery.md",
+      "candidate_sha256": "sha256:77e3a4b4e1b548bc1836ed9955c325513d80b08fd83cafdef69cedc27bdfbc51",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/glossary.md",
+      "candidate_sha256": "sha256:9ac2ba0fe3c6032c0967d857bad92354f631ecad70ec2e2afee1225be9d26d47",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/verification-and-rollout.md",
+      "candidate_sha256": "sha256:85c9de5d4e4a5bb3c09b1109db64cfec4a7ba4088977f9978b1e154e7fc97c8e",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "candidate_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+      "candidate_sha256": "sha256:5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/docs/standards/bootstrap-review-control-plane.md",
+      "candidate_sha256": "sha256:f4d17f1bd099db438b4f793f6b962e876b59fdb18324e577afd537154af49685",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/docs/standards/repository-maintenance-agent-protocol.md",
+      "candidate_sha256": "sha256:3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/00-index.md",
+      "candidate_sha256": "sha256:e11e0c2d75dbe7eef8434bb23f0f385b89dbf445c9f1842dc3ba947a0e1ea422",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/01-requirements-and-acceptance.md",
+      "candidate_sha256": "sha256:4990d198e2d39de2e0b2749d2754f4b6a0f665a57a27b60b037f5bef2828ffba",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/command-registry.v1.json",
+      "candidate_sha256": "sha256:67384623cbc1e4ad5795410e2e7458295820fb396a9f04ab1e4482d2d011e92c",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:339fd17df43948ae799ed5198d81e3ae03ec95eaacf48317f516a935cc63e046",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/plan-state.v1.json",
+      "candidate_sha256": "sha256:789637687db8944015d3a7ad815bf8efd500a37a4e90c94d15fd8e0fb8d14076",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md",
+      "candidate_sha256": "sha256:ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "candidate_sha256": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:edef7d760ff1104be415a04c4c315632d58d1a22ce706ff435fd388db7f4e7f8",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/plan-state.v1.json",
+      "candidate_sha256": "sha256:ec758630a4d6944e633ed1843f230f06d46fed702193b7706d0d10f69f41eaec",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+      "candidate_sha256": "sha256:e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/00-index.md",
+      "candidate_sha256": "sha256:ec170170c5e859f8180f12ae24242db1ea87ae08986c85ca8d180a8bde12587d",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/command-registry.v1.json",
+      "candidate_sha256": "sha256:0a21f7f2324b305db088d74e16c4ea2a4e64bc65fae7a5c35a40b12cd2f28d67",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:edad836baf2a26424bbb47badecaf177294afbe23f58b941fcf092995a28dd19",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/plan-state.v1.json",
+      "candidate_sha256": "sha256:e7e7ec2238f1f2058aded596a5abcaf1e93f9e3e698aa2a86919a14ae8370c12",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/requirements.v1.json",
+      "candidate_sha256": "sha256:eabcea026ab97c3e5ac159766585aa33aad6088830966d0f384b09a11ba29f48",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+      "candidate_sha256": "sha256:4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
+      "candidate_sha256": "sha256:5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-skill-authoring-standard/plan-state.v1.json",
+      "candidate_sha256": "sha256:5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+      "candidate_sha256": "sha256:af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/00-index.md",
+      "candidate_sha256": "sha256:83b2c82fb6a0bc9ed9e3a01c56ce4eb920baa26bdb3be0db63714f59fe8efc46",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/command-registry.v1.json",
+      "candidate_sha256": "sha256:4b8b91ed79531266ebfcecba7a1e868dcade5c4d5ab548f0472e922895b0d0a0",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:5a7a62f2d8bb51df9761b4d7f2f2bf3376d79d5ba184fdbacf901613a1de39dd",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/plan-state.v1.json",
+      "candidate_sha256": "sha256:efc945118340b888943472c80d2508ba9f93c9a243afce019771f108978be209",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/requirements.v1.json",
+      "candidate_sha256": "sha256:477a488e1cf83d5edf0c96f8ee0f74798e63d384985ac3b556d246f7683108f9",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/00-index.md",
+      "candidate_sha256": "sha256:816fe0b06d97fa5860cf00e8c19c7625a9f48d37eaf24a52ca48ab88e4c44d37",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "baseline_sha256": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049",
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "candidate_sha256": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/authorization-bootstrap-override-contract.v1.json",
+      "candidate_sha256": "sha256:a57a950afd21a4d16ead5d09e34ec71b1066199b7ed62b4ec538c01863d75af9",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "baseline_sha256": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b",
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "candidate_sha256": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/fixtures/current-package-exact-cover-red.v1.json",
+      "candidate_sha256": "sha256:1d0697da5691adc77bd05a24cdb7309ce7a98bd18639eaa2850eff3848446be4",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "baseline_sha256": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104",
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/child-repository-root-v2.json",
+      "candidate_sha256": "sha256:fb23cd0d4a04fc77530aa3db0d5247f246a4174ec0f6e43d2637b2166f5b77dc",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/child-repository-root.json",
+      "candidate_sha256": "sha256:c9be13a31180596c1fa0175fc2ae06915a4047678e38ab90597c8fac715fcafa",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/child-request-2.json",
+      "candidate_sha256": "sha256:71f92800c90f5a97382464623dcb3cbd548823b2c34978deb30ec8afecb5bee7",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/output2/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:4ac1688f7503dfee09a01ae730bd3d0e990cc231e7865fe0fbf1c7d3aa75152c",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/output2/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:33c186661b7993defee7bf15ecf51601325374767ffdf8eebc0fd115a573f33e",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/receipt.json",
+      "candidate_sha256": "sha256:78e17bd7e03b4d76eb4c955003e2a81ed9768f78cbfa822a3e30ba9c1a98073f",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/snapshot/source-manifest.v1.json",
+      "candidate_sha256": "sha256:3d9c1f7517a0d7f15615c35a79817a02de8ec379cbde22f5b6fe9bc0eee64b5b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/child-request.json",
+      "candidate_sha256": "sha256:66e684cf6c2848e385133f496b4b3424a9139da00f4d86d11852a8e3ef4858ee",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/output/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:85d9e21d4c62348e46f6d36f252a7f0be70abb18ca6636700a5e2f626ecf3417",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/output/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:b927fd61369e309b87a56f3453c9bc7a131fca8290f2892382b993ec7de3c434",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/receipt.json",
+      "candidate_sha256": "sha256:5a3d4a2e573664a50d84a6d9e3837e4f8d19996cf5d671187653dd443d582cd9",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/request.json",
+      "candidate_sha256": "sha256:c5e23dfe425ad6a41b727c4cb27e8311880bdbf102374c6128517c2939bef310",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/snapshot/source-manifest.v1.json",
+      "candidate_sha256": "sha256:24ec4fbffe784a22732c711e72319225eff9137c058bffb8da2fd1f438f359df",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o2/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:730e45c195274f48b2dd50501d34ea9d46ee2ad710cdbdf63bbaa27d68d2742d",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o2/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:b8c308b1a96110c5b323ed41dacd9794ae35c026d3a7818bdede4d6af358e8ec",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o3/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:8a5aec72c674738520313318ef4f3ba6ea230c600dd97c5fd0a0fa47c47ef517",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o3/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:8eecc787b6686a32f6315a45a289bee9f624eb81039874843b9cfc034cde0d4b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/receipt.json",
+      "candidate_sha256": "sha256:75ceec1187cbfa13eccc3756a35c9530bc3459db08c24dbdbc92dd17b2e2d365",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/request.json",
+      "candidate_sha256": "sha256:29a95aa89c9a2243d0ab0a7a920d015f261e08ae778f480cdce8482777757798",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/result-repository-root.json",
+      "candidate_sha256": "sha256:dcc6cc61a1fd6a54f50849832633ed7474570253b25761359574e07382067223",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/s/source-manifest.v1.json",
+      "candidate_sha256": "sha256:fb246ac23572c53fb17e8386fbb8d3215bbf37ff609aba2a49368665e05246ea",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/s3/source-manifest.v1.json",
+      "candidate_sha256": "sha256:d405b8837296b5b4f5c19b48af9d145248432eecae1de50329aa3926c68713b1",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "baseline_sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01",
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "candidate_sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "baseline_sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "candidate_sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/model-route-decision.v1.json",
+      "candidate_sha256": "sha256:f5dcac8fd0a2fd6ec09b9940e46e32c99afb39504c2bdd57903f88ba8b6ba6c6",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "baseline_sha256": "sha256:87ecf0c91498e980ec2b70c62ddaf86fafc4f062bb8ba59c69b019a5734c8353",
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "candidate_sha256": "sha256:4fa059ae7365c10e2cb700d2401e73c2b6b9bc869fb23d471f7a49b7ce1d46c0",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+      "candidate_sha256": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/source-freeze-manifest.v1.json",
+      "candidate_sha256": "sha256:627f25239239b6e1d851e4d17f8e247d8403400e356b115c5ca62d91d4413093",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/supervised-semantic-review-decision-contract.v1.json",
+      "candidate_sha256": "sha256:9df7de8e69c2e3a5825fdc821a4e881a341bef66f12f26df639494441491b748",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "baseline_sha256": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b",
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "candidate_sha256": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "baseline_sha256": "sha256:390d29c735f1195d6142b5b79c3cc45f7684ff1c7bf5beaccc445825cd79df96",
+      "candidate_path": "_bmad-output/q/arbe/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "candidate_sha256": "sha256:e290a35fad1c09b4ebee5706dc0739bb5f2b89b457b3fb0bffc598113d97bfa3",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/q/arbe/s/source-manifest.v1.json",
+      "candidate_sha256": "sha256:a7e8b6554403c222a529ec4bf7926cf0c6cabd72ecc2ed7e37080c06c7b8a354",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "_bmad-output/quick-dev-tdd-adapter/acceptance-review-bootstrap-efficiency/skill-input/request.json",
+      "candidate_sha256": "sha256:9e5ca8e5045524849a6ac11e81f1820680780a0cc29de6fb0062e12402537619",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/know37.txt",
+      "candidate_sha256": "sha256:305d94f588a0c2edd4835423cf2e233cf681c5b2491c926df8d32a64514d0d7b",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/know38.txt",
+      "candidate_sha256": "sha256:f7aebd7aa5544017e4feca375f7f2fb198fddfda5f50c2baab53dee0d21bd097",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "baseline_sha256": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "candidate_sha256": "sha256:2be58c3dcfc397993b43c3505fec19cd248f8fdb078d5337a351019c8cde2009",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "baseline_sha256": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "candidate_sha256": "sha256:093fadf40d4cd5d9e285bba2bcf17a110d3c1e382f40dc125a246eedb40fe716",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-authorization-receipt.v1.json",
+      "baseline_sha256": "sha256:9314dc6cd2a1b4bc11668ced50e502472adf4235e0b4fea829a4b4126e6b542a",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-authorization-receipt.v1.json",
+      "candidate_sha256": "sha256:54bf3b64364808d049b38b7016e097c5e2973c534629495e9ce1b2b621e71ce3",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "baseline_sha256": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:8b4da580d0285ac97e029a5fc37590e78f4bf3d59b933e1bde8f04952f5839d8",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/child-request.json",
+      "candidate_sha256": "sha256:a6de58606c4019f1082259efa4b2863a368abc9675566ef2eaf1fd0851940bc2",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/output/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:2f44f787d3af3c7afef58b89f4201d6eac21ee43b053f06796f8e5faf87d1e60",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/output/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:6a9bb8b14461d14f93e94e0b44158d37e1313aac532386c20add9c864fb97a87",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/receipt.json",
+      "candidate_sha256": "sha256:41dee1ba49960bf5dcba685adb4ffc1d4d64c7a4ef2d50df762fd30bb54d4f93",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/request.json",
+      "candidate_sha256": "sha256:c5e23dfe425ad6a41b727c4cb27e8311880bdbf102374c6128517c2939bef310",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/run-result-attempt-2.json",
+      "candidate_sha256": "sha256:9132384ee6919ed779b686e88b75438c33bbbc330b64c2abd67938e221a846f1",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/snapshot/source-manifest.v1.json",
+      "candidate_sha256": "sha256:6bfb441ee7571f9b5dff46085fb926a63926e0d5290e82189f4dd10a819aaaf0",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r3/child-request.json",
+      "candidate_sha256": "sha256:95b36d0318aa25f7192a3c3150e1645c918cdb4edfc3e4852aaaac3e53e0d06e",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r3/output/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:a10658dfbd36c7100b24dfba37125d83e16b323bf58cc620bfdf8c41468e0b83",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r3/output/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:5eecf4393e47db5ea9203a164656124576be1dd383af5dc6e219d8293361f451",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r3/receipt.json",
+      "candidate_sha256": "sha256:44de554ebdde331cdf0665c78a255034b82222f17fb8e8d381624d9f1b1ad703",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r3/snapshot/source-manifest.v1.json",
+      "candidate_sha256": "sha256:2e33195d84c41dc22f774ea0769874f2ac7357d1a7c327fde76aec650acad1ef",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r4/child-request.json",
+      "candidate_sha256": "sha256:16fbe22b23c89de8246693a6ebb73acb12775867597ac72f10eb02ef4a73bd7f",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r4/output/semantic-decision.v1.json",
+      "candidate_sha256": "sha256:b22ba3d4606a465b21865b749c5c60e055177b46de7204b2437bca4f7ab19ac8",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r4/output/skill-input-context.v1.json",
+      "candidate_sha256": "sha256:6c45be1d56565ba7b15b93c0ed792d31a61bcc52cace8117667080f8378a84a6",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r4/receipt.json",
+      "candidate_sha256": "sha256:753607cd644dbdc6a780ca1d9abb1bab9a7c9d03d310109ffb39301cc9f2ee5a",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r4/snapshot/source-manifest.v1.json",
+      "candidate_sha256": "sha256:6b483a070dfbcf42acd8cb8fb8badbec6106417746f35efeb0ee0228e8626d40",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "baseline_sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.history/08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0.v1.json",
+      "candidate_sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "baseline_sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "candidate_sha256": "sha256:f4f81299501e49c89709d51530efa64d449485590f6d6be5a5448a5f880e486b",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "baseline_sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.history/08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0.v1.json",
+      "candidate_sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "change_type": "copied",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "baseline_sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "candidate_sha256": "sha256:9b52ced172ca84973dd0456b23c78e83e5e69e37a56ab242e7d1697dbb68484a",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "baseline_sha256": "sha256:87ecf0c91498e980ec2b70c62ddaf86fafc4f062bb8ba59c69b019a5734c8353",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "candidate_sha256": "sha256:581a53e208489c93bb88ed7ae7e6c979d29f124daf90426adf0bb347bd0718be",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-2/source-freeze-manifest.v1.json",
+      "candidate_sha256": "sha256:592c74b2d9619f7004a6f07e039dadfda9e6341e6a622f4a04cbac8f493a4189",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-3/finding-set.json",
+      "candidate_sha256": "sha256:df18eb93ac3ef9ee773b12363fc9ca0b827fde581c35dcbdafa93bd103ffafb2",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-3/repair-closure.json",
+      "candidate_sha256": "sha256:15a3871bedcda650510645593b2049f15828435274674c51e9fa2f8ebe7cf7ec",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-3/repair-slices.json",
+      "candidate_sha256": "sha256:d5f608255b3a5a1885bce756c4668b50e90f357ad03be6a42397a280e974337d",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/stage_projection_builder.py",
+      "candidate_sha256": "sha256:e10cca6a230de593ae4992914f99b8fc5845ec3b7457751cc80f35bd3675a034",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "baseline_sha256": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "candidate_sha256": "sha256:3012585a283456a5de39988996267e45ba6bbf9c3f684b26e72da0f119dfe64b",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "baseline_sha256": "sha256:390d29c735f1195d6142b5b79c3cc45f7684ff1c7bf5beaccc445825cd79df96",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "candidate_sha256": "sha256:b9e0e2111dffe9b1a74a13c8e98567aae6ffcd1d795a4cba65fbd21700763bb6",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_slice.py",
+      "candidate_sha256": "sha256:d17cb16aaddbe9e1cb24c26f7bfd57d77e451a97878425637e71595d28379630",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "scripts/python/launch_skill_input_consumer.py",
+      "baseline_sha256": "sha256:3b5154ee82e0265a148837d7713fcc4a27cb5da07779dfc170ca49586bc7a7ec",
+      "candidate_path": "scripts/python/launch_skill_input_consumer.py",
+      "candidate_sha256": "sha256:14f724cecd32ac20aeed22d41ca53a248d094b052d37cccd59e5b47205de9184",
+      "change_type": "modified",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/acceptance_bootstrap_efficiency.py",
+      "candidate_sha256": "sha256:970d4479be80b245d9af5e7e1d444e95cbc00720b2494bd9f8b3624c74078089",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/canonical_evidence/__init__.py",
+      "candidate_sha256": "sha256:537270f979696b69f692aa20d0c1e0f212cb16bf5b70f2df0c503c4fdda0b9c2",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/canonical_evidence/core.py",
+      "candidate_sha256": "sha256:5f3db10ff8216f33370b48c2c12a03facc9835d8ea31da8715f0f17e92981194",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/canonical_evidence/tests/test_canonical_evidence.py",
+      "candidate_sha256": "sha256:17ab656f7e8723ae9a264f06e58c0d6d7ed9e8e7cf46886f375e6f88bdd8e31c",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/canonical_evidence/tests/test_consumer_migrations.py",
+      "candidate_sha256": "sha256:d33ef3b030686f27a2a625dedab7b03baecdd39f06b4b6a1f258ab84b06919a3",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/tests/test_acceptance_bootstrap_efficiency.py",
+      "candidate_sha256": "sha256:eebc6a5892fb575eadc91cdd91d263c54ea19aaffec66cc7796becef735b234e",
+      "change_type": "added",
+      "inclusion_reason": "immutable candidate commit diff",
+      "roles": [
+        "implementation"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete"
+}

@@ -255,6 +255,52 @@ class RunInputTests(unittest.TestCase):
                 acceptance_cli.prepare_run(str(target / "input.json"), str(target / "run.json"))
             self.assertFalse((target / "run.json").exists())
 
+    def test_commit_candidate_treats_an_unchanged_copy_source_as_unchanged(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository_root = Path(directory) / "repo"
+            repository_root.mkdir()
+            _git(repository_root, "init", "--quiet")
+            _git(repository_root, "config", "user.email", "test@example.invalid")
+            _git(repository_root, "config", "user.name", "Test")
+            source = repository_root / "src" / "source.py"
+            source.parent.mkdir()
+            source.write_bytes(b"value = 1\n")
+            _git(repository_root, "add", ".")
+            _git(repository_root, "commit", "--quiet", "-m", "baseline")
+            baseline_revision = _git(repository_root, "rev-parse", "HEAD")
+            copied = repository_root / "src" / "copied.py"
+            copied.write_bytes(source.read_bytes())
+            _git(repository_root, "add", ".")
+            _git(repository_root, "commit", "--quiet", "-m", "copy source")
+            candidate_revision = _git(repository_root, "rev-parse", "HEAD")
+
+            target = repository_root / "execution-plans" / "acceptance"
+            target.mkdir(parents=True)
+            copied_bytes = copied.read_bytes()
+            baseline = {
+                "schemaVersion": "acceptance-baseline-content-manifest.v1",
+                "status": "complete", "coverageGaps": [], "authorizes": [], "files": [],
+            }
+            candidate = {
+                "schemaVersion": "acceptance-candidate-content-manifest.v1",
+                "status": "complete", "coverageGaps": [], "authorizes": [],
+                "files": [{
+                    "change_type": "added", "roles": ["implementation"],
+                    "baseline_path": None, "baseline_sha256": None,
+                    "candidate_path": "src/copied.py", "candidate_sha256": _sha256(copied_bytes),
+                    "inclusion_reason": "candidate copy is an added path",
+                }],
+            }
+            value = _run_input(
+                target, baseline, candidate,
+                baseline_revision=baseline_revision, candidate_revision=candidate_revision,
+            )
+            _write_prepare_inputs(target, baseline, candidate, value)
+
+            result = acceptance_cli.prepare_run(str(target / "input.json"), str(target / "run.json"))
+
+            self.assertEqual(candidate_revision, result["candidateCustody"]["candidateResolvedCommit"])
+
     def test_prepare_commit_binds_deletion_only_candidate_and_rejects_missing_tombstone(self) -> None:
         from acceptance_core import InputError
 
@@ -574,7 +620,7 @@ class RunInputTests(unittest.TestCase):
         with self.assertRaisesRegex(InputError, "sha256 hash"):
             validate_candidate_manifest(invalid, baseline)
 
-    def test_rename_and_copy_changed_paths_include_both_git_identities(self) -> None:
+    def test_rename_includes_both_identities_but_copy_changes_only_the_target_path(self) -> None:
         from acceptance_core import _git_changed_paths, candidate_changed_paths
 
         for change_type in ("renamed", "copied"):
@@ -603,10 +649,9 @@ class RunInputTests(unittest.TestCase):
                         "candidate_path": "target.txt",
                     }]
                 }
-                self.assertEqual(
-                    _git_changed_paths(root, baseline_commit, candidate_commit),
-                    set(candidate_changed_paths(manifest)),
-                )
+                expected = {"source.txt", "target.txt"} if change_type == "renamed" else {"target.txt"}
+                self.assertEqual(expected, _git_changed_paths(root, baseline_commit, candidate_commit))
+                self.assertEqual(expected, set(candidate_changed_paths(manifest)))
 
     def test_candidate_manifest_rejects_unknown_top_level_fields(self) -> None:
         from acceptance_core import InputError, validate_candidate_manifest

@@ -1,0 +1,23 @@
+{
+  "schema_version": "skill-semantic-decision.v1",
+  "producer_role": "controlled-semantic-skill-input-consumer",
+  "execution_identity": "sha256:05109211b8b927f1e3b5a32e0b4be2a1b19354e29035921ad3aa9b9d4df5fcdb",
+  "source_manifest_hash": "sha256:dfd7c4f8183f79f47e701d001545485182f9ee77fd11d74290321ae1ab816de5",
+  "context_artifact_hash": "sha256:b9022744429fd3ebdc859adeb9a76d7b62fc3b1a291933b2277a05c548b77e71",
+  "source_statuses": {
+    "_bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-15/ARCHITECTURE-SPINE.md": "accepted",
+    "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/.memlog.md": "accepted",
+    "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/SPEC.md": "accepted",
+    "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/architecture-diagrams.md": "accepted",
+    "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-and-lifecycle.md": "accepted",
+    "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-projection-and-segmentation.md": "accepted",
+    "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/execution-and-recovery.md": "accepted",
+    "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/glossary.md": "accepted",
+    "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/verification-and-rollout.md": "accepted"
+  },
+  "status": "accepted",
+  "rationale": "All manifest sources have complete frozen page coverage. The context contains bounded redacted semantic summaries only.",
+  "redaction_status": "complete",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "authorizes": []
+}

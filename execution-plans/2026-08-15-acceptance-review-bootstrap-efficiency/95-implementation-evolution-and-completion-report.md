@@ -41,3 +41,11 @@ commit, release, or archive.
 - S6 preserves the rollout RED as a `prior-red-successor`; its GREEN validates immutable historical failure records, zero reviewer calls for deterministic failure, false-authorization rejection, telemetry shape, and a closed default switch before all rollout gates pass.
 - `terminal-full` passed with all seven registered GREEN behavior programs. Evidence: `logs/tdd-adapter/acceptance-review-bootstrap-efficiency/terminal/terminal-full-20260816T0714.log` (`sha256:3cca5603253fe1588a364913d8a4488d022546c6ae53894ea6edd4c457728010`).
 - Quick Dev published the hash-bound `implementation-complete` receipt after the terminal runner passed all seven registered GREEN programs. The receipt is under `logs/tdd-adapter/acceptance-review-bootstrap-efficiency/terminal/` and explicitly excludes `acceptance-passed`, commit, release, and archive. This report remains explanatory and non-authorizing.
+
+## 2026-08-16 - Current Candidate Evidence Refresh
+
+- Candidate commit: `78ded97ad5e741d268c8e269832e658cb38d584f`.
+- `bootstrap-runtime-green` was rerun against the current Bootstrap lease integration; all 9 tests passed.
+- `terminal-full` was rerun against the current candidate and all seven registered GREEN behavior programs exited zero. Evidence log: `logs/tdd-adapter/acceptance-review-bootstrap-efficiency/terminal/terminal-full-20260816T0945-78ded97a.log` (`sha256:3111f91aba42c9602d509937c8bee0ec6b4b74519678743a81e0357e26653dea`).
+- Quick Dev published the successor receipt at `logs/tdd-adapter/acceptance-review-bootstrap-efficiency/terminal/RUN-20260816T094500-000000Z/implementation-complete-result.json`. It authorizes only `implementation-complete`; Acceptance remains the sole owner of `acceptance-passed`.
+- The earlier 07:14 terminal log and receipt remain historical evidence and are not used for the current candidate.
