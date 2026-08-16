@@ -1,4 +1,6 @@
 import importlib.util
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 import unittest
 
@@ -8,6 +10,8 @@ MODULE_PATH = ROOT / ".agents/skills/run-phase-bootstrap-review/scripts/runtime_
 SPEC = importlib.util.spec_from_file_location("runtime_policy", MODULE_PATH)
 RUNTIME = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(RUNTIME)
+sys.path.insert(0, str(MODULE_PATH.parent))
+import bootstrap_review
 
 
 IDENTITY = {"candidate": "sha256:candidate", "closure": "sha256:closure", "segment": "sha256:segment", "attempt": "attempt-1"}
@@ -51,8 +55,34 @@ class RuntimePolicyEventsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             RUNTIME.validate_runtime_policy({"schema_version": "bootstrap-runtime-policy.v1", "authorizes": []})
 
+    def test_bootstrap_event_adapter_expires_liveness_without_expiring_progress(self):
+        identity = {**IDENTITY, "attempt": "attempt-1"}
+        events = [
+            {"eventType": "attempt-started", "attemptId": "attempt-1", "timestamp": _iso(100), "pid": 7, "processIdentity": "a", "writeSet": ["x"]},
+            {"eventType": "attempt-heartbeat", "attemptId": "attempt-1", "timestamp": _iso(100)},
+            {"eventType": "attempt-effective-progress", "attemptId": "attempt-1", "timestamp": _iso(155), "effectiveProgressIdentity": identity, "effectiveProgress": {**identity, "kind": "evidence_increment", "evidence_hash": "sha256:new"}},
+        ]
+        lease = bootstrap_review.reconcile_runtime_leases(events, policy=POLICY, now=161, live_processes={7: "a"})
+        self.assertEqual([], lease["occupied_write_set"])
+        self.assertEqual(["attempt-1"], lease["stale_attempts"])
+
+    def test_bootstrap_event_adapter_expires_progress_without_expiring_liveness(self):
+        identity = {**IDENTITY, "attempt": "attempt-1"}
+        events = [
+            {"eventType": "attempt-started", "attemptId": "attempt-1", "timestamp": _iso(100), "pid": 7, "processIdentity": "a", "writeSet": ["x"]},
+            {"eventType": "attempt-effective-progress", "attemptId": "attempt-1", "timestamp": _iso(100), "effectiveProgressIdentity": identity, "effectiveProgress": {**identity, "kind": "evidence_increment", "evidence_hash": "sha256:new"}},
+            {"eventType": "attempt-heartbeat", "attemptId": "attempt-1", "timestamp": _iso(155)},
+        ]
+        lease = bootstrap_review.reconcile_runtime_leases(events, policy=POLICY, now=161, live_processes={7: "a"})
+        self.assertEqual([], lease["occupied_write_set"])
+        self.assertEqual(["attempt-1"], lease["stale_attempts"])
+
     def test_retry_is_transport_only_bounded_and_targets_failed_segment(self):
         self.assertEqual("retry", RUNTIME.retry_decision(POLICY, "transport", 1, "segment-2", {"segment-2"}))
         self.assertEqual("blocked", RUNTIME.retry_decision(POLICY, "transport", 2, "segment-2", {"segment-2"}))
         self.assertEqual("blocked", RUNTIME.retry_decision(POLICY, "semantic", 1, "segment-2", {"segment-2"}))
         self.assertEqual("blocked", RUNTIME.retry_decision(POLICY, "transport", 1, "segment-1", {"segment-2"}))
+
+
+def _iso(seconds: int) -> str:
+    return datetime.fromtimestamp(seconds, timezone.utc).isoformat().replace("+00:00", "Z")

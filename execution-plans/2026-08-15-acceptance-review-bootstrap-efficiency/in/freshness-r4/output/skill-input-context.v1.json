@@ -1,0 +1,33 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:6b483a070dfbcf42acd8cb8fb8badbec6106417746f35efeb0ee0228e8626d40",
+  "sections": [
+    {
+      "title": "Purpose",
+      "content": "Acceptance control plane replaces whole-directory review with immutable changed-set and complete Consumer Closure evidence, deterministic checks, typed routing, isolated Bootstrap review, and Acceptance-owned finalization."
+    },
+    {
+      "title": "Authority",
+      "content": "VDD owns draft and plan-ready; maintainer owns implementation-authorized and non-authorizing supervised decisions; Quick Dev owns implementation-complete; Acceptance alone owns acceptance-passed. Bootstrap evidence never authorizes lifecycle state."
+    },
+    {
+      "title": "Admission And Routing",
+      "content": "Acceptance requires a current identity-bound implementation-complete handoff, resolved immutable baseline, frozen candidate, manifest, closure, and required-check evidence. Deterministic failure launches no reviewers. Routes are deterministic_only, focused repair, full conformance, or manual pause; registered risks force full or pause."
+    },
+    {
+      "title": "Review Execution",
+      "content": "Complete Bootstrap review uses isolated Blind Hunter, Edge Case Hunter, and Acceptance Auditor roles over frozen closure identities. Required checks are real contract-projected executions. Accepted P0/P1 findings require an independent verifier under existing policy."
+    },
+    {
+      "title": "Authority Delivery",
+      "content": "In-budget selected authority is delivered in full, continuing Partial reads to Complete. Over-budget content requires parent-owned hash-bound inclusive Range Projection. Segment descriptors, snapshots, access proofs, receipts, retry, and folds share stable canonical identity."
+    },
+    {
+      "title": "Recovery And Verification",
+      "content": "Append-only Process Events distinguish liveness from effective progress. Heartbeats and output do not refresh no-progress. Leases are derived from process identity, liveness, progress, and terminal state; recovery is bounded, identity-bound, and non-authorizing. M0 through M2 require semantic parity and 8-13-scale regression before replacing whole-directory defaults."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T08:44:33.985462Z"
+}

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -117,7 +118,73 @@ def reconcile_leases(
             stale.add(attempt)
             continue
         occupied.update(write_set)
-    return {"occupied_write_set": sorted(occupied), "stale_attempts": sorted(stale)}
+    return {
+        "occupied_write_set": sorted(occupied),
+        "occupied_attempts": sorted(
+            attempt for attempt, state in active.items()
+            if attempt not in stale
+            and live_processes.get(state["event"]["process"]["pid"]) == state["event"]["process"]["created"]
+            and now - state["liveness_at"] < validated["liveness_seconds"]
+            and now - state["progress_at"] < validated["effective_progress_seconds"]
+        ),
+        "stale_attempts": sorted(stale),
+    }
+
+
+def _iso_epoch(value: Any) -> int:
+    if not isinstance(value, str):
+        raise ValueError("Bootstrap process event timestamp is invalid")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("Bootstrap process event timestamp is invalid") from exc
+    if parsed.tzinfo is None:
+        raise ValueError("Bootstrap process event timestamp must be timezone-aware")
+    return int(parsed.astimezone(timezone.utc).timestamp())
+
+
+def reconcile_bootstrap_process_events(
+    events: list[dict[str, Any]],
+    live_processes: dict[int, str],
+    *,
+    now: int,
+    policy: dict[str, Any],
+) -> dict[str, list[str]]:
+    """Adapt the canonical Bootstrap process-event schema to lease reconciliation."""
+    adapted: list[dict[str, Any]] = []
+    terminal_types = {"attempt-completed", "attempt-failed", "attempt-rejected", "attempt-stale", "attempt-abandoned"}
+    for event in events:
+        if not isinstance(event, dict):
+            raise ValueError("Bootstrap process event is invalid")
+        event_type = event.get("eventType")
+        attempt = event.get("attemptId")
+        if not isinstance(attempt, str) or not attempt:
+            continue
+        timestamp = _iso_epoch(event.get("timestamp"))
+        if event_type == "attempt-started":
+            process = {"pid": event.get("pid"), "created": event.get("processIdentity")}
+            adapted.append({
+                "kind": "attempt_started", "attempt": attempt, "timestamp": timestamp,
+                "write_set": event.get("writeSet", []), "process": process,
+            })
+        elif event_type == "attempt-heartbeat":
+            adapted.append({"kind": "heartbeat", "attempt": attempt, "timestamp": timestamp})
+        elif event_type == "attempt-effective-progress":
+            identity = event.get("effectiveProgressIdentity")
+            progress = event.get("effectiveProgress")
+            if not isinstance(identity, dict) or not isinstance(progress, dict):
+                raise ValueError("Bootstrap Effective Progress event is incomplete")
+            adapted.append({
+                "kind": "effective_progress", "attempt": attempt, "timestamp": timestamp,
+                "identity": identity, "progress": progress,
+            })
+        elif event_type in terminal_types:
+            adapted.append({
+                "kind": "attempt_terminal", "attempt": attempt, "timestamp": timestamp,
+                "process": {"pid": event.get("pid"), "created": event.get("processIdentity")},
+                "write_set": event.get("writeSet", []),
+            })
+    return reconcile_leases(adapted, live_processes, now=now, policy=policy)
 
 
 def retry_decision(policy: dict[str, Any], family: str, prior_attempts: int, segment: str, failed_segments: set[str]) -> str:

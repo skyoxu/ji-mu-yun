@@ -53,7 +53,10 @@ from projection_and_segmentation import (  # noqa: E402
     build_range_projection,
     build_segment_descriptor,
 )
-from runtime_policy import load_runtime_policy  # noqa: E402
+from runtime_policy import (  # noqa: E402
+    load_runtime_policy,
+    reconcile_bootstrap_process_events,
+)
 
 
 CONTROL_PLANE_REVISION = "bootstrap-control-plane.v2"
@@ -6019,6 +6022,32 @@ def active_attempt_no_progress_timeout(
     return None
 
 
+def reconcile_runtime_leases(
+    events: list[dict[str, Any]],
+    *,
+    policy: dict[str, Any] | None = None,
+    now: int | None = None,
+    live_processes: dict[int, str] | None = None,
+) -> dict[str, list[str]]:
+    """Return lease truth from real Bootstrap process events and runtime policy."""
+    resolved_policy = RUNTIME_POLICY if policy is None else policy
+    resolved_now = int(datetime.now(timezone.utc).timestamp()) if now is None else now
+    if live_processes is None:
+        pids = {
+            event.get("pid") for event in events
+            if event.get("eventType") == "attempt-started" and isinstance(event.get("pid"), int)
+        }
+        live_processes = {
+            pid: identity
+            for pid in pids
+            if isinstance(pid, int)
+            and (identity := process_creation_identity(pid)) is not None
+        }
+    return reconcile_bootstrap_process_events(
+        events, live_processes, now=resolved_now, policy=resolved_policy
+    )
+
+
 def command_process_lease_locked(args: argparse.Namespace, run_dir: Path, manifest: dict[str, Any]) -> int:
     state = load_process_leases(run_dir, manifest)
     changed = False
@@ -7155,10 +7184,35 @@ def reserve_codex_attempt(
             for name in ("review-gate-state.json", "review-gate-result.json")
         ):
             raise BootstrapError(f"Discovery role {role} cannot run after gate output exists")
-        for active in active_attempts(events).values():
+        runtime_leases = reconcile_runtime_leases(events)
+        active_by_attempt = active_attempts(events)
+        stale_attempts = set(runtime_leases["stale_attempts"]).intersection(active_by_attempt)
+        for stale_attempt in sorted(stale_attempts):
+            active = active_by_attempt[stale_attempt]
+            append_process_event(
+                run_dir,
+                {
+                    "eventType": "attempt-stale",
+                    "timestamp": utc_now(),
+                    "attemptId": stale_attempt,
+                    "operationId": active.get("operationId"),
+                    "role": active.get("role"),
+                    "pid": active.get("pid"),
+                    "processIdentity": active.get("processIdentity"),
+                    "writeSet": active.get("writeSet", []),
+                    "note": "Runtime policy reconciliation found a non-occupied lease",
+                },
+            )
+        if stale_attempts:
+            rebuild_process_leases_from_events(run_dir, manifest)
+            events = read_process_events(run_dir)
+            runtime_leases = reconcile_runtime_leases(events)
+            active_by_attempt = active_attempts(events)
+        for attempt_id_in_use in runtime_leases["occupied_attempts"]:
+            active = active_by_attempt.get(attempt_id_in_use, {})
             if set(formal_write_set).intersection(active.get("writeSet", [])):
                 raise BootstrapError(
-                    f"Concurrent write-set overlap with attempt {active['attemptId']}"
+                    f"Concurrent write-set overlap with attempt {attempt_id_in_use}"
                 )
         append_process_event(
             run_dir,
