@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "contractHash": "sha256:8b4da580d0285ac97e029a5fc37590e78f4bf3d59b933e1bde8f04952f5839d8",
+  "createdUtc": "2026-08-16T13:28:35.670165Z",
+  "knowledgeContextHash": "sha256:f4a99c285d3e4f967219830524db31e251855bb90eb1c40a96d8558df0429886",
+  "runId": "acceptance-fce308b2eae233cb",
+  "runInputHash": "sha256:2c218fa93186c06dd998945345643ad29f0edab29db22155ca797cd4477602ae",
+  "schemaVersion": "acceptance-execution-run.v1",
+  "skillInputBindingHash": "sha256:f131976c425374983bc2291cd29e821f8d96d11e669491775387f46da575ab5a",
+  "skillInputContextHash": "sha256:497a22fb6353bb1473d0c88b0551ccf6a493ef02102f1871bba4dfe76fb5b947",
+  "skillInputContextPath": "skill-input/skill-input-context.v1.json",
+  "skillInputContextSourcePath": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/acceptance-r16/output/skill-input-context.v1.json"
+}

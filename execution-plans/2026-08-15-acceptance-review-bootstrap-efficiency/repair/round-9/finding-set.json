@@ -1,0 +1,49 @@
+{
+  "schema_version": "vdd-repair-finding-set.v1",
+  "repair_id": "acceptance-review-bootstrap-efficiency-default-deterministic-r9",
+  "predecessor": {
+    "path": "repair/round-8/source-freeze-manifest.v1.json",
+    "sha256": "sha256:11bc6601a743598cf5c9110c8fe5892d8e35af1da5c5773dd336d6ad95840a90"
+  },
+  "findings": [
+    {
+      "id": "ARBE-POLICY-001",
+      "severity": "P1",
+      "summary": "The frozen route matrix still infers Bootstrap from mode, risk, and control-plane changes, contradicting the maintainer decision that deterministic-only is the default acceptance route.",
+      "allowed_repair_scope": [
+        "requirements-and-acceptance.md",
+        "00-index.md",
+        "implementation-contract.v1.json",
+        "command-registry.v1.json",
+        ".agents/skills/run-refactor-implementation-acceptance/**",
+        "scripts/toolchain/tests/test_acceptance_bootstrap_efficiency.py",
+        "repair/round-9/**"
+      ]
+    },
+    {
+      "id": "ARBE-EVIDENCE-002",
+      "severity": "P1",
+      "summary": "Deterministic evidence records do not carry a validated passed or failed result, preventing the default route and finalization from proving current machine success.",
+      "allowed_repair_scope": [
+        "implementation-contract.v1.json",
+        "command-registry.v1.json",
+        ".agents/skills/run-refactor-implementation-acceptance/**",
+        "repair/round-9/**"
+      ]
+    },
+    {
+      "id": "ARBE-REQUEST-003",
+      "severity": "P1",
+      "summary": "An optional Bootstrap request needs Acceptance-owned command-input admission so policy or internal callers cannot synthesize an automatic route upgrade.",
+      "allowed_repair_scope": [
+        "requirements-and-acceptance.md",
+        "00-index.md",
+        "implementation-contract.v1.json",
+        "command-registry.v1.json",
+        ".agents/skills/run-refactor-implementation-acceptance/**",
+        "repair/round-9/**"
+      ]
+    }
+  ],
+  "authorizes": []
+}

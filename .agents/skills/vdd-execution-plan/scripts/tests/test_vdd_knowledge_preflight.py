@@ -86,7 +86,9 @@ class VddKnowledgePreflightTests(unittest.TestCase):
                 "--skill-input-receipt", str(artifacts["receipt"]),
                 "--skill-input-contract", str(artifacts["contract"]),
                 "--skill-input-operation", "create",
-            ]), mock.patch.object(module, "validate_context", return_value=None), mock.patch("sys.stdout", output):
+            ]), mock.patch.object(module, "validate_context", return_value=None), \
+                 mock.patch.object(module, "validate_worktree_sources", return_value=None), \
+                 mock.patch("sys.stdout", output):
                 self.assertEqual(0, module.main())
             result = json.loads(output.getvalue())
             self.assertEqual(artifacts["context"].resolve().relative_to(root.resolve()).as_posix(), result["skill_input"]["context_artifact"])
@@ -193,6 +195,34 @@ class VddKnowledgePreflightTests(unittest.TestCase):
         ))
         self.assertEqual("ready", result["status"])
 
+    def test_rejected_candidate_drift_does_not_block_preflight(self) -> None:
+        module = load_preflight()
+        snapshot = {"ref": "refs/heads/main", "commit": "a" * 40}
+        payload = bound_payload(module, {
+            "required_modules": ["repository-rules"],
+            "locator_request": {"request_id": "request-1", "snapshot": snapshot},
+            "locator_result": {"request_id": "request-1", "snapshot": snapshot, "status": "matched", "candidates": [
+                {"path": "AGENTS.md", "source_sha256": "b" * 64},
+                {"path": "docs/stale.md", "source_sha256": "c" * 64},
+            ]},
+            "decisions": [
+                {"owner": "adapter", "decision": "accepted", "satisfies": ["repository-rules"], "candidate": {"path": "AGENTS.md", "source_sha256": "b" * 64}},
+                {"owner": "adapter", "decision": "rejected", "satisfies": [], "candidate": {"path": "docs/stale.md", "source_sha256": "c" * 64}},
+            ],
+        })
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            captured = []
+            def validate_worktree_sources(projected, _root):
+                captured.extend(projected["locator_result"]["candidates"])
+                return None
+            with mock.patch.object(module, "validate_context", return_value=None) as validate, \
+                 mock.patch.object(module, "validate_worktree_sources", side_effect=validate_worktree_sources):
+                result = module.evaluate_preflight(payload, repository_root=root)
+        self.assertEqual("ready", result["status"])
+        self.assertFalse(validate.call_args.kwargs["verify_sources"])
+        self.assertEqual(["AGENTS.md"], [candidate["path"] for candidate in captured])
+
     def test_snapshot_mismatch_blocks_preflight(self) -> None:
         module = load_preflight()
         result = module.evaluate_preflight(bound_payload(module,
@@ -267,6 +297,8 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             }
             validator = SimpleNamespace(
                 validate_context=lambda *_args, **_kwargs: None,
+                validate_worktree_sources=lambda *_args, **_kwargs: None,
+                validate_catalog_freshness=lambda _root: None,
                 canonical_hash=lambda value: "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
             )
             with mock.patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=json.dumps(result), stderr="")), \
@@ -301,6 +333,7 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             }
             validator = SimpleNamespace(
                 validate_context=lambda *_args, **_kwargs: "required_modules_unsatisfied",
+                validate_catalog_freshness=lambda _root: None,
                 canonical_hash=lambda value: "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
             )
             with mock.patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=json.dumps(result), stderr="")), mock.patch.object(module, "_validator", return_value=validator), mock.patch.object(sys, "argv", ["prepare", "--repository-root", str(root), "--request-id", "request-1", "--query", "rules", "--required-module", "repository-rules", "--target-plan", "execution-plans/plan", "--output", str(output)]):

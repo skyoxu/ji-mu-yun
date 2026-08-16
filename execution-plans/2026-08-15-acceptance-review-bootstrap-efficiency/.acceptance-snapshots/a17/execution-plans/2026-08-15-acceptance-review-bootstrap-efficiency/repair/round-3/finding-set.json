@@ -1,0 +1,22 @@
+{
+  "schema_version": "vdd-repair-finding-set.v1",
+  "repair_id": "acceptance-review-bootstrap-efficiency-tdd-successor-r3",
+  "predecessor": {
+    "path": "logs/tdd-adapter/acceptance-review-bootstrap-efficiency/S3/RUN-20260816T062021-767005Z/observations/red-observed.json",
+    "sha256": "sha256:1932b7da3510aed0cd39892fc67aa3e0325c17da4dfcca822b5f27d3913e4a48"
+  },
+  "findings": [
+    {
+      "id": "VDD-TDD-001",
+      "severity": "P1",
+      "summary": "S3 acquired its behavior test entry after the historical RED; the successor must preserve that RED by reference instead of replaying or copying it.",
+      "allowed_repair_scope": [
+        "implementation-contract.v1.json",
+        ".agents/skills/quick-dev-tdd-adapter/**",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_pipeline.py",
+        "repair/round-3/**"
+      ]
+    }
+  ],
+  "authorizes": []
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:753c3a24fa81ce4dc9b92b1baaf8557301dd670b8de496c9121e2f7a4752e078",
+  "sections": [
+    {
+      "title": "Control-plane architecture",
+      "content": "Acceptance uses immutable, identity-bound artifacts: freeze candidate and baseline, create changed-set and complete Consumer Closure, run real required checks, choose typed mode and route, then import matching evidence before Acceptance alone publishes acceptance-passed. Evidence producers remain non-authorizing."
+    },
+    {
+      "title": "Authority and routing",
+      "content": "Lifecycle ownership is VDD for draft/plan-ready, maintainer for implementation-authorized, Quick Dev adapters for implementation-complete, and Acceptance for acceptance-passed. Deterministic failures launch no reviewers. Focused/full routes require Bootstrap; triggers upgrade to full or manual pause; supervised deterministic-only requires a current maintainer decision."
+    },
+    {
+      "title": "Review isolation and recovery",
+      "content": "Bootstrap Complete Review retains three isolated roles. Each child uses an immutable Segment Descriptor, segment-only frozen snapshot, and inherited access proof. Process events govern liveness, validated Effective Progress, lease reconciliation, bounded retry, and non-authorizing recovery; heartbeats and prose are not progress or authority."
+    },
+    {
+      "title": "Projection, verification, and rollout",
+      "content": "Selected authority is delivered whole within budget or by controller-owned hash-bound Range Projection. Required checks bind real execution and exact reuse inputs. M0-M2 delivery includes recovery invariants, Acceptance strategy, semantic corpus, 8-13 scale regression, cost metrics, and no false authorization."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T10:54:45.694853Z"
+}

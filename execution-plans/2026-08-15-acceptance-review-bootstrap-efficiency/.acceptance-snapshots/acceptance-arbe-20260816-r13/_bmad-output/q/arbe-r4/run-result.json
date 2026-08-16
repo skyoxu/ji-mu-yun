@@ -1,0 +1,7 @@
+{
+  "status": "complete",
+  "context_artifact": "C:/jimuyun/_bmad-output/q/arbe-r4/o/skill-input-context.v1.json",
+  "semantic_decision": "C:/jimuyun/_bmad-output/q/arbe-r4/o/semantic-decision.v1.json",
+  "source_manifest_hash": "sha256:c4a5911d38ffb0fdd435ded8be1e51e6c6d6b7aafab336c4e311d52029dafa9a",
+  "snapshot_read_coverage": "C:/jimuyun/_bmad-output/q/arbe-r4/o/snapshot-read-coverage.v1.json"
+}

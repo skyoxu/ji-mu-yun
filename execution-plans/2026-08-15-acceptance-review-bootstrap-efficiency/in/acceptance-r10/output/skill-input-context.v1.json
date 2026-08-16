@@ -1,0 +1,17 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:247f348eb00b8a6f78422814b37cb619c2abeb9b561909c12bd6ce8b3e9eb5c1",
+  "sections": [
+    {
+      "title": "Command Registry",
+      "content": "Defines red/green validation commands for canonical evidence, migration, runtime policy, acceptance pipeline, projection/segmentation, semantic import, rollout regression, and terminal validation. Commands are non-shell Python test invocations with bounded timeouts and mapped ARBE acceptance IDs. Terminal coverage requires all owner-owned green programs; authorizes is empty."
+    },
+    {
+      "title": "Requirements And Acceptance",
+      "content": "Defines ARBE-001 through ARBE-022 across canonical evidence, migration, admission and closure, route and review policy, segmentation, runtime retry controls, Bootstrap import, historical evidence, telemetry, and acceptance modes. Observable criteria require identity-bound evidence, fail-closed validation, no authority from advisory content, preserved historical failures, mandatory-route protections, and Acceptance-only lifecycle publication."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T10:40:17.659403Z"
+}

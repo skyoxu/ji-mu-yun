@@ -1,0 +1,18 @@
+{
+  "plan_directory": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+  "target_files": [
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/source-freeze-manifest.v1.json",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/authorization-bootstrap-override-contract.v1.json",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/supervised-semantic-review-decision-contract.v1.json",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/model-route-decision.v1.json",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md"
+  ],
+  "operation": "execute",
+  "lane": "strict_tdd_plan"
+}

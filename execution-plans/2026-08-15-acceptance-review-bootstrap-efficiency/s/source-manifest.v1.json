@@ -1,0 +1,198 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "sources": [
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+      "sha256": "sha256:98d29dc34a6fba2c2806abe9f7cb47f1a76d1fb704dbb725b365a8078dde11d3",
+      "semantic_snapshot_sha256": "sha256:98d29dc34a6fba2c2806abe9f7cb47f1a76d1fb704dbb725b365a8078dde11d3",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "sha256:4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
+      "semantic_snapshot_sha256": "sha256:4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-15/ARCHITECTURE-SPINE.md",
+      "sha256": "sha256:56e1718d3a868af862395803e927703f6081802dde42d3e39e3eb3652d6260dd",
+      "semantic_snapshot_sha256": "sha256:56e1718d3a868af862395803e927703f6081802dde42d3e39e3eb3652d6260dd",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-14/addendum.md",
+      "sha256": "sha256:3e79b2f4b2687a5e0024e7f263daaba99fd1cc46956b2d1d117cf85b7abcb3c1",
+      "semantic_snapshot_sha256": "sha256:3e79b2f4b2687a5e0024e7f263daaba99fd1cc46956b2d1d117cf85b7abcb3c1",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-14/prd.md",
+      "sha256": "sha256:5bfacd696f74d89823026801f0e1e5e64872da223dceb749a4a134c7d85b1985",
+      "semantic_snapshot_sha256": "sha256:5bfacd696f74d89823026801f0e1e5e64872da223dceb749a4a134c7d85b1985",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-acceptance-review-bootstrap-efficiency.json",
+      "sha256": "sha256:0aa51999ef3def06b87f4fae8833df396dc2fd1f950cf065d8a76204ac9ab895",
+      "semantic_snapshot_sha256": "sha256:0aa51999ef3def06b87f4fae8833df396dc2fd1f950cf065d8a76204ac9ab895",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/canonical-spec-package-selections/sha256-d5417f8767a7a8ba52998d4ac7e79b77a6d00a104fe280c1bb8b70ba5d38622b.json",
+      "sha256": "sha256:96dcf3b0a3e29dc02549ee3e0fd335113f2e306f9f205c4982314948427d8d49",
+      "semantic_snapshot_sha256": "sha256:96dcf3b0a3e29dc02549ee3e0fd335113f2e306f9f205c4982314948427d8d49",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/SPEC.md",
+      "sha256": "sha256:0d0ca945e96f0905d792779e22fcb3d49a211992ce0167a523d2a4e2b66e5120",
+      "semantic_snapshot_sha256": "sha256:0d0ca945e96f0905d792779e22fcb3d49a211992ce0167a523d2a4e2b66e5120",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/architecture-diagrams.md",
+      "sha256": "sha256:35f8ad8f6ae1632c4c528f92cb9cb10802f6451355349475f854f2b488d979b1",
+      "semantic_snapshot_sha256": "sha256:35f8ad8f6ae1632c4c528f92cb9cb10802f6451355349475f854f2b488d979b1",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-and-lifecycle.md",
+      "sha256": "sha256:0cf9506528af0de30b784f9c235a8e597a3eb9557332226ecb7d813779d7775c",
+      "semantic_snapshot_sha256": "sha256:0cf9506528af0de30b784f9c235a8e597a3eb9557332226ecb7d813779d7775c",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-projection-and-segmentation.md",
+      "sha256": "sha256:ad62a890c28468f63f0cf7b586fd322e6d9414418c79d849a06e0fafb4591d71",
+      "semantic_snapshot_sha256": "sha256:ad62a890c28468f63f0cf7b586fd322e6d9414418c79d849a06e0fafb4591d71",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/execution-and-recovery.md",
+      "sha256": "sha256:77e3a4b4e1b548bc1836ed9955c325513d80b08fd83cafdef69cedc27bdfbc51",
+      "semantic_snapshot_sha256": "sha256:77e3a4b4e1b548bc1836ed9955c325513d80b08fd83cafdef69cedc27bdfbc51",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/glossary.md",
+      "sha256": "sha256:fc10400d62c91e77ee37eac712c194538f03d6b44e7364f28f56d5410fc56dab",
+      "semantic_snapshot_sha256": "sha256:fc10400d62c91e77ee37eac712c194538f03d6b44e7364f28f56d5410fc56dab",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/verification-and-rollout.md",
+      "sha256": "sha256:3403b5ad81861c1ca6e513a652aa8449a82939fe68605d9814727ae7c45072bb",
+      "semantic_snapshot_sha256": "sha256:3403b5ad81861c1ca6e513a652aa8449a82939fe68605d9814727ae7c45072bb",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/00-index.md",
+      "sha256": "sha256:ccd50c498ff160c29372c476ae2bcc632f3df04e6522391cc5d227b5b720eb51",
+      "semantic_snapshot_sha256": "sha256:ccd50c498ff160c29372c476ae2bcc632f3df04e6522391cc5d227b5b720eb51",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "sha256": "sha256:76bc0f302923bf157d7f2ab91b3ae72b4b512a0f70d134b14b0e6ebcb7885574",
+      "semantic_snapshot_sha256": "sha256:76bc0f302923bf157d7f2ab91b3ae72b4b512a0f70d134b14b0e6ebcb7885574",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "sha256": "sha256:67a47d805c2e69912d0feb6c860b7c51a7eb96baf240f0c40481680b97a6db7f",
+      "semantic_snapshot_sha256": "sha256:67a47d805c2e69912d0feb6c860b7c51a7eb96baf240f0c40481680b97a6db7f",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "sha256": "sha256:6f4df0a89e853ce20e73d8d83d7c95c0eb37e535cddb2d72b17001fff078ddd7",
+      "semantic_snapshot_sha256": "sha256:6f4df0a89e853ce20e73d8d83d7c95c0eb37e535cddb2d72b17001fff078ddd7",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "sha256": "sha256:9cbf01cafb24af078987fb7726d952abdb96bad91b6d2d30e3ff5a9260383600",
+      "semantic_snapshot_sha256": "sha256:9cbf01cafb24af078987fb7726d952abdb96bad91b6d2d30e3ff5a9260383600",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-8/source-freeze-manifest.v1.json",
+      "sha256": "sha256:11bc6601a743598cf5c9110c8fe5892d8e35af1da5c5773dd336d6ad95840a90",
+      "semantic_snapshot_sha256": "sha256:11bc6601a743598cf5c9110c8fe5892d8e35af1da5c5773dd336d6ad95840a90",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/finding-set.json",
+      "sha256": "sha256:9e961d048a52947e7f98b4c62519d4bdf047ee3e5a960f8df4fa03726d95ac0f",
+      "semantic_snapshot_sha256": "sha256:9e961d048a52947e7f98b4c62519d4bdf047ee3e5a960f8df4fa03726d95ac0f",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/plan-input.md",
+      "sha256": "sha256:386c6a3bbf2606780a4e1dcddebed07fdd32dc37bee7e81ed81e5e0d8c15c162",
+      "semantic_snapshot_sha256": "sha256:386c6a3bbf2606780a4e1dcddebed07fdd32dc37bee7e81ed81e5e0d8c15c162",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/repair-closure.json",
+      "sha256": "sha256:2ee69d4fb24dd45b1e9eacf02435238964e3100d7843561a46cc1caceec592e5",
+      "semantic_snapshot_sha256": "sha256:2ee69d4fb24dd45b1e9eacf02435238964e3100d7843561a46cc1caceec592e5",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/repair-slices.json",
+      "sha256": "sha256:ff1cca8b6615915e59910322420be57798bb0ccc664d34dab74781ccea32b669",
+      "semantic_snapshot_sha256": "sha256:ff1cca8b6615915e59910322420be57798bb0ccc664d34dab74781ccea32b669",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/source-freeze-manifest.v1.json",
+      "sha256": "sha256:74414bc1007ac8235a94012e0a42d9fb517415e65844d45d668f9c5bbd54c9d2",
+      "semantic_snapshot_sha256": "sha256:74414bc1007ac8235a94012e0a42d9fb517415e65844d45d668f9c5bbd54c9d2",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+      "sha256": "sha256:d69f00966efe8f1c7d6e5da204196a338320a4f65ba0e11e467a00d57c3044da",
+      "semantic_snapshot_sha256": "sha256:d69f00966efe8f1c7d6e5da204196a338320a4f65ba0e11e467a00d57c3044da",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "sha256": "sha256:00eea29b23b8c6f032ae1b0a44b301a727e31dcdaf3320a29dac5b723b6db23e",
+      "semantic_snapshot_sha256": "sha256:00eea29b23b8c6f032ae1b0a44b301a727e31dcdaf3320a29dac5b723b6db23e",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-16T14:16:28.352080Z"
+}

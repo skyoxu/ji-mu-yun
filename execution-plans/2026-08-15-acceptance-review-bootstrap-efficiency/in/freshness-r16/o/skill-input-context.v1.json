@@ -1,0 +1,49 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:b62d6451b7c9cc3a1989f1a653ac1105a9ef0245e91462b309ecc3a1e2ae775f",
+  "sections": [
+    {
+      "title": "Architecture",
+      "content": "Evidence-gated artifact DAG: Acceptance owns freeze, closure, checks, route, import, and finalization; Bootstrap produces non-authorizing semantic evidence. Default route after passing checks is deterministic_only; focused/full Bootstrap requires an explicit admitted request."
+    },
+    {
+      "title": "Specification",
+      "content": "CAP-1 through CAP-10 require immutable identities, complete closure, real checks, controlled projection and segmentation, bounded recovery, three-role review, final evidence validation, and parity-gated rollout. Unknown, stale, incomplete, or mismatched evidence fails closed."
+    },
+    {
+      "title": "Plan Index",
+      "content": "Delivery slices S0-S6 sequence canonical evidence, consumer migration, runtime recovery, Acceptance pipeline, projection, semantic import, and rollout. Self-hosting exception is limited and does not waive final conformant validation."
+    },
+    {
+      "title": "Command Registry",
+      "content": "Defines fixed RED/GREEN commands for canonical evidence, migrations, runtime, Acceptance pipeline, projection, semantic import, rollout, and terminal validation. Receipts are non-authorizing."
+    },
+    {
+      "title": "Implementation Contract",
+      "content": "Defines scoped TDD slices, dependencies, permitted paths, required command IDs, recovery behavior, and terminal implementation-complete predicate. S3/S5/S6 cover default deterministic routing, explicit request admission, finalization, and regression."
+    },
+    {
+      "title": "Source Freeze",
+      "content": "Round-8 manifest binds selected canonical package, adopted architecture, repository rules, knowledge context, and source identities. It is non-authorizing and records no unresolved inputs."
+    },
+    {
+      "title": "Repair Findings",
+      "content": "Round-9 P1 findings require removing inferred Bootstrap upgrades, recording machine-verifiable required-check results, and admitting optional Bootstrap only through Acceptance-owned command input."
+    },
+    {
+      "title": "Repair Input",
+      "content": "Round-9 repair authority includes requirements, index, implementation contract, command registry, findings, repair slices, canonical specification, and architecture spine; historical acceptance evidence is excluded from rewrite."
+    },
+    {
+      "title": "Repair Slices",
+      "content": "S3 makes default route and check outcomes machine-verifiable; S5 finalizes deterministic evidence and exact-matched requested Bootstrap evidence; S6 proves zero default Bootstrap calls and rejects forged or automatic upgrades."
+    },
+    {
+      "title": "Requirements",
+      "content": "ARBE-001 through ARBE-022 map capabilities to slices and acceptance IDs. Required-check success selects deterministic_only; explicit focused/full requests require controlled receipt and current identity bindings; Bootstrap and advisory text cannot publish acceptance-passed."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T14:18:47.010091Z"
+}

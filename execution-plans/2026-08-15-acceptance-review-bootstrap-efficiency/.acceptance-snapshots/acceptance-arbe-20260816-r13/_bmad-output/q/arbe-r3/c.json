@@ -1,0 +1,19 @@
+{
+  "schema_version": "skill-input-child-request.v1",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "contract_hash": "sha256:86595a84186fc8a844e73b98adef7ae7489de5c17b28074a6e09dc2d18144d7e",
+  "source_manifest_hash": "sha256:437b491f3d5368a33a976cbf481af4c62d02ffdf9bbbfab3ee78a17d8f5c92f0",
+  "snapshot_root": "_bmad-output/q/arbe-r3/s",
+  "output_root": "_bmad-output/q/arbe-r3/o",
+  "execution_identity": "sha256:c03a8752b4c4fcdb52f5643f5400ef59d6956c132c4211fd871209ff7f2a116c",
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 1048576,
+  "input_mode": "paged-frozen-snapshot-stdin",
+  "allowed_capabilities": [
+    "read-frozen-snapshot",
+    "write-context-output"
+  ],
+  "authorizes": [],
+  "max_snapshot_chunk_bytes": 32768
+}

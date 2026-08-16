@@ -1,0 +1,17 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:7e61190303c1f1c2b42695e561ef3e172ecc9bb4ff6ef3cc9d794b923f55bbe0",
+  "sections": [
+    {
+      "title": "Command registry",
+      "content": "The registry defines deterministic RED/GREEN pytest programs for canonical evidence, consumer migration, Bootstrap runtime policy, Acceptance evidence, projection and segmentation, semantic import, and rollout regression. It also defines slice validation and terminal validation. Commands use fixed repository-relative programs, bounded timeouts, shell=false, and mapped acceptance IDs. Terminal coverage comprises the seven GREEN suites. The registry grants no authorization."
+    },
+    {
+      "title": "Requirements and acceptance",
+      "content": "The package specifies 22 requirements and 46 observable acceptance criteria across slices S0-S6. Core invariants cover identity-bound admission; complete changed-set and typed consumer closure evidence; real prerequisite checks; policy-constrained routing; isolated semantic roles and verifier gating; complete source delivery or identity-bound range projections; stable segment descriptors and immutable child snapshots; effective-progress, process, lease, and bounded-retry controls; pre-launch cost decisions; current Bootstrap evidence import; strict shared canonical evidence and consumer migration; immutable historical failures; bounded reviewer attempts; semantic parity and false-authorization rejection; rollout telemetry and gates; and the fixed supervised/unattended mode-by-route matrix. Advisory material cannot establish authority, registered risk triggers require route escalation, Bootstrap artifacts authorize nothing, and Acceptance alone may publish acceptance-passed."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T11:32:28.511751Z"
+}

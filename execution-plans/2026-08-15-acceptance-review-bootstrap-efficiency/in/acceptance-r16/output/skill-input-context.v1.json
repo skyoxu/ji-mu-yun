@@ -1,0 +1,17 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:029a27d6fe607f9d45b5f311a3a6a69e29de28834ae92a48ff67ca93a11e731c",
+  "sections": [
+    {
+      "title": "Command registry",
+      "content": "Defines red/green pytest programs for canonical evidence, migration, runtime policy, acceptance pipeline, projection/segmentation, semantic import, and rollout regression. Terminal validation runs all owner-owned green programs. Commands are non-shell, repository-root scoped, timeout-bounded, and map to ARBE acceptance IDs."
+    },
+    {
+      "title": "Requirements and acceptance",
+      "content": "Defines ARBE-001 through ARBE-022 and observable criteria ARBE-A01 through ARBE-A46. Core requirements cover identity-bound admission, changed-set and consumer closure, real checks and route policy, isolated roles, immutable projections and segments, runtime progress/retry controls, cost decisions, Bootstrap import authority, canonical-evidence migration, historical evidence, rollout metrics, acceptance mode/route matrix, and advisory-only external review material."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T13:26:46.864454Z"
+}

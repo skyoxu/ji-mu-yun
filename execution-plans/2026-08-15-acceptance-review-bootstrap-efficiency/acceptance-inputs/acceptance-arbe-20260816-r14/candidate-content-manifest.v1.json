@@ -1,0 +1,701 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": ".agents/skills/bmad-spec/scripts/canonical_package.py",
+      "baseline_sha256": "sha256:2dd56942da0895f386747659a637e092e0df38c2b18bf0f747b20f0d17ef4c68",
+      "candidate_path": ".agents/skills/bmad-spec/scripts/canonical_package.py",
+      "candidate_sha256": "sha256:64be3610a12a868229fd8cf80ca4d559f8e0652eb4384598f8314d7d244ff516",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "baseline_sha256": "sha256:08d1f9b896a3e1f07bae81d791dd2be8f047a4d048761436b71da0d6799c9815",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "candidate_sha256": "sha256:6079f4cf4f479792ac0223c8817164a7d2fdd5108c6b212c29a67a9a2498d0f4",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "baseline_sha256": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "candidate_sha256": "sha256:0d4b8ad763ad4d5b9d6ca5f70df01c87ce374572a5f9b4a52d13708f0fd77625",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+      "baseline_sha256": "sha256:d2aa85225c66761bc68ed3e29276fcf68aea7b1791484a0698d4108b2d326809",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+      "candidate_sha256": "sha256:b8ba2fcacb3a8316579e588e831567538d92b6c2851eb744cbcc4e7bad151814",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "baseline_sha256": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "candidate_sha256": "sha256:e77f1ea1b76aab3bdef2bd44cdd85a4256e6743178a7e71b0c853d5d01dae50b",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "baseline_sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "candidate_sha256": "sha256:591d30cf78631dc1ed53cf658d149c1c9df818e911ab31f4ec47f8f97d5471d1",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/protocol_guards.py",
+      "candidate_sha256": "sha256:e95f583aef75dc23be0f9759645f9989d93f5ecd598df8217587c9662abbf601",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "baseline_sha256": "sha256:54550c910d7c98779b927cf18c0e971e50f93263f473bb0c86cc32357c9bf3ef",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "candidate_sha256": "sha256:8a6b0068e1c740a6adf7dcf3e4e0ffa8fb4ea33c8f364b2348c95a2b4250f6b4",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      "baseline_sha256": "sha256:4661d816c1da182db73c7b949ae5b49e349155224e90d47983d062a9ecbecf7e",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      "candidate_sha256": "sha256:f160e4fca8d56cf376e06a595e12094379a1e0a7f556c9c4cef9e8cb11a07d19",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_artifact_composer.py",
+      "baseline_sha256": "sha256:108f93c0375243b17c1af8bee8dc0b11a70270c8cb9be36de0dc6290fdeba2d1",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_artifact_composer.py",
+      "candidate_sha256": "sha256:62d1e42e4582e236884634296b81113bc57826772a968c14fc0d92b8a3ee3006",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
+      "baseline_sha256": "sha256:1fc2d4292abc886139f243c08d04afaee3f7b6dc3be89ac64eab5c2093997bf1",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
+      "candidate_sha256": "sha256:9e00196e7ca92dc3a03d47eea6b0e7512379cb4e2bc6e9db44db0039419869c8",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_knowledge_context.py",
+      "baseline_sha256": "sha256:0d67467a1250fd6a305b5b782f6ba325db639e8d3483f1557f2d84fc1a8c093c",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_knowledge_context.py",
+      "candidate_sha256": "sha256:2b6dd8965aa67aa54b4da4e3ee05960bc2a9a8bbc501ce8fe14316cab0793880",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "baseline_sha256": "sha256:c4e4c1a9d908371e3c0bd269fe36ce12e1c36180ec8493de6d7ae188c3f807fb",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "candidate_sha256": "sha256:28a41e9924608653df072a4f3de12ff3eb3f3f30eb73963cdf05e0fef09d2648",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/policies/bootstrap-runtime/runtime-policy.v1.json",
+      "candidate_sha256": "sha256:67d5f8006edd814598238b3a15761337bb8589cd08d6b79f772dabc844083b2f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json",
+      "baseline_sha256": "sha256:bff22ea5ff1887b532085124f5959b7c6f8d5048137767505cc699df0327f09f",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json",
+      "candidate_sha256": "sha256:e3453c6c02d1088b573184294acf38db67118cd357726eb59643c043e7a7c5c1",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "baseline_sha256": "sha256:88af11576915d536c4df43842d2816c7d704bdad050ed7fe35d401ea00dbd717",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "candidate_sha256": "sha256:d422c08ca7fdc8a8761120062ded41f0aea62d4b5487a50109246ae209dbe323",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/projection_and_segmentation.py",
+      "candidate_sha256": "sha256:b3d3ac85dcdba6625e42c022c3332000515f552b818881266a6f49bb7ae3e49e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/runtime_policy.py",
+      "candidate_sha256": "sha256:bd970a0909632462b6d7321a7f0bc9595a27bc2e903ab2cfc036639724291894",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_projection_and_segmentation.py",
+      "candidate_sha256": "sha256:cf1f80000a611e86c1ebd24a9f9adf95c0a17e2902cb1c1c29bf27e071ef07f2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_runtime_policy_events.py",
+      "candidate_sha256": "sha256:e62a8b8885f1c5002ba41291116f79e43f4f95f1033d1799e91080d9969c7105",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "baseline_sha256": "sha256:d260564ae6e36b23ecc6fae06688d55c43ae87bee05dcae5e5f4eb15b2e01106",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "candidate_sha256": "sha256:150659166337634ccb619dc7b44021321676cb7040055d2e2fa8cc8b33f850fc",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "baseline_sha256": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "candidate_sha256": "sha256:3013eaf3a085449f35cec85e7a5bc51571ed682e1a30e961295347623f80a862",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/semantic_import.py",
+      "candidate_sha256": "sha256:37cdd1ce7c7a7d652e6491ad3a977dc2a9c83d6221285dfb8c9956496319d36c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_import.py",
+      "candidate_sha256": "sha256:3f8428744574228880b9f2521bb0661755d698f2ff7089f7ebd6b9c1f319302a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_pipeline.py",
+      "candidate_sha256": "sha256:af80c0ccac1f2ab9c088b8832fe0f120655e9f426c492ea9e53a34cad132c648",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "baseline_sha256": "sha256:5f310f0584653ba6f1ddad6e091288e7a08f8c699c65b258db24500a2fe7fc3c",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "candidate_sha256": "sha256:08a81beb3f26e9ca264f98b75f96437d7f932b20f17abf229d69eb2933dcd14b",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+      "baseline_sha256": "sha256:e5f5ebe2bafb38e4066a8f9ce61c016514767f81aeaed07dbd70f4100051eb04",
+      "candidate_path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+      "candidate_sha256": "sha256:c792b5367dcdf9c877fd39d36012354cb12bfa7501ce88246905a858fd7aceac",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+      "baseline_sha256": "sha256:ffc8e5d4684e45262d168a12fbd784e07ac6f568d314fd373992e5eb770cf8ec",
+      "candidate_path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+      "candidate_sha256": "sha256:98d29dc34a6fba2c2806abe9f7cb47f1a76d1fb704dbb725b365a8078dde11d3",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "baseline_sha256": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "candidate_sha256": "sha256:694449c4517681cb646a6f82bc85dfe0b8ad4e70c332a5a278ad5e343486b556",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "baseline_sha256": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "candidate_sha256": "sha256:093fadf40d4cd5d9e285bba2bcf17a110d3c1e382f40dc125a246eedb40fe716",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-authorization-receipt.v1.json",
+      "baseline_sha256": "sha256:9314dc6cd2a1b4bc11668ced50e502472adf4235e0b4fea829a4b4126e6b542a",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-authorization-receipt.v1.json",
+      "candidate_sha256": "sha256:981886e530c5ce2961feb3d25a3b9e95e67e473fe9955d229e043f7d1b341613",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "baseline_sha256": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:8b4da580d0285ac97e029a5fc37590e78f4bf3d59b933e1bde8f04952f5839d8",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "baseline_sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "candidate_sha256": "sha256:77196964dad06385f594d72037bf8f1d3d715b684fe7295751260fc335ae183c",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "baseline_sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "candidate_sha256": "sha256:37ea09d76e032b81426b5d26bd46bd8a1a308ad513f89dfefbc68f5437543d44",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "baseline_sha256": "sha256:87ecf0c91498e980ec2b70c62ddaf86fafc4f062bb8ba59c69b019a5734c8353",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "candidate_sha256": "sha256:15226bfdaa13b1b69f28557fa292bee3b5fca52ac09a8529bb3bd10764151d90",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-5/source-freeze-manifest.v1.json",
+      "candidate_sha256": "sha256:9a6bbf6b2149a4ff5b25b77e9a13559fa5f7444e24c96fcbdc9360c4b45ff0ff",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-6/source-freeze-manifest.v1.json",
+      "candidate_sha256": "sha256:e30c4803340bfae86d5d4828d8b896d11062293422ae34414f9f0d221c56a8f4",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/stage_projection_builder.py",
+      "candidate_sha256": "sha256:e10cca6a230de593ae4992914f99b8fc5845ec3b7457751cc80f35bd3675a034",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "baseline_sha256": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "candidate_sha256": "sha256:3012585a283456a5de39988996267e45ba6bbf9c3f684b26e72da0f119dfe64b",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "baseline_sha256": "sha256:390d29c735f1195d6142b5b79c3cc45f7684ff1c7bf5beaccc445825cd79df96",
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "candidate_sha256": "sha256:4d3510817cf4e031bfc44c4c3ddfc25eb7a19fc8122114ae578acc3cf5787f6a",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_slice.py",
+      "candidate_sha256": "sha256:d17cb16aaddbe9e1cb24c26f7bfd57d77e451a97878425637e71595d28379630",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "baseline_sha256": "sha256:ef96e55bfae9807120b3b5592bb429cb0e24a02331f2064312799dd039ac77b9",
+      "candidate_path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "candidate_sha256": "sha256:597bdd5dba55c33ab8114667c2bdd680e42d9ee998c9bdef4f25ce10859497c9",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "baseline_sha256": "sha256:495b5b7610ee0938fd28a1529c271ab209106c92931f28c75eb6df62c43e0604",
+      "candidate_path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "candidate_sha256": "sha256:63bc933412514c3a823be454d50253b5b18ed936be0fa404920f5968708b722d",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/indexes/current.json",
+      "baseline_sha256": "sha256:b14856d9cacdd2f6a118d6bef171e019157b0fa4ccb0508d8caabf3d1eca85a2",
+      "candidate_path": "knowledge/indexes/current.json",
+      "candidate_sha256": "sha256:4005ab610ce81b836f3f7ede3ecf8ed194855e6fe3e8278067eee45e394a6c34",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/5affb5f17029074cc38a39dfd1f6442d14b6d30e311df79dc025cd34c664da65/evaluation/query-report.v1.json",
+      "candidate_sha256": "sha256:14275f419a8c69e6ffdf6017d00913c2a396e683fca0670db0cc321309bff79f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/5affb5f17029074cc38a39dfd1f6442d14b6d30e311df79dc025cd34c664da65/inputs/consumer-policies.v2.json",
+      "candidate_sha256": "sha256:eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/5affb5f17029074cc38a39dfd1f6442d14b6d30e311df79dc025cd34c664da65/inputs/repository-knowledge-query-suite.v1.json",
+      "candidate_sha256": "sha256:5d1b44a3da527ac39eb966099c6100daae7ae509651ae54bf10bec9d953437a0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/5affb5f17029074cc38a39dfd1f6442d14b6d30e311df79dc025cd34c664da65/inputs/source-exclusions.v1.json",
+      "candidate_sha256": "sha256:c12514d500252b84c93041ccb2b564419a6d72bc77546af20dfde1e378287f2d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/5affb5f17029074cc38a39dfd1f6442d14b6d30e311df79dc025cd34c664da65/layers/consumer-projections.v1.json",
+      "candidate_sha256": "sha256:d6f7d0277571ffad312550fb3a8aabbb173e9098c15c955245276011e17c9dad",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/5affb5f17029074cc38a39dfd1f6442d14b6d30e311df79dc025cd34c664da65/layers/repository-knowledge-catalog.v1.json",
+      "candidate_sha256": "sha256:597bdd5dba55c33ab8114667c2bdd680e42d9ee998c9bdef4f25ce10859497c9",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/5affb5f17029074cc38a39dfd1f6442d14b6d30e311df79dc025cd34c664da65/layers/repository-knowledge-catalog.v2.json",
+      "candidate_sha256": "sha256:63bc933412514c3a823be454d50253b5b18ed936be0fa404920f5968708b722d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/5affb5f17029074cc38a39dfd1f6442d14b6d30e311df79dc025cd34c664da65/layers/repository-source-snapshot.v1.json",
+      "candidate_sha256": "sha256:b94ce80c42da0f85dcfb0f4a9e3bb609506555e018fbcf42bd847e9fb6c84dfe",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/5affb5f17029074cc38a39dfd1f6442d14b6d30e311df79dc025cd34c664da65/manifest.json",
+      "candidate_sha256": "sha256:134381ab4e2a4e4b7471606044a10b132a1365f40fb495d0c2a9cde480d6fd73",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/indexes/last-known-good.json",
+      "baseline_sha256": "sha256:b14856d9cacdd2f6a118d6bef171e019157b0fa4ccb0508d8caabf3d1eca85a2",
+      "candidate_path": "knowledge/indexes/last-known-good.json",
+      "candidate_sha256": "sha256:4005ab610ce81b836f3f7ede3ecf8ed194855e6fe3e8278067eee45e394a6c34",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/projections/consumer-projections.v1.json",
+      "baseline_sha256": "sha256:4b03993f03e37095253a9fe98c1352dd4906fd03f00dbff9579211f837da5ec1",
+      "candidate_path": "knowledge/projections/consumer-projections.v1.json",
+      "candidate_sha256": "sha256:d6f7d0277571ffad312550fb3a8aabbb173e9098c15c955245276011e17c9dad",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "baseline_sha256": "sha256:ec3dbfd0d838d32ae21bc2d8db3bceed628ed0cb12909cdd1060f1378b2ed209",
+      "candidate_path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "candidate_sha256": "sha256:b94ce80c42da0f85dcfb0f4a9e3bb609506555e018fbcf42bd847e9fb6c84dfe",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "scripts/python/launch_skill_input_consumer.py",
+      "baseline_sha256": "sha256:3b5154ee82e0265a148837d7713fcc4a27cb5da07779dfc170ca49586bc7a7ec",
+      "candidate_path": "scripts/python/launch_skill_input_consumer.py",
+      "candidate_sha256": "sha256:14f724cecd32ac20aeed22d41ca53a248d094b052d37cccd59e5b47205de9184",
+      "change_type": "modified",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/acceptance_bootstrap_efficiency.py",
+      "candidate_sha256": "sha256:970d4479be80b245d9af5e7e1d444e95cbc00720b2494bd9f8b3624c74078089",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/canonical_evidence/__init__.py",
+      "candidate_sha256": "sha256:537270f979696b69f692aa20d0c1e0f212cb16bf5b70f2df0c503c4fdda0b9c2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/canonical_evidence/core.py",
+      "candidate_sha256": "sha256:5f3db10ff8216f33370b48c2c12a03facc9835d8ea31da8715f0f17e92981194",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/canonical_evidence/tests/test_canonical_evidence.py",
+      "candidate_sha256": "sha256:17ab656f7e8723ae9a264f06e58c0d6d7ed9e8e7cf46886f375e6f88bdd8e31c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/canonical_evidence/tests/test_consumer_migrations.py",
+      "candidate_sha256": "sha256:d33ef3b030686f27a2a625dedab7b03baecdd39f06b4b6a1f258ab84b06919a3",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/tests/test_acceptance_bootstrap_efficiency.py",
+      "candidate_sha256": "sha256:eebc6a5892fb575eadc91cdd91d263c54ea19aaffec66cc7796becef735b234e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit current candidate closure",
+      "roles": [
+        "implementation"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete"
+}

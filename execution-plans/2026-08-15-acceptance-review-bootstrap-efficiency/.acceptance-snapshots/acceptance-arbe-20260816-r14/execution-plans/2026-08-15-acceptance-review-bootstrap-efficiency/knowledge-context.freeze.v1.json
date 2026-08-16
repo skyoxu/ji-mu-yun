@@ -1,0 +1,29 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:37ea09d76e032b81426b5d26bd46bd8a1a308ad513f89dfefbc68f5437543d44",
+  "canonical_context_sha256": "sha256:2371967135bf3d6cc9ac01558e8b54ce44cce8c66c1b25ebeaecfa972621a517",
+  "request_sha256": "sha256:d39e0a38940969528e64c0a6cfa6d84ae6b945e2ceeedeb1bd0711f4dfae5f5b",
+  "result_sha256": "sha256:7a79faf4c7dbed6acf551b10afdeb144a5132625718e0f479e527b4695de7f6c",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "c36613b6330cb9b630b98388308b125e9d0defe8"
+  },
+  "source_snapshot_id": "sha256:3b70ca3f7a7a760a7fa170b212a2a6ddc8711e180eec6aad752c7a19a784b531",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
+      "satisfies": [
+        "repository-rules"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:193d9dc97200065d75660b9ff52c0bd21b65e11e33db6accc8f4703825024fd3",
+    "freeze_receipt_path": "knowledge-context.freeze.history/193d9dc97200065d75660b9ff52c0bd21b65e11e33db6accc8f4703825024fd3.v1.json",
+    "reason": "bind current catalog generation 5affb5f1"
+  }
+}

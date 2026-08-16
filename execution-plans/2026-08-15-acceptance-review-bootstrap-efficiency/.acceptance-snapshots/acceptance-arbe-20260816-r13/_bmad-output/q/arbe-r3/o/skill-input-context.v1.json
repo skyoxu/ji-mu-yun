@@ -1,0 +1,25 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:437b491f3d5368a33a976cbf481af4c62d02ffdf9bbbfab3ee78a17d8f5c92f0",
+  "sections": [
+    {
+      "title": "Authority and lifecycle",
+      "content": "The repository uses an evidence-gated artifact DAG with exclusive lifecycle ownership: VDD publishes draft and plan-ready, the maintainer publishes implementation-authorized, Quick Dev/TDD may publish identity-bound implementation-complete, and Acceptance alone may publish acceptance-passed. Bootstrap, adapters, reports, reviews, receipts, and derived evidence are non-authorizing by default. Missing, stale, incomplete, ambiguous, or identity-mismatched prerequisites fail closed."
+    },
+    {
+      "title": "Implementation and acceptance flow",
+      "content": "Implementation operates on one explicit schema-valid plan through observed RED, GREEN, REFACTOR, slice predicates, and terminal validation. Writes, commands, dependencies, authority inputs, and evidence must match declared contracts and immutable hashes. Acceptance freezes baseline and candidate identities, constructs a complete changed-set manifest and fixed-point Consumer Closure, runs real registered deterministic checks first, and launches no semantic reviewers when those checks fail."
+    },
+    {
+      "title": "Review, isolation, and recovery",
+      "content": "Typed routes are deterministic_only, focused_repair_verification, full_implementation_conformance, and manual_pause; supervised or unattended mode does not change ownership. Registered risk, authority, security, protected-path, ambiguity, or explicit-review triggers require full review or pause and cannot be cost-downgraded. Complete Review preserves three isolated roles on identical frozen evidence, with independent verification for accepted P0/P1 findings. Children receive immutable segment-only snapshots and inherited access proofs. Append-only process events govern attempts, Effective Progress, terminal states, stale detection, lease reconciliation, bounded retries, and non-authorizing recovery; heartbeat, output, and polling are not progress."
+    },
+    {
+      "title": "Current plan and verification obligations",
+      "content": "The acceptance-review-bootstrap-efficiency plan is plan-ready and awaits maintainer implementation authorization. Its S0-S6 sequence covers canonical strict evidence, consumer migration, execution recovery, Acceptance closure and routing, authority projection and segmentation, three-role evidence import, and scale/parity rollout. The known exact-cover RED exception requires a hash-bound maintainer override and does not waive migration or terminal validation. Verification must prove complete authority coverage, exact identity binding, zero reviewer calls on deterministic failure, bounded attempts, correct mode-route behavior, preserved historical failures, semantic parity, and no false authorization."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T00:00:00+08:00"
+}

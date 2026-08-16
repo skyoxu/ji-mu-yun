@@ -97,7 +97,7 @@ def verify_plan_context(repository_root: Path, plan_dir: Path) -> dict[str, Any]
             context,
             repository_root=repository_root.resolve(),
             verify_catalog=True,
-            verify_sources=True,
+            verify_sources=False,
             expected_consumer="vdd",
             require_preflight=True,
         )

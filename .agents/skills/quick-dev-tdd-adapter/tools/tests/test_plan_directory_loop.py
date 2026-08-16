@@ -60,6 +60,42 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             (stale / "slice-ready-result.json").write_text(json.dumps({"predicate": "slice-ready", "status": "pass", "contract_hash": "sha256:stale"}), encoding="utf-8")
             self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
 
+    def test_router_reuses_an_unaffected_slice_from_the_head_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            baseline = {
+                "plan_id": "target",
+                "slices": [
+                    {"slice_id": "S0", "depends_on": [], "behavior": "stable"},
+                    {"slice_id": "S1", "depends_on": ["S0"], "behavior": "old"},
+                ],
+            }
+            current = {
+                "plan_id": "target",
+                "slices": [
+                    {"slice_id": "S0", "depends_on": [], "behavior": "stable"},
+                    {"slice_id": "S1", "depends_on": ["S0"], "behavior": "repaired"},
+                ],
+            }
+            plan = self._plan(root, current["slices"])
+            (plan / "command-registry.v1.json").write_text('{"commands":[]}', encoding="utf-8")
+            baseline_bytes = json.dumps(baseline, sort_keys=True).encode("utf-8")
+            (root / "logs/tdd-adapter/target/S0/current").mkdir(parents=True)
+            result = root / "logs/tdd-adapter/target/S0/current/slice-ready-result.json"
+            result.write_text(json.dumps({
+                "predicate": "slice-ready",
+                "status": "pass",
+                "contract_hash": "sha256:" + __import__("hashlib").sha256(baseline_bytes).hexdigest(),
+            }), encoding="utf-8")
+
+            def head_bytes(_root: Path, relative: Path) -> bytes | None:
+                return baseline_bytes if relative.name == "implementation-contract.v1.json" else b'{"commands":[]}'
+
+            with mock.patch.object(ROUTER, "_head_artifact_bytes", side_effect=head_bytes):
+                routed = ROUTER.route(root, plan)
+
+            self.assertEqual({"next_action": "run-slice", "slice_id": "S1", "authorizes": []}, routed)
+
     def test_router_requires_implementation_authorization_before_run_slice(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:55934f3c83aeb314ceac206f48b1f9fb65977c5d4faa97ce73e35512408cbdac",
+  "sections": [
+    {
+      "title": "Architecture",
+      "content": "Acceptance uses immutable, owner-local evidence artifacts. It freezes baseline/candidate identities, computes complete Consumer Closure, executes real required checks, and alone may publish acceptance-passed. Bootstrap supplies non-authorizing semantic evidence only."
+    },
+    {
+      "title": "Routing",
+      "content": "After current required checks pass, deterministic_only is the default and launches no Bootstrap work. Focused or full Bootstrap requires an explicit Acceptance-owned --request-bootstrap record and controlled receipt; policy, risk, supervision, and advisory text cannot upgrade the route."
+    },
+    {
+      "title": "Execution Safety",
+      "content": "Bootstrap segments have stable canonical descriptors, immutable segment-only snapshots, inherited access proofs, and no live repository traversal. Runtime recovery distinguishes liveness from effective progress, uses append-only events and conjunctive leases, and keeps transport failures non-semantic."
+    },
+    {
+      "title": "Implementation Plan",
+      "content": "Seven ordered slices cover shared canonical evidence, consumer migration, Bootstrap runtime, Acceptance closure/checks/routes, authority projection, semantic import/finalization, and rollout regression. Required commands define RED/GREEN checks and terminal-full validates all owner-owned GREEN programs."
+    },
+    {
+      "title": "Repair Scope",
+      "content": "Round 9 repairs three P1 findings: remove inferred Bootstrap routing, make deterministic check results machine-verifiable, and require Acceptance-owned explicit request admission. Affected slices are S3, S5, and S6, with acceptance, import, and regression validation."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T14:26:18.905143Z"
+}

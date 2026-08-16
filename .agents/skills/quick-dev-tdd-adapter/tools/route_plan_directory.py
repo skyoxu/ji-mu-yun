@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import sys
 
 
@@ -65,6 +66,108 @@ def _implementation_candidate_current(result: dict[str, object], current: dict[s
     if current is None:
         return False
     return all(result.get(key) == current[key] for key in _IMPLEMENTATION_CANDIDATE_ROOTS)
+
+
+def _sha(payload: bytes) -> str:
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def _head_artifact_bytes(repository_root: Path, relative: Path) -> bytes | None:
+    """Read an immutable HEAD artifact for independent-slice freshness checks."""
+    completed = subprocess.run(
+        ["git", "-C", str(repository_root), "show", f"HEAD:{relative.as_posix()}"],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    return completed.stdout if completed.returncode == 0 else None
+
+
+def _slice_projection(contract: dict[str, object], registry: dict[str, object], slice_id: str) -> str | None:
+    """Hash the slice and recursive dependencies, plus their command descriptors."""
+    declared = contract.get("slices")
+    commands = registry.get("commands")
+    if not isinstance(declared, list) or not isinstance(commands, list):
+        return None
+    by_id = {item.get("slice_id"): item for item in declared if isinstance(item, dict)}
+    if slice_id not in by_id or len(by_id) != len(declared):
+        return None
+    ordered: list[str] = []
+    visiting: set[str] = set()
+
+    def visit(current: str) -> bool:
+        if current in visiting:
+            return False
+        if current in ordered:
+            return True
+        item = by_id.get(current)
+        if not isinstance(item, dict):
+            return False
+        visiting.add(current)
+        dependencies = item.get("depends_on", [])
+        if not isinstance(dependencies, list) or any(not isinstance(value, str) for value in dependencies):
+            return False
+        if not all(visit(value) for value in dependencies):
+            return False
+        visiting.remove(current)
+        ordered.append(current)
+        return True
+
+    if not visit(slice_id):
+        return None
+    command_ids: set[str] = set()
+    for current in ordered:
+        item = by_id[current]
+        tdd = item.get("tdd", {})
+        if isinstance(tdd, dict):
+            for stage in ("red", "green"):
+                value = tdd.get(stage, {})
+                if isinstance(value, dict) and isinstance(value.get("command_id"), str):
+                    command_ids.add(value["command_id"])
+            refactor = tdd.get("refactor", {})
+            if isinstance(refactor, dict) and isinstance(refactor.get("invocations"), list):
+                for invocation in refactor["invocations"]:
+                    if isinstance(invocation, dict) and isinstance(invocation.get("command_id"), str):
+                        command_ids.add(invocation["command_id"])
+        if isinstance(item.get("post_refactor_command_id"), str):
+            command_ids.add(item["post_refactor_command_id"])
+    command_by_id = {item.get("id"): item for item in commands if isinstance(item, dict)}
+    if any(command_id not in command_by_id for command_id in command_ids):
+        return None
+    payload = {
+        "plan_id": contract.get("plan_id"),
+        "slices": [by_id[current] for current in ordered],
+        "commands": [command_by_id[current] for current in sorted(command_ids)],
+    }
+    return _sha(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+
+
+def _unaffected_slice_current(
+    repository_root: Path,
+    plan_dir: Path,
+    contract: dict[str, object],
+    registry: dict[str, object],
+    result: dict[str, object],
+    slice_id: str,
+) -> bool:
+    """Reuse a predecessor result only when its exact slice projection is unchanged."""
+    root = repository_root.resolve()
+    contract_path = plan_dir / "implementation-contract.v1.json"
+    baseline_bytes = _head_artifact_bytes(root, contract_path.resolve().relative_to(root))
+    if baseline_bytes is None or result.get("contract_hash") != _sha(baseline_bytes):
+        return False
+    registry_path = plan_dir / "command-registry.v1.json"
+    baseline_registry_bytes = _head_artifact_bytes(root, registry_path.resolve().relative_to(root))
+    if baseline_registry_bytes is None:
+        return False
+    try:
+        baseline_contract = json.loads(baseline_bytes.decode("utf-8"))
+        baseline_registry = json.loads(baseline_registry_bytes.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError):
+        return False
+    current_projection = _slice_projection(contract, registry, slice_id)
+    baseline_projection = _slice_projection(baseline_contract, baseline_registry, slice_id)
+    return current_projection is not None and current_projection == baseline_projection
 
 
 def _terminal_completion_current(repository_root: Path, plan_dir: Path, contract_hash: str) -> bool:
@@ -173,6 +276,10 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
     contract_path = target / "implementation-contract.v1.json"
     contract_bytes = contract_path.read_bytes()
     contract = json.loads(contract_bytes.decode("utf-8"))
+    try:
+        registry = json.loads((target / "command-registry.v1.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        registry = {}
     contract_hash = "sha256:" + hashlib.sha256(contract_bytes).hexdigest()
     if not isinstance(contract.get("plan_id"), str) or not isinstance(contract.get("slices"), list):
         raise ValueError("implementation contract is invalid")
@@ -216,6 +323,10 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                         target,
                         None if exit_predicate == "implementation-complete" else slice_id,
                     ),
+                )
+            elif not contract_current and isinstance(registry, dict):
+                current = _unaffected_slice_current(
+                    repository_root, target, contract, registry, result, slice_id
                 )
             if result.get("predicate") == exit_predicate and result.get("status") == "pass" and current and (required_artifact is None or required_artifact.is_file()):
                 completed.add(slice_id)

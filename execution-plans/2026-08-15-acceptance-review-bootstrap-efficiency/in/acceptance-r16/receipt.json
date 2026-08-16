@@ -1,0 +1,95 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "request_binding": {
+    "request": {},
+    "consumer": "run-refactor-implementation-acceptance",
+    "operation": "acceptance",
+    "target": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+    "route_identity": "sha256:1a9658fe93e866156e37fcbc195f3c808408d399acd250c6cd51e25681a06c1c",
+    "source_roles": {
+      "implementation_target": [
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json"
+      ],
+      "acceptance_requirements": [
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md"
+      ]
+    }
+  },
+  "request_hash": "sha256:603bc481ac17747dcc22d5f9fbb0c8fcff11dcacb847784e0b01863e37b703dc",
+  "target": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+  "route_identity": "sha256:1a9658fe93e866156e37fcbc195f3c808408d399acd250c6cd51e25681a06c1c",
+  "repository_identity": {
+    "head": "6c7f52f28680122f4664230faa08a0106d72975c",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-16T13:26:46.874286Z",
+  "contract_hash": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0",
+  "source_manifest": {
+    "path": "snapshot/source-manifest.v1.json",
+    "sha256": "sha256:029a27d6fe607f9d45b5f311a3a6a69e29de28834ae92a48ff67ca93a11e731c"
+  },
+  "child_request": {
+    "path": "child-request.json",
+    "sha256": "sha256:b5369e72494872bd2847c7441a9bab93fce7708a4e7ade3967eed842b13a79b0"
+  },
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "required": true,
+      "sha256_before": "sha256:093fadf40d4cd5d9e285bba2bcf17a110d3c1e382f40dc125a246eedb40fe716",
+      "sha256_after": "sha256:093fadf40d4cd5d9e285bba2bcf17a110d3c1e382f40dc125a246eedb40fe716",
+      "size_bytes": 7841,
+      "line_count": 24,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:093fadf40d4cd5d9e285bba2bcf17a110d3c1e382f40dc125a246eedb40fe716",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 24
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+      "required": true,
+      "sha256_before": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "sha256_after": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "size_bytes": 8721,
+      "line_count": 78,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 78
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "output/semantic-decision.v1.json",
+    "sha256": "sha256:102bd53bfd204ad64963e0c458fde11f3e3f4e2dd0cf31e8edf90e1d511b499c"
+  },
+  "context_artifact": {
+    "path": "output/skill-input-context.v1.json",
+    "sha256": "sha256:497a22fb6353bb1473d0c88b0551ccf6a493ef02102f1871bba4dfe76fb5b947"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:f131976c425374983bc2291cd29e821f8d96d11e669491775387f46da575ab5a"
+}

@@ -1,0 +1,6 @@
+{
+  "status": "complete",
+  "context_artifact": "C:/jimuyun/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r9/output/skill-input-context.v1.json",
+  "semantic_decision": "C:/jimuyun/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r9/output/semantic-decision.v1.json",
+  "source_manifest_hash": "sha256:35ad7932a444df9754428138698f8e8a0eb2ce7b0dbbf463e124e37a4d5a02ee"
+}

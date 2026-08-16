@@ -1,0 +1,23 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "sha256": "sha256:093fadf40d4cd5d9e285bba2bcf17a110d3c1e382f40dc125a246eedb40fe716",
+      "semantic_snapshot_sha256": "sha256:093fadf40d4cd5d9e285bba2bcf17a110d3c1e382f40dc125a246eedb40fe716",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+      "sha256": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "semantic_snapshot_sha256": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-16T13:07:05.665790Z"
+}

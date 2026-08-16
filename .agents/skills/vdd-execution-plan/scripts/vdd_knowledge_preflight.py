@@ -14,7 +14,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
 
-from knowledge_context_validation import canonical_hash, validate_context  # noqa: E402
+from knowledge_context_validation import canonical_hash, validate_context, validate_worktree_sources  # noqa: E402
 from skill_input_gate import require_ready_skill_input  # noqa: E402
 
 
@@ -41,6 +41,30 @@ def evaluate_consumption(*, required_modules: list[str], decisions: list[dict[st
     return {"status": "blocked" if missing else "ready", "missing_required_modules": missing, "decisions": normalized}
 
 
+def _accepted_worktree_projection(payload: dict[str, Any]) -> dict[str, Any]:
+    accepted = {
+        (decision["candidate"]["path"], decision["candidate"]["source_sha256"])
+        for decision in payload.get("decisions", [])
+        if isinstance(decision, dict)
+        and decision.get("decision") == "accepted"
+        and isinstance(decision.get("candidate"), dict)
+    }
+    projected = dict(payload)
+    result = payload.get("locator_result")
+    if not isinstance(result, dict):
+        return projected
+    projected_result = dict(result)
+    candidates = result.get("candidates")
+    if isinstance(candidates, list):
+        projected_result["candidates"] = [
+            candidate for candidate in candidates
+            if isinstance(candidate, dict)
+            and (candidate.get("path"), candidate.get("source_sha256")) in accepted
+        ]
+    projected["locator_result"] = projected_result
+    return projected
+
+
 def evaluate_preflight(payload: dict[str, Any], *, repository_root: Path | None = None) -> dict[str, Any]:
     """Validate that VDD decisions consume, rather than expand, Locator output."""
     try:
@@ -59,9 +83,13 @@ def evaluate_preflight(payload: dict[str, Any], *, repository_root: Path | None 
         payload,
         repository_root=repository_root,
         verify_catalog=repository_root is not None,
-        verify_sources=repository_root is not None,
+        verify_sources=False,
         expected_consumer="vdd",
     )
+    if not failure_code and repository_root is not None:
+        failure_code = validate_worktree_sources(
+            _accepted_worktree_projection(payload), repository_root
+        )
     if failure_code:
         result["status"] = "blocked"
         result["failure_code"] = failure_code

@@ -1,0 +1,96 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "request_binding": {
+    "request": {},
+    "consumer": "run-refactor-implementation-acceptance",
+    "operation": "acceptance",
+    "target": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+    "route_identity": "sha256:1a9658fe93e866156e37fcbc195f3c808408d399acd250c6cd51e25681a06c1c",
+    "source_roles": {
+      "implementation_target": [
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json"
+      ],
+      "acceptance_requirements": [
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md"
+      ]
+    }
+  },
+  "request_hash": "sha256:603bc481ac17747dcc22d5f9fbb0c8fcff11dcacb847784e0b01863e37b703dc",
+  "target": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+  "route_identity": "sha256:1a9658fe93e866156e37fcbc195f3c808408d399acd250c6cd51e25681a06c1c",
+  "repository_identity": {
+    "head": "6c7f52f28680122f4664230faa08a0106d72975c",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-16T13:07:05.683530Z",
+  "contract_hash": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0",
+  "source_manifest": {
+    "path": "snapshot/source-manifest.v1.json",
+    "sha256": "sha256:607be8d727ba63c16576f81d24b9362d5456d633155737a02ad01611a74b5b96"
+  },
+  "child_request": {
+    "path": "pending/skill-input-child-request.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "required": true,
+      "sha256_before": "sha256:093fadf40d4cd5d9e285bba2bcf17a110d3c1e382f40dc125a246eedb40fe716",
+      "sha256_after": "sha256:093fadf40d4cd5d9e285bba2bcf17a110d3c1e382f40dc125a246eedb40fe716",
+      "size_bytes": 7841,
+      "line_count": 24,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:093fadf40d4cd5d9e285bba2bcf17a110d3c1e382f40dc125a246eedb40fe716",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 24
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+      "required": true,
+      "sha256_before": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "sha256_after": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "size_bytes": 8721,
+      "line_count": 78,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 78
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "pending/semantic-decision.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "status": "insufficient"
+  },
+  "context_artifact": {
+    "path": "pending/skill-input-context.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": false,
+  "binding_hash": "sha256:cb9db238183b5d6e182371343bdb51162494aaaf8bd9bd1f85a9ab6806a208cf"
+}

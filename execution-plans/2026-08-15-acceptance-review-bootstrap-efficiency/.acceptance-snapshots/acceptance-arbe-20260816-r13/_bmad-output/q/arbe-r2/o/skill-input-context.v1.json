@@ -1,0 +1,33 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:3017aa5aaf72fbe27d10c5903c2ca51bb7a8a844f7168e3abe38968236049981",
+  "sections": [
+    {
+      "title": "Authority and lifecycle",
+      "content": "Repository authority defines an evidence-gated, owner-local lifecycle: VDD owns draft and plan-ready, the maintainer owns implementation-authorized, Quick Dev and its adapter own implementation-complete, and Acceptance alone owns acceptance-passed. Bootstrap, semantic children, generated evidence, receipts, reports, and advisory decisions remain non-authorizing. Missing, stale, ambiguous, or identity-mismatched authority fails closed."
+    },
+    {
+      "title": "Acceptance and Bootstrap architecture",
+      "content": "Acceptance freezes immutable baseline and candidate identities, builds a complete changed-set manifest and fixed-point Consumer Closure, runs real registry-projected deterministic checks, then selects a typed route. Deterministic failure launches no reviewers. Focused and full routes require Bootstrap; registered authority, security, lifecycle, or adversarial triggers force full conformance or manual pause. Full review preserves three isolated roles, with an independent verifier only for accepted P0/P1 findings."
+    },
+    {
+      "title": "Authority delivery and execution",
+      "content": "Normative inputs must be completely consumed. Oversized authority may use only controller-produced, full-source-bound range projections with exact hashes and inclusive coordinates. Stable segment descriptors bind source bytes, role, order, candidate, closure, execution identity, and retry lineage. Children receive immutable segment-only snapshots and inherited access proofs. Append-only process events govern attempts, effective progress, terminal state, leases, recovery, and bounded segment-local retries; heartbeat or repeated output alone is not progress."
+    },
+    {
+      "title": "Quick Dev and Acceptance tooling",
+      "content": "Quick Dev accepts one explicit schema-valid execution-plan directory, verifies frozen knowledge receipts and authority bindings before RED, requires an observed failing RED before production writes, then enforces GREEN, REFACTOR, and plan predicates. Its backend is stateless and observational. Refactor Acceptance freezes candidate custody, validates manifests, policies, checks, scans, coverage, repair evidence, Bootstrap lineage, and finalization prerequisites. Both toolchains preserve failed evidence and reject path, hash, policy, lifecycle, or dependency drift."
+    },
+    {
+      "title": "Target plan",
+      "content": "The acceptance-review-bootstrap-efficiency plan is plan-ready and not implementation-authorized. S0-S6 cover canonical evidence, consumer migration, event-sourced Bootstrap recovery, Acceptance closure and routing, projection and segment isolation, semantic import and finalization, and rollout regression. A bound maintainer override may address only the recorded exact-cover compatibility RED and cannot waive migration or terminal validation. The current product is Bootstrap-triggered, and implementation-complete and acceptance-passed remain unauthorized."
+    },
+    {
+      "title": "Verification and residual constraints",
+      "content": "All manifested pages, including both segments of each multipage source, are covered. Validation requires strict canonical hashing, exact identity bindings, shell-disabled registered commands, complete artifact coverage, immutable historical failures, zero false authorization, bounded attempts, and semantic parity before replacing whole-directory review. Some source summaries identify implementation ambiguities or redacted fields, but complete page coverage is sufficient for semantic source acceptance and does not grant execution or lifecycle authority."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T00:00:00+09:00"
+}

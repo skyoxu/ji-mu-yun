@@ -255,13 +255,18 @@ def _validate_freshness() -> None:
     spec.loader.exec_module(module)
     module.validate_manifest(REPOSITORY_ROOT, _json(source_path))
     skill_contract = ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json"
-    receipt = _current_freshness_receipt().relative_to(REPOSITORY_ROOT).as_posix()
+    receipt_path = _current_freshness_receipt()
+    receipt_data = _json(receipt_path)
+    operation = receipt_data.get("operation")
+    if operation not in {"create", "repair"}:
+        raise ValueError("Skill Input freshness operation is invalid")
+    receipt = receipt_path.relative_to(REPOSITORY_ROOT).as_posix()
     _run_owner_validator(
         ["scripts/python/validate_skill_input_consumption.py", "--repository-root", ".", "--contract", skill_contract, "--require-ready", receipt],
         "Skill Input validation",
     )
     _run_owner_validator(
-        [".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py", "--input", "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json", "--repository-root", ".", "--skill-input-receipt", receipt, "--skill-input-operation", "create", "--skill-input-contract", skill_contract],
+        [".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py", "--input", "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json", "--repository-root", ".", "--skill-input-receipt", receipt, "--skill-input-operation", operation, "--skill-input-contract", skill_contract],
         "knowledge preflight",
     )
 

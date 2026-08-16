@@ -1,0 +1,18 @@
+{
+  "schema_version": "skill-input-child-request.v1",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "contract_hash": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0",
+  "source_manifest_hash": "sha256:247f348eb00b8a6f78422814b37cb619c2abeb9b561909c12bd6ce8b3e9eb5c1",
+  "snapshot_root": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/acceptance-r10/snapshot",
+  "output_root": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/acceptance-r10/output",
+  "execution_identity": "sha256:fd1d8cb332cc147e36db10a4a57050667b7b7e0d572b81faf3668fd4dc847628",
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 262144,
+  "input_mode": "serialized-snapshot-stdin",
+  "allowed_capabilities": [
+    "read-frozen-snapshot",
+    "write-context-output"
+  ],
+  "authorizes": []
+}

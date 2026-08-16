@@ -1,0 +1,29 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:193d9dc97200065d75660b9ff52c0bd21b65e11e33db6accc8f4703825024fd3",
+  "canonical_context_sha256": "sha256:0d5f2bdc732282d23e852457ae313a11fbdef824c23f8c66c8589a85aa1be720",
+  "request_sha256": "sha256:d84d3c6eeda8a35e9afbf13681a0ee78973c2774489e0d4441d790288a3ce608",
+  "result_sha256": "sha256:01b900820311ba4048061bacf435166d73f414a7f9b5fcbc36eb23ee322f2a3f",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "4acc50e7774a20195071b07a0b7d03016ccbce5f"
+  },
+  "source_snapshot_id": "sha256:bcabbeb3a42619944448f1818b1a8055b380a35b20cffb6395f5a2e77435e7ec",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
+      "satisfies": [
+        "repository-rules"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:77eb729cf484ce8a326d47c4672713f07021df4bfd4818f53a5b0c69cd22ec9e",
+    "freeze_receipt_path": "knowledge-context.freeze.history/77eb729cf484ce8a326d47c4672713f07021df4bfd4818f53a5b0c69cd22ec9e.v1.json",
+    "reason": "refresh after fixed candidate commit c36613b6"
+  }
+}

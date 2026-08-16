@@ -21,7 +21,7 @@
     {"slice_id":"S6","status":"pending","depends_on":["S0","S1","S2","S3","S4","S5"]}
   ],
   "blocking_conditions": ["exact-cover compatibility RED may be bypassed only by the bound maintainer override; it remains an S1 obligation"],
-  "authorization_receipt": {"path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-authorization-receipt.v1.json", "sha256": "sha256:8003413127f04f2f9ffb238e98d5578afabec1b17ae62929937023f077a968bd"},
+  "authorization_receipt": {"path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-authorization-receipt.v1.json", "sha256": "sha256:9f5017898d0fb0670da832d0a1038d3c5dd0bc3ae5c5b36336e7bdb55472ab84"},
   "authorizes": ["plan-ready", "implementation-authorized"],
   "does_not_authorize": ["implementation-complete", "acceptance-passed", "archived", "release"]
 }

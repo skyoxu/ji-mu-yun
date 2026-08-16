@@ -1,0 +1,45 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:35ad7932a444df9754428138698f8e8a0eb2ce7b0dbbf463e124e37a4d5a02ee",
+  "sections": [
+    {
+      "title": "Architecture Spine",
+      "content": "Defines evidence-gated Artifact DAG ownership, immutable identities, closure-before-evidence, canonical evidence mechanics, range delivery, stable segments, real checks, event recovery, typed routes, cost gates, and Acceptance-only finalization."
+    },
+    {
+      "title": "Memory Log",
+      "content": "Records CAP-1 through CAP-10, finalized companion scope, superseding lifecycle and route decisions, resolved range/runtime/history questions, and two remaining policy measurement questions."
+    },
+    {
+      "title": "SPEC",
+      "content": "Canonical contract for Acceptance and Bootstrap efficiency: freeze valid implementation handoff, build complete closure, run deterministic checks, select mode and route, preserve three-role review, and finalize only from current evidence."
+    },
+    {
+      "title": "Authority And Lifecycle",
+      "content": "Assigns lifecycle publishers and defines freeze, manifest, closure, required-check, mode-route, Bootstrap, and acceptance-passed contracts. Bootstrap and advisory reviewers remain non-authorizing."
+    },
+    {
+      "title": "Authority Projection And Segmentation",
+      "content": "Requires complete authority delivery or controller-owned hash-bound projections, one canonical segment identity across assignment through retry, segment-only snapshots, inherited access proofs, and mutation rejection."
+    },
+    {
+      "title": "Execution And Recovery",
+      "content": "Defines append-only Process Events, Effective Progress distinct from liveness, policy-bound stop-loss, lease reconciliation, bounded retries, typed status, and recovery independent of chat or manual reconstruction."
+    },
+    {
+      "title": "Verification And Rollout",
+      "content": "Requires pre-launch cost decisions, regression and semantic corpus coverage, counter-metrics against omissions and false authorization, and M0-M2 delivery sequencing before replacing whole-directory defaults."
+    },
+    {
+      "title": "Architecture Diagrams",
+      "content": "Shows lifecycle flow from VDD through Acceptance, mode-route branching, isolated Bootstrap review, and attempt-to-reconciliation retry state transitions."
+    },
+    {
+      "title": "Glossary",
+      "content": "Defines Acceptance, Bootstrap Complete Review, closure, required checks, projections, segments, process events, lifecycle states, typed routes, modes, supervised decisions, and non-authorizing outcomes."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T10:33:46.733952Z"
+}

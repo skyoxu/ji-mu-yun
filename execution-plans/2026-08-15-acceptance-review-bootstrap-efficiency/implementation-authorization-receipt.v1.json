@@ -2,13 +2,13 @@
   "schema_version": "acceptance-review-bootstrap-efficiency.implementation-authorization-receipt.v1",
   "plan_id": "acceptance-review-bootstrap-efficiency",
   "source_freeze_manifest": {
-    "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-7/source-freeze-manifest.v1.json",
-    "sha256": "sha256:e43e415c162abae53fc648aaf1fca47a237a206f921347fdaecfec63ba804272",
-    "canonical_hash": "sha256:35c300a6f9760805bdb15e2916dceea7be1f7e0be0b81a4c328337a7ec0aa2f2"
+    "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/source-freeze-manifest.v1.json",
+    "sha256": "sha256:74414bc1007ac8235a94012e0a42d9fb517415e65844d45d668f9c5bbd54c9d2",
+    "canonical_hash": "sha256:07157e88a01e10a768f07d2c764682875ef73b8c02da9f8d482b3e6e9d4657d6"
   },
   "implementation_contract": {
     "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
-    "sha256": "sha256:8b4da580d0285ac97e029a5fc37590e78f4bf3d59b933e1bde8f04952f5839d8"
+    "sha256": "sha256:67a47d805c2e69912d0feb6c860b7c51a7eb96baf240f0c40481680b97a6db7f"
   },
   "selection_pointer": {
     "path": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-acceptance-review-bootstrap-efficiency.json",
@@ -22,7 +22,7 @@
     "command": "python tools/validate_all.py --validate-plan",
     "validator": {
       "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
-      "sha256": "sha256:00eea29b23b8c6f032ae1b0a44b301a727e31dcdaf3320a29dac5b723b6db23e"
+      "sha256": "sha256:ab68920b5f2ebbe46801722411d15e37e9c1f4836367f52340405bdeb7549550"
     },
     "result": {
       "acceptance": 46,

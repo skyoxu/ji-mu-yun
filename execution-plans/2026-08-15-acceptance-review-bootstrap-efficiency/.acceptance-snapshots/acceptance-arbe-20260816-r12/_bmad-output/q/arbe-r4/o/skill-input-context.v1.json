@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:c4a5911d38ffb0fdd435ded8be1e51e6c6d6b7aafab336c4e311d52029dafa9a",
+  "sections": [
+    {
+      "title": "Authority and lifecycle",
+      "content": "The repository uses decentralized lifecycle ownership: VDD publishes draft and plan-ready, the maintainer publishes implementation-authorized, Quick Dev or its TDD adapter publishes implementation-complete, and Acceptance alone may publish acceptance-passed. Bootstrap Review, semantic children, adapters, evidence records, and this context remain non-authorizing."
+    },
+    {
+      "title": "Implementation discipline",
+      "content": "Quick Dev consumes one explicit schema-valid execution plan and frozen accepted knowledge. It validates authority, contracts, commands, path boundaries, dependencies, baselines, receipts, and hashes before RED. Production writes require an observed failing RED, followed by GREEN and REFACTOR within declared paths. Drift, stale evidence, unknown facts, scope expansion, or malformed recovery state fails closed and routes to repair."
+    },
+    {
+      "title": "Acceptance and review",
+      "content": "Acceptance freezes baseline and candidate identities, constructs a complete changed-set manifest and fixed-point minimal Consumer Closure, projects registered deterministic checks, and selects an identity-bound mode and route. Deterministic failures launch no reviewers. Focused and full routes require Bootstrap evidence; registered risk, authority, lifecycle, security, corruption, or explicit-review triggers require full conformance or manual pause. Complete Review preserves three isolated roles, with independent verification only for accepted P0/P1 findings."
+    },
+    {
+      "title": "Evidence, segmentation, and recovery",
+      "content": "Evidence is immutable, owner-local, content-addressed, append-only where required, and non-authorizing by default. Complete authority must be supplied within budget or through controller-owned, full-source-bound Range Projections. Stable Segment Descriptors and segment-only frozen snapshots bind identity, coverage, execution, retry, and cache behavior. Process Events govern attempts, leases, progress, terminal state, and retry; heartbeat or output alone is not Effective Progress. Stop-loss isolates attempts, reconciles leases, and emits typed non-authorizing recovery."
+    },
+    {
+      "title": "Plan state and rollout",
+      "content": "The acceptance-review-bootstrap-efficiency plan is self-hosted and plan-ready, with maintainer implementation authorization still required. Its S0-S6 dependency graph covers canonical evidence, consumer migration, runtime recovery, Acceptance closure and routing, authority projection, semantic import, and regression rollout. Whole-directory review remains the default until M0-M2 validation, 8-13-scale regression, semantic-parity checks, bounded recovery, telemetry, and zero-false-authorization gates pass. Historical failed runs remain immutable and non-reusable."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T00:00:00Z"
+}
