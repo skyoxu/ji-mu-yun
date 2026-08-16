@@ -228,6 +228,27 @@ class KnowledgeContextValidationTests(unittest.TestCase):
             source.write_text("rules\n", encoding="utf-8")
             document = payload(digest=hashlib.sha256(source.read_bytes()).hexdigest())
             self.assertIsNone(validation.validate_worktree_sources(document, root))
+
+    def test_hash_only_read_set_drift_is_refreshed_without_selection_expansion(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "AGENTS.md"
+            source.write_text("new rules\n", encoding="utf-8")
+            document = payload(digest="a" * 64)
+            refreshed = validation.refresh_context_read_set(document, root)
+            candidate = refreshed["locator_result"]["candidates"][0]
+            digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            self.assertEqual("AGENTS.md", candidate["path"])
+            self.assertEqual(digest, candidate["source_sha256"])
+            self.assertEqual("current_worktree_read_set", refreshed["source_refresh"]["mode"])
+            self.assertIsNone(
+                validate_context(refreshed, repository_root=root, verify_sources=True)
+            )
+
+    def test_read_set_refresh_rejects_path_escape(self) -> None:
+        document = payload(path="../outside.md")
+        with self.assertRaisesRegex(ValueError, "candidate_path_outside_repository"):
+            validation.refresh_context_read_set(document, Path.cwd())
             source.write_text("changed\n", encoding="utf-8")
             self.assertEqual(
                 "candidate_worktree_source_hash_mismatch",

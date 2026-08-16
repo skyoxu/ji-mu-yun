@@ -52,6 +52,15 @@ guess scope, revisions, changed paths, commands, or acceptance actions. If a
 required source is missing or ambiguous, report `prerequisite_blocked` with the
 missing artifacts and stop before `start-or-resume`.
 
+When the Quick Dev implementation receipt is absent or stale only because its
+candidate/terminal binding changed, automatically return to
+`quick-dev-tdd-adapter` for the declared target's controlled terminal loop,
+publish a successor `implementation-complete` receipt, then rebuild the compact
+projection from that receipt. This is an owner handoff, not an Acceptance-owned
+terminal command and not a Bootstrap route. Stop only when Quick Dev's terminal
+program fails, its contract/runner is missing, or the new receipt cannot bind
+the current declared terminal contract.
+
 Treat candidate assembly as one evidence transaction. Complete every
 VDD/source-freeze mutation, then publish the knowledge catalog, then create
 the Acceptance knowledge context and Skill-input receipt, and only then invoke
@@ -66,28 +75,35 @@ Use `scripts/python/launch_skill_input_consumer.py --create-request` with the
 candidate receipt and actual backend/model, then run semantic consumption with
 that generated request through the same typed boundary. Never hand-author its
 execution identity. Require
-`scripts/python/validate_skill_input_consumption.py --require-ready`. A stale,
-partial, or unredacted input is `prerequisite_blocked`; it cannot be replaced
-with a log or historical summary. Pass the receipt to `start-or-resume` with
+`scripts/python/validate_skill_input_consumption.py --require-ready`. A stale
+but reconstructible input is automatically regenerated through the same typed
+Skill-input workflow, then consumed as a new binding; partial or unredacted
+input remains `prerequisite_blocked` and cannot be replaced with a log or
+historical summary. Pass the receipt to `start-or-resume` with
 `--skill-input-receipt` and `--skill-input-contract`.
 
 Create the knowledge context only through the canonical Locator and bind the
-adapter to exactly one explicit `--target-plan`. If it returns `catalog_stale`,
-the adapter emits a hash-bound `knowledge-maintenance-required` route with
-`automatic_publication_allowed=false`, `authorizes=[]`, and stops. This Skill
-must not invoke publication automatically; a maintainer must explicitly enter
-`maintain-knowledge-base` and create a publication request. Other blocked
-knowledge failures route to `knowledge-context-repair-required`. Never
-hand-author candidate selections, accept an old context, bypass Locator
-freshness, or write knowledge artifacts outside the explicit target plan. The
-adapter persists the route append-only under
-`<target-plan>/knowledge-context-routes/<hash>.json`; maintenance must bind that
-exact route before catalog-stale publication.
+adapter to exactly one explicit `--target-plan`. `catalog_stale` alone is a
+non-authorizing `knowledge_freshness=degraded` condition: record it in the
+hash-bound ready context and continue from the current, hash-verified Locator
+read-set. This Skill must not invoke publication automatically; catalog
+publication remains an explicit maintainer action and is never a prerequisite
+for this run. Other knowledge failures, including invalid publication,
+unavailable candidate sources, unsatisfied required modules, unsafe paths, or
+schema failures, route to
+`knowledge-context-repair-required` and stop. Never hand-author candidate
+selections, bypass Locator source/read-set validation, or write knowledge
+artifacts outside the explicit target plan. The adapter persists a blocked route
+append-only under `<target-plan>/knowledge-context-routes/<hash>.json` only for
+those blocking failures.
 
 Before a ready context is written, validate the complete Locator read-set
-against current worktree bytes. A worktree hash mismatch produces the same
-typed maintenance/repair route and stops before candidate or Skill-input
-materialization; it must not be deferred to `prepare-run`.
+against current worktree bytes. When only bytes have changed, automatically
+produce a successor context with `source_refresh=current_worktree_read_set`:
+it preserves the catalog-selected paths, modules, and resource-set exactly and
+rebinds only their current hashes. A missing source, path/resource-set change,
+module mismatch, or schema failure remains a typed repair route and stops; no
+automatic refresh may widen the knowledge selection.
 
 Create or resume the target-owned append-only run with the canonical run-input
 request hash that `prepare-run` will publish as `inputHash`, plus the
@@ -111,9 +127,11 @@ frozen context file bytes; use the context `sha256` emitted by
 Omitting `--run-id` derives `acceptance-<16-hex-binding-id>` from those three
 hashes plus the validated Skill-input binding and context-artifact hashes. The
 same target and bindings resume the same persisted run without rewriting it.
-Any input, contract, knowledge-context, Skill-input receipt, or context drift fails closed;
-prepare a new candidate/run or use the existing explicit stale-successor
-recovery instead of overwriting history.
+Any input, contract, knowledge-context, Skill-input receipt, or context drift
+invalidates only that derived artifact. Automatically rebuild the owner-owned
+artifact and create a binding-derived successor run; never overwrite the stale
+predecessor. Fail closed only if deterministic rebuild cannot verify a required
+source, scope, schema, or authority.
 
 Treat a historical Acceptance directory without `run-state.json` as an
 artifact-only legacy run. Preserve it for replay, never auto-migrate it into

@@ -74,7 +74,7 @@ def main() -> int:
     parser.add_argument("--supersede-frozen-context", action="store_true")
     parser.add_argument("--expected-context-sha256")
     parser.add_argument("--supersession-reason")
-    parser.add_argument("--allow-stale-catalog", action="store_true", help="Allow a published but older catalog during rapid repository evolution")
+    parser.add_argument("--allow-stale-catalog", action="store_true", help="Deprecated: catalog staleness is recorded as degraded by default")
     args = parser.parse_args()
     root = args.repository_root.resolve()
     if args.target_plan.is_absolute() or ".." in args.target_plan.parts:
@@ -98,13 +98,12 @@ def main() -> int:
         raise SystemExit("--catalog must name the canonical repository knowledge catalog")
     snapshot = json.loads(catalog_path.read_text(encoding="utf-8")).get("source_snapshot", {})
     request = {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": args.request_id, "consumer": "vdd", "query": args.query, "snapshot": {"ref": snapshot.get("ref"), "commit": snapshot.get("commit")}, "policy_revision": _policy_revision(root)}
-    if args.allow_stale_catalog:
-        request["allow_stale_catalog"] = True
+    request["allow_stale_catalog"] = True
     completed = subprocess.run(
         [
             sys.executable, "-B", str(root / "scripts/python/knowledge_locator.py"),
             "--repository-root", str(root), "--catalog", str(catalog_path),
-            *( ["--allow-stale-catalog"] if args.allow_stale_catalog else [] ),
+            "--allow-stale-catalog",
         ],
         input=json.dumps(request), text=True, encoding="utf-8", capture_output=True, check=False,
     )
@@ -127,6 +126,7 @@ def main() -> int:
         "request_sha256": validator.canonical_hash(request),
         "result_sha256": validator.canonical_hash(result),
     }
+    catalog_failure_code = validator.validate_catalog_freshness(root)
     failure_code = validator.validate_context(
         payload,
         repository_root=root,
@@ -134,9 +134,31 @@ def main() -> int:
         verify_sources=True,
         expected_consumer="vdd",
     )
+    if failure_code is None:
+        failure_code = validator.validate_worktree_sources(payload, root)
+    if failure_code == "candidate_worktree_source_hash_mismatch":
+        try:
+            payload = validator.refresh_context_read_set(payload, root)
+        except (OSError, ValueError):
+            # Preserve the verified mismatch when the owner cannot refresh its
+            # already selected read-set without changing selection shape.
+            pass
+        else:
+            failure_code = validator.validate_context(
+                payload,
+                repository_root=root,
+                verify_catalog=True,
+                verify_sources=True,
+                expected_consumer="vdd",
+            )
+            if failure_code is None:
+                failure_code = validator.validate_worktree_sources(payload, root)
     payload["preflight"] = {
         "status": "blocked" if failure_code else "ready",
         "failure_code": failure_code,
+        "knowledge_freshness": "degraded" if catalog_failure_code == "catalog_stale" else "current",
+        "catalog_failure_code": "catalog_stale" if catalog_failure_code == "catalog_stale" else None,
+        "source_freshness": "refreshed" if payload.get("source_refresh") else "catalog_bound",
         "context_sha256": validator.canonical_hash(payload),
     }
     if output.name != "knowledge-context.v1.json":

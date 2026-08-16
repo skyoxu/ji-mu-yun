@@ -78,6 +78,15 @@ def freeze_knowledge_context(target_root: Path, raw_path: str) -> dict[str, Any]
     preflight = document.get("preflight")
     if not isinstance(preflight, dict) or preflight.get("status") != "ready":
         raise InputError("knowledge context preflight is not ready")
+    catalog_failure = validation.validate_catalog_freshness(repository_root)
+    if catalog_failure not in {None, "catalog_stale"}:
+        raise InputError(f"knowledge context catalog is invalid: {catalog_failure}")
+    expected_freshness = "degraded" if catalog_failure == "catalog_stale" else "current"
+    if preflight.get("knowledge_freshness") != expected_freshness:
+        raise InputError("knowledge context freshness declaration is invalid")
+    expected_catalog_failure = "catalog_stale" if expected_freshness == "degraded" else None
+    if preflight.get("catalog_failure_code") != expected_catalog_failure:
+        raise InputError("knowledge context catalog freshness evidence is invalid")
     accepted = [
         decision
         for decision in document.get("decisions", [])

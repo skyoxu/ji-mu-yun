@@ -40,7 +40,11 @@ After the target plan's current declared terminal predicate passes, append its o
 1. Run `tools/loop_plan_directory.py` before every expensive action. It reads only the explicit target directory and its plan-local evidence and emits one next action.
 2. For `run-slice`, generate a plan-local `run_context` and invoke `tools/run_slice_lifecycle.py`; it uses the shared `LifecycleRunner` and `stage_artifact_composer`. Never handwrite stage, Capsule, attempt, or ledger JSON.
 3. Run the declared RED command and require its expected nonzero failure before a production write; then run GREEN, REFACTOR, and the plan-local slice predicate.
-4. After `slice-ready`, route the next unlocked slice automatically. Stop only at the plan-local terminal predicate, `external-repair-required`, or a repeated failure fingerprint.
+4. After `slice-ready`, route the next unlocked slice automatically. When a
+   previous terminal receipt is stale only because a declared candidate binding
+   changed, rerun the controlled terminal path and publish a successor receipt;
+   do not stop for manual evidence repair. Stop only at the plan-local terminal
+   predicate, `external-repair-required`, or a repeated failure fingerprint.
 5. A plan may consume an already-published implementation authorization before its first implementation slice. This Skill never launches Bootstrap Review, changes review evidence, or creates a successor policy. Its terminal result may only be `implementation-complete`; acceptance remains external.
 6. After a P0/P1 repair reaches the plan-local terminal predicate, read
    [repair-review-handoff.md](references/repair-review-handoff.md), generate the
@@ -67,10 +71,11 @@ Pass the explicit plan directory and target file paths as source roles. Use
 `scripts/python/launch_skill_input_consumer.py --create-request` with the
 candidate receipt and actual backend/model, then run the typed semantic child
 with that generated request. Never hand-author its execution identity. Require
-`validate_skill_input_consumption.py --require-ready` before
-action selection, `prepare`, or RED. `ready=false`, source drift, or a missing
-sidecar is a hard stop and must route to plan repair; no raw snapshot or log is
-fallback input. In the Python adapter, use `tools/adapter.py`'s
+`validate_skill_input_consumption.py --require-ready` before action selection,
+`prepare`, or RED. A stale but reconstructible Skill input is regenerated
+through the same typed workflow before the next action. `ready=false`, an
+unverifiable source mismatch, or a missing sidecar is a hard stop and must
+route to plan repair; no raw snapshot or log is fallback input. In the Python adapter, use `tools/adapter.py`'s
 `prepare_with_skill_input` wrapper so the gate result and context artifact are
 bound into the prepared slice.
 

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import copy
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -200,6 +202,78 @@ def validate_worktree_sources(payload: dict[str, Any], repository_root: Path) ->
     return None
 
 
+def refresh_context_read_set(payload: dict[str, Any], repository_root: Path) -> dict[str, Any]:
+    """Rehash an already selected read-set without widening its catalog selection."""
+    refreshed = copy.deepcopy(payload)
+    result = refreshed.get("locator_result")
+    candidates = result.get("candidates") if isinstance(result, dict) else None
+    if not isinstance(candidates, list) or not candidates:
+        raise ValueError("locator_candidates_invalid")
+    base_result_hash = refreshed.get("result_sha256")
+    if not isinstance(base_result_hash, str) or base_result_hash != canonical_hash(result):
+        raise ValueError("locator_hash_mismatch")
+    refreshed_candidates: dict[tuple[object, object], str] = {}
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            raise ValueError("locator_candidates_invalid")
+        original_key = (candidate.get("path"), candidate.get("source_sha256"))
+        read_set = candidate.get("read_set")
+        if read_set is None:
+            read_set = [{"path": candidate.get("path"), "source_sha256": candidate.get("source_sha256")}]
+            candidate["read_set"] = read_set
+        if not isinstance(read_set, list) or not read_set:
+            raise ValueError("locator_candidate_read_set_invalid")
+        for index, item in enumerate(read_set):
+            if not isinstance(item, dict):
+                raise ValueError("locator_candidate_read_set_invalid")
+            source = _contained_source(repository_root, item.get("path"))
+            if str(item.get("path")).replace("\\", "/").startswith("docs/migration/"):
+                raise ValueError("candidate_path_excluded")
+            digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            item["source_sha256"] = digest
+            if index == 0:
+                candidate["path"] = item["path"]
+                candidate["source_sha256"] = digest
+                refreshed_candidates[original_key] = digest
+    decisions = refreshed.get("decisions")
+    if not isinstance(decisions, list):
+        raise ValueError("consumption_decision_invalid")
+    for decision in decisions:
+        candidate = decision.get("candidate") if isinstance(decision, dict) else None
+        if not isinstance(candidate, dict):
+            raise ValueError("consumption_decision_invalid")
+        key = (candidate.get("path"), candidate.get("source_sha256"))
+        if key in refreshed_candidates:
+            candidate["source_sha256"] = refreshed_candidates[key]
+    refreshed["result_sha256"] = canonical_hash(result)
+    if refreshed["result_sha256"] != base_result_hash:
+        refreshed["source_refresh"] = {
+            "schema_version": "jimuyun.knowledge-source-refresh.v1",
+            "mode": "current_worktree_read_set",
+            "base_locator_result_sha256": base_result_hash,
+        }
+    return refreshed
+
+
+def _source_refresh_is_valid(payload: dict[str, Any]) -> bool:
+    value = payload.get("source_refresh")
+    if value is None:
+        return False
+    if not isinstance(value, dict) or set(value) != {
+        "schema_version", "mode", "base_locator_result_sha256"
+    }:
+        raise ValueError("source_refresh_invalid")
+    if (
+        value.get("schema_version") != "jimuyun.knowledge-source-refresh.v1"
+        or value.get("mode") != "current_worktree_read_set"
+        or not isinstance(value.get("base_locator_result_sha256"), str)
+        or not re.fullmatch(r"sha256:[0-9a-f]{64}", value["base_locator_result_sha256"])
+        or value["base_locator_result_sha256"] == payload.get("result_sha256")
+    ):
+        raise ValueError("source_refresh_invalid")
+    return True
+
+
 def validate_context(
     payload: dict[str, Any],
     *,
@@ -233,6 +307,10 @@ def validate_context(
         return "locator_snapshot_mismatch"
     if payload.get("request_sha256") != canonical_hash(request) or payload.get("result_sha256") != canonical_hash(result):
         return "locator_hash_mismatch"
+    try:
+        source_refresh = _source_refresh_is_valid(payload)
+    except ValueError as exc:
+        return str(exc)
     preflight = payload.get("preflight")
     if preflight is None:
         if require_preflight:
@@ -248,9 +326,10 @@ def validate_context(
     snapshot = request.get("snapshot")
     if not isinstance(snapshot, dict) or snapshot.get("ref") != "refs/heads/main" or not isinstance(snapshot.get("commit"), str):
         return "locator_snapshot_invalid"
+    catalog_freshness: str | None = None
     if repository_root is not None and verify_catalog:
-        catalog_error = validate_catalog_freshness(repository_root.resolve())
-        catalog_error = catalog_freshness_failure(catalog_error, request)
+        catalog_freshness = validate_catalog_freshness(repository_root.resolve())
+        catalog_error = catalog_freshness_failure(catalog_freshness, request)
         if catalog_error:
             return catalog_error
     if result.get("status") != "matched":
@@ -318,6 +397,20 @@ def validate_context(
         return None
     repository_root = repository_root.resolve()
     if verify_catalog:
+        if preflight is not None:
+            has_freshness_declaration = (
+                "knowledge_freshness" in preflight or "catalog_failure_code" in preflight
+            )
+            if has_freshness_declaration:
+                expected_freshness = "degraded" if catalog_freshness == "catalog_stale" else "current"
+                expected_failure = "catalog_stale" if expected_freshness == "degraded" else None
+                if (
+                    preflight.get("knowledge_freshness") != expected_freshness
+                    or preflight.get("catalog_failure_code") != expected_failure
+                ):
+                    return "preflight_catalog_freshness_invalid"
+            elif catalog_freshness == "catalog_stale" and require_preflight:
+                return "preflight_catalog_freshness_missing"
         catalog = json.loads((repository_root / CATALOG_RELATIVE).read_text(encoding="utf-8"))
         source_snapshot = catalog.get("source_snapshot", {})
         if request.get("snapshot") != {"ref": source_snapshot.get("ref"), "commit": source_snapshot.get("commit")}:
@@ -354,8 +447,19 @@ def validate_context(
         else:
             eligible_module_ids = None
         registered = _catalog_candidates(catalog)
+        registered_by_path: dict[str, dict[str, Any] | None] = {}
+        for entry in registered.values():
+            source_path = entry.get("source_path") or entry.get("path")
+            if not isinstance(source_path, str):
+                continue
+            registered_by_path[source_path] = (
+                entry if source_path not in registered_by_path else None
+            )
         for candidate in candidate_documents:
-            entry = registered.get((candidate["path"], candidate["source_sha256"]))
+            entry = (
+                registered_by_path.get(candidate["path"])
+                if source_refresh else registered.get((candidate["path"], candidate["source_sha256"]))
+            )
             if entry is None:
                 return "locator_candidate_catalog_mismatch"
             if candidate.get("module_id") is not None and candidate.get("module_id") != entry.get("module_id"):
@@ -375,9 +479,14 @@ def validate_context(
                     actual = _candidate_read_set(candidate)
                 except ValueError as exc:
                     return str(exc)
-                if actual != expected:
+                if source_refresh:
+                    if [path for path, _digest in actual] != [path for path, _digest in expected]:
+                        return "locator_candidate_read_set_mismatch"
+                elif actual != expected:
                     return "locator_candidate_read_set_mismatch"
     if verify_sources:
+        if source_refresh:
+            return validate_worktree_sources(payload, repository_root)
         commit = snapshot["commit"]
         for candidate in candidate_documents:
             try:

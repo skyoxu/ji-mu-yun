@@ -68,7 +68,8 @@ class RefactorAcceptanceKnowledgeContextTests(unittest.TestCase):
             document = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual("refactor-acceptance", captured["request"]["consumer"])
             self.assertEqual(1, captured["request"]["max_candidates"])
-            self.assertEqual(["--max-candidates", "1"], captured["command"][-2:])
+            self.assertIn("--allow-stale-catalog", captured["command"])
+            self.assertEqual("1", captured["command"][captured["command"].index("--max-candidates") + 1])
             locator = Path(captured["command"][2])
             self.assertEqual((root / "scripts" / "python" / "knowledge_locator.py").resolve(), locator.resolve())
             self.assertEqual("ready", document["preflight"]["status"])
@@ -118,7 +119,7 @@ class RefactorAcceptanceKnowledgeContextTests(unittest.TestCase):
             module._output_path(root, Path("execution-plans/plan/context.json"), target),
         )
 
-    def test_catalog_stale_returns_typed_maintenance_route_without_writing_context(self) -> None:
+    def test_catalog_stale_writes_degraded_context_without_maintenance_route(self) -> None:
         module = _load("prepare_knowledge_context.py")
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -135,19 +136,46 @@ class RefactorAcceptanceKnowledgeContextTests(unittest.TestCase):
                 "--output", "execution-plans/plan/knowledge-context.json",
             ]
             with mock.patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=json.dumps(locator), stderr="")), \
-                 mock.patch.object(module, "validate_context", return_value="catalog_stale"), \
+                 mock.patch.object(module, "validate_context", return_value=None), \
+                 mock.patch.object(module, "validate_catalog_freshness", return_value="catalog_stale"), \
+                 mock.patch.object(module, "validate_worktree_sources", return_value=None), \
                  mock.patch.object(sys, "argv", argv), mock.patch("builtins.print") as printed:
-                self.assertEqual(2, module.main())
-            route = json.loads(printed.call_args.args[0])
-            self.assertEqual("knowledge-maintenance-required", route["next_action"])
-            self.assertFalse(route["automatic_publication_allowed"])
-            self.assertTrue(route["requires_explicit_maintainer_confirmation"])
-            self.assertEqual([], route["authorizes"])
-            self.assertTrue(route["route_sha256"].startswith("sha256:"))
-            route_output = root / route["route_output"]
-            self.assertTrue(route_output.is_file())
-            self.assertEqual(route, json.loads(route_output.read_text(encoding="utf-8")))
-            self.assertFalse((root / "execution-plans/plan/knowledge-context.json").exists())
+                self.assertEqual(0, module.main())
+            result = json.loads(printed.call_args.args[0])
+            self.assertEqual("ready", result["status"])
+            context = json.loads((root / "execution-plans/plan/knowledge-context.json").read_text(encoding="utf-8"))
+            self.assertTrue(context["locator_request"]["allow_stale_catalog"])
+            self.assertEqual("degraded", context["preflight"]["knowledge_freshness"])
+            self.assertEqual("catalog_stale", context["preflight"]["catalog_failure_code"])
+            self.assertFalse((root / "execution-plans/plan/knowledge-context-routes").exists())
+
+    def test_freeze_accepts_degraded_catalog_with_current_read_set(self) -> None:
+        module = _load("knowledge_context.py")
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary).resolve()
+            document = {
+                "consumer": "refactor-acceptance",
+                "locator_request": {"allow_stale_catalog": True},
+                "locator_result": {"source_snapshot_id": "sha256:" + "a" * 64},
+                "decisions": [],
+                "request_sha256": "sha256:" + "b" * 64,
+                "result_sha256": "sha256:" + "c" * 64,
+            }
+            document["preflight"] = {
+                "status": "ready", "failure_code": None,
+                "knowledge_freshness": "degraded", "catalog_failure_code": "catalog_stale",
+                "context_sha256": module.canonical_hash(document),
+            }
+            (target / "knowledge-context.json").write_text(json.dumps(document), encoding="utf-8")
+            validator = SimpleNamespace(
+                validate_context=lambda *args, **kwargs: None,
+                validate_worktree_sources=lambda *args, **kwargs: None,
+                validate_catalog_freshness=lambda *args, **kwargs: "catalog_stale",
+            )
+            with mock.patch.object(module, "_repository_root", return_value=target), \
+                 mock.patch.object(module, "_validator", return_value=validator):
+                frozen = module.freeze_knowledge_context(target, "knowledge-context.json")
+            self.assertEqual("knowledge-context.json", frozen["path"])
 
     def test_worktree_read_set_drift_returns_route_before_context_publication(self) -> None:
         module = _load("prepare_knowledge_context.py")

@@ -16,6 +16,8 @@ if str(PYTHON_ROOT) not in sys.path:
 
 from knowledge_context_validation import (  # noqa: E402
     canonical_hash,
+    refresh_context_read_set,
+    validate_catalog_freshness,
     validate_context,
     validate_worktree_sources,
 )
@@ -91,6 +93,9 @@ def main() -> int:
         "max_candidates": args.max_candidates,
         "snapshot": {"ref": snapshot.get("ref"), "commit": snapshot.get("commit")},
         "policy_revision": _policy_revision(root),
+        # Catalog freshness affects retrieval coverage, not the integrity of a
+        # Locator result whose complete source/read-set is independently bound.
+        "allow_stale_catalog": True,
     }
     completed = subprocess.run(
         [
@@ -98,6 +103,7 @@ def main() -> int:
             str(root / "scripts" / "python" / "knowledge_locator.py"),
             "--repository-root", str(root),
             "--max-candidates", str(args.max_candidates),
+            "--allow-stale-catalog",
         ],
         input=json.dumps(request, ensure_ascii=False),
         text=True,
@@ -133,6 +139,7 @@ def main() -> int:
         "request_sha256": canonical_hash(request),
         "result_sha256": canonical_hash(result),
     }
+    catalog_failure_code = validate_catalog_freshness(root)
     failure_code = validate_context(
         payload,
         repository_root=root,
@@ -143,9 +150,31 @@ def main() -> int:
     )
     if failure_code is None:
         failure_code = validate_worktree_sources(payload, root)
+    if failure_code == "candidate_worktree_source_hash_mismatch":
+        try:
+            payload = refresh_context_read_set(payload, root)
+        except (OSError, ValueError):
+            # The original mismatch is the stable, fail-closed diagnosis when
+            # the selected read-set cannot be safely refreshed.
+            pass
+        else:
+            failure_code = validate_context(
+                payload,
+                repository_root=root,
+                verify_catalog=True,
+                verify_sources=True,
+                expected_consumer="refactor-acceptance",
+                require_selection=True,
+            )
+            if failure_code is None:
+                failure_code = validate_worktree_sources(payload, root)
+    knowledge_freshness = "degraded" if catalog_failure_code == "catalog_stale" else "current"
     payload["preflight"] = {
         "status": "blocked" if failure_code else "ready",
         "failure_code": failure_code,
+        "knowledge_freshness": knowledge_freshness,
+        "catalog_failure_code": "catalog_stale" if knowledge_freshness == "degraded" else None,
+        "source_freshness": "refreshed" if payload.get("source_refresh") else "catalog_bound",
         "context_sha256": canonical_hash(payload),
     }
     if failure_code is not None:
@@ -153,13 +182,13 @@ def main() -> int:
             "schema_version": "jimuyun.acceptance-knowledge-maintenance-route.v1",
             "status": "blocked",
             "failure_code": failure_code,
-            "next_action": "knowledge-maintenance-required" if failure_code == "catalog_stale" else "knowledge-context-repair-required",
+            "next_action": "knowledge-context-repair-required",
             "target_plan": target_plan.relative_to(root).as_posix(),
             "snapshot": request["snapshot"],
             "request_sha256": payload["request_sha256"],
             "result_sha256": payload["result_sha256"],
             "automatic_publication_allowed": False,
-            "requires_explicit_maintainer_confirmation": failure_code == "catalog_stale",
+            "requires_explicit_maintainer_confirmation": False,
             "authorizes": [],
         }
         route_seed = canonical_hash(route).removeprefix("sha256:")

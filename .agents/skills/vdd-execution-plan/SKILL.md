@@ -110,7 +110,13 @@ mandatory knowledge-consumption sequence in
 Skill's `scripts/vdd_knowledge_preflight.py` with the request, result, and
 adapter-owned decisions. A required module without a matched, reread,
 hash-verified Locator candidate blocks `plan-ready`; optional insufficient
-matches remain explicit and non-authorizing.
+matches remain explicit and non-authorizing. `catalog_stale` alone does not
+block: the context records `knowledge_freshness=degraded` and continues only
+after the same source/read-set verification. Invalid publication and every
+selection-shape or Locator integrity failure remain blocking. A hash-only drift of
+an already selected read-set is refreshed automatically without widening its
+catalog path/module/resource selection; unavailable sources or a selection-shape
+change remain blocking.
 
 Use `scripts/prepare_knowledge_context.py` to create the request and frozen
 Locator result. Its `--accept` arguments are explicit adapter decisions; it
