@@ -1,0 +1,24 @@
+{
+  "schema_version": "skill-semantic-decision.v1",
+  "producer_role": "controlled-semantic-skill-input-consumer",
+  "execution_identity": "sha256:05109211b8b927f1e3b5a32e0b4be2a1b19354e29035921ad3aa9b9d4df5fcdb",
+  "source_manifest_hash": "sha256:3542801b82d9f0e3b1afc406003d3c7dc897cced0d08c47182694389bacb0bfb",
+  "context_artifact_hash": "sha256:0fab24b7c46a5f66da1be3886df0da5e18fe9000690ae4e8a96c204634916d57",
+  "source_statuses": {
+    "_bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-15/ARCHITECTURE-SPINE.md": "accepted",
+    "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/SPEC.md": "accepted",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/00-index.md": "accepted",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json": "accepted",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json": "accepted",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-8/source-freeze-manifest.v1.json": "accepted",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/finding-set.json": "accepted",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/i/plan-input.md": "accepted",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/repair-slices.json": "accepted",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md": "accepted"
+  },
+  "status": "accepted",
+  "rationale": "All manifest sources have complete supplied coverage and support a bounded redacted execution-planning context.",
+  "redaction_status": "complete",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "authorizes": []
+}

@@ -1,0 +1,79 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "sources": [
+    {
+      "path": "_bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-15/ARCHITECTURE-SPINE.md",
+      "sha256": "sha256:56e1718d3a868af862395803e927703f6081802dde42d3e39e3eb3652d6260dd",
+      "semantic_snapshot_sha256": "sha256:56e1718d3a868af862395803e927703f6081802dde42d3e39e3eb3652d6260dd",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/SPEC.md",
+      "sha256": "sha256:0d0ca945e96f0905d792779e22fcb3d49a211992ce0167a523d2a4e2b66e5120",
+      "semantic_snapshot_sha256": "sha256:0d0ca945e96f0905d792779e22fcb3d49a211992ce0167a523d2a4e2b66e5120",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/00-index.md",
+      "sha256": "sha256:ccd50c498ff160c29372c476ae2bcc632f3df04e6522391cc5d227b5b720eb51",
+      "semantic_snapshot_sha256": "sha256:ccd50c498ff160c29372c476ae2bcc632f3df04e6522391cc5d227b5b720eb51",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "sha256": "sha256:76bc0f302923bf157d7f2ab91b3ae72b4b512a0f70d134b14b0e6ebcb7885574",
+      "semantic_snapshot_sha256": "sha256:76bc0f302923bf157d7f2ab91b3ae72b4b512a0f70d134b14b0e6ebcb7885574",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "sha256": "sha256:67a47d805c2e69912d0feb6c860b7c51a7eb96baf240f0c40481680b97a6db7f",
+      "semantic_snapshot_sha256": "sha256:67a47d805c2e69912d0feb6c860b7c51a7eb96baf240f0c40481680b97a6db7f",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-8/source-freeze-manifest.v1.json",
+      "sha256": "sha256:11bc6601a743598cf5c9110c8fe5892d8e35af1da5c5773dd336d6ad95840a90",
+      "semantic_snapshot_sha256": "sha256:11bc6601a743598cf5c9110c8fe5892d8e35af1da5c5773dd336d6ad95840a90",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/finding-set.json",
+      "sha256": "sha256:9e961d048a52947e7f98b4c62519d4bdf047ee3e5a960f8df4fa03726d95ac0f",
+      "semantic_snapshot_sha256": "sha256:9e961d048a52947e7f98b4c62519d4bdf047ee3e5a960f8df4fa03726d95ac0f",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/i/plan-input.md",
+      "sha256": "sha256:8bd3f41dc2c6ed17c8bb7df5d5f2d9961082efbc063858f1edbe1d2c8cc85851",
+      "semantic_snapshot_sha256": "sha256:8bd3f41dc2c6ed17c8bb7df5d5f2d9961082efbc063858f1edbe1d2c8cc85851",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/repair-slices.json",
+      "sha256": "sha256:ff1cca8b6615915e59910322420be57798bb0ccc664d34dab74781ccea32b669",
+      "semantic_snapshot_sha256": "sha256:ff1cca8b6615915e59910322420be57798bb0ccc664d34dab74781ccea32b669",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+      "sha256": "sha256:d69f00966efe8f1c7d6e5da204196a338320a4f65ba0e11e467a00d57c3044da",
+      "semantic_snapshot_sha256": "sha256:d69f00966efe8f1c7d6e5da204196a338320a4f65ba0e11e467a00d57c3044da",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-16T15:15:23.486225Z"
+}

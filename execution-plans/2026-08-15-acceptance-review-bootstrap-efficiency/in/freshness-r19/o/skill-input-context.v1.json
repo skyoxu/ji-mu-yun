@@ -1,0 +1,49 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:3542801b82d9f0e3b1afc406003d3c7dc897cced0d08c47182694389bacb0bfb",
+  "sections": [
+    {
+      "title": "Architecture",
+      "content": "Evidence-gated artifact DAG separates lifecycle ownership from non-authorizing deterministic and Bootstrap evidence. Acceptance owns closure, route, imports, and final acceptance; Bootstrap owns isolated semantic execution and recovery only."
+    },
+    {
+      "title": "Canonical Evidence",
+      "content": "Use a shared strict canonical-evidence primitive with domain-separated complete identity references, immutable artifacts, verify-only legacy support, and cross-consumer vectors. Reject ambiguous JSON, identity, path, range, scope, and stale-input conditions."
+    },
+    {
+      "title": "Acceptance Route",
+      "content": "Admission requires a current implementation-complete handoff and immutable baseline/candidate. Acceptance builds changed-set and consumer closure, executes real required checks, then defaults to deterministic_only. Focused or full Bootstrap requires an explicit Acceptance-owned request record; failures and pauses are non-authorizing."
+    },
+    {
+      "title": "Bootstrap Execution",
+      "content": "Explicit Bootstrap work uses stable segment descriptors, immutable segment-only snapshots, inherited access proof, three isolated review roles, and an independent verifier only for accepted P0/P1 findings. Receipts remain non-authorizing and require exact binding validation."
+    },
+    {
+      "title": "Runtime Recovery",
+      "content": "Bootstrap runtime uses immutable policy-bound process events. Heartbeats refresh liveness only; validated effective progress controls no-progress windows. Lease occupancy is conjunctive, recovery is event-based, retries are bounded, and transport failures cannot become semantic completion."
+    },
+    {
+      "title": "Delivery Plan",
+      "content": "Seven ordered slices cover canonical evidence and migration; runtime recovery; acceptance pipeline; projection and isolation; semantic import/finalization; and scale/parity rollout. Whole-directory behavior remains until rollout gates and semantic parity pass."
+    },
+    {
+      "title": "Command Contract",
+      "content": "The registry defines fixed real RED/GREEN validation programs for canonical evidence, migration, runtime, acceptance pipeline, projection, import, rollout, and terminal validation. Receipts must bind executable, inputs, environment projection, results, and policy."
+    },
+    {
+      "title": "Repair Findings",
+      "content": "Round 9 repairs three P1 gaps: remove inferred Bootstrap route upgrades, make deterministic check outcomes machine-verifiable, and require controlled Acceptance-owned admission for optional Bootstrap requests."
+    },
+    {
+      "title": "Repair Scope",
+      "content": "Repair slices target S3 acceptance routing and evidence, S5 deterministic/default finalization and explicit Bootstrap import, and S6 regression proof of zero default-route Bootstrap calls and rejection of forged or inferred upgrades."
+    },
+    {
+      "title": "Requirements",
+      "content": "Acceptance criteria require complete closure, real checks, deterministic default routing, explicit-request-only semantic review, isolated three-role coverage, bounded recovery, canonical identity safety, preserved historical failures, semantic parity, telemetry, and Acceptance-only lifecycle publication."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-17T00:00:00Z"
+}
