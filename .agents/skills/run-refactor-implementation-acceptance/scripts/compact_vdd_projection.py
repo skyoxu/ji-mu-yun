@@ -69,7 +69,8 @@ def _validate_request(value: dict[str, Any]) -> None:
         "codeReviewDomain", "codeReviewPolicyPath", "implementationReceiptPath",
         "implementationReceiptHash", "commands", "actions", "authorizes",
     }
-    if set(value) not in {frozenset(required), frozenset(required | {"baselineOverlaySources"})} or value.get("schemaVersion") != "compact-vdd-acceptance-projection-request.v1" or value.get("authorizes") != []:
+    allowed = {frozenset(required), frozenset(required | {"baselineOverlaySources"}), frozenset(required | {"candidateRevision"}), frozenset(required | {"candidateRevision", "baselineOverlaySources"})}
+    if set(value) not in allowed or value.get("schemaVersion") != "compact-vdd-acceptance-projection-request.v1" or value.get("authorizes") != []:
         raise InputError("compact VDD projection request fields are invalid")
     if not isinstance(value.get("runId"), str) or RUN_PATTERN.fullmatch(value["runId"]) is None:
         raise InputError("compact VDD projection runId is invalid")
@@ -90,6 +91,10 @@ def _validate_request(value: dict[str, Any]) -> None:
         raise InputError("compact VDD projection commands are missing")
     if not isinstance(value.get("actions"), list) or not value["actions"]:
         raise InputError("compact VDD projection actions are missing")
+    if "candidateRevision" in value:
+        candidate = value["candidateRevision"]
+        if not isinstance(candidate, str) or not re.fullmatch(r"[0-9a-f]{40}", candidate):
+            raise InputError("compact VDD candidateRevision is invalid")
     overlays = value.get("baselineOverlaySources", {})
     if not isinstance(overlays, dict) or any(
         not isinstance(path, str) or not isinstance(source, str)
@@ -193,10 +198,28 @@ def _implementation_handoff(root: Path, target: Path, request: dict[str, Any]) -
     return receipt_path, receipt, runner_path
 
 
+def _candidate_payload(root: Path, request: dict[str, Any], path: str) -> bytes | None:
+    revision = request.get("candidateRevision")
+    if revision is not None:
+        return _git_blob(root, revision, path)
+    current = root / path
+    return current.read_bytes() if current.is_file() else None
+
+
 def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     root = repository_root.resolve()
     request = _load(request_path)
     _validate_request(request)
+    if request.get("candidateRevision"):
+        status = (_git(root, "status", "--porcelain") or b"").decode("utf-8")
+        lines = [line for line in status.splitlines() if line]
+        allowed_request = (
+            len(lines) == 1
+            and lines[0].startswith("?? ")
+            and (root / lines[0][3:]).resolve() == request_path.resolve()
+        )
+        if status and not allowed_request:
+            raise InputError("commit candidate requires a clean worktree apart from its projection request")
     target = (root / request["targetPlan"]).resolve()
     try:
         target.relative_to(root)
@@ -220,8 +243,7 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     present_payloads: dict[str, bytes] = {}
     for path in request["changedPaths"]:
         baseline_payload = _git_blob(root, resolved_revision, path)
-        current = root / path
-        candidate_payload = current.read_bytes() if current.is_file() else None
+        candidate_payload = _candidate_payload(root, request, path)
         if baseline_payload is None and candidate_payload is None:
             raise InputError(f"changed path has neither baseline nor candidate bytes: {path}")
         if baseline_payload is not None:
@@ -307,9 +329,8 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
             "target": str(target),
             "target_plan_paths": request["targetPlanPaths"],
             "baseline_revision": resolved_revision,
-            "candidate_revision": "dirty-worktree:" + canonical_hash(candidate_manifest).split(":", 1)[1],
-            "candidate_mode": "dirty_worktree",
-            "candidate_frozen_snapshot_path": f".acceptance-snapshots/{run_id}",
+            "candidate_revision": request.get("candidateRevision") or "dirty-worktree:" + canonical_hash(candidate_manifest).split(":", 1)[1],
+            "candidate_mode": "commit" if request.get("candidateRevision") else "dirty_worktree",
             "execution_mode": "evidence_only",
             "baseline_content_manifest_path": baseline_ref_path.as_posix(),
             "baseline_content_manifest_hash": canonical_hash(baseline_manifest),
@@ -328,6 +349,8 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
             "changed_paths": request["changedPaths"],
             "affected_consumer_refs": request["affectedConsumerRefs"],
         }
+        if not request.get("candidateRevision"):
+            run_request["candidate_frozen_snapshot_path"] = f".acceptance-snapshots/{run_id}"
         validate_run_input(run_request)
         stage_request = stage / final_request.name
         stage_request.write_text(json.dumps(run_request, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")

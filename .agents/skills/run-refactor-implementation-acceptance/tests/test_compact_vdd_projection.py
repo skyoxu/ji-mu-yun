@@ -127,6 +127,20 @@ class CompactVddProjectionTests(unittest.TestCase):
         with self.assertRaisesRegex(InputError, "already exists"):
             project(self.root, self.request_path)
 
+    def test_projection_accepts_a_clean_explicit_commit_candidate(self) -> None:
+        subprocess.run(["git", "add", "."], cwd=self.root, check=True)
+        subprocess.run(["git", "commit", "--quiet", "-m", "candidate"], cwd=self.root, check=True)
+        candidate = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.root, text=True).strip()
+        self.request["candidateRevision"] = candidate
+        self.write_request()
+
+        result = project(self.root, self.request_path)
+        request = json.loads((self.root / result["runRequest"]).read_text(encoding="utf-8"))
+
+        self.assertEqual("commit", request["candidate_mode"])
+        self.assertEqual(candidate, request["candidate_revision"])
+        self.assertNotIn("candidate_frozen_snapshot_path", request)
+
     def test_projection_rejects_handoff_that_no_longer_matches_the_terminal_contract(self) -> None:
         receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
         receipt["terminal_command_id"] = "other"
