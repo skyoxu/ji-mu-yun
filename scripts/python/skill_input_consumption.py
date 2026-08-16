@@ -194,14 +194,15 @@ def _git(repository_root: Path, *args: str) -> str:
 
 
 def repository_identity(repository_root: Path, scoped_paths: Iterable[str]) -> dict[str, str]:
+    normalized_paths = sorted(set(scoped_paths))
     head = _git(repository_root, "rev-parse", "HEAD")
     index = subprocess.run(
-        ["git", "-C", str(repository_root), "diff", "--cached", "--binary"],
+        ["git", "-C", str(repository_root), "diff", "--cached", "--binary", "--", *normalized_paths],
         capture_output=True,
         check=False,
     ).stdout
     worktree = subprocess.run(
-        ["git", "-C", str(repository_root), "diff", "--binary", "--", *sorted(set(scoped_paths))],
+        ["git", "-C", str(repository_root), "diff", "--binary", "--", *normalized_paths],
         capture_output=True,
         check=False,
     ).stdout

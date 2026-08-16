@@ -415,7 +415,9 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
         current_identity = repository_identity(repository_root, expected_paths)
     except SkillInputError as exc:
         raise ReceiptValidationError(str(exc)) from exc
-    if identity != current_identity:
+    # The source manifest binds every consumed file by content hash. HEAD is
+    # provenance only, so unrelated commits cannot invalidate a frozen input.
+    if any(identity[key] != current_identity[key] for key in ("index_hash", "scoped_worktree_hash")):
         raise ReceiptValidationError("receipt repository identity is stale")
     root = receipt_path.parent.resolve()
     manifest_path, _ = _artifact(root, receipt.get("source_manifest"), "source_manifest")

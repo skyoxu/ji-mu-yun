@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -15,11 +16,37 @@ from typing import Any
 
 PLAN_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = PLAN_ROOT.parents[1]
-CURRENT_SOURCE_FREEZE = PLAN_ROOT / "repair" / "round-6" / "source-freeze-manifest.v1.json"
+ROUND_DIRECTORY = re.compile(r"round-(\d+)")
+FRESHNESS_DIRECTORY = re.compile(r"freshness-r(\d+)")
 
 
 def _sha(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def _latest_append_only_artifact(parent: Path, pattern: re.Pattern[str], filename: str, label: str) -> Path:
+    candidates: list[tuple[int, Path]] = []
+    if parent.is_dir():
+        for child in parent.iterdir():
+            match = pattern.fullmatch(child.name)
+            artifact = child / filename
+            if match and artifact.is_file():
+                candidates.append((int(match.group(1)), artifact))
+    if not candidates:
+        raise ValueError(f"current {label} evidence is missing")
+    return max(candidates, key=lambda item: item[0])[1]
+
+
+def _current_source_freeze() -> Path:
+    return _latest_append_only_artifact(
+        PLAN_ROOT / "repair", ROUND_DIRECTORY, "source-freeze-manifest.v1.json", "source-freeze"
+    )
+
+
+def _current_freshness_receipt() -> Path:
+    return _latest_append_only_artifact(
+        PLAN_ROOT / "in", FRESHNESS_DIRECTORY, "receipt.json", "Skill Input freshness"
+    )
 
 
 def _run(*args: str) -> bytes:
@@ -81,11 +108,22 @@ def _validate_implementation_authorization(state: dict[str, Any], source: dict[s
     source_ref = receipt["source_freeze_manifest"]
     if not isinstance(source_ref, dict) or set(source_ref) != {"path", "sha256", "canonical_hash"}:
         raise ValueError("source freeze manifest reference is invalid")
-    source_path = CURRENT_SOURCE_FREEZE
-    if source_ref["path"] != source_path.relative_to(REPOSITORY_ROOT).as_posix() or source_ref["sha256"] != _sha(source_path.read_bytes()):
+    source_path = REPOSITORY_ROOT / source_ref["path"]
+    expected_parent = PLAN_ROOT / "repair"
+    if (
+        not isinstance(source_ref.get("path"), str)
+        or source_path.name != "source-freeze-manifest.v1.json"
+        or source_path.parent.parent != expected_parent
+        or ROUND_DIRECTORY.fullmatch(source_path.parent.name) is None
+        or not source_path.is_file()
+        or source_ref["sha256"] != _sha(source_path.read_bytes())
+    ):
         raise ValueError("source freeze manifest hash is stale")
-    if source_ref["canonical_hash"] != source.get("canonical_hash"):
+    authorized_source = _json(source_path)
+    if source_ref["canonical_hash"] != authorized_source.get("canonical_hash"):
         raise ValueError("source freeze canonical hash is stale")
+    if authorized_source.get("selection_hash") != source.get("selection_hash"):
+        raise ValueError("source freeze selection hash is stale")
     _validate_bound_file(
         receipt["implementation_contract"],
         "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
@@ -175,7 +213,7 @@ def _untracked_manifest() -> list[dict[str, str]]:
 def current_candidate_identity(_slice_id: str) -> dict[str, str]:
     contract = (PLAN_ROOT / "implementation-contract.v1.json").read_bytes()
     registry = (PLAN_ROOT / "command-registry.v1.json").read_bytes()
-    authority = CURRENT_SOURCE_FREEZE.read_bytes()
+    authority = _current_source_freeze().read_bytes()
     tracked = _run("diff", "--binary", "HEAD", "--")
     untracked = json.dumps(_untracked_manifest(), sort_keys=True, separators=(",", ":")).encode("utf-8")
     projection = b"\0".join((tracked, untracked, contract, registry, authority))
@@ -208,7 +246,7 @@ def _run_owner_validator(arguments: list[str], label: str) -> None:
 
 
 def _validate_freshness() -> None:
-    source_path = CURRENT_SOURCE_FREEZE
+    source_path = _current_source_freeze()
     source_module_path = REPOSITORY_ROOT / ".agents/skills/vdd-execution-plan/scripts/source_freeze.py"
     spec = importlib.util.spec_from_file_location("vdd_source_freeze_validator", source_module_path)
     if spec is None or spec.loader is None:
@@ -217,7 +255,7 @@ def _validate_freshness() -> None:
     spec.loader.exec_module(module)
     module.validate_manifest(REPOSITORY_ROOT, _json(source_path))
     skill_contract = ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json"
-    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r10/receipt.json"
+    receipt = _current_freshness_receipt().relative_to(REPOSITORY_ROOT).as_posix()
     _run_owner_validator(
         ["scripts/python/validate_skill_input_consumption.py", "--repository-root", ".", "--contract", skill_contract, "--require-ready", receipt],
         "Skill Input validation",
@@ -232,7 +270,7 @@ def validate_plan() -> dict[str, Any]:
     contract = _json(PLAN_ROOT / "implementation-contract.v1.json")
     registry = _json(PLAN_ROOT / "command-registry.v1.json")
     state = _json(PLAN_ROOT / "plan-state.v1.json")
-    source = _json(CURRENT_SOURCE_FREEZE)
+    source = _json(_current_source_freeze())
     required_files = {
         "00-index.md", "95-implementation-evolution-and-completion-report.md",
         "command-registry.v1.json", "implementation-contract.v1.json",

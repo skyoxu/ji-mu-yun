@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "acceptance-review-bootstrap-efficiency-20260816-r12",
+    "request_id": "acceptance-review-bootstrap-efficiency-20260816-r11",
     "consumer": "vdd",
     "query": "Repository Agent Contract repository rules toolchain control plane",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb"
+      "commit": "c36613b6330cb9b630b98388308b125e9d0defe8"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -507,8 +507,8 @@
         "enforcement_level": "E1",
         "kind": "governance-component",
         "lifecycle": "repository-source",
-        "line_end": 433,
-        "line_start": 433,
+        "line_end": 416,
+        "line_start": 416,
         "module_id": "governance.refactor-implementation-acceptance",
         "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
         "primary_domain": "toolchain",
@@ -526,7 +526,7 @@
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
             "role": "primary",
-            "source_sha256": "2eb83be6211212d4f8fc5b865f870eb0fc38f6f94c1aff40d7364e83cc82680c"
+            "source_sha256": "fa0010ac933813cd3671291af8efea4a2849a3219783f5a2189d100430b13bf0"
           },
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json",
@@ -541,7 +541,7 @@
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
             "role": "knowledge-adapter",
-            "source_sha256": "3752f56cb75604a0409e50bfc439b649a2247ba33e0f3b09f647b9584a229af3"
+            "source_sha256": "4192e3e7a3f5fbc5c8cbe84abf60c8a2b4733ddd82c27c5308374061ae06e48f"
           },
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-knowledge-maintenance-route.v1.schema.json",
@@ -585,7 +585,7 @@
         ],
         "semantic_eligible": true,
         "source_role": "skill-entrypoint",
-        "source_sha256": "2eb83be6211212d4f8fc5b865f870eb0fc38f6f94c1aff40d7364e83cc82680c",
+        "source_sha256": "fa0010ac933813cd3671291af8efea4a2849a3219783f5a2189d100430b13bf0",
         "status": "active",
         "visibility": {
           "marketplace": "excluded",
@@ -816,13 +816,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "acceptance-review-bootstrap-efficiency-20260816-r12",
+    "request_id": "acceptance-review-bootstrap-efficiency-20260816-r11",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb",
+      "commit": "c36613b6330cb9b630b98388308b125e9d0defe8",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:73439257113cd841332d7289e45f8bf3297be2c38652ecf4b97ed074f6f0e740",
+    "source_snapshot_id": "sha256:3b70ca3f7a7a760a7fa170b212a2a6ddc8711e180eec6aad752c7a19a784b531",
     "status": "matched"
   },
   "required_modules": [
@@ -915,7 +915,7 @@
       "owner": "adapter",
       "candidate": {
         "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
-        "source_sha256": "2eb83be6211212d4f8fc5b865f870eb0fc38f6f94c1aff40d7364e83cc82680c"
+        "source_sha256": "fa0010ac933813cd3671291af8efea4a2849a3219783f5a2189d100430b13bf0"
       },
       "decision": "rejected",
       "satisfies": [],
@@ -952,11 +952,11 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:59d28a53a57f3dcc06f6c64015713bc8888ecea0c63baccd9fb7ee531af2d9dc",
-  "result_sha256": "sha256:a18846069bbc06a9319bb45164363048bda02d219a123a6efd68e1db2b57dcea",
+  "request_sha256": "sha256:d39e0a38940969528e64c0a6cfa6d84ae6b945e2ceeedeb1bd0711f4dfae5f5b",
+  "result_sha256": "sha256:7a79faf4c7dbed6acf551b10afdeb144a5132625718e0f479e527b4695de7f6c",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:1a877b5163ea665ae920da026d38cf79db760413aa3addaf355fd80ca955fd1c"
+    "context_sha256": "sha256:417aedadd2b641d2ecc2674a70f953525873cc009c7e243108c389f37db16154"
   }
 }

@@ -505,13 +505,12 @@ class SkillInputConsumptionTests(unittest.TestCase):
                     "context",
                 )
 
-    def test_repository_identity_drift_fails_closed(self):
+    def test_repository_head_drift_without_source_drift_remains_valid(self):
         temporary, root, contract, receipt, args = self._fixture()
         self.addCleanup(temporary.cleanup)
         prepare(args)
         subprocess.run(["git", "commit", "--allow-empty", "-qm", "identity drift"], cwd=root, check=True)
-        with self.assertRaisesRegex(ReceiptValidationError, "repository identity is stale"):
-            validate_receipt(receipt, root, contract)
+        self.assertEqual("candidate", validate_receipt(receipt, root, contract)["status"])
 
     def test_ready_requires_sidecars(self):
         temporary, root, contract, receipt, args = self._fixture()

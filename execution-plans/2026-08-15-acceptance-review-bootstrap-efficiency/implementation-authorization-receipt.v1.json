@@ -2,9 +2,9 @@
   "schema_version": "acceptance-review-bootstrap-efficiency.implementation-authorization-receipt.v1",
   "plan_id": "acceptance-review-bootstrap-efficiency",
   "source_freeze_manifest": {
-    "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-6/source-freeze-manifest.v1.json",
-    "sha256": "sha256:e30c4803340bfae86d5d4828d8b896d11062293422ae34414f9f0d221c56a8f4",
-    "canonical_hash": "sha256:1bbb5811d7303384dfe81c61b550eeefc4856a8a66e73dd34bfba802b587be22"
+    "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-7/source-freeze-manifest.v1.json",
+    "sha256": "sha256:e43e415c162abae53fc648aaf1fca47a237a206f921347fdaecfec63ba804272",
+    "canonical_hash": "sha256:35c300a6f9760805bdb15e2916dceea7be1f7e0be0b81a4c328337a7ec0aa2f2"
   },
   "implementation_contract": {
     "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
@@ -22,7 +22,7 @@
     "command": "python tools/validate_all.py --validate-plan",
     "validator": {
       "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
-      "sha256": "sha256:4d3510817cf4e031bfc44c4c3ddfc25eb7a19fc8122114ae578acc3cf5787f6a"
+      "sha256": "sha256:00eea29b23b8c6f032ae1b0a44b301a727e31dcdaf3320a29dac5b723b6db23e"
     },
     "result": {
       "acceptance": 46,

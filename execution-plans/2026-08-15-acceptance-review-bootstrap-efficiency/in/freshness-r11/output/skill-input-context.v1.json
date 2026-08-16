@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:b45af387fdfe9bd6ba87ca039b7af6634f539344260baf4892f2c56b9ff743f6",
+  "sections": [
+    {
+      "title": "Architecture and authority",
+      "content": "The adopted architecture uses evidence-gated pipes and filters over immutable, owner-local artifacts. Lifecycle ownership is decentralized: VDD owns draft and plan-ready, the maintainer owns implementation-authorized, Quick Dev owns implementation-complete, and Acceptance alone owns acceptance-passed. Bootstrap and deterministic checks produce non-authorizing evidence with authorizes=[]. Canonical identities use strict, domain-separated canonical JSON through the shared canonical_evidence primitive; legacy identities are verify-only."
+    },
+    {
+      "title": "Acceptance scope and routing",
+      "content": "Acceptance admits only a current identity-bound implementation-complete handoff, freezes immutable baseline and candidate identities, builds a complete Changed-set Manifest, computes Consumer Closure to a typed-edge fixed point, and executes contract-projected required checks before semantic review. Candidate or authority mutation stales dependent evidence. Acceptance mode is supervised or unattended and is orthogonal to route. Deterministic-only runs no Bootstrap; the supervised form additionally requires an exact current maintainer decision. Focused and full routes run Bootstrap. Manual pause is non-authorizing. Registered risk or authority triggers require full conformance or manual pause."
+    },
+    {
+      "title": "Authority projection and review isolation",
+      "content": "Selected authority within the model-visible budget must be delivered completely; Partial reads continue from the reported offset until Complete. Over-budget authority may use only controller-owned, full-source-bound Range Projections with immutable source, range, byte, policy, and inclusion bindings. Bootstrap Complete Review preserves isolated Blind Hunter, Edge Case Hunter, and Acceptance Auditor roles over one frozen closure. Each child receives only its assigned immutable segment snapshot and validated access proof. Segment identity is stable across assignment, request, receipt, validation, fold, cache, and transport retry; attempt identity remains separate."
+    },
+    {
+      "title": "Execution, recovery, and evidence",
+      "content": "Append-only Process Events are execution authority. Liveness heartbeat does not establish Effective Progress. Only validated terminal transitions, evidence increments, or registered state transitions refresh the no-progress window. Lease occupancy requires matching process identity, live heartbeat, current progress window, and no terminal event. Failure or staleness is reconciled before bounded retry. Context-budget failure requires repartitioning. Only completed attempts with independently validated current receipts contribute semantic findings or coverage; transport and recovery outcomes remain non-authorizing. Recovery depends only on events, immutable descriptors, current process identity, and the bound policy."
+    },
+    {
+      "title": "Verification and rollout",
+      "content": "Acceptance publishes a pre-launch cost decision binding closure size, segment count, required roles and attempts, retry exposure, route, launch plan, and policy. Cost cannot weaken mandatory authority coverage. Rollout proceeds through M0 recovery and isolation, M1 Acceptance strategy integration, and M2 scale and finalization. The 8-13 regression and frozen semantic corpus must prove zero reviewer calls on deterministic failure, complete required role coverage, bounded attempts, no scope escape or stale lease, trigger-preserving routing, verifier preservation for accepted P0/P1 findings, exact evidence import, and rejection of false authorization. Historical failed runs remain immutable; vcec-r1n is abandoned, non-reusable, and non-authorizing. Formal wall-time and closure-reduction thresholds remain deferred to policy owners."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T12:08:32.324287Z"
+}
