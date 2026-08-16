@@ -1,0 +1,22 @@
+{
+  "schema_version": "vdd-repair-slices.v1",
+  "repair_id": "acceptance-review-bootstrap-efficiency-tdd-successor-r3",
+  "slices": [
+    {
+      "slice_id": "R3-S0",
+      "behavior": "Bind S3 to the immutable failed RED and run the independent successor GREEN/REFACTOR protocol.",
+      "changed_paths": [
+        "implementation-contract.v1.json",
+        ".agents/skills/quick-dev-tdd-adapter/**",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_pipeline.py"
+      ],
+      "targeted_validation": [
+        "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+        "py -3 -m pytest .agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_pipeline.py -q",
+        "py -3 execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py --validate-plan"
+      ],
+      "terminal_validation": "py -3 execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py --validate-plan"
+    }
+  ],
+  "authorizes": []
+}

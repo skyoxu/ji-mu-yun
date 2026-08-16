@@ -231,6 +231,13 @@ class ExecutionControlTests(unittest.TestCase):
             self.assertIsNone(execution_control.inspect_persisted_run(run, actions, "sha256:" + "a" * 64, "sha256:" + "b" * 64)["nextAction"])
             lifecycle = (run / "acceptance-events.jsonl").read_text(encoding="utf-8").splitlines()
             self.assertEqual(3, len(lifecycle))
+            completed = json.loads(lifecycle[-1])
+            receipt = run / completed["resultReceipt"]["path"]
+            self.assertTrue(receipt.is_file())
+            self.assertEqual(
+                completed["resultReceipt"]["sha256"],
+                "sha256:" + hashlib.sha256(receipt.read_bytes()).hexdigest(),
+            )
 
     def test_persisted_action_claim_is_exclusive_before_command_execution(self) -> None:
         import tempfile

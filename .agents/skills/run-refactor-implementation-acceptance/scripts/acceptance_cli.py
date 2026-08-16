@@ -66,6 +66,7 @@ from bootstrap_integration import (
 )
 from review_requirement import decide_review_requirement
 from semantic_import import finalize_acceptance, project_route
+from deterministic_finalization import finalize_deterministic_run
 
 
 def _read_json(path: str) -> object:
@@ -975,6 +976,13 @@ def main() -> int:
     finalize = subcommands.add_parser("finalize")
     finalize.add_argument("--request", required=True)
     finalize.add_argument("--out", required=True)
+    deterministic_finalize = subcommands.add_parser("finalize-deterministic-run")
+    deterministic_finalize.add_argument("--repository-root", required=True)
+    deterministic_finalize.add_argument("--run-dir", required=True)
+    deterministic_finalize.add_argument("--run-input", required=True)
+    deterministic_finalize.add_argument("--actions", required=True)
+    deterministic_finalize.add_argument("--command-registry", required=True)
+    deterministic_finalize.add_argument("--out", required=True)
     for name in ("project-semantic-route", "finalize-semantic-acceptance"):
         semantic = subcommands.add_parser(name)
         semantic.add_argument("--request", required=True)
@@ -1101,6 +1109,20 @@ def main() -> int:
         return 0
     if args.command == "finalize":
         print(json.dumps(finalize_command(args.request, args.out), sort_keys=True))
+        return 0
+    if args.command == "finalize-deterministic-run":
+        result = finalize_deterministic_run(
+            Path(args.repository_root), Path(args.run_dir), Path(args.run_input),
+            _read_json(args.actions), _read_json(args.command_registry),
+        )
+        output = Path(args.out)
+        if output.exists():
+            if _read_json(str(output)) != result:
+                raise InputError("deterministic finalization summary is not append-only")
+        else:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
+        print(json.dumps(result, sort_keys=True))
         return 0
     if args.command == "project-semantic-route":
         print(json.dumps(project_semantic_route_command(args.request, args.out), sort_keys=True))

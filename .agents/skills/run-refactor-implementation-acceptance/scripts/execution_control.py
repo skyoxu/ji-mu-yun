@@ -511,6 +511,7 @@ def record_lifecycle_event(
     owner_token: str,
     formal_write_set: Any,
     command_id: str | None = None,
+    result_receipt: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Append an authoritative lifecycle event and preserve immutable attempt input."""
     state, _ = _load_persisted_run(run_dir)
@@ -523,6 +524,15 @@ def record_lifecycle_event(
     validate_write_set(formal_write_set, formal_write_set, [])
     if command_id is not None and (not isinstance(command_id, str) or not command_id):
         raise ControlError("lifecycle command identity is invalid")
+    if result_receipt is not None:
+        if (
+            not isinstance(result_receipt, dict)
+            or set(result_receipt) != {"path", "sha256"}
+            or not isinstance(result_receipt["path"], str)
+            or not result_receipt["path"]
+            or not re.fullmatch(r"sha256:[a-f0-9]{64}", result_receipt["sha256"])
+        ):
+            raise ControlError("lifecycle result receipt binding is invalid")
     event_path = run_dir / "acceptance-events.jsonl"
     if not event_path.is_file():
         raise ControlError("lifecycle event log is missing")
@@ -544,6 +554,8 @@ def record_lifecycle_event(
         "processId": __import__("os").getpid(), "ownerToken": owner_token,
         "formalWriteSet": formal_write_set, "commandId": command_id, "authorizes": [],
     }
+    if result_receipt is not None:
+        event["resultReceipt"] = result_receipt
     if event_type in {"action-reserved", "run-superseded"}:
         request_path.write_text(json.dumps(event, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
     with event_path.open("a", encoding="utf-8", newline="\n") as handle:
@@ -770,14 +782,32 @@ def resume_persisted_run(
     record_lifecycle_event(run_dir, event_type="action-started", **lifecycle_args)
     try:
         result = resume_run(repository_root, actions, completed, command_registry)
+        receipt_path = run_dir / "actions" / action["actionId"] / attempt_id / "result.json"
+        try:
+            with receipt_path.open("x", encoding="utf-8", newline="\n") as handle:
+                json.dump(result["receipt"], handle, sort_keys=True, indent=2)
+                handle.write("\n")
+        except FileExistsError as exc:
+            raise ControlError("persisted action result receipt is not append-only") from exc
+        receipt_binding = {
+            "path": receipt_path.relative_to(run_dir).as_posix(),
+            "sha256": "sha256:" + hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
+        }
         if result["receipt"].get("exitCode") != 0:
-            record_lifecycle_event(run_dir, event_type="action-failed", **lifecycle_args)
+            record_lifecycle_event(
+                run_dir, event_type="action-failed", result_receipt=receipt_binding,
+                **lifecycle_args,
+            )
             return {
                 "schemaVersion": "acceptance-persisted-resume-result.v1", "runId": state["runId"],
                 "actionId": action["actionId"], "commandId": action["commandId"], "receipt": result["receipt"],
+                "resultReceipt": receipt_binding,
                 "actionEvent": None, "authorizes": [],
             }
-        record_lifecycle_event(run_dir, event_type="action-completed", **lifecycle_args)
+        record_lifecycle_event(
+            run_dir, event_type="action-completed", result_receipt=receipt_binding,
+            **lifecycle_args,
+        )
         event = append_action_event(run_dir, {"actionId": result["actionId"], "status": "completed", "commandId": result["commandId"]})
     except Exception:
         record_lifecycle_event(run_dir, event_type="action-failed", **lifecycle_args)
@@ -787,6 +817,7 @@ def resume_persisted_run(
     return {
         "schemaVersion": "acceptance-persisted-resume-result.v1", "runId": _load_persisted_run(run_dir)[0]["runId"],
         "actionId": result["actionId"], "commandId": result["commandId"], "receipt": result["receipt"],
+        "resultReceipt": receipt_binding,
         "actionEvent": event, "authorizes": [],
     }
 

@@ -91,7 +91,7 @@
     },
     {
       "id": "S5", "slice_id": "S5", "title": "semantic execution import and finalization",
-      "behavior": "Preserve Complete Review three-role semantics and gate/verifier rules; finalize the default deterministic_only route from current machine evidence, and validate current admitted-request Bootstrap evidence before Acceptance-owned finalization only for explicitly selected focused/full routes.",
+      "behavior": "Preserve Complete Review three-role semantics and gate/verifier rules; persist and hash-bind every controlled action receipt; automatically finalize the default deterministic_only route from the closed machine-evidence DAG without Bootstrap; and validate current admitted-request Bootstrap evidence before Acceptance-owned finalization only for explicitly selected focused/full routes.",
       "requirement_ids": ["ARBE-006", "ARBE-013", "ARBE-022"],
       "acceptance_ids": ["ARBE-A12", "ARBE-A13", "ARBE-A27", "ARBE-A28", "ARBE-A45", "ARBE-A46"],
       "source_refs": ["requirements-and-acceptance.md", "source-freeze-manifest.v1.json"],

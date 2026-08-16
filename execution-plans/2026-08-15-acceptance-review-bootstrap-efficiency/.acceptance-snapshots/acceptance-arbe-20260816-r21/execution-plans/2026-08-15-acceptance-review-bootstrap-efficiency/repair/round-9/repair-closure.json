@@ -1,0 +1,32 @@
+{
+  "schema_version": "vdd-repair-closure.v1",
+  "repair_id": "acceptance-review-bootstrap-efficiency-default-deterministic-r9",
+  "finding_set": {
+    "path": "repair/round-9/finding-set.json",
+    "sha256": "sha256:9e961d048a52947e7f98b4c62519d4bdf047ee3e5a960f8df4fa03726d95ac0f"
+  },
+  "repair_slices": {
+    "path": "repair/round-9/repair-slices.json",
+    "sha256": "sha256:ff1cca8b6615915e59910322420be57798bb0ccc664d34dab74781ccea32b669"
+  },
+  "successor_receipt": {
+    "path": "repair/round-9/source-freeze-manifest.v1.json",
+    "sha256": "sha256:74414bc1007ac8235a94012e0a42d9fb517415e65844d45d668f9c5bbd54c9d2"
+  },
+  "consumer": {
+    "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+    "sha256": "sha256:98d29dc34a6fba2c2806abe9f7cb47f1a76d1fb704dbb725b365a8078dde11d3"
+  },
+  "validator": {
+    "path": "tools/validate_all.py",
+    "sha256": "sha256:ab68920b5f2ebbe46801722411d15e37e9c1f4836367f52340405bdeb7549550"
+  },
+  "changed_paths": [
+    "requirements-and-acceptance.md",
+    "00-index.md",
+    "implementation-contract.v1.json",
+    "command-registry.v1.json",
+    "repair/round-9/**"
+  ],
+  "authorizes": []
+}

@@ -150,16 +150,26 @@ Execute the orchestration in this order:
    knowledge-context or Skill-input binding is omitted.
 4. Run the deterministic inventory, policy, matrix, checklist, scan, coverage,
    and evidence actions required by the target contract.
-5. Publish the immutable Bootstrap requirement decision and obtain a fresh
-   repository-owned `inspect-lineage` projection, including zero rounds. The
-   current `decide-bootstrap` command accepts only a repository root, a
-   prepared Acceptance run-input reference, a hash-bound deterministic
-   evidence reference, and maintainer intent. It replays candidate custody,
-   changed paths, the repository-owned semantic trigger policy, and policy
-   hashes itself. Caller-authored requirements, profiles, risk booleans, and
-   reason codes are legacy-read-only inputs and cannot publish a current
-   decision. Incomplete deterministic evidence is `blocked` and cannot be
-   routed to Bootstrap.
+   When the persisted action DAG is closed on the default `deterministic_only`
+   route, run `acceptance_cli.py finalize-deterministic-run` with that exact
+   prepared run input, action DAG, and command registry. It must replay the
+   hash-bound controlled receipts for every completed action, then append the
+   candidate evaluation, impact projection, and Acceptance-owned
+   `acceptance-passed` result. A missing, failed, or stale receipt fails closed;
+   this step does not invoke Bootstrap.
+5. For an explicitly selected semantic route, publish the immutable Bootstrap
+   requirement decision and obtain a fresh repository-owned `inspect-lineage`
+   projection, including zero rounds. The default `deterministic_only` route
+   does not call Bootstrap and proceeds directly from the receipt-bound
+   finalization above. When Bootstrap is explicitly requested, the current
+   `decide-bootstrap` command accepts only a repository root, a prepared
+   Acceptance run-input reference, a hash-bound deterministic evidence
+   reference, and maintainer intent. It replays candidate custody, changed
+   paths, the repository-owned semantic trigger policy, and policy hashes
+   itself. Caller-authored requirements, profiles, risk booleans, and reason
+   codes are legacy-read-only inputs and cannot publish a current decision.
+   Incomplete deterministic evidence is `blocked` and cannot be routed to
+   Bootstrap.
 6. Produce the bounded route with `route-acceptance`, the thin public alias for
    `prepare-bootstrap`:
 

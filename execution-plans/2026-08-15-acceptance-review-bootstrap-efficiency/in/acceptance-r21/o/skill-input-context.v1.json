@@ -1,0 +1,17 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:4d95afa81933c588dcde8aee6fb5df7c01f4f70615011a302766fd9cd68398ce",
+  "sections": [
+    {
+      "title": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "content": "Defines fixed acceptance commands for canonical evidence, migration, runtime policy, evidence pipeline, projection and segmentation, semantic import, rollout regression, and terminal validation. Commands bind acceptance IDs, timeouts, repository paths, and authorizes=[]."
+    },
+    {
+      "title": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+      "content": "Defines ARBE-001 through ARBE-022 and acceptance IDs ARBE-A01 through ARBE-A46. Requirements cover identity-bound admission, changed sets, closure, deterministic checks, explicit Bootstrap routing, role and verifier isolation, projections and segments, runtime progress and leases, canonical evidence migration, historical replay, telemetry, and Acceptance-owned finalization."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T15:41:03.470769Z"
+}
