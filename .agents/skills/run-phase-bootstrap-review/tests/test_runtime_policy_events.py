@@ -11,7 +11,7 @@ SPEC.loader.exec_module(RUNTIME)
 
 
 IDENTITY = {"candidate": "sha256:candidate", "closure": "sha256:closure", "segment": "sha256:segment", "attempt": "attempt-1"}
-POLICY = {"schema_version": "bootstrap-runtime-policy.v1", "no_progress_seconds": 60, "retry_limits": {"transport": 2}, "authorizes": []}
+POLICY = {"schema_version": "bootstrap-runtime-policy.v1", "liveness_seconds": 10, "effective_progress_seconds": 60, "no_progress_seconds": 60, "launch_grace_seconds": 5, "terminal_grace_seconds": 5, "lease_seconds": 60, "retry_limits": {"transport": 2}, "backoff_seconds": 1, "status_throttle_seconds": 5, "output_max_bytes": 12000, "authorizes": []}
 
 
 class RuntimePolicyEventsTests(unittest.TestCase):
@@ -30,13 +30,26 @@ class RuntimePolicyEventsTests(unittest.TestCase):
 
     def test_lease_requires_live_matching_process_identity(self):
         events = [
-            {"kind": "attempt_started", "attempt": "attempt-1", "write_set": ["x"], "process": {"pid": 7, "created": "a"}},
-            {"kind": "attempt_terminal", "attempt": "attempt-2", "write_set": ["y"], "process": {"pid": 8, "created": "b"}},
+            {"kind": "attempt_started", "attempt": "attempt-1", "timestamp": 100, "write_set": ["x"], "process": {"pid": 7, "created": "a"}},
+            {"kind": "attempt_terminal", "attempt": "attempt-2", "timestamp": 100, "write_set": ["y"], "process": {"pid": 8, "created": "b"}},
         ]
         live = {7: "a", 8: "reused"}
-        lease = RUNTIME.reconcile_leases(events, live)
+        lease = RUNTIME.reconcile_leases(events, live, now=105, policy=POLICY)
         self.assertEqual(["x"], lease["occupied_write_set"])
         self.assertEqual(["attempt-2"], lease["stale_attempts"])
+
+    def test_lease_requires_liveness_and_effective_progress_independently(self):
+        started = {"kind": "attempt_started", "attempt": "attempt-1", "timestamp": 100, "write_set": ["x"], "process": {"pid": 7, "created": "a"}}
+        live = {7: "a"}
+        self.assertEqual([], RUNTIME.reconcile_leases([started], live, now=111, policy=POLICY)["occupied_write_set"])
+        heartbeat = {"kind": "heartbeat", "attempt": "attempt-1", "timestamp": 155}
+        self.assertEqual([], RUNTIME.reconcile_leases([started, heartbeat], live, now=161, policy=POLICY)["occupied_write_set"])
+        progress = {"kind": "effective_progress", "attempt": "attempt-1", "timestamp": 155, "identity": IDENTITY, "progress": {**IDENTITY, "kind": "evidence_increment", "evidence_hash": "sha256:new"}}
+        self.assertEqual(["x"], RUNTIME.reconcile_leases([started, heartbeat, progress], live, now=161, policy=POLICY)["occupied_write_set"])
+
+    def test_rejects_incomplete_runtime_policy(self):
+        with self.assertRaises(ValueError):
+            RUNTIME.validate_runtime_policy({"schema_version": "bootstrap-runtime-policy.v1", "authorizes": []})
 
     def test_retry_is_transport_only_bounded_and_targets_failed_segment(self):
         self.assertEqual("retry", RUNTIME.retry_decision(POLICY, "transport", 1, "segment-2", {"segment-2"}))

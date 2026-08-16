@@ -1,0 +1,41 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:2e33195d84c41dc22f774ea0769874f2ac7357d1a7c327fde76aec650acad1ef",
+  "sections": [
+    {
+      "title": "Architecture Spine",
+      "content": "Evidence-gated artifact DAG: Acceptance owns closure, checks, routing, import, and finalization; Bootstrap produces non-authorizing evidence. Immutable complete identities, canonical evidence primitives, full-source delivery or controller-owned projections, stable segment descriptors, real required checks, event-based recovery, and typed routes fail closed on mismatch or staleness."
+    },
+    {
+      "title": "Specification",
+      "content": "CAP-1 through CAP-10 require identity-bound acceptance inputs, complete consumer closure, deterministic checks before model work, isolated three-role Bootstrap review where required, bounded recovery, cost decisions, exact evidence import, and semantic regression coverage. Lifecycle owners remain separated; assistant or advisory text is never authority."
+    },
+    {
+      "title": "Authority and Lifecycle",
+      "content": "VDD owns draft/plan-ready, maintainer owns implementation-authorized and non-authorizing supervised decisions, Quick Dev owns implementation-complete, and Acceptance alone publishes acceptance-passed. Mode and route are orthogonal; triggers force full review or pause."
+    },
+    {
+      "title": "Projection and Segmentation",
+      "content": "Selected authority is delivered completely within budget; over-budget content uses immutable hash-bound range projections. Segment assignments, requests, receipts, folds, and retries share one canonical descriptor. Children receive only frozen assigned snapshots and inherited access proof."
+    },
+    {
+      "title": "Execution and Recovery",
+      "content": "Append-only process events govern attempts. Heartbeats prove liveness only; controller-validated effective progress refreshes no-progress windows. Terminal events, process identity, leases, retries, and recovery are policy-bound and non-authorizing on failure."
+    },
+    {
+      "title": "Verification and Rollout",
+      "content": "Cost decisions precede launch. Regression and frozen semantic corpus must prove no omission, false authorization, transport-as-semantics, boundary escape, stale lease, or route downgrade. Delivery proceeds M0 recovery/isolation, M1 Acceptance strategy, then M2 scale and finalization."
+    },
+    {
+      "title": "Diagrams and Glossary",
+      "content": "Diagrams depict lifecycle routing and attempt reconciliation. Glossary defines Acceptance, Bootstrap Complete Review, closure, required checks, projections, segment snapshots, process events, modes, routes, and non-authorizing results."
+    },
+    {
+      "title": "Memory Log",
+      "content": "Historical process record confirms the canonical package, adopted architecture, resolved range/runtime/vcec-r1n decisions, and remaining policy measurement questions. It reinforces that authoritative implementation obligations are the finalized specification and companions."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T08:00:39.548205Z"
+}

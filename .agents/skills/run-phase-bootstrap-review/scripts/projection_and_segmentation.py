@@ -15,7 +15,7 @@ class ProjectionError(ValueError):
 
 
 _PROJECTION_DOMAIN = "bootstrap.range-projection.v1"
-_SEGMENT_DOMAIN = "bootstrap.segment-descriptor.v1"
+_SEGMENT_DOMAIN = "jimuyun.bootstrap.segment-descriptor.v1"
 _HASH_PREFIX = "sha256:"
 
 
@@ -33,36 +33,36 @@ def _hash_identity(value: Any, field: str) -> str:
     return value
 
 
-def _lines(source: bytes) -> list[bytes]:
+def _validate_utf8_boundaries(source: bytes, start_byte: int, end_byte: int) -> bytes:
     try:
         source.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise ProjectionError("projection source must be UTF-8") from exc
-    lines = source.splitlines(keepends=True)
-    if not lines:
+    if not source:
         raise ProjectionError("projection source must not be empty")
-    return lines
-
-
-def _slice(source: bytes, start_line: int, end_line: int) -> bytes:
-    lines = _lines(source)
     if (
-        not isinstance(start_line, int)
-        or not isinstance(end_line, int)
-        or start_line < 1
-        or end_line < start_line
-        or end_line > len(lines)
+        not isinstance(start_byte, int)
+        or isinstance(start_byte, bool)
+        or not isinstance(end_byte, int)
+        or isinstance(end_byte, bool)
+        or start_byte < 0
+        or end_byte < start_byte
+        or end_byte >= len(source)
     ):
         raise ProjectionError("inclusive projection range is invalid")
-    return b"".join(lines[start_line - 1:end_line])
+    if source[start_byte] & 0xC0 == 0x80:
+        raise ProjectionError("projection start is not a UTF-8 character boundary")
+    if end_byte + 1 < len(source) and source[end_byte + 1] & 0xC0 == 0x80:
+        raise ProjectionError("projection end is not a UTF-8 character boundary")
+    return source[start_byte:end_byte + 1]
 
 
 def build_range_projection(
     *,
     path: str,
     source: bytes,
-    start_line: int,
-    end_line: int,
+    start_byte: int,
+    end_byte: int,
     inclusion_reason: str,
     changed_set_id: str,
     requirement_ids: list[str],
@@ -75,15 +75,15 @@ def build_range_projection(
         raise ProjectionError("projection inclusion reason is invalid")
     if not all(isinstance(value, list) and value and all(isinstance(item, str) and item for item in value) for value in (requirement_ids, acceptance_ids)):
         raise ProjectionError("projection requirement or acceptance references are invalid")
-    extracted = _slice(source, start_line, end_line)
+    extracted = _validate_utf8_boundaries(source, start_byte, end_byte)
     document: dict[str, Any] = {
         "schema_version": "bootstrap.range-projection.v1",
         "path": path,
         "full_source_hash": _sha(source),
         "encoding": "utf-8",
         "newline_policy": "source-preserved",
-        "start_line": start_line,
-        "end_line": end_line,
+        "start_byte": start_byte,
+        "end_byte": end_byte,
         "extracted_bytes_base64": base64.b64encode(extracted).decode("ascii"),
         "extracted_bytes_hash": _sha(extracted),
         "inclusion_reason": inclusion_reason,
@@ -98,14 +98,14 @@ def build_range_projection(
 
 def validate_range_projection(projection: Any, source: bytes) -> dict[str, Any]:
     required = {
-        "schema_version", "path", "full_source_hash", "encoding", "newline_policy", "start_line", "end_line",
+        "schema_version", "path", "full_source_hash", "encoding", "newline_policy", "start_byte", "end_byte",
         "extracted_bytes_base64", "extracted_bytes_hash", "inclusion_reason", "changed_set_identity",
         "requirement_ids", "acceptance_ids", "policy_identity", "identity",
     }
     if not isinstance(projection, dict) or set(projection) != required or projection.get("schema_version") != "bootstrap.range-projection.v1":
         raise ProjectionError("projection schema is invalid")
     rebuilt = build_range_projection(
-        path=projection["path"], source=source, start_line=projection["start_line"], end_line=projection["end_line"],
+        path=projection["path"], source=source, start_byte=projection["start_byte"], end_byte=projection["end_byte"],
         inclusion_reason=projection["inclusion_reason"], changed_set_id=projection["changed_set_identity"],
         requirement_ids=projection["requirement_ids"], acceptance_ids=projection["acceptance_ids"], policy_identity=projection["policy_identity"],
     )
@@ -139,8 +139,8 @@ def build_segment_descriptor(
         "role": role,
         "path": projection["path"],
         "artifact_hash": projection["full_source_hash"],
-        "start_line": projection["start_line"],
-        "end_line": projection["end_line"],
+        "start_byte": projection["start_byte"],
+        "end_byte": projection["end_byte"],
         "ordinal": ordinal,
         "total": total,
         "segment_bytes_hash": projection["extracted_bytes_hash"],

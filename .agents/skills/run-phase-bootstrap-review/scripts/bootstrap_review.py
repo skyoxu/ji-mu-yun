@@ -48,6 +48,12 @@ from _control_plane import (  # noqa: E402
     validate_artifact_view,
 )
 from knowledge_context import select_context  # noqa: E402
+from projection_and_segmentation import (  # noqa: E402
+    ProjectionError,
+    build_range_projection,
+    build_segment_descriptor,
+)
+from runtime_policy import load_runtime_policy  # noqa: E402
 
 
 CONTROL_PLANE_REVISION = "bootstrap-control-plane.v2"
@@ -76,7 +82,13 @@ LAYERS = ("blind_hunter", "edge_case_hunter", "acceptance_auditor")
 FOCUSED_REPAIR_ROLE = "focused_repair_verifier"
 REVIEWER_ROLES = (*LAYERS, FOCUSED_REPAIR_ROLE)
 HASH_PREFIX = "sha256:"
-CODEX_NO_PROGRESS_TIMEOUT_SECONDS = 900
+RUNTIME_POLICY_PATH = SKILL_ROOT / "policies" / "bootstrap-runtime" / "runtime-policy.v1.json"
+try:
+    RUNTIME_POLICY = load_runtime_policy(RUNTIME_POLICY_PATH)
+except ValueError as exc:
+    raise RuntimeError(f"Bootstrap runtime policy is invalid: {exc}") from exc
+RUNTIME_POLICY_IDENTITY = HASH_PREFIX + hashlib.sha256(RUNTIME_POLICY_PATH.read_bytes()).hexdigest()
+CODEX_NO_PROGRESS_TIMEOUT_SECONDS = RUNTIME_POLICY["no_progress_seconds"]
 SEGMENTED_ARTIFACT_VIEW_THRESHOLD_BYTES = 256 * 1024
 ARTIFACT_VIEW_SEGMENT_BYTES = 64 * 1024
 SEGMENT_PROMPT_MAX_BYTES = 96 * 1024
@@ -3793,34 +3805,58 @@ def artifact_view_segment_plan(
         if not snapshot.is_file() or file_hash(snapshot) != entry.get("snapshotSha256"):
             raise BootstrapError(f"Artifact View segment snapshot is stale: {original_path}")
         raw = snapshot.read_bytes()
-        if entry.get("contentKind") == "text":
-            lines = raw.splitlines(keepends=True)
-            if not lines:
-                chunks = [(0, 0, b"")]
-            else:
-                chunks: list[tuple[int, int, bytes]] = []
-                start = 1
-                content = bytearray()
-                for line_number, line in enumerate(lines, start=1):
-                    if content and len(content) + len(line) > max_segment_bytes:
-                        chunks.append((start, line_number - 1, bytes(content)))
-                        start = line_number
-                        content = bytearray()
-                    content.extend(line)
-                chunks.append((start, len(lines), bytes(content)))
+        if entry.get("contentKind") == "text" and raw:
+            try:
+                raw.decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise BootstrapError(f"Text Artifact View snapshot is not UTF-8: {original_path}") from exc
+            chunks: list[tuple[int, int, bytes]] = []
+            start_byte = 0
+            while start_byte < len(raw):
+                end_byte = min(start_byte + max_segment_bytes - 1, len(raw) - 1)
+                while end_byte + 1 < len(raw) and raw[end_byte + 1] & 0xC0 == 0x80:
+                    end_byte += 1
+                chunks.append((start_byte, end_byte, raw[start_byte:end_byte + 1]))
+                start_byte = end_byte + 1
         else:
-            chunks = [(0, 0, raw)]
-        for start_line, end_line, content in chunks:
+            chunks = [(0, len(raw) - 1, raw)]
+        for start_byte, end_byte, content in chunks:
+            if entry.get("contentKind") == "text" and content:
+                try:
+                    projection = build_range_projection(
+                        path=original_path,
+                        source=raw,
+                        start_byte=start_byte,
+                        end_byte=end_byte,
+                        inclusion_reason="controller-assigned artifact view segment",
+                        changed_set_id=manifest["inputHash"],
+                        requirement_ids=["bootstrap-review"],
+                        acceptance_ids=["artifact-view"],
+                        policy_identity=value_hash({
+                            "policyRevision": manifest["policyRevision"],
+                            "processLeasePolicy": manifest["processLeasePolicy"],
+                        }),
+                    )
+                except ProjectionError as exc:
+                    raise BootstrapError(f"Artifact View Range Projection is invalid: {exc}") from exc
+                range_identity = projection["identity"]
+            else:
+                projection = None
+                range_identity = None
             core = {
                 "originalPath": original_path,
                 "snapshotPath": entry["snapshotPath"],
                 "artifactSha256": entry["snapshotSha256"],
-                "startLine": start_line,
-                "endLine": end_line,
+                "startByte": start_byte,
+                "endByte": end_byte,
+                "startLine": raw[:start_byte].count(b"\n") + 1 if content else 0,
+                "endLine": raw[:end_byte + 1].count(b"\n") + 1 if content else 0,
                 "sizeBytes": len(content),
                 "contentSha256": HASH_PREFIX + hashlib.sha256(content).hexdigest(),
+                "rangeProjection": projection,
+                "rangeProjectionIdentity": range_identity,
             }
-            pending.append({**core, "segmentId": value_hash(core)})
+            pending.append({**core, "segmentId": range_identity or value_hash(core)})
     total = len(pending)
     return [
         {**segment, "ordinal": ordinal, "totalSegments": total}
@@ -3843,14 +3879,32 @@ def artifact_view_total_bytes(run_dir: Path, manifest: dict[str, Any]) -> int:
 def artifact_view_segment_receipt(
     segment: dict[str, Any], manifest: dict[str, Any], role: str
 ) -> dict[str, Any]:
+    descriptor_identity = None
+    projection = segment.get("rangeProjection")
+    if isinstance(projection, dict):
+        try:
+            descriptor_identity = build_segment_descriptor(
+                projection=projection,
+                review_identity=manifest["inputHash"],
+                candidate_identity=manifest["authorityContextHash"],
+                closure_identity=manifest["candidateBindingHash"],
+                role=role,
+                ordinal=segment["ordinal"],
+                total=segment["totalSegments"],
+                model_identity=None,
+            )["identity"]
+        except (KeyError, ProjectionError) as exc:
+            raise TransportAttemptError("Artifact View Segment Descriptor is invalid") from exc
     return {
         "schemaVersion": "bootstrap-artifact-view-segment-receipt.v1",
         "reviewerRole": role,
         "artifactViewManifestHash": manifest["artifactView"]["manifestHash"],
         **{key: segment[key] for key in (
             "segmentId", "ordinal", "totalSegments", "originalPath", "snapshotPath",
-            "artifactSha256", "startLine", "endLine", "sizeBytes", "contentSha256",
+            "artifactSha256", "startByte", "endByte", "sizeBytes", "contentSha256",
         )},
+        "rangeProjectionIdentity": segment["rangeProjectionIdentity"],
+        "segmentDescriptorIdentity": descriptor_identity,
         "complete": True,
     }
 
@@ -3874,11 +3928,11 @@ def validate_artifact_view_segment_receipts(
     previous_by_path: dict[str, tuple[int, int]] = {}
     for segment in segments:
         path = segment.get("originalPath")
-        start, end = segment.get("startLine"), segment.get("endLine")
+        start, end = segment.get("startByte"), segment.get("endByte")
         if not isinstance(path, str) or not isinstance(start, int) or not isinstance(end, int):
             raise TransportAttemptError("Artifact View segment plan has a duplicate or overlap")
         previous = previous_by_path.get(path)
-        if previous is not None and (start == 0 or start <= previous[1]):
+        if previous is not None and start <= previous[1]:
             raise TransportAttemptError("Artifact View segment plan has a duplicate or overlap")
         previous_by_path[path] = (start, end)
     expected = [artifact_view_segment_receipt(segment, manifest, role) for segment in segments]
@@ -5938,14 +5992,17 @@ def command_authorize_launch(args: argparse.Namespace) -> int:
 def active_attempt_no_progress_timeout(
     events: list[dict[str, Any]], attempt_id: str
 ) -> int | None:
-    """Return an expired no-progress bound recorded for an active attempt."""
+    """Return an expired policy-bound Effective Progress window for an attempt."""
     for event in reversed(events):
         if (
-            event.get("eventType") != HEARTBEAT_EVENT_TYPE
+            event.get("eventType") not in {
+                "attempt-started", "attempt-effective-progress",
+                "attempt-process-completed", "attempt-completed",
+            }
             or event.get("attemptId") != attempt_id
         ):
             continue
-        timeout = event.get("noProgressTimeoutSeconds")
+        timeout = event.get("noProgressTimeoutSeconds", RUNTIME_POLICY["no_progress_seconds"])
         timestamp = event.get("timestamp")
         if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout < 1:
             return None
@@ -6624,6 +6681,8 @@ def command_prove_access(args: argparse.Namespace) -> int:
             "writeSet": [],
             "state": "waiting-for-child-output",
             "noProgressTimeoutSeconds": CODEX_NO_PROGRESS_TIMEOUT_SECONDS,
+            "runtimePolicyIdentity": RUNTIME_POLICY_IDENTITY,
+            "runtimePolicyIdentity": RUNTIME_POLICY_IDENTITY,
         },
     )
     try:
@@ -7546,6 +7605,8 @@ def run_codex_attempt(
             "writeSet": request["writeSet"],
             "state": "waiting-for-child-output",
             "noProgressTimeoutSeconds": CODEX_NO_PROGRESS_TIMEOUT_SECONDS,
+            "runtimePolicyIdentity": RUNTIME_POLICY_IDENTITY,
+            "runtimePolicyIdentity": RUNTIME_POLICY_IDENTITY,
         },
     )
     try:
