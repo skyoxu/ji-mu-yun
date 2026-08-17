@@ -68,6 +68,24 @@ def _run_lifecycle(run_dir: Path, support_dir: Path, context_path: Path, refacto
         raise RuntimeError(f"staged {stage} action failed: {completed.stdout}{completed.stderr}")
 
 
+def _route_next(run_dir: Path, expected: str) -> None:
+    from loop_plan_directory import route_staged_run
+
+    action = route_staged_run(run_dir)
+    if action != expected:
+        raise RuntimeError(f"persisted staged route expected {expected}, got {action}")
+
+
+def _implement_probe(red_test: Path, support_dir: Path) -> None:
+    before = _sha(red_test.read_bytes())
+    red_test.write_text("def test_dogfood_red_probe():\n    assert True\n", encoding="utf-8", newline="\n")
+    after = _sha(red_test.read_bytes())
+    (support_dir / "implementation-action.v1.json").write_text(
+        json.dumps({"schema_version": "quick-dev-tdd-stage-recovery.dogfood-implementation.v1", "action": "implementation", "path": red_test.relative_to(ROOT).as_posix(), "before_sha256": before, "after_sha256": after, "authorizes": []}, indent=2) + "\n",
+        encoding="utf-8", newline="\n",
+    )
+
+
 def main() -> int:
     run_id = "RUN-DOGFOOD-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     run_dir = ROOT / "logs" / "tdd-adapter" / "acceptance-coordinator-efficiency" / "S3" / run_id
@@ -76,10 +94,8 @@ def main() -> int:
     red_test = ROOT / "logs" / "tdd-adapter" / "acceptance-coordinator-efficiency" / "dogfood-red-probe.py"
     red_test.parent.mkdir(parents=True, exist_ok=True)
     red_test.write_text("def test_dogfood_red_probe():\n    assert False\n", encoding="utf-8", newline="\n")
-    green_script = support_dir / "dogfood_green.py"
-    green_script.write_text("from pathlib import Path\nimport subprocess\nimport sys\npath = Path(sys.argv[1])\npath.write_text('def test_dogfood_red_probe():\\n    assert True\\n', encoding='utf-8', newline='\\n')\nraise SystemExit(subprocess.call([sys.executable, '-B', '-m', 'pytest', '.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py', '-q']))\n", encoding="utf-8", newline="\n")
     red = _descriptor("dogfood-red", ["-B", "-m", "pytest", red_test.relative_to(ROOT).as_posix(), "-q"], 300)
-    green = _descriptor("dogfood-green", ["-B", str(green_script.relative_to(ROOT)), red_test.relative_to(ROOT).as_posix()], 600)
+    green = _descriptor("dogfood-green", ["-B", "-m", "pytest", ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py", "-q"], 600)
     refactor = [
         _descriptor("dogfood-acceptance-suite", ["-B", "-m", "pytest", ".agents/skills/run-refactor-implementation-acceptance/tests", "-q"], 900),
         _descriptor("dogfood-quick-dev-suite", ["-B", "-m", "pytest", ".agents/skills/quick-dev-tdd-adapter/tools/tests", "-q"], 900),
@@ -99,11 +115,16 @@ def main() -> int:
     contract_ref = context["implementation_contract"]
     encoded_context["implementation_contract"] = {key: value for key, value in contract_ref.items() if key != "payload"} | {"payload_base64": base64.b64encode(contract_ref["payload"]).decode("ascii")}
     context_path.write_text(json.dumps(encoded_context, indent=2) + "\n", encoding="utf-8", newline="\n")
-    _run_lifecycle(run_dir, support_dir, context_path, refactor, red_test, "red")
-    _run_lifecycle(run_dir, support_dir, context_path, refactor, red_test, "green")
-    _run_lifecycle(run_dir, support_dir, context_path, refactor, red_test, "refactor")
     sys.path.insert(0, str(TOOLS))
     from stage_lifecycle_runner import LifecycleRunner
+    _run_lifecycle(run_dir, support_dir, context_path, refactor, red_test, "red")
+    _route_next(run_dir, "green")
+    _implement_probe(red_test, support_dir)
+    _route_next(run_dir, "green")
+    _run_lifecycle(run_dir, support_dir, context_path, refactor, red_test, "green")
+    _route_next(run_dir, "refactor")
+    _run_lifecycle(run_dir, support_dir, context_path, refactor, red_test, "refactor")
+    _route_next(run_dir, "slice-terminal")
     observations = {stage: json.loads((run_dir / "observations" / f"{stage}-observed.json").read_text(encoding="utf-8")) for stage in ("red", "green", "refactor")}
     decoded = json.loads(context_path.read_text(encoding="utf-8"))
     for item in [*decoded["authority_refs"], decoded["implementation_contract"]]:
@@ -117,9 +138,15 @@ def main() -> int:
     terminal_result = subprocess.run([terminal["executable"], *terminal["argv"]], cwd=ROOT, check=False, capture_output=True, text=True, encoding="utf-8")
     if terminal_result.returncode != 0:
         raise RuntimeError(terminal_result.stdout + terminal_result.stderr)
+    terminal_document = json.loads(terminal_result.stdout)
+    if terminal_document.get("status") != "pass" or terminal_document.get("predicate") != "slice-ready":
+        raise RuntimeError("dogfood slice terminal did not pass")
+    (run_dir / "slice-ready-result.json").write_text(json.dumps(terminal_document, indent=2) + "\n", encoding="utf-8", newline="\n")
+    if __import__("loop_plan_directory").route_staged_run(run_dir) is not None:
+        raise RuntimeError("persisted staged route did not close after the slice terminal")
     if not (run_dir / "attempt-ledger-manifest.v1.json").is_file():
         raise RuntimeError("staged dogfood did not close the protocol bundle")
-    print(json.dumps({"status": "pass", "consumer_plan": "acceptance-coordinator-efficiency", "stages": ["red", "green", "refactor"], "terminal": "slice-ready", "run_id": run_id, "terminal_output_sha256": _sha(terminal_result.stdout.encode() + terminal_result.stderr.encode())}, sort_keys=True))
+    print(json.dumps({"status": "pass", "consumer_plan": "acceptance-coordinator-efficiency", "stages": ["red", "implementation", "green", "refactor"], "terminal": "slice-ready", "run_id": run_id, "terminal_output_sha256": _sha(terminal_result.stdout.encode() + terminal_result.stderr.encode())}, sort_keys=True))
     return 0
 
 

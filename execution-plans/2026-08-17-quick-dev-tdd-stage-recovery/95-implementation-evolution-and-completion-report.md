@@ -40,7 +40,15 @@ This append-only report is non-authorizing continuity evidence.
   the same three immutable observations before running the terminal command.
 - The dogfood run verified `attempt-ledger-manifest.v1.json` and the S3
   `slice-ready` predicate; the refreshed terminal dogfood binding is
-  `sha256:6e3098b653245b2e4a983a76782ee3e6990e043c5bb245c9a70b30b0c73a7eb0`.
+  `sha256:60e66d4458536b84932a1548468aae02b21aa7c52235bcfb0a74385bf0ebaa94`.
   The VDD-owned knowledge context was refreshed through successor `r15` after
   the controlled source/read-set validation. This report remains
   non-authorizing evidence.
+
+## 2026-08-17 - Route-First Dogfood Repair
+
+- The dogfood runner now stops after RED, runs an independent implementation
+  action, and re-reads persisted stage state before GREEN, REFACTOR, and
+  slice-terminal.
+- The probe write is no longer coupled to GREEN validation. The routed terminal
+  records `slice-ready-result.json` only after canonical protocol closure.

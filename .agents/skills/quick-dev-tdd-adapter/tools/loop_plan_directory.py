@@ -230,20 +230,31 @@ def _active_slice_run(root: Path, plan_id: str, slice_id: str) -> tuple[Path, st
     evidence_root = root / "logs" / "tdd-adapter" / plan_id / slice_id
     candidates = sorted((path for path in evidence_root.glob("RUN-*") if path.is_dir()), key=lambda path: path.name, reverse=True)
     for run_dir in candidates:
-        if not (run_dir / "stage-state.json").is_file():
-            continue
-        try:
-            state = json.loads((run_dir / "stage-state.json").read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, json.JSONDecodeError):
-            continue
-        if state.get("stage") == "refactor" and (run_dir / "slice-ready-result.json").is_file():
-            continue
-        if state.get("stage") == "refactor" and (run_dir / "observations" / "refactor-observed.json").is_file():
-            return run_dir, "slice-terminal"
-        if (run_dir / "observations" / "green-observed.json").is_file():
-            return run_dir, "refactor"
-        if (run_dir / "observations" / "red-observed.json").is_file() and (run_dir / "red-basis.v1.json").is_file():
-            return run_dir, "green"
+        action = route_staged_run(run_dir)
+        if action is not None:
+            return run_dir, action
+    return None
+
+
+def route_staged_run(run_dir: Path) -> str | None:
+    """Read one persisted staged run and return its only legal next action."""
+    state_path = run_dir / "stage-state.json"
+    if not state_path.is_file():
+        return None
+    try:
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    observations = run_dir / "observations"
+    if state.get("stage") == "refactor":
+        if (run_dir / "slice-ready-result.json").is_file():
+            return None
+        return "slice-terminal" if (observations / "refactor-observed.json").is_file() else None
+    if state.get("stage") == "green":
+        return "refactor" if (observations / "green-observed.json").is_file() else None
+    if state.get("stage") == "red":
+        if (observations / "red-observed.json").is_file() and (run_dir / "red-basis.v1.json").is_file():
+            return "green"
     return None
 
 
