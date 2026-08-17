@@ -1,0 +1,13 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:816885026f2a16c00116ed637608b993b0cd03c65d265e07facc29e9e51468f1",
+  "sections": [
+    {
+      "title": "Acceptance Coordinator Efficiency Requirements",
+      "content": "Compact implementation contract with four slices: S0 binds implementation-complete receipts to candidate manifest, custody snapshot, terminal runner, projection knowledge context, and behavior-affecting environment identity; exact matches are required. S1 freezes and projects the candidate, machine-selects deterministic routes, rejects caller-provided deterministic routes, avoids semantic/Bootstrap invocation on deterministic-only paths, and preserves degraded context refresh behavior. S2 makes identical finalization and receipt/import replays immutable successes, creates successor attempts for stale actions, and uses a latest-successor pointer for deterministic recovery. S3 defines a one-shot, reentrant, idempotent run-coordinator that resolves targets, validates handoff, consumes bundle context, follows the action DAG, recovers stale actions, finalizes, replays validation, records telemetry, and emits typed Bootstrap handoffs for semantic routes. Non-goals include background supervision, Bootstrap from deterministic-only acceptance, Knowledge publication by Acceptance, lifecycle ownership changes, phase/runtime/workspace changes, and rewriting historical evidence."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-17T05:22:56.632656Z"
+}

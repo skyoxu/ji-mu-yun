@@ -1,0 +1,22 @@
+{
+  "schema_version": "acceptance-coordinator-efficiency.vdd-repair-closure.v1",
+  "round": 1,
+  "scope": "plan readiness and Quick Dev adapter compatibility",
+  "findings_closed": [
+    "skill-input-ready-and-knowledge-preflight",
+    "lifecycle-state-consistency",
+    "reliable-command-descriptors",
+    "stage-projection-builder-present",
+    "machine-readable-terminal-and-runner",
+    "plan-local-validator-identity"
+  ],
+  "preserved": ["S0-S3 behavior", "lifecycle ownership", "no Bootstrap default", "no Knowledge publication by Acceptance"],
+  "verification": [
+    "VDD Skill-input receipt ready",
+    "VDD Knowledge Preflight ready",
+    "S0-S2 terminal predicates pass",
+    "Quick Dev invocation contract loads",
+    "Quick Dev targeted regression plus Acceptance pytest terminal composition passes"
+  ],
+  "authorizes": []
+}

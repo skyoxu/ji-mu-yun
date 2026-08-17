@@ -23,7 +23,7 @@
       "dependency_closure": [".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-refactor-implementation-acceptance/**"],
       "execution_snapshot_paths": ["implementation-contract.v1.json", "command-registry.v1.json"],
       "tdd": {"red": {"command_id": "s0-red", "test_selector": "candidate binding and bundle override absent", "expected_exit": "nonzero", "expected_failure_family": "candidate-binding-or-bundle-authority-absent", "expected_failure_ids": ["ACE-S0-EXIT"]}, "green": {"command_id": "s0-green", "expected_exit": "zero"}, "refactor": {"invocations": [{"command_id": "quick-dev-suite", "expected_exit": "zero"}, {"command_id": "acceptance-suite", "expected_exit": "zero"}]}},
-      "post_refactor_command_id": "s0-green",
+      "post_refactor_command_id": "s0-terminal",
       "exit_predicate": "slice-ready",
       "recovery": "Keep the last matching receipt/context pair and reject only the stale candidate binding."
     },
@@ -41,7 +41,7 @@
       "dependency_closure": [".agents/skills/run-refactor-implementation-acceptance/**", "scripts/python/knowledge_context_validation.py"],
       "execution_snapshot_paths": ["implementation-contract.v1.json", "command-registry.v1.json"],
       "tdd": {"red": {"command_id": "s1-red", "test_selector": "caller route bypass or semantic child dependency remains", "expected_exit": "nonzero", "expected_failure_family": "deterministic-route-projection-absent", "expected_failure_ids": ["ACE-S1-EXIT"]}, "green": {"command_id": "s1-green", "expected_exit": "zero"}, "refactor": {"invocations": [{"command_id": "acceptance-suite", "expected_exit": "zero"}]}},
-      "post_refactor_command_id": "s1-green",
+      "post_refactor_command_id": "s1-terminal",
       "exit_predicate": "slice-ready",
       "recovery": "Preserve the frozen candidate and route receipt; repair only the projection or source-sufficiency consumer."
     },
@@ -58,8 +58,8 @@
       "execution_read_set": ["requirements-and-acceptance.md", ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py"],
       "dependency_closure": [".agents/skills/run-refactor-implementation-acceptance/**"],
       "execution_snapshot_paths": ["implementation-contract.v1.json", "command-registry.v1.json"],
-      "tdd": {"red": {"command_id": "s2-red", "test_selector": "identical replay conflicts or stale action has no successor", "expected_exit": "nonzero", "expected_failure_family": "replay-or-successor-recovery-absent", "expected_failure_ids": ["ACE-S2-EXIT"]}, "green": {"command_id": "s2-green", "expected_exit": "zero"}, "refactor": {"invocations": [{"command_id": "acceptance-suite", "expected_exit": "zero"}]}},
-      "post_refactor_command_id": "s2-green",
+      "tdd": {"red": {"command_id": "s2-red", "test_selector": "identical replay conflicts or stale action has no successor", "expected_exit": "nonzero", "expected_failure_family": "replay-or-successor-recovery-absent", "expected_failure_ids": ["ACE-S2-EXIT"]}, "green": {"command_id": "s2-green", "expected_exit": "zero"}, "refactor": {"invocations": [{"command_id": "acceptance-pytest-suite", "expected_exit": "zero"}]}},
+      "post_refactor_command_id": "s2-terminal",
       "exit_predicate": "slice-ready",
       "recovery": "Retain append-only evidence and publish only a successor derived from the same binding."
     },
@@ -82,6 +82,6 @@
       "recovery": "Resume or replay the same derived run; do not create a daemon or auto-start Bootstrap."
     }
   ],
-  "terminal": {"command_id": "terminal-full", "predicate": "implementation-complete"},
+  "terminal": {"command_id": "terminal-full", "runner": "tools/terminal_full.py", "predicate": "implementation-complete"},
   "authorizes": []
 }

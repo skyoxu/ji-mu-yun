@@ -30,8 +30,8 @@
     "sha256": "sha256:816885026f2a16c00116ed637608b993b0cd03c65d265e07facc29e9e51468f1"
   },
   "child_request": {
-    "path": "pending/skill-input-child-request.v1.json",
-    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    "path": "skill-input-request.v1.json",
+    "sha256": "sha256:d54a78b3c24a5e6239f48f670bea947e330a4616a87202a3531fa218b8a3a2df"
   },
   "sources": [
     {
@@ -52,22 +52,21 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     }
   ],
   "missing_sources": [],
   "changed_sources": [],
   "semantic_decision": {
-    "path": "pending/semantic-decision.v1.json",
-    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-    "status": "insufficient"
+    "path": "semantic-input/semantic-decision.v1.json",
+    "sha256": "sha256:95d667a7e76f1f9b65f762c132b75b6dfdefd93c5990372592aea697d1b8ad16"
   },
   "context_artifact": {
-    "path": "pending/skill-input-context.v1.json",
-    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    "path": "semantic-input/skill-input-context.v1.json",
+    "sha256": "sha256:0c363cefb6e7209d25dcd11f4009e2307e8d368bcec8abbef0f6377ce324d212"
   },
   "diagnostic_authorization": null,
   "authorizes": [],
-  "ready": false,
-  "binding_hash": "sha256:1be10306ed490d67a752eeaf6e0b2d66b27a705b655d6ec29aacc1c749795bb8"
+  "ready": true,
+  "binding_hash": "sha256:e026032da0d6dbedccc582dce083bdf14167bfdc1525e24dc34b28e08f903f84"
 }

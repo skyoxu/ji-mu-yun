@@ -1,7 +1,7 @@
 {
   "schema_version": "jimuyun.plan-state.v1",
   "plan_id": "acceptance-coordinator-efficiency",
-  "status": "draft",
-  "authorizes": [],
+  "status": "plan-ready",
+  "authorizes": ["plan-ready"],
   "owner": "vdd-execution-plan"
 }

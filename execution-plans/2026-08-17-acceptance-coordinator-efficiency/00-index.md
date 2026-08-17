@@ -4,10 +4,10 @@
 
 - Plan ID: `acceptance-coordinator-efficiency`
 - Profile: `self-hosted`
-- Lifecycle state: `draft` (Skill-input semantic receipt pending)
+- Lifecycle state: `plan-ready`
 - Owner of this state: `vdd-execution-plan`
 - Source authority: `../2026-08-15-acceptance-review-bootstrap-efficiency/acceptance-workflow-optimization.md`
-- Implementation authorization: unavailable until VDD publishes `plan-ready`
+- Implementation authorization: not published; maintainer-owned
 
 ## Intent
 
@@ -25,14 +25,13 @@ path. It remains lightweight: four implementation slices, existing unit-test
 suites, one terminal full command, no Bootstrap review, and no new semantic
 validator or requirements/acceptance cross-product.
 
-## Current Gate
+## Readiness Evidence
 
-The typed VDD input snapshot and child request are present. The first semantic
-child invocation returned non-JSON output, so its receipt is not ready. This is
-a transport/child-output failure, not a requirements ambiguity and does not
-change the four-slice scope. Resume from the existing request after the bound
-child runner can emit its required JSON result; do not manually construct a
-ready receipt.
+The typed VDD input receipt is ready and the Knowledge Preflight accepted the
+current Refactor Acceptance and Quick Dev read-set. The first child transport
+attempt returned non-JSON, but a controlled retry of the same request produced
+the bound context and semantic decision. This did not alter requirements or
+the four-slice scope.
 
 ## Slices
 
