@@ -18,3 +18,15 @@ This append-only report is non-authorizing continuity evidence.
   with current contract hash `sha256:0962f50ac29d53baa542f58f7b7dc14ec8186094af61a0a4d68b07a40d1b9923`.
 - Adapter regression: `92` tests passed. This report authorizes nothing;
   acceptance remains owned by the Acceptance Skill.
+
+## 2026-08-17 - Stage-Action Closure Repair
+
+- Replaced one-shot continuation with independent RED, GREEN, REFACTOR, and
+  slice-terminal actions. Each stage persists evidence and exits before the
+  next route decision.
+- Current RED evidence binds failure intent, test selector, contract hash,
+  validator hash, and pre-implementation candidate identity.
+- The full terminal reran `adapter-tests` and `dogfood-8-17`, binding dogfood
+  output `sha256:55cccd28df5c1a813dc9f57abb6902ca480fac6f85ee42d4f1d36cec269cd530`.
+- Current route is `implementation-complete`; this report remains
+  non-authorizing continuity evidence.

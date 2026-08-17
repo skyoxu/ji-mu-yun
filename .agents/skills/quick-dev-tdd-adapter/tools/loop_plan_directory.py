@@ -90,11 +90,45 @@ def run_red_only(workspace: Path, command: dict[str, object]) -> subprocess.Comp
     return completed
 
 
+def build_red_basis(
+    command: dict[str, object],
+    failure_intent: dict[str, object],
+    pre_implementation_candidate: dict[str, object],
+    validator_hash: str,
+    contract_hash: str,
+) -> dict[str, object]:
+    """Build the non-authorizing identity that a RED observation must bind."""
+    required = {"id", "executable", "argv", "cwd", "timeout_seconds", "shell"}
+    if not isinstance(command, dict) or set(command) != required or command.get("shell") is not False:
+        raise ValueError("RED command is not a structured shell-free descriptor")
+    selector = failure_intent.get("test_selector")
+    expected = failure_intent.get("expected_failure_ids")
+    if not isinstance(selector, str) or not selector or not isinstance(expected, list) or not expected or not all(isinstance(item, str) and item for item in expected):
+        raise ValueError("RED failure intent is invalid")
+    if not isinstance(pre_implementation_candidate, dict) or not pre_implementation_candidate:
+        raise ValueError("pre-implementation candidate identity is missing")
+    if not isinstance(validator_hash, str) or not validator_hash or not isinstance(contract_hash, str) or not contract_hash:
+        raise ValueError("RED identity hashes are invalid")
+    return {
+        "failure_intent": {"command_id": command["id"], "test_selector": selector, "expected_failure_ids": list(expected)},
+        "test_selector": selector,
+        "contract_hash": contract_hash,
+        "validator_hash": validator_hash,
+        "pre_implementation_candidate": dict(pre_implementation_candidate),
+    }
+
+
 def staged_cutover_guard(repository_root: Path, plan_dir: Path) -> bool:
     """Read-only predicate for the staged adapter cutover boundary."""
     tools = Path(__file__).resolve().parent
     required = (tools / "stage_lifecycle_runner.py", tools / "run_slice_lifecycle.py")
-    return all(path.is_file() for path in required) and (plan_dir / "implementation-contract.v1.json").is_file()
+    root = repository_root.resolve()
+    target = (root / plan_dir).resolve() if not plan_dir.is_absolute() else plan_dir.resolve()
+    try:
+        target.relative_to(root / "execution-plans")
+    except ValueError:
+        return False
+    return all(path.is_file() for path in required) and (target / "implementation-contract.v1.json").is_file()
 
 
 def _lifecycle_timeout_seconds(invocation: Path) -> int:
@@ -190,24 +224,47 @@ def _current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object],
     return {"path": artifact.relative_to(root).as_posix(), "sha256": _sha(artifact)}
 
 
+def _active_slice_run(root: Path, plan_id: str, slice_id: str) -> tuple[Path, str] | None:
+    evidence_root = root / "logs" / "tdd-adapter" / plan_id / slice_id
+    candidates = sorted((path for path in evidence_root.glob("RUN-*") if path.is_dir()), key=lambda path: path.name, reverse=True)
+    for run_dir in candidates:
+        if not (run_dir / "stage-state.json").is_file():
+            continue
+        try:
+            state = json.loads((run_dir / "stage-state.json").read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        if state.get("stage") == "refactor" and (run_dir / "slice-ready-result.json").is_file():
+            continue
+        if state.get("stage") == "refactor" and (run_dir / "observations" / "refactor-observed.json").is_file():
+            return run_dir, "slice-terminal"
+        if (run_dir / "observations" / "green-observed.json").is_file():
+            return run_dir, "refactor"
+        if (run_dir / "observations" / "red-observed.json").is_file() and (run_dir / "red-basis.v1.json").is_file():
+            return run_dir, "green"
+    return None
+
+
 def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> None:
     snapshots = _workspace_snapshot_paths(root, plan, snapshots)
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
     bridge = contract.get("adapter_bridge")
-    handoff = None
-    if isinstance(bridge, dict) and isinstance(bridge.get("runner"), str):
-        handoff = _current_bridge_handoff(root, plan, contract, slice_id)
-        if handoff is None:
-            runner = plan / bridge["runner"]
-            if not runner.is_file():
-                raise ValueError("declared plan-local adapter bridge is missing")
-            _run([str(runner), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--snapshot-path", *snapshots])
-            return
-    run_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
+    active = _active_slice_run(root, str(contract["plan_id"]), slice_id)
+    stage = active[1] if active else "red"
+    if stage == "slice-terminal":
+        raise RuntimeError("slice terminal must be routed as validate-slice")
+    handoff = _current_bridge_handoff(root, plan, contract, slice_id) if stage == "red" and contract.get("plan_id") != "quick-dev-tdd-stage-recovery" else None
+    if stage == "red" and isinstance(bridge, dict) and isinstance(bridge.get("runner"), str) and handoff is None:
+        runner = plan / bridge["runner"]
+        if not runner.is_file():
+            raise ValueError("declared plan-local adapter bridge is missing")
+        _run([str(runner), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--snapshot-path", *snapshots, "--materialize-only"])
+    run_id = active[0].name if active else datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
+    invocation_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
     evidence = root / "logs" / "tdd-adapter" / contract["plan_id"]
     run_dir = evidence / slice_id / run_id
-    invocation = evidence / "_invocations" / run_id
-    _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", run_id, "--out-dir", str(invocation)])
+    invocation = evidence / "_invocations" / invocation_id
+    _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", invocation_id, "--out-dir", str(invocation)])
     if handoff is not None:
         context_path = invocation / "run-context.json"
         context = json.loads(context_path.read_text(encoding="utf-8"))
@@ -227,6 +284,8 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
         command_path.write_text(json.dumps(commands_document[index], indent=2) + "\n", encoding="utf-8", newline="\n")
         commands.extend(["--command", f"refactor={command_path}"])
     invocation_args = [str(TOOLS / "run_slice_lifecycle.py"), "--workspace", str(root), "--plan-dir", str(plan), "--run-dir", str(run_dir), "--slice-id", slice_id, "--run-context", str(invocation / "run-context.json"), "--terminal-command", str(invocation / "terminal-command.json")]
+    if handoff is None:
+        invocation_args.extend(["--stage", stage])
     for index, command in enumerate(json.loads((invocation / "preparation-commands.json").read_text(encoding="utf-8"))):
         command_path = invocation / f"preparation-command-{index}.json"
         command_path.write_text(json.dumps(command, indent=2) + "\n", encoding="utf-8", newline="\n")
@@ -234,6 +293,25 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
     for snapshot in snapshots:
         invocation_args.extend(["--snapshot-path", snapshot])
     _run([*invocation_args, *commands], timeout_seconds=_lifecycle_timeout_seconds(invocation))
+
+
+def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> None:
+    contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+    active = _active_slice_run(root, str(contract["plan_id"]), slice_id)
+    if active is None or active[1] != "slice-terminal":
+        raise RuntimeError("slice terminal requires a completed refactor observation")
+    run_dir = active[0]
+    run_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
+    invocation = root / "logs" / "tdd-adapter" / str(contract["plan_id"]) / "_invocations" / run_id
+    _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", run_id, "--out-dir", str(invocation)])
+    command = json.loads((invocation / "terminal-command.json").read_text(encoding="utf-8"))
+    completed = subprocess.run([command["executable"], *command["argv"]], cwd=root, shell=False, check=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=command["timeout_seconds"])
+    if completed.returncode != 0:
+        raise RuntimeError("slice terminal predicate failed")
+    result = json.loads(completed.stdout)
+    if result.get("status") != "pass" or result.get("predicate") != "slice-ready":
+        raise RuntimeError("slice terminal predicate did not pass")
+    (run_dir / "slice-ready-result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def main() -> int:
@@ -253,6 +331,9 @@ def main() -> int:
         actions.append(result)
         if result["next_action"] == "validate-terminal":
             _run_terminal(root, plan)
+            continue
+        if result["next_action"] == "validate-slice":
+            _run_slice_terminal(root, plan, str(result["slice_id"]), args.snapshot_path)
             continue
         if result["next_action"] != "run-slice":
             break

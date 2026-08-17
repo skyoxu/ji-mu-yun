@@ -275,6 +275,7 @@ def _terminal_completion_current(repository_root: Path, plan_dir: Path, contract
         if (
             result.get("predicate") == "implementation-complete"
             and result.get("status") == "pass"
+            and (contract.get("plan_id") != "quick-dev-tdd-stage-recovery" or result.get("orchestration_version") == "stage-actions.v2")
             and result.get("plan_id") == contract["plan_id"]
             and result.get("contract_hash") == contract_hash
             and result.get("terminal_command_id") == terminal.get("command_id")
@@ -283,6 +284,44 @@ def _terminal_completion_current(repository_root: Path, plan_dir: Path, contract
         ):
             return True
     return False
+
+
+def _active_slice_action(repository_root: Path, plan_id: str, slice_id: str) -> str | None:
+    evidence_root = repository_root / "logs" / "tdd-adapter" / plan_id / slice_id
+    candidates = sorted((path for path in evidence_root.glob("RUN-*") if path.is_dir()), key=lambda path: path.name, reverse=True)
+    for run_dir in candidates:
+        if not (run_dir / "stage-state.json").is_file():
+            continue
+        try:
+            state = json.loads((run_dir / "stage-state.json").read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        if state.get("stage") == "refactor" and (run_dir / "slice-ready-result.json").is_file():
+            continue
+        if state.get("stage") == "refactor" and (run_dir / "observations" / "refactor-observed.json").is_file():
+            return "validate-slice"
+        if (run_dir / "observations" / "green-observed.json").is_file():
+            return "run-slice"
+        if (run_dir / "observations" / "red-observed.json").is_file():
+            return "run-slice"
+    return None
+
+
+def next_stage_action(stages: list[str]) -> str:
+    """Return the only legal successor for an observed stage prefix."""
+    transitions = {(): "red", ("red",): "green", ("red", "green"): "refactor", ("red", "green", "refactor"): "slice-terminal"}
+    key = tuple(stages)
+    if key not in transitions:
+        raise ValueError("stage observations are not an ordered lifecycle prefix")
+    return transitions[key]
+
+
+def _staged_refactor_complete(result_path: Path) -> bool:
+    try:
+        state = json.loads(result_path.with_name("stage-state.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return False
+    return state.get("stage") == "refactor"
 
 
 def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object] | None:
@@ -419,7 +458,7 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 current = _unaffected_slice_current(
                     repository_root, target, contract, registry, result, slice_id
                 )
-            if result.get("predicate") == exit_predicate and result.get("status") == "pass" and current and (required_artifact is None or required_artifact.is_file()):
+            if result.get("predicate") == exit_predicate and result.get("status") == "pass" and (contract.get("plan_id") != "quick-dev-tdd-stage-recovery" or (result.get("orchestration_version") == "stage-actions.v2" and _staged_refactor_complete(result_path))) and current and (required_artifact is None or required_artifact.is_file()):
                 completed.add(slice_id)
                 break
     for slice_item in contract["slices"]:
@@ -431,6 +470,9 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
         authorization_gate = _slice_authorization_gate(target, contract["plan_id"])
         if authorization_gate is not None:
             return authorization_gate
+        active_action = _active_slice_action(repository_root, contract["plan_id"], slice_id)
+        if active_action == "validate-slice":
+            return {"next_action": "validate-slice", "slice_id": slice_id, "authorizes": []}
         return {"next_action": "run-slice", "slice_id": slice_id, "authorizes": []}
     if _terminal_completion_current(repository_root, target, contract_hash):
         return {"next_action": "implementation-complete", "authorizes": []}

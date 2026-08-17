@@ -14,6 +14,7 @@ TEST_TEMPLATES = {
     ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py": '''import importlib.util
 from pathlib import Path
 import sys
+import tempfile
 
 
 TOOLS = Path(__file__).resolve().parents[1]
@@ -30,7 +31,13 @@ def _load(name: str):
 
 def test_red_only_stage_runner_is_available():
     driver = _load("loop_plan_directory")
-    assert callable(driver.run_red_only)
+    basis = driver.build_red_basis(
+        {"id": "red", "executable": "py", "argv": [], "cwd": ".", "timeout_seconds": 1, "shell": False},
+        {"test_selector": "tests/test_stage.py", "expected_failure_ids": ["QDR-S0-EXIT"]},
+        {"head": "head-sha"}, "validator-sha", "contract-sha",
+    )
+    assert set(basis) == {"failure_intent", "test_selector", "contract_hash", "validator_hash", "pre_implementation_candidate"}
+    assert basis["failure_intent"]["command_id"] == "red"
 ''',
     ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_recovery.py": '''import importlib.util
 from pathlib import Path
@@ -49,11 +56,12 @@ def _load(name: str):
 
 def test_router_recognizes_a_current_red_handoff():
     router = _load("route_plan_directory")
-    assert callable(router.current_red_handoff)
+    assert router.next_stage_action(["red"]) == "green"
 ''',
     ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_migration_cutover.py": '''import importlib.util
 from pathlib import Path
 import sys
+import tempfile
 
 
 TOOLS = Path(__file__).resolve().parents[1]
@@ -74,6 +82,12 @@ def test_staged_cutover_guard_is_available():
         Path.cwd(),
         Path("execution-plans/2026-08-17-quick-dev-tdd-stage-recovery"),
     ) is True
+    with tempfile.TemporaryDirectory() as temp:
+        root = Path(temp) / "repository"
+        outside = Path(temp) / "outside"
+        outside.mkdir()
+        (outside / "implementation-contract.v1.json").write_text("{}", encoding="utf-8")
+        assert driver.staged_cutover_guard(root, outside) is False
 ''',
 }
 

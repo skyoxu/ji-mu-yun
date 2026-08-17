@@ -31,13 +31,20 @@ def main() -> int:
         errors="replace",
         cwd=args.repository_root,
     )
-    payload = {"schema_version": "quick-dev-tdd-stage-recovery.terminal-result.v1", "status": "pass" if result.returncode == 0 else "fail", "predicate": "slice-ready" if args.slice else "implementation-complete", "plan_id": "quick-dev-tdd-stage-recovery", "contract_hash": contract_hash, "terminal_command_id": "s0-terminal" if args.slice == "S0" else "s1-terminal" if args.slice == "S1" else "s2-terminal" if args.slice == "S2" else "terminal-full", "validated_command_ids": ["adapter-tests", "dogfood-8-17"] if args.slice == "S2" else [], "authorizes": ["implementation-complete"] if result.returncode == 0 and args.slice is None else []}
+    dogfood = None if args.slice else subprocess.run(
+        [sys.executable, "-B", "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py", "--slice", "S3"],
+        check=False,
+        capture_output=True,
+        cwd=args.repository_root,
+    )
+    status = "pass" if result.returncode == 0 and (dogfood is None or dogfood.returncode == 0) else "fail"
+    payload = {"schema_version": "quick-dev-tdd-stage-recovery.terminal-result.v1", "orchestration_version": "stage-actions.v2", "status": status, "predicate": "slice-ready" if args.slice else "implementation-complete", "plan_id": "quick-dev-tdd-stage-recovery", "contract_hash": contract_hash, "terminal_command_id": "s0-terminal" if args.slice == "S0" else "s1-terminal" if args.slice == "S1" else "s2-terminal" if args.slice == "S2" else "terminal-full", "validated_command_ids": [] if args.slice else ["adapter-tests", "dogfood-8-17"], "dogfood_output_sha256": None if dogfood is None else "sha256:" + hashlib.sha256(dogfood.stdout + dogfood.stderr).hexdigest(), "authorizes": ["implementation-complete"] if status == "pass" and args.slice is None else []}
     rendered = json.dumps(payload)
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(rendered)
-    return result.returncode
+    return 0 if status == "pass" else 1
 
 
 if __name__ == "__main__":

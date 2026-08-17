@@ -109,14 +109,17 @@ def main() -> int:
     parser.add_argument("--command", action="append", required=True, help="stage=path-to-shell-false-command-json")
     parser.add_argument("--terminal-command", type=Path, required=True)
     parser.add_argument("--prepare-command", type=Path, action="append", default=[])
+    parser.add_argument("--stage", choices=("all", "red", "green", "refactor"), default="all")
     args = parser.parse_args()
     workspace, plan_dir, run_dir = args.workspace.resolve(), args.plan_dir.resolve(), args.run_dir.resolve()
     try:
         plan_dir.relative_to((workspace / "execution-plans").resolve())
     except ValueError as exc:
         raise ValueError("plan directory must stay under workspace execution-plans") from exc
-    if run_dir.exists():
+    if run_dir.exists() and args.stage in {"all", "red"}:
         raise ValueError("run directory already exists")
+    if args.stage in {"green", "refactor"} and not run_dir.is_dir():
+        raise ValueError("stage successor run directory is missing")
     context = json.loads(args.run_context.read_text(encoding="utf-8"))
     if context.get("slice_id") != args.slice_id or not isinstance(context.get("plan_id"), str):
         raise ValueError("run context identity does not match invocation")
@@ -141,23 +144,64 @@ def main() -> int:
     ):
         raise RuntimeError("legacy regression predecessor is missing")
     prior_red = red_core.get("prior_red")
-    if red_mode == "prior-red-successor":
-        prior_red = _prior_red_successor(workspace, prior_red, commands["red"][0]["id"])
-        lifecycle.begin_after_prior_red()
-        red = {"exit_code": None, "observed_at": None}
-    else:
+    if args.stage == "red":
+        run_dir.mkdir(parents=True, exist_ok=True)
         red = lifecycle.observe(
             "red", commands["red"][0],
             "Recorded declared legacy regression observation." if red_mode == "legacy-regression" else "Recorded RED command observation.",
         )
         _validate_red_exit(red_mode, red["exit_code"])
-    green = lifecycle.observe("green", commands["green"][0], "Recorded GREEN command observation.")
+        red_core = context["stage_results"]["red"]
+        (run_dir / "red-basis.v1.json").write_text(json.dumps({
+            "schema_version": "quick-dev-tdd-adapter.red-basis.v1",
+            "failure_intent": {"command_id": red_core["command_id"], "test_selector": red_core["test_selector"], "expected_failure_ids": red_core["expected_failure_ids"]},
+            "test_selector": red_core["test_selector"],
+            "contract_hash": red_core["contract_hash"],
+            "validator_hash": red_core["validator_hash"],
+            "pre_implementation_candidate": red_core["pre_implementation_candidate"],
+            "authorizes": [],
+        }, indent=2) + "\n", encoding="utf-8", newline="\n")
+        (run_dir / "stage-state.json").write_text(json.dumps({"stage": "red", "next_stage": "green", "authorizes": []}, indent=2) + "\n", encoding="utf-8", newline="\n")
+        print(json.dumps({"run_id": run_dir.name, "stage": "red", "next_stage": "green", "authorizes": []}, sort_keys=True))
+        return 0
+
+    if args.stage in {"green", "refactor"}:
+        lifecycle.resume_observations(run_dir, ["red"] if args.stage == "green" else ["red", "green"])
+    else:
+        if red_mode == "prior-red-successor":
+            prior_red = _prior_red_successor(workspace, prior_red, commands["red"][0]["id"])
+            lifecycle.begin_after_prior_red()
+            red = {"exit_code": None, "observed_at": None}
+        else:
+            red = lifecycle.observe(
+                "red", commands["red"][0],
+                "Recorded declared legacy regression observation." if red_mode == "legacy-regression" else "Recorded RED command observation.",
+            )
+            _validate_red_exit(red_mode, red["exit_code"])
+
+    if args.stage == "refactor":
+        green = json.loads((run_dir / "observations" / "green-observed.json").read_text(encoding="utf-8"))
+    else:
+        green = lifecycle.observe("green", commands["green"][0], "Recorded GREEN command observation.")
     if green["exit_code"] != 0:
         raise RuntimeError("GREEN command failed")
-    for command in commands["refactor"][:-1]:
-        if _run(workspace, command) != 0:
-            raise RuntimeError("REFACTOR pre-observation command failed")
-    refactor = lifecycle.observe("refactor", commands["refactor"][-1], "Recorded REFACTOR command observation.")
+    if args.stage == "green":
+        if green["exit_code"] != 0:
+            raise RuntimeError("GREEN command failed")
+        (run_dir / "stage-state.json").write_text(json.dumps({"stage": "green", "next_stage": "refactor", "authorizes": []}, indent=2) + "\n", encoding="utf-8", newline="\n")
+        print(json.dumps({"run_id": run_dir.name, "stage": "green", "next_stage": "refactor", "authorizes": []}, sort_keys=True))
+        return 0
+
+    existing_refactor = run_dir / "observations" / "refactor-observed.json"
+    if args.stage == "refactor" and existing_refactor.is_file():
+        refactor = json.loads(existing_refactor.read_text(encoding="utf-8"))
+        if refactor.get("stage") != "refactor" or refactor.get("exit_code") != 0:
+            raise RuntimeError("existing REFACTOR observation is not reusable")
+    else:
+        for command in commands["refactor"][:-1]:
+            if _run(workspace, command) != 0:
+                raise RuntimeError("REFACTOR pre-observation command failed")
+        refactor = lifecycle.observe("refactor", commands["refactor"][-1], "Recorded REFACTOR command observation.")
     if refactor["exit_code"] != 0:
         raise RuntimeError("REFACTOR command failed")
 
@@ -198,8 +242,13 @@ def main() -> int:
             "green_exit_code": green["exit_code"], "refactor_exit_code": refactor["exit_code"],
             "authorizes": [],
         }, indent=2) + "\n", encoding="utf-8", newline="\n")
-    else:
+    elif args.stage == "all":
         bundle = lifecycle.close(context, {})
+
+    if args.stage == "refactor":
+        (run_dir / "stage-state.json").write_text(json.dumps({"stage": "refactor", "next_stage": "slice-terminal", "authorizes": []}, indent=2) + "\n", encoding="utf-8", newline="\n")
+        print(json.dumps({"run_id": run_dir.name, "stage": "refactor", "next_stage": "slice-terminal", "authorizes": []}, sort_keys=True))
+        return 0
 
     projection = _projection(plan_dir)
     output = run_dir / "stage-evidence-projection.v1.json"

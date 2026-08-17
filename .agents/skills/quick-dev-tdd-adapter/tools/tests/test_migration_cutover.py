@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import sys
+import tempfile
 
 
 TOOLS = Path(__file__).resolve().parents[1]
@@ -21,3 +22,9 @@ def test_staged_cutover_guard_is_available():
         Path.cwd(),
         Path("execution-plans/2026-08-17-quick-dev-tdd-stage-recovery"),
     ) is True
+    with tempfile.TemporaryDirectory() as temp:
+        root = Path(temp) / "repository"
+        outside = Path(temp) / "outside"
+        outside.mkdir()
+        (outside / "implementation-contract.v1.json").write_text("{}", encoding="utf-8")
+        assert driver.staged_cutover_guard(root, outside) is False

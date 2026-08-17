@@ -89,6 +89,36 @@ class LifecycleRunner:
             raise ValueError("prior RED successor must begin from an empty lifecycle")
         self.stages.append("red")
 
+    def resume_observations(self, run_dir: Path, stages: list[str]) -> None:
+        """Resume an existing append-only run before the next stage."""
+        expected = ["red", "green", "refactor"]
+        if stages != expected[:len(stages)] or self.stages:
+            raise ValueError("prior lifecycle stages are invalid")
+        snapshots = dict(self.snapshots)
+        for stage in stages:
+            path = run_dir / "observations" / f"{stage}-observed.json"
+            if not path.is_file():
+                raise ValueError("prior lifecycle observation is missing")
+            observation = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(observation, dict) or observation.get("stage") != stage:
+                raise ValueError("prior lifecycle observation is invalid")
+            changed = observation.get("changed_files")
+            if not isinstance(changed, list):
+                raise ValueError("prior lifecycle snapshots are invalid")
+            for item in changed:
+                if not isinstance(item, dict) or not isinstance(item.get("path"), str):
+                    raise ValueError("prior lifecycle snapshot is invalid")
+                observed_path = item["path"]
+                matches = [path for path in self.paths if path == observed_path or path.endswith("/" + observed_path)]
+                if len(matches) != 1:
+                    raise ValueError("prior lifecycle snapshot path is ambiguous")
+                after = item.get("after_bytes_base64")
+                if after is not None and not isinstance(after, str):
+                    raise ValueError("prior lifecycle snapshot is invalid")
+                snapshots[matches[0]] = after
+            self.stages.append(stage)
+        self.snapshots = snapshots
+
     def close(self, run_context: dict[str, Any], artifact_store: dict[tuple[str, str], bytes]) -> dict[str, Any]:
         """Close only a complete captured lifecycle; no stage is synthesized here."""
         if self.stages != ["red", "green", "refactor"]:

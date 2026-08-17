@@ -1,0 +1,29 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:8d1956eb8e49bba20cacde620b5352697bb5cc22ccf780d9af3f9e2c1323e372",
+  "canonical_context_sha256": "sha256:96db55f5b946f2e711109919276900b1ffe92e59d6340da0c7d08d9efc7e08d8",
+  "request_sha256": "sha256:8503449736cfd6e4297ea15a15533ca13619b29197a697411d63c359c56a1a3e",
+  "result_sha256": "sha256:1c183c5de206544e432dadf1493384fe2eb32f379a7275ccc12e51a54c12ca6b",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb"
+  },
+  "source_snapshot_id": "sha256:73439257113cd841332d7289e45f8bf3297be2c38652ecf4b97ed074f6f0e740",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "source_sha256": "ccda1fed815b953b9f0eed9f616b94bcd0778c5a99e582dfa87fed2c69b08ce7",
+      "satisfies": [
+        "governance.quick-dev-tdd-adapter"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:0311798004712d8fae33f4c23b8fea6094d820fbf3b63505e01d1e7642d2bf51",
+    "freeze_receipt_path": "knowledge-context.freeze.history/0311798004712d8fae33f4c23b8fea6094d820fbf3b63505e01d1e7642d2bf51.v1.json",
+    "reason": "Refresh selected read-set hashes after adding bound RED-basis evidence; selection semantics unchanged."
+  }
+}

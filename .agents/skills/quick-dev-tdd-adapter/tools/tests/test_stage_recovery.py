@@ -15,4 +15,4 @@ def _load(name: str):
 
 def test_router_recognizes_a_current_red_handoff():
     router = _load("route_plan_directory")
-    assert callable(router.current_red_handoff)
+    assert router.next_stage_action(["red"]) == "green"

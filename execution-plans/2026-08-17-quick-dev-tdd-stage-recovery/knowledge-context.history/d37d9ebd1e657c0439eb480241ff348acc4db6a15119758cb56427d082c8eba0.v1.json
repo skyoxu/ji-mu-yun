@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r14",
+    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r5",
     "consumer": "vdd",
     "query": "Quick Dev TDD stage recovery RED basis implementation successor route resume migration dogfood",
     "snapshot": {
@@ -63,7 +63,7 @@
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
             "role": "orchestrator",
-            "source_sha256": "35f72e6a1e9144e8ebeb12bdca15807bae6beeac1862b3fea4dae648ca56f125"
+            "source_sha256": "6329e3107d9c81397cd92e5fe6bbead88a30ccc0f29b796dcfff2fb1c8985921"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
@@ -881,7 +881,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r14",
+    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r5",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb",
@@ -1017,12 +1017,12 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:d1b61b22291bc6706e44599d082dd18310553979ccbb3b5b6294cc0618557349",
-  "result_sha256": "sha256:fb91f530730b0c0b699fd6abb34cce234b694f84f8238b7d79ca5cea1143dc4b",
+  "request_sha256": "sha256:1935a9a1818e7d8bdf8fd9eba89a80f9ff49aef5773a0410b2a1fa32664277ae",
+  "result_sha256": "sha256:f3c187b00bec641e73d307fc9028acbbd5d18f1486e8c9dafb533b9ac286deb3",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:50abb40e8730efabf2b7435780667d17bfe289fcadee91966872898eb895fd1d"
+    "base_locator_result_sha256": "sha256:ffc29f5dd0c5d6fbccbd73e22a73d445c7c9392fdc2b30f0b837d8afa479edc6"
   },
   "preflight": {
     "status": "ready",
@@ -1030,6 +1030,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:593e1b458bbf9b123982064eaf3bc5f69648359cb0b112853ff8b42ad660425d"
+    "context_sha256": "sha256:dd4b296009184df7deae7cc7291ed984dd17646144585a7ef42fa441c04fd602"
   }
 }
