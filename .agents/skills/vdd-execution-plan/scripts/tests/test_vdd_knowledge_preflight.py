@@ -315,6 +315,53 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             self.assertEqual("jimuyun.vdd-knowledge-freeze.v1", freeze["schema_version"])
             self.assertEqual("test-policy-v2", freeze["policy_revision"])
 
+    def test_prepare_freeze_receipt_uses_refreshed_context_decisions(self) -> None:
+        module = load_prepare()
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / "knowledge/catalogs").mkdir(parents=True)
+            (root / "knowledge/catalogs/repository-knowledge-catalog.v2.json").write_text(
+                json.dumps({"source_snapshot": {"ref": "refs/heads/main", "commit": "a" * 40}}), encoding="utf-8"
+            )
+            (root / "knowledge/policies").mkdir(parents=True)
+            (root / "knowledge/policies/consumer-policies.v2.json").write_text(
+                json.dumps({"policy_revision": "test-policy-v2"}), encoding="utf-8"
+            )
+            output = root / "execution-plans/plan/knowledge-context.v1.json"
+            locator_result = {
+                "schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "request-1",
+                "snapshot": {"ref": "refs/heads/main", "commit": "a" * 40}, "status": "matched",
+                "source_snapshot_id": "old-snapshot",
+                "candidates": [{"path": "AGENTS.md", "source_sha256": "old"}],
+            }
+            calls = iter(["candidate_worktree_source_hash_mismatch", None])
+
+            def refresh(payload, _root):
+                refreshed = json.loads(json.dumps(payload))
+                refreshed["locator_result"]["source_snapshot_id"] = "new-snapshot"
+                refreshed["locator_result"]["candidates"][0]["source_sha256"] = "new"
+                refreshed["decisions"][0]["candidate"]["source_sha256"] = "new"
+                refreshed["result_sha256"] = validator.canonical_hash(refreshed["locator_result"])
+                refreshed["source_refresh"] = {"status": "refreshed"}
+                return refreshed
+
+            validator = SimpleNamespace(
+                validate_context=lambda *_args, **_kwargs: None,
+                validate_worktree_sources=lambda *_args, **_kwargs: next(calls),
+                validate_catalog_freshness=lambda _root: None,
+                refresh_context_read_set=refresh,
+                canonical_hash=lambda value: "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+            )
+            with mock.patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=json.dumps(locator_result), stderr="")), \
+                 mock.patch.object(module, "_validator", return_value=validator), \
+                 mock.patch.object(sys, "argv", ["prepare", "--repository-root", str(root), "--request-id", "request-1", "--query", "rules", "--accept", "AGENTS.md=repository-rules", "--target-plan", "execution-plans/plan", "--output", str(output)]):
+                self.assertEqual(0, module.main())
+            document = json.loads(output.read_text(encoding="utf-8"))
+            freeze = json.loads(output.with_name("knowledge-context.freeze.v1.json").read_text(encoding="utf-8"))
+            self.assertEqual("new", document["decisions"][0]["candidate"]["source_sha256"])
+            self.assertEqual("new", freeze["accepted"][0]["source_sha256"])
+            self.assertEqual("new-snapshot", freeze["source_snapshot_id"])
+
     def test_blocked_preflight_does_not_publish_fixed_output_files(self) -> None:
         module = load_prepare()
         with tempfile.TemporaryDirectory() as raw:

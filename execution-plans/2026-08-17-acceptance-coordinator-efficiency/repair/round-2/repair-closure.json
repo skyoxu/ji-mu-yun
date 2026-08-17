@@ -1,0 +1,15 @@
+{
+  "schema_version": "acceptance-coordinator-efficiency.vdd-repair-closure.v1",
+  "round": 2,
+  "scope": "S0 TDD command binding",
+  "findings_closed": [
+    "S0 RED command incorrectly targeted an unrelated 7-15 plan test",
+    "existing candidate-identity behavior lacked a declared legacy-regression path"
+  ],
+  "historical_predecessor": {
+    "path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6/RUN-20260721T081500Z/observations/red-observed.json",
+    "sha256": "sha256:e1073ed4aadc6e7212c7e9f1773481f8f63f77cd8ff94b185fd81f002f3a1f17"
+  },
+  "preserved": ["ACE-S0 behavior", "lifecycle ownership", "no Bootstrap default", "no Knowledge publication by Acceptance"],
+  "authorizes": []
+}

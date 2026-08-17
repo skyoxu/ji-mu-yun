@@ -177,7 +177,7 @@ def main() -> int:
             "source_sha256": decision["candidate"]["source_sha256"],
             "satisfies": sorted(decision["satisfies"]),
         }
-        for decision in decisions
+        for decision in payload["decisions"]
         if decision["decision"] == "accepted"
     ]
     receipt = {
@@ -187,9 +187,9 @@ def main() -> int:
         "canonical_context_sha256": validator.canonical_hash(payload),
         "request_sha256": payload["request_sha256"],
         "result_sha256": payload["result_sha256"],
-        "snapshot": request["snapshot"],
-        "source_snapshot_id": result.get("source_snapshot_id"),
-        "policy_revision": request["policy_revision"],
+        "snapshot": payload["locator_request"]["snapshot"],
+        "source_snapshot_id": payload["locator_result"].get("source_snapshot_id"),
+        "policy_revision": payload["locator_request"]["policy_revision"],
         "accepted": accepted_decisions,
         "authorizes": [],
     }

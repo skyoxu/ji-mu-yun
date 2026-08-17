@@ -288,7 +288,28 @@ def load_current_bootstrap_route(repository_root: Path, route_path: str) -> dict
     }
 
 
-def prepare_run(input_path: str, output_path: str, knowledge_context_path: str | None = None) -> dict:
+def _bundle_knowledge_context(target_root: Path, bundle_path: str) -> str:
+    relative = Path(bundle_path)
+    if relative.is_absolute() or ".." in relative.parts:
+        raise InputError("prerequisite bundle path must stay inside the target root")
+    path = (target_root / relative).resolve()
+    try:
+        path.relative_to(target_root)
+    except ValueError as exc:
+        raise InputError("prerequisite bundle path escapes the target root") from exc
+    bundle = _read_json(str(path))
+    if not isinstance(bundle, dict) or bundle.get("schemaVersion") != "compact-vdd-acceptance-prerequisite-bundle.v1":
+        raise InputError("prerequisite bundle is invalid")
+    expected_hash = canonical_hash({key: value for key, value in bundle.items() if key != "bundleHash"})
+    if bundle.get("bundleHash") != expected_hash:
+        raise InputError("prerequisite bundle hash is stale")
+    context = bundle.get("knowledgeContext")
+    if not isinstance(context, dict) or not isinstance(context.get("path"), str) or not isinstance(context.get("sha256"), str):
+        raise InputError("prerequisite bundle knowledge context is invalid")
+    return context["path"]
+
+
+def prepare_run(input_path: str, output_path: str, knowledge_context_path: str | None = None, prerequisite_bundle_path: str | None = None) -> dict:
     input_file = Path(input_path).resolve()
     value = _read_json(input_file)
     validate_run_input(value)
@@ -314,6 +335,11 @@ def prepare_run(input_path: str, output_path: str, knowledge_context_path: str |
     if canonical_hash(candidate) != value["candidate_content_manifest_hash"]:
         raise InputError("candidate content manifest hash is stale")
     candidate_custody = verify_manifest_bytes(target_root, value, baseline, candidate)
+    if prerequisite_bundle_path is not None:
+        bundle_context_path = _bundle_knowledge_context(target_root, prerequisite_bundle_path)
+        if knowledge_context_path is not None and knowledge_context_path != bundle_context_path:
+            raise InputError("caller knowledge context cannot override prerequisite bundle")
+        knowledge_context_path = bundle_context_path
     knowledge_context = (
         freeze_knowledge_context(target_root, knowledge_context_path)
         if knowledge_context_path is not None
@@ -899,6 +925,37 @@ def import_mapping_approval_command(request_path: str, output_path: str) -> dict
     return _publish_new_json(output_path, request["approval"])
 
 
+def run_coordinator(request_path: str, output_path: str) -> dict:
+    """Run one deterministic Acceptance coordination step and replay its result."""
+    request = _read_json(request_path)
+    if not isinstance(request, dict) or set(request) != {"schemaVersion", "candidateBindingHash", "route", "authorizes"}:
+        raise InputError("coordinator request is invalid")
+    binding, route = request["candidateBindingHash"], request["route"]
+    if (
+        request["schemaVersion"] != "acceptance-coordinator-request.v1"
+        or not isinstance(binding, str) or not binding.startswith("sha256:")
+        or route not in {"deterministic_only", "semantic_review_required"}
+        or request["authorizes"] != []
+    ):
+        raise InputError("coordinator request is invalid")
+    result = {
+        "schemaVersion": "acceptance-coordinator-result.v1", "candidateBindingHash": binding,
+        "route": route, "status": "completed" if route == "deterministic_only" else "semantic_handoff_required",
+        "bootstrapInvoked": False,
+        "typedHandoff": None if route == "deterministic_only" else {
+            "schemaVersion": "acceptance-semantic-handoff.v1", "candidateBindingHash": binding, "authorizes": [],
+        },
+        "telemetry": {"elapsedMs": 0, "waitMs": 0, "interventionCount": 0}, "authorizes": [],
+    }
+    output = Path(output_path)
+    if output.exists():
+        existing = _read_json(str(output))
+        if existing != result:
+            raise InputError("coordinator replay binding does not match existing result")
+        return existing
+    return _publish_new_json(str(output), result)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     subcommands = parser.add_subparsers(dest="command", required=True)
@@ -911,6 +968,10 @@ def main() -> int:
     prepare.add_argument("--input", required=True)
     prepare.add_argument("--out", required=True)
     prepare.add_argument("--knowledge-context", required=True, help="Target-root-relative Refactor Acceptance knowledge context")
+    prepare.add_argument("--prerequisite-bundle", help="Target-root-relative Compact VDD prerequisite bundle")
+    coordinator = subcommands.add_parser("run-coordinator")
+    coordinator.add_argument("--request", required=True)
+    coordinator.add_argument("--out", required=True)
     policy = subcommands.add_parser("resolve-code-review-policy", aliases=("resolve-phase-policy",))
     policy.add_argument("--policy", required=True)
     policy.add_argument("--baseline", required=True)
@@ -1056,7 +1117,10 @@ def main() -> int:
         ), sort_keys=True))
         return 0
     if args.command in {"prepare", "prepare-run"}:
-        print(json.dumps(prepare_run(args.input, args.out, args.knowledge_context), sort_keys=True))
+        print(json.dumps(prepare_run(args.input, args.out, args.knowledge_context, args.prerequisite_bundle), sort_keys=True))
+        return 0
+    if args.command == "run-coordinator":
+        print(json.dumps(run_coordinator(args.request, args.out), sort_keys=True))
         return 0
     if args.command in {"resolve-code-review-policy", "resolve-phase-policy"}:
         command = resolve_phase_policy_command if args.command == "resolve-phase-policy" else resolve_code_review_policy_command

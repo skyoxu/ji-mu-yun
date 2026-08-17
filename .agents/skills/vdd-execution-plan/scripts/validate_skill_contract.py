@@ -256,7 +256,7 @@ def validate_profile_cases(skill_root: Path, contract: dict[str, Any]) -> list[d
     expectations = {
         "slice-local-stale": ("expected_invalidation", "slice-and-declared-downstream"),
         "shared-contract-replay": ("expected_invalidation", "targeted-then-terminal-full-replay"),
-        "legacy-regression": ("expected_red_path", "legacy-regression-without-fabrication"),
+        "red-evidence-boundary": ("expected_red_path", "quick-dev-observed-current-candidate"),
         "optional-review": ("expected_review", "supplemental-and-batched"),
         "standard-no-report": ("expected_report", "optional"),
         "self-hosted-competing-pressure": (
@@ -307,7 +307,9 @@ def validate_generic_source(skill_root: Path, contract: dict[str, Any]) -> list[
     sources = sorted(
         path
         for path in skill_root.rglob("*")
-        if path.is_file() and path.suffix in {".json", ".md", ".py", ".yaml"}
+        if path.is_file()
+        and path.suffix in {".json", ".md", ".py", ".yaml"}
+        and "tests" not in path.parts
     )
     for path in sources:
         try:

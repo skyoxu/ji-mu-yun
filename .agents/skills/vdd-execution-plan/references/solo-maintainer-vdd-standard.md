@@ -9,7 +9,12 @@ Verification-driven planning means a plan names observable behavior, current val
 - Follow the optional clarification recovery and sensitive quarantine boundary accepted in `docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md`.
 - Preserve repository instructions, UTF-8, path containment, protected-path approval, sensitive-data minimization, current Git identity, and additive historical evidence.
 - Select `standard`, `resumable`, or `self-hosted` before choosing plan artifacts.
-- Keep intent, scope, non-goals, authority, implementation slices, RED/negative or legacy-regression evidence, targeted validation, and one terminal full validation actionable.
+- Keep intent, scope, non-goals, authority, implementation slices, declared
+  failure intent, targeted validation, and one terminal full validation
+  actionable. VDD does not create, select, import, hash-bind, or publish RED
+  execution evidence. Quick Dev observes RED on the frozen current candidate.
+  A behavior already present at planning time is regression coverage, not a
+  synthetic implementation slice and not a reason to import a historical RED.
 - Do not equate plan readiness, implementation authorization, implementation completion, acceptance, or archive.
 - Use existing repository validators first. Add a schema, validator, fixture, ledger, or generated view only when a named machine consumer changes a routing or validation decision.
 

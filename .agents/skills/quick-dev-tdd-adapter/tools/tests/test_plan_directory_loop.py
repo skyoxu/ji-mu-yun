@@ -34,6 +34,22 @@ class PlanDirectoryLoopTests(unittest.TestCase):
         (plan / "implementation-contract.v1.json").write_text(json.dumps({"plan_id": "target", "slices": slices}), encoding="utf-8")
         return plan
 
+    def test_quick_dev_compiles_vdd_failure_intent_without_a_prebound_red_command(self) -> None:
+        red = BUILDER._generated_red_descriptor("S3", {
+            "test_selector": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py::CoordinatorTests::test_replays_binding",
+            "expected_failure_ids": ["ACE-S3-EXIT"],
+        })
+        self.assertEqual("quick-dev-generated-red-S3", red["id"])
+        self.assertEqual(["-3", "-B", "-m", "pytest"], red["argv"][:4])
+
+    def test_quick_dev_rejects_vdd_red_evidence_binding(self) -> None:
+        with self.assertRaisesRegex(ValueError, "must not bind"):
+            BUILDER._generated_red_descriptor("S3", {
+                "test_selector": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+                "expected_failure_ids": ["ACE-S3-EXIT"],
+                "legacy_predecessor": {"path": "logs/red.json", "sha256": "sha256:bad"},
+            })
+
     def test_router_rejects_plan_path_outside_execution_plans(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

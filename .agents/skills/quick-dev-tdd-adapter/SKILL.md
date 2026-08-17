@@ -39,7 +39,15 @@ After the target plan's current declared terminal predicate passes, append its o
 
 1. Run `tools/loop_plan_directory.py` before every expensive action. It reads only the explicit target directory and its plan-local evidence and emits one next action.
 2. For `run-slice`, generate a plan-local `run_context` and invoke `tools/run_slice_lifecycle.py`; it uses the shared `LifecycleRunner` and `stage_artifact_composer`. Never handwrite stage, Capsule, attempt, or ledger JSON.
-3. Run the declared RED command and require its expected nonzero failure before a production write; then run GREEN, REFACTOR, and the plan-local slice predicate.
+3. After freezing the current candidate, resolve the VDD-declared failure intent
+   into a shell-free RED command, run it, and require its expected nonzero
+   failure before a production write; then run GREEN, REFACTOR, and the
+   plan-local slice predicate. RED command descriptors and RED observations are
+   Quick Dev run artifacts, not VDD artifacts. Reject a newly produced VDD plan
+   that contains a RED receipt, run ID, hash, predecessor, imported historical
+   RED, or a pre-bound RED command descriptor. Historical plans may be read
+   only through an explicit compatibility adapter and cannot be refreshed into
+   new evidence.
 4. After `slice-ready`, route the next unlocked slice automatically. When a
    previous terminal receipt is stale only because a declared candidate binding
    changed, rerun the controlled terminal path and publish a successor receipt;

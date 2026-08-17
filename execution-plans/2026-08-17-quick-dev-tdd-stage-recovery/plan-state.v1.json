@@ -1,0 +1,7 @@
+{
+  "schema_version": "quick-dev-tdd-stage-recovery.plan-state.v1",
+  "plan_id": "quick-dev-tdd-stage-recovery",
+  "lifecycle_state": "draft",
+  "owner": "vdd-execution-plan",
+  "authorizes": []
+}

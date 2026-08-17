@@ -7,7 +7,8 @@
 - Lifecycle state: `plan-ready`
 - Owner of this state: `vdd-execution-plan`
 - Source authority: `../2026-08-15-acceptance-review-bootstrap-efficiency/acceptance-workflow-optimization.md`
-- Implementation authorization: not published; maintainer-owned
+- Implementation authorization: published by maintainer; Quick Dev must first
+  publish its own current consumer context before S0 runs
 
 ## Intent
 

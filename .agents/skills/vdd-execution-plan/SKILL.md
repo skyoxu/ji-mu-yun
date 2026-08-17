@@ -19,7 +19,7 @@ Choose the least complex profile that serves a real consumer. Record the selecte
 
 | Profile | Use when | Required additions |
 | --- | --- | --- |
-| `standard` | Ordinary feature, fix, documentation change, or bounded refactor | One compact plan document, lifecycle state, Git baseline/current scope, implementation slice(s), one RED or declared legacy-regression path, targeted commands, and one terminal full validation command. |
+| `standard` | Ordinary feature, fix, documentation change, or bounded refactor | One compact plan document, lifecycle state, Git baseline/current scope, implementation slice(s), declared failure intent and acceptance targets, targeted commands, and one terminal full validation command. |
 | `resumable` | Work crosses sessions, has dependent slices, or can leave partial state | `standard` plus compact resume state, dependency-scoped slice status, recovery instructions, and an indexed append-only `95-*.md` report. |
 | `self-hosted` | The work changes VDD, Quick Dev, acceptance/review routing, or a controlling validator | `resumable` plus only the protocol fixtures and migration checks consumed by the changed workflow. Stabilize the changed layer with targeted checks before one end-to-end replay. |
 
@@ -62,7 +62,18 @@ Use the static transition contract in [references/lifecycle-state-contract.json]
 
 VDD owns `draft` and `plan-ready`. The maintainer may explicitly publish `implementation-authorized` without Bootstrap evidence. Bootstrap Review is optional supplemental evidence and never publishes a lifecycle state. Quick Dev may publish only `implementation-complete`; acceptance and archive are separately owned. New plans emit no old state names; repair plans may read them only through the documented compatibility adapter.
 
-For each slice, name its intended behavior, RED or controlled negative command, GREEN/acceptance command, declared downstream dependents, and recovery action. Existing behavior found after implementation uses a declared legacy/regression path: never invent historical RED evidence. A RED command must not rely on the slice's GREEN output or a future slice.
+For each slice, name its intended behavior, failure intent (the test selector and
+expected observable failure before the change), GREEN/acceptance target,
+declared downstream dependents, and recovery action. VDD owns none of the RED
+execution: it must not emit a RED command descriptor, mode, run ID, receipt,
+hash, predecessor, or imported historical evidence. Quick Dev resolves the
+declared selector after freezing its current candidate, runs the RED command,
+and owns the resulting observation under its current run directory. A VDD plan
+that finds the behavior already present removes it from implementation scope and
+keeps it only as current regression/terminal coverage; it must not use a
+legacy path to manufacture a missing RED. Legacy RED import remains a
+read-only compatibility path for already-versioned historical plans, never an
+artifact that a newly created or repaired VDD plan may publish.
 
 During repair, first stabilize the smallest affected layer. A slice-local change invalidates that slice and its declared downstream dependents only. A shared lifecycle contract, global validator semantic, baseline identity, or dependency used by every slice requires one terminal full replay after targeted stabilization. Targeted validation never authorizes completion. Before publishing `implementation-complete`, run one current terminal full validation.
 

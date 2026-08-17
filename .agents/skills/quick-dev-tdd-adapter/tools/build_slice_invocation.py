@@ -137,6 +137,34 @@ def _descriptor(commands: dict[str, dict[str, Any]], command_id: str, **values: 
     }
 
 
+def _generated_red_descriptor(slice_id: str, red: dict[str, Any]) -> dict[str, Any]:
+    """Compile VDD failure intent into the current Quick Dev RED invocation."""
+    forbidden = {"command_id", "mode", "legacy_predecessor", "prior_red", "receipt", "run_id", "sha256"}
+    if forbidden & set(red):
+        raise ValueError("VDD-owned RED must not bind execution evidence or a command")
+    if set(red) != {"test_selector", "expected_failure_ids"}:
+        raise ValueError("VDD RED intent is invalid")
+    selector = red["test_selector"]
+    failure_ids = red["expected_failure_ids"]
+    if (
+        not isinstance(selector, str)
+        or not selector.startswith(".agents/")
+        or ".." in Path(selector).parts
+        or not isinstance(failure_ids, list)
+        or not failure_ids
+        or any(not isinstance(item, str) or not item for item in failure_ids)
+    ):
+        raise ValueError("VDD RED intent is invalid")
+    return {
+        "id": f"quick-dev-generated-red-{slice_id}",
+        "executable": "py",
+        "argv": ["-3", "-B", "-m", "pytest", selector, "-q"],
+        "cwd": ".",
+        "timeout_seconds": 300,
+        "shell": False,
+    }
+
+
 def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> dict[str, Any]:
     root, plan = repository_root.resolve(), plan_dir.resolve()
     try:
@@ -153,9 +181,14 @@ def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> 
     values = {"plan_rel": plan_rel, "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "candidate_run_id": _candidate_run_id(root, contract["plan_id"]) if slice_id == "RMAP-S7" else ""}
     commands = {item["id"]: item for item in registry["commands"]}
     tdd = selected["tdd"]
-    predecessor = _legacy_predecessor(root, tdd["red"])
-    red_mode = tdd["red"].get("mode", "red")
-    red = _descriptor(commands, tdd["red"]["command_id"], **values)
+    if contract.get("red_execution_owner") == "quick-dev-tdd-adapter":
+        predecessor = None
+        red_mode = "red"
+        red = _generated_red_descriptor(slice_id, tdd["red"])
+    else:
+        predecessor = _legacy_predecessor(root, tdd["red"])
+        red_mode = tdd["red"].get("mode", "red")
+        red = _descriptor(commands, tdd["red"]["command_id"], **values)
     green = _descriptor(commands, tdd["green"]["command_id"], **values)
     refactor = [_descriptor(commands, item["command_id"], **values) for item in tdd["refactor"]["invocations"]]
     terminal = _descriptor(commands, selected["post_refactor_command_id"], **values)

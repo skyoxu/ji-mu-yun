@@ -29,7 +29,11 @@ def main() -> int:
     parser.add_argument("--poll-seconds", type=int, default=15)
     args = parser.parse_args(); root, plan = args.repository_root.resolve(), args.plan_dir.resolve()
     while True:
-        routed = json.loads(subprocess.check_output([sys.executable, str(TOOLS / "route_plan_directory.py"), "--repository-root", str(root), "--plan-dir", str(plan)], text=True))
+        routed = json.loads(subprocess.check_output([
+            sys.executable, str(TOOLS / "route_plan_directory.py"),
+            "--repository-root", str(root), "--plan-dir", str(plan),
+            "--caller", "quick-dev-tdd-adapter",
+        ], text=True))
         action = routed["next_action"]
         _write(args.state_file, {"observed_at": datetime.now(timezone.utc).isoformat(), "action": action, "slice_id": routed.get("slice_id"), "authorizes": []})
         if action != "run-slice": return 0

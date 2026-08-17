@@ -89,6 +89,31 @@ def _write_prepare_inputs(target_root: Path, baseline: dict, candidate: dict, ru
 
 
 class RunInputTests(unittest.TestCase):
+    def test_prepare_run_rejects_caller_context_override_of_prerequisite_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            baseline = {
+                "schemaVersion": "acceptance-baseline-content-manifest.v1",
+                "status": "complete", "coverageGaps": [], "files": [], "authorizes": [],
+            }
+            candidate = {
+                "schemaVersion": "acceptance-candidate-content-manifest.v1",
+                "status": "complete", "coverageGaps": [], "files": [], "authorizes": [],
+            }
+            _write_prepare_inputs(target, baseline, candidate, _run_input(target, baseline, candidate))
+            bundle = {
+                "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+                "knowledgeContext": {"path": "bundle-context.json", "sha256": "sha256:" + "a" * 64},
+            }
+            bundle["bundleHash"] = acceptance_cli.canonical_hash(bundle)
+            (target / "bundle.json").write_text(json.dumps(bundle), encoding="utf-8")
+            with mock.patch.object(acceptance_cli, "verify_manifest_bytes", return_value={}):
+                with self.assertRaisesRegex(acceptance_cli.InputError, "cannot override"):
+                    acceptance_cli.prepare_run(
+                        str(target / "input.json"), str(target / "run.json"),
+                        "caller-context.json", "bundle.json",
+                    )
+
     def test_git_lookup_disables_replace_objects(self) -> None:
         completed = subprocess.CompletedProcess(args=[], returncode=0, stdout=b"ok", stderr=b"")
         with mock.patch.object(acceptance_core.subprocess, "run", return_value=completed) as run:

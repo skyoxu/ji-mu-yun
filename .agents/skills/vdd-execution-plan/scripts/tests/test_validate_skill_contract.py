@@ -183,6 +183,18 @@ class SkillContractTests(unittest.TestCase):
             result = self.validator.validate_skill(copied)
             self.assertIn("VDD-PROFILE-CASES-BEHAVIOR", {item["rule_id"] for item in result["findings"]})
 
+    def test_red_evidence_boundary_mutation_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            copied = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, copied)
+            path = copied / "scripts" / "fixtures" / "profile-cases.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            case = next(item for item in data["cases"] if item["id"] == "red-evidence-boundary")
+            case["expected_red_path"] = "vdd-bound-red-receipt"
+            path.write_text(json.dumps(data), encoding="utf-8", newline="\n")
+            result = self.validator.validate_skill(copied)
+            self.assertIn("VDD-PROFILE-CASES-BEHAVIOR", {item["rule_id"] for item in result["findings"]})
+
     def test_review_reentry_policy_mutation_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             copied = Path(tmp) / "skill"
