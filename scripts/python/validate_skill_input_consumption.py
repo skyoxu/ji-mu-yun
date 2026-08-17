@@ -20,6 +20,7 @@ from skill_input_consumption import (
     contract_hash,
     declared_missing_plan_files,
     expand_source_graph,
+    generated_artifact_exclusions,
     forbidden_repository_path,
     line_ranges,
     is_reparse_point,
@@ -404,6 +405,7 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
             receipt["operation"],
             role_values,
             declared_missing_plan_files(repository_root, repository_root / receipt["target"]),
+            generated_artifact_exclusions(repository_root, repository_root / receipt["target"]),
         )
     except SkillInputError as exc:
         raise ReceiptValidationError(str(exc)) from exc

@@ -1,0 +1,108 @@
+这个阻断判断是对的。我建议选 2，不要把目标 plan 的合同降回 v1。
+
+当前目标合同明确是 acceptance-coordinator-efficiency.implementation-contract.v2。 但父 bmad-quick-dev 输入路由把 plan-owned contract 正则硬编码成只能匹配 .implementation-contract.v1，否则直接报 unsupported schema_version。 对应的共享 plan-owned schema 也同样只接受 v1。
+
+因此这是父 Quick Dev consumer 的版本兼容缺口，不是应该通过把目标合同倒退来解决的问题。
+
+而且方案 1 代价更大：当前 maintainer authorization receipt 已经绑定了 implementation contract 的精确 SHA256，同时还绑定 frozen Knowledge 和 Skill Input。 改合同回 v1 后肯定需要重新授权。
+
+不过这里还有一点：选方案 2 后也不要继续沿用现在的 authorization receipt。 当前 Knowledge context 是基于旧 snapshot 82b770...，而 Quick Dev/Acceptance 相关代码这期间已经变化；既然本地 preflight 已经判 stale，就应该刷新。 Knowledge freeze 一旦变化，旧 authorization receipt 绑定的 freeze hash 也就失效，所以最终仍应重新做一次 maintainer authorization。
+
+正确顺序我建议固定成：
+
+先做一个独立、窄范围的 Quick Dev compatibility repair
+不修改 acceptance-coordinator-efficiency 的 S3 需求。
+父 quick_dev_input_router.py 正式支持 plan-owned contract v1 + v2。
+最好新增 plan-owned-implementation-contract.v2.schema.json，而不是把 v1 schema 名义上偷偷放宽成所有版本。
+v1 → v1 schema；v2 → v2 schema；v3/未知版本继续 fail closed。
+增加测试：合法 v2 → strict_tdd_plan；非法 v2 → schema-invalid；未知 v3 → reject。
+当前 adapter 后续 build_slice_invocation.py 本身并没有硬编码 schema version，它消费的是结构字段，所以父 gate 通过后这层没有第二个 version blocker。
+再回到 acceptance-coordinator-efficiency
+refresh Knowledge context/freeze；
+重跑 Skill Input / plan readiness 相关 current binding；
+maintainer 重新发布 implementation-authorized，绑定原 v2 contract + 新 Knowledge freeze + 当前 Skill Input；
+再从父 Quick Dev route 进入 TDD。
+
+也就是说：
+
+不要：
+v2 contract → 降级 v1 → reauthorize
+
+
+应该：
+修 parent Quick Dev v2 compatibility
+→ refresh Knowledge
+→ maintainer reauthorize current v2 bindings
+→ TDD S3
+
+你可以直接给 Codex 这一段：
+
+任务：修复 Quick Dev 父输入路由对 plan-owned implementation-contract.v2 的兼容阻断。
+
+
+这是共享 toolchain compatibility repair，不属于
+execution-plans/2026-08-17-acceptance-coordinator-efficiency
+的 S3 implementation write-set。
+
+
+不要修改该目标 plan 的 requirements/S3 语义。
+不要把目标 implementation contract 从 v2 降回 v1。
+不要扩 finding。
+
+
+当前事实：
+- 目标：
+  execution-plans/2026-08-17-acceptance-coordinator-efficiency/
+  implementation-contract.v1.json
+- schema_version =
+  acceptance-coordinator-efficiency.implementation-contract.v2
+- `.agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py`
+  当前只接受 plan-owned `.implementation-contract.v1`
+- `.agents/skills/quick-dev-tdd-adapter/schemas/
+  plan-owned-implementation-contract.v1.schema.json`
+  也只声明 v1
+- downstream build_slice_invocation 消费结构字段，不应通过降级目标合同解决。
+
+
+只修：
+
+
+1. 正式支持 plan-owned contract v2
+   - 推荐新增：
+     plan-owned-implementation-contract.v2.schema.json
+   - 保持与当前 v2 实际结构相符
+   - `$id` / schema_version pattern 必须明确是 v2
+
+
+2. quick_dev_input_router 显式 dispatch
+   - *.implementation-contract.v1 → v1 schema
+   - *.implementation-contract.v2 → v2 schema
+   - 未知 v3+ → fail closed
+   - canonical jimuyun.implementation-contract.v1 行为保持不变
+
+
+3. targeted tests
+   - valid plan-owned v1 仍通过
+   - valid plan-owned v2 → strict_tdd_plan / quick-dev-tdd-adapter
+   - malformed v2 → schema-invalid
+   - unsupported v3 → unsupported schema_version
+   - caller-lane authority 不变
+
+
+4. 不修改
+   execution-plans/2026-08-17-acceptance-coordinator-efficiency/
+   的 contract、requirements、plan-state 或 authorization receipt。
+
+
+完成 compatibility repair 后停止。
+不要自行继续 S3 implementation。
+
+
+报告：
+- changed files
+- v1 regression
+- v2 route result
+- malformed/unknown fail-closed result
+- HEAD
+
+这一步完成后，再处理 Knowledge refresh + 新 authorization。这样不会把“共享路由缺陷”和“Acceptance S3 实现”混成一次修改。

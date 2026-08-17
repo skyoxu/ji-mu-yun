@@ -642,12 +642,27 @@ def _resolve_reference(
     raise SkillInputError(f"referenced source does not exist: {raw_reference}")
 
 
+def generated_artifact_exclusions(repository_root: Path, target: Path) -> frozenset[str]:
+    """Exclude mutable Skill Input successor artifacts from their own source graph."""
+    root = repository_root.resolve()
+    target = target.resolve()
+    if not target.is_dir():
+        return frozenset()
+    return frozenset(
+        item.relative_to(root).as_posix()
+        for item in target.iterdir()
+        if item.name.startswith(("skill-input", "semantic-input"))
+        or item.name == "implementation-authorization-receipt.v1.json"
+    )
+
+
 def expand_source_graph(
     repository_root: Path,
     contract: dict[str, Any],
     operation: str,
     role_values: dict[str, list[str]],
     allowed_missing_references: frozenset[str] = frozenset(),
+    excluded_paths: frozenset[str] = frozenset(),
 ) -> list[tuple[Path, str]]:
     """Expand explicit role roots and their declared in-boundary references."""
     validate_contract(contract, repository_root)
@@ -690,8 +705,14 @@ def expand_source_graph(
             if is_reparse_point(candidate):
                 raise SkillInputError(f"symlink source is not allowed: {candidate}")
             relative = candidate.resolve().relative_to(repository_root.resolve()).as_posix()
+            if relative in excluded_paths or any(
+                relative.startswith(prefix + "/") for prefix in excluded_paths
+            ):
+                continue
             if forbidden_repository_path(relative):
                 raise SkillInputError(f"forbidden source path: {relative}")
+            if any(relative.startswith(prefix + "/") for prefix in opaque_paths):
+                continue
             if relative in ancestors:
                 if relative == referrer:
                     # A contract may hash-bind itself in its dependency closure.
@@ -704,7 +725,7 @@ def expand_source_graph(
                 expanded.append((candidate.resolve(), relative))
                 if len(expanded) > contract["max_sources"]:
                     raise SkillInputError("source count exceeds contract max_sources")
-            if relative in opaque_paths or any(relative.startswith(prefix + "/") for prefix in opaque_paths):
+            if relative in opaque_paths:
                 continue
             if not reference_kinds:
                 continue

@@ -28,6 +28,7 @@ from skill_input_consumption import (
     is_reparse_point,
     write_bytes_atomic,
     write_json_atomic,
+    generated_artifact_exclusions,
 )
 
 
@@ -47,7 +48,12 @@ def _reject_symlink_components(path: Path, *, stop: Path | None = None) -> None:
         current = current.parent
 
 
-def _directory_membership(repository_root: Path, directory: Path) -> tuple[tuple[str, str], ...]:
+def _directory_membership(
+    repository_root: Path,
+    directory: Path,
+    *,
+    excluded_paths: frozenset[str] = frozenset(),
+) -> tuple[tuple[str, str], ...]:
     members: list[tuple[str, str]] = []
     for item in directory.rglob("*"):
         if is_reparse_point(item):
@@ -55,6 +61,10 @@ def _directory_membership(repository_root: Path, directory: Path) -> tuple[tuple
         if not item.is_file() and not item.is_dir():
             continue
         relative = item.resolve().relative_to(repository_root.resolve()).as_posix()
+        if relative in excluded_paths or any(
+            relative.startswith(prefix + "/") for prefix in excluded_paths
+        ):
+            continue
         members.append((relative, "file" if item.is_file() else "directory"))
     return tuple(sorted(members))
 
@@ -145,6 +155,11 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
     if snapshot_root.exists() and is_reparse_point(snapshot_root):
         raise SkillInputError("snapshot root may not be a symlink")
     snapshot_root.mkdir(parents=True, exist_ok=True)
+    try:
+        snapshot_relative = snapshot_root.relative_to(repository_root).as_posix()
+    except ValueError as exc:
+        raise SkillInputError("snapshot root must stay inside the repository") from exc
+    excluded_snapshot_paths = frozenset({snapshot_relative}) | generated_artifact_exclusions(repository_root, target_path)
 
     normalized_role_values: dict[str, list[str]] = {}
     directory_memberships: dict[str, tuple[Path, tuple[tuple[str, str], ...]]] = {}
@@ -156,7 +171,11 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
             if resolved_source.is_dir() and relative_source not in directory_memberships:
                 directory_memberships[relative_source] = (
                     resolved_source,
-                    _directory_membership(repository_root, resolved_source),
+                    _directory_membership(
+                        repository_root,
+                        resolved_source,
+                        excluded_paths=excluded_snapshot_paths,
+                    ),
                 )
         if len(normalized_role_values[role_name]) != len(set(normalized_role_values[role_name])):
             raise SkillInputError(f"source role contains duplicate canonical paths: {role_name}")
@@ -167,6 +186,7 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         args.operation,
         normalized_role_values,
         allowed_missing,
+        excluded_snapshot_paths,
     )
     required_roots: list[Path] = []
     required_role_names = set(required_roles)
@@ -230,7 +250,14 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         })
 
     for relative_root, (directory, before_membership) in directory_memberships.items():
-        if _directory_membership(repository_root, directory) != before_membership:
+        if (
+            _directory_membership(
+                repository_root,
+                directory,
+                excluded_paths=excluded_snapshot_paths,
+            )
+            != before_membership
+        ):
             raise SkillInputError(f"directory source membership changed: {relative_root}")
 
     manifest = {

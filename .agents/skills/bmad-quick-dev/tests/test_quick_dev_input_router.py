@@ -42,6 +42,7 @@ class QuickDevInputRouterTests(unittest.TestCase):
         for name in (
             "implementation-contract.v1.schema.json",
             "plan-owned-implementation-contract.v1.schema.json",
+            "plan-owned-implementation-contract.v2.schema.json",
         ):
             (schema_root / name).write_text(
                 (REPOSITORY_ROOT / ".agents/skills/quick-dev-tdd-adapter/schemas" / name).read_text(
@@ -179,6 +180,67 @@ class QuickDevInputRouterTests(unittest.TestCase):
 
         self.assertEqual("strict_tdd_plan", result["lane"])
         self.assertEqual("quick-dev-tdd-adapter", result["backend"])
+
+    def test_routes_schema_valid_plan_owned_v2_contract_to_strict_adapter(self) -> None:
+        plan = self.repo / "execution-plans" / "plan-owned-v2"
+        plan.mkdir()
+        contract = {
+            "schema_version": "plan-owned-v2.implementation-contract.v2",
+            "plan_id": "plan-owned-v2",
+            "profile": "self-hosted",
+            "command_registry": "command-registry.v1.json",
+            "backend": {"hidden_state": False},
+            "protocol_artifacts": {
+                "context_layout": "context/<capsule-id>",
+                "attempt_layout": "attempts/<attempt-id>",
+            },
+            "authority": {"authority_manifest": "authority-manifest.v1.json"},
+            "slices": [{
+                "slice_id": "S3",
+                "title": "Example v2",
+                "requirement_ids": ["R1"],
+                "acceptance_ids": ["A1"],
+                "source_refs": ["requirements.md"],
+                "depends_on": [],
+                "allowed_changes": {"production": ["src/example.py"], "tests": ["tests/test_example.py"], "documentation": []},
+                "execution_snapshot_paths": ["src/example.py"],
+                "forbidden_changes": [],
+                "execution_read_set": ["requirements.md"],
+                "dependency_closure": ["requirements.md"],
+                "tdd": {
+                    "red": {"test_selector": "test_example", "expected_failure_ids": ["RED-1"]},
+                    "green": {"command_id": "green", "expected_exit": "zero"},
+                    "refactor": {"invocations": [{"command_id": "green", "expected_exit": "zero"}]},
+                },
+                "post_refactor_command_id": "predicate",
+                "exit_predicate": "slice-ready",
+                "recovery": "Replay the same binding.",
+            }],
+        }
+        (plan / "implementation-contract.v1.json").write_text(json.dumps(contract), encoding="utf-8")
+        result = router.route_input(self.repo, plan, normal_facts())
+        self.assertEqual("strict_tdd_plan", result["lane"])
+        self.assertEqual("quick-dev-tdd-adapter", result["backend"])
+
+    def test_rejects_unknown_plan_owned_contract_version(self) -> None:
+        plan = self.repo / "execution-plans" / "plan-owned-v3"
+        plan.mkdir()
+        (plan / "implementation-contract.v1.json").write_text(
+            json.dumps({"schema_version": "plan-owned-v3.implementation-contract.v3"}),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(router.InputRoutingError, "unsupported schema_version"):
+            router.route_input(self.repo, plan, normal_facts())
+
+    def test_rejects_malformed_plan_owned_v2_contract(self) -> None:
+        plan = self.repo / "execution-plans" / "malformed-v2"
+        plan.mkdir()
+        (plan / "implementation-contract.v1.json").write_text(
+            json.dumps({"schema_version": "malformed-v2.implementation-contract.v2"}),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(router.InputRoutingError, "schema-invalid"):
+            router.route_input(self.repo, plan, normal_facts())
 
     def test_callers_cannot_consume_another_lane(self) -> None:
         requirement = self.repo / "requirement.md"

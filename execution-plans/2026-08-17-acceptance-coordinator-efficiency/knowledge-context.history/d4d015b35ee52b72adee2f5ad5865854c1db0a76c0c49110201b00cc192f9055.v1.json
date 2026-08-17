@@ -145,7 +145,7 @@
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
             "role": "cli",
-            "source_sha256": "2ac7e8601b6f19e76c0aebe2c631ca2eaa630c6e5786fb083da8e96a0fcfd283"
+            "source_sha256": "0d4b8ad763ad4d5b9d6ca5f70df01c87ce374572a5f9b4a52d13708f0fd77625"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md",
@@ -160,7 +160,7 @@
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
             "role": "orchestrator",
-            "source_sha256": "1f6a3e35d3b1350c3c4b949f4012e3b32503f20f8e1eb04ee57f53317c334297"
+            "source_sha256": "530b0347da4565fba4b5ca66646786791455b5fa39c2a653c8111590d621f524"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
@@ -993,7 +993,7 @@
     }
   ],
   "request_sha256": "sha256:0ccd2c5d1fb12e441e19437f719a46de1a2fbd31e4bab9275b4202e5fd05c16a",
-  "result_sha256": "sha256:f9941142746159c3dcb3b6966e30cb2a33d7e37da9763ddd4f3a614ee9720d5f",
+  "result_sha256": "sha256:44aa0dd5d357c62ff53790f4c38b56be1a8f6ced257103e7aa88cf931dd35902",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
@@ -1005,6 +1005,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:f02990637a9ec9034b111f7bb983d74c2c4c7923881e597961c779c958859333"
+    "context_sha256": "sha256:2d5ad8f4e217121a294a4c980ac17b22c0d6c8dd39a8e155cc4a7faabefb713f"
   }
 }

@@ -1,0 +1,37 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:358a4926351044042e3f9af7969371800ebb5cff1c43a844b5b0033b7d09bba7",
+  "sections": [
+    {
+      "title": "Repository governance",
+      "content": "Ji Mu Yun separates toolchain control, Phase services, and user sandboxes with strict authority and snapshot boundaries. Protected runtime, workspace, authentication, LLM-entry, and delivery settings require explicit approval. Plans alone are not completion evidence; validation, tests, smoke checks, and logs are required. Communication is Chinese while code and logs remain English."
+    },
+    {
+      "title": "Implementation plan",
+      "content": "The acceptance-coordinator-efficiency plan is implementation-authorized for four sequential Acceptance control-plane slices. S0 binds implementation receipts to exact candidate, custody or snapshot, terminal runner, context, and declared environment identity. S1 machine-selects routes and provides a model-free deterministic path. S2 adds immutable replay, stale-action successors, and deterministic current-run selection. S3 adds a reentrant, idempotent one-shot coordinator with telemetry and typed semantic handoff."
+    },
+    {
+      "title": "Authority boundaries",
+      "content": "Maintainer authorization, Quick Dev implementation-complete, and Acceptance acceptance-passed remain separately owned. Acceptance may not implement target code, publish Knowledge authority, approve, commit, release, deploy, rewrite historical evidence, or publish another owner's lifecycle state. Deterministic-only execution must never invoke Bootstrap. Semantic routes stop at a typed Bootstrap handoff and authorization boundary. All supplied artifacts authorize nothing."
+    },
+    {
+      "title": "Execution contract",
+      "content": "The active contract is plan-ready and targets slice S3. Changes are restricted to the Acceptance skill scripts, tests, and documentation; Phase, runtime, logs, and knowledge paths are forbidden. The required sequence is an existing-suite RED failure, S3 GREEN, Quick Dev and Acceptance regression suites, an S3 terminal predicate, and the full terminal predicate. Shell execution is disabled and registered commands use Python with bounded timeouts."
+    },
+    {
+      "title": "Determinism and recovery",
+      "content": "Candidate scope, baseline, commands, paths, revisions, and bindings must be explicit and hash-bound. Identical inputs replay immutable results; changed or stale inputs create successor artifacts without overwriting history. The coordinator resolves the target, validates handoff and context, follows the action DAG, recovers stale work, finalizes, and validates replay. Repeated bindings resume or replay without creating a new run."
+    },
+    {
+      "title": "Knowledge and routing",
+      "content": "The frozen Knowledge context accepts the Quick Dev and Refactor Acceptance governance skills, is source-refreshed, and is degraded only because the catalog is stale. Other considered references were rejected for insufficient specificity. The recorded model route is observe-only and grants no authority. The Quick Dev adapter requires current typed consumer context before S0 and preserves frozen hashes and strict TDD bindings."
+    },
+    {
+      "title": "Current state",
+      "content": "The plan state is implementation-authorized, with S0 current and no completed slices. The next action is preparation of the Quick Dev consumer context. Historical evidence is read-only provenance and excluded from candidate identity. Full source-page coverage was supplied for every manifested source, including both pages of the Knowledge context."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-18T00:00:00+09:00"
+}

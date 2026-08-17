@@ -72,12 +72,13 @@ def _strict_contract_lane(target: Path, contract_path: Path) -> dict[str, Any]:
     schema_version = contract.get("schema_version")
     canonical_version = "jimuyun.implementation-contract.v1"
     plan_owned_version = re.compile(
-        r"^[a-z0-9][a-z0-9.-]*\.implementation-contract\.v1$"
+        r"^[a-z0-9][a-z0-9.-]*\.implementation-contract\.(v1|v2)$"
     )
     if schema_version == canonical_version:
         schema_name = "implementation-contract.v1.schema.json"
     elif isinstance(schema_version, str) and plan_owned_version.fullmatch(schema_version):
-        schema_name = "plan-owned-implementation-contract.v1.schema.json"
+        version = schema_version.rsplit(".", 1)[-1]
+        schema_name = f"plan-owned-implementation-contract.{version}.schema.json"
     else:
         raise InputRoutingError(
             "implementation contract is schema-invalid: unsupported schema_version"

@@ -4,7 +4,7 @@
   "mode": "strict",
   "trigger": "after minimum target discovery, before action selection, prepare, or RED",
   "source_roles": {
-    "plan_directory": {"selector": "plan_directory", "required": true, "root": "repository", "allowed_kinds": ["directory"], "reference_kinds": ["markdown-link", "json-path-field"], "opaque_reference_paths": ["knowledge-context.v1.json", "knowledge-context.freeze.v1.json", "knowledge-context.history"]},
+    "plan_directory": {"selector": "plan_directory", "required": true, "root": "repository", "allowed_kinds": ["directory"], "reference_kinds": ["markdown-link", "json-path-field"], "opaque_reference_paths": ["knowledge-context.v1.json", "knowledge-context.freeze.v1.json", "knowledge-context.history", "knowledge-context.freeze.history", "repair", "skill-input", "semantic-input", "skill-input-receipt.v1.json", "skill-input-request.v1.json", "skill-input-semantic-result.v1.json"]},
     "target_files": {"selector": "target_files", "required": true, "root": "repository", "allowed_kinds": ["file", "directory"], "reference_kinds": ["markdown-link", "json-path-field"]},
     "requirements": {"selector": "requirements", "required": false, "root": "repository", "allowed_kinds": ["file"], "reference_kinds": ["markdown-link", "json-path-field"]}
   },

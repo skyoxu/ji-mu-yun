@@ -1,0 +1,27 @@
+{
+  "schema_version": "acceptance-coordinator-efficiency.implementation-authorization-receipt.v1",
+  "plan_id": "acceptance-coordinator-efficiency",
+  "implementation_contract": {
+    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/implementation-contract.v1.json",
+    "sha256": "sha256:e1ca6fca0d22acee0db7f1a2c2408b199e97b6c9d2ca3c42348152f73405e771"
+  },
+  "authority_manifest": {
+    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/authority-manifest.v1.json",
+    "sha256": "sha256:10798b56b52e348c044d8ec2aac6631974f8bfaeb7eb9959cc5b5bb935d7b95e"
+  },
+  "knowledge_context_freeze": {
+    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/knowledge-context.freeze.v1.json",
+    "sha256": "sha256:b433baea47388af9c8e7e2d5e806fb2b72be0d216504dade04755827dbb2f8d6"
+  },
+  "skill_input_receipt": {
+    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/skill-input-receipt.successor.v1.json",
+    "sha256": "sha256:c9bb62f85f0d30b71e04adadc6c2801b35c85e55194d0fdf89aea11468c27fa6"
+  },
+  "decision": {
+    "owner": "maintainer",
+    "transition": "implementation-authorized",
+    "reason": "explicit-maintainer-authorization-after-current-binding-refresh"
+  },
+  "authorizes": ["implementation-authorized"],
+  "does_not_authorize": ["implementation-complete", "acceptance-passed", "archived", "release"]
+}

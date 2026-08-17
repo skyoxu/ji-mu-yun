@@ -132,6 +132,61 @@ class SkillInputConsumptionTests(unittest.TestCase):
 
         self.assertEqual(["plan/knowledge-context.v1.json"], [relative for _path, relative in expanded])
 
+    def test_opaque_directory_is_excluded_from_directory_members(self):
+        temporary, root, contract_path, _receipt, _args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        plan = root / "plan"
+        repair = plan / "repair"
+        repair.mkdir(parents=True)
+        (repair / "closure.json").write_text('{"path":"logs/old.json"}\n', encoding="utf-8")
+        (plan / "current.md").write_text("current\n", encoding="utf-8")
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        contract["source_roles"] = {
+            "requirements": {
+                "selector": "requirements",
+                "required": True,
+                "root": "repository",
+                "allowed_kinds": ["directory"],
+                "reference_kinds": ["json-path-field"],
+                "opaque_reference_paths": ["repair"],
+            }
+        }
+        contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+        expanded = expand_source_graph(root, contract, "create", {"requirements": ["plan"]})
+
+        self.assertEqual(["plan/current.md"], [relative for _path, relative in expanded])
+
+    def test_excluded_snapshot_directory_is_not_reingested(self):
+        temporary, root, contract_path, _receipt, _args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        plan = root / "plan"
+        snapshot = plan / "snapshot"
+        snapshot.mkdir(parents=True)
+        (plan / "requirements.md").write_text("current\n", encoding="utf-8")
+        (snapshot / "old.md").write_text("stale\n", encoding="utf-8")
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        contract["source_roles"] = {
+            "requirements": {
+                "selector": "requirements",
+                "required": True,
+                "root": "repository",
+                "allowed_kinds": ["directory"],
+                "reference_kinds": [],
+            }
+        }
+        contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+        expanded = expand_source_graph(
+            root,
+            contract,
+            "create",
+            {"requirements": ["plan"]},
+            excluded_paths=frozenset({"plan/snapshot"}),
+        )
+
+        self.assertEqual(["plan/requirements.md"], [relative for _path, relative in expanded])
+
     def test_legacy_v1_contract_uses_default_snapshot_budget(self):
         temporary, root, contract, receipt, args = self._fixture()
         self.addCleanup(temporary.cleanup)

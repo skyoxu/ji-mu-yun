@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -28,7 +29,21 @@ def _run(suites: tuple[tuple[str, str], ...]) -> tuple[bool, list[str]]:
         )
         result = subprocess.run(
             command,
-            cwd=ROOT, capture_output=True, check=False,
+            cwd=ROOT,
+            env={
+                **os.environ,
+                "PYTHONPATH": os.pathsep.join(
+                    filter(
+                        None,
+                        [
+                            str(ROOT / ".agents/skills/quick-dev-tdd-adapter/tools"),
+                            os.environ.get("PYTHONPATH", ""),
+                        ],
+                    )
+                ),
+            },
+            capture_output=True,
+            check=False,
         )
         if result.returncode:
             return False, completed
