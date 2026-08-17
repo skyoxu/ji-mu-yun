@@ -1,10 +1,10 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:53f71243cf23ca74118fbd29a881096bcc5ce465df0ea6852c409083e0e2ee86",
-  "canonical_context_sha256": "sha256:8d100b82f046dc94d6e78d14b61fded21a0ac14cab1f15adaee8819e9f7eaaf8",
-  "request_sha256": "sha256:feaf49825a273803488a03205801c076d9c13a6c785c931e11f4a5dc90e2522e",
-  "result_sha256": "sha256:02deae4fe706ce4ce35c195417acad5e718f3e2800771cb68c68080fc28bbfa7",
+  "context_sha256": "sha256:abf5c71f0af2dc80c41c32d8289128603733605ca80cb3f70c4210d2788beb32",
+  "canonical_context_sha256": "sha256:ab56b8dca64326b69b113cd7006238651077f920b87d667afe8a799d091ac898",
+  "request_sha256": "sha256:b1a45258b5be918074f542c88c5c0ec69a45fc9ad06d9be7775dc909501fbab9",
+  "result_sha256": "sha256:8d3826bd2cbe1943f5b30df98a89d1b323c97db4a0efad3f35862c22a8b548fb",
   "snapshot": {
     "ref": "refs/heads/main",
     "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb"
@@ -22,8 +22,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:636fd7d46f01b49e6fa2c406211adb3873356629d509c86131dd95b9ef7eb9e5",
-    "freeze_receipt_path": "knowledge-context.freeze.history/636fd7d46f01b49e6fa2c406211adb3873356629d509c86131dd95b9ef7eb9e5.v1.json",
-    "reason": "refresh after hardened implementation successor validation"
+    "context_sha256": "sha256:53f71243cf23ca74118fbd29a881096bcc5ce465df0ea6852c409083e0e2ee86",
+    "freeze_receipt_path": "knowledge-context.freeze.history/53f71243cf23ca74118fbd29a881096bcc5ce465df0ea6852c409083e0e2ee86.v1.json",
+    "reason": "refresh after top-level implementation handoff route repair"
   }
 }

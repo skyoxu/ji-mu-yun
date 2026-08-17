@@ -304,6 +304,21 @@ class PlanDirectoryLoopTests(unittest.TestCase):
 
             self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
 
+    def test_top_level_active_route_exposes_implementation_handoff(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            run = root / "logs/tdd-adapter/target/S0/RUN-001"
+            observations = run / "observations"
+            observations.mkdir(parents=True)
+            (run / "stage-state.json").write_text(json.dumps({"stage": "red", "next_stage": "implement"}), encoding="utf-8")
+            (observations / "red-observed.json").write_text(json.dumps({"stage": "red", "exit_code": 1}), encoding="utf-8")
+            (run / "red-basis.v1.json").write_text(json.dumps({
+                "contract_hash": "sha256:contract",
+                "validator_hash": "sha256:validator",
+                "pre_implementation_candidate": {"candidate_binding_hash": "sha256:before"},
+            }), encoding="utf-8")
+            self.assertEqual("implement", ROUTER._active_slice_action(root, "target", "S0"))
+
     def test_router_rejects_abbreviated_v2_implementation_authority(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -40,8 +40,8 @@ This append-only report is non-authorizing continuity evidence.
   the same three immutable observations before running the terminal command.
 - The dogfood run verified `attempt-ledger-manifest.v1.json` and the S3
   `slice-ready` predicate; the refreshed terminal dogfood binding is
-  `sha256:b0c30960dcd8deed28b11a3809982456671b1165529af708853e604be1758841`.
-  The VDD-owned knowledge context was refreshed through successor `r17` after
+  `sha256:546dffd7f6a178a75ca877618e385c85ad8aac364968eb5da5b6fece36e014ae`.
+  The VDD-owned knowledge context was refreshed through successor `r18` after
   the controlled source/read-set validation. This report remains
   non-authorizing evidence.
 
@@ -60,3 +60,12 @@ This append-only report is non-authorizing continuity evidence.
 - The implementation successor binds contract and validator identities, the
   pre- and post-implementation candidates, and changed paths before routing
   to GREEN.
+
+## 2026-08-17 - Top-Level Implementation Handoff Route Repair
+
+- The generic route now exposes `implement` as a non-authorizing action after
+  RED and only exposes `run-slice` for GREEN after a valid successor.
+- The generic loop refuses to invoke the lifecycle CLI with the unsupported
+  `--stage implement` value; implementation is an explicit caller boundary.
+- Integration coverage verifies the top-level active route and the refreshed
+  terminal evidence includes the route-first dogfood.

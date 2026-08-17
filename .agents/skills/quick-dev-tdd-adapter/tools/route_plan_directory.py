@@ -8,6 +8,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+from stage_lifecycle_runner import validate_implementation_successor
+
 
 _IMPLEMENTATION_CANDIDATE_ROOTS = (
     "candidate_hash",
@@ -300,10 +302,12 @@ def _active_slice_action(repository_root: Path, plan_id: str, slice_id: str) -> 
             continue
         if state.get("stage") == "refactor" and (run_dir / "observations" / "refactor-observed.json").is_file():
             return "validate-slice"
-        if (run_dir / "observations" / "green-observed.json").is_file():
+        if state.get("stage") == "implement":
+            return "run-slice" if validate_implementation_successor(run_dir) else "implement"
+        if state.get("stage") == "green" and (run_dir / "observations" / "green-observed.json").is_file():
             return "run-slice"
-        if (run_dir / "observations" / "red-observed.json").is_file():
-            return "run-slice"
+        if state.get("stage") == "red" and (run_dir / "observations" / "red-observed.json").is_file():
+            return "implement"
     return None
 
 
@@ -473,6 +477,8 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
         active_action = _active_slice_action(repository_root, contract["plan_id"], slice_id)
         if active_action == "validate-slice":
             return {"next_action": "validate-slice", "slice_id": slice_id, "authorizes": []}
+        if active_action == "implement":
+            return {"next_action": "implement", "slice_id": slice_id, "authorizes": []}
         return {"next_action": "run-slice", "slice_id": slice_id, "authorizes": []}
     if _terminal_completion_current(repository_root, target, contract_hash):
         return {"next_action": "implementation-complete", "authorizes": []}

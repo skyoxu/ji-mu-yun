@@ -266,6 +266,8 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
     bridge = contract.get("adapter_bridge")
     active = _active_slice_run(root, str(contract["plan_id"]), slice_id)
     stage = active[1] if active else "red"
+    if stage == "implement":
+        raise RuntimeError("implementation handoff must publish a RED-bound successor before run-slice")
     if stage == "slice-terminal":
         raise RuntimeError("slice terminal must be routed as validate-slice")
     handoff = _current_bridge_handoff(root, plan, contract, slice_id) if stage == "red" and contract.get("plan_id") != "quick-dev-tdd-stage-recovery" else None
