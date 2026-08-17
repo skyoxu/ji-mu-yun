@@ -135,7 +135,8 @@ def main() -> int:
     if len(commands["red"]) != 1 or len(commands["green"]) != 1 or not commands["refactor"]:
         raise ValueError("RED and GREEN require one command; REFACTOR requires at least one")
 
-    lifecycle = _load("stage_lifecycle_runner").LifecycleRunner(workspace, run_dir, args.snapshot_path)
+    stage_runner = _load("stage_lifecycle_runner")
+    lifecycle = stage_runner.LifecycleRunner(workspace, run_dir, args.snapshot_path)
     red_core = context["stage_results"]["red"]
     red_mode = red_core.get("mode", "red")
     predecessor = red_core.get("legacy_predecessor")
@@ -161,11 +162,13 @@ def main() -> int:
             "pre_implementation_candidate": red_core["pre_implementation_candidate"],
             "authorizes": [],
         }, indent=2) + "\n", encoding="utf-8", newline="\n")
-        (run_dir / "stage-state.json").write_text(json.dumps({"stage": "red", "next_stage": "green", "authorizes": []}, indent=2) + "\n", encoding="utf-8", newline="\n")
-        print(json.dumps({"run_id": run_dir.name, "stage": "red", "next_stage": "green", "authorizes": []}, sort_keys=True))
+        (run_dir / "stage-state.json").write_text(json.dumps({"stage": "red", "next_stage": "implement", "authorizes": []}, indent=2) + "\n", encoding="utf-8", newline="\n")
+        print(json.dumps({"run_id": run_dir.name, "stage": "red", "next_stage": "implement", "authorizes": []}, sort_keys=True))
         return 0
 
     if args.stage in {"green", "refactor"}:
+        if args.stage == "green" and not stage_runner.validate_implementation_successor(run_dir):
+            raise RuntimeError("GREEN requires a valid RED-bound implementation successor")
         lifecycle.resume_observations(run_dir, ["red"] if args.stage == "green" else ["red", "green"])
     else:
         if red_mode == "prior-red-successor":

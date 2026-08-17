@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 from route_plan_directory import route
-from stage_lifecycle_runner import LifecycleRunner
+from stage_lifecycle_runner import LifecycleRunner, validate_implementation_successor
 
 
 TOOLS = Path(__file__).resolve().parent
@@ -254,7 +254,9 @@ def route_staged_run(run_dir: Path) -> str | None:
         return "refactor" if (observations / "green-observed.json").is_file() else None
     if state.get("stage") == "red":
         if (observations / "red-observed.json").is_file() and (run_dir / "red-basis.v1.json").is_file():
-            return "green"
+            return "implement"
+    if state.get("stage") == "implement":
+        return "green" if validate_implementation_successor(run_dir) else "implement"
     return None
 
 

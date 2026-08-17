@@ -17,7 +17,8 @@ def _load(name: str):
 
 def test_router_recognizes_a_current_red_handoff():
     router = _load("route_plan_directory")
-    assert router.next_stage_action(["red"]) == "green"
+    assert router.next_stage_action(["red"]) == "implement"
+    assert router.next_stage_action(["red", "implement"]) == "green"
 
 
 def test_persisted_stage_router_requires_each_boundary():
@@ -27,8 +28,26 @@ def test_persisted_stage_router_requires_each_boundary():
         observations = run / "observations"
         observations.mkdir(parents=True)
         (run / "stage-state.json").write_text(json.dumps({"stage": "red"}), encoding="utf-8")
-        (observations / "red-observed.json").write_text("{}", encoding="utf-8")
+        (observations / "red-observed.json").write_text(json.dumps({"stage": "red", "exit_code": 1}), encoding="utf-8")
         (run / "red-basis.v1.json").write_text("{}", encoding="utf-8")
+        assert driver.route_staged_run(run) == "implement"
+        (run / "red-basis.v1.json").write_text(json.dumps({
+            "contract_hash": "sha256:contract",
+            "validator_hash": "sha256:validator",
+            "pre_implementation_candidate": {"candidate_binding_hash": "sha256:before"},
+        }), encoding="utf-8")
+        (run / "implementation-successor.v1.json").write_text(json.dumps({
+            "schema_version": "quick-dev-tdd-adapter.implementation-successor.v1",
+            "status": "implementation-observed",
+            "red_basis_sha256": "sha256:" + __import__("hashlib").sha256((run / "red-basis.v1.json").read_bytes()).hexdigest(),
+            "contract_hash": "sha256:contract",
+            "validator_hash": "sha256:validator",
+            "pre_implementation_candidate": {"candidate_binding_hash": "sha256:before"},
+            "post_implementation_candidate": {"candidate_binding_hash": "sha256:after"},
+            "changed_paths": ["probe.py"],
+            "authorizes": [],
+        }), encoding="utf-8")
+        (run / "stage-state.json").write_text(json.dumps({"stage": "implement"}), encoding="utf-8")
         assert driver.route_staged_run(run) == "green"
         (run / "stage-state.json").write_text(json.dumps({"stage": "green"}), encoding="utf-8")
         (observations / "green-observed.json").write_text("{}", encoding="utf-8")

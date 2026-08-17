@@ -77,9 +77,15 @@ def _route_next(run_dir: Path, expected: str) -> None:
 
 
 def _implement_probe(red_test: Path, support_dir: Path) -> None:
+    from stage_lifecycle_runner import publish_implementation_successor
+
     before = _sha(red_test.read_bytes())
     red_test.write_text("def test_dogfood_red_probe():\n    assert True\n", encoding="utf-8", newline="\n")
     after = _sha(red_test.read_bytes())
+    run_dir = support_dir.parent.parent / "S3" / support_dir.name
+    red_basis = json.loads((run_dir / "red-basis.v1.json").read_text(encoding="utf-8"))
+    post_candidate = {**red_basis["pre_implementation_candidate"], "candidate_binding_hash": after}
+    publish_implementation_successor(run_dir, post_candidate, [red_test.relative_to(ROOT).as_posix()])
     (support_dir / "implementation-action.v1.json").write_text(
         json.dumps({"schema_version": "quick-dev-tdd-stage-recovery.dogfood-implementation.v1", "action": "implementation", "path": red_test.relative_to(ROOT).as_posix(), "before_sha256": before, "after_sha256": after, "authorizes": []}, indent=2) + "\n",
         encoding="utf-8", newline="\n",
@@ -118,7 +124,7 @@ def main() -> int:
     sys.path.insert(0, str(TOOLS))
     from stage_lifecycle_runner import LifecycleRunner
     _run_lifecycle(run_dir, support_dir, context_path, refactor, red_test, "red")
-    _route_next(run_dir, "green")
+    _route_next(run_dir, "implement")
     _implement_probe(red_test, support_dir)
     _route_next(run_dir, "green")
     _run_lifecycle(run_dir, support_dir, context_path, refactor, red_test, "green")

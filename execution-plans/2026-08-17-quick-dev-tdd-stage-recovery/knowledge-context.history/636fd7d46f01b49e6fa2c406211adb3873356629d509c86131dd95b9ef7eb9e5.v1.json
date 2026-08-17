@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r17",
+    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r16",
     "consumer": "vdd",
     "query": "Quick Dev TDD stage recovery RED basis implementation successor route resume migration dogfood",
     "snapshot": {
@@ -881,7 +881,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r17",
+    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r16",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb",
@@ -1017,12 +1017,12 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:feaf49825a273803488a03205801c076d9c13a6c785c931e11f4a5dc90e2522e",
-  "result_sha256": "sha256:02deae4fe706ce4ce35c195417acad5e718f3e2800771cb68c68080fc28bbfa7",
+  "request_sha256": "sha256:b203484abf29e7adf20f4e728a721e50e56ebf1ecdea5d6b741bf53b586b3760",
+  "result_sha256": "sha256:951e49813adf758badfdbd86aeb726cbab6ba9bb32a927dfc47f54afa27c4d51",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:1e79a1d9d7e3d4b29497d4d2ccc46931db62ca872a1b35b8155625c866bc0f1a"
+    "base_locator_result_sha256": "sha256:c569c8121a7186529b87c255f886ba9e21cc5f197b753278e40d61a32bd05ed7"
   },
   "preflight": {
     "status": "ready",
@@ -1030,6 +1030,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:83a0969ca5981f9ea2e92d254a6111251957bcab40b60e5d4ce7c268b0b9361d"
+    "context_sha256": "sha256:fe7251cc57874752e7857e93e1b4c92f39f2d61b2bc022968605ee53413f00b2"
   }
 }

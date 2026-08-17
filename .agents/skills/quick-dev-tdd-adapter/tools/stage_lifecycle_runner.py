@@ -16,6 +16,83 @@ from stage_artifact_composer import compose
 from adapter import persist_protocol_bundle
 
 
+def _implementation_successor_path(run_dir: Path) -> Path:
+    return run_dir / "implementation-successor.v1.json"
+
+
+def validate_implementation_successor(run_dir: Path) -> bool:
+    """Verify the run-local implementation successor against RED basis."""
+    basis_path = run_dir / "red-basis.v1.json"
+    receipt_path = _implementation_successor_path(run_dir)
+    red_path = run_dir / "observations" / "red-observed.json"
+    if not basis_path.is_file() or not receipt_path.is_file() or not red_path.is_file():
+        return False
+    try:
+        basis = json.loads(basis_path.read_text(encoding="utf-8"))
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        red = json.loads(red_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return False
+    if not isinstance(basis, dict) or not isinstance(receipt, dict):
+        return False
+    pre = basis.get("pre_implementation_candidate")
+    post = receipt.get("post_implementation_candidate")
+    changed_paths = receipt.get("changed_paths")
+    expected_basis_hash = "sha256:" + hashlib.sha256(basis_path.read_bytes()).hexdigest()
+    return (
+        receipt.get("schema_version") == "quick-dev-tdd-adapter.implementation-successor.v1"
+        and receipt.get("status") == "implementation-observed"
+        and red.get("stage") == "red"
+        and isinstance(red.get("exit_code"), int)
+        and red["exit_code"] != 0
+        and receipt.get("red_basis_sha256") == expected_basis_hash
+        and receipt.get("contract_hash") == basis.get("contract_hash")
+        and receipt.get("validator_hash") == basis.get("validator_hash")
+        and receipt.get("pre_implementation_candidate") == pre
+        and isinstance(post, dict)
+        and post != pre
+        and isinstance(changed_paths, list)
+        and bool(changed_paths)
+        and all(isinstance(path, str) and path for path in changed_paths)
+        and receipt.get("authorizes") == []
+    )
+
+
+def publish_implementation_successor(run_dir: Path, post_candidate: dict[str, Any], changed_paths: list[str]) -> dict[str, Any]:
+    """Persist one RED-bound implementation successor and advance its route."""
+    basis_path = run_dir / "red-basis.v1.json"
+    state_path = run_dir / "stage-state.json"
+    red_path = run_dir / "observations" / "red-observed.json"
+    if not basis_path.is_file() or not state_path.is_file() or not red_path.is_file() or not isinstance(post_candidate, dict) or not post_candidate or not changed_paths:
+        raise ValueError("implementation successor input is invalid")
+    basis = json.loads(basis_path.read_text(encoding="utf-8"))
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    red = json.loads(red_path.read_text(encoding="utf-8"))
+    pre = basis.get("pre_implementation_candidate")
+    if state.get("stage") != "red" or red.get("stage") != "red" or not isinstance(red.get("exit_code"), int) or red["exit_code"] == 0 or not isinstance(pre, dict) or post_candidate == pre or any(not isinstance(path, str) or not path for path in changed_paths):
+        raise ValueError("implementation successor does not advance RED candidate")
+    receipt = {
+        "schema_version": "quick-dev-tdd-adapter.implementation-successor.v1",
+        "status": "implementation-observed",
+        "run_id": run_dir.name,
+        "red_basis_sha256": "sha256:" + hashlib.sha256(basis_path.read_bytes()).hexdigest(),
+        "contract_hash": basis.get("contract_hash"),
+        "validator_hash": basis.get("validator_hash"),
+        "pre_implementation_candidate": pre,
+        "post_implementation_candidate": post_candidate,
+        "changed_paths": list(changed_paths),
+        "authorizes": [],
+    }
+    destination = _implementation_successor_path(run_dir)
+    payload = json.dumps(receipt, indent=2, sort_keys=True) + "\n"
+    if destination.exists() and destination.read_text(encoding="utf-8") != payload:
+        raise ValueError("implementation successor already has different bytes")
+    if not destination.exists():
+        destination.write_text(payload, encoding="utf-8", newline="\n")
+    (run_dir / "stage-state.json").write_text(json.dumps({"stage": "implement", "next_stage": "green", "authorizes": []}, indent=2) + "\n", encoding="utf-8", newline="\n")
+    return receipt
+
+
 class LifecycleRunner:
     """Caller-owned, append-only capture state for one future TDD lifecycle."""
 

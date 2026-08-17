@@ -260,6 +260,7 @@ def persist_protocol_bundle(
         "predecessor-red-observation.v1.json",
         "stage-state.json",
         "red-basis.v1.json",
+        "implementation-successor.v1.json",
         "legacy-regression-evidence.json",
         "prior-red-successor-evidence.v1.json",
         "stage-evidence-projection.v1.json",

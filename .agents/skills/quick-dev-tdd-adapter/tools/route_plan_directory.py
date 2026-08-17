@@ -309,7 +309,7 @@ def _active_slice_action(repository_root: Path, plan_id: str, slice_id: str) -> 
 
 def next_stage_action(stages: list[str]) -> str:
     """Return the only legal successor for an observed stage prefix."""
-    transitions = {(): "red", ("red",): "green", ("red", "green"): "refactor", ("red", "green", "refactor"): "slice-terminal"}
+    transitions = {(): "red", ("red",): "implement", ("red", "implement"): "green", ("red", "implement", "green"): "refactor", ("red", "implement", "green", "refactor"): "slice-terminal"}
     key = tuple(stages)
     if key not in transitions:
         raise ValueError("stage observations are not an ordered lifecycle prefix")
