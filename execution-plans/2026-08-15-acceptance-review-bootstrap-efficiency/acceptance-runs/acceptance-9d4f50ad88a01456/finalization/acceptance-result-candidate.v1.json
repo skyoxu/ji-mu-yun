@@ -1,0 +1,26 @@
+{
+  "authorizes": [],
+  "candidate": {
+    "actionReceipts": [
+      {
+        "path": "actions/terminal-full/attempt-001/result.json",
+        "sha256": "sha256:52c6e2909ef1987aca95655df963264b797dc50f0ed7109e05ab726e7e880539"
+      }
+    ],
+    "authorizes": [],
+    "candidateCustodyHash": "sha256:b69e247d70583b15826c337c4044428744060d9c7608092e905527ebe7e33f4e",
+    "inputBindings": {
+      "candidateCustodyHash": "sha256:b69e247d70583b15826c337c4044428744060d9c7608092e905527ebe7e33f4e",
+      "contractHash": "sha256:45a2a3116d5458e1de69f1496b900aa88fcffdf7e5ff142d681ef57c1970bf6f",
+      "knowledgeContextHash": "sha256:7229bef8b51cda654072b637f2311366e30d020332c8613f9dee22c6c98bb3d3",
+      "runInputHash": "sha256:69f40a3bf36abf87eb1a36a2bb72391b441c4110e5592c3cdceff6cbea016cc8"
+    },
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-deterministic-evaluation.v1",
+    "status": "passed",
+    "terminalResultHash": "sha256:817642a0752deb8053873915a7b0963e319527b550a00e6df3d88b411a08665e"
+  },
+  "candidateHash": "sha256:c89cc6128c6719904f543eb97278ef86221623f440663deb05f8c371129e40a5",
+  "candidateInputHash": "sha256:20e33ba4b5697fae0c9956a1f4e3e9ffe834094083db141651b1e0fc1aaec900",
+  "schemaVersion": "acceptance-result-candidate.v1"
+}

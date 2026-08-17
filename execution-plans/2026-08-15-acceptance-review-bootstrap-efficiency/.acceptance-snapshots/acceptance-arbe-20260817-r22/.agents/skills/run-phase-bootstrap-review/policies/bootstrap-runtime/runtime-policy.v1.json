@@ -1,0 +1,1 @@
+{"schema_version":"bootstrap-runtime-policy.v1","liveness_seconds":120,"effective_progress_seconds":3600,"no_progress_seconds":3600,"launch_grace_seconds":30,"terminal_grace_seconds":30,"lease_seconds":3600,"retry_limits":{"transport":3},"backoff_seconds":5,"status_throttle_seconds":15,"output_max_bytes":12000,"authorizes":[]}

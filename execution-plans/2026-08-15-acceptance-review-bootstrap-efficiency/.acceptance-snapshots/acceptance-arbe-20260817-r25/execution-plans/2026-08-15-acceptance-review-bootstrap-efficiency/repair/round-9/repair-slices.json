@@ -1,0 +1,25 @@
+{
+  "schema_version": "vdd-repair-slices.v1",
+  "repair_id": "acceptance-review-bootstrap-efficiency-default-deterministic-r9",
+  "slices": [
+    {
+      "slice_id": "S3",
+      "finding_ids": ["ARBE-POLICY-001", "ARBE-EVIDENCE-002", "ARBE-REQUEST-003"],
+      "behavior": "Make required-check success and failure machine-verifiable, select deterministic_only by default, and admit optional Bootstrap routes only from an explicit controlled entry-command request.",
+      "validation": ["acceptance-pipeline-red", "acceptance-pipeline-green"]
+    },
+    {
+      "slice_id": "S5",
+      "finding_ids": ["ARBE-POLICY-001", "ARBE-EVIDENCE-002", "ARBE-REQUEST-003"],
+      "behavior": "Finalize from current deterministic evidence by default; import Bootstrap evidence only when its admitted explicit request and all route bindings exact-match.",
+      "validation": ["semantic-import-red", "semantic-import-green"]
+    },
+    {
+      "slice_id": "S6",
+      "finding_ids": ["ARBE-POLICY-001", "ARBE-REQUEST-003"],
+      "behavior": "Regression-prove zero Bootstrap calls for the default route and reject automatic upgrades or forged request records.",
+      "validation": ["rollout-regression-red", "rollout-regression-green"]
+    }
+  ],
+  "authorizes": []
+}

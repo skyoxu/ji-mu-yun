@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "automatic_publication_allowed": false,
+  "failure_code": "catalog_stale",
+  "next_action": "knowledge-maintenance-required",
+  "request_sha256": "sha256:8a09b6b006ec8d30b437f1543ac03de3d1aff43770756d815aa78891a3641b28",
+  "requires_explicit_maintainer_confirmation": true,
+  "result_sha256": "sha256:2fee1e65db09fe9b1b61fc11ebd4555bcd66c3e168704ac3e7cd6ef8dd0b594a",
+  "route_output": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context-routes/08a27f98547be52a8093a93b7b8fc706e638a61b3b84b43c059831b53d3ae71e.json",
+  "route_sha256": "sha256:806359205a99a9f18f1e8726f6a9ae00f4a01df66818a1289d06f25249d4af56",
+  "schema_version": "jimuyun.acceptance-knowledge-maintenance-route.v1",
+  "snapshot": {
+    "commit": "dbf8670c1fb6c394b3aa1b422069045e142be68c",
+    "ref": "refs/heads/main"
+  },
+  "status": "blocked",
+  "target_plan": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency"
+}

@@ -1,0 +1,79 @@
+{
+  "authorizes": [],
+  "commandId": "terminal-full",
+  "commandRegistryHash": "sha256:037e29c3a96b24f2ba8d88c50be0df5d21a6cb1e3825c88cd38c8bbe47303ec5",
+  "environmentIdentity": {
+    "hash": "sha256:3d83924597c385d0a288d12c4263e250a6e330ac01419f4c241825cefb9a5fa7",
+    "names": [
+      "APPDATA",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py"
+    ],
+    "commandId": "terminal-full",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 7200
+  },
+  "invocationHash": "sha256:db71bb87d5336d41b7da5b5052a4d6af7e22b5210f66057774d31ec5ac49c1ec",
+  "processResult": {
+    "commandId": "terminal-full",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "============================= test session starts =============================\r\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\r\nrootdir: C:\\jimuyun\r\nplugins: anyio-4.13.0\r\ncollected 3 items\r\n\r\nscripts\\toolchain\\canonical_evidence\\tests\\test_canonical_evidence.py .. [ 66%]\r\n.                                                                        [100%]\r\n\r\n============================== 3 passed in 0.03s ==============================\r\n============================= test session starts =============================\r\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\r\nrootdir: C:\\jimuyun\r\nplugins: anyio-4.13.0\r\ncollected 5 items\r\n\r\nscripts\\toolchain\\canonical_evidence\\tests\\test_consumer_migrations.py . [ 20%]\r\n....                                                                     [100%]\r\n\r\n============================== 5 passed in 0.04s ==============================\r\n============================= test session starts =============================\r\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\r\nrootdir: C:\\jimuyun\r\nplugins: anyio-4.13.0\r\ncollected 9 items\r\n\r\n.agents\\skills\\run-phase-bootstrap-review\\tests\\test_runtime_policy_events.py . [ 11%]\r\n........                                                                 [100%]\r\n\r\n============================== 9 passed in 0.05s ==============================\r\n============================= test session starts =============================\r\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\r\nrootdir: C:\\jimuyun\r\nplugins: anyio-4.13.0\r\ncollected 3 items\r\n\r\n.agents\\skills\\run-refactor-implementation-acceptance\\tests\\test_evidence_pipeline.py . [ 33%]\r\n..                                                                       [100%]\r\n\r\n============================== 3 passed in 0.07s ==============================\r\n============================= test session starts =============================\r\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\r\nrootdir: C:\\jimuyun\r\nplugins: anyio-4.13.0\r\ncollected 6 items\r\n\r\n.agents\\skills\\run-phase-bootstrap-review\\tests\\test_projection_and_segmentation.py . [ 16%]\r\n.....                                                                    [100%]\r\n\r\n============================== 6 passed in 0.07s ==============================\r\n============================= test session starts =============================\r\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\r\nrootdir: C:\\jimuyun\r\nplugins: anyio-4.13.0\r\ncollected 6 items\r\n\r\n.agents\\skills\\run-refactor-implementation-acceptance\\tests\\test_bootstrap_import.py . [ 16%]\r\n....                                                                     [ 83%]\r\n.agents\\skills\\run-refactor-implementation-acceptance\\tests\\test_deterministic_finalization.py . [100%]\r\n\r\n============================== 6 passed in 0.76s ==============================\r\n============================= test session starts =============================\r\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\r\nrootdir: C:\\jimuyun\r\nplugins: anyio-4.13.0\r\ncollected 3 items\r\n\r\nscripts\\toolchain\\tests\\test_acceptance_bootstrap_efficiency.py ...      [100%]\r\n\r\n============================== 3 passed in 0.02s ==============================\r\n{\"authorizes\": [\"implementation-complete\"], \"command_registry_hash\": \"sha256:3fd8ebc5fe67038f2349bc2851247da343c81c77d041d488f3fd0c20515656ce\", \"contract_hash\": \"sha256:45a2a3116d5458e1de69f1496b900aa88fcffdf7e5ff142d681ef57c1970bf6f\", \"does_not_authorize\": [\"acceptance-passed\", \"commit\", \"release\", \"archived\"], \"plan_id\": \"acceptance-review-bootstrap-efficiency\", \"predicate\": \"implementation-complete\", \"results\": [{\"command_id\": \"canonical-evidence-green\", \"exit_code\": 0}, {\"command_id\": \"canonical-migration-green\", \"exit_code\": 0}, {\"command_id\": \"bootstrap-runtime-green\", \"exit_code\": 0}, {\"command_id\": \"acceptance-pipeline-green\", \"exit_code\": 0}, {\"command_id\": \"projection-segment-green\", \"exit_code\": 0}, {\"command_id\": \"semantic-import-green\", \"exit_code\": 0}, {\"command_id\": \"rollout-regression-green\", \"exit_code\": 0}], \"schema_version\": \"quick-dev-implementation-complete.v1\", \"status\": \"pass\", \"terminal_command_id\": \"terminal-full\", \"validated_command_ids\": [\"canonical-evidence-green\", \"canonical-migration-green\", \"bootstrap-runtime-green\", \"acceptance-pipeline-green\", \"projection-segment-green\", \"semantic-import-green\", \"rollout-regression-green\"]}\r\n",
+    "stdoutSha256": "sha256:9af9f23e663831317611b66aafa6465a351a8b3302fd9635fa65dc0f1c188ccf"
+  },
+  "processResultHash": "sha256:234b82bebfe13289c0639205ce5323e60eaf850bee35675274fa73fbaea51b6d",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

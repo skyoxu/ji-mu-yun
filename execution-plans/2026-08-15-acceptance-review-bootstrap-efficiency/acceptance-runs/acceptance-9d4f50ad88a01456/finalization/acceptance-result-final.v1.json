@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "candidateHash": "sha256:c89cc6128c6719904f543eb97278ef86221623f440663deb05f8c371129e40a5",
+  "candidatePath": "C:\\jimuyun\\execution-plans\\2026-08-15-acceptance-review-bootstrap-efficiency\\acceptance-runs\\acceptance-9d4f50ad88a01456\\finalization\\acceptance-result-candidate.v1.json",
+  "final": {
+    "acceptanceMode": "unattended",
+    "authorizes": [
+      "acceptance-passed"
+    ],
+    "identityHash": "sha256:ae95d320635f2567fc3938c7144ab3615208d5619531497c169f1cd450e3c4d4",
+    "lifecycleTransition": "acceptance-passed",
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-passed.v1",
+    "triggerIds": []
+  },
+  "impactProjectionHash": "sha256:aa11f50e78c4ce65ed550012a1dc3fc5aec5c36fe33855096bc326d1bb42998a",
+  "schemaVersion": "acceptance-result-final.v1"
+}

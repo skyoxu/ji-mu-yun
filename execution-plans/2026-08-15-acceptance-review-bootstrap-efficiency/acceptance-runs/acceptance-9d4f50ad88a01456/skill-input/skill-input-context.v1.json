@@ -1,0 +1,17 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:45964aa7e4f05e688b854136d06d05b51c05f024b1b39b564da71aa49b6e6d3d",
+  "sections": [
+    {
+      "title": "Command Registry",
+      "content": "Frozen acceptance command registry for acceptance-review-bootstrap-efficiency defines canonical evidence, migration, runtime, pipeline, projection, semantic import, rollout regression, and terminal validation commands. It binds required checks to ARBE acceptance IDs and declares no authorizations."
+    },
+    {
+      "title": "Requirements And Acceptance",
+      "content": "Frozen requirements define ARBE-001 through ARBE-022 covering admission identity, changed sets, consumer closure, real checks, deterministic routing, role isolation, projections, segment identity, access isolation, runtime progress and lease policy, cost decisions, Bootstrap import, canonical evidence migration, historical replay, telemetry, rollout gates, and advisory-only model text. Observable acceptance IDs ARBE-A01 through ARBE-A46 specify required behavior and rejection cases."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T18:06:40.750469Z"
+}

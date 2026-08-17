@@ -1,0 +1,63 @@
+{
+  "schema_version": "acceptance-review-bootstrap-efficiency.implementation-authorization-receipt.v1",
+  "plan_id": "acceptance-review-bootstrap-efficiency",
+  "source_freeze_manifest": {
+    "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/source-freeze-manifest.v1.json",
+    "sha256": "sha256:74414bc1007ac8235a94012e0a42d9fb517415e65844d45d668f9c5bbd54c9d2",
+    "canonical_hash": "sha256:07157e88a01e10a768f07d2c764682875ef73b8c02da9f8d482b3e6e9d4657d6"
+  },
+  "implementation_contract": {
+    "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "sha256": "sha256:45a2a3116d5458e1de69f1496b900aa88fcffdf7e5ff142d681ef57c1970bf6f"
+  },
+  "selection_pointer": {
+    "path": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-acceptance-review-bootstrap-efficiency.json",
+    "sha256": "sha256:0aa51999ef3def06b87f4fae8833df396dc2fd1f950cf065d8a76204ac9ab895"
+  },
+  "selection_record": {
+    "path": "_bmad-output/specs/canonical-spec-package-selections/sha256-d5417f8767a7a8ba52998d4ac7e79b77a6d00a104fe280c1bb8b70ba5d38622b.json",
+    "sha256": "sha256:96dcf3b0a3e29dc02549ee3e0fd335113f2e306f9f205c4982314948427d8d49"
+  },
+  "plan_validation": {
+    "command": "python tools/validate_all.py --validate-plan",
+    "validator": {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "sha256": "sha256:ab68920b5f2ebbe46801722411d15e37e9c1f4836367f52340405bdeb7549550"
+    },
+    "result": {
+      "acceptance": 46,
+      "authorizes": [],
+      "commands": 16,
+      "requirements": 22,
+      "schema_version": "acceptance-review-bootstrap-efficiency.plan-validation.v1",
+      "slices": 7,
+      "status": "passed"
+    },
+    "result_hash": "sha256:7c85bac34d18660783486eda7b7416895bac282aa51f01a2de7575f8fbf0672c"
+  },
+  "known_red": {
+    "command_id": "canonical-migration-red",
+    "fixture": {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/fixtures/current-package-exact-cover-red.v1.json",
+      "sha256": "sha256:1d0697da5691adc77bd05a24cdb7309ce7a98bd18639eaa2850eff3848446be4"
+    },
+    "validator": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
+      "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a"
+    },
+    "result": {
+      "status": "blocked",
+      "family": "schema_error",
+      "detail": "frozen authority lacks acceptance-contract companion",
+      "authorizes": []
+    },
+    "result_hash": "sha256:4dccbc3a9c5b91327c19fa9a7f46eb3c1f79c840a8467247176170e9cda8cc27"
+  },
+  "decision": {
+    "owner": "maintainer",
+    "transition": "implementation-authorized",
+    "reason": "self-hosted-exact-cover-bootstrap-exception"
+  },
+  "authorizes": ["implementation-authorized"],
+  "does_not_authorize": ["implementation-complete", "acceptance-passed", "archived", "release"]
+}

@@ -258,8 +258,6 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     for path in request["changedPaths"]:
         baseline_payload = _git_blob(root, resolved_revision, path)
         candidate_payload = _candidate_payload(root, request, path)
-        if _historical_evidence_path(path):
-            candidate_payload = None
         if baseline_payload is None and candidate_payload is None:
             raise InputError(f"changed path has neither baseline nor candidate bytes: {path}")
         if baseline_payload is not None:
@@ -285,7 +283,7 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
             "candidate_sha256": candidate_hash,
             "inclusion_reason": "explicit compact VDD candidate path",
         })
-        if candidate_payload is not None and not _historical_evidence_path(path):
+        if candidate_payload is not None and not (request.get("candidateRevision") and _historical_evidence_path(path)):
             present_payloads[path] = candidate_payload
 
     baseline_manifest = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": baseline_files}

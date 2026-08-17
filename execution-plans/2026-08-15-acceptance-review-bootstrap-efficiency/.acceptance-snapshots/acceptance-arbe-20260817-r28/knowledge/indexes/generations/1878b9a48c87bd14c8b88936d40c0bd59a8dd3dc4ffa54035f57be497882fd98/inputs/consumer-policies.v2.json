@@ -1,0 +1,66 @@
+{
+  "schema_version": "jimuyun.knowledge-consumer-policies.v2",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "policies": [
+    {
+      "consumer": "vdd",
+      "domains": ["toolchain", "phase"],
+      "visibility": ["active", "dependency", "conditional"],
+      "lifecycles": ["repository-source"],
+      "statuses": ["active", "conditional", "historical"],
+      "historical_mode": "exact-only",
+      "path_prefixes": [".agents/skills/", "docs/", "execution-plans/", "knowledge/", "scripts/python/", "runtime/phase-a/"],
+      "exact_paths": ["AGENTS.md", "README.md"],
+      "required_modules": ["repository-rules"],
+      "optional_modules": ["existing-workflow"],
+      "max_candidates": 20,
+      "minimum_confidence": "medium",
+      "freeze_point": "before-plan-source-freeze"
+    },
+    {
+      "consumer": "quick-dev",
+      "domains": ["toolchain", "phase"],
+      "visibility": ["active", "dependency"],
+      "lifecycles": ["repository-source"],
+      "statuses": ["active"],
+      "historical_mode": "forbidden",
+      "path_prefixes": [],
+      "exact_paths": [],
+      "required_modules": ["vdd-frozen-context"],
+      "optional_modules": [],
+      "max_candidates": 0,
+      "minimum_confidence": "not-applicable",
+      "freeze_point": "vdd-owned-context"
+    },
+    {
+      "consumer": "bootstrap",
+      "domains": ["toolchain", "phase"],
+      "visibility": ["active", "dependency", "conditional"],
+      "lifecycles": ["repository-source"],
+      "statuses": ["active", "conditional", "historical"],
+      "historical_mode": "exact-only",
+      "path_prefixes": [".agents/skills/", "docs/", "execution-plans/", "knowledge/", "scripts/python/", "runtime/phase-a/"],
+      "exact_paths": ["AGENTS.md", "README.md"],
+      "required_modules": ["profile-context"],
+      "optional_modules": ["knowledge-context"],
+      "max_candidates": 32,
+      "minimum_confidence": "medium",
+      "freeze_point": "artifact-view-prepare"
+    },
+    {
+      "consumer": "refactor-acceptance",
+      "domains": ["toolchain", "phase", "workspace"],
+      "visibility": ["active", "dependency", "conditional"],
+      "lifecycles": ["repository-source"],
+      "statuses": ["active", "conditional", "historical"],
+      "historical_mode": "exact-only",
+      "path_prefixes": [".agents/skills/", "docs/", "execution-plans/", "knowledge/", "scripts/python/", "runtime/phase-a/"],
+      "exact_paths": ["AGENTS.md", "README.md"],
+      "required_modules": ["acceptance-scope"],
+      "optional_modules": ["knowledge-context", "governance-context"],
+      "max_candidates": 32,
+      "minimum_confidence": "medium",
+      "freeze_point": "acceptance-run-input"
+    }
+  ]
+}

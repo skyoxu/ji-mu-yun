@@ -1,0 +1,16 @@
+{
+  "schema_version": "skill-semantic-decision.v1",
+  "producer_role": "run-refactor-implementation-acceptance",
+  "execution_identity": "sha256:05109211b8b927f1e3b5a32e0b4be2a1b19354e29035921ad3aa9b9d4df5fcdb",
+  "source_manifest_hash": "sha256:45964aa7e4f05e688b854136d06d05b51c05f024b1b39b564da71aa49b6e6d3d",
+  "context_artifact_hash": "sha256:454ffe46bba6f41d35a62692bd63fdf9902ca3b506d96796e1c05f1072ca20ab",
+  "source_statuses": {
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json": "accepted",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md": "accepted"
+  },
+  "status": "accepted",
+  "rationale": "Both frozen manifest sources are covered by bounded redacted summaries with complete page coverage; no source is insufficient.",
+  "redaction_status": "complete",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "authorizes": []
+}
