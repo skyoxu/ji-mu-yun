@@ -40,6 +40,20 @@ Read only the row that matches the task, then follow its local links.
 Before modifying a subtree, follow its nearest `AGENTS.md`. Do not preload
 unrelated indexes or document trees.
 
+## MCP Tool Routing
+
+FastCtx is the preferred local MCP plane. At the start of any task needing
+local inspection or non-interactive execution, first discover whether its MCP
+tools are attached and use their exposed `read`, `grep`, `glob`, `run`, or
+background-job interfaces. Do not assume a shell fallback merely because a
+FastCtx tool name is unfamiliar.
+
+When FastCtx is unavailable in the active session, or a specific FastCtx call
+returns an explicit unavailable/error result, record that fallback once and
+then use the Windows command plane for that operation. Do not retry through
+invented FastCtx routes or silently mix command planes within a long-running
+operation. A later newly attached FastCtx MCP resumes preferred status.
+
 `AGENTS.md` files inside `logs/**/artifact-view/tree/`, acceptance snapshots,
 backups, or historical log bundles are frozen evidence or imported payloads,
 not active repository instructions. The server-selected project entry at
