@@ -26,3 +26,6 @@ or business-repository dependency.
 ## Required Order
 
 `S0 -> S1 -> S2 -> terminal-full`
+
+The migration bridge may create only each slice's declared test file before
+RED. Production changes remain prohibited until that RED observation exists.
