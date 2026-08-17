@@ -1,0 +1,92 @@
+已经关闭的部分：
+
+真正分阶段执行 ✅：现在 run_slice_lifecycle.py 支持 red / green / refactor 独立 action；RED、GREEN、REFACTOR 都写 stage-state.json 后退出，router 再决定下一步；REFACTOR 后还会单独路由 validate-slice。
+RED basis identity ✅：已经绑定 failure intent、test selector、contract hash、validator hash 和 pre-implementation candidate。
+旧 terminal receipt 防误用 ✅：这个计划现在要求 orchestration_version == stage-actions.v2 才能被 router 判为 current completion。
+terminal-full 改进 ✅：会重新跑 adapter tests 和 dogfood-8-17，并绑定 dogfood 输出 hash。
+P1-1：S2 的 “8-17 dogfood” 仍不是真正 staged dogfood
+
+需求写得很明确：
+
+8-17 consumer 要通过 separate RED → implementation → GREEN → refactor actions 到 terminal。
+
+但当前 dogfood-8-17 实际只是：
+
+acceptance-coordinator-efficiency/tools/terminal_full.py --slice S3
+
+而那个命令本身只是跑 test_coordinator.py，并没有通过 Quick Dev staged router 执行 RED/GREEN/REFACTOR。
+
+更直接的证据是：acceptance-coordinator-efficiency 当前仍只是：
+
+implementation-authorized
+
+它自己的 95 report 也只记录到 implementation authorization，没有 staged implementation completion。
+
+所以现在是：
+
+dogfood terminal test ✅
+真实 staged dogfood ❌
+P1-2：staged path 没有完成 canonical protocol close
+
+这个是这次 stage split 引出的直接 evidence 回归。
+
+当前 refactor action：
+
+REFACTOR
+→ stage-state = refactor
+→ next_stage = slice-terminal
+→ return
+
+但 LifecycleRunner.close() 才负责：
+
+RED + GREEN + REFACTOR
+→ stage_artifact_composer.compose()
+→ persist_protocol_bundle()
+
+而现在 staged refactor 在调用 close() 之前就 return 了；随后 _run_slice_terminal() 只是执行 terminal command，然后直接写 slice-ready-result.json。
+
+也就是：
+
+RED evidence ✅
+GREEN evidence ✅
+REFACTOR evidence ✅
+slice-ready ✅
+
+
+canonical Capsule / attempt / ledger bundle close ❌
+
+这会让新的 staged path 比旧 strict adapter 少掉原本的 protocol evidence closure。
+
+最小修复
+
+只修这两个，不再扩 finding：
+
+1. slice-terminal 前做 canonical finalize
+   resume RED/GREEN/REFACTOR
+   → LifecycleRunner.close(...)
+   → composer
+   → persist_protocol_bundle
+   → 再跑 slice terminal
+
+
+2. 真正 dogfood acceptance-coordinator-efficiency
+   用新 staged adapter 跑：
+   RED
+   → implement
+   → GREEN
+   → REFACTOR
+   → slice terminal
+   → 后续 slices
+   → terminal-full
+
+
+3. 重跑 quick-dev-tdd-stage-recovery terminal-full
+   → 新 stage-actions.v2 implementation-complete receipt
+   → 更新 95 report
+
+所以目前我的判断是：
+
+核心 staged TDD 编排：✅ 已实现。
+RED identity：✅ 已实现。
+完整 evidence closure：❌ 差一步。
+真实 8-17 dogfood：❌ 尚未发生。

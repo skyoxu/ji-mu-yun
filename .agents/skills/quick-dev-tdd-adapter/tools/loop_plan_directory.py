@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -9,6 +10,7 @@ import subprocess
 import sys
 
 from route_plan_directory import route
+from stage_lifecycle_runner import LifecycleRunner
 
 
 TOOLS = Path(__file__).resolve().parent
@@ -304,6 +306,25 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
     run_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
     invocation = root / "logs" / "tdd-adapter" / str(contract["plan_id"]) / "_invocations" / run_id
     _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", run_id, "--out-dir", str(invocation)])
+    context = json.loads((invocation / "run-context.json").read_text(encoding="utf-8"))
+    for item in [*context["authority_refs"], context["implementation_contract"]]:
+        item["payload"] = base64.b64decode(item.pop("payload_base64"), validate=True)
+    observations = {
+        stage: json.loads((run_dir / "observations" / f"{stage}-observed.json").read_text(encoding="utf-8"))
+        for stage in ("red", "green", "refactor")
+    }
+    for stage in ("green", "refactor"):
+        core = context["stage_results"][stage]
+        core["exit_code"] = observations[stage]["exit_code"]
+        core["observed_at"] = observations[stage]["observed_at"]
+        if stage == "refactor":
+            refactor_commands = json.loads((invocation / "refactor-commands.json").read_text(encoding="utf-8"))
+            core["command_ids"] = [item["id"] for item in refactor_commands]
+            core["command_id"] = refactor_commands[0]["id"]
+    snapshots = _workspace_snapshot_paths(root, plan, snapshots)
+    lifecycle = LifecycleRunner(root, run_dir, snapshots)
+    lifecycle.resume_observations(run_dir, ["red", "green", "refactor"])
+    lifecycle.close(context, {})
     command = json.loads((invocation / "terminal-command.json").read_text(encoding="utf-8"))
     completed = subprocess.run([command["executable"], *command["argv"]], cwd=root, shell=False, check=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=command["timeout_seconds"])
     if completed.returncode != 0:

@@ -32,7 +32,7 @@ def main() -> int:
         cwd=args.repository_root,
     )
     dogfood = None if args.slice else subprocess.run(
-        [sys.executable, "-B", "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py", "--slice", "S3"],
+        [sys.executable, "-B", "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/dogfood_runner.py"],
         check=False,
         capture_output=True,
         cwd=args.repository_root,

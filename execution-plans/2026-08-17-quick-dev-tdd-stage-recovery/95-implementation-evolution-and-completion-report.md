@@ -30,3 +30,17 @@ This append-only report is non-authorizing continuity evidence.
   output `sha256:55cccd28df5c1a813dc9f57abb6902ca480fac6f85ee42d4f1d36cec269cd530`.
 - Current route is `implementation-complete`; this report remains
   non-authorizing continuity evidence.
+
+## 2026-08-17 - Staged Dogfood And Protocol Closure Repair
+
+- `dogfood-8-17` now runs the acceptance-coordinator S3 consumer through the
+  staged adapter's independent RED, GREEN, and REFACTOR actions before its
+  slice terminal predicate.
+- `slice-terminal` now closes the canonical Capsule/attempt/ledger bundle from
+  the same three immutable observations before running the terminal command.
+- The dogfood run verified `attempt-ledger-manifest.v1.json` and the S3
+  `slice-ready` predicate; the refreshed terminal dogfood binding is
+  `sha256:6e3098b653245b2e4a983a76782ee3e6990e043c5bb245c9a70b30b0c73a7eb0`.
+  The VDD-owned knowledge context was refreshed through successor `r15` after
+  the controlled source/read-set validation. This report remains
+  non-authorizing evidence.

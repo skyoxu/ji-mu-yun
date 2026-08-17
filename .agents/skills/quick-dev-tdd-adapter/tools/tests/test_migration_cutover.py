@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -28,3 +29,10 @@ def test_staged_cutover_guard_is_available():
         outside.mkdir()
         (outside / "implementation-contract.v1.json").write_text("{}", encoding="utf-8")
         assert driver.staged_cutover_guard(root, outside) is False
+
+
+def test_8_17_dogfood_is_bound_to_staged_runner():
+    plan = Path.cwd() / "execution-plans" / "2026-08-17-quick-dev-tdd-stage-recovery"
+    registry = json.loads((plan / "command-registry.v1.json").read_text(encoding="utf-8"))
+    command = next(item for item in registry["commands"] if item["id"] == "dogfood-8-17")
+    assert command["argv"] == ["-3", "-B", "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/dogfood_runner.py"]

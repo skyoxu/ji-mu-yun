@@ -254,6 +254,17 @@ class AdapterTests(unittest.TestCase):
             ADAPTER.persist_protocol_bundle(run_dir, bundle, store)
             self.assertTrue((observation_dir / "refactor-observed.json").is_file())
 
+    def test_protocol_persistence_preserves_staged_boundary_metadata(self) -> None:
+        fixtures = json.loads((PLAN_ROOT / "fixtures" / "capsule-attempt-cases.v1.json").read_text(encoding="utf-8"))
+        bundle, store, _ = hydrate_protocol_fixture(fixtures["valid_bundle"])
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "RUN-001"
+            run_dir.mkdir()
+            (run_dir / "stage-state.json").write_text("{}", encoding="utf-8")
+            (run_dir / "red-basis.v1.json").write_text("{}", encoding="utf-8")
+            ADAPTER.persist_protocol_bundle(run_dir, bundle, store)
+            self.assertTrue((run_dir / "attempt-ledger-manifest.v1.json").is_file())
+
     def test_compose_stage_binding_is_derived_from_protocol_documents(self) -> None:
         fixtures = json.loads((PLAN_ROOT / "fixtures" / "capsule-attempt-cases.v1.json").read_text(encoding="utf-8"))
         bundle, _, _ = hydrate_protocol_fixture(fixtures["valid_bundle"])

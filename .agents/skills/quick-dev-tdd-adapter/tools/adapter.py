@@ -254,7 +254,17 @@ def persist_protocol_bundle(
     # LifecycleRunner records these non-authoritative observations before the
     # immutable protocol bundle is closed. They are append-only inputs, not
     # protocol artifacts, and must survive the close operation.
-    observation_paths = {f"observations/{stage}-observed.json" for stage in ("red", "green", "refactor")} | {"recovery-state.json", "predecessor-red-observation.v1.json"}
+    observation_paths = {
+        *(f"observations/{stage}-observed.json" for stage in ("red", "green", "refactor")),
+        "recovery-state.json",
+        "predecessor-red-observation.v1.json",
+        "stage-state.json",
+        "red-basis.v1.json",
+        "legacy-regression-evidence.json",
+        "prior-red-successor-evidence.v1.json",
+        "stage-evidence-projection.v1.json",
+        "slice-ready-result.json",
+    }
     if existing_paths - set(payloads) - observation_paths:
         raise ValueError("undeclared existing artifact prevents protocol persistence")
 
