@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -94,21 +95,85 @@ def _workspace_snapshot_paths(root: Path, plan: Path, snapshots: list[str]) -> l
     return resolved
 
 
+def _sha(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object], slice_id: str) -> dict[str, str] | None:
+    """Return one current bridge RED handoff or reject stale bridge evidence."""
+    selected = next((item for item in contract.get("slices", []) if item.get("slice_id") == slice_id), None)
+    if not isinstance(selected, dict) or not isinstance(selected.get("tdd"), dict):
+        raise ValueError("bridge slice declaration is invalid")
+    red = selected["tdd"].get("red")
+    if not isinstance(red, dict):
+        raise ValueError("bridge RED declaration is invalid")
+    evidence_root = root / "logs" / "tdd-adapter" / str(contract["plan_id"]) / slice_id
+    artifacts = sorted(evidence_root.glob("*/implementation-needed-result.json")) if evidence_root.is_dir() else []
+    if not artifacts:
+        return None
+    contract_hash = _sha(plan / "implementation-contract.v1.json")
+    valid: list[Path] = []
+    for artifact in artifacts:
+        try:
+            handoff = json.loads(artifact.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError("migration RED handoff is unreadable") from exc
+        selector = handoff.get("test_selector")
+        test_path = (root / selector).resolve() if isinstance(selector, str) else None
+        expected = {
+            "schema_version": "quick-dev-tdd-adapter.red-handoff.v1",
+            "plan_id": contract["plan_id"],
+            "slice_id": slice_id,
+            "predicate": "implementation-needed",
+            "status": "pass",
+            "contract_hash": contract_hash,
+            "test_selector": red.get("test_selector"),
+            "expected_failure_ids": red.get("expected_failure_ids"),
+            "stage": "red",
+            "commands_attempted": [f"quick-dev-generated-red-{slice_id}"],
+        }
+        if (
+            any(handoff.get(key) != value for key, value in expected.items())
+            or not isinstance(handoff.get("exit_code"), int)
+            or handoff["exit_code"] == 0
+            or test_path is None
+            or not test_path.is_file()
+            or handoff.get("test_hash") != _sha(test_path)
+        ):
+            raise ValueError("migration RED handoff is stale or does not match the current slice")
+        valid.append(artifact)
+    if len(valid) != 1:
+        raise ValueError("migration RED handoff is ambiguous")
+    artifact = valid[0]
+    return {"path": artifact.relative_to(root).as_posix(), "sha256": _sha(artifact)}
+
+
 def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> None:
     snapshots = _workspace_snapshot_paths(root, plan, snapshots)
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
     bridge = contract.get("adapter_bridge")
+    handoff = None
     if isinstance(bridge, dict) and isinstance(bridge.get("runner"), str):
-        runner = plan / bridge["runner"]
-        if not runner.is_file():
-            raise ValueError("declared plan-local adapter bridge is missing")
-        _run([str(runner), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--snapshot-path", *snapshots])
-        return
+        handoff = _current_bridge_handoff(root, plan, contract, slice_id)
+        if handoff is None:
+            runner = plan / bridge["runner"]
+            if not runner.is_file():
+                raise ValueError("declared plan-local adapter bridge is missing")
+            _run([str(runner), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--snapshot-path", *snapshots])
+            return
     run_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
     evidence = root / "logs" / "tdd-adapter" / contract["plan_id"]
     run_dir = evidence / slice_id / run_id
     invocation = evidence / "_invocations" / run_id
     _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", run_id, "--out-dir", str(invocation)])
+    if handoff is not None:
+        context_path = invocation / "run-context.json"
+        context = json.loads(context_path.read_text(encoding="utf-8"))
+        red = context["stage_results"]["red"]
+        red["mode"] = "prior-red-successor"
+        red["prior_red"] = handoff
+        red["legacy_predecessor"] = None
+        context_path.write_text(json.dumps(context, indent=2) + "\n", encoding="utf-8", newline="\n")
     commands = [
         "--command", f"red={invocation / 'red-command.json'}",
         "--command", f"green={invocation / 'green-command.json'}",

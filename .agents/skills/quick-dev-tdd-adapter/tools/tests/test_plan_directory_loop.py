@@ -84,9 +84,79 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             self.assertTrue(created.is_file())
             self.assertFalse((root / ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_recovery.py").exists())
             self.assertEqual("implementation-needed", handoff["predicate"])
-            self.assertNotEqual(0, handoff["observed_exit"])
+            self.assertEqual("red", handoff["stage"])
+            self.assertNotEqual(0, handoff["exit_code"])
             with self.assertRaisesRegex(ValueError, "already exists"):
                 MIGRATION_BRIDGE.materialize_red_test(root, contract["slices"][0])
+
+    def test_matching_bridge_handoff_is_reused_as_the_red_predecessor(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = root / "execution-plans" / "stage-recovery"
+            plan.mkdir(parents=True)
+            contract = json.loads((STAGE_RECOVERY_PLAN / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+            contract["plan_id"] = "stage-recovery"
+            (plan / "implementation-contract.v1.json").write_text(json.dumps(contract), encoding="utf-8")
+            MIGRATION_BRIDGE.run_red(root, plan, "S0")
+
+            handoff = DRIVER._current_bridge_handoff(root, plan, contract, "S0")
+
+            self.assertIsNotNone(handoff)
+            self.assertTrue(handoff["path"].endswith("implementation-needed-result.json"))
+            self.assertTrue(handoff["sha256"].startswith("sha256:"))
+
+    def test_bridge_handoff_with_test_hash_drift_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = root / "execution-plans" / "stage-recovery"
+            plan.mkdir(parents=True)
+            contract = json.loads((STAGE_RECOVERY_PLAN / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+            contract["plan_id"] = "stage-recovery"
+            (plan / "implementation-contract.v1.json").write_text(json.dumps(contract), encoding="utf-8")
+            MIGRATION_BRIDGE.run_red(root, plan, "S0")
+            test_path = root / ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py"
+            test_path.write_text(test_path.read_text(encoding="utf-8") + "\n# drift\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "stale"):
+                DRIVER._current_bridge_handoff(root, plan, contract, "S0")
+
+    def test_loop_uses_current_bridge_handoff_for_green_continuation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = root / "execution-plans" / "target"
+            plan.mkdir(parents=True)
+            (plan / "implementation-contract.v1.json").write_text(json.dumps({
+                "plan_id": "target", "adapter_bridge": {"runner": "tools/migration_bridge.py"},
+            }), encoding="utf-8")
+            calls: list[list[str]] = []
+
+            def fake_run(arguments: list[str], *, timeout_seconds: int = 0) -> None:
+                calls.append(arguments)
+                if Path(arguments[0]).name != "build_slice_invocation.py":
+                    return
+                out = Path(arguments[arguments.index("--out-dir") + 1])
+                out.mkdir(parents=True)
+                command = {"id": "command", "executable": "py", "argv": ["-3", "-B", "-c", "pass"], "cwd": ".", "timeout_seconds": 1, "shell": False}
+                (out / "run-context.json").write_text(json.dumps({"stage_results": {"red": {"mode": "red", "prior_red": None, "legacy_predecessor": None}}}), encoding="utf-8")
+                for name, value in {
+                    "red-command.json": command,
+                    "green-command.json": command,
+                    "terminal-command.json": command,
+                    "refactor-commands.json": [command],
+                    "preparation-commands.json": [],
+                }.items():
+                    (out / name).write_text(json.dumps(value), encoding="utf-8")
+
+            handoff = {"path": "logs/tdd-adapter/target/S0/RUN/red.json", "sha256": "sha256:" + "a" * 64}
+            with mock.patch.object(DRIVER, "_current_bridge_handoff", return_value=handoff), mock.patch.object(DRIVER, "_run", side_effect=fake_run):
+                DRIVER._run_slice(root, plan, "S0", ["implementation-contract.v1.json"])
+
+            self.assertEqual("build_slice_invocation.py", Path(calls[0][0]).name)
+            self.assertEqual("run_slice_lifecycle.py", Path(calls[1][0]).name)
+            context_path = Path(calls[1][calls[1].index("--run-context") + 1])
+            context = json.loads(context_path.read_text(encoding="utf-8"))
+            self.assertEqual("prior-red-successor", context["stage_results"]["red"]["mode"])
+            self.assertEqual(handoff, context["stage_results"]["red"]["prior_red"])
 
     def test_router_rejects_plan_path_outside_execution_plans(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

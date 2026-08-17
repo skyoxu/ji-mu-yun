@@ -131,7 +131,9 @@ def run_red(root: Path, plan: Path, slice_id: str) -> Path:
         "contract_hash": _sha(contract_path),
         "test_selector": selected["tdd"]["red"]["test_selector"],
         "expected_failure_ids": selected["tdd"]["red"]["expected_failure_ids"],
-        "observed_exit": completed.returncode,
+        "stage": "red",
+        "exit_code": completed.returncode,
+        "commands_attempted": [f"quick-dev-generated-red-{slice_id}"],
         "test_hash": _sha(test_path),
         "authorizes": [],
     }
