@@ -44,6 +44,9 @@
         "attempt_layout": {"const": "attempts/<attempt-id>"}
       }
     },
+    "red_execution_owner": {
+      "enum": ["quick-dev-tdd-adapter", "vdd"]
+    },
     "authority": {
       "type": "object",
       "required": ["authority_manifest"],
@@ -57,6 +60,46 @@
       "items": {"$ref": "#/$defs/slice"}
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"red_execution_owner": {"const": "quick-dev-tdd-adapter"}},
+        "required": ["red_execution_owner"]
+      },
+      "then": {
+        "properties": {
+          "slices": {
+            "items": {
+              "properties": {
+                "tdd": {
+                  "properties": {"red": {"$ref": "#/$defs/quickDevRedIntent"}}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"red_execution_owner": {"const": "vdd"}},
+        "required": ["red_execution_owner"]
+      },
+      "then": {
+        "properties": {
+          "slices": {
+            "items": {
+              "properties": {
+                "tdd": {
+                  "properties": {"red": {"$ref": "#/$defs/legacyRedIntent"}}
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
     "stringArray": {
       "type": "array",
@@ -120,21 +163,10 @@
           "required": ["red", "green", "refactor"],
           "properties": {
             "red": {
-              "type": "object",
-              "required": [
-                "command_id",
-                "test_selector",
-                "expected_exit",
-                "expected_failure_family",
-                "expected_failure_ids"
-              ],
-              "properties": {
-                "command_id": {"type": "string", "minLength": 1},
-                "test_selector": {"type": "string", "minLength": 1},
-                "expected_exit": {"enum": ["zero", "nonzero"]},
-                "expected_failure_family": {"type": "string", "minLength": 1},
-                "expected_failure_ids": {"$ref": "#/$defs/stringArray"}
-              }
+              "oneOf": [
+                {"$ref": "#/$defs/legacyRedIntent"},
+                {"$ref": "#/$defs/quickDevRedIntent"}
+              ]
             },
             "green": {"$ref": "#/$defs/commandExpectation"},
             "refactor": {
@@ -156,6 +188,30 @@
         },
         "recovery": {"type": "string", "minLength": 1}
       }
+    },
+    "legacyRedIntent": {
+      "type": "object",
+      "required": ["command_id", "test_selector", "expected_exit", "expected_failure_family", "expected_failure_ids"],
+      "properties": {
+        "command_id": {"type": "string", "minLength": 1},
+        "test_selector": {"type": "string", "minLength": 1},
+        "expected_exit": {"enum": ["zero", "nonzero"]},
+        "expected_failure_family": {"type": "string", "minLength": 1},
+        "expected_failure_ids": {"$ref": "#/$defs/stringArray"},
+        "mode": {"enum": ["red", "red-first", "legacy-regression", "prior-red-successor"]},
+        "legacy_predecessor": {"type": "object"},
+        "prior_red": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "quickDevRedIntent": {
+      "type": "object",
+      "required": ["test_selector", "expected_failure_ids"],
+      "properties": {
+        "test_selector": {"type": "string", "minLength": 1},
+        "expected_failure_ids": {"$ref": "#/$defs/stringArray"}
+      },
+      "additionalProperties": false
     }
   }
 }

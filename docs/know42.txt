@@ -1,0 +1,67 @@
+结论：上一轮的 tools/ 和 95 index 已修好，但现在仍不能直接启动 Quick Dev。还剩 2 个硬 P1，都是 execution-contract 接线问题，不是需求设计问题。
+
+第一，implementation-contract.v1.json 目前过不了当前 Quick Dev schema gate。 当前 schema 要求每个 slice 的 tdd.red 包含 command_id / test_selector / expected_exit / expected_failure_family / expected_failure_ids，并且 planned_new_files 是 slice 内字段。 但你现在写的是：
+
+tdd.red =
+  test_selector
+  expected_failure_ids
+
+
+top-level:
+planned_new_files_by_slice
+
+而 Quick Dev router 会先严格跑这个 schema，schema error 会直接拒绝进入 strict_tdd_plan。
+
+这里不能为了满足旧 schema 又把 RED command authority 塞回 VDD。正确修法应该是：同步升级 plan-owned-implementation-contract.v1.schema.json，让 red_execution_owner=quick-dev-tdd-adapter 时 RED 采用 failure-intent schema；同时把 planned_new_files 放回各 slice。
+
+第二，migration bridge 目前只是文字声明，没有真正接入 Quick Dev。 你已经正确写了“bridge 只能在 RED 前创建声明的 test file，production 必须等真实 RED 后才能改”。 但当前 loop_plan_directory.py 真正识别的是：
+
+contract.adapter_bridge.runner
+
+存在时才运行 plan-local bridge；否则仍直接进入旧的 build_slice_invocation → run_slice_lifecycle。
+
+而当前 contract 没有 adapter_bridge，新 tools/ 目录里也只有：
+
+validate_all.py
+stage_projection_builder.py
+terminal_full.py
+
+没有 migration bridge runner。
+
+所以目前：
+
+planned_new_files_by_slice
+
+只是数据，没有生产者。那三个新 RED test 仍不会在 RED 前被创建。
+
+另外你这轮已经真正修好的部分可以关闭：
+
+plan-local validate_all.py ✅
+stage_projection_builder.py ✅
+terminal_full.py ✅
+95 report 已加入全局 index ✅
+RED basis / implementation successor ✅
+S0/S1 migration bridge → S2 cutover 的设计语义 ✅
+
+所以现在只做最后一次非常窄的 repair：
+
+1. 更新 Quick Dev plan-owned schema
+   - red_execution_owner=quick-dev-tdd-adapter
+     → RED 只要求 failure intent
+   - planned_new_files 改为 slice-local
+
+
+2. 真正增加 adapter_bridge
+   - contract.adapter_bridge.runner
+   - plan-local bridge runner
+   - RED 前只允许 materialize 当前 slice test file
+   - observed RED 后停止，交回 implementation
+   - 不在同一调用继续 GREEN
+
+
+3. 给 bridge/schema 加 targeted tests
+
+
+4. 保持 plan-ready
+   → maintainer implementation-authorized
+   → Quick Dev S0

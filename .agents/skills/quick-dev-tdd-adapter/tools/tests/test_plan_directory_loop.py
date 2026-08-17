@@ -10,10 +10,18 @@ from unittest import mock
 
 TOOLS = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
+STAGE_RECOVERY_PLAN = REPOSITORY_ROOT / "execution-plans" / "2026-08-17-quick-dev-tdd-stage-recovery"
 
 
 def load(name: str):
     spec = importlib.util.spec_from_file_location(name, TOOLS / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_path(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -25,6 +33,7 @@ LIFECYCLE = load("run_slice_lifecycle")
 CONTROLLER = load("persistent_plan_loop")
 with mock.patch.dict(sys.modules, {"route_plan_directory": ROUTER}):
     DRIVER = load("loop_plan_directory")
+MIGRATION_BRIDGE = load_path("stage_recovery_migration_bridge", STAGE_RECOVERY_PLAN / "tools" / "migration_bridge.py")
 
 
 class PlanDirectoryLoopTests(unittest.TestCase):
@@ -49,6 +58,35 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 "expected_failure_ids": ["ACE-S3-EXIT"],
                 "legacy_predecessor": {"path": "logs/red.json", "sha256": "sha256:bad"},
             })
+
+    def test_plan_owned_schema_distinguishes_quick_dev_red_intent(self) -> None:
+        schema = json.loads((REPOSITORY_ROOT / ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json").read_text(encoding="utf-8"))
+        quick = schema["$defs"]["quickDevRedIntent"]
+        legacy = schema["$defs"]["legacyRedIntent"]
+        self.assertEqual(["test_selector", "expected_failure_ids"], quick["required"])
+        self.assertFalse(quick["additionalProperties"])
+        self.assertIn("command_id", legacy["required"])
+        self.assertEqual("#/$defs/quickDevRedIntent", schema["allOf"][0]["then"]["properties"]["slices"]["items"]["properties"]["tdd"]["properties"]["red"]["$ref"])
+
+    def test_migration_bridge_materializes_only_current_slice_test_before_red(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = root / "execution-plans" / "stage-recovery"
+            plan.mkdir(parents=True)
+            contract = json.loads((STAGE_RECOVERY_PLAN / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+            contract["plan_id"] = "stage-recovery"
+            (plan / "implementation-contract.v1.json").write_text(json.dumps(contract), encoding="utf-8")
+
+            run_dir = MIGRATION_BRIDGE.run_red(root, plan, "S0")
+
+            created = root / ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py"
+            handoff = json.loads((run_dir / "implementation-needed-result.json").read_text(encoding="utf-8"))
+            self.assertTrue(created.is_file())
+            self.assertFalse((root / ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_recovery.py").exists())
+            self.assertEqual("implementation-needed", handoff["predicate"])
+            self.assertNotEqual(0, handoff["observed_exit"])
+            with self.assertRaisesRegex(ValueError, "already exists"):
+                MIGRATION_BRIDGE.materialize_red_test(root, contract["slices"][0])
 
     def test_router_rejects_plan_path_outside_execution_plans(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
