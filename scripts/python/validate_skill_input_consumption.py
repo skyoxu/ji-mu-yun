@@ -18,6 +18,7 @@ from skill_input_consumption import (
     canonical_hash,
     contained_path,
     contract_hash,
+    declared_missing_plan_files,
     expand_source_graph,
     forbidden_repository_path,
     line_ranges,
@@ -397,7 +398,13 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
     ):
         raise ReceiptValidationError("receipt source role binding is invalid")
     try:
-        expected_expanded = expand_source_graph(repository_root, contract, receipt["operation"], role_values)
+        expected_expanded = expand_source_graph(
+            repository_root,
+            contract,
+            receipt["operation"],
+            role_values,
+            declared_missing_plan_files(repository_root, repository_root / receipt["target"]),
+        )
     except SkillInputError as exc:
         raise ReceiptValidationError(str(exc)) from exc
     expected_paths = {relative for _path, relative in expected_expanded}

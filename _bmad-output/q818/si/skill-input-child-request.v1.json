@@ -1,0 +1,19 @@
+{
+  "schema_version": "skill-input-child-request.v1",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "contract_hash": "sha256:fd1d5a31131eaf2b01a72edc42c2122be9851bd93b967a20759bd74274650028",
+  "source_manifest_hash": "sha256:7ee5f3ad7042470521b090ea406e6992afd3a700e10a6ba01e75e3e3ec199a69",
+  "snapshot_root": "_bmad-output/q818/si/snapshot",
+  "output_root": "_bmad-output/q818/si/output",
+  "execution_identity": "sha256:c03a8752b4c4fcdb52f5643f5400ef59d6956c132c4211fd871209ff7f2a116c",
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 1048576,
+  "input_mode": "paged-frozen-snapshot-stdin",
+  "allowed_capabilities": [
+    "read-frozen-snapshot",
+    "write-context-output"
+  ],
+  "authorizes": [],
+  "max_snapshot_chunk_bytes": 32768
+}

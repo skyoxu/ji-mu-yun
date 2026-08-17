@@ -13,7 +13,7 @@ PYTHON_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PYTHON_ROOT))
 
 from prepare_skill_input_consumption import prepare  # noqa: E402
-from skill_input_consumption import SkillInputError, canonical_hash, contained_path, redact_bytes, redaction_profile_hash, sha256_bytes, validate_contract, write_json_atomic  # noqa: E402
+from skill_input_consumption import SkillInputError, canonical_hash, contained_path, expand_source_graph, redact_bytes, redaction_profile_hash, sha256_bytes, validate_contract, write_json_atomic  # noqa: E402
 from validate_skill_input_consumption import ReceiptValidationError, _artifact, _remove_model_snapshot_payload, publish_ready, validate_receipt  # noqa: E402
 from launch_skill_input_consumer import ChildRequestError, _validate_segment_summary, create_child_request, run_semantic_child, semantic_child_execution_identity, validate_child_request  # noqa: E402
 from skill_input_gate import require_ready_skill_input  # noqa: E402
@@ -86,6 +86,51 @@ class SkillInputConsumptionTests(unittest.TestCase):
         self.assertEqual("candidate", result["status"])
         safe = (root / "run" / "snapshot" / "requirements.md").read_text(encoding="utf-8")
         self.assertNotIn("abc", safe)
+
+    def test_source_graph_allows_only_declared_missing_planned_test(self):
+        temporary, root, contract_path, _receipt, _args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        source = root / "requirements.md"
+        source.write_text("[planned](tools/tests/test_future.py)\n", encoding="utf-8")
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        contract["source_roles"]["requirements"]["reference_kinds"] = ["markdown-link"]
+        contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+        with self.assertRaisesRegex(SkillInputError, "referenced source does not exist"):
+            expand_source_graph(root, contract, "create", {"requirements": ["requirements.md"]})
+        expanded = expand_source_graph(
+            root,
+            contract,
+            "create",
+            {"requirements": ["requirements.md"]},
+            frozenset({"tools/tests/test_future.py"}),
+        )
+
+        self.assertEqual(["requirements.md"], [relative for _path, relative in expanded])
+
+    def test_opaque_reference_path_is_hashed_without_recursive_expansion(self):
+        temporary, root, contract_path, _receipt, _args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        plan = root / "plan"
+        plan.mkdir()
+        (plan / "knowledge-context.v1.json").write_text('{"path":"../large.py"}\n', encoding="utf-8")
+        (root / "large.py").write_text("x = 'unrelated'\n", encoding="utf-8")
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        contract["source_roles"] = {
+            "requirements": {
+                "selector": "requirements",
+                "required": True,
+                "root": "repository",
+                "allowed_kinds": ["directory"],
+                "reference_kinds": ["json-path-field"],
+                "opaque_reference_paths": ["knowledge-context.v1.json"],
+            }
+        }
+        contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+        expanded = expand_source_graph(root, contract, "create", {"requirements": ["plan"]})
+
+        self.assertEqual(["plan/knowledge-context.v1.json"], [relative for _path, relative in expanded])
 
     def test_legacy_v1_contract_uses_default_snapshot_budget(self):
         temporary, root, contract, receipt, args = self._fixture()

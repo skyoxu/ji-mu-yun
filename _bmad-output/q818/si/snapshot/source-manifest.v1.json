@@ -1,0 +1,135 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "sources": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "sha256": "sha256:ccda1fed815b953b9f0eed9f616b94bcd0778c5a99e582dfa87fed2c69b08ce7",
+      "semantic_snapshot_sha256": "sha256:ccda1fed815b953b9f0eed9f616b94bcd0778c5a99e582dfa87fed2c69b08ce7",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py",
+      "sha256": "sha256:cfcc7cc8ab4029712e864baa211a8b74ea3715d888f0f0c87bfb040732644dac",
+      "semantic_snapshot_sha256": "sha256:cfcc7cc8ab4029712e864baa211a8b74ea3715d888f0f0c87bfb040732644dac",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/00-index.md",
+      "sha256": "sha256:91a182444b736e0684d01b84730b6d79ee02c4788c4b5f5bab769c65d716f8f1",
+      "semantic_snapshot_sha256": "sha256:91a182444b736e0684d01b84730b6d79ee02c4788c4b5f5bab769c65d716f8f1",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/95-implementation-evolution-and-completion-report.md",
+      "sha256": "sha256:4666d33e66c8f4293ff89e25dd5eebe69d6f2b524cc7ad43271e9d7ba4392b36",
+      "semantic_snapshot_sha256": "sha256:4666d33e66c8f4293ff89e25dd5eebe69d6f2b524cc7ad43271e9d7ba4392b36",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/authority-manifest.v1.json",
+      "sha256": "sha256:038ff3a7b41eb482bbee568dafe86e3ca228d9a777f87a9f01a7f4de760274bc",
+      "semantic_snapshot_sha256": "sha256:038ff3a7b41eb482bbee568dafe86e3ca228d9a777f87a9f01a7f4de760274bc",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/command-registry.v1.json",
+      "sha256": "sha256:cdb5f574ad45db288eae85c46371c3508a1ff4dcc083a6d3cb196f8e576bffcc",
+      "semantic_snapshot_sha256": "sha256:cdb5f574ad45db288eae85c46371c3508a1ff4dcc083a6d3cb196f8e576bffcc",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/implementation-contract.v1.json",
+      "sha256": "sha256:0962f50ac29d53baa542f58f7b7dc14ec8186094af61a0a4d68b07a40d1b9923",
+      "semantic_snapshot_sha256": "sha256:0962f50ac29d53baa542f58f7b7dc14ec8186094af61a0a4d68b07a40d1b9923",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.freeze.history/56be222ad675499f6289a172a5dce5fc5230525c8aa9bf177b3c17583537d8e8.v1.json",
+      "sha256": "sha256:19ac99c71c408711b92f2d77f3c29e70c0703706e281f86e5c39bd22b8073bdf",
+      "semantic_snapshot_sha256": "sha256:19ac99c71c408711b92f2d77f3c29e70c0703706e281f86e5c39bd22b8073bdf",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.freeze.v1.json",
+      "sha256": "sha256:395dcf301b4e400d2614fbdceba964d1371dcd5d3a2ce7daaef9bb316dc223d1",
+      "semantic_snapshot_sha256": "sha256:395dcf301b4e400d2614fbdceba964d1371dcd5d3a2ce7daaef9bb316dc223d1",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.history/56be222ad675499f6289a172a5dce5fc5230525c8aa9bf177b3c17583537d8e8.v1.json",
+      "sha256": "sha256:56be222ad675499f6289a172a5dce5fc5230525c8aa9bf177b3c17583537d8e8",
+      "semantic_snapshot_sha256": "sha256:56be222ad675499f6289a172a5dce5fc5230525c8aa9bf177b3c17583537d8e8",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.v1.json",
+      "sha256": "sha256:2ab035fc321b13e690beb88edda9011475de20677904f71f32194b1684b34ff8",
+      "semantic_snapshot_sha256": "sha256:2ab035fc321b13e690beb88edda9011475de20677904f71f32194b1684b34ff8",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/plan-state.v1.json",
+      "sha256": "sha256:05a0c1181b21f05077c7a46d72830358b1a0c335452e84468f1266eee82e1ba2",
+      "semantic_snapshot_sha256": "sha256:05a0c1181b21f05077c7a46d72830358b1a0c335452e84468f1266eee82e1ba2",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/requirements-and-acceptance.md",
+      "sha256": "sha256:bb742257498cdfac233f2f1c69f6e8581a82ab44e8e530cf43b531cf1156ffe5",
+      "semantic_snapshot_sha256": "sha256:bb742257498cdfac233f2f1c69f6e8581a82ab44e8e530cf43b531cf1156ffe5",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/resume-state.v1.json",
+      "sha256": "sha256:0f59888f52dc494f36fc2112871cddd48e50d907fc53e76dd68b977c76bc1316",
+      "semantic_snapshot_sha256": "sha256:0f59888f52dc494f36fc2112871cddd48e50d907fc53e76dd68b977c76bc1316",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/migration_bridge.py",
+      "sha256": "sha256:b477af2bc3aa3060d14ef35d64c2d231bb72ae2fa90a6f230facafb5d448e7f1",
+      "semantic_snapshot_sha256": "sha256:b477af2bc3aa3060d14ef35d64c2d231bb72ae2fa90a6f230facafb5d448e7f1",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/stage_projection_builder.py",
+      "sha256": "sha256:c85b5e25e59831b874e42cd922755b895c9cefd243b8f2b04988b62951cb25b4",
+      "semantic_snapshot_sha256": "sha256:c85b5e25e59831b874e42cd922755b895c9cefd243b8f2b04988b62951cb25b4",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py",
+      "sha256": "sha256:c52f496b86d790de4caf053dd550792eb09c3de7fd094d739185eb99358c8263",
+      "semantic_snapshot_sha256": "sha256:c52f496b86d790de4caf053dd550792eb09c3de7fd094d739185eb99358c8263",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/validate_all.py",
+      "sha256": "sha256:cf88be62fa301ddc70547abb9dac9333afcece923a78e61145d559a746bf3ec2",
+      "semantic_snapshot_sha256": "sha256:cf88be62fa301ddc70547abb9dac9333afcece923a78e61145d559a746bf3ec2",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-17T11:00:45.225318Z"
+}

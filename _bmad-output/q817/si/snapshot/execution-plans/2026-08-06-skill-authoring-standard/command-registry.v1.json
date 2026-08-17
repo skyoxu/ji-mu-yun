@@ -1,0 +1,18 @@
+{
+  "schema_version": "jimuyun.skill-authoring-standard-command-registry.v1",
+  "plan_id": "skill-authoring-standard",
+  "terminal_replay_command_ids": ["standard-contract-tests", "standard-example-tests", "package-a-terminal"],
+  "commands": [
+    {"id":"plan-validator","executable":"py","argv":["-3","-B",{"type":"plan_path","value":"tools/validate_plan.py"}],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":120,"shell":false},
+    {"id":"plan-validator-tests","executable":"py","argv":["-3","-B","-m","unittest","discover","-s",{"type":"plan_path","value":"tools/tests"},"-p","test_*.py"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":180,"shell":false},
+    {"id":"slice-s0-predicate","executable":"py","argv":["-3","-B",{"type":"plan_path","value":"tools/validate_implementation.py"},"--slice","SAS-S0"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":180,"shell":false},
+    {"id":"slice-s1-predicate","executable":"py","argv":["-3","-B",{"type":"plan_path","value":"tools/validate_implementation.py"},"--slice","SAS-S1"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"slice-s2-predicate","executable":"py","argv":["-3","-B",{"type":"plan_path","value":"tools/validate_implementation.py"},"--slice","SAS-S2"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"slice-s3-predicate","executable":"py","argv":["-3","-B",{"type":"plan_path","value":"tools/validate_implementation.py"},"--slice","SAS-S3"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":600,"shell":false},
+    {"id":"standard-contract-tests","executable":"py","argv":["-3","-B","scripts/sc/tests/test_validate_skill_quality.py"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"standard-example-tests","executable":"py","argv":["-3","-B","scripts/sc/tests/test_skill_quality_examples.py"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":180,"shell":false},
+    {"id":"package-a-terminal","executable":"py","argv":["-3","-B","scripts/sc/validate_skill_quality.py","--repository-root",".","--contract","scripts/sc/config/skill-authoring-standard.v1.json","--target-root",".agents/skills"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":900,"shell":false},
+    {"id":"terminal-implementation-validation","executable":"py","argv":["-3","-B",{"type":"plan_path","value":"tools/validate_implementation.py"}],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":1200,"shell":false}
+  ],
+  "authorizes": []
+}

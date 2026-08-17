@@ -1,0 +1,15 @@
+{
+  "schema_version": "vdd.plan-state.v1",
+  "plan_id": "quick-dev-phase-regression-repair-mode",
+  "profile": "self-hosted",
+  "state": "plan-ready",
+  "state_owner": "vdd-execution-plan",
+  "slices": [
+    {"id":"RMAP-S0","status":"pending","depends_on":[]},
+    {"id":"RMAP-S1","status":"pending","depends_on":["RMAP-S0"]},
+    {"id":"RMAP-S2","status":"pending","depends_on":["RMAP-S0","RMAP-S1"]}
+  ],
+  "blocking_conditions": [],
+  "authorizes": ["plan-ready"],
+  "does_not_authorize": ["implementation-authorized","implementation-complete","acceptance-passed","commit","release","archived"]
+}

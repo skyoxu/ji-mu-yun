@@ -1,0 +1,23 @@
+import importlib.util
+from pathlib import Path
+import sys
+
+
+TOOLS = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(TOOLS))
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, TOOLS / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_staged_cutover_guard_is_available():
+    driver = _load("loop_plan_directory")
+    assert driver.staged_cutover_guard(
+        Path.cwd(),
+        Path("execution-plans/2026-08-17-quick-dev-tdd-stage-recovery"),
+    ) is True

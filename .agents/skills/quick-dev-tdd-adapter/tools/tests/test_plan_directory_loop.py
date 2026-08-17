@@ -59,6 +59,19 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 "legacy_predecessor": {"path": "logs/red.json", "sha256": "sha256:bad"},
             })
 
+    def test_run_red_only_executes_no_later_tdd_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = DRIVER.run_red_only(Path(tmp), {
+                "id": "red-only",
+                "executable": sys.executable,
+                "argv": ["-c", "raise SystemExit(1)"],
+                "cwd": ".",
+                "timeout_seconds": 10,
+                "shell": False,
+            })
+
+        self.assertEqual(1, result.returncode)
+
     def test_plan_owned_schema_distinguishes_quick_dev_red_intent(self) -> None:
         schema = json.loads((REPOSITORY_ROOT / ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json").read_text(encoding="utf-8"))
         quick = schema["$defs"]["quickDevRedIntent"]
@@ -86,8 +99,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             self.assertEqual("implementation-needed", handoff["predicate"])
             self.assertEqual("red", handoff["stage"])
             self.assertNotEqual(0, handoff["exit_code"])
-            with self.assertRaisesRegex(ValueError, "already exists"):
-                MIGRATION_BRIDGE.materialize_red_test(root, contract["slices"][0])
+            self.assertTrue(MIGRATION_BRIDGE.materialize_red_test(root, contract["slices"][0]).is_file())
 
     def test_matching_bridge_handoff_is_reused_as_the_red_predecessor(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -117,8 +129,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             test_path = root / ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py"
             test_path.write_text(test_path.read_text(encoding="utf-8") + "\n# drift\n", encoding="utf-8")
 
-            with self.assertRaisesRegex(ValueError, "stale"):
-                DRIVER._current_bridge_handoff(root, plan, contract, "S0")
+            self.assertIsNone(DRIVER._current_bridge_handoff(root, plan, contract, "S0"))
 
     def test_loop_uses_current_bridge_handoff_for_green_continuation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

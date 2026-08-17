@@ -1,0 +1,53 @@
+{
+  "schema_version": "quick-dev-tdd-stage-recovery.implementation-contract.v1",
+  "plan_id": "quick-dev-tdd-stage-recovery",
+  "profile": "self-hosted",
+  "lifecycle_state": "plan-ready",
+  "red_execution_owner": "quick-dev-tdd-adapter",
+  "adapter_bridge": {"runner": "tools/migration_bridge.py"},
+  "command_registry": "command-registry.v1.json",
+  "backend": {"hidden_state": false, "provider_scheduling": false, "subprocess_ownership": false},
+  "protocol_artifacts": {"context_layout": "context/<capsule-id>", "attempt_layout": "attempts/<attempt-id>"},
+  "authority": {"authority_manifest": "authority-manifest.v1.json"},
+  "forbidden_changes": ["PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**", "knowledge/**"],
+  "slices": [
+    {
+      "slice_id": "S0",
+      "title": "stage evidence primitive",
+      "behavior": "Persist immutable RED basis and stage summaries, then stop at implementation-needed.",
+      "requirement_ids": ["QDR-S0"], "acceptance_ids": ["QDR-S0-EXIT"], "source_refs": ["requirements-and-acceptance.md"], "depends_on": [],
+      "allowed_changes": {"production": [".agents/skills/quick-dev-tdd-adapter/tools/**"], "tests": [".agents/skills/quick-dev-tdd-adapter/tools/tests/**"], "documentation": [".agents/skills/quick-dev-tdd-adapter/SKILL.md"]},
+      "planned_new_files": [".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py"],
+      "forbidden_changes": ["PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**", "knowledge/**"],
+      "execution_read_set": ["requirements-and-acceptance.md", ".agents/skills/quick-dev-tdd-adapter/tools/**"], "dependency_closure": [".agents/skills/quick-dev-tdd-adapter/**"], "execution_snapshot_paths": ["implementation-contract.v1.json", "command-registry.v1.json"],
+      "tdd": {"red": {"test_selector": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py", "expected_failure_ids": ["QDR-S0-EXIT"]}, "green": {"command_id": "s0-green", "expected_exit": "zero"}, "refactor": {"invocations": [{"command_id": "adapter-tests", "expected_exit": "zero"}]}},
+      "post_refactor_command_id": "s0-terminal", "exit_predicate": "slice-ready", "recovery": "Resume from the RED summary; never rerun GREEN in the RED invocation."
+    },
+    {
+      "slice_id": "S1",
+      "title": "route and recovery",
+      "behavior": "Route one expensive stage per invocation and distinguish implementation successors from real contract, validator, selector, authority, or undeclared-write drift.",
+      "requirement_ids": ["QDR-S1"], "acceptance_ids": ["QDR-S1-EXIT"], "source_refs": ["requirements-and-acceptance.md"], "depends_on": ["S0"],
+      "allowed_changes": {"production": [".agents/skills/quick-dev-tdd-adapter/tools/**"], "tests": [".agents/skills/quick-dev-tdd-adapter/tools/tests/**"], "documentation": [".agents/skills/quick-dev-tdd-adapter/SKILL.md"]},
+      "planned_new_files": [".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_recovery.py"],
+      "forbidden_changes": ["PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**", "knowledge/**"],
+      "execution_read_set": ["requirements-and-acceptance.md", ".agents/skills/quick-dev-tdd-adapter/tools/**"], "dependency_closure": [".agents/skills/quick-dev-tdd-adapter/**"], "execution_snapshot_paths": ["implementation-contract.v1.json", "command-registry.v1.json"],
+      "tdd": {"red": {"test_selector": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_recovery.py", "expected_failure_ids": ["QDR-S1-EXIT"]}, "green": {"command_id": "s1-green", "expected_exit": "zero"}, "refactor": {"invocations": [{"command_id": "adapter-tests", "expected_exit": "zero"}]}},
+      "post_refactor_command_id": "s1-terminal", "exit_predicate": "slice-ready", "recovery": "Reuse only same RED lineage and semantic contract; implementation changes create a successor candidate."
+    },
+    {
+      "slice_id": "S2",
+      "title": "migration and dogfood",
+      "behavior": "Keep legacy one-shot evidence read-only, cut over to staged execution, and dogfood the 8-17 coordinator without VDD-bound RED.",
+      "requirement_ids": ["QDR-S2"], "acceptance_ids": ["QDR-S2-EXIT"], "source_refs": ["requirements-and-acceptance.md"], "depends_on": ["S0", "S1"],
+      "allowed_changes": {"production": [".agents/skills/quick-dev-tdd-adapter/**"], "tests": [".agents/skills/quick-dev-tdd-adapter/tools/tests/**"], "documentation": [".agents/skills/quick-dev-tdd-adapter/SKILL.md"]},
+      "planned_new_files": [".agents/skills/quick-dev-tdd-adapter/tools/tests/test_migration_cutover.py"],
+      "forbidden_changes": ["PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**", "knowledge/**"],
+      "execution_read_set": ["requirements-and-acceptance.md", ".agents/skills/quick-dev-tdd-adapter/**", "execution-plans/2026-08-17-acceptance-coordinator-efficiency/**"], "dependency_closure": [".agents/skills/quick-dev-tdd-adapter/**", "execution-plans/2026-08-17-acceptance-coordinator-efficiency/**"], "execution_snapshot_paths": ["implementation-contract.v1.json", "command-registry.v1.json"],
+      "tdd": {"red": {"test_selector": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_migration_cutover.py", "expected_failure_ids": ["QDR-S2-EXIT"]}, "green": {"command_id": "s2-green", "expected_exit": "zero"}, "refactor": {"invocations": [{"command_id": "adapter-tests", "expected_exit": "zero"}, {"command_id": "dogfood-8-17", "expected_exit": "zero"}]}},
+      "post_refactor_command_id": "s2-terminal", "exit_predicate": "slice-ready", "recovery": "Legacy evidence is continuity only; terminal proof must come from staged adapter plus 8-17 dogfood."
+    }
+  ],
+  "terminal": {"command_id": "terminal-full", "runner": "tools/terminal_full.py", "predicate": "implementation-complete"},
+  "authorizes": []
+}

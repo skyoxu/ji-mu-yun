@@ -1,0 +1,25 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:7ee5f3ad7042470521b090ea406e6992afd3a700e10a6ba01e75e3e3ec199a69",
+  "sections": [
+    {
+      "title": "Scope and authority",
+      "content": "The plan recovers Quick Dev TDD as resumable, evidence-gated RED, implementation, GREEN, refactor, and terminal stages. Requirements outrank the implementation contract, command registry, and plan state. The adapter accepts only explicit plan directories with valid contracts; acceptance, review, commit, release, and Bootstrap remain external. No reviewed artifact grants authorization."
+    },
+    {
+      "title": "Lifecycle requirements",
+      "content": "S0 records immutable candidate-bound RED evidence and stops at implementation-needed. S1 resumes idempotently, performs one expensive stage per invocation, preserves RED lineage across declared implementation changes, and requires successor preparation for contract, validator, selector, authority, or undeclared-write drift. Repeated failure fingerprints halt. S2 makes legacy evidence read-only, completes staged cutover, dogfoods the designated consumer, and requires distinct RED, implementation, GREEN, and refactor actions."
+    },
+    {
+      "title": "Implementation and validation",
+      "content": "The contract limits production changes to the adapter scope, declares one test per slice, and forbids protected runtime and knowledge paths. The migration bridge validates approved test templates, runs pytest-owned RED, requires a real nonzero result, and emits non-authorizing handoff evidence. Projection, candidate-identity, slice validation, adapter tests, dogfood, and terminal validation use structured hash-bound artifacts and shell-free command descriptors. Successful full terminal validation is the implementation-complete predicate."
+    },
+    {
+      "title": "Current state and knowledge",
+      "content": "The plan is plan-ready and implementation-authorized with next action run-slice, while continuity and resume records themselves authorize nothing. Frozen knowledge accepts the Quick Dev TDD adapter skill as the governing source at the recorded repository snapshot. Knowledge catalog freshness is degraded, but source freshness was refreshed; competing candidates were rejected as insufficiently specific. Complete paged coverage was supplied for every manifested source."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-17T00:00:00+08:00"
+}

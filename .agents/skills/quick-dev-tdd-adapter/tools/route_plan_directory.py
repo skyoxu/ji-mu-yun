@@ -72,6 +72,56 @@ def _sha(payload: bytes) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
+def current_red_handoff(repository_root: Path, plan_dir: Path, slice_id: str) -> dict[str, str] | None:
+    """Return the single current Quick Dev RED handoff for a slice.
+
+    The handoff is continuity evidence only: its contract, selector, expected
+    failures, and test bytes must still match the plan before it can seed a
+    GREEN continuation.
+    """
+    root, plan = repository_root.resolve(), plan_dir.resolve()
+    contract_path = plan / "implementation-contract.v1.json"
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    selected = next((item for item in contract.get("slices", []) if item.get("slice_id") == slice_id), None)
+    if not isinstance(selected, dict):
+        return None
+    red = selected.get("tdd", {}).get("red") if isinstance(selected.get("tdd"), dict) else None
+    if not isinstance(red, dict):
+        return None
+    selector = red.get("test_selector")
+    if not isinstance(selector, str):
+        return None
+    evidence_root = root / "logs" / "tdd-adapter" / str(contract.get("plan_id")) / slice_id
+    artifacts = sorted(evidence_root.glob("*/implementation-needed-result.json")) if evidence_root.is_dir() else []
+    expected_contract = _sha(contract_path.read_bytes())
+    valid: list[Path] = []
+    for artifact in artifacts:
+        try:
+            value = json.loads(artifact.read_text(encoding="utf-8"))
+            test_path = (root / selector).resolve()
+            test_path.relative_to(root)
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+            continue
+        if (
+            value.get("predicate") != "implementation-needed"
+            or value.get("status") != "pass"
+            or value.get("stage") != "red"
+            or value.get("contract_hash") != expected_contract
+            or value.get("test_selector") != selector
+            or value.get("expected_failure_ids") != red.get("expected_failure_ids")
+            or not isinstance(value.get("exit_code"), int)
+            or value["exit_code"] == 0
+            or not test_path.is_file()
+            or value.get("test_hash") != _sha(test_path.read_bytes())
+        ):
+            continue
+        valid.append(artifact)
+    if len(valid) != 1:
+        return None
+    artifact = valid[0]
+    return {"path": artifact.relative_to(root).as_posix(), "sha256": _sha(artifact.read_bytes())}
+
+
 def _head_artifact_bytes(repository_root: Path, relative: Path) -> bytes | None:
     """Read an immutable HEAD artifact for independent-slice freshness checks."""
     completed = subprocess.run(

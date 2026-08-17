@@ -1,0 +1,16 @@
+{
+  "schema_version": "vdd.plan-state.v1",
+  "plan_id": "skill-authoring-standard",
+  "profile": "self-hosted",
+  "state": "plan-ready",
+  "state_owner": "vdd-execution-plan",
+  "updated_utc": "2026-08-06T00:00:00Z",
+  "resume": {
+    "next_action": "Obtain explicit maintainer implementation authorization, then enter SAS-S0 through the strict Quick Dev TDD route.",
+    "last_completed_step": "knowledge-preflight-ready-and-plan-validated",
+    "recovery_instruction": "Read 00-index.md, requirements.v1.json, implementation-contract.v1.json, authority-manifest.v1.json, baseline-and-scope.v1.json, resume-state.v1.json, and the knowledge freeze receipt before continuing."
+  },
+  "blocking_conditions": [],
+  "authorizes": ["plan-ready"],
+  "does_not_authorize": ["implementation-authorized","implementation-complete","acceptance-passed","release","archived"]
+}

@@ -13,9 +13,11 @@ import sys
 TEST_TEMPLATES = {
     ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py": '''import importlib.util
 from pathlib import Path
+import sys
 
 
 TOOLS = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(TOOLS))
 
 
 def _load(name: str):
@@ -51,9 +53,11 @@ def test_router_recognizes_a_current_red_handoff():
 ''',
     ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_migration_cutover.py": '''import importlib.util
 from pathlib import Path
+import sys
 
 
 TOOLS = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(TOOLS))
 
 
 def _load(name: str):
@@ -66,7 +70,10 @@ def _load(name: str):
 
 def test_staged_cutover_guard_is_available():
     driver = _load("loop_plan_directory")
-    assert callable(driver.staged_cutover_guard)
+    assert driver.staged_cutover_guard(
+        Path.cwd(),
+        Path("execution-plans/2026-08-17-quick-dev-tdd-stage-recovery"),
+    ) is True
 ''',
 }
 
@@ -97,10 +104,13 @@ def materialize_red_test(root: Path, selected: dict[str, object]) -> Path:
         raise ValueError("planned test is not an approved migration bridge target")
     target = (root / relative).resolve()
     target.relative_to(root.resolve())
+    template = TEST_TEMPLATES[relative.as_posix()]
     if target.exists():
-        raise ValueError("planned RED test already exists")
+        if target.read_text(encoding="utf-8") != template:
+            raise ValueError("existing planned RED test does not match the bridge template")
+        return target
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(TEST_TEMPLATES[relative.as_posix()], encoding="utf-8", newline="\n")
+    target.write_text(template, encoding="utf-8", newline="\n")
     return target
 
 
@@ -144,14 +154,24 @@ def run_red(root: Path, plan: Path, slice_id: str) -> Path:
     return run_dir
 
 
+def materialize_only(root: Path, plan: Path, slice_id: str) -> Path:
+    _contract, selected = _load_slice(plan, slice_id)
+    return materialize_red_test(root, selected)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository-root", type=Path, required=True)
     parser.add_argument("--plan-dir", type=Path, required=True)
     parser.add_argument("--slice-id", required=True)
     parser.add_argument("--snapshot-path", action="append", required=True)
+    parser.add_argument("--materialize-only", action="store_true")
     args = parser.parse_args()
     root, plan = args.repository_root.resolve(), args.plan_dir.resolve()
+    if args.materialize_only:
+        test_path = materialize_only(root, plan, args.slice_id)
+        print(json.dumps({"test_path": str(test_path), "next_action": "prepare-skill-input", "authorizes": []}, sort_keys=True))
+        return 0
     run_dir = run_red(root, plan, args.slice_id)
     print(json.dumps({"run_dir": str(run_dir), "next_action": "implement", "authorizes": []}, sort_keys=True))
     return 0

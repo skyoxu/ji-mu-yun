@@ -61,6 +61,42 @@ def _run(arguments: list[str], *, timeout_seconds: int = HELPER_TIMEOUT_SECONDS)
         raise RuntimeError(f"lifecycle helper failed with exit code {completed.returncode}")
 
 
+def run_red_only(workspace: Path, command: dict[str, object]) -> subprocess.CompletedProcess[str]:
+    """Observe one shell-free RED command without advancing to GREEN or REFACTOR."""
+    required = {"id", "executable", "argv", "cwd", "timeout_seconds", "shell"}
+    if (
+        set(command) != required
+        or command.get("shell") is not False
+        or command.get("cwd") != "."
+        or not isinstance(command.get("executable"), str)
+        or not isinstance(command.get("argv"), list)
+        or any(not isinstance(item, str) for item in command["argv"])
+        or not isinstance(command.get("timeout_seconds"), int)
+        or command["timeout_seconds"] <= 0
+    ):
+        raise ValueError("RED command must be a structured shell-free descriptor")
+    completed = subprocess.run(
+        [command["executable"], *command["argv"]],
+        cwd=workspace,
+        shell=False,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=command["timeout_seconds"],
+    )
+    if completed.returncode == 0:
+        raise RuntimeError("RED command unexpectedly passed")
+    return completed
+
+
+def staged_cutover_guard(repository_root: Path, plan_dir: Path) -> bool:
+    """Read-only predicate for the staged adapter cutover boundary."""
+    tools = Path(__file__).resolve().parent
+    required = (tools / "stage_lifecycle_runner.py", tools / "run_slice_lifecycle.py")
+    return all(path.is_file() for path in required) and (plan_dir / "implementation-contract.v1.json").is_file()
+
+
 def _lifecycle_timeout_seconds(invocation: Path) -> int:
     descriptors: list[dict[str, object]] = []
     for name in ("preparation-commands.json", "refactor-commands.json"):
@@ -113,6 +149,7 @@ def _current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object],
         return None
     contract_hash = _sha(plan / "implementation-contract.v1.json")
     valid: list[Path] = []
+    stale = False
     for artifact in artifacts:
         try:
             handoff = json.loads(artifact.read_text(encoding="utf-8"))
@@ -140,10 +177,15 @@ def _current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object],
             or not test_path.is_file()
             or handoff.get("test_hash") != _sha(test_path)
         ):
-            raise ValueError("migration RED handoff is stale or does not match the current slice")
+            stale = True
+            continue
         valid.append(artifact)
     if len(valid) != 1:
-        raise ValueError("migration RED handoff is ambiguous")
+        if valid:
+            raise ValueError("migration RED handoff is ambiguous")
+        if stale:
+            return None
+        raise ValueError("migration RED handoff is invalid")
     artifact = valid[0]
     return {"path": artifact.relative_to(root).as_posix(), "sha256": _sha(artifact)}
 

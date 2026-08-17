@@ -57,28 +57,34 @@ def _legacy_predecessor(repository_root: Path, red: dict[str, Any]) -> dict[str,
 def _load_candidate_identity(plan: Path, slice_id: str) -> dict[str, str]:
     helper = plan / "tools" / "validate_all.py"
     plan_tools = str(helper.parent)
-    if plan_tools not in sys.path:
-        sys.path.insert(0, plan_tools)
-    # Plan validators commonly have generic helper names.  Do not let a
-    # currently loaded Skill helper with the same name cross the ownership
-    # boundary while importing the plan-local validator.
-    shadowed: dict[str, object] = {}
-    for name in ("protocol_guards", "fixture_checks", "rmap_checks"):
-        loaded = sys.modules.get(name)
-        loaded_path = getattr(loaded, "__file__", None)
-        if loaded is not None and loaded_path and Path(loaded_path).resolve().parent != helper.parent.resolve():
-            shadowed[name] = loaded
-            del sys.modules[name]
+    # Plan validators use repository-local, generic helper module names. Load
+    # their complete sibling set in an isolated import transaction so a Skill
+    # helper cannot be selected accidentally, then restore the caller's module
+    # namespace before returning the identity.
+    sibling_modules = (
+        "validate_all", "contract_guards", "fixture_checks",
+        "candidate_diff_guards", "protocol_guards", "evidence_guards",
+        "isolated_test_repository", "slice_guards",
+        "validation_result_guards", "slice_freshness", "rmap_checks",
+    )
+    original_path = list(sys.path)
+    prior_modules = {name: sys.modules.get(name) for name in sibling_modules}
     try:
+        sys.path.insert(0, plan_tools)
+        for name in sibling_modules:
+            sys.modules.pop(name, None)
         spec = importlib.util.spec_from_file_location("plan_candidate_identity", helper)
         if spec is None or spec.loader is None:
             raise RuntimeError("plan-local candidate identity helper is unavailable")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
+        identity = module.current_candidate_identity(slice_id)
     finally:
-        for name, loaded in shadowed.items():
-            sys.modules[name] = loaded
-    identity = module.current_candidate_identity(slice_id)
+        sys.path[:] = original_path
+        for name in sibling_modules:
+            sys.modules.pop(name, None)
+            if prior_modules[name] is not None:
+                sys.modules[name] = prior_modules[name]
     if not isinstance(identity, dict) or not isinstance(identity.get("validator_hash"), str):
         raise ValueError("plan-local candidate identity is invalid")
     return identity

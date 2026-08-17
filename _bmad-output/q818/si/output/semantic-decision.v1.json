@@ -1,0 +1,36 @@
+{
+  "schema_version": "skill-semantic-decision.v1",
+  "producer_role": "controlled-semantic-skill-input-consumer",
+  "execution_identity": "sha256:c03a8752b4c4fcdb52f5643f5400ef59d6956c132c4211fd871209ff7f2a116c",
+  "source_manifest_hash": "sha256:7ee5f3ad7042470521b090ea406e6992afd3a700e10a6ba01e75e3e3ec199a69",
+  "context_artifact_hash": "sha256:fffd324e1894a5134e10e3266522654811d348233cb7d33e049102d478265edd",
+  "source_statuses": {
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md": "accepted",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/00-index.md": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/95-implementation-evolution-and-completion-report.md": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/authority-manifest.v1.json": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/command-registry.v1.json": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/implementation-contract.v1.json": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.freeze.history/56be222ad675499f6289a172a5dce5fc5230525c8aa9bf177b3c17583537d8e8.v1.json": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.freeze.v1.json": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.history/56be222ad675499f6289a172a5dce5fc5230525c8aa9bf177b3c17583537d8e8.v1.json": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.v1.json": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/plan-state.v1.json": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/requirements-and-acceptance.md": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/resume-state.v1.json": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/migration_bridge.py": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/stage_projection_builder.py": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py": "accepted",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/validate_all.py": "accepted"
+  },
+  "status": "accepted",
+  "rationale": "All manifested sources have complete paged coverage and mutually coherent bounded summaries sufficient for semantic routing; degraded catalog freshness does not invalidate the refreshed accepted governing source.",
+  "redaction_status": "complete",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "authorizes": [],
+  "snapshot_read_coverage": {
+    "path": "snapshot-read-coverage.v1.json",
+    "sha256": "sha256:e78b80d2df63a1e4d6cbafff1466506639d18ae38a3bce77b57eaf86c9248e5b"
+  }
+}

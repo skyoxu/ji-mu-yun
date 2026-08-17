@@ -180,6 +180,33 @@ def contained_path(repository_root: Path, raw_path: str, *, must_exist: bool = T
     return resolved, relative
 
 
+def declared_missing_plan_files(repository_root: Path, target: Path) -> frozenset[str]:
+    """Return missing bridge-created test paths explicitly declared by the target plan."""
+    contract_path = target / "implementation-contract.v1.json" if target.is_dir() else target
+    if contract_path.name != "implementation-contract.v1.json" or not contract_path.is_file():
+        return frozenset()
+    contract = read_json(contract_path)
+    if not isinstance(contract, dict) or not isinstance(contract.get("slices"), list):
+        return frozenset()
+    allowed: set[str] = set()
+    for slice_item in contract["slices"]:
+        if not isinstance(slice_item, dict):
+            continue
+        planned = slice_item.get("planned_new_files", [])
+        if not isinstance(planned, list):
+            raise SkillInputError("planned_new_files must be an array")
+        for raw_path in planned:
+            if not isinstance(raw_path, str) or not raw_path:
+                raise SkillInputError("planned_new_files contains an invalid path")
+            resolved, relative = contained_path(repository_root, raw_path, must_exist=False)
+            if resolved.exists():
+                continue
+            if not relative.endswith(".py") or "/tests/" not in relative:
+                raise SkillInputError("only planned test files may be absent from Skill input")
+            allowed.add(relative)
+    return frozenset(allowed)
+
+
 def _git(repository_root: Path, *args: str) -> str:
     result = subprocess.run(
         ["git", "-C", str(repository_root), *args],
@@ -314,7 +341,8 @@ def validate_contract(contract: dict[str, Any], repository_root: Path) -> None:
     for role_name, role in source_roles.items():
         if not isinstance(role_name, str) or not role_name or not isinstance(role, dict):
             raise SkillInputError("contract source role is invalid")
-        if set(role) != {"selector", "required", "root", "allowed_kinds", "reference_kinds"}:
+        allowed_role_fields = {"selector", "required", "root", "allowed_kinds", "reference_kinds", "opaque_reference_paths"}
+        if not set(role).issubset(allowed_role_fields) or not {"selector", "required", "root", "allowed_kinds", "reference_kinds"}.issubset(role):
             raise SkillInputError(f"contract source role fields are invalid: {role_name}")
         if not isinstance(role["selector"], str) or not SELECTOR_PATTERN.fullmatch(role["selector"]):
             raise SkillInputError(f"contract source role selector is invalid: {role_name}")
@@ -326,6 +354,13 @@ def validate_contract(contract: dict[str, Any], repository_root: Path) -> None:
                 if field == "reference_kinds" and values == []:
                     continue
                 raise SkillInputError(f"contract source role {field} is invalid: {role_name}")
+        opaque = role.get("opaque_reference_paths", [])
+        if (
+            not isinstance(opaque, list)
+            or any(not isinstance(item, str) or not item or Path(item).is_absolute() or ".." in Path(item).parts for item in opaque)
+            or len(set(opaque)) != len(opaque)
+        ):
+            raise SkillInputError(f"contract source role opaque_reference_paths is invalid: {role_name}")
     for operation_name, operation in operations.items():
         if operation_name not in {"create", "repair", "review", "execute", "acceptance"} or not isinstance(operation, dict) or set(operation) != {"required_inputs"}:
             raise SkillInputError(f"contract operation is invalid: {operation_name}")
@@ -554,6 +589,7 @@ def _resolve_reference(
     source: Path,
     raw_reference: str,
     reference_root: Path,
+    allowed_missing_references: frozenset[str] = frozenset(),
 ) -> tuple[Path, str] | None:
     reference = raw_reference.strip().strip("<>")
     if not reference or reference.startswith("#"):
@@ -589,6 +625,13 @@ def _resolve_reference(
         if forbidden_repository_path(relative):
             raise SkillInputError(f"forbidden reference path: {relative}")
         return resolved, relative
+    for candidate in dict.fromkeys(candidates):
+        try:
+            _resolved, relative = contained_path(repository_root, candidate, must_exist=False)
+        except SkillInputError:
+            continue
+        if relative in allowed_missing_references:
+            return None
     if not (
         target_text.startswith(".")
         or "/" in target_text
@@ -604,6 +647,7 @@ def expand_source_graph(
     contract: dict[str, Any],
     operation: str,
     role_values: dict[str, list[str]],
+    allowed_missing_references: frozenset[str] = frozenset(),
 ) -> list[tuple[Path, str]]:
     """Expand explicit role roots and their declared in-boundary references."""
     validate_contract(contract, repository_root)
@@ -613,7 +657,7 @@ def expand_source_graph(
     if any(role not in role_values for role in required_roles):
         missing = sorted(set(required_roles) - set(role_values))
         raise SkillInputError(f"required source role is missing: {missing}")
-    queue: list[tuple[Path, int, frozenset[str], set[str], Path, str | None]] = []
+    queue: list[tuple[Path, int, frozenset[str], set[str], Path, str | None, frozenset[str]]] = []
     for role_name, raw_paths in role_values.items():
         role = contract["source_roles"].get(role_name)
         if not isinstance(role, dict) or not isinstance(raw_paths, list) or not raw_paths:
@@ -627,11 +671,20 @@ def expand_source_graph(
             if kind not in role["allowed_kinds"]:
                 raise SkillInputError(f"source kind is not allowed for role: {role_name}")
             reference_root = root_path if root_path.is_dir() else root_path.parent
-            queue.append((root_path, 0, frozenset(), set(role["reference_kinds"]), reference_root, None))
+            opaque_paths: set[str] = set()
+            for raw_path in role.get("opaque_reference_paths", []):
+                opaque_path = (reference_root / raw_path).resolve()
+                try:
+                    opaque_relative = opaque_path.relative_to(repository_root.resolve()).as_posix()
+                    opaque_path.relative_to(reference_root.resolve())
+                except ValueError as exc:
+                    raise SkillInputError("opaque reference path escapes its source root") from exc
+                opaque_paths.add(opaque_relative)
+            queue.append((root_path, 0, frozenset(), set(role["reference_kinds"]), reference_root, None, frozenset(opaque_paths)))
     expanded: list[tuple[Path, str]] = []
     seen: set[str] = set()
     while queue:
-        candidate_root, depth, ancestors, reference_kinds, reference_root, referrer = queue.pop(0)
+        candidate_root, depth, ancestors, reference_kinds, reference_root, referrer, opaque_paths = queue.pop(0)
         candidates = [candidate_root] if candidate_root.is_file() else sorted(item for item in candidate_root.rglob("*") if item.is_file())
         for candidate in candidates:
             if is_reparse_point(candidate):
@@ -651,6 +704,8 @@ def expand_source_graph(
                 expanded.append((candidate.resolve(), relative))
                 if len(expanded) > contract["max_sources"]:
                     raise SkillInputError("source count exceeds contract max_sources")
+            if relative in opaque_paths or any(relative.startswith(prefix + "/") for prefix in opaque_paths):
+                continue
             if not reference_kinds:
                 continue
             if depth >= contract["max_reference_depth"]:
@@ -659,14 +714,20 @@ def expand_source_graph(
                     raise SkillInputError("reference depth exceeds contract max_reference_depth")
                 continue
             for raw_reference in _reference_values(candidate, reference_kinds):
-                resolved, _ = _resolve_reference(repository_root, candidate, raw_reference, reference_root) or (None, None)
+                resolved, _ = _resolve_reference(
+                    repository_root,
+                    candidate,
+                    raw_reference,
+                    reference_root,
+                    allowed_missing_references,
+                ) or (None, None)
                 if resolved is None:
                     continue
                 next_ancestors = frozenset(set(ancestors) | {relative})
                 resolved_path = resolved.resolve()
                 inside_reference_root = resolved_path == reference_root or reference_root in resolved_path.parents
                 next_reference_kinds = set(reference_kinds) if inside_reference_root else set()
-                queue.append((resolved_path, depth + 1, next_ancestors, next_reference_kinds, reference_root, relative))
+                queue.append((resolved_path, depth + 1, next_ancestors, next_reference_kinds, reference_root, relative, opaque_paths))
     if not expanded:
         raise SkillInputError("no source files were discovered")
     return sorted(expanded, key=lambda item: item[1])

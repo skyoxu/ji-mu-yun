@@ -74,6 +74,11 @@
           "type": "array",
           "uniqueItems": true,
           "items": {"enum": ["markdown-link", "json-path-field"]}
+        },
+        "opaque_reference_paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
         }
       }
     },

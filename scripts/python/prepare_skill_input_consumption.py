@@ -14,6 +14,7 @@ from skill_input_consumption import (
     canonical_hash,
     contained_path,
     contract_hash,
+    declared_missing_plan_files,
     expand_source_graph,
     line_ranges,
     now_utc,
@@ -159,7 +160,14 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
                 )
         if len(normalized_role_values[role_name]) != len(set(normalized_role_values[role_name])):
             raise SkillInputError(f"source role contains duplicate canonical paths: {role_name}")
-    expanded = expand_source_graph(repository_root, contract, args.operation, normalized_role_values)
+    allowed_missing = declared_missing_plan_files(repository_root, target_path)
+    expanded = expand_source_graph(
+        repository_root,
+        contract,
+        args.operation,
+        normalized_role_values,
+        allowed_missing,
+    )
     required_roots: list[Path] = []
     required_role_names = set(required_roles)
     for role_name in required_role_names:
