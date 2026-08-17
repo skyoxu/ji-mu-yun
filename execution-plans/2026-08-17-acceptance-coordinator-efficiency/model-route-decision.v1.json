@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "jimuyun.workflow-model-route-decision.v1",
+  "decisionId": "sha256:57429bf8d88e0a6f1186ff36f7743bb5b7a3a62c0fe3d74ca1d0a144bd77e79d",
+  "consumer": "vdd",
+  "classification": "self-hosted",
+  "routeId": "vdd.self_hosted",
+  "requestedExecution": {"backend": "codex-cli", "model": "gpt-5.6-sol", "effort": "high", "sandbox": "workspace-write", "launchMode": "child"},
+  "rolloutMode": "observe_only",
+  "status": "observe_only",
+  "authorizes": []
+}

@@ -1,0 +1,9 @@
+{
+  "schema_version": "acceptance-coordinator-efficiency.resume-state.v1",
+  "plan_id": "acceptance-coordinator-efficiency",
+  "profile": "self-hosted",
+  "current_slice": "S0",
+  "completed_slices": [],
+  "next_action": "resume-skill-input-semantic-child",
+  "authorizes": []
+}

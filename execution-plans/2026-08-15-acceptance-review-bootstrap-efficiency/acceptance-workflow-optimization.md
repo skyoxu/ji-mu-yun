@@ -65,7 +65,12 @@ Projection bundle 可能保留旧 context 路径，而调用者在 `prepare-run`
 
 修复要求：projector 在发布 bundle 时绑定当前 context；`prepare-run` 只能消费 bundle 中的 context 引用；context 发生 successor refresh 时必须生成新的 bundle 和新的 derived run，不允许调用者替换字段。
 
-当前 `prepare_knowledge_context.py` 尚未实现这条自动 successor 路径：它仍会把 `failure_code` 统一转换为 blocked maintenance route。底层 `allow_stale_catalog=true` 只提供容忍 primitive，不能代替 Acceptance-owned refresh。
+当前 Acceptance-owned knowledge context 已支持以下 refresh primitive：
+
+- `catalog_stale` 的 `degraded` continuation；
+- selected read-set source bytes 变化后的受控 refresh/rehash。
+
+剩余缺口不是 knowledge refresh primitive，而是 projection bundle、`prepare-run` 与 coordinator 尚未把 successor context 收敛为唯一 authority；它们仍可能要求调用者人工重新拼装或替换 context。
 
 目标行为固定为：
 
@@ -156,7 +161,8 @@ resolve target
 ### 阶段一：先消除错误硬阻断
 
 - deterministic_only 移除 semantic child 强制依赖；
-- 利用现有 stale-tolerance primitive，增加 Acceptance-owned successor-context refresh；
+- 将现有 Acceptance-owned successor-context refresh 接入 coordinator 与 bundle 单一 authority；
+- `catalog_stale` / source-byte refresh 不再产生人工重新拼装步骤；
 - 修复 implementation target 的安全 source projection；
 - 修复 bundle/context 单一 authority。
 

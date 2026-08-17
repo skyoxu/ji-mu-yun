@@ -60,6 +60,10 @@
     {
       "plan_directory": "2026-08-15-acceptance-review-bootstrap-efficiency",
       "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-08-17-acceptance-coordinator-efficiency",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
     }
   ]
 }

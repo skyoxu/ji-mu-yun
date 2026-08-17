@@ -1,0 +1,15 @@
+{
+  "schema_version": "acceptance-coordinator-efficiency.baseline-and-scope.v1",
+  "baseline_commit": "3a83b807c56926b7b89a5208ba4fa310c7a8fa28",
+  "scope": [
+    ".agents/skills/quick-dev-tdd-adapter/**",
+    ".agents/skills/run-refactor-implementation-acceptance/**",
+    "scripts/python/knowledge_context_validation.py"
+  ],
+  "source_inputs": [
+    {"path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/acceptance-workflow-optimization.md", "sha256": "sha256:35fdac11d23fd47a04de078be605261705b9bde2e10200b8098dee3d726371fe"},
+    {"path": "AGENTS.md", "sha256": "sha256:4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8"}
+  ],
+  "historical_evidence": "read-only provenance; excluded from candidate identity",
+  "authorizes": []
+}
