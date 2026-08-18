@@ -14,6 +14,7 @@ the 2026-08-17 historical plans.
 - W4: immutable receipt generation and canonical current pointer.
 - W5: leased attempts, retention protection, and approval-gated garbage
   collection.
+- W6: end-to-end migration verification across W0-W5.
 
 ## Explicit Non-goals
 

@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 PLAN_ID = "toolchain-workflow-repair"
-SLICES = {"W0", "W1", "W2", "W3", "W4", "W5"}
+SLICES = {"W0", "W1", "W2", "W3", "W4", "W5", "W6"}
 REQUIRED_FILES = {
     "requirements-and-acceptance.md",
     "implementation-contract.v1.json",
@@ -83,7 +83,7 @@ def main() -> int:
                     failures.append("contract-tdd-intent-invalid")
                     break
             command_ids = {item.get("id") for item in registry.get("commands", []) if isinstance(item, dict)}
-            required_commands = {"plan-ready", "terminal-full", *(f"w{index}-green" for index in range(6))}
+            required_commands = {"plan-ready", "terminal-full", *(f"w{index}-green" for index in range(7))}
             if not required_commands.issubset(command_ids):
                 failures.append("command-registry-incomplete")
             if not authority.get("authority_sources") or not authority.get("candidate_inputs") or not authority.get("lifecycle_projections"):

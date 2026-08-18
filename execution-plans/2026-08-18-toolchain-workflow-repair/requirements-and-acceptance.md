@@ -85,6 +85,18 @@ Acceptance `TWR-W5-EXIT`: protected generations are retained, expired
 unreferenced attempts are reported deterministically, and any applied cleanup
 records candidates, protected objects, reasons, bytes, and predecessor commit.
 
+## W6 / TWR-W6: End-To-End Workflow Migration
+
+An end-to-end test must prove the implemented workflow from typed source
+selection through transport, adapter-observed coverage, Knowledge gates,
+immutable generation/current-pointer publication, and retention protection.
+It must remain non-authorizing: it neither publishes Knowledge authority nor
+changes lifecycle state.
+
+Acceptance `TWR-W6-EXIT`: a controlled test generation resolves through the
+single current pointer, passes all deterministic gates, and is protected by
+retention; an invalid intermediate artifact cannot advance the pointer.
+
 ## Ownership
 
 VDD owns draft and plan-ready. Maintainer owns implementation authorization.
