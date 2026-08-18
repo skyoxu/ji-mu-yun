@@ -1,6 +1,6 @@
 # Toolchain Workflow Repair
 
-This draft plan owns the workflow-level repairs identified during the
+This plan owns the workflow-level repairs identified during the
 acceptance-coordinator trust review. It is separate from the
 `acceptance-coordinator-trust-recovery` implementation plan and does not alter
 the 2026-08-17 historical plans.
@@ -21,5 +21,7 @@ the 2026-08-17 historical plans.
 - No Bootstrap startup or lifecycle publication.
 - No changes to Phase runtime or user-sandbox state.
 
-The plan remains `draft` until its VDD plan-ready validator and repair closure
-pass. Maintainer authorization is required only before implementation.
+The plan is currently `plan-ready`, after its VDD-owned plan validation and
+publication receipts passed. Maintainer authorization is required only before
+implementation; this plan does not authorize implementation, Knowledge
+publication, Bootstrap, or acceptance.
