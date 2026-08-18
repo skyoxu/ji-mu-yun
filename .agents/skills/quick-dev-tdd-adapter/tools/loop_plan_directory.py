@@ -416,22 +416,38 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
         if "protocol artifact conflicts" not in str(exc):
             raise
         successor = run_dir.parent / f"{run_dir.name}-SUCCESSOR"
-        if successor.exists():
-            raise
-        successor.mkdir(parents=True)
         observation_refs = []
         for stage in ("red", "green", "refactor"):
             source = observation_sources[stage] / "observations" / f"{stage}-observed.json"
             if not source.is_file():
                 raise RuntimeError("terminal successor requires complete lifecycle observations")
             observation_refs.append({"stage": stage, "path": source.relative_to(root).as_posix(), "sha256": _sha(source)})
-        (successor / "successor-lineage.v1.json").write_text(json.dumps({
+        lineage = {
             "schema_version": "quick-dev-tdd-adapter.successor-lineage.v1",
             "predecessor_run": run_dir.relative_to(root).as_posix(),
             "predecessor_observations": observation_refs,
             "next_transition": "slice-terminal",
             "authorizes": [],
-        }, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+        }
+        lineage_path = successor / "successor-lineage.v1.json"
+        encoded_lineage = json.dumps(lineage, indent=2, sort_keys=True) + "\n"
+        if successor.exists():
+            if not successor.is_dir() or successor.is_symlink():
+                raise RuntimeError("terminal successor identity is invalid")
+            if lineage_path.is_file():
+                if lineage_path.read_text(encoding="utf-8") != encoded_lineage:
+                    raise RuntimeError("terminal successor identity conflicts")
+            elif any(successor.iterdir()):
+                raise RuntimeError("terminal successor reservation is incomplete")
+            else:
+                lineage_path.write_text(encoded_lineage, encoding="utf-8", newline="\n")
+        else:
+            successor.mkdir(parents=True)
+            try:
+                with lineage_path.open("x", encoding="utf-8", newline="\n") as stream:
+                    stream.write(encoded_lineage)
+            except FileExistsError as identity_error:
+                raise RuntimeError("terminal successor identity conflicts") from identity_error
         run_dir = successor
         context["run_id"] = run_dir.name
         for core in context["stage_results"].values():

@@ -1,0 +1,13 @@
+{
+  "schema_version": "jimuyun.knowledge-maintenance-request.v1",
+  "request_id": "ACR-20260818-knowledge-refresh",
+  "skill_id": "maintain-knowledge-base",
+  "mode": "existing-only",
+  "target": {"kind": "none"},
+  "discovery_policy": "existing-entries-only",
+  "knowledge_snapshot_id": "catalog-current",
+  "authority": {"authority_ref": "refs/heads/main", "main_commit": "3c285bcc29d97a86dab837bffb58fd201045ae12", "implicit_fetch": false, "dirty_worktree_authority": false},
+  "source_write_policy": "forbidden",
+  "log_root": "logs/knowledge-context",
+  "append_only_log": true
+}

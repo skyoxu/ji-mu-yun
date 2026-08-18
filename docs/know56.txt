@@ -1,0 +1,427 @@
+三、你提出的路径基本正确，但需要四个修正
+修正 1：不是任意“重新运行 Locator”，而是 replay frozen selection
+
+自动 successor 不应允许 Locator 根据新排名重新选择候选。
+
+正确顺序是：
+
+从当前已发布的有效 LKG catalog 重放原 Locator request；
+使用相同 consumer、policy revision、required modules；
+原 accepted path/module/resource-set 作为冻结约束；
+重新读取这些路径的当前源码；
+重算 read-set source hashes；
+验证 selection 投影完全不变；
+生成 successor context。
+
+自动路径只允许：
+
+同 path
++ 同 module ID
++ 同 satisfies
++ 同 resource-set
++ 同 consumer
++ 同四维 Knowledge scope
++ 不同 source hashes
+
+如果重新运行 Locator 后排名变化，但旧 selection 仍然存在且满足约束，可以继续使用旧 selection。
+
+如果旧 selection 已经不存在或不能满足 required modules，进入 typed repair，不能自动接受新候选。
+
+修正 2：必须验证使用的是有效 LKG，不是失败的 staging catalog
+
+查询评估失败时：
+
+失败的 staging generation 不得被执行路径读取；
+current.json 和 last-known-good.json 不推进；
+Locator 继续使用此前验证成功的 published/LKG catalog；
+再用当前源码字节重新绑定 selected read-set。
+
+因此执行允许条件应是：
+
+valid published/LKG catalog
+AND selection stable
+AND authority stable
+AND required modules satisfied
+AND current selected read-set fully readable and rehashed
+
+不能把：
+
+catalog_publication_invalid
+pointer/manifest 损坏
+policy/projection 不一致
+LKG 非当前 main 的祖先
+LKG 输入被篡改
+
+也归类为普通 catalog_stale。
+
+这些仍然必须 hard blocked。
+
+修正 3：同一 path 不代表 authority 没变
+
+这是原方案最需要补强的地方。
+
+假设 selection 仍然选择：
+
+docs/adr/ADR-0048-...
+
+但 ADR 内容被修改了，那么：
+
+selection path 没变；
+module ID 没变；
+knowledgeSelectionHash 可能没变；
+但 authority semantics 已经变化。
+
+因此必须把 source 分成至少两类：
+
+普通执行上下文源
+
+例如：
+
+普通生产代码；
+非权威说明文档；
+实现细节；
+-普通测试代码。
+
+这类同 selection 字节变化可以生成 successor 并继续。
+
+Authority-bearing source
+
+至少包括：
+
+AGENTS.md
+Accepted ADR
+implementation contract
+authority manifest
+command registry
+-测试身份/测试选择器
+Skill contract
+Knowledge consumer policy
+projection policy
+publication policy
+-安全和 protected-path 规则
+
+这类文件即使 path/module 不变，只要内容变化，也应：
+
+使原 authorization 失效；或
+进入 typed authority repair；
+不得仅靠 context successor 自动穿透。
+
+你已经在硬阻断列表里包含 policy、contract、command/test identity，建议再明确加入：
+
+authority-bearing selected source bytes changed
+修正 4：“机器验收继续”必须有范围条件
+
+查询质量失败不应该阻塞普通业务实现的机器验收，这一点正确。
+
+但不能普遍适用于 Knowledge 系统自身的改动。
+
+可以 degraded Acceptance 的情况
+改动目标与 Knowledge Locator/catalog/evaluator/publisher 无关；
+required modules 全部满足；
+selected read-set 当前字节已经重新绑定；
+authority envelope 没有变化；
+Acceptance 的实际检查不依赖失败的查询行为；
+protected-path/model routing 没有要求 semantic review。
+不能仅用 degraded Acceptance 的情况
+修改 Locator 排名算法；
+修改 query evaluator；
+修改 publication gate；
+修改 Knowledge policies/projections；
+修改 catalog builder；
+修改 TOOL-006 本身或其对应的检索合同；
+-当前 Acceptance 的目标就是证明 Knowledge 查询质量。
+
+否则会形成：
+
+Knowledge 查询质量坏了
+→ 使用“查询质量失败不阻塞”规则
+→ Knowledge 系统自己验收自己通过
+
+这属于自我豁免。
+
+这类变更至少需要独立 semantic review，且 Knowledge publication 仍必须等 query gate 修复后才能完成。
+
+四、推荐的正式状态模型
+
+不要把所有状态塞进一个枚举。建议采用正交状态轴。
+
+{
+  "knowledgeFreshness": "degraded",
+  "contextStatus": "successor-refreshed",
+  "selectionStatus": "stable",
+  "authorityStatus": "validated",
+  "queryQualityStatus": "failed",
+  "publicationStatus": "blocked",
+  "executionDisposition": "continue",
+  "degradationReasons": [
+    "catalog-stale",
+    "query-evaluation-gate-failed",
+    "selected-read-set-rehashed"
+  ],
+  "authorizes": []
+}
+
+建议取值：
+
+状态轴	取值
+knowledgeFreshness	current / degraded / invalid
+contextStatus	original / successor-refreshed / repair-required
+selectionStatus	stable / drifted / unverifiable
+authorityStatus	validated / drifted / ambiguous
+queryQualityStatus	passed / failed / unknown
+publicationStatus	current / blocked / not-requested
+executionDisposition	continue / semantic-review-required / typed-repair / blocked
+
+由此得到清晰矩阵：
+
+条件	执行	验收	Knowledge 发布
+current + validated	继续	正常	可申请发布
+stale + successor rebuilt	继续，degraded	普通目标可继续	不自动发布
+query quality failed + LKG 有效	继续，degraded	非 Knowledge 目标可继续	阻断
+selection drift	typed repair	阻断	阻断
+authority drift/ambiguity	hard blocked	阻断	阻断
+source missing/unreadable	hard blocked	阻断	阻断
+publication/LKG 完整性损坏	hard blocked	阻断	恢复 LKG
+Knowledge 系统自修改且 query failed	可实现	semantic review/terminal blocked	阻断
+五、两个哈希必须分开，但建议再显式绑定 authority
+
+你的两个哈希方向正确。
+
+knowledgeSelectionHash
+
+应该覆盖：
+
+consumer；
+query semantics；
+required modules；
+accepted module IDs；
+accepted paths；
+satisfies 映射；
+resource-set 路径集合；
+Domain；
+Visibility；
+Lifecycle Instance；
+Enforcement Level；
+path policy；
+authority scope；
+consumer policy revision。
+
+不包含源码字节 hash。
+
+knowledgeContextHash
+
+应该覆盖：
+
+knowledgeSelectionHash；
+每个 selected/read-set source 的当前 hash；
+Locator result hash；
+source refresh predecessor；
+catalog/LKG generation；
+freshness状态；
+query-quality report reference；
+-完整 successor lineage。
+建议增加 knowledgeAuthorityEnvelopeHash
+
+虽然可以把 authority 全塞入 selection hash，但你的仓库权责较复杂，最好再显式计算：
+
+knowledgeAuthorityEnvelopeHash
+
+覆盖：
+
+Accepted ADR 集；
+AGENTS 路由；
+policy revision；
+consumer ceiling；
+enforcement level；
+publication authority；
+producer identity；
+-允许的 successor 类型。
+
+Maintainer authorization 建议绑定：
+
+implementationContractHash
+authorityManifestHash
+knowledgeSelectionHash
+knowledgeAuthorityEnvelopeHash
+
+具体 run 再绑定：
+
+knowledgeContextHash
+knowledgeSuccessorChainHash
+skillInputReceiptHash
+
+这样同 selection 的普通源码更新：
+
+knowledgeContextHash 变化；
+base Maintainer authorization 仍有效；
+run 创建 binding-derived successor。
+
+但 selection、authority、contract、command/test 任一变化：
+
+base authorization 失效；
+必须重新授权。
+六、successor receipt 应该长什么样
+
+建议生成独立的连续性证明：
+
+{
+  "schemaVersion": "knowledge-context-successor-receipt.v1",
+  "reason": "same-selection-source-refresh",
+  "predecessorContextHash": "sha256:...",
+  "successorContextHash": "sha256:...",
+  "knowledgeSelectionHash": "sha256:...",
+  "knowledgeAuthorityEnvelopeHash": "sha256:...",
+  "catalogGeneration": {
+    "status": "last-known-good",
+    "manifestHash": "sha256:..."
+  },
+  "sourceChanges": [
+    {
+      "path": "...",
+      "previousHash": "sha256:...",
+      "currentHash": "sha256:...",
+      "sourceRole": "execution-context"
+    }
+  ],
+  "selectionUnchanged": true,
+  "authorityUnchanged": true,
+  "publicationAuthorized": false,
+  "producer": "vdd-execution-plan",
+  "authorizes": []
+}
+
+注意：
+
+Quick Dev 不能自行声明 selectionUnchanged=true；
+必须由 VDD/Knowledge canonical validator 计算；
+Quick Dev 只消费 receipt；
+receipt 不授权 Knowledge publication；
+successor chain 断裂就阻断。
+七、TOOL-006 应如何处理
+
+当前 repository-knowledge-query-suite.v1.json 中 TOOL-006 期望：
+
+immutable Slice Capsule
+expected nonzero failure
+
+而当前 Quick Dev Skill 的表达已经演进，精确短语或换行结构不再稳定。
+
+这种失败首先说明：
+
+query fixture 与当前文本形态发生偏移；
+Knowledge query quality 需要修复；
+当前 generation 不应发布。
+
+但只要：
+
+Locator 仍找到 governance.quick-dev-tdd-adapter；
+path 仍为 Quick Dev SKILL.md；
+module ID、consumer eligibility 和 resource-set 不变；
+Quick Dev 当前实际读取的源字节重新 hash；
+authority scope 未变化；
+
+它不应该阻断一个与 Knowledge 查询系统无关的 Quick Dev implementation 或 Acceptance。
+
+所以你的 TOOL-006 分类是合理的：
+
+影响 publication 和 quality score
+不自动影响普通 execution admissibility
+八、需要修改的 ADR 和合同
+
+这里不能只改 Python，因为仓库要求控制面合同变化更新 Accepted ADR。
+
+ADR-0048
+
+当前规定 stale 结果“按 trusted consumer policy fail closed”。
+
+它留下了按 consumer policy 细分的空间，可以扩展为：
+
+stale catalog 本身不等于无效 context；
+consumer 可在稳定 selection 和当前 read-set 验证后使用 degraded context；
+authority、scope、source integrity 继续 fail closed。
+ADR-0050
+
+基本不需要放松。
+
+应继续维持：
+
+query gate 全通过才发布；
+失败不推进 current/LKG；
+generation 和 LKG 完整性严格验证。
+
+只需补充：
+
+publication failure does not invalidate a still-valid LKG for degraded execution consumption.
+
+ADR-0057
+
+这是最需要更新的。
+
+它当前要求 Acceptance 遇到 stale catalog 发布 non-authorizing stop route。这个决定与“stale catalog 不阻塞普通 Acceptance”直接冲突。
+
+应由新 ADR 明确 supersede 这一条：
+
+stale + valid LKG + stable selection + current read-set → Acceptance 可继续；
+publication 仍需显式 maintainer authority；
+-只有不能重建、selection/authority 漂移才 stop。
+
+建议新增类似：
+
+ADR-00XX:
+Knowledge Execution Degraded Successor And Publication Separation
+九、建议实施顺序
+先更新 ADR 和 consumer policy。
+定义 knowledgeSelectionHash。
+定义 authority-bearing source 分类。
+扩充 context schema 和 preflight 状态轴。
+生成 canonical successor receipt。
+修改 Quick Dev authorization gate：
+不再只比较 freeze 文件 hash；
+改为验证 base authorization + successor chain。
+修改 Skill-input successor：
+同 selection 合法刷新可自动重建；
+scope/authority 变化仍阻断。
+修改 Acceptance：
+degraded 普通目标继续；
+Knowledge 自修改强制 semantic review；
+-结果显式携带 degradation。
+保持 publication query gate 不变。
+更新 Skill 文档和测试。
+用 TOOL-006 做首个 dogfood 场景。
+十、最低测试集合
+
+必须覆盖：
+
+catalog stale、LKG 有效、selection 不变：继续。
+query gate 失败、selection 不变：执行继续，publication blocked。
+source bytes 变化：生成 successor，context hash 变化。
+selection hash 在纯字节变化后不变。
+required module 消失：hard blocked。
+selected path 改名：typed repair。
+resource-set 增减：typed repair。
+Accepted ADR 字节变化：authorization 失效。
+consumer policy 变化：authorization 失效。
+command/test identity 变化：authorization 失效。
+source unreadable：hard blocked。
+LKG manifest 损坏：hard blocked。
+伪造 successor receipt：拒绝。
+successor chain 缺失：拒绝。
+TOOL-006 失败：普通 Quick Dev/Acceptance 可继续 degraded。
+修改 query evaluator 且 TOOL-006 失败：不能 deterministic terminal complete。
+最终结论
+
+你的方案适合当前仓库，而且应该成为下一阶段 Knowledge 与 Quick Dev 集成的正式模型。
+
+不过我建议把核心原则稍微改写成：
+
+Knowledge catalog 新鲜度不足不阻塞普通执行；当前执行上下文必须对 selected read-set 强一致。查询质量失败阻塞 Knowledge 发布，但不自动阻塞无关实现。selection、authority、contract、command/test 或 authority-bearing source 发生漂移时，仍然阻塞授权与完成。
+
+实施重点不是继续增加 allow_stale_catalog——这个能力已经存在。真正需要完成的是：
+
+把 knowledgeSelectionHash 正式化；
+建立 owner-produced successor chain；
+把 Maintainer authorization 从“精确 freeze 文件”升级为“selection + authority + contract”；
+让每次 run 继续绑定精确 knowledgeContextHash；
+更新 ADR-0057，解除 stale catalog 对普通 Acceptance 的全局停止语义。
+
+完成后，Knowledge 将从全局串行门禁变成“严格发布、受控降级、当前字节强绑定”的上下文基础设施，更符合你现在的高速演进阶段。
