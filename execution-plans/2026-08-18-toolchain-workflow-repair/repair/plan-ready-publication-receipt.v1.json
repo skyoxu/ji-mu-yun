@@ -1,0 +1,27 @@
+{
+  "authorizes": [
+    "plan-ready"
+  ],
+  "does_not_authorize": [
+    "implementation-authorized",
+    "implementation-complete",
+    "acceptance-passed",
+    "knowledge-publication",
+    "bootstrap-review"
+  ],
+  "owner": "vdd",
+  "plan_id": "toolchain-workflow-repair",
+  "plan_state": {
+    "path": "plan-state.v1.json",
+    "sha256": "sha256:def6403e4f190300c286443e8366074982589b4aa0c45ebaaeb5e8e9b899828e"
+  },
+  "resume_state": {
+    "path": "resume-state.v1.json",
+    "sha256": "sha256:ab427f489f5ef6a514acb28c66dd79071e2a6d55153779a14c2e4626bfd72928"
+  },
+  "schema_version": "toolchain-workflow-repair.plan-ready-publication.v1",
+  "validation": {
+    "path": "repair/plan-validation-receipt.v1.json",
+    "sha256": "sha256:987fee669ec3c3420d854445c1d18caf45adf2a779fa266b0b634185ddcbd2c8"
+  }
+}

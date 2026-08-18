@@ -71,13 +71,19 @@ publishes a byte-identical successor; stale, conflicting, or incomplete
 receipts cannot become current, and consumers resolve the current receipt via
 the typed pointer rather than a fixed filename.
 
-## W5 Boundary
+## W5 / TWR-W5: Attempt Retention And Garbage Collection
 
-Attempt lease, retention, and garbage collection are intentionally deferred to
-a dependent plan or a later slice after W0 and W4 establish typed selection and
-immutable receipt generations. This boundary does not weaken recovery or
-retention requirements; it prevents a second runtime state machine from being
-introduced before receipt identity is stable.
+Attempts live below `.skill-input-work/<plan-id>/<attempt-id>/` and expose
+active, failed, succeeded, or expired lifecycle states. Active attempts carry a
+lease and heartbeat. Retention protects the current generation, lifecycle and
+authorization references, terminal/acceptance references, and unexpired active
+leases. `--dry-run` reports deletion candidates; `--apply` requires explicit
+maintainer approval before removing committed evidence and emits a
+non-authorizing cleanup receipt.
+
+Acceptance `TWR-W5-EXIT`: protected generations are retained, expired
+unreferenced attempts are reported deterministically, and any applied cleanup
+records candidates, protected objects, reasons, bytes, and predecessor commit.
 
 ## Ownership
 

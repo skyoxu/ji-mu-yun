@@ -1,0 +1,23 @@
+{
+  "authorizes": [],
+  "current_slice": null,
+  "does_not_authorize": [
+    "implementation-authorized",
+    "implementation-complete",
+    "acceptance-passed",
+    "knowledge-publication",
+    "bootstrap-review"
+  ],
+  "next_action": "awaiting-maintainer-implementation-authorization",
+  "plan_id": "toolchain-workflow-repair",
+  "schema_version": "jimuyun.vdd-plan-resume-state.v1",
+  "slice_status": {
+    "W0": "pending",
+    "W1": "pending",
+    "W2": "pending",
+    "W3": "pending",
+    "W4": "pending",
+    "W5": "pending"
+  },
+  "status": "plan-ready"
+}
