@@ -98,6 +98,26 @@ def _prior_red_successor(workspace: Path, prior_red: Any, command_id: str) -> di
     return {"path": path, "sha256": expected_hash}
 
 
+def _prior_red_basis(workspace: Path, prior_red: dict[str, str]) -> tuple[dict[str, str], str] | None:
+    """Resolve the predecessor basis that accompanies a prior RED observation."""
+    observation = (workspace.resolve() / prior_red["path"]).resolve()
+    try:
+        observation.relative_to(workspace.resolve())
+    except ValueError:
+        return None
+    basis = observation.parent.parent / "red-basis.v1.json"
+    if not basis.is_file():
+        return None
+    try:
+        json.loads(basis.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    return (
+        {"path": basis.relative_to(workspace.resolve()).as_posix(), "sha256": "sha256:" + hashlib.sha256(basis.read_bytes()).hexdigest()},
+        basis.parent.name,
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--workspace", type=Path, required=True)
@@ -157,8 +177,10 @@ def main() -> int:
             "schema_version": "quick-dev-tdd-adapter.red-basis.v1",
             "failure_intent": {"command_id": red_core["command_id"], "test_selector": red_core["test_selector"], "expected_failure_ids": red_core["expected_failure_ids"]},
             "test_selector": red_core["test_selector"],
+            "test_sha256": red_core["test_sha256"],
             "contract_hash": red_core["contract_hash"],
             "validator_hash": red_core["validator_hash"],
+            "execution_fingerprint": red_core["execution_fingerprint"],
             "pre_implementation_candidate": red_core["pre_implementation_candidate"],
             "authorizes": [],
         }, indent=2) + "\n", encoding="utf-8", newline="\n")
@@ -234,10 +256,22 @@ def main() -> int:
             "refactor_exit_code": refactor["exit_code"], "authorizes": [],
         }, indent=2) + "\n", encoding="utf-8", newline="\n")
     elif red_mode == "prior-red-successor":
-        (run_dir / "prior-red-successor-evidence.v1.json").write_text(json.dumps({
-            "schema_version": "quick-dev-tdd-adapter.prior-red-successor-evidence.v1",
+        prior_basis = _prior_red_basis(workspace, prior_red)
+        if prior_basis is None:
+            raise RuntimeError("prior RED successor requires a readable predecessor basis")
+        red_basis, predecessor_run = prior_basis
+        (run_dir / "prior-red-handoff.v2.json").write_text(json.dumps({
+            "schema_version": "quick-dev-tdd-adapter.prior-red-handoff.v2",
             "plan_id": context["plan_id"], "slice_id": args.slice_id, "run_id": run_dir.name,
-            "prior_red": prior_red,
+            "red_observation": prior_red,
+            "red_basis": red_basis,
+            "execution_fingerprint": context["stage_results"]["red"]["execution_fingerprint"],
+            "test_selector": context["stage_results"]["red"]["test_selector"],
+            "test_sha256": context["stage_results"]["red"]["test_sha256"],
+            "expected_failure_ids": context["stage_results"]["red"]["expected_failure_ids"],
+            "validator_hash": context["stage_results"]["red"]["validator_hash"],
+            "pre_implementation_candidate": context["stage_results"]["red"]["pre_implementation_candidate"],
+            "predecessor_run": predecessor_run,
             "red_command_id": commands["red"][0]["id"],
             "green_command_id": commands["green"][0]["id"],
             "refactor_command_ids": [item["id"] for item in commands["refactor"]],
@@ -270,6 +304,7 @@ def main() -> int:
         raise RuntimeError("terminal predicate did not emit a JSON result") from exc
     if predicate_result.get("status") != "pass" or not isinstance(predicate_result.get("predicate"), str):
         raise RuntimeError("terminal predicate output is not a passing result")
+    predicate_result["execution_fingerprint"] = context["stage_results"]["red"]["execution_fingerprint"]
     (run_dir / f"{predicate_result['predicate']}-result.json").write_text(
         json.dumps(predicate_result, indent=2) + "\n", encoding="utf-8", newline="\n"
     )

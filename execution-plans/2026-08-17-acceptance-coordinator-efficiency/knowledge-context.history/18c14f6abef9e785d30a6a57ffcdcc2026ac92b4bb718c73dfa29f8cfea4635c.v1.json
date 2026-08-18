@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-acceptance-coordinator-efficiency-20260818-recovery7-successor-20260818T041831Z-successor-20260818T042854Z",
+    "request_id": "vdd-acceptance-coordinator-efficiency-20260818-s8",
     "consumer": "vdd",
     "query": "Acceptance coordinator deterministic route projection candidate binding Quick Dev idempotent finalization stale successor recovery",
     "snapshot": {
@@ -53,7 +53,7 @@
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
             "role": "cli",
-            "source_sha256": "4b8fa72771997b3373db98ef74edca9a417dfe49c187f4c4de7c48330c428424"
+            "source_sha256": "6c15f147df0709d1f63034d8f0a6b19bf3a10a92017c7e3ccc5bdb99eaa977e2"
           },
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
@@ -140,12 +140,12 @@
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
             "role": "primary",
-            "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+            "source_sha256": "ccda1fed815b953b9f0eed9f616b94bcd0778c5a99e582dfa87fed2c69b08ce7"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
             "role": "cli",
-            "source_sha256": "94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+            "source_sha256": "2ac7e8601b6f19e76c0aebe2c631ca2eaa630c6e5786fb083da8e96a0fcfd283"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md",
@@ -160,12 +160,12 @@
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
             "role": "orchestrator",
-            "source_sha256": "48915e425d6171732cd6beccc9017baa7216e75493ed47a4041688d06f5970e7"
+            "source_sha256": "1f6a3e35d3b1350c3c4b949f4012e3b32503f20f8e1eb04ee57f53317c334297"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
             "role": "validator",
-            "source_sha256": "a7ba1c59ad1f72aa14273aca3d219c6572c9609324cd9af794df01b42f19bcb0"
+            "source_sha256": "cdac510df53bf40fe36dd27d56e10598dc8fda35d8b928c2fd7830d114d1e969"
           }
         ],
         "relations": [
@@ -180,7 +180,7 @@
         ],
         "semantic_eligible": true,
         "source_role": "skill-entrypoint",
-        "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+        "source_sha256": "ccda1fed815b953b9f0eed9f616b94bcd0778c5a99e582dfa87fed2c69b08ce7",
         "status": "active",
         "visibility": {
           "marketplace": "excluded",
@@ -853,7 +853,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-acceptance-coordinator-efficiency-20260818-recovery7-successor-20260818T041831Z-successor-20260818T042854Z",
+    "request_id": "vdd-acceptance-coordinator-efficiency-20260818-s8",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb",
@@ -883,7 +883,7 @@
       "owner": "adapter",
       "candidate": {
         "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
-        "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+        "source_sha256": "ccda1fed815b953b9f0eed9f616b94bcd0778c5a99e582dfa87fed2c69b08ce7"
       },
       "decision": "accepted",
       "satisfies": [
@@ -992,12 +992,12 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:dcf4e0a741788b4d31364298d8bc517b9a6db62f1495a5a731108a8b53388fd9",
-  "result_sha256": "sha256:99bca0803065872c1100f18d1aa3334add71b5bf0949e15ed34b12382d456880",
+  "request_sha256": "sha256:6b1623faf31fb3f78d12082c9b0c630f90f5ffc3203751aec43f84e41e54f150",
+  "result_sha256": "sha256:77c397282ab0d4db717d8f48b7b26ce40b03b027f7c8bd33891eb9dd89463b08",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:f3ab31a9810eef02c4b25f44a81b8499801c47fc6a6b9674de97fd659aea5ad3"
+    "base_locator_result_sha256": "sha256:32539534dbdced34878b304cfb3af9d64187f1b4cc3ab14a85f50a496d1f8a24"
   },
   "preflight": {
     "status": "ready",
@@ -1005,6 +1005,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:728c70cdaf78ce531838f4a97ab732547b96e5b9b39750da797bf9dedabd6e7f"
+    "context_sha256": "sha256:4673b3e3f4e961b3cf734810d95b42ae9537a958fe628467c031f6686ac7efa6"
   }
 }

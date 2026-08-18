@@ -8,7 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from stage_lifecycle_runner import validate_implementation_successor
+from stage_lifecycle_runner import derive_run_state, validate_implementation_successor
 
 
 _IMPLEMENTATION_CANDIDATE_ROOTS = (
@@ -74,6 +74,18 @@ def _sha(payload: bytes) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
+def _current_execution_fingerprint(repository_root: Path, plan_dir: Path, slice_id: str) -> str | None:
+    """Build the current RED semantic identity without creating a run."""
+    try:
+        from build_slice_invocation import build
+
+        context = build(repository_root, plan_dir, slice_id, "RECOVERY-PROBE")["run_context"]
+        value = context["stage_results"]["red"]["execution_fingerprint"]
+        return value if isinstance(value, str) and value else None
+    except (ImportError, KeyError, OSError, TypeError, ValueError, json.JSONDecodeError):
+        return None
+
+
 def current_red_handoff(repository_root: Path, plan_dir: Path, slice_id: str) -> dict[str, str] | None:
     """Return the single current Quick Dev RED handoff for a slice.
 
@@ -94,6 +106,23 @@ def current_red_handoff(repository_root: Path, plan_dir: Path, slice_id: str) ->
     if not isinstance(selector, str):
         return None
     evidence_root = root / "logs" / "tdd-adapter" / str(contract.get("plan_id")) / slice_id
+    current_fingerprint = _current_execution_fingerprint(root, plan, slice_id)
+    for handoff_path in sorted(evidence_root.glob("*/prior-red-handoff.v2.json"), reverse=True) if evidence_root.is_dir() else []:
+        try:
+            handoff = json.loads(handoff_path.read_text(encoding="utf-8"))
+            reference = handoff.get("red_observation")
+            if (
+                handoff.get("plan_id") == contract.get("plan_id")
+                and handoff.get("slice_id") == slice_id
+                and handoff.get("execution_fingerprint") == current_fingerprint
+                and handoff.get("test_selector") == selector
+                and handoff.get("expected_failure_ids") == red.get("expected_failure_ids")
+                and isinstance(reference, dict)
+                and set(reference) == {"path", "sha256"}
+            ):
+                return {"path": reference["path"], "sha256": reference["sha256"]}
+        except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+            continue
     artifacts = sorted(evidence_root.glob("*/implementation-needed-result.json")) if evidence_root.is_dir() else []
     expected_contract = _sha(contract_path.read_bytes())
     valid: list[Path] = []
@@ -104,11 +133,25 @@ def current_red_handoff(repository_root: Path, plan_dir: Path, slice_id: str) ->
             test_path.relative_to(root)
         except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
             continue
+        contract_matches = value.get("contract_hash") == expected_contract
+        if not contract_matches:
+            historical = _historical_contract_and_registry(repository_root, plan_dir, value.get("contract_hash"))
+            if historical is not None:
+                try:
+                    old_contract = json.loads(historical[0].decode("utf-8"))
+                    old_registry = json.loads(historical[1].decode("utf-8"))
+                    contract_matches = _slice_projection(old_contract, old_registry, slice_id) == _slice_projection(
+                        json.loads(contract_path.read_text(encoding="utf-8")),
+                        json.loads((plan_dir / "command-registry.v1.json").read_text(encoding="utf-8")),
+                        slice_id,
+                    )
+                except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+                    contract_matches = False
         if (
             value.get("predicate") != "implementation-needed"
             or value.get("status") != "pass"
             or value.get("stage") != "red"
-            or value.get("contract_hash") != expected_contract
+            or not contract_matches
             or value.get("test_selector") != selector
             or value.get("expected_failure_ids") != red.get("expected_failure_ids")
             or not isinstance(value.get("exit_code"), int)
@@ -119,7 +162,39 @@ def current_red_handoff(repository_root: Path, plan_dir: Path, slice_id: str) ->
             continue
         valid.append(artifact)
     if len(valid) != 1:
-        return None
+        # Compatibility bridge for staged runs that recorded the RED result
+        # before the implementation-needed sidecar was introduced. The
+        # observation remains the authoritative nonzero execution proof; the
+        # red-result binds selector/failure intent and contract projection.
+        legacy: list[tuple[Path, Path]] = []
+        for result_path in sorted(evidence_root.glob("*/red-result.json")):
+            observation_path = result_path.parent / "observations" / "red-observed.json"
+            try:
+                result = json.loads(result_path.read_text(encoding="utf-8"))
+                observation = json.loads(observation_path.read_text(encoding="utf-8"))
+                test_path = (root / selector).resolve()
+                test_path.relative_to(root)
+            except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+                continue
+            if (
+                result.get("stage") != "red"
+                or result.get("slice_id") != slice_id
+                or result.get("test_selector") != selector
+                or result.get("expected_failure_ids") != red.get("expected_failure_ids")
+                or observation.get("stage") != "red"
+                or not isinstance(observation.get("exit_code"), int)
+                or observation.get("exit_code") == 0
+                or not test_path.is_file()
+            ):
+                continue
+            legacy.append((result_path, observation_path))
+        if not legacy:
+            return None
+        # Multiple interrupted attempts may exist; the newest matching RED is
+        # the recoverable predecessor when all candidates describe the same
+        # selector/failure intent.
+        observation_path = sorted(legacy, key=lambda item: item[0].parent.name)[-1][1]
+        return {"path": observation_path.relative_to(root).as_posix(), "sha256": _sha(observation_path.read_bytes())}
     artifact = valid[0]
     return {"path": artifact.relative_to(root).as_posix(), "sha256": _sha(artifact.read_bytes())}
 
@@ -239,6 +314,9 @@ def _unaffected_slice_current(
     slice_id: str,
 ) -> bool:
     """Reuse a predecessor result only when its exact slice projection is unchanged."""
+    current_fingerprint = _current_execution_fingerprint(repository_root.resolve(), plan_dir, slice_id)
+    if isinstance(result.get("execution_fingerprint"), str):
+        return result["execution_fingerprint"] == current_fingerprint
     root = repository_root.resolve()
     contract_path = plan_dir / "implementation-contract.v1.json"
     current_bytes = _head_artifact_bytes(root, contract_path.resolve().relative_to(root))
@@ -292,22 +370,13 @@ def _active_slice_action(repository_root: Path, plan_id: str, slice_id: str) -> 
     evidence_root = repository_root / "logs" / "tdd-adapter" / plan_id / slice_id
     candidates = sorted((path for path in evidence_root.glob("RUN-*") if path.is_dir()), key=lambda path: path.name, reverse=True)
     for run_dir in candidates:
-        if not (run_dir / "stage-state.json").is_file():
-            continue
-        try:
-            state = json.loads((run_dir / "stage-state.json").read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, json.JSONDecodeError):
-            continue
-        if state.get("stage") == "refactor" and (run_dir / "slice-ready-result.json").is_file():
-            continue
-        if state.get("stage") == "refactor" and (run_dir / "observations" / "refactor-observed.json").is_file():
+        action = derive_run_state(run_dir)
+        if action == "slice-terminal":
             return "validate-slice"
-        if state.get("stage") == "implement":
-            return "run-slice" if validate_implementation_successor(run_dir) else "implement"
-        if state.get("stage") == "green" and (run_dir / "observations" / "green-observed.json").is_file():
-            return "run-slice"
-        if state.get("stage") == "red" and (run_dir / "observations" / "red-observed.json").is_file():
+        if action == "implement":
             return "implement"
+        if action in {"green", "refactor"}:
+            return "run-slice"
     return None
 
 
@@ -405,6 +474,8 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
     except ValueError as exc:
         raise ValueError("plan directory must stay under execution-plans") from exc
     knowledge = _verify_plan_context(repository_root, target)
+    if knowledge["status"] == "successor-required":
+        return {"next_action": "refresh-knowledge-context", "reason": knowledge["failure_code"], "authorizes": []}
     if knowledge["status"] == "vdd-repair":
         return {"next_action": "external-repair-required", "reason": knowledge["failure_code"], "authorizes": []}
     contract_path = target / "implementation-contract.v1.json"

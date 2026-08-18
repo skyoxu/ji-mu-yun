@@ -1,0 +1,391 @@
+我看完附件后，判断很明确：
+
+这不是 12 个独立缺陷，而是 4 个底层机制没有统一，导致同一个计划在“contract 变化 → evidence stale → successor → 恢复误判 → 再生成 evidence”之间反复震荡。
+
+附件的核心判断是正确的：当前不应该继续给 2026-08-17-acceptance-coordinator-efficiency 加 coordinator 功能，而应该先修 Quick Dev adapter 的恢复语义。附件也明确指出目前 S0/S1 已有 successor 证据、S2 尚未闭合，因此不能进入 Acceptance。
+
+一、真正的根因不是 coordinator，而是 4 个基础问题
+根因 A：没有“正式 TDD 开始后的执行合同冻结”
+
+最早 contract 被收窄成 S3-only，导致 terminal 可以对一个不完整计划产生 false green；后来恢复四 slice 后，旧证据又因为 contract hash 变化全部 stale。
+
+更严重的是，正式 TDD 开始后 coordinator、slice mapping、selector、terminal runner、command registry 还在继续变化，于是 RED、GREEN、terminal receipt 不断失效。附件已经准确指出根因：
+
+没有先冻结最终 contract，再开始正式 TDD。
+
+所以以后不能再简单使用：
+
+contract_hash changed
+→ everything stale
+
+也不能：
+
+contract changed
+→ blindly reuse old RED
+
+需要引入一个更稳定的 Execution Fingerprint。
+
+例如：
+
+execution_fingerprint =
+  slice behavior identity
++ RED selector
++ RED test bytes/hash
++ expected_failure_ids
++ validator identity
++ allowed production write-set
++ GREEN command semantics
++ REFACTOR command semantics
++ terminal predicate identity
+
+合同里的描述文字、报告文字、非执行 metadata 改变，可以让原始 contract hash 变化，但只要 execution_fingerprint 不变，就不应该把 RED 打成 stale。
+
+反过来，只要 test selector、test bytes、failure intent、validator、write-set 或行为语义变化，就必须重新 RED。
+
+根因 B：把 stage-state.json 当成真相，但真正的事实已经存在于 immutable observations
+
+这是当前 S2 卡住的最直接原因。
+
+附件里已经出现：
+
+green-observed.json       exists
+refactor-observed.json    exists
+slice-ready-result.json   exists
+
+
+stage-state.json          incomplete/missing
+
+然后 router 因为只相信 stage-state，又去执行 GREEN，最终撞上：
+
+ValueError: stage observation already exists
+
+这里架构方向必须反过来：
+
+Observation 是事实；stage-state 只是可重建缓存。
+
+也就是说 routing 应该这样推导：
+
+valid RED observation 不存在
+→ red
+
+
+valid RED 存在
++ implementation successor 不存在
+→ implement
+
+
+valid implementation successor 存在
++ GREEN observation 不存在
+→ green
+
+
+valid GREEN 存在
++ REFACTOR observation 不存在
+→ refactor
+
+
+valid REFACTOR 存在
++ canonical protocol closure 不存在
+→ close-protocol
+
+
+protocol 已 close
++ slice-ready 不存在
+→ validate-slice
+
+
+slice-ready 已存在
+→ next slice
+
+stage-state.json 可以继续保存，但它只能是：
+
+derived_state_cache
+
+如果它不存在、损坏或落后：
+
+rebuild from immutable evidence
+
+而不是重新执行已经发生的 expensive stage。
+
+这是整个修复里优先级最高的一项。
+
+根因 C：RED / successor / protocol evidence 没有统一 identity model
+
+现在历史 RED 至少有三种格式。
+
+同时 successor 有时缺：
+
+predecessor；
+observation hash；
+next transition；
+完整 stage state；
+防止重复 observation 的约束。
+
+因此一个恢复错误会继续演化成另一个恢复错误。
+
+建议不要继续给三种 legacy shape 增加 if/else。
+
+直接定义一个统一的：
+
+prior-red-handoff.v2
+
+概念上应至少包含：
+
+{
+  "schema_version": "quick-dev.prior-red-handoff.v2",
+  "plan_id": "...",
+  "slice_id": "S2",
+
+
+  "red_observation": {
+    "path": ".../observations/red-observed.json",
+    "sha256": "sha256:..."
+  },
+
+
+  "red_basis": {
+    "path": ".../red-basis.v1.json",
+    "sha256": "sha256:..."
+  },
+
+
+  "execution_fingerprint": "sha256:...",
+  "test_selector": "...",
+  "test_sha256": "sha256:...",
+  "expected_failure_ids": ["..."],
+  "validator_hash": "sha256:...",
+  "pre_implementation_candidate_hash": "sha256:...",
+
+
+  "predecessor_run": "...",
+  "authorizes": []
+}
+
+旧的：
+
+implementation-needed-result.json
+red-result.json
+red-basis + red-observed
+
+都只通过 compatibility loader 投影成这个统一模型。
+
+后面的 router、GREEN、successor validator 不再认识旧格式。
+
+这样才能真正结束 legacy evidence 分支爆炸。
+
+根因 D：Knowledge refresh 和 terminal recovery 没有进入同一 reentrant 状态机
+
+Knowledge stale 现在基本表现成：
+
+修改 source
+→ frozen context stale
+→ 人工刷新
+→ 重启 route
+→ source 又变
+→ 再 stale
+
+附件指出大量 KWI-QUICK-FROZEN-CONTEXT-STALE 实际是 source bytes 真变了，而不是 catalog 本身坏了。
+
+它不应该是“人工 P0 停机”，而应该成为一种明确 route：
+
+knowledge-current
+knowledge-successor-required
+knowledge-refresh-failed
+
+也就是：
+
+current evidence valid
++ knowledge source bytes changed
+→ publish knowledge successor
+→ rerun Locator
+→ validate successor
+→ resume SAME run
+
+不要因此创建新的 TDD run。
+
+Knowledge context 是 consumer context successor，不应该自动等同于：
+
+RED invalid
+GREEN invalid
+重新开始 slice
+
+是否需要重新 RED，应该仍由前面说的 execution_fingerprint 决定。
+
+二、Terminal partial closure 也应该采用“replay-or-successor”，不能覆盖写
+
+附件里的另一个典型问题是：
+
+已有 partial protocol artifacts
+→ terminal 用新的 context/attempt payload
+→ 写同一路径
+→ immutable evidence conflict
+
+这里应该遵循三态：
+
+artifact 不存在
+→ create
+
+
+artifact 已存在且 canonical hash 相同
+→ replay existing success
+
+
+artifact 已存在但 canonical hash 不同
+→ NEVER overwrite
+→ create successor attempt
+
+也就是说 protocol closure 本身也必须 idempotent。
+
+不能：
+
+try write
+→ conflict
+→ patch around it
+
+而应该：
+
+compute closure identity
+→ resolve existing closure
+→ replay or successor
+三、我建议把修复控制在一个独立 Adapter Repair，4 个 slice 足够
+
+不要继续在 acceptance-coordinator-efficiency 上边跑边修 adapter。
+
+建议单独做一次非常窄的 Quick Dev recovery repair：
+
+R0 — Execution Freeze & RED Reuse Policy
+增加 execution_fingerprint；明确 contract metadata change 哪些允许 RED reuse，哪些必须重新 RED；正式 RED 前执行完整 tool/readiness preflight。这样可以一次性解决 contract 变化、测试晚创建、plan-local tool 晚发现等问题。附件里工具缺失与 RED 生命周期失控正是这类问题。
+R1 — Observation-Derived Recovery
+router 不再以 stage-state.json 为 authority；新增 derive_run_state()，从 immutable RED / implementation successor / GREEN / REFACTOR / protocol closure / slice-ready 推导 action；stage-state 缺失时自动重建，已有 GREEN/REFACTOR 永不重跑。
+R2 — Unified Successor & Prior RED
+引入 prior-red-handoff.v2；legacy loaders 只负责转换；successor 创建必须原子绑定 predecessor、observation hashes、execution fingerprint、candidate identity 和 next transition。禁止人工复制 observation 文件到 successor run。
+R3 — Reentrant Knowledge + Terminal Closure
+stale knowledge 自动走 successor refresh 后恢复原 run；partial protocol closure 做 replay-or-successor；增加 existing GREEN、existing REFACTOR、partial terminal、knowledge stale 四组集成回归测试。
+
+这四项完成后，不需要重新推倒 8-17。
+
+四、修完 Adapter 后，8-17 应该怎么恢复
+
+这里我不建议重新从 S0 全跑。
+
+附件已经说 S0/S1 有 successor evidence。
+
+正确方式是让新的 recovery engine 对现有 evidence 做一次 projection：
+
+S0
+→ derive evidence state
+→ fingerprint matches ?
+   YES → reuse slice-ready
+   NO  → successor from first invalid stage
+
+
+S1
+→ same
+
+
+S2
+→ derive from immutable observations
+→ 如果 GREEN 已存在，不再 GREEN
+→ 如果 REFACTOR 已存在，不再 REFACTOR
+→ 从第一个缺失/无效 predicate 恢复
+
+
+S3
+→ 只有 S0/S1/S2 current 后再进入
+
+这样才是真正验证新的“reentrant recovery”，而不是再次手工重建整条 evidence 链。
+
+五、最重要的验收场景
+
+修 Adapter 时，不要把主要精力继续放在 unit helper test 上。
+
+真正应该锁死的是这些行为：
+
+case 1
+stage-state missing
++ RED/GREEN already exist
+→ derive state
+→ never rerun RED/GREEN
+
+
+case 2
+old RED shape
+→ normalize prior-red-handoff.v2
+→ GREEN resumes
+
+
+case 3
+contract metadata changed only
++ execution fingerprint unchanged
+→ RED reusable
+
+
+case 4
+test bytes / selector / validator changed
+→ prior RED rejected
+→ new RED required
+
+
+case 5
+successor created
+→ predecessor + observation hashes + next stage complete
+
+
+case 6
+partial terminal artifacts identical
+→ replay
+
+
+case 7
+partial terminal artifacts conflict
+→ successor attempt
+→ no overwrite
+
+
+case 8
+knowledge source stale
+→ refresh successor
+→ resume same TDD run
+
+
+case 9
+existing GREEN / REFACTOR
+→ no duplicate observation writes
+
+附件最后提出的方向——从 immutable observations 推导阶段、完整 successor、统一 prior RED、明确 reuse policy、自动 Knowledge successor、补 partial terminal / existing GREEN / existing REFACTOR 回归——我认为就是正确技术路线。
+
+最终建议
+
+现在不要做：
+
+继续修 8-17 coordinator
+→ 再跑
+→ 遇 stale
+→ 手工 successor
+→ 再修 adapter
+
+改成：
+
+冻结 8-17 当前业务实现
+        ↓
+Quick Dev Recovery Repair
+  execution fingerprint
+  observation-derived state
+  prior-red-handoff.v2
+  successor state machine
+  knowledge auto-successor
+  terminal replay/successor
+        ↓
+用现有 8-17 evidence 做真实恢复 dogfood
+        ↓
+S0 / S1 projection reuse
+S2 从真实缺口继续
+S3
+        ↓
+fresh terminal-full
+        ↓
+implementation-complete
+        ↓
+Acceptance
+
+这样处理后，这次 8-17 遇到的 12 个问题不会变成 12 个长期补丁，而会收敛成一套统一的恢复协议。这也是我认为最值得修的地方：不是让当前这一次跑通，而是让以后 contract refresh、Knowledge refresh、partial terminal、进程中断都能自动恢复。

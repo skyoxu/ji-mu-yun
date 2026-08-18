@@ -20,6 +20,102 @@ def _implementation_successor_path(run_dir: Path) -> Path:
     return run_dir / "implementation-successor.v1.json"
 
 
+def _sha(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _valid_observation(path: Path, stage: str, *, required_exit: int | None = None) -> bool:
+    """Validate an immutable observation before deriving a recovery action."""
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return False
+    exit_code = value.get("exit_code") if isinstance(value, dict) else None
+    if value.get("stage") != stage or not isinstance(exit_code, int):
+        return False
+    return exit_code != 0 if required_exit is None and stage == "red" else exit_code == required_exit
+
+
+def prior_red_observation_path(run_dir: Path) -> Path | None:
+    """Resolve a hash-bound prior RED used by a successor without copying it."""
+    documents = (
+        (run_dir / "prior-red-handoff.v2.json", "red_observation"),
+        (run_dir / "prior-red-successor-evidence.v1.json", "prior_red"),
+    )
+    root = next((parent.parent for parent in run_dir.parents if parent.name == "logs"), None)
+    if root is None:
+        return None
+    for document, key in documents:
+        try:
+            value = json.loads(document.read_text(encoding="utf-8"))
+            reference = value.get(key)
+            path, digest = reference.get("path"), reference.get("sha256")
+            if not isinstance(path, str) or not isinstance(digest, str):
+                continue
+            target = (root / path).resolve()
+            target.relative_to(root)
+            if target.is_file() and _sha(target) == digest and _valid_observation(target, "red"):
+                return target
+        except (AttributeError, OSError, UnicodeError, ValueError, json.JSONDecodeError):
+            continue
+    return None
+
+
+def derive_run_state(run_dir: Path) -> str | None:
+    """Derive the next lifecycle action from immutable evidence, never cache state.
+
+    ``stage-state.json`` is an operational cache.  It may be absent after an
+    interrupted or successor run, so it cannot decide whether an expensive
+    stage is executed again.
+    """
+    observations = run_dir / "observations"
+    red = observations / "red-observed.json"
+    green = observations / "green-observed.json"
+    refactor = observations / "refactor-observed.json"
+    if (run_dir / "slice-ready-result.json").is_file():
+        try:
+            result = json.loads((run_dir / "slice-ready-result.json").read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            return None
+        if result.get("predicate") == "slice-ready" and result.get("status") == "pass":
+            return None
+        return None
+    local_red_lineage = (
+        red.is_file()
+        and (run_dir / "red-basis.v1.json").is_file()
+        and _valid_observation(red, "red")
+    )
+    prior_red_lineage = prior_red_observation_path(run_dir) is not None
+    if not local_red_lineage and not prior_red_lineage:
+        return None
+    if local_red_lineage and not validate_implementation_successor(run_dir):
+        return "implement"
+    if not green.is_file() or not _valid_observation(green, "green", required_exit=0):
+        return "green"
+    if not refactor.is_file() or not _valid_observation(refactor, "refactor", required_exit=0):
+        return "refactor"
+    return "slice-terminal"
+
+
+def rebuild_stage_state(run_dir: Path) -> str | None:
+    """Refresh the non-authoritative stage cache from verified evidence."""
+    action = derive_run_state(run_dir)
+    if action is None:
+        return None
+    stage, next_stage = {
+        "implement": ("red", "implement"),
+        "green": ("implement", "green"),
+        "refactor": ("green", "refactor"),
+        "slice-terminal": ("refactor", "slice-terminal"),
+    }[action]
+    payload = {"stage": stage, "next_stage": next_stage, "derived": True, "authorizes": []}
+    path = run_dir / "stage-state.json"
+    encoded = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+    if not path.is_file() or path.read_text(encoding="utf-8") != encoded:
+        path.write_text(encoded, encoding="utf-8", newline="\n")
+    return action
+
+
 def validate_implementation_successor(run_dir: Path) -> bool:
     """Verify the run-local implementation successor against RED basis."""
     basis_path = run_dir / "red-basis.v1.json"
@@ -38,7 +134,7 @@ def validate_implementation_successor(run_dir: Path) -> bool:
     pre = basis.get("pre_implementation_candidate")
     post = receipt.get("post_implementation_candidate")
     changed_paths = receipt.get("changed_paths")
-    expected_basis_hash = "sha256:" + hashlib.sha256(basis_path.read_bytes()).hexdigest()
+    expected_basis_hash = _sha(basis_path)
     return (
         receipt.get("schema_version") == "quick-dev-tdd-adapter.implementation-successor.v1"
         and receipt.get("status") == "implementation-observed"
@@ -166,14 +262,21 @@ class LifecycleRunner:
             raise ValueError("prior RED successor must begin from an empty lifecycle")
         self.stages.append("red")
 
-    def resume_observations(self, run_dir: Path, stages: list[str]) -> None:
+    def resume_observations(
+        self,
+        run_dir: Path,
+        stages: list[str],
+        *,
+        observation_sources: dict[str, Path] | None = None,
+    ) -> None:
         """Resume an existing append-only run before the next stage."""
         expected = ["red", "green", "refactor"]
         if stages != expected[:len(stages)] or self.stages:
             raise ValueError("prior lifecycle stages are invalid")
         snapshots = dict(self.snapshots)
         for stage in stages:
-            path = run_dir / "observations" / f"{stage}-observed.json"
+            source = observation_sources.get(stage, run_dir) if observation_sources is not None else run_dir
+            path = source / "observations" / f"{stage}-observed.json"
             if not path.is_file():
                 raise ValueError("prior lifecycle observation is missing")
             observation = json.loads(path.read_text(encoding="utf-8"))

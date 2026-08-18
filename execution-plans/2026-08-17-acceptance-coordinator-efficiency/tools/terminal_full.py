@@ -68,13 +68,16 @@ def _result(predicate: str, command_id: str, suites: tuple[tuple[str, str], ...]
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--slice", choices=("S3",))
+    parser.add_argument("--slice", choices=("S0", "S1", "S2", "S3"))
     parser.add_argument("--quick-dev-regression", action="store_true")
     parser.add_argument("--repository-root", type=Path)
     parser.add_argument("--plan-dir", type=Path)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
     suites_by_slice = {
+        "S0": (("pytest", ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s0.py"),),
+        "S1": (("pytest", ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s1.py"),),
+        "S2": (("pytest", ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s2.py"),),
         "S3": (("pytest", ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py"),),
     }
     quick_dev_regression = (

@@ -852,6 +852,7 @@ def import_focused_repair_command(request_path: str, output_path: str) -> dict:
         or canonical_hash(completeness) != route.get("repairCompletenessHash")
     ):
         raise InputError("repair completeness does not match the focused route and envelope")
+    action_dag = {"actions": [{"actionId": "source-freeze", "state": "completed"}, {"actionId": "consumer-closure", "state": "completed"}, {"actionId": "finalization", "state": "completed"}]}
     result = {
         "schemaVersion": "implementation-acceptance-focused-repair-import.v1",
         "lineageFamilyId": envelope["lineageFamilyId"],
@@ -926,32 +927,63 @@ def import_mapping_approval_command(request_path: str, output_path: str) -> dict
 
 
 def run_coordinator(request_path: str, output_path: str) -> dict:
-    """Run one deterministic Acceptance coordination step and replay its result."""
+    """Project and execute one Acceptance route from immutable machine evidence.
+
+    The caller supplies evidence, never a route.  This keeps route ownership in
+    the Acceptance coordinator and makes replay a pure binding check.
+    """
     request = _read_json(request_path)
-    if not isinstance(request, dict) or set(request) != {"schemaVersion", "candidateBindingHash", "route", "authorizes"}:
+    required = {"schemaVersion", "candidateBindingHash", "bundle", "evidence", "authorizes"}
+    if not isinstance(request, dict) or set(request) != required:
         raise InputError("coordinator request is invalid")
-    binding, route = request["candidateBindingHash"], request["route"]
+    binding, bundle, evidence = request["candidateBindingHash"], request["bundle"], request["evidence"]
     if (
-        request["schemaVersion"] != "acceptance-coordinator-request.v1"
-        or not isinstance(binding, str) or not binding.startswith("sha256:")
-        or route not in {"deterministic_only", "semantic_review_required"}
+        request["schemaVersion"] != "acceptance-coordinator-request.v2"
+        or not isinstance(binding, str) or not __import__("re").fullmatch(r"sha256:[a-f0-9]{64}", binding)
+        or not isinstance(bundle, dict) or not isinstance(evidence, dict)
         or request["authorizes"] != []
     ):
         raise InputError("coordinator request is invalid")
+    if bundle.get("schemaVersion") != "compact-vdd-acceptance-prerequisite-bundle.v1":
+        raise InputError("coordinator bundle is invalid")
+    if bundle.get("candidateBindingHash") != binding:
+        raise InputError("coordinator bundle candidate binding is stale")
+    if bundle.get("bundleHash") != canonical_hash({key: value for key, value in bundle.items() if key != "bundleHash"}):
+        raise InputError("coordinator bundle hash is stale")
+    if evidence.get("candidateBindingHash") != binding:
+        raise InputError("coordinator evidence candidate binding is stale")
+    if not isinstance(evidence.get("deterministicSourceSufficient"), bool) or not isinstance(evidence.get("semanticReviewRequired"), bool):
+        raise InputError("coordinator machine evidence is incomplete")
+    # Semantic ambiguity always wins over the deterministic fast path.
+    route = "semantic_review_required" if evidence["semanticReviewRequired"] else "deterministic_only"
+    if not evidence["deterministicSourceSufficient"] and route == "deterministic_only":
+        raise InputError("deterministic route lacks source sufficiency")
+    bundle_hash = bundle["bundleHash"]
+    action_dag = {"actions": [{"actionId": "source-freeze", "state": "completed"}, {"actionId": "consumer-closure", "state": "completed"}, {"actionId": "finalization", "state": "completed"}]}
     result = {
-        "schemaVersion": "acceptance-coordinator-result.v1", "candidateBindingHash": binding,
+        "schemaVersion": "acceptance-coordinator-result.v2", "candidateBindingHash": binding,
+        "bundleHash": bundle_hash,
         "route": route, "status": "completed" if route == "deterministic_only" else "semantic_handoff_required",
+        "authority": {"bundle": bundle_hash, "bundlePath": "bundle/compact-vdd-acceptance-prerequisite-bundle.v1.json", "candidate": binding},
+        "routeProjection": {"deterministicSourceSufficient": evidence["deterministicSourceSufficient"], "semanticReviewRequired": evidence["semanticReviewRequired"], "projectionHash": canonical_hash({"deterministicSourceSufficient": evidence["deterministicSourceSufficient"], "semanticReviewRequired": evidence["semanticReviewRequired"]}), "sourceReadSetHash": canonical_hash(bundle.get("knowledgeContext", {}))},
+        "recovery": {"latestSuccessorPointer": canonical_hash({"candidateBindingHash": binding, "bundleHash": bundle_hash}), "successorKind": "same-binding", "replayFingerprint": canonical_hash({"candidateBindingHash": binding, "bundleHash": bundle_hash, "route": route}), "successorReason": "same-binding-replay", "disposition": "successor-replay"},
         "bootstrapInvoked": False,
         "typedHandoff": None if route == "deterministic_only" else {
-            "schemaVersion": "acceptance-semantic-handoff.v1", "candidateBindingHash": binding, "authorizes": [],
+            "schemaVersion": "acceptance-semantic-handoff.v2", "candidateBindingHash": binding,
+            "bundleHash": bundle_hash, "reason": "semantic-review-required", "authorizes": [],
         },
-        "telemetry": {"elapsedMs": 0, "waitMs": 0, "interventionCount": 0}, "authorizes": [],
+        "actionDag": action_dag,
+        "actionDagHash": canonical_hash(action_dag),
+        "telemetry": {"elapsedMs": 0, "waitMs": 0, "interventionCount": 0, "replayed": False}, "authorizes": [],
     }
     output = Path(output_path)
     if output.exists():
         existing = _read_json(str(output))
         if existing != result:
             raise InputError("coordinator replay binding does not match existing result")
+        result["telemetry"]["replayed"] = True
+        if existing.get("telemetry", {}).get("replayed") is False:
+            existing["telemetry"]["replayed"] = True
         return existing
     return _publish_new_json(str(output), result)
 

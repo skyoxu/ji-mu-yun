@@ -171,6 +171,51 @@ def _generated_red_descriptor(slice_id: str, red: dict[str, Any]) -> dict[str, A
     }
 
 
+def _execution_fingerprint(
+    repository_root: Path,
+    selected: dict[str, Any],
+    registry: dict[str, Any],
+    red: dict[str, Any],
+    green: dict[str, Any],
+    refactor: list[dict[str, Any]],
+    terminal: dict[str, Any],
+    validator_hash: str,
+) -> tuple[str, str | None]:
+    """Bind RED reuse to executable semantics, not the whole contract bytes."""
+    intent = selected.get("tdd", {}).get("red", {})
+    selector = intent.get("test_selector") if isinstance(intent, dict) else None
+    test = (repository_root / selector).resolve() if isinstance(selector, str) else None
+    # Historical contracts used a descriptive selector together with a fully
+    # registered RED command.  New Quick-Dev-owned RED contracts must point at
+    # real test bytes, but preserving this read-only compatibility avoids
+    # silently invalidating unrelated existing plans.
+    if test is not None and test.is_file():
+        try:
+            test.relative_to(repository_root.resolve())
+        except ValueError as exc:
+            raise ValueError("RED test file escapes repository") from exc
+        test_hash: str | None = _sha(test.read_bytes())
+    elif red["id"].startswith("quick-dev-generated-red-"):
+        raise ValueError("RED test file must exist before invocation preparation")
+    else:
+        test_hash = None
+    projection = {
+        "slice_id": selected.get("slice_id"),
+        "behavior": selected.get("behavior"),
+        "depends_on": selected.get("depends_on"),
+        "allowed_changes": selected.get("allowed_changes"),
+        "red": intent,
+        "red_command": red,
+        "green_command": green,
+        "refactor_commands": refactor,
+        "terminal_command": terminal,
+        "validator_hash": validator_hash,
+        "test_sha256": test_hash,
+        "command_registry_schema": registry.get("schema_version"),
+    }
+    return _sha(json.dumps(projection, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")), test_hash
+
+
 def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> dict[str, Any]:
     root, plan = repository_root.resolve(), plan_dir.resolve()
     try:
@@ -200,6 +245,7 @@ def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> 
     terminal = _descriptor(commands, selected["post_refactor_command_id"], **values)
     preparation = [_descriptor(commands, item["command_id"], **values) for item in selected.get("pre_terminal", [])]
     identity = _load_candidate_identity(plan, slice_id)
+    execution_fingerprint, test_hash = _execution_fingerprint(root, selected, registry, red, green, refactor, terminal, identity["validator_hash"])
     authority = plan / contract["authority"]["authority_manifest"]
     context = {
         "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id,
@@ -209,7 +255,7 @@ def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> 
         "boundaries": {"allowed_write_set": [path for group in selected["allowed_changes"].values() for path in group], "forbidden_write_set": selected["forbidden_changes"], "execution_read_set": selected["execution_read_set"], "dependency_closure": selected["dependency_closure"]},
         "target_command_ids": [red["id"], green["id"], *[item["id"] for item in refactor], terminal["id"]],
         "stage_results": {
-            "red": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "legacy-regression-observed" if red_mode == "legacy-regression" else "prior-red-imported" if red_mode == "prior-red-successor" else "red-observed", "mode": red_mode, "legacy_predecessor": predecessor if red_mode == "legacy-regression" else None, "prior_red": predecessor if red_mode == "prior-red-successor" else None, "command_id": red["id"], "test_selector": tdd["red"]["test_selector"], "expected_failure_ids": tdd["red"]["expected_failure_ids"], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"], "pre_implementation_candidate": identity},
+            "red": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "legacy-regression-observed" if red_mode == "legacy-regression" else "prior-red-imported" if red_mode == "prior-red-successor" else "red-observed", "mode": red_mode, "legacy_predecessor": predecessor if red_mode == "legacy-regression" else None, "prior_red": predecessor if red_mode == "prior-red-successor" else None, "command_id": red["id"], "test_selector": tdd["red"]["test_selector"], "test_sha256": test_hash, "expected_failure_ids": tdd["red"]["expected_failure_ids"], "execution_fingerprint": execution_fingerprint, "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"], "pre_implementation_candidate": identity},
             "green": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "green-observed", "command_id": green["id"], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"]},
             "refactor": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "refactor-verified", "command_id": refactor[0]["id"], "command_ids": [item["id"] for item in refactor], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"]},
         },

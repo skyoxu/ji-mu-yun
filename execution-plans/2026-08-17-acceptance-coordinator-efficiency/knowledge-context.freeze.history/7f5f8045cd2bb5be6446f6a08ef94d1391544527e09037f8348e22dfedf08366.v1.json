@@ -1,10 +1,10 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:30bb122a9aa9e2d739be86b9299f5f290bbecab28073d45adb13ac69cb6c5b34",
-  "canonical_context_sha256": "sha256:a8e3ac7763fefee42d4f89b2779f28f89a6d63dc94bdf5f5969cf42a69cb4bbe",
-  "request_sha256": "sha256:dcf4e0a741788b4d31364298d8bc517b9a6db62f1495a5a731108a8b53388fd9",
-  "result_sha256": "sha256:99bca0803065872c1100f18d1aa3334add71b5bf0949e15ed34b12382d456880",
+  "context_sha256": "sha256:7f5f8045cd2bb5be6446f6a08ef94d1391544527e09037f8348e22dfedf08366",
+  "canonical_context_sha256": "sha256:647593296acffc2af309132432425514110a9e9e0a8020b0d9df00635cb6f02b",
+  "request_sha256": "sha256:51516d229ab5c60fc24f3b83599726ff5f0222385cae7cc82d52e15b79dc6423",
+  "result_sha256": "sha256:3cf366ee15bd442e228f7497c759b1d3feb367af04ee2053da12c9a8a9fe09a3",
   "snapshot": {
     "ref": "refs/heads/main",
     "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb"
@@ -21,7 +21,7 @@
     },
     {
       "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
-      "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+      "source_sha256": "ccda1fed815b953b9f0eed9f616b94bcd0778c5a99e582dfa87fed2c69b08ce7",
       "satisfies": [
         "governance.quick-dev-tdd-adapter"
       ]
@@ -29,8 +29,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:3d628d10a28bc3c7f081a3c58d48c6f5ae1c32050cd1cd294457406f84044efc",
-    "freeze_receipt_path": "knowledge-context.freeze.history/3d628d10a28bc3c7f081a3c58d48c6f5ae1c32050cd1cd294457406f84044efc.v1.json",
-    "reason": "quick-dev-controlled-source-refresh"
+    "context_sha256": "sha256:0994c065988577e842484685db8b0e373a3c92e2a92ebdfa30d3e2147cc6dd3c",
+    "freeze_receipt_path": "knowledge-context.freeze.history/0994c065988577e842484685db8b0e373a3c92e2a92ebdfa30d3e2147cc6dd3c.v1.json",
+    "reason": "final candidate refresh before S0-S3 rerun"
   }
 }

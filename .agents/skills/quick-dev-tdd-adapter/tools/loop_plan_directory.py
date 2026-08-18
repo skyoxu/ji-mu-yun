@@ -10,7 +10,14 @@ import subprocess
 import sys
 
 from route_plan_directory import route
-from stage_lifecycle_runner import LifecycleRunner, validate_implementation_successor
+from knowledge_context import refresh_successor_context
+from stage_lifecycle_runner import (
+    LifecycleRunner,
+    derive_run_state,
+    prior_red_observation_path,
+    rebuild_stage_state,
+    validate_implementation_successor,
+)
 
 
 TOOLS = Path(__file__).resolve().parent
@@ -182,7 +189,7 @@ def _current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object],
     evidence_root = root / "logs" / "tdd-adapter" / str(contract["plan_id"]) / slice_id
     artifacts = sorted(evidence_root.glob("*/implementation-needed-result.json")) if evidence_root.is_dir() else []
     if not artifacts:
-        return None
+        artifacts = []
     contract_hash = _sha(plan / "implementation-contract.v1.json")
     valid: list[Path] = []
     stale = False
@@ -217,6 +224,43 @@ def _current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object],
             continue
         valid.append(artifact)
     if len(valid) != 1:
+        # Legacy staged runs may only have red-result plus the immutable
+        # nonzero observation. Accept the newest matching observation as a
+        # prior-red successor; it is never treated as a fresh RED pass.
+        legacy: list[Path] = []
+        for result_path in sorted(evidence_root.glob("*/red-result.json")) if evidence_root.is_dir() else []:
+            observation = result_path.parent / "observations" / "red-observed.json"
+            try:
+                result = json.loads(result_path.read_text(encoding="utf-8"))
+                observed = json.loads(observation.read_text(encoding="utf-8"))
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                continue
+            if (result.get("stage") == "red" and result.get("slice_id") == slice_id
+                    and isinstance(result.get("test_selector"), str)
+                    and result.get("test_selector", "").startswith(".agents/")
+                    and isinstance(result.get("expected_failure_ids"), list)
+                    and result.get("expected_failure_ids")
+                    and observed.get("stage") == "red" and isinstance(observed.get("exit_code"), int)
+                    and observed.get("exit_code") != 0):
+                legacy.append(observation)
+        if not legacy:
+            for run_path in sorted(evidence_root.glob("RUN-*")) if evidence_root.is_dir() else []:
+                basis_path = run_path / "red-basis.v1.json"
+                observation = run_path / "observations" / "red-observed.json"
+                try:
+                    basis = json.loads(basis_path.read_text(encoding="utf-8"))
+                    observed = json.loads(observation.read_text(encoding="utf-8"))
+                except (OSError, UnicodeError, json.JSONDecodeError):
+                    continue
+                intent = basis.get("failure_intent", {})
+                if (intent.get("expected_failure_ids") == red.get("expected_failure_ids")
+                        and observed.get("stage") == "red"
+                        and isinstance(observed.get("exit_code"), int)
+                        and observed.get("exit_code") != 0):
+                    legacy.append(observation)
+        if legacy:
+            artifact = sorted(legacy, key=lambda path: path.parent.parent.name)[-1]
+            return {"path": artifact.relative_to(root).as_posix(), "sha256": _sha(artifact)}
         if valid:
             raise ValueError("migration RED handoff is ambiguous")
         if stale:
@@ -236,28 +280,21 @@ def _active_slice_run(root: Path, plan_id: str, slice_id: str) -> tuple[Path, st
     return None
 
 
-def route_staged_run(run_dir: Path) -> str | None:
-    """Read one persisted staged run and return its only legal next action."""
-    state_path = run_dir / "stage-state.json"
-    if not state_path.is_file():
-        return None
+def _has_execution_fingerprint(run_dir: Path) -> bool:
     try:
-        state = json.loads(state_path.read_text(encoding="utf-8"))
+        basis = json.loads((run_dir / "red-basis.v1.json").read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError):
-        return None
-    observations = run_dir / "observations"
-    if state.get("stage") == "refactor":
-        if (run_dir / "slice-ready-result.json").is_file():
-            return None
-        return "slice-terminal" if (observations / "refactor-observed.json").is_file() else None
-    if state.get("stage") == "green":
-        return "refactor" if (observations / "green-observed.json").is_file() else None
-    if state.get("stage") == "red":
-        if (observations / "red-observed.json").is_file() and (run_dir / "red-basis.v1.json").is_file():
-            return "implement"
-    if state.get("stage") == "implement":
-        return "green" if validate_implementation_successor(run_dir) else "implement"
-    return None
+        return False
+    return isinstance(basis.get("execution_fingerprint"), str) and bool(basis["execution_fingerprint"])
+
+
+def route_staged_run(run_dir: Path) -> str | None:
+    """Return the next action derived from append-only observations.
+
+    The stage-state sidecar is refreshed only as a cache.  It never controls
+    whether a RED, GREEN, or REFACTOR observation is repeated.
+    """
+    return rebuild_stage_state(run_dir)
 
 
 def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> None:
@@ -266,11 +303,19 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
     bridge = contract.get("adapter_bridge")
     active = _active_slice_run(root, str(contract["plan_id"]), slice_id)
     stage = active[1] if active else "red"
+    reusable_handoff = _current_bridge_handoff(root, plan, contract, slice_id) if contract.get("plan_id") != "quick-dev-tdd-stage-recovery" else None
+    if active is not None and reusable_handoff is not None and not _has_execution_fingerprint(active[0]):
+        # An interrupted implementation stage is recoverable from the one
+        # validated prior RED observation. Legacy runs cannot prove their
+        # executable semantics against the current contract, so they resume in
+        # a successor rather than writing another observation into that run.
+        active = None
+        stage = "red"
     if stage == "implement":
         raise RuntimeError("implementation handoff must publish a RED-bound successor before run-slice")
     if stage == "slice-terminal":
         raise RuntimeError("slice terminal must be routed as validate-slice")
-    handoff = _current_bridge_handoff(root, plan, contract, slice_id) if stage == "red" and contract.get("plan_id") != "quick-dev-tdd-stage-recovery" else None
+    handoff = reusable_handoff if stage == "red" else None
     if stage == "red" and isinstance(bridge, dict) and isinstance(bridge.get("runner"), str) and handoff is None:
         runner = plan / bridge["runner"]
         if not runner.is_file():
@@ -324,8 +369,10 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
     context = json.loads((invocation / "run-context.json").read_text(encoding="utf-8"))
     for item in [*context["authority_refs"], context["implementation_contract"]]:
         item["payload"] = base64.b64decode(item.pop("payload_base64"), validate=True)
+    prior_red = prior_red_observation_path(run_dir)
+    observation_sources = {"red": prior_red.parent.parent if prior_red is not None else run_dir, "green": run_dir, "refactor": run_dir}
     observations = {
-        stage: json.loads((run_dir / "observations" / f"{stage}-observed.json").read_text(encoding="utf-8"))
+        stage: json.loads((observation_sources[stage] / "observations" / f"{stage}-observed.json").read_text(encoding="utf-8"))
         for stage in ("red", "green", "refactor")
     }
     for stage in ("green", "refactor"):
@@ -338,8 +385,43 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
             core["command_id"] = refactor_commands[0]["id"]
     snapshots = _workspace_snapshot_paths(root, plan, snapshots)
     lifecycle = LifecycleRunner(root, run_dir, snapshots)
-    lifecycle.resume_observations(run_dir, ["red", "green", "refactor"])
-    lifecycle.close(context, {})
+    lifecycle.resume_observations(run_dir, ["red", "green", "refactor"], observation_sources=observation_sources)
+    try:
+        lifecycle.close(context, {})
+    except ValueError as exc:
+        # A partially closed run is immutable. Reconcile it by creating an
+        # append-only successor carrying only stage observations, never by
+        # overwriting protocol attempts from the predecessor.
+        if "protocol artifact conflicts" not in str(exc):
+            raise
+        successor = run_dir.parent / f"{run_dir.name}-SUCCESSOR"
+        if successor.exists():
+            raise
+        successor.mkdir(parents=True)
+        observation_refs = []
+        for stage in ("red", "green", "refactor"):
+            source = run_dir / "observations" / f"{stage}-observed.json"
+            if not source.is_file():
+                raise RuntimeError("terminal successor requires complete predecessor observations")
+            observation_refs.append({"stage": stage, "path": source.relative_to(root).as_posix(), "sha256": _sha(source)})
+        (successor / "successor-lineage.v1.json").write_text(json.dumps({
+            "schema_version": "quick-dev-tdd-adapter.successor-lineage.v1",
+            "predecessor_run": run_dir.relative_to(root).as_posix(),
+            "predecessor_observations": observation_refs,
+            "next_transition": "slice-terminal",
+            "authorizes": [],
+        }, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+        run_dir = successor
+        context["run_id"] = run_dir.name
+        for core in context["stage_results"].values():
+            core["run_id"] = run_dir.name
+        lifecycle = LifecycleRunner(root, run_dir, snapshots)
+        lifecycle.resume_observations(
+            run_dir.parent / run_dir.name.removesuffix("-SUCCESSOR"),
+            ["red", "green", "refactor"],
+            observation_sources=observation_sources,
+        )
+        lifecycle.close(context, {})
     command = json.loads((invocation / "terminal-command.json").read_text(encoding="utf-8"))
     completed = subprocess.run([command["executable"], *command["argv"]], cwd=root, shell=False, check=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=command["timeout_seconds"])
     if completed.returncode != 0:
@@ -347,6 +429,7 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
     result = json.loads(completed.stdout)
     if result.get("status") != "pass" or result.get("predicate") != "slice-ready":
         raise RuntimeError("slice terminal predicate did not pass")
+    result["execution_fingerprint"] = context["stage_results"]["red"]["execution_fingerprint"]
     (run_dir / "slice-ready-result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
@@ -367,6 +450,11 @@ def main() -> int:
         actions.append(result)
         if result["next_action"] == "validate-terminal":
             _run_terminal(root, plan)
+            continue
+        if result["next_action"] == "refresh-knowledge-context":
+            refreshed = refresh_successor_context(root, plan)
+            if refreshed.get("status") != "refreshed":
+                raise RuntimeError(str(refreshed.get("failure_code", "knowledge successor refresh failed")))
             continue
         if result["next_action"] == "validate-slice":
             _run_slice_terminal(root, plan, str(result["slice_id"]), args.snapshot_path)

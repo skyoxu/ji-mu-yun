@@ -263,6 +263,8 @@ def persist_protocol_bundle(
         "implementation-successor.v1.json",
         "legacy-regression-evidence.json",
         "prior-red-successor-evidence.v1.json",
+        "prior-red-handoff.v2.json",
+        "successor-lineage.v1.json",
         "stage-evidence-projection.v1.json",
         "slice-ready-result.json",
     }

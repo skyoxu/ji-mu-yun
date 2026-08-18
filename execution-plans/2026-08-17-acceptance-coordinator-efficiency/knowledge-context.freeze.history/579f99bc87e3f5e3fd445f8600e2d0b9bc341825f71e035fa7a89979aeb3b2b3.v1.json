@@ -1,10 +1,10 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:30bb122a9aa9e2d739be86b9299f5f290bbecab28073d45adb13ac69cb6c5b34",
-  "canonical_context_sha256": "sha256:a8e3ac7763fefee42d4f89b2779f28f89a6d63dc94bdf5f5969cf42a69cb4bbe",
-  "request_sha256": "sha256:dcf4e0a741788b4d31364298d8bc517b9a6db62f1495a5a731108a8b53388fd9",
-  "result_sha256": "sha256:99bca0803065872c1100f18d1aa3334add71b5bf0949e15ed34b12382d456880",
+  "context_sha256": "sha256:579f99bc87e3f5e3fd445f8600e2d0b9bc341825f71e035fa7a89979aeb3b2b3",
+  "canonical_context_sha256": "sha256:a1b14d2f2e0fca99bcaac8fefaba40c1d4b63e7035d02dd9c0bfc106d7ed16d9",
+  "request_sha256": "sha256:41367b12820e4e5ec8ac44fc71f7a23973b6a4aae2f31d8ecf68cb565513a798",
+  "result_sha256": "sha256:6bb539930ce2615bd85349711346d2b4966951e51e288721f5830d979e5a3286",
   "snapshot": {
     "ref": "refs/heads/main",
     "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb"
@@ -21,7 +21,7 @@
     },
     {
       "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
-      "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+      "source_sha256": "ccda1fed815b953b9f0eed9f616b94bcd0778c5a99e582dfa87fed2c69b08ce7",
       "satisfies": [
         "governance.quick-dev-tdd-adapter"
       ]
@@ -29,8 +29,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:3d628d10a28bc3c7f081a3c58d48c6f5ae1c32050cd1cd294457406f84044efc",
-    "freeze_receipt_path": "knowledge-context.freeze.history/3d628d10a28bc3c7f081a3c58d48c6f5ae1c32050cd1cd294457406f84044efc.v1.json",
-    "reason": "quick-dev-controlled-source-refresh"
+    "context_sha256": "sha256:5f6ec59db196de793b8dc3d5fc6f551d7dce6c57ffc7cebfa925c3ca132cdad6",
+    "freeze_receipt_path": "knowledge-context.freeze.history/5f6ec59db196de793b8dc3d5fc6f551d7dce6c57ffc7cebfa925c3ca132cdad6.v1.json",
+    "reason": "bind current coordinator implementation"
   }
 }

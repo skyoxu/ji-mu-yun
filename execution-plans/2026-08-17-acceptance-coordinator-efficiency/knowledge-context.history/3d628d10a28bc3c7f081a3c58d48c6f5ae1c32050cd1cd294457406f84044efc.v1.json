@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-acceptance-coordinator-efficiency-20260818-recovery7-successor-20260818T041831Z-successor-20260818T042854Z",
+    "request_id": "vdd-acceptance-coordinator-efficiency-20260818-recovery7-successor-20260818T041831Z",
     "consumer": "vdd",
     "query": "Acceptance coordinator deterministic route projection candidate binding Quick Dev idempotent finalization stale successor recovery",
     "snapshot": {
@@ -160,7 +160,7 @@
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
             "role": "orchestrator",
-            "source_sha256": "48915e425d6171732cd6beccc9017baa7216e75493ed47a4041688d06f5970e7"
+            "source_sha256": "e3134b9bc2605939deb330fc75583843173249baf648ffb09ece6f56561121ab"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
@@ -853,7 +853,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-acceptance-coordinator-efficiency-20260818-recovery7-successor-20260818T041831Z-successor-20260818T042854Z",
+    "request_id": "vdd-acceptance-coordinator-efficiency-20260818-recovery7-successor-20260818T041831Z",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb",
@@ -992,12 +992,12 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:dcf4e0a741788b4d31364298d8bc517b9a6db62f1495a5a731108a8b53388fd9",
-  "result_sha256": "sha256:99bca0803065872c1100f18d1aa3334add71b5bf0949e15ed34b12382d456880",
+  "request_sha256": "sha256:87298a1399113ac1b845acbfd6b8c726fb135f8f991eacddbbce22236cc22124",
+  "result_sha256": "sha256:fe1fcc61b6ac440c9db1dafad841c222344360cd257a7c12b3255ae77b5e7631",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:f3ab31a9810eef02c4b25f44a81b8499801c47fc6a6b9674de97fd659aea5ad3"
+    "base_locator_result_sha256": "sha256:bafecc05ed91070d0e2d299ced528877327ab89c665e59ffcaf37fbc14fc9e5c"
   },
   "preflight": {
     "status": "ready",
@@ -1005,6 +1005,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:728c70cdaf78ce531838f4a97ab732547b96e5b9b39750da797bf9dedabd6e7f"
+    "context_sha256": "sha256:c3ac69aeb62caab9a4ad9d57e6df482aa496ba114416673d2ba344d42b289038"
   }
 }

@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -79,6 +80,75 @@ def _accepted_worktree_projection(context: dict[str, Any]) -> dict[str, Any]:
     return projected
 
 
+def _selection(context: dict[str, Any]) -> set[tuple[str, tuple[str, ...]]]:
+    """Project accepted authority shape without binding historical source bytes."""
+    values: set[tuple[str, tuple[str, ...]]] = set()
+    for decision in context.get("decisions", []):
+        candidate = decision.get("candidate") if isinstance(decision, dict) else None
+        if decision.get("decision") != "accepted" or not isinstance(candidate, dict):
+            continue
+        path, satisfies = candidate.get("path"), decision.get("satisfies")
+        if not isinstance(path, str) or not isinstance(satisfies, list) or any(not isinstance(item, str) for item in satisfies):
+            raise ValueError("accepted knowledge selection is invalid")
+        values.add((path, tuple(sorted(satisfies))))
+    if not values:
+        raise ValueError("accepted knowledge selection is empty")
+    return values
+
+
+def refresh_successor_context(repository_root: Path, plan_dir: Path) -> dict[str, Any]:
+    """Ask the VDD producer to refresh bytes without widening selected authority.
+
+    This is a controlled producer invocation, not a Quick Dev publication. The
+    VDD script archives the frozen predecessor and atomically publishes the
+    successor receipt.  The caller may continue only when the selected
+    path/module projection is unchanged.
+    """
+    root, plan = repository_root.resolve(), plan_dir.resolve()
+    context_path = plan / "knowledge-context.v1.json"
+    freeze_path = plan / "knowledge-context.freeze.v1.json"
+    before_bytes = context_path.read_bytes()
+    before = json.loads(before_bytes.decode("utf-8"))
+    request = before.get("locator_request")
+    if not isinstance(request, dict) or request.get("consumer") != "vdd":
+        return {"status": "vdd-repair", "failure_code": "KWI-QUICK-SCOPE-EXPANSION"}
+    before_selection = _selection(before)
+    accepted = [
+        f"{path}={','.join(modules)}"
+        for path, modules in sorted(before_selection)
+    ]
+    target = plan.relative_to(root).as_posix()
+    output = context_path.relative_to(root).as_posix()
+    successor_id = f"{request.get('request_id', 'quick-dev')}-successor-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+    command = [
+        sys.executable, "-B", str(root / ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py"),
+        "--repository-root", str(root), "--request-id", successor_id,
+        "--query", str(request.get("query", "")), "--target-plan", target,
+        "--output", output, "--supersede-frozen-context",
+        "--expected-context-sha256", "sha256:" + hashlib.sha256(before_bytes).hexdigest(),
+        "--supersession-reason", "quick-dev-controlled-source-refresh",
+    ]
+    for module in before.get("required_modules", []):
+        if not isinstance(module, str) or not module:
+            return {"status": "vdd-repair", "failure_code": "KWI-QUICK-SCOPE-EXPANSION"}
+        command.extend(["--required-module", module])
+    for value in accepted:
+        command.extend(["--accept", value])
+    completed = subprocess.run(command, cwd=root, check=False, capture_output=True, text=True, encoding="utf-8")
+    if completed.returncode:
+        return {"status": "vdd-repair", "failure_code": "KWI-QUICK-FROZEN-CONTEXT-STALE", "detail": "successor_refresh_failed"}
+    try:
+        after = json.loads(context_path.read_text(encoding="utf-8"))
+        receipt = json.loads(freeze_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return {"status": "vdd-repair", "failure_code": "KWI-QUICK-FROZEN-CONTEXT-STALE", "detail": "successor_refresh_unreadable"}
+    if _selection(after) != before_selection:
+        return {"status": "vdd-repair", "failure_code": "KWI-QUICK-SCOPE-EXPANSION"}
+    if not isinstance(receipt.get("supersedes"), dict):
+        return {"status": "vdd-repair", "failure_code": "KWI-QUICK-FROZEN-CONTEXT-STALE", "detail": "successor_receipt_missing"}
+    return {"status": "refreshed", "authorizes": []}
+
+
 def verify_plan_context(repository_root: Path, plan_dir: Path) -> dict[str, Any]:
     """Fail closed when a declared VDD context no longer matches local sources."""
     context_path = plan_dir / "knowledge-context.v1.json"
@@ -102,12 +172,16 @@ def verify_plan_context(repository_root: Path, plan_dir: Path) -> dict[str, Any]
             require_preflight=True,
         )
         if failure_code:
-            return {"status": "vdd-repair", "failure_code": "KWI-QUICK-FROZEN-CONTEXT-STALE", "detail": failure_code}
+            status = "successor-required" if failure_code in {
+                "catalog_snapshot_mismatch", "catalog_source_snapshot_id_mismatch",
+                "preflight_catalog_freshness_invalid", "candidate_worktree_source_hash_mismatch",
+            } else "vdd-repair"
+            return {"status": status, "failure_code": "KWI-QUICK-FROZEN-CONTEXT-STALE", "detail": failure_code}
         worktree_failure = validator.validate_worktree_sources(
             _accepted_worktree_projection(context), repository_root.resolve()
         )
         if worktree_failure:
-            return {"status": "vdd-repair", "failure_code": "KWI-QUICK-FROZEN-CONTEXT-STALE", "detail": worktree_failure}
+            return {"status": "successor-required", "failure_code": "KWI-QUICK-FROZEN-CONTEXT-STALE", "detail": worktree_failure}
         accepted = [
             {
                 "path": decision["candidate"]["path"],
