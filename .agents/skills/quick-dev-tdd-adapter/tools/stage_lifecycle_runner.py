@@ -271,7 +271,8 @@ class LifecycleRunner:
     ) -> None:
         """Resume an existing append-only run before the next stage."""
         expected = ["red", "green", "refactor"]
-        if stages != expected[:len(stages)] or self.stages:
+        start = len(self.stages)
+        if stages != expected[start:start + len(stages)]:
             raise ValueError("prior lifecycle stages are invalid")
         snapshots = dict(self.snapshots)
         for stage in stages:

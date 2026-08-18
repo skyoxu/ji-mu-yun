@@ -125,7 +125,7 @@ def main() -> int:
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--slice-id", required=True)
     parser.add_argument("--run-context", type=Path, required=True)
-    parser.add_argument("--snapshot-path", action="append", required=True)
+    parser.add_argument("--snapshot-path", action="append", default=[])
     parser.add_argument("--command", action="append", required=True, help="stage=path-to-shell-false-command-json")
     parser.add_argument("--terminal-command", type=Path, required=True)
     parser.add_argument("--prepare-command", type=Path, action="append", default=[])
@@ -189,9 +189,15 @@ def main() -> int:
         return 0
 
     if args.stage in {"green", "refactor"}:
-        if args.stage == "green" and not stage_runner.validate_implementation_successor(run_dir):
-            raise RuntimeError("GREEN requires a valid RED-bound implementation successor")
-        lifecycle.resume_observations(run_dir, ["red"] if args.stage == "green" else ["red", "green"])
+        if red_mode == "prior-red-successor":
+            prior_red = _prior_red_successor(workspace, prior_red, commands["red"][0]["id"])
+            lifecycle.begin_after_prior_red()
+            if args.stage == "refactor":
+                lifecycle.resume_observations(run_dir, ["green"])
+        else:
+            if args.stage == "green" and not stage_runner.validate_implementation_successor(run_dir):
+                raise RuntimeError("GREEN requires a valid RED-bound implementation successor")
+            lifecycle.resume_observations(run_dir, ["red"] if args.stage == "green" else ["red", "green"])
     else:
         if red_mode == "prior-red-successor":
             prior_red = _prior_red_successor(workspace, prior_red, commands["red"][0]["id"])
@@ -214,6 +220,16 @@ def main() -> int:
         if green["exit_code"] != 0:
             raise RuntimeError("GREEN command failed")
         (run_dir / "stage-state.json").write_text(json.dumps({"stage": "green", "next_stage": "refactor", "authorizes": []}, indent=2) + "\n", encoding="utf-8", newline="\n")
+        if red_mode == "prior-red-successor":
+            (run_dir / "prior-red-handoff.v2.json").write_text(json.dumps({
+                "schema_version": "quick-dev-tdd-adapter.prior-red-handoff.v2",
+                "plan_id": context["plan_id"], "slice_id": args.slice_id, "run_id": run_dir.name,
+                "red_observation": prior_red,
+                "execution_fingerprint": context["stage_results"]["red"]["execution_fingerprint"],
+                "test_selector": context["stage_results"]["red"]["test_selector"],
+                "expected_failure_ids": context["stage_results"]["red"]["expected_failure_ids"],
+                "authorizes": [],
+            }, indent=2) + "\n", encoding="utf-8", newline="\n")
         print(json.dumps({"run_id": run_dir.name, "stage": "green", "next_stage": "refactor", "authorizes": []}, sort_keys=True))
         return 0
 

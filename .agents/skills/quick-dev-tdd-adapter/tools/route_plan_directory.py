@@ -440,6 +440,43 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
         }
     if lifecycle_state == "implementation-authorized":
         if document["authorizes"] == ["plan-ready", "implementation-authorized"]:
+            receipt_path = plan_dir / "implementation-authorization-receipt.successor.v1.json"
+            if not receipt_path.is_file():
+                return {
+                    "next_action": "awaiting-implementation-authorization",
+                    "reason": "implementation-authorization-receipt-missing",
+                    "authorizes": [],
+                }
+            try:
+                receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+                if (
+                    receipt.get("plan_id") != plan_id
+                    or receipt.get("decision", {}).get("owner") != "maintainer"
+                    or receipt.get("decision", {}).get("transition") != "implementation-authorized"
+                    or receipt.get("authorizes") != ["implementation-authorized"]
+                ):
+                    raise ValueError("receipt metadata mismatch")
+                bindings = (
+                    "implementation_contract",
+                    "authority_manifest",
+                    "knowledge_context_freeze",
+                    "skill_input_receipt",
+                )
+                root = plan_dir.resolve().parents[1]
+                for field in bindings:
+                    binding = receipt.get(field)
+                    if not isinstance(binding, dict) or not isinstance(binding.get("path"), str) or not isinstance(binding.get("sha256"), str):
+                        raise ValueError("receipt binding missing")
+                    path = (root / binding["path"]).resolve()
+                    path.relative_to(root)
+                    if not path.is_file() or _sha(path.read_bytes()) != binding["sha256"]:
+                        raise ValueError("receipt binding stale")
+            except (OSError, UnicodeError, json.JSONDecodeError, TypeError, ValueError):
+                return {
+                    "next_action": "awaiting-implementation-authorization",
+                    "reason": "implementation-authorization-stale",
+                    "authorizes": [],
+                }
             return None
         return {
             "next_action": "external-repair-required",

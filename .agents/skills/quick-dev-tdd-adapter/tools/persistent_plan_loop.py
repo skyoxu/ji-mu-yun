@@ -36,9 +36,16 @@ def main() -> int:
         ], text=True))
         action = routed["next_action"]
         _write(args.state_file, {"observed_at": datetime.now(timezone.utc).isoformat(), "action": action, "slice_id": routed.get("slice_id"), "authorizes": []})
-        if action != "run-slice": return 0
-        snapshot = _snapshot(plan, str(routed["slice_id"]))
-        completed = subprocess.run([sys.executable, str(TOOLS / "loop_plan_directory.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--snapshot-path", snapshot, "--max-actions", "1"], cwd=root)
+        if action in {"awaiting-implementation-authorization", "external-repair-required", "implement", "stop", "implementation-complete"}:
+            return 0
+        if action in {"run-slice", "validate-slice", "validate-terminal", "refresh-knowledge-context"}:
+            snapshot = _snapshot(plan, str(routed["slice_id"])) if routed.get("slice_id") else None
+            command = [sys.executable, str(TOOLS / "loop_plan_directory.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--max-actions", "1"]
+            if snapshot:
+                command.extend(["--snapshot-path", snapshot])
+            completed = subprocess.run(command, cwd=root)
+        else:
+            return 0
         if completed.returncode: return completed.returncode
         time.sleep(args.poll_seconds)
 

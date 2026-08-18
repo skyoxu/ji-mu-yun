@@ -178,8 +178,8 @@ def _sha(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object], slice_id: str) -> dict[str, str] | None:
-    """Return one current bridge RED handoff or reject stale bridge evidence."""
+def _legacy_current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object], slice_id: str) -> dict[str, str] | None:
+    """Historical reader retained only for older evidence inspection."""
     selected = next((item for item in contract.get("slices", []) if item.get("slice_id") == slice_id), None)
     if not isinstance(selected, dict) or not isinstance(selected.get("tdd"), dict):
         raise ValueError("bridge slice declaration is invalid")
@@ -270,6 +270,12 @@ def _current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object],
     return {"path": artifact.relative_to(root).as_posix(), "sha256": _sha(artifact)}
 
 
+def _current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object], slice_id: str) -> dict[str, str] | None:
+    """Use the router's single strict handoff validator for all continuations."""
+    from route_plan_directory import current_red_handoff
+    return current_red_handoff(root, plan, slice_id)
+
+
 def _active_slice_run(root: Path, plan_id: str, slice_id: str) -> tuple[Path, str] | None:
     evidence_root = root / "logs" / "tdd-adapter" / plan_id / slice_id
     candidates = sorted((path for path in evidence_root.glob("RUN-*") if path.is_dir()), key=lambda path: path.name, reverse=True)
@@ -277,6 +283,18 @@ def _active_slice_run(root: Path, plan_id: str, slice_id: str) -> tuple[Path, st
         action = route_staged_run(run_dir)
         if action is not None:
             return run_dir, action
+    return None
+
+
+def _active_prior_red_handoff(run_dir: Path) -> dict[str, str] | None:
+    path = run_dir / "prior-red-handoff.v2.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        reference = value.get("red_observation")
+        if isinstance(reference, dict) and set(reference) == {"path", "sha256"} and all(isinstance(reference[key], str) for key in reference):
+            return {"path": reference["path"], "sha256": reference["sha256"]}
+    except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+        pass
     return None
 
 
@@ -303,7 +321,7 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
     bridge = contract.get("adapter_bridge")
     active = _active_slice_run(root, str(contract["plan_id"]), slice_id)
     stage = active[1] if active else "red"
-    reusable_handoff = _current_bridge_handoff(root, plan, contract, slice_id) if contract.get("plan_id") != "quick-dev-tdd-stage-recovery" else None
+    reusable_handoff = _current_bridge_handoff(root, plan, contract, slice_id)
     if active is not None and reusable_handoff is not None and not _has_execution_fingerprint(active[0]):
         # An interrupted implementation stage is recoverable from the one
         # validated prior RED observation. Legacy runs cannot prove their
@@ -315,7 +333,7 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
         raise RuntimeError("implementation handoff must publish a RED-bound successor before run-slice")
     if stage == "slice-terminal":
         raise RuntimeError("slice terminal must be routed as validate-slice")
-    handoff = reusable_handoff if stage == "red" else None
+    handoff = reusable_handoff if stage == "red" else _active_prior_red_handoff(active[0]) if active is not None else None
     if stage == "red" and isinstance(bridge, dict) and isinstance(bridge.get("runner"), str) and handoff is None:
         runner = plan / bridge["runner"]
         if not runner.is_file():
@@ -346,7 +364,10 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
         command_path.write_text(json.dumps(commands_document[index], indent=2) + "\n", encoding="utf-8", newline="\n")
         commands.extend(["--command", f"refactor={command_path}"])
     invocation_args = [str(TOOLS / "run_slice_lifecycle.py"), "--workspace", str(root), "--plan-dir", str(plan), "--run-dir", str(run_dir), "--slice-id", slice_id, "--run-context", str(invocation / "run-context.json"), "--terminal-command", str(invocation / "terminal-command.json")]
-    if handoff is None:
+    if handoff is not None and stage == "red":
+        run_dir.mkdir(parents=True, exist_ok=False)
+        invocation_args.extend(["--stage", "green"])
+    else:
         invocation_args.extend(["--stage", stage])
     for index, command in enumerate(json.loads((invocation / "preparation-commands.json").read_text(encoding="utf-8"))):
         command_path = invocation / f"preparation-command-{index}.json"
@@ -400,9 +421,9 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
         successor.mkdir(parents=True)
         observation_refs = []
         for stage in ("red", "green", "refactor"):
-            source = run_dir / "observations" / f"{stage}-observed.json"
+            source = observation_sources[stage] / "observations" / f"{stage}-observed.json"
             if not source.is_file():
-                raise RuntimeError("terminal successor requires complete predecessor observations")
+                raise RuntimeError("terminal successor requires complete lifecycle observations")
             observation_refs.append({"stage": stage, "path": source.relative_to(root).as_posix(), "sha256": _sha(source)})
         (successor / "successor-lineage.v1.json").write_text(json.dumps({
             "schema_version": "quick-dev-tdd-adapter.successor-lineage.v1",
@@ -437,7 +458,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository-root", type=Path, required=True)
     parser.add_argument("--plan-dir", type=Path, required=True)
-    parser.add_argument("--snapshot-path", action="append", required=True)
+    parser.add_argument("--snapshot-path", action="append", default=[])
     parser.add_argument("--max-actions", type=int, default=1)
     args = parser.parse_args()
     root, plan = args.repository_root.resolve(), args.plan_dir.resolve()
@@ -457,6 +478,8 @@ def main() -> int:
                 raise RuntimeError(str(refreshed.get("failure_code", "knowledge successor refresh failed")))
             continue
         if result["next_action"] == "validate-slice":
+            if not args.snapshot_path:
+                raise ValueError("validate-slice requires a snapshot path")
             _run_slice_terminal(root, plan, str(result["slice_id"]), args.snapshot_path)
             continue
         if result["next_action"] != "run-slice":

@@ -164,6 +164,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
 
             self.assertEqual("build_slice_invocation.py", Path(calls[0][0]).name)
             self.assertEqual("run_slice_lifecycle.py", Path(calls[1][0]).name)
+            self.assertEqual("green", calls[1][calls[1].index("--stage") + 1])
             context_path = Path(calls[1][calls[1].index("--run-context") + 1])
             context = json.loads(context_path.read_text(encoding="utf-8"))
             self.assertEqual("prior-red-successor", context["stage_results"]["red"]["mode"])
@@ -295,14 +296,42 @@ class PlanDirectoryLoopTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
+            bindings = {
+                "implementation_contract": "implementation-contract.v1.json",
+                "authority_manifest": "authority-manifest.v1.json",
+                "knowledge_context_freeze": "knowledge-context.freeze.v1.json",
+                "skill_input_receipt": "skill-input-receipt.successor.v1.json",
+            }
+            for name in list(bindings.values())[1:]:
+                (plan / name).write_text("{}\n", encoding="utf-8")
             (plan / "plan-state.v1.json").write_text(json.dumps({
                 "schema_version": "vdd.plan-state.v2",
                 "plan_id": "target",
                 "status": "implementation-authorized",
                 "authorizes": ["plan-ready", "implementation-authorized"],
             }), encoding="utf-8")
+            receipt_bindings = {}
+            for field, name in bindings.items():
+                path = plan / name
+                receipt_bindings[field] = {
+                    "path": path.relative_to(root).as_posix(),
+                    "sha256": "sha256:" + __import__("hashlib").sha256(path.read_bytes()).hexdigest(),
+                }
+            (plan / "implementation-authorization-receipt.successor.v1.json").write_text(json.dumps({
+                "plan_id": "target",
+                **receipt_bindings,
+                "decision": {"owner": "maintainer", "transition": "implementation-authorized"},
+                "authorizes": ["implementation-authorized"],
+            }), encoding="utf-8")
 
             self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+
+            changed_contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+            changed_contract["changed"] = True
+            (plan / "implementation-contract.v1.json").write_text(json.dumps(changed_contract), encoding="utf-8")
+            result = ROUTER.route(root, plan)
+            self.assertEqual("awaiting-implementation-authorization", result["next_action"])
+            self.assertEqual("implementation-authorization-stale", result["reason"])
 
     def test_top_level_active_route_exposes_implementation_handoff(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -506,6 +535,25 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             plan = self._plan(root, [{"slice_id": "RMAP-S7", "depends_on": [], "allowed_changes": {}}])
             with self.assertRaisesRegex(ValueError, "declared execution snapshot"):
                 CONTROLLER._snapshot(plan, "RMAP-S7")
+
+    def test_persistent_controller_dispatches_refresh_and_terminal_actions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
+            state = root / "logs" / "controller-state.json"
+            routes = iter([
+                {"next_action": "refresh-knowledge-context"},
+                {"next_action": "validate-terminal"},
+                {"next_action": "implementation-complete"},
+            ])
+            with mock.patch.object(CONTROLLER.subprocess, "check_output", side_effect=lambda *_args, **_kwargs: json.dumps(next(routes))), \
+                 mock.patch.object(CONTROLLER.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)) as run, \
+                 mock.patch.object(CONTROLLER.time, "sleep"), \
+                 mock.patch.object(sys, "argv", ["persistent_plan_loop.py", "--repository-root", str(root), "--plan-dir", str(plan), "--state-file", str(state), "--poll-seconds", "0"]):
+                self.assertEqual(0, CONTROLLER.main())
+
+            self.assertEqual(2, run.call_count)
+            self.assertEqual("implementation-complete", json.loads(state.read_text(encoding="utf-8"))["action"])
 
     def test_builder_expands_run_path_and_serializes_base64_context(self) -> None:
         plan = REPOSITORY_ROOT / "execution-plans/2026-07-15-repository-maintenance-tdd-adapter"
