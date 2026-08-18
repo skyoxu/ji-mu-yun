@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -18,15 +19,44 @@ def _request(tmp_path: Path, *, semantic: bool = False) -> tuple[Path, Path, dic
         "knowledgeContext": {"path": "context.json", "sha256": "sha256:" + "c" * 64},
     }
     bundle["bundleHash"] = canonical_hash(bundle)
+    def write(name: str, value: dict) -> dict:
+        path = tmp_path / name
+        path.write_text(json.dumps(value, sort_keys=True), encoding="utf-8")
+        return {"path": name, "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()}
+
+    authority = write("producer-authority.json", {
+        "schemaVersion": "acceptance-coordinator-producer-authority.v1",
+        "owner": "run-refactor-implementation-acceptance",
+        "candidateBindingHash": binding,
+        "bundleHash": bundle["bundleHash"],
+        "authorizes": [],
+    })
+    actions = []
+    for action_id in ("source-freeze", "consumer-closure", "finalization"):
+        receipt = write(f"{action_id}.json", {
+            "schemaVersion": "acceptance-coordinator-action-receipt.v1",
+            "actionId": action_id,
+            "status": "completed",
+            "candidateBindingHash": binding,
+            "bundleHash": bundle["bundleHash"],
+            "authorizes": [],
+        })
+        actions.append({"actionId": action_id, "receipt": receipt})
+    evidence = write("machine-evidence.json", {
+        "schemaVersion": "acceptance-coordinator-evidence.v1",
+        "producerAuthority": authority,
+        "candidateBindingHash": binding,
+        "bundleHash": bundle["bundleHash"],
+        "deterministicSourceSufficient": True,
+        "semanticReviewRequired": semantic,
+        "actions": actions,
+        "authorizes": [],
+    })
     request = {
         "schemaVersion": "acceptance-coordinator-request.v2",
         "candidateBindingHash": binding,
         "bundle": bundle,
-        "evidence": {
-            "candidateBindingHash": binding,
-            "deterministicSourceSufficient": True,
-            "semanticReviewRequired": semantic,
-        },
+        "evidence": evidence,
         "authorizes": [],
     }
     source, output = tmp_path / "request.json", tmp_path / "result.json"
@@ -81,7 +111,11 @@ def test_coordinator_rejects_insufficient_deterministic_evidence(tmp_path: Path)
     import acceptance_cli
 
     source, output, request = _request(tmp_path)
-    request["evidence"]["deterministicSourceSufficient"] = False
+    evidence_path = tmp_path / request["evidence"]["path"]
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    evidence["deterministicSourceSufficient"] = False
+    evidence_path.write_text(json.dumps(evidence), encoding="utf-8")
+    request["evidence"]["sha256"] = "sha256:" + hashlib.sha256(evidence_path.read_bytes()).hexdigest()
     source.write_text(json.dumps(request), encoding="utf-8")
     with pytest.raises(acceptance_cli.InputError):
         acceptance_cli.run_coordinator(str(source), str(output))

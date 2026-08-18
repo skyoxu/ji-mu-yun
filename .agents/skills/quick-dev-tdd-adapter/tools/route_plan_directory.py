@@ -125,6 +125,20 @@ def current_red_handoff(repository_root: Path, plan_dir: Path, slice_id: str) ->
             continue
     artifacts = sorted(evidence_root.glob("*/implementation-needed-result.json")) if evidence_root.is_dir() else []
     expected_contract = _sha(contract_path.read_bytes())
+    expected_test_hash = _sha((root / selector).read_bytes()) if (root / selector).is_file() else None
+
+    def valid_basis(path: Path) -> bool:
+        try:
+            basis = json.loads(path.read_text(encoding="utf-8"))
+            intent = basis.get("failure_intent", {})
+        except (OSError, UnicodeError, json.JSONDecodeError, AttributeError):
+            return False
+        return (
+            basis.get("test_selector") == selector
+            and basis.get("test_sha256") == expected_test_hash
+            and basis.get("execution_fingerprint") == current_fingerprint
+            and intent.get("expected_failure_ids") == red.get("expected_failure_ids")
+        )
     valid: list[Path] = []
     for artifact in artifacts:
         try:
@@ -185,9 +199,27 @@ def current_red_handoff(repository_root: Path, plan_dir: Path, slice_id: str) ->
                 or not isinstance(observation.get("exit_code"), int)
                 or observation.get("exit_code") == 0
                 or not test_path.is_file()
+                or not valid_basis(result_path.parent / "red-basis.v1.json")
             ):
                 continue
             legacy.append((result_path, observation_path))
+        if not legacy:
+            # The oldest staged shape contains only the canonical RED basis and
+            # its immutable failed observation.  It is safe only when both
+            # current executable identity and current test bytes still match.
+            for basis_path in sorted(evidence_root.glob("*/red-basis.v1.json")):
+                observation_path = basis_path.parent / "observations" / "red-observed.json"
+                try:
+                    observation = json.loads(observation_path.read_text(encoding="utf-8"))
+                except (OSError, UnicodeError, json.JSONDecodeError):
+                    continue
+                if (
+                    valid_basis(basis_path)
+                    and observation.get("stage") == "red"
+                    and isinstance(observation.get("exit_code"), int)
+                    and observation["exit_code"] != 0
+                ):
+                    legacy.append((basis_path, observation_path))
         if not legacy:
             return None
         # Multiple interrupted attempts may exist; the newest matching RED is

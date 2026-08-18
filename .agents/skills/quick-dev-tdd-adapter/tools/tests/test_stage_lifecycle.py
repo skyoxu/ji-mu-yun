@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from pathlib import Path
 import sys
 
@@ -63,3 +64,26 @@ def test_prior_red_basis_is_hash_bound(tmp_path):
     assert result is not None
     assert result[0]["path"].endswith("red-basis.v1.json")
     assert result[1] == "RUN-OLD"
+
+
+def test_terminal_close_reads_predecessor_red_without_copying_it(tmp_path, monkeypatch):
+    runner_module = _load("stage_lifecycle_runner")
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    (workspace / "snapshot.txt").write_text("current", encoding="utf-8")
+    predecessor = tmp_path / "RUN-OLD"
+    successor = tmp_path / "RUN-NEW"
+    for source, stage, code in ((predecessor, "red", 1), (successor, "green", 0), (successor, "refactor", 0)):
+        observation = source / "observations" / f"{stage}-observed.json"
+        observation.parent.mkdir(parents=True, exist_ok=True)
+        observation.write_text(json.dumps({"stage": stage, "exit_code": code}), encoding="utf-8")
+    observed = []
+    monkeypatch.setattr(runner_module, "compose", lambda _context, values, _store: (observed.extend(values) or {"schema_version": "bundle"}, {}, None))
+    monkeypatch.setattr(runner_module, "persist_protocol_bundle", lambda *_args: None)
+    runner = runner_module.LifecycleRunner(workspace, successor, ["snapshot.txt"])
+    runner.stages = ["red", "green", "refactor"]
+
+    runner.close({}, {}, observation_sources={"red": predecessor, "green": successor, "refactor": successor})
+
+    assert [item["stage"] for item in observed] == ["red", "green", "refactor"]
+    assert not (successor / "observations" / "red-observed.json").exists()

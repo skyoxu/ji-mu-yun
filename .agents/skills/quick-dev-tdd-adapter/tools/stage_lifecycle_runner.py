@@ -300,13 +300,20 @@ class LifecycleRunner:
             self.stages.append(stage)
         self.snapshots = snapshots
 
-    def close(self, run_context: dict[str, Any], artifact_store: dict[tuple[str, str], bytes]) -> dict[str, Any]:
+    def close(
+        self,
+        run_context: dict[str, Any],
+        artifact_store: dict[tuple[str, str], bytes],
+        *,
+        observation_sources: dict[str, Path] | None = None,
+    ) -> dict[str, Any]:
         """Close only a complete captured lifecycle; no stage is synthesized here."""
         if self.stages != ["red", "green", "refactor"]:
             raise ValueError("complete RED/GREEN/REFACTOR observations are required")
         observations = []
         for stage in self.stages:
-            path = self.run_dir / "observations" / f"{stage}-observed.json"
+            source = observation_sources.get(stage, self.run_dir) if observation_sources else self.run_dir
+            path = source / "observations" / f"{stage}-observed.json"
             observations.append(json.loads(path.read_text(encoding="utf-8")))
         bundle, store, _ = compose(run_context, observations, artifact_store)
         persist_protocol_bundle(self.run_dir, bundle, store)

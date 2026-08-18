@@ -926,6 +926,68 @@ def import_mapping_approval_command(request_path: str, output_path: str) -> dict
     return _publish_new_json(output_path, request["approval"])
 
 
+def _load_bound_json(base: Path, reference: object, label: str) -> tuple[dict, dict[str, str]]:
+    if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+        raise InputError(f"{label} reference is invalid")
+    relative, digest = reference.get("path"), reference.get("sha256")
+    if not isinstance(relative, str) or not isinstance(digest, str):
+        raise InputError(f"{label} reference is invalid")
+    path = (base / relative).resolve()
+    try:
+        path.relative_to(base.resolve())
+    except ValueError as exc:
+        raise InputError(f"{label} reference escapes request root") from exc
+    if not path.is_file() or _file_hash(path) != digest:
+        raise InputError(f"{label} reference is stale")
+    value = _read_json(str(path))
+    if not isinstance(value, dict):
+        raise InputError(f"{label} payload is invalid")
+    return value, {"path": relative.replace("\\", "/"), "sha256": digest}
+
+
+def _load_coordinator_evidence(base: Path, reference: object, binding: str, bundle_hash: str) -> tuple[dict, dict[str, str]]:
+    evidence, ref = _load_bound_json(base, reference, "coordinator evidence")
+    required = {
+        "schemaVersion", "producerAuthority", "candidateBindingHash", "bundleHash",
+        "deterministicSourceSufficient", "semanticReviewRequired", "actions", "authorizes",
+    }
+    if set(evidence) != required or evidence.get("schemaVersion") != "acceptance-coordinator-evidence.v1":
+        raise InputError("coordinator evidence contract is invalid")
+    if evidence.get("candidateBindingHash") != binding or evidence.get("bundleHash") != bundle_hash or evidence.get("authorizes") != []:
+        raise InputError("coordinator evidence binding is stale")
+    if not isinstance(evidence.get("deterministicSourceSufficient"), bool) or not isinstance(evidence.get("semanticReviewRequired"), bool):
+        raise InputError("coordinator evidence route projection is invalid")
+    authority, _ = _load_bound_json(base, evidence["producerAuthority"], "coordinator producer authority")
+    if (
+        authority.get("schemaVersion") != "acceptance-coordinator-producer-authority.v1"
+        or authority.get("owner") != "run-refactor-implementation-acceptance"
+        or authority.get("candidateBindingHash") != binding
+        or authority.get("bundleHash") != bundle_hash
+        or authority.get("authorizes") != []
+    ):
+        raise InputError("coordinator producer authority is invalid")
+    expected_actions = ("source-freeze", "consumer-closure", "finalization")
+    actions = evidence.get("actions")
+    if not isinstance(actions, list) or [item.get("actionId") for item in actions if isinstance(item, dict)] != list(expected_actions):
+        raise InputError("coordinator action evidence is invalid")
+    observed = []
+    for item in actions:
+        if not isinstance(item, dict) or set(item) != {"actionId", "receipt"}:
+            raise InputError("coordinator action evidence is invalid")
+        receipt, receipt_ref = _load_bound_json(base, item["receipt"], f"coordinator {item['actionId']} receipt")
+        if (
+            receipt.get("schemaVersion") != "acceptance-coordinator-action-receipt.v1"
+            or receipt.get("actionId") != item["actionId"]
+            or receipt.get("status") != "completed"
+            or receipt.get("candidateBindingHash") != binding
+            or receipt.get("bundleHash") != bundle_hash
+            or receipt.get("authorizes") != []
+        ):
+            raise InputError("coordinator action receipt is invalid")
+        observed.append({"actionId": item["actionId"], "state": "completed", "receipt": receipt_ref})
+    return evidence, {"path": ref["path"], "sha256": ref["sha256"], "actions": observed}
+
+
 def run_coordinator(request_path: str, output_path: str) -> dict:
     """Project and execute one Acceptance route from immutable machine evidence.
 
@@ -936,11 +998,11 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
     required = {"schemaVersion", "candidateBindingHash", "bundle", "evidence", "authorizes"}
     if not isinstance(request, dict) or set(request) != required:
         raise InputError("coordinator request is invalid")
-    binding, bundle, evidence = request["candidateBindingHash"], request["bundle"], request["evidence"]
+    binding, bundle, evidence_ref = request["candidateBindingHash"], request["bundle"], request["evidence"]
     if (
         request["schemaVersion"] != "acceptance-coordinator-request.v2"
         or not isinstance(binding, str) or not __import__("re").fullmatch(r"sha256:[a-f0-9]{64}", binding)
-        or not isinstance(bundle, dict) or not isinstance(evidence, dict)
+        or not isinstance(bundle, dict)
         or request["authorizes"] != []
     ):
         raise InputError("coordinator request is invalid")
@@ -950,16 +1012,13 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
         raise InputError("coordinator bundle candidate binding is stale")
     if bundle.get("bundleHash") != canonical_hash({key: value for key, value in bundle.items() if key != "bundleHash"}):
         raise InputError("coordinator bundle hash is stale")
-    if evidence.get("candidateBindingHash") != binding:
-        raise InputError("coordinator evidence candidate binding is stale")
-    if not isinstance(evidence.get("deterministicSourceSufficient"), bool) or not isinstance(evidence.get("semanticReviewRequired"), bool):
-        raise InputError("coordinator machine evidence is incomplete")
+    evidence, evidence_record = _load_coordinator_evidence(Path(request_path).resolve().parent, evidence_ref, binding, bundle["bundleHash"])
     # Semantic ambiguity always wins over the deterministic fast path.
     route = "semantic_review_required" if evidence["semanticReviewRequired"] else "deterministic_only"
     if not evidence["deterministicSourceSufficient"] and route == "deterministic_only":
         raise InputError("deterministic route lacks source sufficiency")
     bundle_hash = bundle["bundleHash"]
-    action_dag = {"actions": [{"actionId": "source-freeze", "state": "completed"}, {"actionId": "consumer-closure", "state": "completed"}, {"actionId": "finalization", "state": "completed"}]}
+    action_dag = {"actions": evidence_record["actions"], "evidence": {"path": evidence_record["path"], "sha256": evidence_record["sha256"]}}
     result = {
         "schemaVersion": "acceptance-coordinator-result.v2", "candidateBindingHash": binding,
         "bundleHash": bundle_hash,

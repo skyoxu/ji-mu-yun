@@ -408,8 +408,8 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
     lifecycle = LifecycleRunner(root, run_dir, snapshots)
     lifecycle.resume_observations(run_dir, ["red", "green", "refactor"], observation_sources=observation_sources)
     try:
-        lifecycle.close(context, {})
-    except ValueError as exc:
+        lifecycle.close(context, {}, observation_sources=observation_sources)
+    except (ValueError, FileNotFoundError) as exc:
         # A partially closed run is immutable. Reconcile it by creating an
         # append-only successor carrying only stage observations, never by
         # overwriting protocol attempts from the predecessor.
@@ -442,7 +442,7 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
             ["red", "green", "refactor"],
             observation_sources=observation_sources,
         )
-        lifecycle.close(context, {})
+        lifecycle.close(context, {}, observation_sources=observation_sources)
     command = json.loads((invocation / "terminal-command.json").read_text(encoding="utf-8"))
     completed = subprocess.run([command["executable"], *command["argv"]], cwd=root, shell=False, check=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=command["timeout_seconds"])
     if completed.returncode != 0:
