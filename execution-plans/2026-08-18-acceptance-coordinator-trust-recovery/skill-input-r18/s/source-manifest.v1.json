@@ -1,0 +1,177 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "sources": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+      "semantic_snapshot_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+      "semantic_snapshot_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "sha256": "sha256:bb293dcfa1dff49f8ae28d2001eea6f7b788e6b08acc3bd91cc5e8cfbb717042",
+      "semantic_snapshot_sha256": "sha256:f06d373edbc6e4510d82ce2471bb210fce5195f0a5febf36b04bcc9bf72c21a5",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.json",
+      "sha256": "sha256:1acc483d886b8a15da829d825022541448277f72fee7eb8e0280a436b4889291",
+      "semantic_snapshot_sha256": "sha256:8edf1cfe58222e4aed4f85526d82025049cf04aafb01ba7ccb560f4d8dbb1509",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json",
+      "sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "semantic_snapshot_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+      "semantic_snapshot_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+      "semantic_snapshot_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "sha256": "sha256:69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
+      "semantic_snapshot_sha256": "sha256:69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+      "sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+      "semantic_snapshot_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+      "sha256": "sha256:1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7",
+      "semantic_snapshot_sha256": "sha256:1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "docs/adr/ADR-0058-acceptance-coordinator-persisted-evidence-ownership.md",
+      "sha256": "sha256:d80eff84978107c84e0c291a586dacbfc47771a2529dbb79e2cc7dfd5c663b19",
+      "semantic_snapshot_sha256": "sha256:d80eff84978107c84e0c291a586dacbfc47771a2529dbb79e2cc7dfd5c663b19",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "docs/adr/ADR-0059-knowledge-execution-degraded-successor-and-publication-separation.md",
+      "sha256": "sha256:a411a88efaa3c48b52c27938c41aeb11dd998bb4edd61e939b775a8f9ba0e2ee",
+      "semantic_snapshot_sha256": "sha256:a411a88efaa3c48b52c27938c41aeb11dd998bb4edd61e939b775a8f9ba0e2ee",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/95-implementation-evolution-and-completion-report.md",
+      "sha256": "sha256:d4ffc887bcd8a98fc28954fd572ac419485dd6ff93fe816cddf2c487d2b2e793",
+      "semantic_snapshot_sha256": "sha256:d4ffc887bcd8a98fc28954fd572ac419485dd6ff93fe816cddf2c487d2b2e793",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/architecture-acceptance-request.v1.json",
+      "sha256": "sha256:d9cf5ae343b775cba095bd62835d0d85bb308d63285f781af7fd1d477c25992a",
+      "semantic_snapshot_sha256": "sha256:d9cf5ae343b775cba095bd62835d0d85bb308d63285f781af7fd1d477c25992a",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/authority-manifest.v1.json",
+      "sha256": "sha256:4fd9d351497b24805210aab3fb481bd2a1d9308dd84e87fe35547c9f9b31bf99",
+      "semantic_snapshot_sha256": "sha256:4fd9d351497b24805210aab3fb481bd2a1d9308dd84e87fe35547c9f9b31bf99",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json",
+      "sha256": "sha256:0b41a95f0d9bdf1dbe25a38605cb87349b9dbe2411cef29789dcd7d9867279e6",
+      "semantic_snapshot_sha256": "sha256:0b41a95f0d9bdf1dbe25a38605cb87349b9dbe2411cef29789dcd7d9867279e6",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json",
+      "sha256": "sha256:bf1e63b226ade2b96b74e6cdc9cb43c9867af712ba8ce6d8219495979578b91d",
+      "semantic_snapshot_sha256": "sha256:bf1e63b226ade2b96b74e6cdc9cb43c9867af712ba8ce6d8219495979578b91d",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/knowledge-maintenance-request.v1.json",
+      "sha256": "sha256:665ec80f808f11ed94cfd5975997460120a2352452407fdde5e927bbecede231",
+      "semantic_snapshot_sha256": "sha256:665ec80f808f11ed94cfd5975997460120a2352452407fdde5e927bbecede231",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/locator-request.v1.json",
+      "sha256": "sha256:dc0fb3d525a4057949a61ce0b6e139f94e62ba14c88d1a6a9c3881ace204557b",
+      "semantic_snapshot_sha256": "sha256:dc0fb3d525a4057949a61ce0b6e139f94e62ba14c88d1a6a9c3881ace204557b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/finding-set.md",
+      "sha256": "sha256:8776260d417cd0962e2e50076e1263c9ba3326ec985e6255c825acad2c16d4f0",
+      "semantic_snapshot_sha256": "sha256:8776260d417cd0962e2e50076e1263c9ba3326ec985e6255c825acad2c16d4f0",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/repair-plan.md",
+      "sha256": "sha256:3c1ba78e813a6e1c649e7e2cdf82f9d41831d0c6f94995f6028c3138ac8a0a67",
+      "semantic_snapshot_sha256": "sha256:3c1ba78e813a6e1c649e7e2cdf82f9d41831d0c6f94995f6028c3138ac8a0a67",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+      "sha256": "sha256:702f33f18e7ce27e8861ab56eb1d6be813d76f9820d181e6a00716b7c6212553",
+      "semantic_snapshot_sha256": "sha256:702f33f18e7ce27e8861ab56eb1d6be813d76f9820d181e6a00716b7c6212553",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+      "sha256": "sha256:e555d158bb1c570fb47c8ff8a636a947a7761b064aa5797863365c0fe7439b9c",
+      "semantic_snapshot_sha256": "sha256:e555d158bb1c570fb47c8ff8a636a947a7761b064aa5797863365c0fe7439b9c",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "knowledge/policies/consumer-policies.v2.json",
+      "sha256": "sha256:eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7",
+      "semantic_snapshot_sha256": "sha256:eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-18T11:34:16.395976Z"
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:f33b21f38cdcfd320a16a3b560251282d277984a25761595bb810f277850d410",
+  "canonical_context_sha256": "sha256:b39f95fa010c0d6845fe631be8d41d6aa27809923a5471c1baf28ef5e4203ce1",
+  "request_sha256": "sha256:3e178d2f87c5148abbe7e323f619505c323c78e7976d2e08e079ffc923bb37cc",
+  "result_sha256": "sha256:136d6e0a7e39b260ee0a78f5c0031c2c6407ca152043ad846f38ea1147fe7073",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb"
+  },
+  "source_snapshot_id": "sha256:73439257113cd841332d7289e45f8bf3297be2c38652ecf4b97ed074f6f0e740",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "source_sha256": "87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+      "satisfies": [
+        "governance.refactor-implementation-acceptance"
+      ]
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "source_sha256": "3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "satisfies": [
+        "governance.vdd-execution-plan"
+      ]
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+      "satisfies": [
+        "governance.quick-dev-tdd-adapter"
+      ]
+    }
+  ],
+  "authorizes": []
+}

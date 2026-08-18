@@ -13,7 +13,7 @@ PYTHON_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PYTHON_ROOT))
 
 from prepare_skill_input_consumption import prepare  # noqa: E402
-from skill_input_consumption import SkillInputError, canonical_hash, contained_path, expand_source_graph, redact_bytes, redaction_profile_hash, sha256_bytes, validate_contract, write_json_atomic  # noqa: E402
+from skill_input_consumption import SkillInputError, canonical_hash, contained_path, expand_source_graph, generated_artifact_exclusions, redact_bytes, redaction_profile_hash, sha256_bytes, validate_contract, write_json_atomic  # noqa: E402
 from validate_skill_input_consumption import ReceiptValidationError, _artifact, _remove_model_snapshot_payload, publish_ready, validate_receipt  # noqa: E402
 from launch_skill_input_consumer import ChildRequestError, _validate_segment_summary, create_child_request, run_semantic_child, semantic_child_execution_identity, validate_child_request  # noqa: E402
 from skill_input_gate import require_ready_skill_input  # noqa: E402
@@ -156,6 +156,28 @@ class SkillInputConsumptionTests(unittest.TestCase):
         expanded = expand_source_graph(root, contract, "create", {"requirements": ["plan"]})
 
         self.assertEqual(["plan/current.md"], [relative for _path, relative in expanded])
+
+    def test_knowledge_context_artifacts_are_excluded_from_target_source_graph(self):
+        temporary, root, _contract_path, _receipt, _args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        plan = root / "plan"
+        plan.mkdir()
+        (plan / "knowledge-context.v1.json").write_text("{}\n", encoding="utf-8")
+        (plan / "knowledge-context.freeze.v1.json").write_text("{}\n", encoding="utf-8")
+        (plan / "plan-state.v1.json").write_text("{}\n", encoding="utf-8")
+        (plan / "resume-state.v1.json").write_text("{}\n", encoding="utf-8")
+        (plan / "current.md").write_text("current\n", encoding="utf-8")
+
+        excluded = generated_artifact_exclusions(root, plan)
+
+        self.assertEqual(
+            {"plan/knowledge-context.v1.json", "plan/knowledge-context.freeze.v1.json"},
+            {path for path in excluded if "knowledge-context" in path},
+        )
+        self.assertEqual(
+            {"plan/plan-state.v1.json", "plan/resume-state.v1.json"},
+            {path for path in excluded if path.endswith(("plan-state.v1.json", "resume-state.v1.json"))},
+        )
 
     def test_excluded_snapshot_directory_is_not_reingested(self):
         temporary, root, contract_path, _receipt, _args = self._fixture()

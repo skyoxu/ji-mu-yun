@@ -652,6 +652,8 @@ def generated_artifact_exclusions(repository_root: Path, target: Path) -> frozen
         item.relative_to(root).as_posix()
         for item in target.iterdir()
         if item.name.startswith(("skill-input", "semantic-input"))
+        or item.name.startswith("knowledge-context")
+        or item.name in {"plan-state.v1.json", "resume-state.v1.json"}
         or item.name == "implementation-authorization-receipt.v1.json"
     )
 

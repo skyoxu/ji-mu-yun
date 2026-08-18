@@ -3,8 +3,19 @@
   "sources": [
     {"path":"AGENTS.md","role":"repository_rule"},
     {"path":"execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md","role":"requirements"},
+    {"path":"execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/plan-state.v1.json","role":"lifecycle_state"},
+    {"path":"execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/resume-state.v1.json","role":"resume_state"},
+    {"path":"docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md","role":"lifecycle_authority"},
+    {"path":"docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md","role":"knowledge_consumption_authority"},
+    {"path":"docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md","role":"knowledge_lkg_authority"},
+    {"path":"docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md","role":"knowledge_publication_authority"},
+    {"path":"docs/adr/ADR-0058-acceptance-coordinator-persisted-evidence-ownership.md","role":"acceptance_evidence_authority"},
+    {"path":"docs/adr/ADR-0059-knowledge-execution-degraded-successor-and-publication-separation.md","role":"knowledge_successor_authority"},
     {"path":".agents/skills/quick-dev-tdd-adapter/SKILL.md","role":"implementation_consumer"},
     {"path":".agents/skills/run-refactor-implementation-acceptance/SKILL.md","role":"acceptance_consumer"},
+    {"path":".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.json","role":"lifecycle_contract"},
+    {"path":".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json","role":"skill_input_contract"},
+    {"path":"knowledge/policies/consumer-policies.v2.json","role":"knowledge_consumer_policy"},
     {"path":".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py","role":"persisted_run_owner"}
   ],
   "authorizes": []

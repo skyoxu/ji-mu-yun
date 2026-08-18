@@ -3,5 +3,6 @@
   "request_id": "ACR-20260818",
   "consumer": "vdd",
   "query": "acceptance coordinator trust recovery persisted run successor knowledge authorization",
-  "snapshot": {"ref": "refs/heads/main", "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb"}
+  "snapshot": {"ref": "refs/heads/main", "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb"},
+  "allow_stale_catalog": true
 }

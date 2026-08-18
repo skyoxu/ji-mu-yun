@@ -25,6 +25,8 @@ This index tracks Phase service ADRs for the hosted Phase A/B platform and Phase
 - ADR-0055: Focused Repair Verification And Lightweight Closure (extends ADR-0051/0054; supersedes none) - `docs/adr/ADR-0055-focused-repair-verification-and-lightweight-closure.md`
 - ADR-0056: AI-Native Single-Maintainer Finding Mode (refines ADR-0051/0055) - `docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md`
 - ADR-0057: Explicit Knowledge Publication And Nonrecursive Plan Indexing (extends ADR-0044/0048/0050; supersedes none) - `docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md`
+- ADR-0058: Acceptance Coordinator Persisted Evidence Ownership - `docs/adr/ADR-0058-acceptance-coordinator-persisted-evidence-ownership.md`
+- ADR-0059: Knowledge Execution Degraded Successor And Publication Separation - `docs/adr/ADR-0059-knowledge-execution-degraded-successor-and-publication-separation.md`
 
 ## Proposed
 

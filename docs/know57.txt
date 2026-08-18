@@ -1,0 +1,376 @@
+结论：当前 8-18 目录的方向基本正确，但还不齐全，只能维持 draft，不能进入 plan-ready，更不能授权 Quick Dev 执行。
+
+我核对的 main 仍是 868328c8。总体判断：
+
+维度	评价
+本会话核心问题覆盖	约 85%
+需求与切片可追踪性	约 45%
+VDD self-hosted 合规性	约 40%
+当前可执行性	不可执行
+当前生命周期状态	draft 正确
+是否可进入 plan-ready	否
+已经做对的部分
+
+requirements-and-acceptance.md 已经覆盖了本会话最重要的两个方向：
+
+Acceptance Coordinator 不再信任 request-local 自证材料，而应以 Acceptance-owned persisted run、action DAG、command registry、route projection 为事实根。
+Knowledge freshness从“一律阻断”调整为受控 successor，并区分 selection、context、authority 和 publication。
+
+另外还覆盖了：
+
+Quick Dev successor 崩溃恢复；
+三种 legacy RED 兼容；
+8-17 的重新授权和 dogfood；
+LKG 完整性、selection drift、authority drift、Knowledge 自修改等硬阻断边界；
+Bootstrap 不自动启动；
+历史证据不应被覆盖。
+
+plan-state.v1.json 保持 draft 和 authorizes: [] 也是正确的，没有提前宣称授权或完成。
+
+还有一点需要澄清：locator-request.v1.json 中的 82b770... 不一定是错误。当前 Knowledge pointer 本来就绑定该 source snapshot，VDD Locator 请求应复制 catalog snapshot，而不是擅自改成 HEAD。
+
+阻塞 plan-ready 的问题
+P0-1：需求编号和实现切片已经错位
+
+需求文档里的语义是：
+
+文档编号	语义
+R0	Coordinator 可信证据
+R1	Reentrant successor
+R2	Knowledge authorization continuity
+R3	Legacy prior-RED
+R4	8-17 dogfood
+
+但 implementation-contract.v1.json 中变成了：
+
+Slice	实际语义	声明 requirement ID
+R0	trusted coordinator root	ACR-R0
+R1	persisted coordinator replay	ACR-R1
+R2	reentrant successor	ACR-R2
+R3	Knowledge continuity	ACR-R3
+R4	legacy RED + dogfood	ACR-R4
+
+从 R1 开始整体错位，而且 ACR-R0-EXIT 等 acceptance ID 在需求文档中没有正式定义。
+
+这会导致机器把测试、依赖和恢复规则绑定到错误需求上，是典型的 plan-level false green 风险。
+
+P0-2：terminal runner 与 Quick Dev 的调用合同不兼容
+
+当前 tools/terminal_full.py 有两个确定性错误：
+
+--slice R0/R1/... 时仍输出：
+
+{"predicate":"implementation-complete"}
+
+但 Quick Dev 的 _run_slice_terminal() 明确要求 predicate == "slice-ready"。因此 R0-R3 即使测试全部通过，也无法关闭切片。
+
+Quick Dev 最终 terminal 会调用 runner：
+
+--repository-root ...
+--plan-dir ...
+--out ...
+
+当前脚本只接受 --slice，不接受这三个参数，也不会向 --out 写结果。因此最终 terminal 一定失败。
+
+此外：
+
+所有 slice terminal 都运行 Quick Dev 和 Acceptance 两套完整测试，不是 targeted validation；
+R4 的 post_refactor_command_id 指向 terminal-full，而 r4-terminal 成了孤儿命令；
+terminal 没有绑定 contract hash、command registry、Knowledge freeze、Skill-input receipt、candidate identity 或 dogfood result。
+
+这是目前最直接的不可执行缺陷。
+
+P0-3：self-hosted 必需状态和输入门禁缺失
+
+计划声明了 profile: self-hosted，但目录中没有：
+
+resume-state.v1.json；
+knowledge-context.v1.json；
+knowledge-context.freeze.v1.json；
+可追踪的 ready Skill-input receipt；
+dependency-scoped slice status 和当前恢复动作。
+
+这与 VDD self-hosted 规范 不符。
+
+特别是 VDD 要求 Skill-input --require-ready 在 Knowledge freeze 和计划输出之前完成。当前找不到对应绑定，因此不能假定这个门禁执行过。
+
+正确恢复方法不是补写一个手工 receipt，而是把本次补漏作为 VDD repair：
+
+显式传入 target plan；
+显式传入本次 finding set；
+重新运行 Skill-input repair gate；
+再运行 Knowledge preflight；
+最后修订 draft 合同。
+P0-4：缺少支撑代码变更的 Accepted ADR
+
+需求文档已经正确承认：Knowledge 受控降级在新的 Accepted ADR 出现前不能 plan-ready。
+
+但还缺另一项：Coordinator 从 request-local evidence 切换到 Acceptance-owned persisted run，也属于跨切面的 authority/trust-root 变化。根 AGENTS.md 要求代码、合同、安全姿态或 release policy 变化必须引用 Accepted ADR。
+
+建议至少形成两个决策：
+
+Acceptance Coordinator persisted evidence ownership
+Acceptance-owned run 是事实根；
+request 只定位，不提供 route；
+persisted action/event/registry/result receipt 的所有权；
+v2 historical-only；
+与 ADR-0041 Bootstrap 边界的关系。
+Knowledge execution successor and authorization continuity
+明确 supersede ADR-0057 的 stale-stop 部分；
+保留 ADR-0050 的 LKG 完整性与 publication gate；
+明确 selection/context/authority 三种 hash；
+定义快速演进和生产策略的共同状态模型。
+
+当前 authority-manifest.v1.json 没有纳入这些 ADR，也没纳入 ADR-0041、0048、0050、0057、VDD lifecycle contract、Skill-input contract 和 Knowledge consumer policy。
+
+P0-5：计划提交夹带了实现，RED 基线已被污染
+
+868328c8 不只是建立计划，还修改了：
+
+loop_plan_directory.py
+
+它已经增加了：
+
+已存在 successor 的 identical lineage 重用；
+空 reservation 目录恢复；
+conflicting lineage 拒绝。
+
+因此不能再把这些已经存在的行为声明为待实现 RED。按照 VDD 规则，已经存在的行为只能作为 regression/terminal coverage，不能制造一个假 RED。
+
+需要将基线拆成：
+
+finding_baseline         = 3c285bcc
+plan_creation_commit     = 868328c8
+implementation_baseline  = 修订计划后的当前 HEAD
+
+R2 的 RED 只能针对仍未实现的边界，例如：
+
+两进程并发 reservation；
+reservation 后中断；
+lineage 后中断；
+protocol closure 后、slice-ready 前中断；
+slice-ready 后、current pointer 更新前中断；
+不同 binding 争用同一 successor；
+retry 是否创建重复 observation/action。
+P0-6：8-17 不可变要求与允许写入范围冲突
+
+需求写明 8-17 的旧 authorization、terminal、resume、report 不可变。
+
+但 R4 允许：
+
+"documentation": [
+  "execution-plans/2026-08-17-acceptance-coordinator-efficiency/**"
+]
+
+这等于授权修改整个历史计划目录，与要求直接冲突。
+
+建议：
+
+本计划的 dogfood 只读消费 8-17；
+新证据写入本计划的临时 fixture 或 logs/；
+不在本计划中更新 8-17 当前状态；
+控制面修复完成后，单独对 8-17 发起 VDD repair/round-n；
+由那个 repair 发布新的 authorization、resume state、terminal result 和报告追加记录。
+需要补充但不一定单独阻塞的内容
+1. 缺少 profile 理由和 non-goals
+
+需求文档应明确写出：
+
+选择 self-hosted，因为修改 Quick Dev、Acceptance、VDD Knowledge consumer 和控制性 validator；
+不授权 Knowledge publication；
+不自动启动 Bootstrap；
+不修改 Phase runtime；
+不授权 release/deployment/archive；
+不覆盖 8-17 历史证据；
+不引入多维护者签名或分布式 trust 系统。
+2. Knowledge hash 还没有精确定义
+
+建议固定为：
+
+knowledgeSelectionHash
+  = consumer
+  + policyRevision
+  + requiredModules
+  + accepted path/module IDs
+  + satisfies mappings
+  + resourceSet
+  + four-dimensional scope
+
+
+knowledgeContextHash
+  = knowledgeSelectionHash
+  + selected source hashes
+  + source snapshot
+  + Locator result hash
+  + accepted decisions
+  + predecessor context hash
+
+
+authorityEnvelopeHash
+  = implementation contract hash
+  + command registry hash
+  + test/validator identity
+  + repository rule hashes
+  + Accepted ADR hashes
+  + Skill contract hashes
+  + Knowledge policy hash
+  + protected-path policy
+  + knowledgeSelectionHash
+  + allowed successor kinds
+
+Base maintainer authorization仍应绑定初始 knowledgeContextHash。后续 context 变化不是修改 authorization，而是由 validator-produced successor receipt 证明从已授权 predecessor 到 successor 的连续性。
+
+3. 缺少生产环境策略接口
+
+当前只写了“高速演进”。建议补两种 assurance profile，但共用同一个安全模型：
+
+状态	rapid-evolution	production/release
+current + validated	继续	继续
+stale + verified successor	继续，标记 degraded	可继续构建/验收；release policy 单独决定是否允许 promotion
+query-quality failed	执行可继续，publication blocked	同样不授权 Knowledge publication；结果必须携带 degraded 状态
+selection drift	阻断并修复/重授权	硬阻断
+authority ambiguity	硬阻断	硬阻断
+source missing/unreadable	硬阻断	硬阻断
+Knowledge self-change + query failure	terminal blocked	terminal/release 均 blocked
+
+不要把 release authority塞进 Quick Dev 或 Acceptance。只需要让 terminal/acceptance result 输出 freshness、publication 和 authority 状态，供未来 release gate 决策。
+
+4. allowed_changes 范围过宽
+
+诸如：
+
+.agents/skills/.../scripts/**
+.agents/skills/.../tools/**
+
+会扩大审查和快照范围。
+
+应先生成 callsite/consumer inventory，然后冻结精确文件：
+
+生产者；
+直接消费者；
+schema/parser；
+targeted tests；
+Skill 文档；
+ADR；
+migration fixture。
+推荐的最终切片结构
+
+建议重新编号，避免当前错位：
+
+Slice	行为	依赖	TDD 处理
+ACR-S0	request v3、拒绝 caller route/self-signed graph	无	真 RED
+ACR-S1	persisted run、action replay、route projection	S0	真 RED
+ACR-S2	Quick Dev successor crash recovery	无或 S1	仅未实现边界做 RED
+ACR-S3	Knowledge selection/context hash 与 authorization successor	S0、S1、S2	真 RED
+Regression	3 种 legacy RED、observation-derived stage、predecessor RED terminal close	S2	不制造 RED，只做回归
+Dogfood	只读 8-17，生成 fresh current result	全部	terminal/acceptance 阶段，不作为实现切片
+
+Dogfood 不应再和 legacy compatibility 合并成同一个 TDD slice。
+
+必须补齐的测试矩阵
+Coordinator
+request-local route boolean 被拒绝；
+临时目录自签完整 hash graph 仍被拒绝；
+v2 只能 historical inspection；
+run ID 不是 binding-derived 时拒绝；
+action 不在 persisted DAG 时拒绝；
+command 不在 bound registry 时拒绝；
+receipt 与 attempt/event 不一致时拒绝；
+candidate、contract、Knowledge、Skill-input 任一 binding 不一致时拒绝；
+stale action 只能通过 canonical recovery；
+identical replay 不新增 action/result。
+Successor
+
+在以下每个注入点退出，再重试：
+
+reservation 前后；
+directory materialization 后；
+lineage 写入后；
+observations 恢复后；
+protocol closure 后；
+slice-ready 写入后；
+successor pointer 更新前后。
+
+每个场景验证：
+
+successor identity 不变；
+observation 不复制、不覆盖；
+action 不重复；
+conflicting binding fail closed；
+最终结果字节一致或 canonical hash 一致。
+Knowledge
+catalog stale、selection 相同：继续 degraded；
+selected non-authority source bytes 变化：生成 context successor；
+query gate 失败：publication blocked，普通执行继续；
+ranking 改变但 accepted selection 未变：仅 telemetry；
+path/module/resource-set/scope 改变：阻断；
+policy/contract/command/test/ADR/Skill bytes 变化：重授权；
+LKG 非 main ancestor：阻断；
+staging generation 无效：不得替换 LKG；
+predecessor chain 缺失：阻断；
+Knowledge self-change时 query gate 失败：terminal 阻断。
+文件级补充方案
+
+建议以 868328c8 为 predecessor，建立一次明确的 VDD repair：
+
+新增：
+
+repair/round-1/finding-set.md
+repair/round-1/repair-plan.md
+repair/round-1/repair-closure.json，仅在修订验证完成后生成
+resume-state.v1.json
+knowledge-context.v1.json
+knowledge-context.freeze.v1.json
+
+修订：
+
+requirements-and-acceptance.md
+统一 requirement/acceptance ID；
+增加 profile reason、non-goals、双基线、生产策略；
+将 dogfood 与 TDD 分离。
+implementation-contract.v1.json
+重建 S0-S3；
+增加明确 behavior；
+缩小 changed/read/dependency closure；
+删除 8-17 写权限；
+已有行为移到 regression coverage。
+command-registry.v1.json
+per-slice targeted；
+单独 regression；
+单独 dogfood；
+仅一个 terminal-full。
+authority-manifest.v1.json
+增加 plan ID、authority order、Accepted ADR、policy/Skill/lifecycle sources；
+authority-bearing source应有内容 hash；
+不要把待修改的实现代码伪装成不变 authority。
+tools/terminal_full.py
+支持 --slice；
+支持 --repository-root --plan-dir --out；
+slice 输出 slice-ready 和 authorizes: []；
+final 输出 hash-bound implementation-complete；
+final 包含 regression、Knowledge、Skill-input、contract、registry、dogfood 验证。
+95-implementation-evolution-and-completion-report.md
+追加本轮 finding 和修订结果，不覆盖原记录。
+
+knowledge-maintenance-request.v1.json 建议从 active authority graph 中移除，或者明确标成 read-only、non-authorizing input。它不能代替 Knowledge context，也不能代替 ADR 或 publication authorization。
+
+正确的生命周期顺序
+保持 draft
+→ 建立 repair finding set
+→ Skill-input repair gate ready
+→ Acceptance trust ADR Accepted
+→ Knowledge successor ADR Accepted
+→ 生成并验证 Knowledge context/freeze
+→ 修正 traceability、terminal、resume、authority
+→ plan validator/targeted fixture checks 通过
+→ 发布 plan-ready
+→ Maintainer 发布 implementation-authorized
+→ Quick Dev 执行真实 RED/GREEN/REFACTOR
+→ 一个 current terminal-full
+→ implementation-complete
+→ Acceptance
+→ 单独修复并重新执行 8-17
+
+本计划自身修改 Knowledge/Quick Dev/Acceptance 控制面，所以不能使用它尚未实现的自动降级机制给自己“开绿灯”。在 S3 完成并通过 terminal 前，若 Knowledge freeze 改变，仍应使用当前规则停下并由 Maintainer 重新授权。这是必要的安全 cutover，而不是失败。
+
+最终结论：主题没有漏掉，但合同闭包漏得比较多。最严重的是 requirement/slice 错位、terminal 必然失败、self-hosted 状态缺失、ADR authority 不足、868 已提前修改实现导致 RED 基线污染，以及 8-17 不可变规则与写权限冲突。把上述 P0 全部补齐后，才适合从 draft 转为 plan-ready。

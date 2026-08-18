@@ -1,0 +1,26 @@
+{
+  "schema_version": "jimuyun.architecture-acceptance-request.v1",
+  "request_id": "ACR-20260818-ADR-ACCEPTANCE",
+  "status": "accepted",
+  "target_plan": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery",
+  "decisions": [
+    {
+      "path": "docs/adr/ADR-0058-acceptance-coordinator-persisted-evidence-ownership.md",
+      "sha256": "sha256:d80eff84978107c84e0c291a586dacbfc47771a2529dbb79e2cc7dfd5c663b19",
+      "requested_transition": "Accepted"
+    },
+    {
+      "path": "docs/adr/ADR-0059-knowledge-execution-degraded-successor-and-publication-separation.md",
+      "sha256": "sha256:a411a88efaa3c48b52c27938c41aeb11dd998bb4edd61e939b775a8f9ba0e2ee",
+      "requested_transition": "Accepted"
+    }
+  ],
+  "constraints": [
+    "Preserve ADR-0050 LKG integrity and publication gate",
+    "Do not modify 2026-08-17 historical evidence",
+    "Do not auto-start Bootstrap"
+  ],
+  "owner": "maintainer",
+  "accepted_by": "maintainer",
+  "authorizes": []
+}
