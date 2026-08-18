@@ -1,0 +1,33 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:cbed66963d73a40ae5c746cf54fa7c992219dcb9dcf522778f0f4cd2148af5f8",
+  "sections": [
+    {
+      "title": "authority-manifest.v1.json",
+      "content": "Defines repository, lifecycle, knowledge, implementation, acceptance, and consumer-policy authority sources; identifies requirements, implementation contract, command registry, terminal validator, persisted run owner, lifecycle projections, and authorizes=[]。"
+    },
+    {
+      "title": "command-registry.v1.json",
+      "content": "Registers R0-R4 green and terminal commands plus quick-dev, acceptance, and full-terminal suites. Commands run from the repository with bounded timeouts; registry authorizes=[]。"
+    },
+    {
+      "title": "implementation-contract.v1.json",
+      "content": "Self-hosted repair plan for acceptance-coordinator trust recovery. Defines R0 trusted evidence, R1 successor recovery, R2 authorization and freshness continuity, R3 legacy RED verification, R4 read-only dogfood, slice dependencies, write sets, forbidden paths, and terminal predicate."
+    },
+    {
+      "title": "repair/round-1/finding-set.md",
+      "content": "Bounded repair covers terminal compatibility, receipt bindings, traceability, self-hosted authority declarations, immutable historical-plan protection, and RED-baseline contamination. Pre-existing shared workflow changes require separate disposition; repair closure remains absent pending validation and authority prerequisites."
+    },
+    {
+      "title": "requirements-and-acceptance.md",
+      "content": "Requires persisted binding-derived acceptance execution, reentrant successor identity, authorization continuity, degraded same-selection knowledge refresh with hard blocks for authority or selection drift, guarded legacy RED reuse, and immutable historical dogfood replay. All transitions remain non-authorizing unless explicitly owned."
+    },
+    {
+      "title": "tools/terminal_full.py",
+      "content": "Validator computes candidate and artifact hashes, runs registered slice or full commands, checks plan state, maintainer authorization, knowledge context and freeze consistency, skill-input receipt validation, terminal receipts, and non-authorizing lifecycle bindings. It emits slice-ready or implementation-complete results with authorizes=[]."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-18T13:46:36.879635Z"
+}

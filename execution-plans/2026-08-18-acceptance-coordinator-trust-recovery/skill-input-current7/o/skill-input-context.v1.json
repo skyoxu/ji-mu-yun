@@ -1,0 +1,33 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:dbf5657b2e693d7d6c09eb9cd8845b4fe1fbb088438a6717dc95a52b58973ed4",
+  "sections": [
+    {
+      "title": "Purpose and authority",
+      "content": "The self-hosted acceptance-coordinator-trust-recovery plan repairs Acceptance, Quick Dev, and Knowledge-consumption trust and recovery gaps without modifying the immutable 2026-08-17 historical plan. Lifecycle ownership remains Maintainer for implementation-authorized, Quick Dev for implementation-complete, and Acceptance for acceptance-passed. Bootstrap startup, Knowledge publication, runtime/release actions, and trust signing are not authorized."
+    },
+    {
+      "title": "Implementation slices",
+      "content": "R0 requires coordinator decisions to derive only from a hash-bound persisted run, action DAG, command registry, and route projection; request-local assertions are rejected. R1 reserves reentrant successor identity before materialization and permits reuse only for byte-identical lineage and bindings. R2 permits a validated same-selection Knowledge refresh successor while requiring reauthorization for selection, authority, scope, resource, policy, contract, command, or test drift. R3 verifies legacy prior-RED evidence only when selector, test bytes, execution fingerprint, and expected failure IDs match. R4 performs a read-only replay of the 2026-08-17 evidence and publishes only new current bindings."
+    },
+    {
+      "title": "Knowledge continuity",
+      "content": "A verified published or LKG catalog may support degraded execution when catalog staleness or selected non-authority source-byte drift preserves the frozen selection and execution semantics. Failed staging, invalid or tampered LKG data, non-ancestor LKG state, missing required sources, authority-bearing source drift, or selection and scope changes remain blockers. Acceptance and Quick Dev may consume a validated successor context but cannot publish Knowledge authority or rewrite maintainer authorization."
+    },
+    {
+      "title": "Validation and evidence",
+      "content": "The command registry defines slice GREEN tests, slice terminal checks, full Quick Dev and Acceptance suites, and a terminal-full check. The terminal validator binds the candidate, contract, registry, authority, Knowledge context and freeze, current Skill-input receipt, maintainer authorization, slice receipts, and resume state. Receipts are non-authorizing. Full completion requires all registered checks to pass and final bindings to be present and consistent."
+    },
+    {
+      "title": "Repair constraints",
+      "content": "The bounded repair addresses terminal argument and predicate compatibility, final receipt bindings, requirement and acceptance traceability, self-hosted authority declarations, historical-plan write protection, and a valid post-repair RED baseline. Pre-existing shared workflow changes lie outside the plan slice write sets and require separate ownership or explicit disposition before plan-ready publication. Repair closure remains absent until targeted validation and maintainer-owned prerequisites complete."
+    },
+    {
+      "title": "Execution boundaries",
+      "content": "Each slice has explicit allowed production, test, and documentation paths plus protected forbidden paths. R0-R2 carry implementation work and targeted tests; R3 and R4 are regression or replay lanes with no production changes. The terminal predicate is slice-ready for a slice and implementation-complete for the full run. All supplied source content and page coverage are complete for semantic consumption."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-18T13:44:32.828012Z"
+}

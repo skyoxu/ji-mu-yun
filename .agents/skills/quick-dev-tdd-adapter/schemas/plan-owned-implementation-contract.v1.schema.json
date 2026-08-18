@@ -136,7 +136,6 @@
         "forbidden_changes",
         "execution_read_set",
         "dependency_closure",
-        "tdd",
         "post_refactor_command_id",
         "exit_predicate",
         "recovery"
@@ -144,6 +143,7 @@
       "properties": {
         "slice_id": {"type": "string", "minLength": 1},
         "title": {"type": "string", "minLength": 1},
+        "execution_mode": {"enum": ["tdd", "regression", "dogfood-replay"]},
         "requirement_ids": {"$ref": "#/$defs/stringArray"},
         "acceptance_ids": {"$ref": "#/$defs/stringArray"},
         "source_refs": {"$ref": "#/$defs/stringArray"},

@@ -1,0 +1,33 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:7f8b44331d547b7b629b0f61dd6a4413e573cd047faf58b7be97ec5c3ec06f20",
+  "sections": [
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/authority-manifest.v1.json",
+      "content": "Defines repository, lifecycle, knowledge, implementation, acceptance, contract, and policy authority sources; candidate inputs and lifecycle projections; authorizes is empty."
+    },
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json",
+      "content": "Registers R0-R4 green and terminal commands plus quick-dev, acceptance, and full-terminal suites. Commands are repository-scoped, non-shell invocations with bounded timeouts; authorizes is empty."
+    },
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json",
+      "content": "Self-hosted repair contract owned by quick-dev-tdd-adapter. Defines R0-R4 slices, dependencies, allowed and forbidden paths, TDD selectors, registered commands, recovery rules, and implementation-complete terminal predicate."
+    },
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/finding-set.md",
+      "content": "Bounded repair findings cover terminal compatibility, receipt bindings, traceability, authority declarations, immutable historical-plan protection, and RED-baseline contamination. Shared workflow changes are pre-existing and require separate disposition; repair closure is absent."
+    },
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+      "content": "Requirements define trusted coordinator evidence, reentrant successor recovery, authorization continuity, degraded knowledge freshness handling, legacy RED compatibility, and read-only dogfood replay. Lifecycle ownership remains Maintainer, Quick Dev, and Acceptance respectively; no Knowledge publication or automatic Bootstrap authorization."
+    },
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+      "content": "Validator computes candidate, contract, and registry hashes; runs registered slice tests; checks maintainer authorization, knowledge freeze/context consistency, and skill-input receipts; emits pass/fail terminal results with bindings and authorizes empty."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-18T13:22:17.035659Z"
+}

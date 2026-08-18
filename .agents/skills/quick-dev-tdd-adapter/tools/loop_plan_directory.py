@@ -9,6 +9,10 @@ from pathlib import Path
 import subprocess
 import sys
 
+TOOLS = Path(__file__).resolve().parent
+if str(TOOLS) not in sys.path:
+    sys.path.insert(0, str(TOOLS))
+
 from route_plan_directory import route
 from knowledge_context import refresh_successor_context
 from stage_lifecycle_runner import (
@@ -20,7 +24,6 @@ from stage_lifecycle_runner import (
 )
 
 
-TOOLS = Path(__file__).resolve().parent
 HELPER_TIMEOUT_SECONDS = 900
 LIFECYCLE_TIMEOUT_OVERHEAD_SECONDS = 60
 
@@ -181,7 +184,11 @@ def _sha(path: Path) -> str:
 def _legacy_current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object], slice_id: str) -> dict[str, str] | None:
     """Historical reader retained only for older evidence inspection."""
     selected = next((item for item in contract.get("slices", []) if item.get("slice_id") == slice_id), None)
-    if not isinstance(selected, dict) or not isinstance(selected.get("tdd"), dict):
+    if not isinstance(selected, dict):
+        raise ValueError("bridge slice declaration is invalid")
+    if selected.get("execution_mode", "tdd") != "tdd":
+        return None
+    if not isinstance(selected.get("tdd"), dict):
         raise ValueError("bridge slice declaration is invalid")
     red = selected["tdd"].get("red")
     if not isinstance(red, dict):

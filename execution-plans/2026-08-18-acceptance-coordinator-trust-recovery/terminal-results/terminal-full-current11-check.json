@@ -1,0 +1,45 @@
+{
+  "authorizes": [],
+  "binding_hashes": {
+    "authority-manifest.v1.json": "sha256:136a1d20efd2dafc6da1d1ba9d58d472545a83c3f55c589d90051b01c5002014",
+    "command-registry.v1.json": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
+    "implementation-contract.v1.json": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b",
+    "knowledge-context.freeze.v1.json": "sha256:66f30a90d4b854557d3697bd349df3a3e7c3bb1bad1696f58425c23ffb7abe2e",
+    "knowledge-context.v1.json": "sha256:43955cbe098e656d50cb2c825f89430323acf4a0a03a4e2d4b5a816d09c9b39f",
+    "skill-input-current11/receipt.json": "sha256:b80b2727ed6d9a41c43733cc1e9af32f1ed06edce810d9d54b4058f2941b2fb1"
+  },
+  "candidate_binding_hash": "sha256:d07a07e629ce8ab6d9dcc2d28ba44ddfcb0c3f3bf8839f13017fcb33fecc5c4d",
+  "command_registry_hash": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
+  "contract_hash": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b",
+  "failures": [
+    "maintainer-implementation-authorization-required",
+    "implementation-authorization-not-published",
+    "maintainer-authorization-receipt-required",
+    "command:r0-green",
+    "command:r1-green",
+    "command:r2-green"
+  ],
+  "lifecycle_transition": "none",
+  "plan_id": "acceptance-coordinator-trust-recovery",
+  "predicate": "implementation-complete",
+  "schema_version": "quick-dev-tdd-adapter.terminal-result.v1",
+  "status": "fail",
+  "terminal_command_id": "terminal-full",
+  "validated_command_ids": [
+    "r0-green",
+    "r1-green",
+    "r2-green",
+    "r3-green",
+    "r4-green",
+    "quick-dev-suite",
+    "acceptance-suite"
+  ],
+  "validated_selectors": [
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_successor_crash_recovery.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_authorization_refresh_chain.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py"
+  ]
+}

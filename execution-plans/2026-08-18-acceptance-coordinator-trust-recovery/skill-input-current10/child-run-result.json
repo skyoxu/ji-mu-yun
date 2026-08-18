@@ -1,0 +1,6 @@
+{
+  "status": "complete",
+  "context_artifact": "C:/jimuyun/execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current10/o/skill-input-context.v1.json",
+  "semantic_decision": "C:/jimuyun/execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current10/o/semantic-decision.v1.json",
+  "source_manifest_hash": "sha256:c191d7b90faa0fb18fc58ae6d541fa2ef68ce188ecc74b2a960500a405683928"
+}

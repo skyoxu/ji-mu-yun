@@ -56,6 +56,29 @@ Acceptance `TWR-W3-EXIT`: execution can continue with a verified degraded
 successor when semantics are unchanged; publication and semantic-review gates
 remain independently enforced.
 
+## W4 / TWR-W4: Receipt Generation And Current Pointer
+
+Receipt generation must be owned by the validator/coordinator that observes the
+execution, not by a caller-authored path or a hard-coded generation name. Each
+receipt is immutable, binds the current candidate, contract, registry,
+authority envelope, Skill-input receipt, Knowledge freeze, and validator
+identity, and is published into a versioned generation directory. A canonical
+current pointer may advance only after the complete receipt validates; failed or
+partial generations never replace current.
+
+Acceptance `TWR-W4-EXIT`: identical replay reuses the same generation or
+publishes a byte-identical successor; stale, conflicting, or incomplete
+receipts cannot become current, and consumers resolve the current receipt via
+the typed pointer rather than a fixed filename.
+
+## W5 Boundary
+
+Attempt lease, retention, and garbage collection are intentionally deferred to
+a dependent plan or a later slice after W0 and W4 establish typed selection and
+immutable receipt generations. This boundary does not weaken recovery or
+retention requirements; it prevents a second runtime state machine from being
+introduced before receipt identity is stable.
+
 ## Ownership
 
 VDD owns draft and plan-ready. Maintainer owns implementation authorization.

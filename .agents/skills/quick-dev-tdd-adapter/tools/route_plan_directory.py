@@ -8,7 +8,11 @@ from pathlib import Path
 import subprocess
 import sys
 
-from stage_lifecycle_runner import derive_run_state, validate_implementation_successor
+try:
+    from stage_lifecycle_runner import derive_run_state, validate_implementation_successor
+except ModuleNotFoundError:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from stage_lifecycle_runner import derive_run_state, validate_implementation_successor
 
 
 _IMPLEMENTATION_CANDIDATE_ROOTS = (
@@ -98,6 +102,8 @@ def current_red_handoff(repository_root: Path, plan_dir: Path, slice_id: str) ->
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     selected = next((item for item in contract.get("slices", []) if item.get("slice_id") == slice_id), None)
     if not isinstance(selected, dict):
+        return None
+    if selected.get("execution_mode", "tdd") != "tdd":
         return None
     red = selected.get("tdd", {}).get("red") if isinstance(selected.get("tdd"), dict) else None
     if not isinstance(red, dict):
@@ -571,6 +577,7 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
         slice_id = slice_item.get("slice_id")
         if not isinstance(slice_id, str):
             raise ValueError("slice id is invalid")
+        execution_mode = slice_item.get("execution_mode", "tdd")
         exit_predicate = slice_item.get("exit_predicate", "slice-ready")
         if not isinstance(exit_predicate, str) or not exit_predicate:
             raise ValueError("slice exit predicate is invalid")
@@ -607,6 +614,7 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 break
     for slice_item in contract["slices"]:
         slice_id = slice_item["slice_id"]
+        execution_mode = slice_item.get("execution_mode", "tdd")
         if slice_id in completed:
             continue
         if not set(slice_item.get("depends_on", [])).issubset(completed):
@@ -619,6 +627,8 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
             return {"next_action": "validate-slice", "slice_id": slice_id, "authorizes": []}
         if active_action == "implement":
             return {"next_action": "implement", "slice_id": slice_id, "authorizes": []}
+        if execution_mode in {"regression", "dogfood-replay"}:
+            return {"next_action": "validate-slice", "slice_id": slice_id, "execution_mode": execution_mode, "authorizes": []}
         return {"next_action": "run-slice", "slice_id": slice_id, "authorizes": []}
     if _terminal_completion_current(repository_root, target, contract_hash):
         return {"next_action": "implementation-complete", "authorizes": []}

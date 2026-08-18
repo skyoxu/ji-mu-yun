@@ -179,6 +179,24 @@ class SkillInputConsumptionTests(unittest.TestCase):
             {path for path in excluded if path.endswith(("plan-state.v1.json", "resume-state.v1.json"))},
         )
 
+    def test_derived_reports_and_evidence_directories_are_excluded(self):
+        temporary, root, _contract_path, _receipt, _args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        plan = root / "plan"
+        (plan / "terminal-results").mkdir(parents=True)
+        (plan / "attempts" / "A1").mkdir(parents=True)
+        (plan / "knowledge-context.history").mkdir()
+        (plan / "95-implementation-evolution-and-completion-report.md").write_text("report\n", encoding="utf-8")
+        (plan / "terminal-results" / "terminal-full.json").write_text("{}\n", encoding="utf-8")
+        (plan / "attempts" / "A1" / "page-1.json").write_text("{}\n", encoding="utf-8")
+
+        excluded = generated_artifact_exclusions(root, plan)
+
+        self.assertIn("plan/95-implementation-evolution-and-completion-report.md", excluded)
+        self.assertIn("plan/terminal-results", excluded)
+        self.assertIn("plan/attempts", excluded)
+        self.assertIn("plan/knowledge-context.history", excluded)
+
     def test_excluded_snapshot_directory_is_not_reingested(self):
         temporary, root, contract_path, _receipt, _args = self._fixture()
         self.addCleanup(temporary.cleanup)

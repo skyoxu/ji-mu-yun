@@ -1,0 +1,33 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:11ecf3f0ba95a3c67c6501f660d6a9eb20cfeef1cbc80d9134b43ee6cf4c2ae3",
+  "sections": [
+    {
+      "title": "Authority and scope",
+      "content": "The self-hosted repair is governed by repository rules, lifecycle and Knowledge ADRs, Skill contracts, and consumer policy. Candidate inputs include requirements, implementation and command contracts, the terminal validator, and the persisted-run owner. Lifecycle projections are plan-state and resume-state artifacts. No source grants authorization."
+    },
+    {
+      "title": "Repair findings",
+      "content": "Round 1 is limited to terminal compatibility, final receipt bindings, traceability, self-hosted authority declarations, protection of the immutable 2026-08-17 plan, and an uncontaminated RED baseline. Pre-existing shared workflow changes remain outside slice write sets and require separate disposition before plan-ready. Repair closure is intentionally absent pending validation and maintainer prerequisites."
+    },
+    {
+      "title": "Implementation slices",
+      "content": "R0 establishes binding-derived trusted coordinator evidence. R1 provides reentrant successor recovery with identical reservation reuse and conflict rejection. R2 preserves Knowledge refresh authorization across unchanged selections while blocking authority or execution drift. R3 verifies legacy prior-RED evidence only when current identities match. R4 performs a read-only historical dogfood replay with newly generated current bindings. Dependencies culminate in R4 after R0-R3."
+    },
+    {
+      "title": "Acceptance requirements",
+      "content": "Persisted evidence, not request-local assertions, controls Acceptance. Successors must recover deterministically without duplication. Same-selection Knowledge staleness may continue through a validated degraded successor, but selection, scope, policy, authority-bearing bytes, required sources, or execution semantics drift requires repair or reauthorization. Knowledge publication and Bootstrap startup are not authorized. Historical 2026-08-17 evidence remains immutable."
+    },
+    {
+      "title": "Commands and validation",
+      "content": "The registry defines shell-free pytest and terminal commands for R0-R4, Quick Dev, Acceptance, and full validation. Slice terminal predicates are slice-ready; the full predicate is implementation-complete. The terminal validator checks plan and Knowledge authority, maintainer authorization bindings, current Skill-input validation, required receipts, registered commands, candidate identity, and final artifact hashes. Results are non-authorizing."
+    },
+    {
+      "title": "Terminal trust conditions",
+      "content": "A passing terminal result requires implementation-authorized plan state, a matching authorization receipt, a valid Knowledge context and freeze, acceptable freshness semantics, validated Skill-input consumption, successful registered commands, and for full execution all slice receipts plus resume and final bindings. Generated evidence is excluded from candidate binding where defined. Every emitted terminal result has authorizes empty and lifecycle transition none."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-18T13:53:13.859062Z"
+}

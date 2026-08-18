@@ -1,0 +1,211 @@
+仍然阻断 plan-ready 的问题
+P0-1：Skill-input receipt 已确定过期
+
+当前 skill-input-r18/receipt.json 仍然绑定：
+
+repository_identity.head = 868328c8...
+
+而当前候选是：
+
+2556ea78...
+
+receipt 还绑定了旧版本的：
+
+ADR-0058；
+ADR-0059；
+requirements；
+implementation contract；
+command registry；
+terminal runner；
+finding set；
+95 report。
+
+这些文件在 2556ea78 中已经改变，但 receipt 仍然声明：
+
+"changed_sources": [],
+"ready": true
+
+所以这个 ready=true 只能作为历史证据，不能作为当前 VDD Skill-input gate。
+
+更严重的是，当前 terminal_full.py 对 receipt 只检查：
+
+文件存在；
+ready == true；
+authorizes == []；
+target path 匹配。
+
+它没有重新验证：
+
+repository identity；
+source manifest；
+source hashes；
+contract hash；
+binding hash；
+当前 Skill-input validator 的 --require-ready 结果。
+
+因此旧 receipt 可能被 terminal 错误接受。这是当前最高优先级问题。
+
+P0-2：source graph 自引用仍然存在
+
+旧 receipt 明确把：
+
+95-implementation-evolution-and-completion-report.md
+
+作为 required source。
+
+而现有 generated_artifact_exclusions() 仍然只是文件名排除列表，仅排除：
+
+skill-input*
+semantic-input*
+knowledge-context*
+精确名称的 plan/resume state
+精确名称的 authorization receipt
+
+它没有系统排除：
+
+95-* append-only report；
+terminal/acceptance/implementation results；
+versioned/successor state；
+repair closure；
+嵌套 lifecycle artifacts；
+retry、page、sidecar 等临时产物。
+
+因此即使现在重新生成 receipt，95 报告仍可能重新进入 source graph。W0 的类型化 source selection 必须先完成，不能靠再加一个文件名前缀解决。
+
+P0-3：authority manifest 仍包含可变生命周期和实现文件
+
+当前 authority-manifest.v1.json 仍把以下文件列为 authority source：
+
+plan-state.v1.json
+resume-state.v1.json
+execution_control.py
+
+这会产生新的自失效风险：
+
+plan-state 在授权时必然变化；
+resume-state 在每个切片后变化；
+execution_control.py 又是 R0 允许修改的生产实现。
+
+建议拆成三类：
+
+authority_sources
+candidate_inputs
+lifecycle_projections
+
+其中：
+
+repository rules、Accepted ADR、生命周期合同、Skill 合同属于 authority；
+implementation code、terminal、contract、registry 属于 candidate binding；
+plan-state、resume-state 属于 lifecycle projection。
+
+后两类不能进入稳定 authority source envelope。
+
+P0-4：R3/R4 文本和机器合同仍然矛盾
+
+requirements-and-acceptance.md 已经正确声明：
+
+R3 是兼容性验证，不是新的 TDD RED；
+R4 是 dogfood/replay，不实现新生产行为。
+
+但是 implementation-contract.v1.json 仍为 R3/R4 定义：
+
+tdd.red
+expected_failure_ids
+planned_new_files
+生产代码写入权限
+
+这仍违反当前 VDD 的规则：已经存在的行为必须作为 regression/terminal coverage，不能制造 synthetic RED。
+
+建议：
+
+把 R3 改为 execution_mode: regression；
+把 R4 改为 execution_mode: dogfood-replay；
+移除二者的 tdd.red；
+R4 的 production write-set 应为空；
+只允许写当前 8-18 目录下的新运行证据；
+如果发现真实缺失行为，再新增一个明确的 implementation slice，不能复用 R3/R4 名义。
+P0-5：terminal 还不是完整信任终点
+
+本轮已经正确修复：
+
+未知 slice 会失败；
+R2 同时覆盖 Quick Dev 和 Acceptance 测试；
+untracked 文件开始进入 candidate binding；
+Knowledge freeze/context 会交叉检查；
+slice command IDs 不再虚报 acceptance-suite。
+
+但还缺：
+
+验证当前 maintainer authorization receipt，而不只是读取可手工修改的 plan-state。
+验证 Skill-input receipt 的当前性和完整 binding。
+验证所有切片的 current terminal receipts 与 resume-state。
+检测 Knowledge self-change，并要求 semantic-review receipt。
+最终 full terminal 实际运行 quick-dev-suite 和 acceptance-suite；目前只运行五个定向测试文件。
+通过 command registry 执行并绑定命令，而不是在 terminal 内重新拼装 pytest 命令。
+解析规范 current receipt，而不是优先硬编码：
+skill-input-r18/receipt.json
+
+这意味着 receipt 路径问题现在只是“为这个目录增加特例”，还不是统一编排。
+
+P0-6：repair closure 仍未完成
+
+当前 report 和 finding set 已经诚实声明这些文件不存在，这是正确的恢复方式，但在它们生成前不能发布 plan-ready：
+
+repair-closure.json
+baseline/candidate changed-set manifests
+root-cause callsite inventory
+sibling disposition
+producer/consumer composition receipt
+当前 Skill-input receipt
+当前 terminal/registry 结构验证结果
+
+repair finding set 还应绑定本次针对 f6a9191b 的完整 predecessor review。docs/know58.txt 可以作为原始反馈附件，但目前它没有被 finding set 按路径和哈希引用，不能代替正式 predecessor review binding。
+
+新建工作流修复计划的检查
+
+把生产工作流问题拆到独立的 2026-08-18-toolchain-workflow-repair 是正确决定。
+
+W0～W3 的方向基本正确：
+
+W0：类型化 selection；
+W1：adapter 控制分页和 continuation；
+W2：adapter 控制 coverage；
+W3：Knowledge 三门分离。
+
+但它明确把 W4 和 W5 列为 non-goals，因此没有覆盖最初发现的全部六项缺陷：
+
+W4：规范 receipt generation/current pointer；
+W5：attempt lease、retention 和 GC。
+
+其中 W4 已经直接阻塞当前 8-18 terminal，所以不能继续作为非目标。建议把 W4 加回同一计划；W5 可以留在同计划后置切片，或者拆成明确依赖 W0/W4 的后继计划。
+
+此外这个新目录当前只是 draft scope record，还缺完整 self-hosted VDD 套件：
+
+implementation contract；
+command registry；
+resume state；
+authority manifest；
+Skill-input gate；
+Knowledge context/freeze；
+terminal full；
+write-set 和 consumer closure。
+
+因此它目前是合格的“需求草案”，不是可授权执行计划。
+
+建议的下一轮顺序
+扩展 toolchain repair 为 W0～W5，至少先完成 W0、W2、W4。
+引入类型化 source roles，彻底排除生命周期、报告和执行证据。
+建立 immutable generation + canonical current pointer。
+修改 8-18 terminal，调用正式 Skill-input validator，不自行浅层解析 receipt。
+清理 authority manifest 的 lifecycle/candidate 混入。
+将 R3/R4 从 TDD slice 改为 regression/dogfood gate。
+生成新的、绑定当前提交或后续候选的 Skill-input receipt。
+更新 Knowledge freeze，使其和当前 Skill-input、contract、authority envelope 同代绑定。
+生成 inventory、changed manifests 和 composition receipt。
+最后生成 repair-closure.json，再原子发布：
+{
+  "status": "plan-ready",
+  "authorizes": ["plan-ready"]
+}
+
+当前综合判断：这次修补已经把错误状态、命令参数、ADR、ID 和范围污染等表层问题处理得比较干净，但核心的“当前 receipt 是否真的可信”仍未闭合。保持 draft 是正确决定；完成 W0/W4、terminal currentness validation 和 authority 解耦后，8-18 才适合重新申请 plan-ready。

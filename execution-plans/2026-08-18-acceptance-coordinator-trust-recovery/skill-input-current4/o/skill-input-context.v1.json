@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:feb157f15e651f7a6b6e81bac2b93659bcd987e8af0b72ed95216890d603ed4e",
+  "sections": [
+    {
+      "title": "Authority and scope",
+      "content": "The self-hosted trust-recovery plan consumes repository rules, lifecycle and Knowledge ADRs, Skill contracts, consumer policy, requirements, implementation contract, command registry, terminal validator, and the persisted Acceptance run owner. Lifecycle ownership remains: Maintainer publishes implementation authorization, Quick Dev owns implementation completion, and Acceptance owns acceptance passage. Bootstrap startup, Knowledge publication, runtime or deployment changes, historical-plan mutation, and trust signing are not authorized."
+    },
+    {
+      "title": "Repair constraints",
+      "content": "Repair round 1 is limited to terminal compatibility, final receipt bindings, traceability, self-hosted authority declarations, protection of the immutable 2026-08-17 plan, and correction of the RED baseline. Pre-existing shared workflow changes are outside slice write sets and require separate ownership or explicit disposition before plan-ready. Repair closure remains absent pending validation and maintainer prerequisites."
+    },
+    {
+      "title": "Execution slices",
+      "content": "R0 establishes a binding-derived persisted Acceptance evidence root and rejects request-local authority or incompletely bound receipts. R1 makes successor creation reentrant through an identical reservation and fails closed on conflicting identity. R2 preserves authorization across verified, same-selection Knowledge refreshes while routing selection or execution-semantics drift to reauthorization. R3 verifies legacy prior-RED evidence only when selector, test bytes, execution fingerprint, and expected failure IDs match. R4 performs a read-only replay of 2026-08-17 evidence while producing fresh current bindings."
+    },
+    {
+      "title": "Knowledge continuity",
+      "content": "A refresh may replay a frozen selection from a verified published or last-known-good catalog when selection, scope, resource semantics, policy, contract, commands, tests, and authority remain unchanged. Ordinary catalog staleness or selected source-byte drift may yield degraded execution through one validated successor. Invalid or tampered LKG data, missing required sources, selection or authority drift, and Knowledge-system self-change with a failed query gate remain blocking. Acceptance and Quick Dev may consume successor context but cannot publish Knowledge authority or rewrite maintainer authorization."
+    },
+    {
+      "title": "Validation and completion",
+      "content": "The registry defines slice GREEN commands, per-slice terminal commands, full Quick Dev and Acceptance suites, and a terminal-full command. The terminal validator checks maintainer authorization, Knowledge freeze binding, current Skill-input receipt validation, registered test commands, candidate identity, and final artifact hashes. Slice predicates are slice-ready; the full predicate is implementation-complete. Results are non-authorizing and record no lifecycle transition."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-18T13:29:44.060613Z"
+}

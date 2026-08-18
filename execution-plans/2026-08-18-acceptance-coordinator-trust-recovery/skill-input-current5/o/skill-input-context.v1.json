@@ -1,0 +1,33 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:0770d0333bb07d774efc5d4034ce460aac21068f068a1b578ba27e7b054329cd",
+  "sections": [
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/authority-manifest.v1.json",
+      "content": "Defines repository authority, candidate inputs, lifecycle projections, and an empty authorizes list. It identifies governance, lifecycle, knowledge, implementation, acceptance, contract, and policy sources."
+    },
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json",
+      "content": "Registers slice and full-terminal Python test commands for R0 through R4, plus quick-dev and acceptance suites. Commands use repository-relative working directories, bounded timeouts, and no shell execution."
+    },
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json",
+      "content": "Defines the self-hosted repair plan, five slices, dependencies, allowed and forbidden paths, TDD selectors, recovery rules, terminal command, and implementation-complete predicate. The plan preserves lifecycle ownership and forbids Knowledge publication and unrelated runtime changes."
+    },
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/finding-set.md",
+      "content": "Bounds repair scope to coordinator trust, successor recovery, traceability, authority declarations, immutable historical-plan protection, and RED-baseline contamination. It records pre-existing workflow changes and an attached predecessor finding source; repair closure remains absent pending validation and authority prerequisites."
+    },
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+      "content": "Specifies R0 trusted evidence roots, R1 reentrant successors, R2 authorization continuity and degraded Knowledge freshness, R3 legacy RED compatibility, and R4 read-only dogfood replay. Acceptance requires binding-derived evidence, immutable historical records, typed blockers for authority or selection drift, and empty authorizes arrays."
+    },
+    {
+      "title": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+      "content": "Implements terminal validation: candidate hashing, registered-command execution, slice selectors, final binding checks, Skill-input validation, authority and Knowledge-freeze checks, and deterministic result emission. Passing results use slice-ready or implementation-complete predicates and never authorize lifecycle transitions."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-18T13:32:34.331510Z"
+}

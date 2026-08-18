@@ -1,0 +1,20 @@
+{
+  "schema_version": "skill-semantic-decision.v1",
+  "producer_role": "semantic-skill-input-consumer",
+  "execution_identity": "sha256:c03a8752b4c4fcdb52f5643f5400ef59d6956c132c4211fd871209ff7f2a116c",
+  "source_manifest_hash": "sha256:9a32605cddd49d3da44c576fe59d1b2048e9e3ae115397207e59c8b0c05b7964",
+  "context_artifact_hash": "sha256:5dc474af331d68ebc491470ebb9c3ae7ede11a254d747ce138dcfaa6030e96d2",
+  "source_statuses": {
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/authority-manifest.v1.json": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/finding-set.md": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py": "accepted"
+  },
+  "status": "accepted",
+  "rationale": "All six frozen manifest sources are present with complete source coverage. Bounded redacted summaries preserve the repair contract, authority constraints, validation commands, acceptance requirements, and terminal behavior. No source is insufficient and no authorization is granted.",
+  "redaction_status": "complete",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "authorizes": []
+}

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import hashlib
+import fnmatch
 import json
 import os
 import re
@@ -643,19 +644,56 @@ def _resolve_reference(
 
 
 def generated_artifact_exclusions(repository_root: Path, target: Path) -> frozenset[str]:
-    """Exclude mutable Skill Input successor artifacts from their own source graph."""
+    """Exclude generated lifecycle/evidence artifacts from their own source graph.
+
+    The exclusion is intentionally type-based rather than tied to one receipt
+    filename. Authoritative requirements, contracts, and repair findings remain
+    selectable; mutable projections and derived evidence do not become their
+    own Skill-input authority.
+    """
     root = repository_root.resolve()
     target = target.resolve()
     if not target.is_dir():
         return frozenset()
-    return frozenset(
-        item.relative_to(root).as_posix()
-        for item in target.iterdir()
-        if item.name.startswith(("skill-input", "semantic-input"))
-        or item.name.startswith("knowledge-context")
-        or item.name in {"plan-state.v1.json", "resume-state.v1.json"}
-        or item.name == "implementation-authorization-receipt.v1.json"
+    exact_names = {
+        "plan-state.v1.json",
+        "resume-state.v1.json",
+        "implementation-authorization-receipt.v1.json",
+        "repair-closure.json",
+    }
+    directory_names = {
+        "terminal-results",
+        "attempts",
+        "pages",
+        "sidecars",
+        "knowledge-context.history",
+        "knowledge-context.freeze.history",
+    }
+    file_patterns = (
+        "skill-input*",
+        "semantic-input*",
+        "knowledge-context*",
+        "95-*.md",
+        "*terminal-result*.json",
+        "*implementation-complete*.json",
+        "*acceptance-result*.json",
+        "changed-set*.json",
+        "root-cause*.json",
+        "sibling-disposition*.json",
+        "composition*.json",
+        "*retry*.json",
+        "*page*.json",
+        "*sidecar*.json",
     )
+    excluded: set[str] = set()
+    for item in target.rglob("*"):
+        relative = item.relative_to(root).as_posix()
+        if item.is_dir() and item.name in directory_names:
+            excluded.add(relative)
+            continue
+        if item.is_file() and (item.name in exact_names or any(fnmatch.fnmatchcase(item.name, pattern) for pattern in file_patterns)):
+            excluded.add(relative)
+    return frozenset(excluded)
 
 
 def expand_source_graph(

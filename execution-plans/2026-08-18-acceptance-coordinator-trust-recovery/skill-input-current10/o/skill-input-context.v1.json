@@ -1,0 +1,33 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:c191d7b90faa0fb18fc58ae6d541fa2ef68ce188ecc74b2a960500a405683928",
+  "sections": [
+    {
+      "title": "Authority manifest",
+      "content": "Defines repository, lifecycle, knowledge, acceptance-evidence, successor, implementation-consumer, lifecycle-contract, Skill-input-contract, and consumer-policy authorities. Candidate inputs include requirements, implementation contract, command registry, terminal validator, and persisted-run owner. Lifecycle projections are plan and resume state. The manifest grants no authorization."
+    },
+    {
+      "title": "Command registry",
+      "content": "Defines shell-free Python commands for R0-R4 focused tests, per-slice terminal validation, the Quick Dev and Acceptance suites, and full terminal validation. Commands run from the repository root with bounded timeouts. The registry grants no authorization."
+    },
+    {
+      "title": "Implementation contract",
+      "content": "Defines a self-hosted repair plan with five dependent slices. R0 establishes trusted persisted coordinator evidence; R1 provides reentrant successor recovery; R2 preserves Knowledge refresh authorization and degraded freshness semantics; R3 verifies legacy prior-RED compatibility; R4 performs immutable historical dogfood replay. Each slice binds requirements, acceptance IDs, allowed and forbidden paths, read sets, dependencies, validation commands, exit predicates, and recovery behavior. Full completion uses the registered terminal runner and implementation-complete predicate."
+    },
+    {
+      "title": "Repair finding set",
+      "content": "Round 1 is limited to terminal compatibility, final receipt bindings, traceability, self-hosted authority declarations, protection of the immutable 2026-08-17 plan, and uncontaminated RED evidence. Pre-existing shared workflow changes are outside slice write sets and require separate ownership or explicit disposition before plan-ready. The predecessor review input is a non-authoritative finding source. Repair closure remains absent pending validation and maintainer-owned prerequisites."
+    },
+    {
+      "title": "Requirements and acceptance",
+      "content": "Repairs trust and recovery gaps without modifying historical 2026-08-17 evidence. Maintainer owns implementation authorization, Quick Dev owns implementation completion, Acceptance owns acceptance-passed, and Bootstrap is never automatic. Requests must resolve hash-bound persisted runs and reject request-local authority. Successors must be reentrant and identity-stable. Knowledge refresh may continue only for verified unchanged selection and authority; drift requires reauthorization, while eligible freshness degradation can use verified published or LKG inputs without publishing authority. Prior RED is reusable only with matching selector, test bytes, execution fingerprint, and expected failures. Final dogfood replay must bind all current artifacts while preserving historical evidence."
+    },
+    {
+      "title": "Terminal validator",
+      "content": "Computes candidate identity from HEAD, tracked diff, and relevant untracked files; executes only registered commands within the repository; validates slice selectors; checks plan authorization, maintainer receipts, Knowledge context and freeze, Skill-input receipt and contract, full-run slice receipts and resume state, and final binding hashes. It emits non-authorizing terminal results with slice-ready or implementation-complete predicates and fails on missing, invalid, drifting, or nonzero evidence."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-18T13:51:08.633583Z"
+}

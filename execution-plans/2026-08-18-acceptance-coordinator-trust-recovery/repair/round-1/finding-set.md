@@ -23,5 +23,11 @@ slice write-sets and are not evidence of this plan's RED/GREEN execution.
 They require separate workflow-repair ownership or explicit VDD disposition
 before this plan can publish `plan-ready`.
 
+The predecessor review input is also bound explicitly as
+`docs/know58.txt` with content hash
+`sha256:75def4c0c62f45bce45cdc660087bedb88b353d2e456829cdd74ac1d37f37e07`.
+It is an attached finding source, not lifecycle authority or completion
+evidence.
+
 `repair-closure.json` is intentionally absent until the targeted validation and
 the maintainer-owned authority prerequisites are complete.

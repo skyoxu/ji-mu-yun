@@ -1,0 +1,17 @@
+{
+  "schema_version": "acceptance-coordinator-trust-recovery.sibling-disposition.v1",
+  "status": "candidate",
+  "siblings": [
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+      "disposition": "historical-immutable",
+      "write_authorized": false
+    },
+    {
+      "path": "docs/know58.txt",
+      "disposition": "attached-predecessor-feedback",
+      "sha256": "sha256:75def4c0c62f45bce45cdc660087bedb88b353d2e456829cdd74ac1d37f37e07",
+      "write_authorized": false
+    }
+  ]
+}

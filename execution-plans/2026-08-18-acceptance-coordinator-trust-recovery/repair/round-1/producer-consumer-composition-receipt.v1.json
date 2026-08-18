@@ -1,0 +1,26 @@
+{
+  "schema_version": "acceptance-coordinator-trust-recovery.composition-receipt.v1",
+  "status": "candidate-not-closed",
+  "producer": "vdd-execution-plan",
+  "consumers": ["quick-dev-tdd-adapter", "run-refactor-implementation-acceptance"],
+  "bound_artifacts": [
+    "implementation-contract.v1.json",
+    "command-registry.v1.json",
+    "authority-manifest.v1.json",
+    "skill-input-current12/receipt.json",
+    "knowledge-context.v1.json",
+    "knowledge-context.freeze.v1.json",
+    "resume-state.v1.json",
+    "terminal-results/R0.json",
+    "terminal-results/R1.json",
+    "terminal-results/R2.json",
+    "terminal-results/R3.json",
+    "terminal-results/R4.json",
+    "terminal-results/terminal-full-current12.json",
+    "repair/round-1/changed-set-manifest.v1.json",
+    "repair/round-1/root-cause-callsite-inventory.v1.json",
+    "repair/round-1/sibling-disposition.v1.json"
+  ],
+  "authorizes": [],
+  "requires_before_closure": ["targeted-validation", "maintainer-implementation-authorization"]
+}

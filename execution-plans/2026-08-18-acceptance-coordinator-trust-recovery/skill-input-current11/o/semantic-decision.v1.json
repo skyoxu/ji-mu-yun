@@ -1,0 +1,20 @@
+{
+  "schema_version": "skill-semantic-decision.v1",
+  "producer_role": "skill-semantic-input-consumer",
+  "execution_identity": "sha256:c03a8752b4c4fcdb52f5643f5400ef59d6956c132c4211fd871209ff7f2a116c",
+  "source_manifest_hash": "sha256:11ecf3f0ba95a3c67c6501f660d6a9eb20cfeef1cbc80d9134b43ee6cf4c2ae3",
+  "context_artifact_hash": "sha256:5bcffbc0aae2ae59eff06b6eb00dd52de3dbadea293cd6ef71323041930205de",
+  "source_statuses": {
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/authority-manifest.v1.json": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/finding-set.md": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py": "accepted"
+  },
+  "status": "accepted",
+  "rationale": "All six manifested sources are present with complete source coverage and provide sufficient bounded semantic context for the repair consumer; this decision grants no authority.",
+  "redaction_status": "not-required",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "authorizes": []
+}

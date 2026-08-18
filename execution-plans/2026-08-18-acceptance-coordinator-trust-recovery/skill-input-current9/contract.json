@@ -1,0 +1,21 @@
+{
+  "schema_version": "skill-input-contract.v1",
+  "consumer": "vdd-execution-plan",
+  "mode": "strict",
+  "trigger": "after create or repair route and authority reads, before knowledge freeze or plan output",
+  "source_roles": {
+    "target_plan": {"selector": "target_plan", "required": false, "root": "repository", "allowed_kinds": ["file"], "reference_kinds": []},
+    "repair_finding": {"selector": "repair_finding", "required": false, "root": "repository", "allowed_kinds": ["file"], "reference_kinds": ["markdown-link", "json-path-field"]}
+  },
+  "operations": {"repair": {"required_inputs": ["target_plan", "repair_finding"]}},
+  "reference_policy": "declared-in-root-and-contained",
+  "max_reference_depth": 8,
+  "max_sources": 128,
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 262144,
+  "budget_basis": {"path": "scripts/sc/fixtures/skill-input-budget.v1.json", "sha256": "sha256:307fe1793b6db3b781737c0dd0221468ab450c62b18ade7b581482e719b35e30"},
+  "sensitivity_policy": "deny-credential-values",
+  "redaction_profile": "credential-values-v1",
+  "forbidden_sources": ["logs-as-recovery-source"],
+  "semantic_acceptance": "all-required-inputs-are-sufficient"
+}

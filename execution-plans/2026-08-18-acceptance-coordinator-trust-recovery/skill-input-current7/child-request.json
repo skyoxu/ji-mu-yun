@@ -1,0 +1,18 @@
+{
+  "schema_version": "skill-input-child-request.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "contract_hash": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+  "source_manifest_hash": "sha256:dbf5657b2e693d7d6c09eb9cd8845b4fe1fbb088438a6717dc95a52b58973ed4",
+  "snapshot_root": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current7/s",
+  "output_root": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current7/o",
+  "execution_identity": "sha256:c03a8752b4c4fcdb52f5643f5400ef59d6956c132c4211fd871209ff7f2a116c",
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 262144,
+  "input_mode": "serialized-snapshot-stdin",
+  "allowed_capabilities": [
+    "read-frozen-snapshot",
+    "write-context-output"
+  ],
+  "authorizes": []
+}

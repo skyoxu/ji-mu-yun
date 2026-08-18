@@ -1,0 +1,33 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:0905e31636a754775c8941b2411327162dcf16c00fab8ed557fcc51546e639f1",
+  "sections": [
+    {
+      "title": "Authority and scope",
+      "content": "The self-hosted trust-recovery plan is governed by repository rules, lifecycle and Knowledge ADRs, Skill contracts, the lifecycle contract, and consumer policy. Lifecycle ownership remains separated: Maintainer authorizes implementation, Quick Dev owns implementation completion, and Acceptance owns acceptance passage. The plan does not authorize Knowledge publication, automatic Bootstrap startup, runtime/release actions, or historical-plan mutation. All supplied artifacts are non-authorizing."
+    },
+    {
+      "title": "Repair findings",
+      "content": "Repair round 1 is limited to terminal argument/predicate compatibility, final receipt bindings, requirement and acceptance traceability, self-hosted authority declarations, protection of the immutable 2026-08-17 plan, and a clean RED baseline. Pre-existing shared workflow changes are outside slice write sets and require separate ownership or explicit disposition before plan-ready. Repair closure remains absent pending validation and maintainer authority prerequisites."
+    },
+    {
+      "title": "Implementation slices",
+      "content": "R0 establishes a binding-derived persisted Acceptance evidence root and rejects request-local assertions or incomplete receipt bindings. R1 makes successor creation reentrant through reserved identity and byte-identical lineage, failing closed on conflicts. R2 preserves authorization across verified same-selection Knowledge refreshes while requiring reauthorization for selection, authority, scope, policy, contract, command, test, or protected-source drift. R3 verifies legacy prior-RED evidence only when selector, test bytes, execution fingerprint, and expected failures match. R4 performs read-only replay of 2026-08-17 evidence and publishes only new current bindings after R0-R3."
+    },
+    {
+      "title": "Validation and recovery",
+      "content": "The command registry defines slice GREEN tests, per-slice terminal checks, full Quick Dev and Acceptance suites, and a terminal-full command. Each command uses structured executable/argv/cwd data with shell disabled. Slice dependencies are R0; R1 after R0; R2 and R3 after R1; R4 after R0-R3. Recovery rules resume only binding-derived persisted state, reuse identical successor reservations, replay frozen verified LKG selections, reject drift, and preserve historical evidence."
+    },
+    {
+      "title": "Terminal contract",
+      "content": "The terminal validator computes a candidate binding from HEAD, tracked diff, and relevant untracked files; validates plan state, maintainer authorization, Knowledge context/freeze, Skill-input receipt, registered commands, and full-run slice receipts; and emits non-authorizing terminal results. Full completion additionally requires hashes for the implementation contract, command registry, authority manifest, Knowledge context and freeze, and a ready target-matching Skill-input receipt. Knowledge failures beyond ordinary catalog staleness require review; stale catalogs require a successor refresh. Terminal predicates are slice-ready for slices and implementation-complete for the full run."
+    },
+    {
+      "title": "Acceptance invariants",
+      "content": "Persisted evidence and receipts must bind the current candidate, contracts, registries, Knowledge and Skill-input identities, events, and complete successor chains. Same-selection source refresh may continue only from verified published or LKG state without publishing new Knowledge authority. Missing sources, invalid ancestry or manifests, tampering, semantic selection drift, or authority-bearing source drift remain blockers. Historical authorization, terminal results, resume state, reports, and evidence under the 2026-08-17 plan remain immutable."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-18T13:49:21.341532Z"
+}

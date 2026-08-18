@@ -1,0 +1,182 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "request_binding": {
+    "request": {
+      "finding": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/finding-set.md",
+      "target_plan": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery"
+    },
+    "consumer": "vdd-execution-plan",
+    "operation": "repair",
+    "target": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery",
+    "route_identity": "vdd.self_hosted.repair.current3",
+    "source_roles": {
+      "target_plan": [
+        "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+        "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json",
+        "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json",
+        "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/authority-manifest.v1.json",
+        "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py"
+      ],
+      "repair_finding": [
+        "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/finding-set.md"
+      ]
+    }
+  },
+  "request_hash": "sha256:6936c93ebf56d494ab68454b1d9740731ff7affebf7d5982cf80d4077610d240",
+  "target": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery",
+  "route_identity": "vdd.self_hosted.repair.current3",
+  "repository_identity": {
+    "head": "2556ea78f41657e5a740016ff97da0b0614631ea",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:80f1317a6848ac41280c3b627895d6e5a19d6c3c32fd40568c6f31da04a43725"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-18T13:22:17.044023Z",
+  "contract_hash": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+  "source_manifest": {
+    "path": "s/source-manifest.v1.json",
+    "sha256": "sha256:7f8b44331d547b7b629b0f61dd6a4413e573cd047faf58b7be97ec5c3ec06f20"
+  },
+  "child_request": {
+    "path": "child-request.json",
+    "sha256": "sha256:3b589d0d65d033e2352a360b7daca084b44ae0239a565b4d68b7def4a638d4ab"
+  },
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/authority-manifest.v1.json",
+      "required": true,
+      "sha256_before": "sha256:136a1d20efd2dafc6da1d1ba9d58d472545a83c3f55c589d90051b01c5002014",
+      "sha256_after": "sha256:136a1d20efd2dafc6da1d1ba9d58d472545a83c3f55c589d90051b01c5002014",
+      "size_bytes": 2491,
+      "line_count": 29,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:136a1d20efd2dafc6da1d1ba9d58d472545a83c3f55c589d90051b01c5002014",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 29
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json",
+      "required": true,
+      "sha256_before": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
+      "sha256_after": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
+      "size_bytes": 4547,
+      "line_count": 19,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 19
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json",
+      "required": true,
+      "sha256_before": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b",
+      "sha256_after": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b",
+      "size_bytes": 9051,
+      "line_count": 101,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 101
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/finding-set.md",
+      "required": true,
+      "sha256_before": "sha256:dca3185f4b5e15ccdfcb5eb1d4b69bf20b546891bfb567e5508f5891f83f8538",
+      "sha256_after": "sha256:dca3185f4b5e15ccdfcb5eb1d4b69bf20b546891bfb567e5508f5891f83f8538",
+      "size_bytes": 1474,
+      "line_count": 33,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:dca3185f4b5e15ccdfcb5eb1d4b69bf20b546891bfb567e5508f5891f83f8538",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 33
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+      "required": true,
+      "sha256_before": "sha256:b44e35896c0a9059d888aa96553ce0268c576df9274c9c3d93e6131b3f5da930",
+      "sha256_after": "sha256:b44e35896c0a9059d888aa96553ce0268c576df9274c9c3d93e6131b3f5da930",
+      "size_bytes": 8723,
+      "line_count": 160,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:b44e35896c0a9059d888aa96553ce0268c576df9274c9c3d93e6131b3f5da930",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 160
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+      "required": true,
+      "sha256_before": "sha256:198a74808eeda5dd1a621a38f212d6c0d1ebed8ec13617de284d9a9b77c8822d",
+      "sha256_after": "sha256:198a74808eeda5dd1a621a38f212d6c0d1ebed8ec13617de284d9a9b77c8822d",
+      "size_bytes": 10437,
+      "line_count": 263,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:198a74808eeda5dd1a621a38f212d6c0d1ebed8ec13617de284d9a9b77c8822d",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 263
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "o/semantic-decision.v1.json",
+    "sha256": "sha256:1b3b462409ccbbf6cc09ca2d75074a8e58ec7fef3332cfdbd4edca76ddff70ab"
+  },
+  "context_artifact": {
+    "path": "o/skill-input-context.v1.json",
+    "sha256": "sha256:d28355217f115225a655084fb995ec347e00300059cf91882e7c7364c7cd65a5"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:e9319d5b313dfc92a0fe7dab12178e1400332b555fa91a761a3289e57162a0b2"
+}

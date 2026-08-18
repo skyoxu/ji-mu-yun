@@ -1,0 +1,25 @@
+{
+  "authorizes": [],
+  "binding_hashes": {},
+  "candidate_binding_hash": "sha256:37a9f62bf7d623c40ddb27785ab058cf8ecb56132d8c833be28e318b03b81d37",
+  "command_registry_hash": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
+  "contract_hash": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b",
+  "failures": [
+    "maintainer-implementation-authorization-required",
+    "implementation-authorization-not-published",
+    "maintainer-authorization-receipt-required",
+    "command:r0-green"
+  ],
+  "lifecycle_transition": "none",
+  "plan_id": "acceptance-coordinator-trust-recovery",
+  "predicate": "slice-ready",
+  "schema_version": "quick-dev-tdd-adapter.terminal-result.v1",
+  "status": "fail",
+  "terminal_command_id": "r0-terminal",
+  "validated_command_ids": [
+    "r0-green"
+  ],
+  "validated_selectors": [
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py"
+  ]
+}

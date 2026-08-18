@@ -1,0 +1,12 @@
+{
+  "schema_version": "acceptance-coordinator-trust-recovery.changed-set.v1",
+  "status": "candidate-not-closed",
+  "finding_baseline_commit": "3c285bcc",
+  "plan_creation_commit": "868328c827a814f9042fdfa62c52ab574a424b24",
+  "predecessor_review_commit": "f6a9191b",
+  "candidate_base_commit": "2556ea78f41657e5a740016ff97da0b0614631ea",
+  "candidate_binding_hash": "sha256:abbce835265a7c303af549d1912142a672533219b20af53901d13607da879c03",
+  "scope": "8-18 trust-recovery contract and workflow-repair evidence only",
+  "historical_exclusions": ["execution-plans/2026-08-17-acceptance-coordinator-efficiency/**"],
+  "requires": ["targeted-validation", "maintainer-implementation-authorization", "repair-closure"]
+}

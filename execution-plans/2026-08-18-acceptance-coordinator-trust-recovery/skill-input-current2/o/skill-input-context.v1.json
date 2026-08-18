@@ -1,0 +1,33 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:42e72bdd5ba215cfaabd18e89ba0bee929e08b851d24257a0f5c792eee3c85b9",
+  "sections": [
+    {
+      "title": "Authority manifest",
+      "content": "Defines repository, lifecycle, knowledge, acceptance-evidence, successor, Skill-input, and consumer-policy authorities. Identifies requirements, implementation contract, command registry, terminal validator, persisted-run owner, and lifecycle projections as candidate inputs. Grants no authority."
+    },
+    {
+      "title": "Command registry",
+      "content": "Registers shell-free Python test and terminal commands for slices R0-R4, the Quick Dev and Acceptance suites, and full terminal validation. Commands use repository-relative working directories, bounded timeouts, and grant no authority."
+    },
+    {
+      "title": "Implementation contract",
+      "content": "Defines a self-hosted five-slice repair plan. R0 establishes trusted persisted coordinator evidence; R1 provides reentrant successor recovery; R2 preserves authorization across eligible Knowledge refresh while blocking semantic drift; R3 verifies legacy prior-RED compatibility; R4 performs read-only historical dogfood replay. Each slice specifies dependencies, write boundaries, forbidden paths, test or regression evidence, terminal predicates, and recovery behavior. Full completion uses terminal-full."
+    },
+    {
+      "title": "Repair finding set",
+      "content": "Round 1 is limited to terminal compatibility, final receipt bindings, traceability, self-hosted authority declarations, protection of the immutable 2026-08-17 plan, and correction of contaminated RED baselines. Pre-existing shared workflow changes are outside slice write sets and require separate ownership or disposition. The predecessor review input is informational only, and repair closure remains absent pending validation and maintainer prerequisites."
+    },
+    {
+      "title": "Requirements and acceptance",
+      "content": "The repair restores trust and recovery without changing historical 2026-08-17 evidence or authorizing Knowledge publication, Bootstrap startup, runtime, release, archival, or trust signing. Persisted binding-owned evidence must replace request-local assertions. Successors must be identity-stable and reentrant. Same-selection Knowledge refresh may continue only through validated successors; selection, authority, execution semantics, required-source, or protected Knowledge-system drift blocks or requires reauthorization. Legacy RED reuse requires exact identity matching. Final dogfood replay must preserve historical artifacts and bind all current evidence to one candidate."
+    },
+    {
+      "title": "Terminal validator",
+      "content": "The validator computes a Git candidate binding, resolves registered commands without a shell, validates slice selectors, checks maintainer implementation authorization and Knowledge freeze integrity, validates the current Skill-input receipt and contract, and on full runs requires hashes for the contract, registry, authority manifest, Knowledge context/freeze, and a ready non-authorizing receipt targeting the plan. It emits a non-authorizing terminal result with pass or fail status, binding hashes, validated commands and selectors, and an implementation-complete or slice-ready predicate."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-18T13:18:06.546674Z"
+}

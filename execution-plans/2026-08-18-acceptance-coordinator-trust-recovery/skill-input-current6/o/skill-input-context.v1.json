@@ -1,0 +1,33 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:3ce7b69a9487807c60124b62ee9e0d896b6b83cd6a2a4866f1f75b53cb62a7fd",
+  "sections": [
+    {
+      "title": "authority-manifest.v1.json",
+      "content": "Defines repository, lifecycle, knowledge, implementation, acceptance, contract, and policy authority sources; identifies candidate inputs and lifecycle projections. authorizes is empty."
+    },
+    {
+      "title": "command-registry.v1.json",
+      "content": "Registers R0-R4 slice tests and terminal validators, full quick-dev and acceptance suites, bounded working directories, non-shell execution, and timeouts."
+    },
+    {
+      "title": "implementation-contract.v1.json",
+      "content": "Defines the self-hosted acceptance-coordinator-trust-recovery plan, R0-R4 slices, dependencies, allowed and forbidden paths, TDD commands, recovery rules, and terminal completion predicate."
+    },
+    {
+      "title": "repair/round-1/finding-set.md",
+      "content": "Scopes repair to coordinator trust, terminal bindings, traceability, authority declarations, immutable historical-plan protection, and RED-baseline contamination. Notes pre-existing workflow changes and absent repair closure."
+    },
+    {
+      "title": "requirements-and-acceptance.md",
+      "content": "Requires trusted persisted coordinator evidence, reentrant successor recovery, authorization continuity, degraded same-selection knowledge refresh, legacy RED compatibility, and read-only historical dogfood replay. No publication or lifecycle authorization is granted."
+    },
+    {
+      "title": "tools/terminal_full.py",
+      "content": "Validates plan authority, maintainer authorization, knowledge context and freeze integrity, skill-input receipt, terminal receipts, registered commands, selectors, candidate binding, and final bindings. Reports pass/fail with authorizes empty."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-18T13:37:56.802968Z"
+}
