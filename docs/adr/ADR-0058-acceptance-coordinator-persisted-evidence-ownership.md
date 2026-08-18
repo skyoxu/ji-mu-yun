@@ -9,7 +9,7 @@ Acceptance coordinator requests currently risk carrying caller-authored route
 booleans, action receipts, successor pointers, and telemetry. A self-consistent
 request directory is not proof that the Acceptance action happened.
 
-## Proposed Decision
+## Decision
 
 - Acceptance-owned persisted runs, action DAGs, append-only events, bound
   command registries, route projections, and action receipts are the current

@@ -15,5 +15,13 @@ This bounded repair addresses only the current plan-contract defects:
 It does not modify the 2026-08-17 plan, its authorization, terminal, resume
 state, report, or historical evidence.
 
+The shared workflow changes present in predecessor commit `f6a9191b`
+(`scripts/python/skill_input_consumption.py`,
+`scripts/python/launch_skill_input_consumer.py`, and the matching test) are
+recorded as a pre-existing candidate delta. They are outside this plan's
+slice write-sets and are not evidence of this plan's RED/GREEN execution.
+They require separate workflow-repair ownership or explicit VDD disposition
+before this plan can publish `plan-ready`.
+
 `repair-closure.json` is intentionally absent until the targeted validation and
 the maintainer-owned authority prerequisites are complete.

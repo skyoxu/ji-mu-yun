@@ -5,7 +5,7 @@
   "red_execution_owner": "quick-dev-tdd-adapter",
   "command_registry": "command-registry.v1.json",
   "backend": {"hidden_state": false},
-  "protocol_artifacts": {"context_layout": "context/<capsule-id>", "attempt_layout": "attempts/<attempt-id>"},
+  "protocol_artifacts": {"context_layout": "context/<capsule-id>", "attempt_layout": "attempts/<attempt-id>", "terminal_results": "terminal-results/<slice-or-terminal>.json"},
   "authority": {"authority_manifest": "authority-manifest.v1.json"},
   "slices": [
     {
@@ -36,7 +36,7 @@
       "allowed_changes": {"production": [".agents/skills/quick-dev-tdd-adapter/tools/**"], "tests": [".agents/skills/quick-dev-tdd-adapter/tools/tests/**"], "documentation": [".agents/skills/quick-dev-tdd-adapter/SKILL.md"]},
       "planned_new_files": [".agents/skills/quick-dev-tdd-adapter/tools/tests/test_successor_crash_recovery.py"],
       "execution_snapshot_paths": ["implementation-contract.v1.json", "command-registry.v1.json"],
-      "forbidden_changes": ["PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**", "knowledge/**"],
+      "forbidden_changes": ["PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**", "knowledge/catalogs/**", "knowledge/projections/**", "knowledge/generations/**", "knowledge/contexts/**"],
       "execution_read_set": ["requirements-and-acceptance.md", ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py"],
       "dependency_closure": [".agents/skills/quick-dev-tdd-adapter/**"],
       "tdd": {"red": {"test_selector": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_successor_crash_recovery.py", "expected_failure_ids": ["ACR-R1-REENTRANT-SUCCESSOR"]}, "green": {"command_id": "r1-green", "expected_exit": "zero"}, "refactor": {"invocations": [{"command_id": "quick-dev-suite", "expected_exit": "zero"}]}},
@@ -54,7 +54,7 @@
       "allowed_changes": {"production": [".agents/skills/quick-dev-tdd-adapter/tools/**", ".agents/skills/run-refactor-implementation-acceptance/scripts/**", ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py", "scripts/python/knowledge_context_validation.py", "scripts/python/knowledge_locator.py", "knowledge/policies/consumer-policies.v2.json"], "tests": [".agents/skills/quick-dev-tdd-adapter/tools/tests/**", ".agents/skills/run-refactor-implementation-acceptance/tests/**"], "documentation": [".agents/skills/quick-dev-tdd-adapter/SKILL.md", ".agents/skills/run-refactor-implementation-acceptance/SKILL.md", ".agents/skills/vdd-execution-plan/SKILL.md"]},
       "planned_new_files": [".agents/skills/quick-dev-tdd-adapter/tools/tests/test_authorization_refresh_chain.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py"],
       "execution_snapshot_paths": ["implementation-contract.v1.json", "command-registry.v1.json"],
-      "forbidden_changes": ["PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**", "knowledge/**"],
+      "forbidden_changes": ["PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**", "knowledge/catalogs/**", "knowledge/projections/**", "knowledge/generations/**", "knowledge/contexts/**"],
       "execution_read_set": ["requirements-and-acceptance.md", ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py", "scripts/python/knowledge_context_validation.py", "scripts/python/knowledge_locator.py", "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md", "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md", "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md"],
       "dependency_closure": [".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-refactor-implementation-acceptance/**"],
       "tdd": {"red": {"test_selector": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_authorization_refresh_chain.py", "expected_failure_ids": ["ACR-R2-REFRESH-AUTH", "ACR-R2-FRESHNESS-DEGRADED"]}, "green": {"command_id": "r2-green", "expected_exit": "zero"}, "refactor": {"invocations": [{"command_id": "acceptance-suite", "expected_exit": "zero"}]}},

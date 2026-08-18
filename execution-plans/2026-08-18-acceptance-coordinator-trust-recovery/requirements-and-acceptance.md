@@ -112,6 +112,13 @@ assembly; query-quality failure is isolated to Knowledge publication; selection
 or source-authority drift remains blocked and routes to reauthorization. A
 valid LKG is never replaced by a failed staging generation.
 
+Machine-readable traceability:
+
+- `ACR-R2-FRESHNESS` — freshness is degraded execution quality, while selection,
+  authority, resource-set, or required-source drift remains a typed blocker.
+- `ACR-R2-FRESHNESS-EXIT` — same-selection catalog/source-byte drift produces
+  one validated successor without publication or manual context assembly.
+
 ### Successor Receipt Contract
 
 The successor receipt is produced by the controlled Knowledge/Acceptance
@@ -128,16 +135,26 @@ recomputed by the validator. A missing or broken predecessor chain is blocking.
 Support current prior-RED handoff, legacy red-result, and red-basis plus failed
 observation only after current selector, test bytes, execution fingerprint, and
 expected failure IDs match. Every mismatch fails closed. Terminal closure may
-read predecessor RED evidence without copying it.
+read predecessor RED evidence without copying it. This is a compatibility
+verification lane, not a claim that legacy behavior is a new TDD RED.
 
-## R4 / ACR-R4: 8-17 Dogfood Migration
+## R4 / ACR-R4: 8-17 Read-only Dogfood Verification
 
 After R0-R3 pass, read existing 8-17 evidence as historical, regenerate
 current bindings in this plan, obtain a new maintainer authorization, and
-dogfood the repaired control plane to a fresh terminal result. The old
+dogfood the repaired control plane to a fresh terminal result. This is a
+verification/replay lane; it does not implement a new production behavior or
+rewrite the historical plan. The old
 authorization, terminal result, resume state, and report remain immutable;
 this plan has no write permission under the 8-17 directory.
 
 Acceptance `ACR-R4-EXIT`: the new authorization, Knowledge, Skill-input, resume state,
 terminal result, and report all bind the same current candidate. Identical
 replay creates no additional action or successor.
+
+Machine-readable traceability:
+
+- `ACR-R3` — prior RED evidence is reusable only when selector, test bytes,
+  execution fingerprint, and expected failure IDs match.
+- `ACR-R3-EXIT` — any mismatch fails closed and cannot be promoted to current
+  terminal evidence.

@@ -1,6 +1,6 @@
 {
   "schema_version": "jimuyun.plan-state.v1",
-  "plan_id": "acceptance-coordinator-trust-recovery",
+  "plan_id": "toolchain-workflow-repair",
   "status": "draft",
   "authorizes": [],
   "owner": "vdd"

@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "ACR-20260818-successor-2",
+    "request_id": "ACR-20260818-successor",
     "consumer": "vdd",
     "query": "acceptance coordinator trust recovery persisted run successor knowledge authorization workflow repair",
     "snapshot": {
@@ -811,7 +811,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "ACR-20260818-successor-2",
+    "request_id": "ACR-20260818-successor",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb",
@@ -953,12 +953,12 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:4416fdd0c0ac88ad34e549d984dbfdc2ed9e2390d178ce8b5dc22b447487c6b6",
-  "result_sha256": "sha256:d72d36c9e124fba336c886d76a8f7f2f58657ecde55ed994faeadfb5fcd798c3",
+  "request_sha256": "sha256:bf48d535b559f0762f0c0f9daaf20e754051f24582094d4051bb94ec402b3c7b",
+  "result_sha256": "sha256:b397f97e6ec8294de0f2ec34f47da8365baea1160632e61eab675620ffdb4ead",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:4318d0ab9ab97ed163b30f0931b3baae38b13c4c85b808013cf06ed47de89521"
+    "base_locator_result_sha256": "sha256:76f4814c244b98868be77b05ccbd57b7578f427800314cf59b60c04bf03ab81c"
   },
   "preflight": {
     "status": "ready",
@@ -966,6 +966,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:2d6671d5ecbc2f8e18a93bfa3edf9ca2242c1e4d75c31370363ee1ab0d2a15e5"
+    "context_sha256": "sha256:048d27bca48560919c17bcb28e2d5bd95fd0d48cc8b7f66874687cdd8423ed9c"
   }
 }

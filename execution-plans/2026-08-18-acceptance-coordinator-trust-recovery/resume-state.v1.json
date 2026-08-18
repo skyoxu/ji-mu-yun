@@ -1,8 +1,8 @@
 {
   "schema_version": "jimuyun.vdd-plan-resume-state.v1",
   "plan_id": "acceptance-coordinator-trust-recovery",
-  "status": "plan-ready",
-  "next_action": "maintainer-implementation-authorization",
+  "status": "draft",
+  "next_action": "repair-closure-validation",
   "current_slice": null,
   "slice_status": {
     "R0": "pending",

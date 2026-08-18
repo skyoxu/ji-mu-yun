@@ -6,12 +6,12 @@
   "decisions": [
     {
       "path": "docs/adr/ADR-0058-acceptance-coordinator-persisted-evidence-ownership.md",
-      "sha256": "sha256:d80eff84978107c84e0c291a586dacbfc47771a2529dbb79e2cc7dfd5c663b19",
+      "sha256": "sha256:fdd3fbdbb08e7e3b8654307d95aede6776ee749b34a7ff3311748d7d6f98df6b",
       "requested_transition": "Accepted"
     },
     {
       "path": "docs/adr/ADR-0059-knowledge-execution-degraded-successor-and-publication-separation.md",
-      "sha256": "sha256:a411a88efaa3c48b52c27938c41aeb11dd998bb4edd61e939b775a8f9ba0e2ee",
+      "sha256": "sha256:da2b176928059d78f4a7acefc92291d45d8e8cffb6aca9edcb11d75316ee57e2",
       "requested_transition": "Accepted"
     }
   ],

@@ -9,7 +9,7 @@ Rapid repository evolution makes catalog freshness and selected source bytes
 change frequently. A stale derived catalog should not block unrelated machine
 execution, while authority drift and publication integrity must remain strict.
 
-## Proposed Decision
+## Decision
 
 - A valid published or LKG catalog may replay a frozen selection against current
   selected read-set bytes and produce a validator-owned successor context.
@@ -27,9 +27,22 @@ execution, while authority drift and publication integrity must remain strict.
   integrity, or Knowledge-system self-change failures remain blocking or require
   semantic review.
 
+## Assurance Profiles
+
+The rapid-evolution profile permits execution against a validator-verified
+same-selection successor with degraded freshness when the target is not a
+Knowledge-system self-change. It does not permit publication, lifecycle
+transition, or authority replacement.
+
+The production/release profile additionally requires current published
+Knowledge, successful publication-quality checks, and the applicable semantic
+review evidence before release or externally authoritative completion. A
+consumer may select the stricter profile without changing the shared LKG or
+publication ownership rules.
+
 ## Relationships
 
-This proposal is intended to extend ADR-0048 and ADR-0050 and supersede only
+This decision extends ADR-0048 and ADR-0050 and supersedes only
 the stale-stop execution interpretation in ADR-0057. It does not weaken the
 publication query gate or LKG integrity checks.
 
