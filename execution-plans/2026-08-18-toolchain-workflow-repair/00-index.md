@@ -22,7 +22,8 @@ the 2026-08-17 historical plans.
 - No Bootstrap startup or lifecycle publication.
 - No changes to Phase runtime or user-sandbox state.
 
-The plan is currently `plan-ready`, after its VDD-owned plan validation and
-publication receipts passed. Maintainer authorization is required only before
-implementation; this plan does not authorize implementation, Knowledge
-publication, Bootstrap, or acceptance.
+The plan is currently `implementation-authorized`, following VDD-owned
+plan-ready validation and an explicit maintainer receipt. Implementation may
+begin only through the declared Quick Dev TDD route; this plan does not
+authorize implementation completion, Knowledge publication, Bootstrap, or
+acceptance.

@@ -59,6 +59,18 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 "legacy_predecessor": {"path": "logs/red.json", "sha256": "sha256:bad"},
             })
 
+    def test_quick_dev_allows_only_the_declared_repository_test_root(self) -> None:
+        descriptor = BUILDER._generated_red_descriptor("S0", {
+            "test_selector": "scripts/python/tests/test_target.py::test_target",
+            "expected_failure_ids": ["S0-EXIT"],
+        }, ["scripts/python/tests/test_target.py"])
+        self.assertEqual("scripts/python/tests/test_target.py::test_target", descriptor["argv"][-2])
+        with self.assertRaisesRegex(ValueError, "invalid"):
+            BUILDER._generated_red_descriptor("S0", {
+                "test_selector": "scripts/python/tests/test_other.py",
+                "expected_failure_ids": ["S0-EXIT"],
+            }, ["scripts/python/tests/test_target.py"])
+
     def test_run_red_only_executes_no_later_tdd_stage(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             result = DRIVER.run_red_only(Path(tmp), {

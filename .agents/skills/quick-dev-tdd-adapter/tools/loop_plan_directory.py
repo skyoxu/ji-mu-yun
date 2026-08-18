@@ -323,7 +323,6 @@ def route_staged_run(run_dir: Path) -> str | None:
 
 
 def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> None:
-    snapshots = _workspace_snapshot_paths(root, plan, snapshots)
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
     bridge = contract.get("adapter_bridge")
     active = _active_slice_run(root, str(contract["plan_id"]), slice_id)
@@ -346,6 +345,7 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
         if not runner.is_file():
             raise ValueError("declared plan-local adapter bridge is missing")
         _run([str(runner), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--snapshot-path", *snapshots, "--materialize-only"])
+    snapshots = _workspace_snapshot_paths(root, plan, snapshots)
     run_id = active[0].name if active else datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
     invocation_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
     evidence = root / "logs" / "tdd-adapter" / contract["plan_id"]

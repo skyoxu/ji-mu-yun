@@ -1,9 +1,10 @@
 {
   "authorizes": [
-    "plan-ready"
+    "plan-ready",
+    "implementation-authorized"
   ],
-  "owner": "vdd",
+  "owner": "maintainer",
   "plan_id": "toolchain-workflow-repair",
   "schema_version": "jimuyun.plan-state.v1",
-  "status": "plan-ready"
+  "status": "implementation-authorized"
 }

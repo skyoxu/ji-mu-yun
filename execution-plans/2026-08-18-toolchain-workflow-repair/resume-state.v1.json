@@ -8,7 +8,7 @@
     "knowledge-publication",
     "bootstrap-review"
   ],
-  "next_action": "awaiting-maintainer-implementation-authorization",
+  "next_action": "run-slice",
   "plan_id": "toolchain-workflow-repair",
   "schema_version": "jimuyun.vdd-plan-resume-state.v1",
   "slice_status": {
@@ -20,5 +20,5 @@
     "W5": "pending",
     "W6": "pending"
   },
-  "status": "plan-ready"
+  "status": "implementation-authorized"
 }

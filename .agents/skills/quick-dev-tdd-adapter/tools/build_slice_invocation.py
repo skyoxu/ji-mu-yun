@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import fnmatch
 import hashlib
 import importlib.util
 import json
@@ -143,7 +144,7 @@ def _descriptor(commands: dict[str, dict[str, Any]], command_id: str, **values: 
     }
 
 
-def _generated_red_descriptor(slice_id: str, red: dict[str, Any]) -> dict[str, Any]:
+def _generated_red_descriptor(slice_id: str, red: dict[str, Any], allowed_tests: list[str] | None = None) -> dict[str, Any]:
     """Compile VDD failure intent into the current Quick Dev RED invocation."""
     forbidden = {"command_id", "mode", "legacy_predecessor", "prior_red", "receipt", "run_id", "sha256"}
     if forbidden & set(red):
@@ -152,10 +153,13 @@ def _generated_red_descriptor(slice_id: str, red: dict[str, Any]) -> dict[str, A
         raise ValueError("VDD RED intent is invalid")
     selector = red["test_selector"]
     failure_ids = red["expected_failure_ids"]
+    test_path = selector.split("::", 1)[0] if isinstance(selector, str) else ""
     if (
         not isinstance(selector, str)
-        or not selector.startswith(".agents/")
-        or ".." in Path(selector).parts
+        or Path(test_path).is_absolute()
+        or ".." in Path(test_path).parts
+        or test_path.startswith((".git/", "logs/"))
+        or (allowed_tests is not None and not any(fnmatch.fnmatchcase(test_path, pattern) for pattern in allowed_tests))
         or not isinstance(failure_ids, list)
         or not failure_ids
         or any(not isinstance(item, str) or not item for item in failure_ids)
@@ -235,7 +239,10 @@ def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> 
     if contract.get("red_execution_owner") == "quick-dev-tdd-adapter":
         predecessor = None
         red_mode = "red"
-        red = _generated_red_descriptor(slice_id, tdd["red"])
+        allowed_tests = selected.get("allowed_changes", {}).get("tests", [])
+        if not isinstance(allowed_tests, list) or any(not isinstance(path, str) for path in allowed_tests):
+            raise ValueError("slice test write set is invalid")
+        red = _generated_red_descriptor(slice_id, tdd["red"], allowed_tests)
     else:
         predecessor = _legacy_predecessor(root, tdd["red"])
         red_mode = tdd["red"].get("mode", "red")

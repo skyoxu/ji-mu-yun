@@ -18,6 +18,8 @@
     {"path":"execution-plans/2026-08-18-toolchain-workflow-repair/requirements-and-acceptance.md","role":"requirements"},
     {"path":"execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json","role":"implementation_contract"},
     {"path":"execution-plans/2026-08-18-toolchain-workflow-repair/command-registry.v1.json","role":"command_registry"},
+    {"path":"execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py","role":"maintainer_authorization_publisher"},
+    {"path":"execution-plans/2026-08-18-toolchain-workflow-repair/tools/migration_bridge.py","role":"quick_dev_test_materialization_bridge"},
     {"path":"execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py","role":"plan_ready_validator"},
     {"path":"execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py","role":"implementation_terminal"}
   ],

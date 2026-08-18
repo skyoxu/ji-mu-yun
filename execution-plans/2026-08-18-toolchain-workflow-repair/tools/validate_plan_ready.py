@@ -21,6 +21,8 @@ REQUIRED_FILES = {
     "canonical-skill-input-plan-receipt.v2.json",
     "knowledge-context.v1.json",
     "knowledge-context.freeze.v1.json",
+    "tools/publish_implementation_authorization.py",
+    "tools/migration_bridge.py",
     "tools/terminal_full.py",
 }
 
@@ -83,7 +85,7 @@ def main() -> int:
                     failures.append("contract-tdd-intent-invalid")
                     break
             command_ids = {item.get("id") for item in registry.get("commands", []) if isinstance(item, dict)}
-            required_commands = {"plan-ready", "terminal-full", *(f"w{index}-green" for index in range(7))}
+            required_commands = {"plan-ready", "terminal-full", *(f"w{index}-{stage}" for index in range(7) for stage in ("green", "terminal"))}
             if not required_commands.issubset(command_ids):
                 failures.append("command-registry-incomplete")
             if not authority.get("authority_sources") or not authority.get("candidate_inputs") or not authority.get("lifecycle_projections"):
