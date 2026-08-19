@@ -1,0 +1,128 @@
+[
+  {
+    "actionId": "w0-green",
+    "activation": true,
+    "commandId": "w0-green",
+    "dependsOn": [],
+    "order": 1
+  },
+  {
+    "actionId": "w1-green",
+    "activation": true,
+    "commandId": "w1-green",
+    "dependsOn": [],
+    "order": 2
+  },
+  {
+    "actionId": "w2-green",
+    "activation": true,
+    "commandId": "w2-green",
+    "dependsOn": [],
+    "order": 3
+  },
+  {
+    "actionId": "w3-green",
+    "activation": true,
+    "commandId": "w3-green",
+    "dependsOn": [],
+    "order": 4
+  },
+  {
+    "actionId": "w4-green",
+    "activation": true,
+    "commandId": "w4-green",
+    "dependsOn": [],
+    "order": 5
+  },
+  {
+    "actionId": "w5-green",
+    "activation": true,
+    "commandId": "w5-green",
+    "dependsOn": [],
+    "order": 6
+  },
+  {
+    "actionId": "w6-green",
+    "activation": true,
+    "commandId": "w6-green",
+    "dependsOn": [],
+    "order": 7
+  },
+  {
+    "actionId": "w0-terminal",
+    "activation": true,
+    "commandId": "w0-terminal",
+    "dependsOn": [],
+    "order": 8
+  },
+  {
+    "actionId": "w1-terminal",
+    "activation": true,
+    "commandId": "w1-terminal",
+    "dependsOn": [],
+    "order": 9
+  },
+  {
+    "actionId": "w2-terminal",
+    "activation": true,
+    "commandId": "w2-terminal",
+    "dependsOn": [],
+    "order": 10
+  },
+  {
+    "actionId": "w3-terminal",
+    "activation": true,
+    "commandId": "w3-terminal",
+    "dependsOn": [],
+    "order": 11
+  },
+  {
+    "actionId": "w4-terminal",
+    "activation": true,
+    "commandId": "w4-terminal",
+    "dependsOn": [],
+    "order": 12
+  },
+  {
+    "actionId": "w5-terminal",
+    "activation": true,
+    "commandId": "w5-terminal",
+    "dependsOn": [],
+    "order": 13
+  },
+  {
+    "actionId": "w6-terminal",
+    "activation": true,
+    "commandId": "w6-terminal",
+    "dependsOn": [],
+    "order": 14
+  },
+  {
+    "actionId": "skill-input-suite",
+    "activation": true,
+    "commandId": "skill-input-suite",
+    "dependsOn": [],
+    "order": 15
+  },
+  {
+    "actionId": "knowledge-suite",
+    "activation": true,
+    "commandId": "knowledge-suite",
+    "dependsOn": [],
+    "order": 16
+  },
+  {
+    "actionId": "workflow-repair-e2e",
+    "activation": true,
+    "commandId": "workflow-repair-e2e",
+    "dependsOn": [],
+    "order": 17
+  },
+  {
+    "actionId": "terminal-full",
+    "activation": true,
+    "commandId": "terminal-full",
+    "dependsOn": [],
+    "order": 19
+  }
+]

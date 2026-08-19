@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T18:46:10.540176Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The workflow repair defines slices W0 through W6 for typed source selection, deterministic transport, adapter-owned coverage, independent Knowledge gates, immutable generation pointers, retention, and end-to-end validation. Acceptance preserves authority ownership and does not publish Knowledge authority.",
+      "title": "Implementation contract"
+    },
+    {
+      "content": "Sources require complete typed selection, deterministic paged transfer, observed coverage, controlled Knowledge continuation or refresh, validated immutable receipts, protected retention, and a non-authorizing end-to-end route. Missing, conflicting, stale, or drifting inputs remain blocked or require controlled repair.",
+      "title": "Requirements"
+    },
+    {
+      "content": "The supplied modules provide Knowledge gate projection, coverage evaluation, generation publication, current-pointer resolution, retention planning, transport planning, and tests covering missing or duplicate pages, source drift, immutable generation behavior, approval-gated retention, transport identity, and typed selection.",
+      "title": "Observed implementation"
+    }
+  ],
+  "source_manifest_hash": "sha256:583e2b37e7845bb97254a2ef826e9c23741ece249ded99094366991999ff92e0",
+  "truncated": false
+}
