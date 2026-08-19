@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "TWR-20260819-plan-ready-final",
+    "request_id": "TWR-20260819-plan-ready-successor",
     "consumer": "vdd",
     "query": "skill-input-execution knowledge-execution-gates",
     "snapshot": {
@@ -278,7 +278,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "TWR-20260819-plan-ready-final",
+    "request_id": "TWR-20260819-plan-ready-successor",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
@@ -337,14 +337,14 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:3c723834fb85245ba9b02d9cc435584bf992f3f1a8b29b6a7ac72695a7dec686",
-  "result_sha256": "sha256:d10e0195918d7c7103b5e07c5d3a5703a08ff59315517935445b9b02d56b699b",
+  "request_sha256": "sha256:84ed9de3cf19cfb55216d139d7a8d589ef346811231f4991e287f1110ca16c88",
+  "result_sha256": "sha256:c9a54a1d3a6c13fc15999c4d81dfbc3b286a9adb0482d8ba54e6d1bf9a586cad",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "knowledge_freshness": "degraded",
-    "catalog_failure_code": "catalog_stale",
+    "knowledge_freshness": "current",
+    "catalog_failure_code": null,
     "source_freshness": "catalog_bound",
-    "context_sha256": "sha256:a2f542a66f6a4953922f7b016551744f8c832b55860c606fe75d2ee9af1fb409"
+    "context_sha256": "sha256:33144f8cc20b036eccf4020890683478ed9e95ef834f64cf7f918bcb7c5c6936"
   }
 }

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "skill=quick-dev-tdd-adapter; purpose=execute one explicit execution-plans directory with schema-valid implementation-contract.v1.json using hash-bound TDD; scope=not review/commit/release authority; entry requires parent router --caller quick-dev-tdd-adapter yielding lane=strict_tdd_plan and backend=quick-dev-tdd-adapter; reject standalone/compact/missing/invalid contracts and routing failure; target restricted to execution-plans and supplied file/containing directory only; one valid 95-*.md report maximum, defects route declared VDD repair; report and run-state non-authorizing; required loop: loop_plan_directory before expensive action, run_slice_lifecycle for slices, observed shell-free expected-failing RED before production write, then GREEN/REFACTOR/slice predicate; no handcrafted lifecycle evidence; continue unlocked slices and stale candidate-bound terminal receipts via successor until terminal/external repair/repeated fingerprint; terminal only implementation-complete, acceptance external; skill-input gate: prepare/launch typed semantic child/validate require-ready before selection/prepare/RED, mismatch or missing sidecar routes repair; model classification architectural>complex>small_mechanical>normal, unknown=blocked complex, overrides upgrade only, decision non-authorizing and adapter selects no provider; verify frozen knowledge context/hash read set before RED; persistent loop uses explicit valid execution_snapshot_paths and planned_new_files constraints; commands structured shell=false; reject drift and preserve failures as successor evidence; P0/P1 completion requires repair-review-handoff and Acceptance-owned audit-repair-completeness with bound manifests/changed files/composition inputs; read required backend/TDD/evidence references before slice; pre-commit version gate requires Context7 only for version-sensitive dependency/API changes; no Stock BMAD authority."
+}

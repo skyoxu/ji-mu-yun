@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "All 31 manifest sources have complete single-segment coverage and accepted bounded summaries. No source or page coverage is omitted.",
+      "title": "Coverage"
+    },
+    {
+      "content": "Quick Dev requires strict typed input, hash-bound TDD slices, explicit lifecycle evidence, constrained paths, and non-authorizing decisions. VDD defines plan readiness and lifecycle contracts. Refactor and acceptance guidance requires frozen inputs, deterministic evidence, bounded routes, and repair handling.",
+      "title": "Skill Guidance"
+    },
+    {
+      "content": "AGENTS rules require preserving changes, repository-scoped validation, and fail-closed handling. ADRs define locator, knowledge publication, degraded execution, evidence ownership, and skill-input generation rules. The toolchain repair plan covers selection, transport, coverage, knowledge gates, immutable generations, retention, and end-to-end validation; listed tests and tools are present in the manifest.",
+      "title": "Repository And Plan"
+    }
+  ],
+  "source_manifest_hash": "sha256:cc5cc5b932482ae93976c7a8b9325e6c5cd274be4f266b0aa0c7949fd21c49a5",
+  "truncated": false
+}

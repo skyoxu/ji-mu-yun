@@ -1,10 +1,10 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:286a75b1341217966bd746db3d1ac441d1255d39bb1dd25674387e10ff31f2f9",
-  "canonical_context_sha256": "sha256:da9aed1c2a738355c4281b0c91032308e5ec8495c484e24022c822447dbc1ffe",
-  "request_sha256": "sha256:3c723834fb85245ba9b02d9cc435584bf992f3f1a8b29b6a7ac72695a7dec686",
-  "result_sha256": "sha256:d10e0195918d7c7103b5e07c5d3a5703a08ff59315517935445b9b02d56b699b",
+  "context_sha256": "sha256:6f643b247930f7689e346528c1f59f765d12ab5ddf55879e51c9e1492afa8591",
+  "canonical_context_sha256": "sha256:b2da1ebae2778c922d8b36dbe26b1dcdb8e52923bf8162e65d3d8e5a4bd9397b",
+  "request_sha256": "sha256:84ed9de3cf19cfb55216d139d7a8d589ef346811231f4991e287f1110ca16c88",
+  "result_sha256": "sha256:c9a54a1d3a6c13fc15999c4d81dfbc3b286a9adb0482d8ba54e6d1bf9a586cad",
   "snapshot": {
     "ref": "refs/heads/main",
     "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
@@ -29,8 +29,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:6f643b247930f7689e346528c1f59f765d12ab5ddf55879e51c9e1492afa8591",
-    "freeze_receipt_path": "knowledge-context.freeze.history/6f643b247930f7689e346528c1f59f765d12ab5ddf55879e51c9e1492afa8591.v1.json",
-    "reason": "Bind current authorization candidate"
+    "context_sha256": "sha256:4dd2869fe47302768aa7b6f6438c3024aceff0e081429213eec3c8414863b2e3",
+    "freeze_receipt_path": "knowledge-context.freeze.history/4dd2869fe47302768aa7b6f6438c3024aceff0e081429213eec3c8414863b2e3.v1.json",
+    "reason": "Knowledge authority modules published at current main for plan-ready revalidation"
   }
 }

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "Adapter prepares TDD slices only after strict skill-input gate; backend hidden state must be false and shell commands are forbidden; declared slice and current contract/validator hashes required; lifecycle is prepared→red-observed→green-observed→refactor-verified, enforcing failure/pass exit codes and allowed path sets; RED permits tests/docs only, GREEN production only, REFACTOR production/tests/docs; unknown or invalid transitions block; candidate finalization is non-authoritative and requires exactly red,green,refactor; resume rejects stale identities and failed/stale/superseded runs; stage binding validates capsule/attempt consistency and returns hashes; protocol persistence validates schema, artifact identities, containment, no reparse points, immutable conflicts, and ordered decision writes; execute rejects existing run directories, requires bundle/store pairing, persists recovery-state.v1 with no authorizations; acceptance, handoff, and release remain unauthorized."
+}

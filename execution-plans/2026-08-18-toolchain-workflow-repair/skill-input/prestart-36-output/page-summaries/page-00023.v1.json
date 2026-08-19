@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py",
+    "source_sha256": "sha256:77866eeee59a477fd0dd12e8797f3103fe61bf2a1b31fa1c3c9edae7661bce7d",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 12028,
+    "start_line": 1,
+    "end_line": 217,
+    "content_sha256": "sha256:77866eeee59a477fd0dd12e8797f3103fe61bf2a1b31fa1c3c9edae7661bce7d"
+  },
+  "status": "accepted",
+  "summary": "Validator for plan toolchain-workflow-repair; requires plan under execution-plans with 14 artifacts/tools; contract self-hosted and slices W0-W6, all TDD; registry must include plan-ready, terminal-full, and green/terminal commands per slice; authority partitions required; draft/plan-ready/authorized-repair state gates enforce no authorization; plan-ready publication must bind validation receipt hash; resume, architecture acceptance, pre-existing delta commits/paths/hashes, knowledge preflight/freeze, and accepted modules skill-input-execution plus knowledge-execution-gates are mandatory; canonical skill-input receipt is required, inside plan/skill-input, and must validate ready; authorized-repair-revalidate requires implementation-authorized plus validating repair state blocked with empty authorizations; output pass/fail validation receipt, always authorizes none and lifecycle transition none; optional output also writes validator input manifest; ambiguity: plan-state.v1.json is read but absent from required-file list."
+}

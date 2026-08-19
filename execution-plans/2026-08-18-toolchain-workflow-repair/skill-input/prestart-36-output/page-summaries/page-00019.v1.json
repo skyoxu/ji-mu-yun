@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/migration_bridge.py",
+    "source_sha256": "sha256:45299dc4b23ab300416f2c849345b879685acfa7ec83e7aa2a740d1d31a06ebb",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 6964,
+    "start_line": 1,
+    "end_line": 155,
+    "content_sha256": "sha256:45299dc4b23ab300416f2c849345b879685acfa7ec83e7aa2a740d1d31a06ebb"
+  },
+  "status": "accepted",
+  "summary": "migration_bridge.py materializes exactly one declared RED test without initiating a Quick Dev slice; templates fixed for slices W0-W6, each encoding expected unavailable/negative behavior with stable TWR IDs; _plan_slice loads implementation-contract.v1.json, requires known slice, declared planned_new_files selector, template, and allowed test write set; materialize requires plan under repository_root/execution-plans; snapshot_paths must exactly equal current selector; rejects absolute/traversal/logs/execution-plans targets and root escape; existing target allowed only if byte-equivalent template, otherwise conflict; creates parent dirs and writes UTF-8 LF test; CLI requires repository root, plan dir, slice ID, one-or-more snapshot paths, and --materialize-only; success emits status materialized, slice_id, resolved path, empty authorizes; ambiguity: W2 test name claims conflicting-overlap but asserts only gap behavior; W6 asserts nonempty selection rather than explicit invalid-intermediate rejection."
+}

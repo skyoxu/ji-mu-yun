@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+    "source_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4685,
+    "start_line": 1,
+    "end_line": 88,
+    "content_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3"
+  },
+  "status": "accepted",
+  "summary": "ADR-0050 accepted 2026-07-29; extends ADR-0048 and complements, does not supersede, ADR-0044/0048; formal LKG recovery only via publish_knowledge_catalog.py --restore-lkg; recovery single-writer lock and exhaustive LKG/generation/artifact/source/policy/query/main verification; LKG commit allowed only ancestor with all indexed and bundled inputs byte-matching main; restore source snapshot, v2 catalog, projections, v1 catalog then publication/query/smoke validation; stale LKG cannot override newer main; failures rollback four layers/current and verify prior bytes; activation domain includes four layers/current/LKG/success evidence, current written last; publication control-plane scripts must match pinned main; stale-lock recovery limited to definitely dead/reused owner or malformed lock after 60s, otherwise conflict; pruning exclusively explicit prune_knowledge_generations.py --prune; protect current, LKG, and five newest valid successful added-to-main generations; mtime not authoritative; invalid/uncommitted/unrecognized dirs report-only; pruning uses canonical current-main policy, persists intent/authorization, isolates targets, records per-target/partial evidence; failure evidence append-only logs/knowledge-context and never pruned; retention policy requires policy plus ADR update"
+}

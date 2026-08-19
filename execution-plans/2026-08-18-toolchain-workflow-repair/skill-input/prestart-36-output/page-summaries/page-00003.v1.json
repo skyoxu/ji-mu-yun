@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "skill=run-refactor-implementation-acceptance; scope=one explicit execution-plans/<target>, evidence only, never implementation/approval/commit/release/deploy; candidate=commit preferred with clean HEAD fallback, otherwise frozen snapshot/proposed set; baseline=explicit frozen plan baseline, never candidate^; prerequisites=contract or compact-vdd bundle, manifests, typed request, DAG, registry, knowledge context, validated skill-input receipt; missing/ambiguous=>prerequisite_blocked; compact VDD projection requires explicit bindings and current Quick Dev receipt; stale receipt binding=>Quick Dev controlled terminal loop; candidate assembly transaction ordered and no historical artifact copying; skill input=create typed request then semantic consume and require-ready, stale reconstructible regenerate, partial/unredacted blocked; knowledge=context via canonical Locator for one target, catalog stale=>degraded continue, other faults=>knowledge-context-repair-required; read-set byte drift only=>same-selection successor refresh; run=start-or-resume binds input/contract/frozen-context/skill-input hashes, derived acceptance-<binding>, drift=>successor, legacy no-state preserved; deterministic actions then finalize-deterministic-run may append acceptance-passed without Bootstrap; Bootstrap only explicit/required immutable route, deterministic evidence complete, fresh inspect-lineage required; model router=no launch ordinarily, Sol/high only 3 policy triggers; semantic route requires high-cost acknowledgement, reentry user confirmation; rounds=max 3 then manual_pause, no reset/Round4; P0/P1 repair requires Quick Dev handoff plus repair-completeness audit; P2 deterministic closure; Bootstrap imports require exact frozen route/input/scope and v3 exact reuse only; manual-pause ADR-0054 lane requires repair evidence, protocol review/composite authority, maintainer acknowledgement, final closure; modes=evidence_only default, controlled_validation only typed isolated commands; policies=phase-service vs toolchain closed path rules; prepare-run requires frozen knowledge context; coverage=changed executable PhaseA C# lines only; controlled commands resolve hash-bound registry; passing tests/clean Bootstrap alone not DoD"
+}

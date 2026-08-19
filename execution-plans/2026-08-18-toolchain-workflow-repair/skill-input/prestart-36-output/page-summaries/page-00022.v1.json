@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py",
+    "source_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 6863,
+    "start_line": 1,
+    "end_line": 143,
+    "content_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7"
+  },
+  "status": "accepted",
+  "summary": "validate_all.py; PLAN_ID=toolchain-workflow-repair; slices W0-W6; deterministic SHA-256 canonical JSON identities; repository-relative paths only, rejects absolute/traversal/symlink paths; excludes logs/ and plan/resume state files; absent files represented explicitly; contract must match plan ID and contain slices; candidate manifest derives allowed_changes plus planned_new_files, ignores glob strings, prefixes tools/ with plan directory, deduplicates/sorts; dependency hashes recurse through depends_on; per-slice identity includes candidate/predicate/authority/validator roots, closure hash, validator hash/version; authority set=manifest, ADR-0060, skill/lifecycle/consumer-policy contracts; validator set=plan tools plus Quick Dev router/build/loop tools; aggregate snapshot hashes all W0-W6 identities."
+}

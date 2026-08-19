@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0059-knowledge-execution-degraded-successor-and-publication-separation.md",
+    "source_sha256": "sha256:da2b176928059d78f4a7acefc92291d45d8e8cffb6aca9edcb11d75316ee57e2",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2418,
+    "start_line": 1,
+    "end_line": 54,
+    "content_sha256": "sha256:da2b176928059d78f4a7acefc92291d45d8e8cffb6aca9edcb11d75316ee57e2"
+  },
+  "status": "accepted",
+  "summary": "ADR-0059 accepted 2026-08-18; valid published/LKG catalog may replay frozen selection using current selected read-set bytes to create validator-owned successor context; knowledgeSelectionHash excludes bytes; knowledgeContextHash binds selection, current source hashes/snapshot, Locator result, decisions, predecessor; authority-envelope hash covers ADRs/rules/policies/contracts/registries/allowed successor kinds; stale freshness/query-quality may permit degraded execution only for unrelated targets with verifiable selection/authority/modules/read-set; publication failure cannot advance current/LKG and cannot invalidate valid LKG consumption; selection/authority/contract/command-test/policy/protected-path/source-integrity/Knowledge self-change remain blocking or semantic-review; rapid profile excludes Knowledge self-change, publication, lifecycle/authority replacement; production/release requires current published Knowledge, publication-quality checks, semantic-review evidence; extends ADR-0048/0050; supersedes only ADR-0057 stale-stop interpretation; publication query gate and LKG integrity unchanged."
+}

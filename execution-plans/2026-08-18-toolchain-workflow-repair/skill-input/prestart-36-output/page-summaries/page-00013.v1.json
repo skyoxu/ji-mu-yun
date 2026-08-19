@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/authority-manifest.v1.json",
+    "source_sha256": "sha256:691ede11493912f71fb60990e4e4da42788f380e2d11f2a0cb70fb636ae14bb3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2643,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:691ede11493912f71fb60990e4e4da42788f380e2d11f2a0cb70fb636ae14bb3"
+  },
+  "status": "accepted",
+  "summary": "schema=toolchain-workflow-repair.authority-manifest.v1; authority sources: AGENTS repository rules; ADR-0048 locator; ADR-0050 retention; ADR-0057 publication; ADR-0058 evidence; ADR-0059 execution separation; ADR-0060 skill-input v2; lifecycle contract; VDD, quick-dev, acceptance skill contracts; consumer policies v2; authorizes=[]; candidate requirements-and-acceptance; implementation-contract v1; command-registry v1; authorization publisher; migration bridge; plan-ready validator; quick-dev adapter; implementation terminal; lifecycle=plan-state v1,resume-state v1"
+}
