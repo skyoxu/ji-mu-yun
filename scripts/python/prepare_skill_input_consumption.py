@@ -21,7 +21,9 @@ from skill_input_consumption import (
     redact_bytes,
     read_json,
     repository_identity,
+    selected_source_content_root,
     sha256_bytes,
+    source_selection_hash,
     artifact_identity_hash,
     validate_contract,
     validate_request_payload,
@@ -195,7 +197,6 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         for raw in role_values.get(role_name, []):
             required_root, _ = contained_path(repository_root, raw)
             required_roots.append(required_root)
-    identity = repository_identity(repository_root, [relative for _, relative in expanded])
     source_entries: list[dict[str, Any]] = []
     manifest_entries: list[dict[str, Any]] = []
     changed_sources: list[str] = []
@@ -281,6 +282,11 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         "source_roles": normalized_role_values,
     }
     request_hash = canonical_hash(request_binding)
+    identity = repository_identity(repository_root, [relative for _, relative in expanded])
+    identity.update({
+        "source_selection_hash": source_selection_hash(request_binding),
+        "selected_source_content_root": selected_source_content_root(expanded),
+    })
     root_relative = _relative_artifact(manifest_path, receipt_root)
     receipt = {
         "schema_version": "skill-input-consumption.v1",

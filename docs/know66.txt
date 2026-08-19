@@ -1,0 +1,70 @@
+最新 main 是 1f8f905a，提交信息本身也是 record failed semantic successor prestart-43。
+
+关键阻断
+没有可用的当前 Skill Input generation
+prestart-41 虽然标记 ready=true，但已经失效：
+receipt 中 request hash：2947a99b...
+当前 request canonical hash：252a7b72...
+request 的 output_root 已变成 prestart-41-output-fresh，receipt 仍绑定 prestart-41-output。
+prestart-41 的29个选中源码实际上仍然是 29/29 匹配，所以不是源码漂移，而是 generation 文件被后续改写。
+prestart-41 还绑定了生成时的 dirty scoped-worktree hash a4886c...，当前提交后工作树应为 clean hash e3b0c4...；验证器仍将两者硬比较。
+prestart-42 和 prestart-43 都是 ready=false、semantic_status=insufficient，不能作为入口 generation。
+Authorization 仍绑定旧的 prestart-40
+
+当前 implementation-authorization-receipt.successor.v1.json 仍指向：
+
+prestart-40-receipt.json
+prestart-40-request.json
+
+而且保存的是旧 raw-byte hashes。按照现在的 canonical router 校验，可核对的绑定中仅 validate_all.py 和 terminal_full.py 两项匹配，至少11项 JSON 绑定不匹配。路由会返回：
+
+{
+  "next_action": "awaiting-implementation-authorization",
+  "reason": "implementation-authorization-stale"
+}
+Quick Dev pass receipt 不可重现
+
+当前目录仍同时存在：
+
+quick-dev-entry-receipt.v1.json：pass / W0
+quick-dev-entry-validation.v1.json：fail
+
+由于当前路由不能得到 run-slice/W0，pass receipt 仍属于陈旧证据。
+
+哈希建议落实情况
+
+已经处理好的部分：
+
+授权发布器 已使用共享 artifact_identity_hash()。
+Quick Dev 路由器 也改为相同算法。
+JSON 的缩进、key 顺序、换行变化不再改变 canonical identity。
+HEAD 仍是 provenance-only。
+
+尚未处理好的部分：
+
+持久化 Authorization 没有用新算法重新发布。
+没有 identity_kind=canonical-json-v1/raw-bytes-v1。
+没有收敛为 immutable generation_root。
+index_hash/scoped_worktree_hash 仍是硬门禁；dirty→commit→clean 即使29个源码字节完全相同也会失效。这仍然会制造你厌烦的 successor churn。
+达到 GO 的最小闭环
+将 index_hash、scoped_worktree_hash 改为 provenance-only；硬校验改成：
+sourceSelectionHash
+selectedSourceContentRoot
+每个选中源码的实际内容哈希
+冻结代码和 formatter 后生成一次新的、不可变的 prestart-44。不要修改41/42/43，将它们标记为 historical/failed。
+确保 prestart-44-request.json 在 finalize 后不再被改写，且 output_root 与 receipt 完全一致。
+用已修复的 publisher 将 Authorization 重新绑定 prestart-44。
+最好让 Authorization 只绑定 generation_root + selectionHash + contextHash，不再重复绑定多个 JSON 表示文件。
+重新生成唯一 Quick Dev entry receipt，并将旧 fail/pass receipt 历史化。
+提交后再次验证；如果只是 HEAD 改变且选中源码内容未变，不得生成 prestart-45。
+
+最终只有同时满足以下结果才能 GO：
+
+prestart-44.ready = true
+validate_skill_input_consumption exit = 0
+route.next_action = run-slice
+route.slice_id = W0
+quick-dev-entry.status = pass
+quick-dev-entry.failures = []
+
+所以整体评价是：canonical 哈希代码链路已经修好，但证据链没有重新发布，worktree 状态硬绑定也尚未解除；目前还不能进入 Quick Dev TDD。

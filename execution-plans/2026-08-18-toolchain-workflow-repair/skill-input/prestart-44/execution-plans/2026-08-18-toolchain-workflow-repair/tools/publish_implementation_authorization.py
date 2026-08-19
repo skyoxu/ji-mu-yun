@@ -155,7 +155,7 @@ def main() -> int:
         **receipt_bindings,
         "skill_input_generation": generation,
         "candidate_binding_hash": candidate_binding_hash,
-        "predecessor_authorization": predecessor,
+        "predecessor_authorization=<redacted>,
         "decision": {
             "owner": "maintainer",
             "transition": "implementation-authorized",

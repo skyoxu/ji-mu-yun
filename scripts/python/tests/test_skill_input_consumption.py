@@ -663,6 +663,15 @@ class SkillInputConsumptionTests(unittest.TestCase):
         subprocess.run(["git", "commit", "--allow-empty", "-qm", "identity drift"], cwd=root, check=True)
         self.assertEqual("candidate", validate_receipt(receipt, root, contract)["status"])
 
+    def test_dirty_to_clean_provenance_drift_without_source_drift_remains_valid(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        (root / "requirements.md").write_text("dirty but selected\n", encoding="utf-8")
+        prepare(args)
+        subprocess.run(["git", "add", "requirements.md"], cwd=root, check=True)
+        subprocess.run(["git", "commit", "-qm", "commit selected source"], cwd=root, check=True)
+        self.assertEqual("candidate", validate_receipt(receipt, root, contract)["status"])
+
     def test_ready_requires_sidecars(self):
         temporary, root, contract, receipt, args = self._fixture()
         self.addCleanup(temporary.cleanup)

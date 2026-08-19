@@ -28,6 +28,8 @@ from skill_input_consumption import (
     redact_bytes,
     redaction_profile_hash,
     repository_identity,
+    selected_source_content_root,
+    source_selection_hash,
     sha256_bytes,
     artifact_identity_hash,
     validate_contract,
@@ -415,9 +417,13 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
     if not receipt_paths or len(receipt_paths) != len(set(receipt_paths)) or set(receipt_paths) != expected_paths:
         raise ReceiptValidationError("receipt sources do not match the declared source graph")
     identity = receipt.get("repository_identity")
-    if not isinstance(identity, dict) or set(identity) != {"head", "index_hash", "scoped_worktree_hash"}:
+    identity_fields = {
+        "head", "index_hash", "scoped_worktree_hash",
+        "source_selection_hash", "selected_source_content_root",
+    }
+    if not isinstance(identity, dict) or set(identity) != identity_fields:
         raise ReceiptValidationError("receipt repository identity is invalid")
-    for key in ("index_hash", "scoped_worktree_hash"):
+    for key in ("index_hash", "scoped_worktree_hash", "source_selection_hash", "selected_source_content_root"):
         _check_sha(identity.get(key), f"receipt.repository_identity.{key}")
     if not isinstance(identity.get("head"), str) or not identity["head"]:
         raise ReceiptValidationError("receipt repository identity head is invalid")
@@ -425,10 +431,12 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
         current_identity = repository_identity(repository_root, expected_paths)
     except SkillInputError as exc:
         raise ReceiptValidationError(str(exc)) from exc
-    # The source manifest binds every consumed file by content hash. HEAD is
-    # provenance only, so unrelated commits cannot invalidate a frozen input.
-    if any(identity[key] != current_identity[key] for key in ("index_hash", "scoped_worktree_hash")):
-        raise ReceiptValidationError("receipt repository identity is stale")
+    # Git state is provenance only. The declared source selection and every
+    # selected source's content are the authoritative freshness boundary.
+    if identity["source_selection_hash"] != source_selection_hash(request_binding):
+        raise ReceiptValidationError("receipt source selection is stale")
+    if identity["selected_source_content_root"] != selected_source_content_root(expected_expanded):
+        raise ReceiptValidationError("receipt selected source content is stale")
     root = receipt_path.parent.resolve()
     manifest_path, _ = _artifact(root, receipt.get("source_manifest"), "source_manifest")
     if not manifest_path.is_file() or artifact_identity_hash(manifest_path) != receipt["source_manifest"]["sha256"]:

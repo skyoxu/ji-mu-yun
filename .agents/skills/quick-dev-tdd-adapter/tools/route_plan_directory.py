@@ -12,9 +12,10 @@ _SKILL_INPUT_ROOT = Path(__file__).resolve().parents[4] / "scripts" / "python"
 if str(_SKILL_INPUT_ROOT) not in sys.path:
     sys.path.insert(0, str(_SKILL_INPUT_ROOT))
 try:
-    from skill_input_consumption import artifact_identity_hash
+    from skill_input_consumption import artifact_identity_hash, canonical_hash
 except ImportError:
     artifact_identity_hash = None
+    canonical_hash = None
 
 try:
     from stage_lifecycle_runner import derive_run_state, validate_implementation_successor
@@ -90,6 +91,57 @@ def _artifact_hash(path: Path) -> str:
     if artifact_identity_hash is not None:
         return artifact_identity_hash(path)
     return _sha(path.read_bytes())
+
+
+def _artifact_identity_kind(path: Path) -> str:
+    if path.suffix.casefold() == ".json":
+        try:
+            json.loads(path.read_text(encoding="utf-8"))
+            return "canonical-json-v1"
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            pass
+    return "raw-bytes-v1"
+
+
+def _binding_is_current(root: Path, binding: object) -> bool:
+    if not isinstance(binding, dict) or not isinstance(binding.get("path"), str) or not isinstance(binding.get("sha256"), str):
+        return False
+    try:
+        path = (root / binding["path"]).resolve()
+        path.relative_to(root)
+    except ValueError:
+        return False
+    if not path.is_file() or _artifact_hash(path) != binding["sha256"]:
+        return False
+    declared_kind = binding.get("identity_kind")
+    return declared_kind is None or declared_kind == _artifact_identity_kind(path)
+
+
+def _skill_input_generation_is_current(root: Path, generation: object) -> bool:
+    required = {
+        "schema_version", "receipt", "source_selection_hash", "selected_source_content_root",
+        "context_hash", "semantic_decision_hash", "child_request_hash", "generation_root",
+    }
+    if not isinstance(generation, dict) or set(generation) != required or generation.get("schema_version") != "skill-input-generation.v1":
+        return False
+    if canonical_hash is None or generation.get("generation_root") != canonical_hash({key: value for key, value in generation.items() if key != "generation_root"}):
+        return False
+    if not _binding_is_current(root, generation["receipt"]):
+        return False
+    try:
+        receipt_path = (root / generation["receipt"]["path"]).resolve()
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        identity = receipt["repository_identity"]
+        return (
+            receipt.get("ready") is True
+            and identity.get("source_selection_hash") == generation["source_selection_hash"]
+            and identity.get("selected_source_content_root") == generation["selected_source_content_root"]
+            and receipt.get("context_artifact", {}).get("sha256") == generation["context_hash"]
+            and receipt.get("semantic_decision", {}).get("sha256") == generation["semantic_decision_hash"]
+            and receipt.get("child_request", {}).get("sha256") == generation["child_request_hash"]
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError):
+        return False
 
 
 def _current_execution_fingerprint(repository_root: Path, plan_dir: Path, slice_id: str) -> str | None:
@@ -527,14 +579,12 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                     or receipt.get("authorizes") != ["implementation-authorized"]
                 ):
                     raise ValueError("receipt metadata mismatch")
-                bindings = (
+                legacy_bindings = (
                     "implementation_contract",
                     "command_registry",
                     "authority_manifest",
                     "knowledge_context",
                     "knowledge_context_freeze",
-                    "skill_input_receipt",
-                    "skill_input_request",
                     "plan_validation",
                     "repair_closure",
                     "bootstrap_preexisting_delta",
@@ -544,13 +594,18 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                     "immutable_predecessor",
                 )
                 root = plan_dir.resolve().parents[1]
+                bindings = legacy_bindings
+                if "skill_input_generation" in receipt:
+                    bindings = legacy_bindings
+                    if not _skill_input_generation_is_current(root, receipt["skill_input_generation"]):
+                        raise ValueError("skill input generation stale")
+                else:
+                    bindings = legacy_bindings + ("skill_input_receipt", "skill_input_request")
                 for field in bindings:
                     binding = receipt.get(field)
-                    if not isinstance(binding, dict) or not isinstance(binding.get("path"), str) or not isinstance(binding.get("sha256"), str):
+                    if not isinstance(binding, dict):
                         raise ValueError("receipt binding missing")
-                    path = (root / binding["path"]).resolve()
-                    path.relative_to(root)
-                    if not path.is_file() or _artifact_hash(path) != binding["sha256"]:
+                    if not _binding_is_current(root, binding):
                         raise ValueError("receipt binding stale")
             except (OSError, UnicodeError, json.JSONDecodeError, TypeError, ValueError):
                 return {

@@ -252,6 +252,35 @@ def repository_identity(repository_root: Path, scoped_paths: Iterable[str]) -> d
     }
 
 
+def source_selection_hash(request_binding: dict[str, Any]) -> str:
+    """Return the semantic identity of the declared source selection.
+
+    This deliberately excludes execution provenance.  A clean commit after a
+    frozen dirty worktree must not create a new input generation when the
+    selected authority and its content are unchanged.
+    """
+    return canonical_hash({
+        "algorithm": "skill-input-source-selection.v1",
+        "consumer": request_binding["consumer"],
+        "operation": request_binding["operation"],
+        "target": request_binding["target"],
+        "route_identity": request_binding["route_identity"],
+        "source_roles": request_binding["source_roles"],
+    })
+
+
+def selected_source_content_root(sources: Iterable[tuple[Path, str]]) -> str:
+    """Return a stable content root for the exact selected source set."""
+    entries = [
+        {"path": relative, "sha256": sha256_bytes(path.read_bytes())}
+        for path, relative in sources
+    ]
+    return canonical_hash({
+        "algorithm": "skill-input-selected-source-content.v1",
+        "sources": sorted(entries, key=lambda entry: entry["path"]),
+    })
+
+
 def contract_hash(contract_path: Path) -> str:
     try:
         return sha256_bytes(contract_path.read_bytes())
