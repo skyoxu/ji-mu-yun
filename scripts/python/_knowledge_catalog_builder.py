@@ -577,6 +577,36 @@ class CatalogBuilder:
                 "freeze_point": "pinned-main-at-run-start",
                 "locator_mode": "maintenance-only",
             },
+            {
+                "id": "skill-input-execution",
+                "title": "Typed Skill Input execution",
+                "primary": "scripts/python/skill_input_consumption.py",
+                "resources": (
+                    ("consumer", "scripts/python/skill_input_consumption.py"),
+                    ("launcher", "scripts/python/launch_skill_input_consumer.py"),
+                    ("validator", "scripts/python/validate_skill_input_consumption.py"),
+                    ("contract", ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json"),
+                ),
+                "consumer": "vdd",
+                "operations": ["prepare", "launch", "validate", "replay"],
+                "freeze_point": "candidate-input",
+                "locator_mode": "deterministic-service",
+            },
+            {
+                "id": "knowledge-execution-gates",
+                "title": "Knowledge execution gates",
+                "primary": "scripts/python/knowledge_context_validation.py",
+                "resources": (
+                    ("validator", "scripts/python/knowledge_context_validation.py"),
+                    ("locator", "scripts/python/knowledge_locator.py"),
+                    ("contract", "knowledge/contracts/knowledge-consumer-context.v1.schema.json"),
+                    ("policy", "knowledge/policies/consumer-policies.v2.json"),
+                ),
+                "consumer": "vdd",
+                "operations": ["validate", "freshness", "source-hash", "replay"],
+                "freeze_point": "context-consumption",
+                "locator_mode": "deterministic-service",
+            },
         )
         for component in components:
             module = self.add_module(
