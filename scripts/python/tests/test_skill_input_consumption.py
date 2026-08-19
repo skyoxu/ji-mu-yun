@@ -295,6 +295,17 @@ class SkillInputConsumptionTests(unittest.TestCase):
         self.assertEqual("complete", status)
         self.assertNotIn(b"eyJhbGciOiJIUzI1NiJ9.secret.payload", redacted)
 
+    def test_json_authorization_object_redaction_preserves_valid_json(self):
+        redacted, sensitivity, status = redact_bytes(
+            b'{"implementation_authorization":{"maintainer_override_allowed":true},"states":["plan-ready"]}'
+        )
+        self.assertEqual("credential-bearing", sensitivity)
+        self.assertEqual("complete", status)
+        self.assertEqual(
+            {"implementation_authorization": "<redacted>", "states": ["plan-ready"]},
+            json.loads(redacted),
+        )
+
     def test_empty_utf8_source_has_complete_zero_range_coverage(self):
         temporary, _root, _contract, receipt, args = self._fixture()
         self.addCleanup(temporary.cleanup)
@@ -1325,7 +1336,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
                 backend_inspector=self._backend_inspector,
             )
 
-    def test_semantic_child_rejects_credential_like_typed_output(self):
+    def test_semantic_child_redacts_credential_like_typed_output_before_publishing(self):
         temporary, root, contract, receipt, args = self._fixture()
         self.addCleanup(temporary.cleanup)
         prepare(args)
@@ -1350,16 +1361,17 @@ class SkillInputConsumptionTests(unittest.TestCase):
             kwargs["output_last_message"].write_text(json.dumps(output), encoding="utf-8")
             return 0, "", ["fake"]
 
-        with self.assertRaisesRegex(ReceiptValidationError, "credential-like output"):
-            run_semantic_child(
-                request,
-                root,
-                backend="codex-cli",
-                model="test-model",
-                runner=fake_runner,
-                backend_inspector=self._backend_inspector,
-            )
-        self.assertFalse((root / "run" / "output" / "skill-input-context.v1.json").exists())
+        result = run_semantic_child(
+            request,
+            root,
+            backend="codex-cli",
+            model="test-model",
+            runner=fake_runner,
+            backend_inspector=self._backend_inspector,
+        )
+        context = Path(result["context_artifact"]).read_text(encoding="utf-8")
+        self.assertNotIn("actual-looking-secret", context)
+        self.assertIn("<redacted>", context)
 
     def test_semantic_child_rejects_oversized_context_before_publishing_sidecars(self):
         temporary, root, _contract, receipt, args = self._fixture()

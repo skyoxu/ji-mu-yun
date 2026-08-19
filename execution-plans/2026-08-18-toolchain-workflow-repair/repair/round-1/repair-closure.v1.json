@@ -1,0 +1,51 @@
+{
+  "authorizes": [],
+  "bindings": {
+    "authorization-predecessor.2050ec68": {
+      "path": "repair/round-1/authorization-predecessor.2050ec68.v1.json",
+      "sha256": "sha256:5837d4fd72488152be68d182a11c83f9ba27d715127d5e9dc362c616d9517ec0"
+    },
+    "baseline-manifest.2050ec68": {
+      "path": "repair/round-1/baseline-manifest.2050ec68.v1.json",
+      "sha256": "sha256:4ddcd4d4075c1325c22900bcf0e18bb2e0d9333060ae22267b689b03643dcc14"
+    },
+    "bootstrap-preexisting-delta": {
+      "path": "repair/round-1/bootstrap-preexisting-delta.v1.json",
+      "sha256": "sha256:a543a96e8830c5fd7d69b957c103d48c5401aab47195e27ec7e0f501f466b3c9"
+    },
+    "finding-set": {
+      "path": "repair/round-1/finding-set.v1.json",
+      "sha256": "sha256:0e2d9a9c599edada466511304b4d89b8e5714859c7b98f865289945deb79bb5a"
+    },
+    "historical-artifact-disposition": {
+      "path": "repair/round-1/historical-artifact-disposition.v1.json",
+      "sha256": "sha256:7948d40fa43965d6af888f646be4b138ca9e022fb4dae2eb0a060fd56c604d77"
+    },
+    "plan-validation-receipt.v2.json": {
+      "path": "repair/round-1/plan-validation-receipt.v2.json",
+      "sha256": "sha256:ad58707393cea4dc9b10c684319f07375286661b4b3387100939b70f0f9e3d21"
+    },
+    "repair-candidate-manifest": {
+      "path": "repair/round-1/repair-candidate-manifest.v1.json",
+      "sha256": "sha256:ad9ac6c94c9686dcf582d491fd4bad00fe18b6ec1cc98ae1ba509d72d0151a0c"
+    },
+    "repair-changed-set": {
+      "path": "repair/round-1/repair-changed-set.v1.json",
+      "sha256": "sha256:2374af37e89585354bf54c916d2cc5a1de0e57d2b97e797ba065db3a4d4820ab"
+    },
+    "repair-state": {
+      "path": "repair/round-1/repair-state.v1.json",
+      "sha256": "sha256:ef5fd8a4699aad23041822346edc469430cbabca00a9ab99bda638cd0474c063"
+    }
+  },
+  "failures": [],
+  "lifecycle_transition": "none",
+  "plan_id": "toolchain-workflow-repair",
+  "requires": [
+    "plan-validation-pass",
+    "pre-existing-delta",
+    "authorization-predecessor"
+  ],
+  "schema_version": "toolchain-workflow-repair.repair-closure.v1",
+  "status": "pass"
+}

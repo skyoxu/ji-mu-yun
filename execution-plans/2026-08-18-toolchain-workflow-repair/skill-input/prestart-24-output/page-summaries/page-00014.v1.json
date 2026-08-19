@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/command-registry.v1.json",
+    "source_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4240,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0"
+  },
+  "status": "accepted",
+  "summary": "schema toolchain-workflow-repair.command-registry.v1; 20 registered commands; green IDs w0-green..w6-green run pytest selection, transport, coverage, knowledge-gate, generation-pointer, retention, workflow-repair E2E; terminal IDs w0-terminal..w6-terminal repeat those checks; skill-input-suite runs consumption tests; knowledge-suite runs knowledge-gate tests; workflow-repair-e2e runs E2E tests; plan-ready validates plan readiness; terminal-full executes full terminal workflow; Python executable py with -3 -B; shell disabled; repo cwd; standard test timeout 300s, E2E 600s, terminal-full 1800s; plan path execution-plans/2026-08-18-toolchain-workflow-repair; registry/page SHA256 identifiers provided; no ambiguities"
+}

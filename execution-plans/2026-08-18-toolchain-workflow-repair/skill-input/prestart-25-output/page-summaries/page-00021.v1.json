@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/canonical-skill-input-plan-receipt.v2.json",
+    "source_sha256": "sha256:e5fc55c1594b68776e1c10078a0f57aa3b91c9a90ffded8c6d86a77ced43b699",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 6350,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:e5fc55c1594b68776e1c10078a0f57aa3b91c9a90ffded8c6d86a77ced43b699"
+  },
+  "status": "accepted",
+  "summary": "schema=skill-input-plan-receipt.v2; scope=plan-ready-only; target=execution-plans/2026-08-18-toolchain-workflow-repair; authorizes=[]; source_content_hash=sha256:2015be2e7500475b1d316a0ebab6bae2c2d4f043a38841b3db3a7575def04e48; source_selection_hash=sha256:06401152190c8465e9dab93e027ced42169b2271d196d265bf426f4ff9a091b2; inputs=20 immutable path+SHA256 records; authority sources=AGENTS, ADR-0048/0050/0057/0058/0059/0060, lifecycle contract, vdd plan skill, quick-dev TDD adapter, refactor acceptance skill, consumer policies; implementation inputs=requirements/acceptance, implementation contract, command registry, authorization publisher, migration bridge, plan-ready validator, adapter, terminal runner; disposition=receipt establishes plan-ready input provenance only; ambiguity=none stated"
+}

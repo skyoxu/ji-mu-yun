@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/generate_preexisting_candidate_delta.py",
+    "source_sha256": "sha256:df1525f1d067cca687403b6d2f91c5a8fac15726bb9ab966fa0a1e43d253fb8c",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2278,
+    "start_line": 1,
+    "end_line": 66,
+    "content_sha256": "sha256:df1525f1d067cca687403b6d2f91c5a8fac15726bb9ab966fa0a1e43d253fb8c"
+  },
+  "status": "accepted",
+  "summary": "Python CLI generates pre-existing candidate delta JSON; required args: repository root, baseline commit, candidate commit, one or more repository-relative paths, output path; paths sorted/deduplicated and reject absolute or parent traversal; reads blobs via git show and fails if absent; records normalized path, baseline/candidate SHA-256, disposition pre-existing-regression-or-repair-input; schema toolchain-workflow-repair.pre-existing-delta.v1; includes commits, generator ID, empty authorizes list; creates parent directory, writes sorted indented UTF-8 JSON with LF newline; prints pass status, output, count; exits 0 on success"
+}

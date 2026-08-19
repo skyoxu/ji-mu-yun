@@ -21,6 +21,7 @@
     {"path":"execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py","role":"maintainer_authorization_publisher"},
     {"path":"execution-plans/2026-08-18-toolchain-workflow-repair/tools/migration_bridge.py","role":"quick_dev_test_materialization_bridge"},
     {"path":"execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py","role":"plan_ready_validator"},
+    {"path":".agents/skills/quick-dev-tdd-adapter/tools/adapter.py","role":"quick_dev_entry_bootstrap_adapter"},
     {"path":"execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py","role":"implementation_terminal"}
   ],
   "lifecycle_projections": [

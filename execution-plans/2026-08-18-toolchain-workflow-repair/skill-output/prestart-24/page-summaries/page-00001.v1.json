@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "skill=quick-dev-tdd-adapter; scope=explicit execution-plans target with schema-valid implementation-contract.v1.json only; reject standalone/compact/missing/invalid inputs; parent route required before state, caller=quick-dev-tdd-adapter, lane=strict_tdd_plan, backend match; target-only discovery under execution-plans, max one 95 report, ambiguity=>VDD repair; reports/run-state non-authorizing; required loop: loop_plan_directory before expensive actions, run_slice_lifecycle artifacts only, observed shell-free RED before writes then GREEN/REFACTOR/slice predicate; no prebound/imported RED in new VDD plans; continue unlocked slices, stale binding=>successor terminal receipt; stop=plan predicate|external-repair-required|repeated fingerprint; terminal=implementation-complete only, acceptance external; skill-input typed receipt/request/semantic child/require-ready gate before actions; model classification highest architectural|complex|small_mechanical|normal, unknown=>blocked complex, decision non-authorizing; knowledge context/hash verification before RED, drift=>VDD repair or VDD-owned refresh; unattended driver uses explicit existing snapshot/write paths, planned_new_files constrained; structured shell:false commands; reject identity/authority/write/read/dependency/baseline/predecessor drift; P0/P1 completion requires repair handoff and Acceptance audit, no acceptance route/bootstrap/review lineage changes; version gate applies before caller commit; read implementation-backend-contract, tdd-run-protocol, evidence-and-freshness before slice."
+}

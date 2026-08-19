@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/generate_canonical_plan_input.py",
+    "source_sha256": "sha256:7cc8933b7b72c147c8947d31778ead6877c28baae74d03fc9535dcf54e487394",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2177,
+    "start_line": 1,
+    "end_line": 55,
+    "content_sha256": "sha256:7cc8933b7b72c147c8947d31778ead6877c28baae74d03fc9535dcf54e487394"
+  },
+  "status": "accepted",
+  "summary": "Python CLI reads authority-manifest.v1.json from resolved plan dir; required args: --repository-root, --plan-dir, --out; processes authority_sources as authority_source and candidate_inputs as implementation_input; validates nonempty string paths and existing files; normalizes separators; hashes file bytes with sha256: prefix; canonical JSON uses UTF-8, sorted keys, compact separators, trailing newline; emits schema_version skill-input-plan-receipt.v2; target is plan path relative to root; records selection and selection/content hashes plus sources; authorizes=[]; scope=plan-ready-only; creates output parent and writes canonical payload; prints pass JSON with output path and empty authorizations; raises ValueError on invalid/missing declarations; exits 0 on success"
+}

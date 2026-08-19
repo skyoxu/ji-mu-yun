@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "All 29 frozen sources have complete page coverage and accepted bounded redacted summaries.",
+      "title": "coverage"
+    },
+    {
+      "content": "Sources define repository governance, knowledge selection and retention, lifecycle ownership, execution-plan repair, Quick Dev TDD flow, validators, command registries, migration tooling, and focused tests.",
+      "title": "scope"
+    }
+  ],
+  "source_manifest_hash": "sha256:c9ffc8c90ab3496ae8178a90d24f88cfc71227e41b3c0983d455e2c77163bb40",
+  "truncated": false
+}

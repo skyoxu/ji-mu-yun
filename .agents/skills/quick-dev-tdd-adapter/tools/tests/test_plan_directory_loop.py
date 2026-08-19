@@ -206,7 +206,8 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             root = Path(tmp); plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
             stale = root / "logs/tdd-adapter/target/S0/old"; stale.mkdir(parents=True)
             (stale / "slice-ready-result.json").write_text(json.dumps({"predicate": "slice-ready", "status": "pass", "contract_hash": "sha256:stale"}), encoding="utf-8")
-            self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+            with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
 
     def test_router_reuses_an_unaffected_slice_from_the_head_contract(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -298,7 +299,8 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 "authorizes": ["plan-ready"],
             }), encoding="utf-8")
 
-            result = ROUTER.route(root, plan)
+            with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                result = ROUTER.route(root, plan)
 
             self.assertEqual("awaiting-implementation-authorization", result["next_action"])
             self.assertEqual("implementation-authorization-required", result["reason"])
@@ -310,12 +312,25 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
             bindings = {
                 "implementation_contract": "implementation-contract.v1.json",
+                "command_registry": "command-registry.v1.json",
                 "authority_manifest": "authority-manifest.v1.json",
+                "knowledge_context": "knowledge-context.v1.json",
                 "knowledge_context_freeze": "knowledge-context.freeze.v1.json",
                 "skill_input_receipt": "skill-input-receipt.successor.v1.json",
+                "skill_input_request": "skill-input-request.v1.json",
+                "plan_validation": "repair/round-1/plan-validation-receipt.v2.json",
+                "plan_ready_revalidation": "repair/round-1/plan-ready-revalidation-receipt.v1.json",
+                "repair_closure": "repair/round-1/repair-closure.v1.json",
+                "bootstrap_preexisting_delta": "repair/round-1/bootstrap-preexisting-delta.v1.json",
+                "candidate_manifest": "repair/round-1/repair-candidate-manifest.v1.json",
+                "validate_all": "tools/validate_all.py",
+                "terminal_validator": "tools/terminal_full.py",
+                "immutable_predecessor": "repair/round-1/authorization-predecessor.v1.json",
             }
             for name in list(bindings.values())[1:]:
-                (plan / name).write_text("{}\n", encoding="utf-8")
+                path = plan / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("{}\n", encoding="utf-8")
             (plan / "plan-state.v1.json").write_text(json.dumps({
                 "schema_version": "vdd.plan-state.v2",
                 "plan_id": "target",
@@ -336,12 +351,14 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 "authorizes": ["implementation-authorized"],
             }), encoding="utf-8")
 
-            self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+            with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
 
             changed_contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
             changed_contract["changed"] = True
             (plan / "implementation-contract.v1.json").write_text(json.dumps(changed_contract), encoding="utf-8")
-            result = ROUTER.route(root, plan)
+            with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                result = ROUTER.route(root, plan)
             self.assertEqual("awaiting-implementation-authorization", result["next_action"])
             self.assertEqual("implementation-authorization-stale", result["reason"])
 

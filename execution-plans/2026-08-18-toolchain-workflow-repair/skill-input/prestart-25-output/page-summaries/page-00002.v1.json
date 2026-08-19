@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "adapter.py: deterministic TDD lifecycle adapter; prepare requires hidden_state=false, no shell registry, declared slice, nonempty contract_hash+validator_hash, then yields prepared non-authoritative run; mandatory Skill input receipt gate binds context artifact/hash; transitions RED->GREEN->REFACTOR strictly ordered with exit-code and allowed-path checks, producing blocked diagnostics on violations; RED allows tests/docs and declared failure, GREEN production only/pass, REFACTOR declared production/tests/docs/pass; finalize_candidate only after exact lifecycle and never authorizes acceptance/handoff/release; resume rejects identity drift and stale/failed/superseded runs; stage binding validates one context+attempt per stage, matching IDs and non-authoritative decision, returns hashes; protocol persistence validates schema/store/path containment/no links/reparse points/complete ordered immutable artifacts, permits listed observation files, rejects conflicts/undeclared files; execute requires new run directory, receipt-gated prepare, processes events, requires protocol bundle+store together, persists recovery-state with hashes and no authorizations; ambiguity: execute creates run_dir before validation and may leave it after blocked/error, making retries require successor."
+}

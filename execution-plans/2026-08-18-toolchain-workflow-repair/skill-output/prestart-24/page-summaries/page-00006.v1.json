@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "仓库为 Ji Mu Yun Phase A/B 云原型平台；职责分为工具链控制面、Phase 服务层、用户沙盒层，彼此不得共享快照/当前/缓存/LKG 权威；按任务路由读取对应入口及最近 AGENTS.md；优先使用 FastCtx，明确不可用后才切换 Windows 命令面并记录一次；中文沟通，代码/脚本/测试/日志/输出使用英文；中文写入须显式 UTF-8，禁止 PowerShell 写中文；保留用户改动，禁止破坏性操作，受保护路径修改前须询问；代码或测试变更须引用已接受 ADR，阈值/契约/安全/发布政策变更须更新 ADR；证据写入 logs，完成须有机器证据而非仅助手声明；API 默认向后兼容，架构/认证/运行时/Hosted 路由变更需覆盖相应验证与证据；Hosted 恢复按八源顺序且缺源失败关闭，实时阻塞优先；共享 LLM/Codex 使用 UTF-8 stdin，写入需可执行路由、workspace-write 与验收；运行时先本地健康检查，使用规范 live-server 脚本，禁止 plain dotnet run；workflow.md 仅在知识索引允许时使用；完成定义含验证、测试/烟雾、日志证据、必要文档及无秘密泄露/未批准持久化/数据库手改/不兼容破坏；维护 AGENTS.md 目标 6000-8000 字符，硬上限 10000，详细内容放所属文档并通过路由链接。"
+}

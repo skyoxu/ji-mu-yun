@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/baseline-manifest.2050ec68.v1.json",
+    "source_sha256": "sha256:4ddcd4d4075c1325c22900bcf0e18bb2e0d9333060ae22267b689b03643dcc14",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 7139,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:4ddcd4d4075c1325c22900bcf0e18bb2e0d9333060ae22267b689b03643dcc14"
+  },
+  "status": "accepted",
+  "summary": "schema toolchain-workflow-repair.manifest.v1; baseline_commit 2050ec682bab8cdc11770bf9823549b264a9e339; authorizes empty; 31 paths present; 8 __pycache__ artifacts absent at baseline; prepare_repair_round.py absent at baseline; listed workflow, plan, receipt, contract, state, requirements, terminal-result, and tool files are baseline-present; source/content SHA-256 validated; no additional requirements or decisions encoded; ambiguity: manifest records presence and hashes only"
+}

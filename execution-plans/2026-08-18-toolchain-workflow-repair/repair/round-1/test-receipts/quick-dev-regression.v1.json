@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "python",
+    "-m",
+    "pytest",
+    "-q",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "authorizes": [],
+  "command_id": "quick-dev-regression",
+  "exit_code": 0,
+  "schema_version": "toolchain-workflow-repair.command-receipt.v1",
+  "shell": false,
+  "status": "pass",
+  "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "sha256:ae1a679916f7a2e4271ffadbfbf2f3bcc00db6c2791d4096cd6281419e0b7e2e"
+}

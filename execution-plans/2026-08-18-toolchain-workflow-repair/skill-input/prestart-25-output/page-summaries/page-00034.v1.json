@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/repair-changed-set.v1.json",
+    "source_sha256": "sha256:2374af37e89585354bf54c916d2cc5a1de0e57d2b97e797ba065db3a4d4820ab",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2271,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:2374af37e89585354bf54c916d2cc5a1de0e57d2b97e797ba065db3a4d4820ab"
+  },
+  "status": "accepted",
+  "summary": "Schema toolchain-workflow-repair.repair-changed-set.v1; authorizes none; baseline manifest sha256:4ddcd4d4075c1325c22900bcf0e18bb2e0d9333060ae22267b689b03643dcc14; candidate manifest sha256:ad9ac6c94c9686dcf582d491fd4bad00fe18b6ec1cc98ae1ba509d72d0151a0c; changed paths all present: seven tool __pycache__ .pyc artifacts plus prepare_repair_round.py; prepare_repair_round.py sha256:949eccfe17be60f1c16b46a7c39342304f45abc885da2d376318dd71acd33aa6; page ordinal 1 of 1; no ambiguities"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/finding-set.v1.json",
+    "source_sha256": "sha256:f96701ad3a2082fbd7081a2a17e773fc595342dd461747332e5883a3f2ee9507",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 3363,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:f96701ad3a2082fbd7081a2a17e773fc595342dd461747332e5883a3f2ee9507"
+  },
+  "status": "accepted",
+  "summary": "finding-set.v1; plan_id=toolchain-workflow-repair; 12 open findings; P0: TWR-ENTRY-001 validate_all.py missing; 002 terminal lacks real pass/fail path; 003 migration bridge W0-only; 004 plan receipt lacks full input-closure binding; 005 authorization predecessor canonical path overwriteable; 006 Quick Dev gate lacks complete binding-closure verification; 007 shared Quick Dev bootstrap changes incompletely classified; 008 slice snapshots omit each materialized RED test; P1: 009 interim receipt presented as canonical v2 authority; 010 knowledge selection lacks explicit required accepted modules; 011 validator lacks authorized-repair revalidation; 012 prestart tools lack temporary-repository dogfood test; affected paths largely omitted (37); no authorizations."
+}

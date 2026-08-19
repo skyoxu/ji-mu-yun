@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/authorization-predecessor.2050ec68.v1.json",
+    "source_sha256": "sha256:5bfa46f39ef4f5eb063d982c6d9f3d57b81ee7daacb7bb56635284109bd08235",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1764,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:5bfa46f39ef4f5eb063d982c6d9f3d57b81ee7daacb7bb56635284109bd08235"
+  },
+  "status": "accepted",
+  "summary": "Plan toolchain-workflow-repair; authorization transition implementation-authorized; owner maintainer; rationale explicit maintainer authorization; candidate binding hash sha256:78d2ecfa94d3f5db5555f7ec2f5f97655a334ca5fd005f97132ceec096cd3e49; linked authority manifest, command registry, implementation contract, knowledge-context freeze, plan-validation receipt, and canonical skill-input receipt with recorded SHA-256 identifiers; implementation allowed; completion, acceptance, publication, bootstrap review, and release remain unauthorized; schema toolchain-workflow-repair.implementation-authorization-receipt.v1; predecessor authorization redacted"
+}

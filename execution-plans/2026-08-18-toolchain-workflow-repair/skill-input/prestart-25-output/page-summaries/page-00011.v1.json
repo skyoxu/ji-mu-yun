@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "文档定义 Ji Mu Yun Phase A/B 云原型平台及三层职责边界；按任务路由读取对应 AGENTS、索引或标准，禁止预加载无关文档；本地检查优先 FastCtx，明确不可用后才用 Windows 命令平面并记录回退；中文沟通，代码/脚本/测试/日志使用英文，禁止表情；默认 Windows，保留用户改动，避免破坏性操作，高风险或受保护路径修改须先询问；中文写入须显式 UTF-8，禁止 PowerShell 写中文；运行态、托管工作区、启动/代理、认证、LLM 入口等受保护范围需授权；API 默认向后兼容，架构/安全/阈值等变更须有已接受 ADR；Hosted 路由恢复按八类来源顺序，缺失即 fail closed，实时阻塞优先；共享 LLM/Codex 依赖指定执行规范、UTF-8 stdin、可执行路由及验收；运行恢复先本地健康检查再代理，禁止 plain dotnet run；完成须有验证、测试/冒烟及 logs 证据，不能仅凭助手文本；不得泄露凭据、手改 live 数据库、破坏兼容性；AGENTS 维护目标 6000-8000 字符，硬上限 10000。"
+}

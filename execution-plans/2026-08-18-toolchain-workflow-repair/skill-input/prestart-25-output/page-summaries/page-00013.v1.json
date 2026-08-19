@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+    "source_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4685,
+    "start_line": 1,
+    "end_line": 88,
+    "content_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3"
+  },
+  "status": "accepted",
+  "summary": "ADR-0050 accepted 2026-07-29; defines deterministic LKG recovery via publish_knowledge_catalog.py --restore-lkg only; recovery uses single-writer lock and validates LKG pointer, generation identity, all artifact hashes, source snapshot, policy, query report, and current main; ancestor LKG may recover only when indexed sources and inputs byte-match main; restores source snapshot, v2 Catalog, projections, and v1 compatibility Catalog, then verifies publication, query gate, and Locator smoke; stale LKG cannot override newer main; failed checks roll back and verify all four layers and current pointer; activation is one rollback domain with current pointer written last; publication requires pinned builder/evaluator/Locator/core/publication scripts to match main; lock recovery rules cover dead/reused owners and malformed locks after 60s, while live/indeterminate owners conflict; pruning is separate explicit prune_knowledge_generations.py --prune and never implicit; current, LKG, and five newest valid successful main generations protected; validity requires complete manifest/artifact/layer/policy/source/query checks, never mtime; invalid/uncommitted/unrecognized generations are reported and retained; pruning persists intent and per-generation authorization, atomically isolates targets, and records per-target outcomes; failure evidence under logs/knowledge-context/ is append-only and outside pruning; extends ADR-0048, complements ADR-0044, supersedes neither; retention policy is versioned and requires policy plus ADR update."
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/00-index.md",
+    "source_sha256": "sha256:aad27ede87e033a11bd60604d54abe0070b8ff434294bdaa5be8ad58a196d439",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1201,
+    "start_line": 1,
+    "end_line": 30,
+    "content_sha256": "sha256:aad27ede87e033a11bd60604d54abe0070b8ff434294bdaa5be8ad58a196d439"
+  },
+  "status": "accepted",
+  "summary": "Toolchain Workflow Repair; source execution-plans/2026-08-18-toolchain-workflow-repair/00-index.md; disposition implementation-authorized; scope W0 typed source selection/authority-read-set projection; W1 adapter transport/pagination/continuation; W2 adapter coverage/truncation; W3 Knowledge execution/publication/review gates; W4 immutable receipts/canonical current pointer; W5 leased attempts/retention protection/approval-gated GC; W6 end-to-end W0-W5 migration verification; separate from acceptance-coordinator-trust-recovery; historical 2026-08-17 plans unchanged; non-goals automatic Knowledge publication, Bootstrap startup/lifecycle publication, Phase runtime/user-sandbox changes; implementation only via declared Quick Dev TDD route; not authorization for completion, Knowledge publication, Bootstrap, or acceptance; prerequisites VDD plan-ready validation and explicit maintainer receipt"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+    "source_sha256": "sha256:720666b4315616cceaa0040eb3969144ca055729462c8d2010e34f8f91b4443d",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16048,
+    "start_line": 1,
+    "end_line": 292,
+    "content_sha256": "sha256:720666b4315616cceaa0040eb3969144ca055729462c8d2010e34f8f91b4443d"
+  },
+  "status": "accepted",
+  "summary": "Python builder for Quick Dev TDD invocation artifacts; validates plan under execution-plans and loads contract/registry/slice; supports generated RED for quick-dev owner with strict test selector, failure IDs, allowed-test checks, or legacy/prior RED with hashed predecessor validation; expands plan/repo/run placeholders and enforces root cwd, non-shell commands; loads isolated plan-local validator identity; computes execution fingerprint from slice semantics, commands, validator and test hash; builds run-context with authority/contract payloads, requirements, acceptance, boundaries, targets and stage results; writes run-context, RED, GREEN, refactor, preparation and terminal command JSON into a new output directory; errors on invalid schema, paths, hashes, commands, identities or missing test; CLI requires repository-root, plan-dir, slice-id, run-id, out-dir."
+}

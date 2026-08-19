@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Complete frozen coverage is present for all listed repository skills, adapters, ADRs, execution-plan artifacts, policies, and tests. Every source segment is accepted.",
+      "title": "Coverage"
+    },
+    {
+      "content": "The sources define strict lifecycle ownership, typed Skill-input handling, deterministic validation, hash-bound evidence, fail-closed behavior, bounded retries, immutable generations, and non-authorizing receipts.",
+      "title": "Repository Guidance"
+    },
+    {
+      "content": "The toolchain workflow repair plan covers typed selection, transport, coverage, knowledge gates, generation pointers, retention, and end-to-end validation. All listed summaries are bounded and redacted.",
+      "title": "Plan Findings"
+    }
+  ],
+  "source_manifest_hash": "sha256:a2156fa9e8bd69aff1cc49a28c2b18d1a7e14266a24ab423b822a1f06bd96693",
+  "truncated": false
+}

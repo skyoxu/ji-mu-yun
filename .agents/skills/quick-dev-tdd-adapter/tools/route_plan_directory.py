@@ -496,9 +496,20 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                     raise ValueError("receipt metadata mismatch")
                 bindings = (
                     "implementation_contract",
+                    "command_registry",
                     "authority_manifest",
+                    "knowledge_context",
                     "knowledge_context_freeze",
                     "skill_input_receipt",
+                    "skill_input_request",
+                    "plan_validation",
+                    "plan_ready_revalidation",
+                    "repair_closure",
+                    "bootstrap_preexisting_delta",
+                    "candidate_manifest",
+                    "validate_all",
+                    "terminal_validator",
+                    "immutable_predecessor",
                 )
                 root = plan_dir.resolve().parents[1]
                 for field in bindings:

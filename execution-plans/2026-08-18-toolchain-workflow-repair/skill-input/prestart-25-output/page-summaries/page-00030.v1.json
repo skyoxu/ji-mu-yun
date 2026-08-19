@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/finding-set.v1.json",
+    "source_sha256": "sha256:f96701ad3a2082fbd7081a2a17e773fc595342dd461747332e5883a3f2ee9507",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 3363,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:f96701ad3a2082fbd7081a2a17e773fc595342dd461747332e5883a3f2ee9507"
+  },
+  "status": "accepted",
+  "summary": "plan_id=toolchain-workflow-repair;schema=toolchain-workflow-repair.finding-set.v1;12 findings open: TWR-ENTRY-001 P0 missing tools/validate_all.py; TWR-ENTRY-002 P0 no real terminal pass/fail path; TWR-ENTRY-003 P0 migration bridge only W0; TWR-ENTRY-004 P0 plan receipt lacks full input-closure binding; TWR-ENTRY-005 P0 authorization predecessor overwriteable at canonical path; TWR-ENTRY-006 P0 Quick Dev gate lacks complete binding-closure verification; TWR-ENTRY-007 P0 shared Quick Dev bootstrap changes incompletely classified; TWR-ENTRY-008 P0 slice snapshots omit materialized RED tests; TWR-ENTRY-009 P1 interim receipt misrepresented as canonical v2 authority; TWR-ENTRY-010 P1 Knowledge selection lacks explicit required accepted modules; TWR-ENTRY-011 P1 validator lacks authorized-repair revalidation; TWR-ENTRY-012 P1 prestart tools lack temporary-repository dogfood test; no authorizations granted"
+}

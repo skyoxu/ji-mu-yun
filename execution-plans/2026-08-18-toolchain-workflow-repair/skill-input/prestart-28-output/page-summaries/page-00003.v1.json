@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Skill governs deterministic implementation-acceptance for exactly one explicit execution-plans/<target>; does not implement, approve, commit, release, deploy, or authorize handoff; require frozen baseline, complete manifests, typed run request, action DAG, command registry, contract or compact-vdd prerequisite, and hash-bound Skill-input receipt; prefer commit candidate, otherwise clean HEAD or explicit frozen dirty/proposed snapshot; never infer candidate^, scope, paths, commands, or actions; use canonical Locator knowledge context and preserve selection on byte-only refresh, blocking missing/changed/schema sources; derive run identity from input, contract, context, Skill-input bindings and resume append-only runs, never overwrite drifted predecessors; validate Skill-input via typed consumer and require-ready; execute deterministic inventory/policy/matrix/checklist/scan/coverage/evidence, then finalize deterministic receipts or route required semantic review; Bootstrap routes: deterministic_only, focused_repair_verification, full_implementation_conformance, manual_pause; explicit semantic/reentry confirmation and high-cost acknowledgement required; Bootstrap producer owns launch/lifecycle, deterministic CLI never launches models; require inspect-lineage for required routes, minimal-complete-closure across seven classes, exact changed-path custody; historical v1/v2 imports cannot grant reuse, only finalized v3 clean exact-binding imports; P2 is disposed with deterministic closure; P0/P1 repair requires Quick Dev handoff and audit-repair-completeness; max three semantic rounds, no Round 4, manual-pause closure uses ADR-0054 two-stage deterministic protocol and explicit maintainer acknowledgement; maintenanceMode=ai-native-single-maintainer shifts concurrency/external-injection severities; model routing is no-launch except policy-owned complex-recovery triggers; evidence and calibration are non-authorizing; pure Godot inputs unsupported; coverage denominator only added/modified executable PhaseA.Platform/**/*.cs lines; plan-local predicates decide acceptance."
+}

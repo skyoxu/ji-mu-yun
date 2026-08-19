@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "python",
+    "-m",
+    "pytest",
+    "-q",
+    "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/tests"
+  ],
+  "authorizes": [],
+  "command_id": "plan-tool-tests",
+  "exit_code": 0,
+  "schema_version": "toolchain-workflow-repair.command-receipt.v1",
+  "shell": false,
+  "status": "pass",
+  "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "sha256:73b686398a095b5cf726bad0e64092fc41392d895f21e9d85a07efaad9a060e5"
+}

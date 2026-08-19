@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+    "source_sha256": "sha256:d5ac46a671852073685cb2ee8fbc36629e68262128cd729d1240560a54032874",
+    "ordinal": 1,
+    "total": 2,
+    "start_byte": 0,
+    "end_byte": 32768,
+    "start_line": 1,
+    "end_line": 586,
+    "content_sha256": "sha256:cfdf0b070863631725ee0c3600d1ccd3052b973cd9e8cc2d8af9825b0b4bb5e7"
+  },
+  "status": "accepted",
+  "summary": "Tests specify quick-dev VDD red intent: generated pytest command, required selector/failure IDs, no legacy predecessor binding, repository-root test restriction; plan schema separates quick-dev and legacy red intents. Migration bridge materializes only current slice tests, emits implementation-needed red handoff, reuses matching handoff, rejects test-hash drift. Router enforces execution-plans location, caller identity, current evidence/contract hashes, explicit implementation authorization receipt and complete bindings, rejects stale/contradictory/abbreviated plan state and completed-plan slice execution; supports unaffected-slice reuse, targeted validation, global validation snapshots, ordinary S7 completion, candidate replay including missing roots and stale authority. Active route exposes implementation handoff. Persistent controller requires declared execution snapshot and dispatches refresh/terminal actions. Terminal validation requires explicit plan-owned contract. Builder expands run paths and base64-serializes context. Page continues in ordinal 2."
+}

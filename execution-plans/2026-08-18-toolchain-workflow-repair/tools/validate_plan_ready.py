@@ -54,9 +54,12 @@ def main() -> int:
     parser.add_argument("--repository-root", type=Path, required=True)
     parser.add_argument("--plan-dir", type=Path, required=True)
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--mode", choices=("initial-plan-ready", "authorized-repair-revalidate"), default="initial-plan-ready")
+    parser.add_argument("--skill-input-receipt", type=Path)
     args = parser.parse_args()
     root = args.repository_root.resolve()
     plan = args.plan_dir.resolve()
+    out_path = args.out.resolve() if args.out else None
     failures: list[str] = []
     if not plan.is_dir() or not plan.is_relative_to(root / "execution-plans"):
         failures.append("plan-directory-invalid")
@@ -72,7 +75,6 @@ def main() -> int:
             resume = read_json(plan / "resume-state.v1.json")
             architecture = read_json(plan / "architecture-acceptance-request.v1.json")
             delta = read_json(plan / "pre-existing-candidate-delta.v1.json")
-            plan_input = read_json(plan / "canonical-skill-input-plan-receipt.v2.json")
             context = read_json(plan / "knowledge-context.v1.json")
             freeze = read_json(plan / "knowledge-context.freeze.v1.json")
             if contract.get("plan_id") != PLAN_ID or contract.get("profile") != "self-hosted":
@@ -90,7 +92,12 @@ def main() -> int:
                 failures.append("command-registry-incomplete")
             if not authority.get("authority_sources") or not authority.get("candidate_inputs") or not authority.get("lifecycle_projections"):
                 failures.append("authority-manifest-partition-invalid")
-            if state.get("status") == "draft" and state.get("authorizes") != []:
+            if args.mode == "authorized-repair-revalidate":
+                repair_state = plan / "repair" / "round-1" / "repair-state.v1.json"
+                repair_value = read_json(repair_state) if repair_state.is_file() else {}
+                if state.get("status") != "implementation-authorized" or repair_value.get("status") != "validating" or repair_value.get("blocks_execution") is not True or repair_value.get("authorizes") != []:
+                    failures.append("authorized-repair-state-invalid")
+            elif state.get("status") == "draft" and state.get("authorizes") != []:
                 failures.append("draft-plan-state-authorizes")
             elif state.get("status") == "plan-ready":
                 publication = plan / "repair" / "plan-ready-publication-receipt.v1.json"
@@ -108,7 +115,7 @@ def main() -> int:
                         or validation_binding.get("sha256") != sha256(validation_path.read_bytes())
                     ):
                         failures.append("plan-ready-publication-receipt-invalid")
-            else:
+            elif state.get("status") != "draft" and args.mode != "authorized-repair-revalidate":
                 failures.append("plan-state-invalid")
             if resume.get("authorizes") != [] or set(resume.get("slice_status", {})) != SLICES:
                 failures.append("resume-state-invalid")
@@ -118,24 +125,25 @@ def main() -> int:
                 failures.append("pre-existing-delta-baseline-invalid")
             if not delta.get("paths") or delta.get("authorizes") != []:
                 failures.append("pre-existing-delta-invalid")
-            if plan_input.get("schema_version") != "skill-input-plan-receipt.v2" or plan_input.get("authorizes") != []:
-                failures.append("canonical-plan-input-invalid")
-            if not plan_input.get("source_selection_hash") or not plan_input.get("source_content_hash"):
-                failures.append("canonical-plan-input-hashes-missing")
+            skill_input = args.skill_input_receipt.resolve() if args.skill_input_receipt else None
+            if skill_input is None:
+                failures.append("canonical-skill-input-receipt-required")
+                skill_validation = None
             else:
-                expected_sources = []
-                for section, role in (("authority_sources", "authority_source"), ("candidate_inputs", "implementation_input")):
-                    for item in authority[section]:
-                        source_path = root / item["path"]
-                        expected_sources.append({"path": item["path"], "role": role, "sha256": sha256(source_path.read_bytes())})
-                expected_selection = [{"path": item["path"], "role": item["role"]} for item in expected_sources]
-                if (
-                    plan_input.get("source_selection") != expected_selection
-                    or plan_input.get("sources") != expected_sources
-                    or plan_input.get("source_selection_hash") != sha256(canonical(expected_selection))
-                    or plan_input.get("source_content_hash") != sha256(canonical(expected_sources))
-                ):
-                    failures.append("canonical-plan-input-binding-invalid")
+                try:
+                    skill_input.relative_to(plan / "skill-input")
+                except ValueError:
+                    failures.append("canonical-skill-input-receipt-outside-plan")
+                    skill_validation = None
+                else:
+                    skill_validation = subprocess.run(
+                        ["python", "scripts/python/validate_skill_input_consumption.py", str(skill_input),
+                         "--repository-root", str(root), "--contract",
+                         ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json", "--require-ready"],
+                        cwd=root, capture_output=True, text=True, check=False,
+                    )
+            if skill_validation is not None and skill_validation.returncode:
+                failures.append("canonical-skill-input-not-ready")
             expected_delta_paths = {
                 ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
                 ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
@@ -159,10 +167,20 @@ def main() -> int:
                         break
             if context.get("preflight", {}).get("status") != "ready" or freeze.get("authorizes") != []:
                 failures.append("knowledge-preflight-or-freeze-invalid")
+            accepted_modules = {
+                module
+                for decision in context.get("decisions", [])
+                if isinstance(decision, dict) and decision.get("decision") == "accepted"
+                for module in decision.get("satisfies", [])
+                if isinstance(module, str)
+            }
+            required_modules = {"skill-input-execution", "knowledge-execution-gates"}
+            if not required_modules.issubset(accepted_modules):
+                failures.append("knowledge-required-modules-unresolved")
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             failures.append(f"invalid-plan-artifact:{exc}")
     result = {
-        "schema_version": "toolchain-workflow-repair.plan-validation.v1",
+        "schema_version": "toolchain-workflow-repair.plan-validation.v2" if args.mode == "authorized-repair-revalidate" else "toolchain-workflow-repair.plan-validation.v1",
         "plan_id": PLAN_ID,
         "predicate": "plan-valid",
         "status": "pass" if not failures else "fail",
@@ -170,10 +188,26 @@ def main() -> int:
         "authorizes": [],
         "lifecycle_transition": "none",
     }
+    if out_path:
+        input_manifest = {
+            "schema_version": "toolchain-workflow-repair.validator-input-manifest.v1",
+            "plan_id": PLAN_ID,
+            "mode": args.mode,
+            "inputs": [
+                {"path": name, "sha256": sha256((plan / name).read_bytes())}
+                for name in ("implementation-contract.v1.json", "command-registry.v1.json", "authority-manifest.v1.json", "knowledge-context.v1.json", "knowledge-context.freeze.v1.json")
+                if (plan / name).is_file()
+            ],
+            "skill_input_receipt": str(args.skill_input_receipt.resolve().relative_to(root).as_posix()) if args.skill_input_receipt else None,
+            "authorizes": [],
+        }
+        manifest_path = out_path.parent / "validator-input-manifest.v1.json"
+        manifest_path.write_text(json.dumps(input_manifest, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
+        result["validator_input_manifest"] = {"path": manifest_path.relative_to(plan).as_posix(), "sha256": sha256(manifest_path.read_bytes())}
     encoded = json.dumps(result, sort_keys=True, indent=2) + "\n"
-    if args.out:
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(encoded, encoding="utf-8", newline="\n")
+    if out_path:
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(encoded, encoding="utf-8", newline="\n")
     print(encoded, end="")
     return 0 if not failures else 1
 

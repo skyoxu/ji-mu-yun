@@ -1,0 +1,17 @@
+{
+  "authorizes": [],
+  "failures": [
+    "slice:W0:current-pass-receipt-required",
+    "slice:W1:current-pass-receipt-required",
+    "slice:W2:current-pass-receipt-required",
+    "slice:W3:current-pass-receipt-required",
+    "slice:W4:current-pass-receipt-required",
+    "slice:W5:current-pass-receipt-required",
+    "slice:W6:current-pass-receipt-required"
+  ],
+  "lifecycle_transition": "none",
+  "plan_id": "toolchain-workflow-repair",
+  "predicate": "implementation-complete",
+  "schema_version": "toolchain-workflow-repair.terminal-result.v2",
+  "status": "fail"
+}

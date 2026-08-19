@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py",
+    "source_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 6863,
+    "start_line": 1,
+    "end_line": 143,
+    "content_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7"
+  },
+  "status": "accepted",
+  "summary": "Deterministic identity projections for Quick Dev router; PLAN_ID toolchain-workflow-repair; slices W0-W6; reject absolute, parent-traversal, symlink, excluded logs/ and state files; hash file bytes with sha256; canonical JSON uses UTF-8, sorted keys, compact separators; repository root and plan paths derived from file location; contract must match plan ID and contain slice list; unknown or missing slices invalid; flatten allowed/planned paths, ignore wildcard strings; tools/ paths resolve under plan tools directory; candidate manifest deduplicated and path-sorted; dependency identities include dependency candidate hashes; predicate includes selected slice, contract, registry, candidate; authority and validator path sets are fixed; outputs candidate, predicate, authority, validator, closure, and validator hashes plus version; snapshots expose per-slice or aggregate hashes across W0-W6."
+}

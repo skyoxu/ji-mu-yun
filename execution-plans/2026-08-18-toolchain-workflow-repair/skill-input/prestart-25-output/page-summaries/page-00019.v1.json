@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/architecture-acceptance-request.v1.json",
+    "source_sha256": "sha256:51e6a17fb6dcc1ddef62c934973539d53c80454b9d297c1a393dfca904ef7a8d",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 627,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:51e6a17fb6dcc1ddef62c934973539d53c80454b9d297c1a393dfca904ef7a8d"
+  },
+  "status": "accepted",
+  "summary": "Accepted by maintainer; request TWR-20260818-ADR-0060; schema jimuyun.architecture-acceptance-request.v1; target plan 2026-08-18-toolchain-workflow-repair; ADR-0060 transition Accepted; preserve v1 evidence as historical; do not auto-start Bootstrap; do not publish Knowledge authority; do not alter 2026-08-17 historical plans; no ambiguities"
+}

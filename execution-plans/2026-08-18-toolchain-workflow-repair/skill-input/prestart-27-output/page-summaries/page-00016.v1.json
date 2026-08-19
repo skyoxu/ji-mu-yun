@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/finding-set.v1.json",
+    "source_sha256": "sha256:78b930fc1da918f661935c2c7ba78f9c1c7076674d239a04eef16e62f2e04940",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 6167,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:78b930fc1da918f661935c2c7ba78f9c1c7076674d239a04eef16e62f2e04940"
+  },
+  "status": "accepted",
+  "summary": "Plan toolchain-workflow-repair; all findings open; TWR-ENTRY-001 P0: add missing tools/validate_all.py and plan-local candidate projection; TWR-ENTRY-002 P0: implement real pass/fail prestart validation; TWR-ENTRY-003 P0: migration bridge must support beyond W0; TWR-ENTRY-004 P0: bind receipts to complete input closure; TWR-ENTRY-005 P0: prevent canonical authorization predecessor overwrite; TWR-ENTRY-006 P0: verify complete Quick Dev binding closure; TWR-ENTRY-007 P0: classify shared bootstrap changes; TWR-ENTRY-008 P0: snapshot every materialized RED test; TWR-ENTRY-009 P1: distinguish interim receipt from canonical v2 authority; TWR-ENTRY-010 P1: declare required accepted knowledge modules; TWR-ENTRY-011 P1: revalidate authorized repairs; TWR-ENTRY-012 P1: add temporary-repository dogfood coverage for prestart tools; primary repair paths validate_plan_ready.py, validate_all.py, migration_bridge.py; targeted validation K2/K9 and repair round-1 tests"
+}

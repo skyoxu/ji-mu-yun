@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "python",
+    "-m",
+    "pytest",
+    "-q",
+    "scripts/python/tests/test_skill_input_consumption.py"
+  ],
+  "authorizes": [],
+  "command_id": "skill-input-suite",
+  "exit_code": 0,
+  "schema_version": "toolchain-workflow-repair.command-receipt.v1",
+  "shell": false,
+  "status": "pass",
+  "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "sha256:a776f31b4c596138493967076c7240f710f82dcff96c9de16af14e7aca71d1f6"
+}

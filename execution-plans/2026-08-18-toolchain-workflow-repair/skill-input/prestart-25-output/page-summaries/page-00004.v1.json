@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+    "source_sha256": "sha256:c1a35ecf07e1eb11c56e7dd14a7709673d01de1f7e54f5423615f759e27fcfdb",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 27131,
+    "start_line": 1,
+    "end_line": 517,
+    "content_sha256": "sha256:c1a35ecf07e1eb11c56e7dd14a7709673d01de1f7e54f5423615f759e27fcfdb"
+  },
+  "status": "accepted",
+  "summary": "loop_plan_directory.py: CLI orchestrator for plan-directory TDD lifecycle; inputs repository root, plan dir, repeatable snapshots, max-actions>=1; routes via route_plan_directory.route and appends no authorizations; actions: validate-terminal runs declared constrained terminal runner; refresh-knowledge-context requires refreshed status; validate-slice requires snapshots and closes lifecycle then validates slice-ready; run-slice drives staged RED/GREEN/REFACTOR. Terminal contract requires exact fields, implementation-complete predicate, nonempty relative contained runner file. Commands are shell-free structured descriptors with positive timeouts; RED must fail or raises. Lifecycle timeout is sum of command timeouts plus 60s. Snapshot resolution limited to existing root-relative or plan-relative files. Stage state reconstructed from append-only observations; active stages route red/implement/slice-terminal, with implement blocked pending RED-bound successor. Strict current RED handoff validator used; legacy reader retained only for historical evidence. Prior RED may resume GREEN, binding handoff in invocation context; legacy/no execution fingerprint causes successor RED restart. Adapter bridge can materialize before RED if no handoff. Slice terminal resumes red/green/refactor observations, handles immutable conflict by append-only -SUCCESSOR lineage, then requires terminal command JSON status=pass predicate=slice-ready and writes fingerprinted result. Helper subprocesses use Python, no shell; general helper timeout 900s; terminal timeout 7200s."
+}

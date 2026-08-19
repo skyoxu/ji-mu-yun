@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "All 53 manifest source paths have complete page coverage and accepted bounded summaries. No source or page coverage is missing.",
+      "title": "Coverage"
+    },
+    {
+      "content": "The quick-dev adapter enforces typed inputs, frozen hashes, shell-free TDD lifecycle stages, bounded transport and coverage, immutable evidence, strict routing, and non-authorizing completion behavior.",
+      "title": "Quick Dev"
+    },
+    {
+      "content": "The remaining sources define VDD lifecycle controls, acceptance boundaries, knowledge selection and publication gates, repair evidence, workflow requirements, validation tools, retention rules, and focused tests. Summaries are redacted and non-authorizing.",
+      "title": "Plan And Governance"
+    }
+  ],
+  "source_manifest_hash": "sha256:30cc28af609372a4967fb72889c6061cc1f6e8fc88e6b24aa2a149e5a90df182",
+  "truncated": false
+}

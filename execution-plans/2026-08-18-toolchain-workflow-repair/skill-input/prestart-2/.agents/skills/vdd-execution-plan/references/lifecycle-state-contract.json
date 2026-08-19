@@ -1,0 +1,14 @@
+{
+  "schema_version": "vdd.lifecycle.v2",
+  "states": ["draft", "plan-ready", "implementation-authorized", "implementation-complete", "acceptance-passed", "archived"],
+  "transitions": [
+    {"from": "draft", "to": "plan-ready", "owner": "vdd-execution-plan"},
+    {"from": "plan-ready", "to": "implementation-authorized", "owner": "maintainer"},
+    {"from": "implementation-authorized", "to": "implementation-complete", "owner": "quick-dev-tdd-adapter"},
+    {"from": "implementation-complete", "to": "acceptance-passed", "owner": "run-refactor-implementation-acceptance"},
+    {"from": "acceptance-passed", "to": "archived", "owner": "archive-skill"}
+  ],
+  "compatibility_adapter": {"accepts_legacy_input": true, "emits_legacy_output": false},
+  "bootstrap_review": {"required_by_default": false, "publishes_lifecycle_state": false},
+  "implementation_authorization=<redacted>, "does_not_authorize": ["acceptance-passed", "archived", "release"]}
+}

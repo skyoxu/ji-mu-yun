@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "All 31 manifest sources have complete single-segment page coverage and accepted summaries. No source or page coverage is missing.",
+      "title": "Coverage"
+    },
+    {
+      "content": "The sources define fail-closed knowledge selection, typed Skill-input handling, lifecycle ownership, deterministic validation, immutable evidence, repair controls, and non-authorizing acceptance boundaries.",
+      "title": "Governance"
+    },
+    {
+      "content": "The toolchain-workflow-repair plan covers slices W0 through W6 for selection, transport, coverage, knowledge gates, generation pointers, retention, and end-to-end validation. Summaries are bounded and redacted.",
+      "title": "Plan"
+    }
+  ],
+  "source_manifest_hash": "sha256:e09f77a35582b8fbbac8fc2322242b44e1760d9e1b7296060249dd5af96cd666",
+  "truncated": false
+}

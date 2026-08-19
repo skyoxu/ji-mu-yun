@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_plan_ready.py",
+    "source_sha256": "sha256:14a8d15c30443b174a80e884079ce7bdb6052aac7e8e7093ac689008137d555a",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 3113,
+    "start_line": 1,
+    "end_line": 65,
+    "content_sha256": "sha256:14a8d15c30443b174a80e884079ce7bdb6052aac7e8e7093ac689008137d555a"
+  },
+  "status": "accepted",
+  "summary": "publish_plan_ready.py CLI requires repository root, plan dir, output; loads validation/state/resume artifacts and appends report; rejects unless validation predicate=plan-valid, status=pass, authorizes=[]; permits only draft or plan-ready lifecycle; draft transitions state to plan-ready with authorizes=[plan-ready], owner=vdd; updates resume status=plan-ready and next_action=awaiting-maintainer-implementation-authorization; report records explicitly non-authorizing publication; emits schema toolchain-workflow-repair.plan-ready-publication.v1 receipt with hashes of validation/state/resume; receipt authorizes only plan-ready; expressly excludes implementation-authorized, implementation-complete, acceptance-passed, knowledge-publication, bootstrap-review; creates output parent and prints pass JSON."
+}

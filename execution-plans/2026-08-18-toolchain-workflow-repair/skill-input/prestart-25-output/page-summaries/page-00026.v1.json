@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/plan-validation-receipt.v1.json",
+    "source_sha256": "sha256:c27a0e0d9db35db29b9bdfc3cae30bfd1394ebb1b29a5e0e29d4fea2dec21f2d",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 205,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:c27a0e0d9db35db29b9bdfc3cae30bfd1394ebb1b29a5e0e29d4fea2dec21f2d"
+  },
+  "status": "accepted",
+  "summary": "plan_id toolchain-workflow-repair; predicate plan-valid; validation status pass; schema toolchain-workflow-repair.plan-validation.v1; authorizes none; failures none; lifecycle transition none"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_knowledge_gate_matrix.py",
+    "source_sha256": "sha256:9662fcd76e6e8157e5f1d2dc9ae7efb271f17749c8794de243f2ffe52857ccc7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 330,
+    "start_line": 1,
+    "end_line": 7,
+    "content_sha256": "sha256:9662fcd76e6e8157e5f1d2dc9ae7efb271f17749c8794de243f2ffe52857ccc7"
+  },
+  "status": "accepted",
+  "summary": "scripts/python/tests/test_knowledge_gate_matrix.py; test_knowledge_gates_keep_stale_catalog_degraded; calls gates.project_knowledge_gates(catalog_stale=True, read_set_same=True, source_bytes_same=True); requires route=degraded-continuation; requires publication_allowed=false"
+}

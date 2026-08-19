@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py",
+    "source_sha256": "sha256:9102b02589759457cf4f6a776b413672492ccbb25a83e3ba81bbb5962f6fac33",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1845,
+    "start_line": 1,
+    "end_line": 51,
+    "content_sha256": "sha256:9102b02589759457cf4f6a776b413672492ccbb25a83e3ba81bbb5962f6fac33"
+  },
+  "status": "accepted",
+  "summary": "validate_all.py; PLAN_ID=toolchain-workflow-repair; slices W0-W6; deterministic candidate identity per slice; SHA-256 values prefixed sha256:; canonical JSON sorted compact plus LF; validates slice membership; resolves plan parent; required inputs implementation-contract.v1.json, command-registry.v1.json, authority-manifest.v1.json; rejects missing or symlink inputs; loads contract JSON and selects matching slices[].slice_id; rejects absent slice; projection includes slice ID, three file hashes, selected slice object, validator file hash; candidate hash derives from canonical projection; returns candidate_hash, validator_hash, contract_hash, command_registry_hash, authority_manifest_hash"
+}

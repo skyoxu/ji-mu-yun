@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Repository guidance requires strict separation of lifecycle, knowledge, acceptance, implementation, and publication responsibilities. Sources are hash-verified, frozen before execution, and fail closed on missing, stale, ambiguous, or drifting inputs.",
+      "title": "Governance"
+    },
+    {
+      "content": "The toolchain workflow repair plan defines W0 through W6 for typed source selection, transport, coverage, knowledge gates, immutable generations, retention, and end-to-end validation. Quick Dev owns implementation completion, while Acceptance owns acceptance completion; authorizations remain empty.",
+      "title": "Workflow"
+    },
+    {
+      "content": "All listed sources have complete single-page coverage and accepted bounded summaries. Validation requires deterministic manifests, receipts, lifecycle bindings, protected paths, explicit approvals for retention changes, and preservation of immutable pointers and historical evidence.",
+      "title": "Evidence"
+    }
+  ],
+  "source_manifest_hash": "sha256:191832f1b4a4bdba440c88ea8946f81a783e77bbef12b21c74cf443ef37b7fe8",
+  "truncated": false
+}

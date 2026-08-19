@@ -1,0 +1,12 @@
+{
+  "authorizes": [],
+  "failures": [
+    "skill-input-not-ready"
+  ],
+  "lifecycle_transition": "none",
+  "next_action": "repair",
+  "predicate": "quick-dev-entry-ready",
+  "schema_version": "toolchain-workflow-repair.quick-dev-entry-validation.v1",
+  "slice_id": null,
+  "status": "fail"
+}

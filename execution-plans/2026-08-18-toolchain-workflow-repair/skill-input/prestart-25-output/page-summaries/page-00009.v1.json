@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "VDD execution-plan skill; route standalone requirements to direct implementation, explicit complete-directory create/repair only; select standard/resumable/self-hosted before model routing; mandatory authority, clarification, lifecycle, knowledge, and skill-input gates; lifecycle draft→plan-ready→implementation-authorized→implementation-complete→acceptance-passed→archived; slices require behavior, failure intent, acceptance target, dependents, recovery; VDD does not own RED execution; repair is in-place under repair/round-n, immutable history, bounded lineage budget; current hash-bound scope/manifests and composition receipts required; knowledge preflight and typed semantic child required before plan artifacts; terminal full validation required before implementation-complete; reports/index required for resumable/self-hosted; Bootstrap optional and non-authorizing; P2-only findings do not trigger semantic repair round; no multi-writer/adversarial controls by default; generic package must exclude live paths, hashes, identities, machine paths"
+}

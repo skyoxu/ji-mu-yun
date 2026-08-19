@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "quick-dev-tdd-adapter applies only to an explicit execution-plans directory with schema-valid implementation-contract.v1.json; parent routing with caller quick-dev-tdd-adapter must succeed as strict_tdd_plan/backend quick-dev-tdd-adapter; read only target plan directory and resolve at most one 95-* report; reports and run-state are non-authoritative; audit and repair before identity freeze; run loop_plan_directory before expensive actions; run slices through lifecycle tooling with generated context and evidence; require typed skill-input receipt/consumer validation before action, prepare, or RED; classify via closed facts into architectural/complex/normal/small_mechanical, with unknowns blocked as complex and no downgrade override; verify frozen knowledge hashes before RED; execute shell-free structured RED, GREEN, REFACTOR and plan-local predicate; route successive slices automatically until implementation-complete, external-repair-required, or repeated failure; acceptance remains external and adapter cannot launch Bootstrap or authorize commit/release; P0/P1 repair terminal requires repair-review handoff and Acceptance audit with complete manifests and composition inputs; persistent loop consumes explicit snapshot paths and planned_new_files only; version-sensitive dependency changes require exact-version documentation review before commit, otherwise gate not applicable; reject authority, command, validator, contract, write-set, read-set, dependency, baseline, or predecessor drift and preserve failed evidence via stale-linked successors"
+}

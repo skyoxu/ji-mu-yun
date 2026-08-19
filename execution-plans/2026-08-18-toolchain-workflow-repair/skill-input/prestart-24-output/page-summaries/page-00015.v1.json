@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "source_sha256": "sha256:5745d62e6c0dfca067ea9d45c25f9360789bed47faae5d03ba0a91ac0a25009b",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 11532,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:5745d62e6c0dfca067ea9d45c25f9360789bed47faae5d03ba0a91ac0a25009b"
+  },
+  "status": "accepted",
+  "summary": "Plan toolchain-workflow-repair; profile self-hosted; schema implementation-contract.v1; owner quick-dev-tdd-adapter; authority manifest and command registry required; seven slices W0-W6 with dependencies W0->W1->W2, W0->W3, W0-W2->W4, W4->W5, all->W6; scope limited to listed scripts, skills, fixtures, tests; forbidden PhaseA.Platform, runtime/phase-a, logs, selected execution-plans and Knowledge catalogs/indexes; W0 typed canonical selection with hash fail-closed; W1 automatic transport with continuation drift rejection; W2 adapter-observed coverage only; W3 three-gate Knowledge projection routes drift/self-change to review; W4 immutable generations and non-advancing failed staging; W5 dry-run GC and explicit maintainer approval for committed evidence; W6 end-to-end proof without lifecycle or Knowledge publishing authority; terminal-full implementation-complete; protocol paths attempts, context, terminal-results; adapter bridge tools/migration_bridge.py; backend hidden state false"
+}

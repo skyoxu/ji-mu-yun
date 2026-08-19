@@ -202,8 +202,8 @@ def declared_missing_plan_files(repository_root: Path, target: Path) -> frozense
             resolved, relative = contained_path(repository_root, raw_path, must_exist=False)
             if resolved.exists():
                 continue
-            if not relative.endswith(".py") or "/tests/" not in relative:
-                raise SkillInputError("only planned test files may be absent from Skill input")
+            # Future planned files are intentionally absent before their
+            # slice starts; they are not current Skill-input sources.
             allowed.add(relative)
     return frozenset(allowed)
 
@@ -342,13 +342,15 @@ def validate_contract(contract: dict[str, Any], repository_root: Path) -> None:
     for role_name, role in source_roles.items():
         if not isinstance(role_name, str) or not role_name or not isinstance(role, dict):
             raise SkillInputError("contract source role is invalid")
-        allowed_role_fields = {"selector", "required", "root", "allowed_kinds", "reference_kinds", "opaque_reference_paths"}
+        allowed_role_fields = {"selector", "required", "root", "allowed_kinds", "reference_kinds", "opaque_reference_paths", "payload"}
         if not set(role).issubset(allowed_role_fields) or not {"selector", "required", "root", "allowed_kinds", "reference_kinds"}.issubset(role):
             raise SkillInputError(f"contract source role fields are invalid: {role_name}")
         if not isinstance(role["selector"], str) or not SELECTOR_PATTERN.fullmatch(role["selector"]):
             raise SkillInputError(f"contract source role selector is invalid: {role_name}")
         if type(role["required"]) is not bool or not isinstance(role["root"], str) or not role["root"]:
             raise SkillInputError(f"contract source role metadata is invalid: {role_name}")
+        if "payload" in role and type(role["payload"]) is not bool:
+            raise SkillInputError(f"contract source role payload is invalid: {role_name}")
         for field, allowed in (("allowed_kinds", {"file", "directory"}), ("reference_kinds", {"markdown-link", "json-path-field"})):
             values = role[field]
             if not isinstance(values, list) or any(not isinstance(item, str) for item in values) or len(set(values)) != len(values) or not values or any(item not in allowed for item in values):
@@ -384,6 +386,10 @@ _JSON_REFERENCE_SUFFIXES = {
 
 
 def _is_json_reference_field(key: str) -> bool:
+    # Diagnostic inventories bind names for audit, not semantic dependencies.
+    # Treating them as source edges recursively imports every historical path.
+    if key.casefold() == "affected_paths":
+        return False
     if key.casefold() == "$ref":
         return True
     separated = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", key)
@@ -571,6 +577,12 @@ def _reference_values(path: Path, reference_kinds: set[str]) -> list[str]:
         def visit(value: Any) -> None:
             if isinstance(value, dict):
                 for key, child in value.items():
+                    # Hash-bound artifact references are custody metadata, not
+                    # semantic source dependencies. Following their path field
+                    # recursively makes closure/receipt graphs self-referential.
+                    if key == "path" and isinstance(value.get("sha256"), str):
+                        visit(child)
+                        continue
                     if isinstance(key, str) and _is_json_reference_field(key):
                         if isinstance(child, str):
                             values.append(child)
@@ -662,6 +674,8 @@ def generated_artifact_exclusions(repository_root: Path, target: Path) -> frozen
         "repair-closure.json",
     }
     directory_names = {
+        "__pycache__",
+        "skill-input",
         "terminal-results",
         "attempts",
         "pages",
@@ -676,6 +690,7 @@ def generated_artifact_exclusions(repository_root: Path, target: Path) -> frozen
         "95-*.md",
         "*terminal-result*.json",
         "*implementation-complete*.json",
+        "implementation-authorization-receipt*.json",
         "*acceptance-result*.json",
         "changed-set*.json",
         "root-cause*.json",
@@ -684,6 +699,7 @@ def generated_artifact_exclusions(repository_root: Path, target: Path) -> frozen
         "*retry*.json",
         "*page*.json",
         "*sidecar*.json",
+        "*.pyc",
     )
     excluded: set[str] = set()
     for item in target.rglob("*"):
@@ -712,7 +728,7 @@ def expand_source_graph(
     if any(role not in role_values for role in required_roles):
         missing = sorted(set(required_roles) - set(role_values))
         raise SkillInputError(f"required source role is missing: {missing}")
-    queue: list[tuple[Path, int, frozenset[str], set[str], Path, str | None, frozenset[str]]] = []
+    queue: list[tuple[Path, int, frozenset[str], set[str], Path, str | None, frozenset[str], bool]] = []
     for role_name, raw_paths in role_values.items():
         role = contract["source_roles"].get(role_name)
         if not isinstance(role, dict) or not isinstance(raw_paths, list) or not raw_paths:
@@ -735,12 +751,12 @@ def expand_source_graph(
                 except ValueError as exc:
                     raise SkillInputError("opaque reference path escapes its source root") from exc
                 opaque_paths.add(opaque_relative)
-            queue.append((root_path, 0, frozenset(), set(role["reference_kinds"]), reference_root, None, frozenset(opaque_paths)))
+            queue.append((root_path, 0, frozenset(), set(role["reference_kinds"]), reference_root, None, frozenset(opaque_paths), role.get("payload", True)))
     expanded: list[tuple[Path, str]] = []
     seen: set[str] = set()
     while queue:
-        candidate_root, depth, ancestors, reference_kinds, reference_root, referrer, opaque_paths = queue.pop(0)
-        candidates = [candidate_root] if candidate_root.is_file() else sorted(item for item in candidate_root.rglob("*") if item.is_file())
+        candidate_root, depth, ancestors, reference_kinds, reference_root, referrer, opaque_paths, payload = queue.pop(0)
+        candidates = ([candidate_root] if candidate_root.is_file() else sorted(item for item in candidate_root.rglob("*") if item.is_file())) if payload else []
         for candidate in candidates:
             if is_reparse_point(candidate):
                 raise SkillInputError(f"symlink source is not allowed: {candidate}")
@@ -775,6 +791,9 @@ def expand_source_graph(
                     raise SkillInputError("reference depth exceeds contract max_reference_depth")
                 continue
             for raw_reference in _reference_values(candidate, reference_kinds):
+                raw_parts = Path(raw_reference.replace("\\", "/")).parts
+                if "__pycache__" in raw_parts or raw_reference.replace("\\", "/").endswith(".pyc"):
+                    continue
                 resolved, _ = _resolve_reference(
                     repository_root,
                     candidate,
@@ -786,9 +805,20 @@ def expand_source_graph(
                     continue
                 next_ancestors = frozenset(set(ancestors) | {relative})
                 resolved_path = resolved.resolve()
+                try:
+                    resolved_relative = resolved_path.relative_to(repository_root.resolve()).as_posix()
+                except ValueError as exc:
+                    raise SkillInputError("reference escapes repository") from exc
+                if resolved_relative in excluded_paths or any(
+                    resolved_relative.startswith(prefix + "/") for prefix in excluded_paths
+                ):
+                    # Generated evidence and interpreter caches are excluded from
+                    # the source graph even when an older manifest still names
+                    # them explicitly.
+                    continue
                 inside_reference_root = resolved_path == reference_root or reference_root in resolved_path.parents
                 next_reference_kinds = set(reference_kinds) if inside_reference_root else set()
-                queue.append((resolved_path, depth + 1, next_ancestors, next_reference_kinds, reference_root, relative, opaque_paths))
+                queue.append((resolved_path, depth + 1, next_ancestors, next_reference_kinds, reference_root, relative, opaque_paths, True))
     if not expanded:
         raise SkillInputError("no source files were discovered")
     return sorted(expanded, key=lambda item: item[1])
@@ -800,6 +830,47 @@ def redact_bytes(raw: bytes) -> tuple[bytes, str, str]:
     except UnicodeDecodeError as exc:
         raise SkillInputError(f"source is not UTF-8: byte {exc.start}") from exc
     sensitivity = "credential-bearing" if _credential_like_text(text) else "normal"
+    # Preserve JSON structure when a sensitive key contains an object. The
+    # legacy text regex can otherwise replace the value together with braces,
+    # producing an invalid model snapshot.
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        parsed = None
+    if isinstance(parsed, (dict, list)):
+        def redact_json(value: Any) -> Any:
+            if isinstance(value, dict):
+                result: dict[str, Any] = {}
+                for key, child in value.items():
+                    if (
+                        isinstance(key, str)
+                        and "/" not in key
+                        and "\\" not in key
+                        and re.search(r"(?i)(token|secret|password|api[_-]?key|authorization)", key)
+                    ):
+                        result[key] = "<redacted>"
+                    elif isinstance(key, str) and key.casefold() in {"affected_paths", "changed_paths"} and isinstance(child, list):
+                        result[key] = {
+                            "omitted_count": len(child),
+                            "canonical_sha256": sha256_bytes(canonical_bytes(child)),
+                        }
+                    else:
+                        result[key] = redact_json(child)
+                return result
+            if isinstance(value, list):
+                return [redact_json(child) for child in value]
+            if isinstance(value, str):
+                masked = BEARER_PATTERN.sub("Bearer <redacted>", value)
+                masked = API_KEY_PATTERN.sub("<redacted-api-key>", masked)
+                masked = PRIVATE_KEY_PATTERN.sub("<redacted-private-key>", masked)
+                return COMMON_TOKEN_PATTERN.sub("<redacted-token>", masked)
+            return value
+
+        return (
+            (json.dumps(redact_json(parsed), ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"),
+            sensitivity,
+            "complete" if sensitivity == "credential-bearing" else "not-required",
+        )
     # Redact complete bearer/API credentials before generic key/value masking.
     redacted = BEARER_PATTERN.sub("Bearer <redacted>", text)
     redacted = API_KEY_PATTERN.sub("<redacted-api-key>", redacted)

@@ -29,6 +29,7 @@ def main() -> int:
     parser.add_argument("--plan-dir", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--refresh-authorized-successor", action="store_true")
+    parser.add_argument("--skill-input-receipt", type=Path, required=True)
     args = parser.parse_args()
     root = args.repository_root.resolve()
     plan = args.plan_dir.resolve()
@@ -57,10 +58,26 @@ def main() -> int:
         "implementation_contract": "implementation-contract.v1.json",
         "command_registry": "command-registry.v1.json",
         "authority_manifest": "authority-manifest.v1.json",
+        "knowledge_context": "knowledge-context.v1.json",
         "knowledge_context_freeze": "knowledge-context.freeze.v1.json",
-        "skill_input_receipt": "canonical-skill-input-plan-receipt.v2.json",
-        "plan_validation": "repair/plan-validation-receipt.v1.json",
+        "plan_validation": "repair/round-1/plan-validation-receipt.v2.json",
+        "plan_ready_revalidation": "repair/round-1/plan-ready-revalidation-receipt.v1.json",
+        "repair_closure": "repair/round-1/repair-closure.v1.json",
+        "bootstrap_preexisting_delta": "repair/round-1/bootstrap-preexisting-delta.v1.json",
+        "candidate_manifest": "repair/round-1/repair-candidate-manifest.v1.json",
+        "validate_all": "tools/validate_all.py",
+        "terminal_validator": "tools/terminal_full.py",
+        "immutable_predecessor": "repair/round-1/authorization-predecessor.2050ec68.v1.json",
     }
+    skill_input = args.skill_input_receipt.resolve()
+    try:
+        skill_input_relative = skill_input.relative_to(plan).as_posix()
+    except ValueError as exc:
+        raise ValueError("skill input receipt must be inside this plan") from exc
+    bindings["skill_input_receipt"] = skill_input_relative
+    request = skill_input.with_name(skill_input.name.replace("-receipt.json", "-request.json"))
+    if request.is_file():
+        bindings["skill_input_request"] = request.relative_to(plan).as_posix()
     receipt_bindings = {
         name: {"path": f"{relative}/{path}", "sha256": sha256(plan / path)}
         for name, path in bindings.items()

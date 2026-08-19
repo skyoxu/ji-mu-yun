@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Skill governs deterministic implementation-acceptance evidence for exactly one explicit execution-plans/<target> plan; require frozen baseline, candidate custody/manifests, implementation contract or compact-VDD prerequisite, typed run request, action DAG, command registry, knowledge context, and Skill-input receipt; never guess scope/revisions/paths/commands/actions; use canonical Locator and hash-bound artifacts; prepare-run then start-or-resume with derived binding run ID; deterministic_only finalizes via replayed controlled receipts and acceptance-passed without Bootstrap; semantic routes require immutable decision, inspect-lineage, bounded prepare-bootstrap, explicit high-cost/user confirmation before review; stale inputs rebuild successor artifacts/runs, historical runs remain read-only; knowledge catalog staleness is degraded/non-authorizing, other failures route repair-required; Quick Dev receipt is required and may be regenerated only for candidate/terminal drift; P0/P1 repair requires completeness audit, focused/full routes, lineage round limits, no Round 4; three rounds yield manual_pause and only ADR-0054 closure lane can finalize; maintenanceMode=ai-native-single-maintainer shifts findings; exact Bootstrap reuse requires finalized v3 clean envelope, current bindings, immediate predecessor lineage; model launches only policy-owned complex recovery triggers; evidence-only default is non-authorizing; no implementation, commit, release, deploy, or archive authorization."
+}

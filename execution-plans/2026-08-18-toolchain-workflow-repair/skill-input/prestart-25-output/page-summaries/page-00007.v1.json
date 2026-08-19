@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+    "source_sha256": "sha256:d5ac46a671852073685cb2ee8fbc36629e68262128cd729d1240560a54032874",
+    "ordinal": 2,
+    "total": 2,
+    "start_byte": 32768,
+    "end_byte": 39238,
+    "start_line": 586,
+    "end_line": 702,
+    "content_sha256": "sha256:43af6545eb805a626ceddb78d71b5229d309f3218d00d082c1de76f502b6dfa0"
+  },
+  "status": "accepted",
+  "summary": "Tests require slice placeholder expansion to declared ID; lifecycle command descriptors must be shell-free; existing run directories are rejected before context consumption; legacy regression requires a hash-bound failed prior RED and rejects passing/unbound predecessors; legacy regression must pass current GREEN while normal RED requires failure; successor binding requires matching failed RED command and rejects wrong/passing predecessor; lifecycle outer timeout sums registered preparation/refactor/red/green/terminal command timeouts (expected 270s)."
+}

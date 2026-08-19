@@ -1,0 +1,29 @@
+{
+  "authorizes": [],
+  "inputs": [
+    {
+      "path": "implementation-contract.v1.json",
+      "sha256": "sha256:708a304bf7bd524f3d3a0987810c88509985503bc7840970f742e5bbcd501ecb"
+    },
+    {
+      "path": "command-registry.v1.json",
+      "sha256": "sha256:d17ff02fc892846b28da43f4a750a7f3f0d95256ad13d796c1d43fb8b141f517"
+    },
+    {
+      "path": "authority-manifest.v1.json",
+      "sha256": "sha256:9855bd33f295905247dbb87d15ad4dadd37d95f46f59f82abaf262eea93fada0"
+    },
+    {
+      "path": "knowledge-context.v1.json",
+      "sha256": "sha256:4dd2869fe47302768aa7b6f6438c3024aceff0e081429213eec3c8414863b2e3"
+    },
+    {
+      "path": "knowledge-context.freeze.v1.json",
+      "sha256": "sha256:faa1db86b1f53f1729fae912e4b8a289794cd9dbe0184f091ac5800c1272c2d8"
+    }
+  ],
+  "mode": "authorized-repair-revalidate",
+  "plan_id": "toolchain-workflow-repair",
+  "schema_version": "toolchain-workflow-repair.validator-input-manifest.v1",
+  "skill_input_receipt": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-29-receipt.json"
+}

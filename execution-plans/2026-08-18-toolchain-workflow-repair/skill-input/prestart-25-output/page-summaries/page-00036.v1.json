@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/repair-state.v1.json",
+    "source_sha256": "sha256:ef5fd8a4699aad23041822346edc469430cbabca00a9ab99bda638cd0474c063",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 173,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:ef5fd8a4699aad23041822346edc469430cbabca00a9ab99bda638cd0474c063"
+  },
+  "status": "accepted",
+  "summary": "plan_id toolchain-workflow-repair; round 1; schema toolchain-workflow-repair.repair-state.v1; status validating; execution blocked; no authorizations"
+}

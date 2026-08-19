@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py",
+    "source_sha256": "sha256:9303a60cfbd6759dff47a15cf8af00adc92101bb276521d129a3082cae874aaa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5832,
+    "start_line": 1,
+    "end_line": 124,
+    "content_sha256": "sha256:9303a60cfbd6759dff47a15cf8af00adc92101bb276521d129a3082cae874aaa"
+  },
+  "status": "accepted",
+  "summary": "ID toolchain-workflow-repair; file publish_implementation_authorization.py; CLI requires repository-root, plan-dir, out, skill-input-receipt; optional refresh-authorized-successor; canonical output implementation-authorization-receipt.successor.v1.json; validates contract plan_id and output path; accepts plan-ready state or controlled implementation-authorized refresh with explicit flag and predecessor receipt; refresh requires predecessor hash binding; requires skill receipt within plan and optionally binds matching request; hashes named contract, registry, authority, knowledge, validation, repair, validator, and immutable predecessor artifacts; computes canonical candidate_binding_hash; mutates plan-state and resume-state to implementation-authorized/run-slice; emits authorization receipt owner maintainer and explicit-maintainer-authorization decision; authorizes implementation-authorized only; explicitly excludes implementation-complete, acceptance-passed, knowledge-publication, bootstrap-review, release; appends report section; ambiguity/blocker: source has malformed unterminated receipt field `predecessor_authorization=<redacted>,`, making module syntactically invalid and omitting intended predecessor value."
+}

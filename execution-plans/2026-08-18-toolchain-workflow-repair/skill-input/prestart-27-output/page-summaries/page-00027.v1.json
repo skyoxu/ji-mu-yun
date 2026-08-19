@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_skill_input_generation_pointer.py",
+    "source_sha256": "sha256:6fa26f1f9c03005129d7f10718be9d30e9b4345e389e94865db805e75b6bf488",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 392,
+    "start_line": 1,
+    "end_line": 9,
+    "content_sha256": "sha256:6fa26f1f9c03005129d7f10718be9d30e9b4345e389e94865db805e75b6bf488"
+  },
+  "status": "accepted",
+  "summary": "test_skill_input_generation_pointer; verifies failed/incomplete generation publication leaves current pointer unchanged; setup tmp_path; resolves current before/after publishing generation_id=g1 content bytes x; required invariant before==after; ambiguity: publish_generation failure semantics inferred from absence of pointer advance"
+}

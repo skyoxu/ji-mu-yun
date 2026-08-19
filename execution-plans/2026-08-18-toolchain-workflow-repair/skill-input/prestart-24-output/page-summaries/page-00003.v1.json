@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Scope: deterministic acceptance for exactly one repository-relative execution-plans/<target>; require frozen baseline, candidate custody, manifests, contract, DAG, registry, typed run request, knowledge context, and Skill-input receipt; prefer commit candidate, infer HEAD only on clean worktree; never infer baseline as candidate^; compact VDD projection requires Quick Dev implementation-complete receipt and explicit sorted scope; candidate assembly and artifacts are hash-bound, append-only, no dirty-worktree enumeration; create Locator-owned context for one target, refresh hashes only without widening selection, route blocking knowledge failures to repair; use typed Skill-input workflow and require ready validation; derive acceptance run ID from bindings, preserve stale/legacy runs, never overwrite; default deterministic_only finalizes via receipt replay without Bootstrap; semantic routes require repository-owned inspect-lineage, typed Bootstrap decision/route, explicit high-cost acknowledgement and later confirmation where required; Bootstrap review scope must cover seven implementation-conformance classes and exact changed production paths; P2 closes deterministically, P0/P1 require Quick Dev handoff and repair-completeness audit; focused reentry only absent typed triggers, maximum three rounds, then manual_pause; ADR-0054 closure requires exact challenge, protocol review/composite authority, maintainer acknowledgement, and deterministic finalization; no model launch, commit, release, deploy, archive, Round 4, or authorization; caller requirements/profiles/reasons and historical calibration are non-authorizing; controlled validation only with typed registered commands and isolated roots; exact reuse only finalized v3 clean runs with current bindings and immediate lineage predecessor; ambiguities/missing or stale evidence fail closed as prerequisite_blocked, repair-required, blocked, or manual_pause."
+}

@@ -1,0 +1,96 @@
+{
+  "authorizes": [],
+  "entries": [
+    {
+      "callsite_lines": [
+        11,
+        90,
+        106,
+        107,
+        111,
+        118,
+        119,
+        120,
+        121,
+        131,
+        133,
+        142
+      ],
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py",
+      "sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7"
+    },
+    {
+      "callsite_lines": [
+        11,
+        24,
+        57,
+        95,
+        96,
+        97,
+        98,
+        99,
+        103,
+        108,
+        114,
+        118,
+        128,
+        129,
+        134,
+        140,
+        151,
+        152,
+        164,
+        183,
+        193,
+        201
+      ],
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py",
+      "sha256": "sha256:77866eeee59a477fd0dd12e8797f3103fe61bf2a1b31fa1c3c9edae7661bce7d"
+    },
+    {
+      "callsite_lines": [
+        9,
+        38
+      ],
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
+      "sha256": "sha256:a3802b040e9e60ca345a57c19b8b6953fa1325a191e6cd96192a02a38a572fab"
+    },
+    {
+      "callsite_lines": [
+        12,
+        28,
+        40,
+        64,
+        65,
+        78,
+        85
+      ],
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/migration_bridge.py",
+      "sha256": "sha256:45299dc4b23ab300416f2c849345b879685acfa7ec83e7aa2a740d1d31a06ebb"
+    },
+    {
+      "callsite_lines": [
+        11,
+        36,
+        40,
+        63,
+        64,
+        65,
+        66,
+        67,
+        70,
+        72,
+        74,
+        77,
+        78,
+        80,
+        100,
+        104,
+        108
+      ],
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py",
+      "sha256": "sha256:325fce91066ec635c88849e994f741e1d4f85d858546abac7c4cb203f1561c78"
+    }
+  ],
+  "schema_version": "toolchain-workflow-repair.callsite-inventory.v1"
+}

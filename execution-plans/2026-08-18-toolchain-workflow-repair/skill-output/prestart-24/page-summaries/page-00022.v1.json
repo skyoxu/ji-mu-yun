@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py",
+    "source_sha256": "sha256:3a22e0de88d52a177cb60e0cb08be0d1ec2e25dfcad8890105589ac2b9bf2887",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 10607,
+    "start_line": 1,
+    "end_line": 189,
+    "content_sha256": "sha256:3a22e0de88d52a177cb60e0cb08be0d1ec2e25dfcad8890105589ac2b9bf2887"
+  },
+  "status": "accepted",
+  "summary": "validate_plan_ready.py; PLAN_ID=toolchain-workflow-repair; validates plan dir under execution-plans plus required artifacts/tools; modes initial-plan-ready|authorized-repair-revalidate; contract requires self-hosted, exact W0-W6, TDD slices; registry requires plan-ready, terminal-full, each w0-w6 green/terminal; authority manifest requires source/candidate/lifecycle partitions; draft forbids authorizations; plan-ready requires VDD publication receipt bound to validation receipt; repair mode requires implementation-authorized state and round-1 validating/blocking/no authorizations; resume requires W0-W6 statuses and no authorizations; architecture must be accepted with decisions; pre-existing delta fixed commits 2556ea.../a2ded3... and exact six paths/hashes/disposition; canonical input v2 binds authority/candidate file hashes and selection/content canonical hashes; knowledge preflight ready and freeze no authorizations; outputs validation v1/v2 pass|fail JSON, no authorization or lifecycle transition; optional out writes receipt; nonzero on failures."
+}

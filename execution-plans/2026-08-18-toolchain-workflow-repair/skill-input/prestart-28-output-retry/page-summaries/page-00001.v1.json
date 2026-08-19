@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "skill=quick-dev-tdd-adapter; scope=explicit execution-plans/ directory with schema-valid implementation-contract.v1.json only; reject standalone/compact/missing/invalid inputs; parent router first caller=quick-dev-tdd-adapter requires lane=strict_tdd_plan backend=quick-dev-tdd-adapter; target-only discovery and single 95-*.md report; report/run-state non-authorizing; lifecycle audit/repair/validate/refreeze then RED->GREEN->REFACTOR->slice predicate; run loop_plan_directory before expensive actions; use generated lifecycle artifacts only; RED shell=false expected nonzero before production write; no RED artifacts prebound in new VDD plans; auto-progress unlocked slices; terminal=implementation-complete only, acceptance external; skill-input typed receipt/request/semantic child/require-ready mandatory before selection/prepare/RED; model classification architectural>complex>small_mechanical>normal, uncertainty=blocked complex, override upgrade only, evidence non-authorizing; adapter never selects provider/model or acceptance/review/commit/release; frozen knowledge context must hash-verify, mismatch routes VDD repair/successor refresh; persistent loop requires explicit existing snapshot paths within allowed writes, planned_new_files tightly bridged; reject drift and raw shell commands; P0/P1 completion requires repair handoff plus Acceptance audit-repair-completeness with hash-bound manifests/composition inputs; commit version gate: Context7 exact pinned version for external version-sensitive changes, otherwise N/A; read required backend/TDD/evidence references before slice implementation."
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "skill=vdd-execution-plan; route only explicit complete-plan create/repair, standalone requirements file=>direct implementation; mandatory pre-reads: solo-maintainer standard, clarification gate, lifecycle contract; profiles=standard|resumable|self-hosted selected before model routing; all ordinary profiles Sol/high; VDD lifecycle owns draft,plan-ready; static states draft>plan-ready>implementation-authorized>implementation-complete>acceptance-passed>archived; Bootstrap optional and non-publishing; Quick Dev alone publishes implementation-complete; slices require behavior,failure intent,acceptance,dependents,recovery; VDD must not produce/run RED evidence; repair is in-place repair/round-n with immutable history and closure; repair requires callsite inventory, exclusions, hash manifests, controlled producer-consumer composition receipt; required knowledge preflight before plan-ready; required skill-input adapter+typed semantic child+ready validation before knowledge freeze/artifacts; baseline/current identity must be bound; review optional unless rule/request; resumable/self-hosted require append-only 95 report/index; completion needs profile artifacts, observable acceptance, recorded negative/legacy path, stable targeted repairs, terminal full validation; ambiguities:none"
+}

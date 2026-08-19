@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
+    "source_sha256": "sha256:a3802b040e9e60ca345a57c19b8b6953fa1325a191e6cd96192a02a38a572fab",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2007,
+    "start_line": 1,
+    "end_line": 56,
+    "content_sha256": "sha256:a3802b040e9e60ca345a57c19b8b6953fa1325a191e6cd96192a02a38a572fab"
+  },
+  "status": "accepted",
+  "summary": "terminal_full.py; PLAN_ID=toolchain-workflow-repair; CLI requires --repository-root and --plan-dir; optional --out; scans slices W0 through W6; requires exactly one logs/tdd-adapter/<plan>/Wn/*/slice-receipt.json per slice; invalid JSON/read failure recorded receipt-invalid; receipt must predicate=slice-ready,status=pass,failures=[],authorizes=[]; result schema toolchain-workflow-repair.terminal-result.v2; result predicate=implementation-complete; status pass only with no failures; authorizes=[]; lifecycle_transition=none; emits sorted indented JSON; optional output creates parent directories and LF UTF-8 file; exit 0 on pass, 1 on failures; digest helper computes sha256 but unused; plan-dir resolved but otherwise unused"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "adapter.py; repository-root path setup; mandatory skill-input gate in prepare/execute; hidden backend state forbidden; shell command registry forbidden; requires declared slice and nonempty contract/validator hashes; prepared run is non-authoritative and excludes acceptance/handoff/release; TDD lifecycle strictly prepared->red-observed->green-observed->refactor-verified; RED requires nonzero exit, expected failure, test/docs-only changes; GREEN requires prior RED, zero exit, production-only changes; REFACTOR requires prior GREEN, zero exit, declared write-set changes; path checks normalize slashes/case and use allowed prefixes; finalize candidate only exact red/green/refactor sequence, remains non-authoritative; resume rejects stale identities and failed/stale/superseded runs; protocol stage bindings validate one matching context/attempt, STAGE-{RED|GREEN|REFACTOR}, aligned IDs, empty authorization, hashes decision/capsule/context; protocol persistence validates bundle/store, containment, no symlink/reparse points, immutable conflicts, complete ordered artifact set, permits listed observation artifacts; execute rejects preexisting run, creates run dir, applies events, requires bundle/store pair, persists recovery-state with identity and optional skill-input hashes; ambiguity: execute creates run directory before later failures, so failed preparation can leave existing run state without recovery document"
+}

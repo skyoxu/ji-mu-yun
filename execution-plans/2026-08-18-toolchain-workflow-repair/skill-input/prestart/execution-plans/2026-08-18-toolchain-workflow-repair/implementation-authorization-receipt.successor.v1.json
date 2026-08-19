@@ -1,0 +1,48 @@
+{
+  "authority_manifest": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/authority-manifest.v1.json",
+    "sha256": "sha256:4cda496e9263f7eec8c8aed078e08fc0c9b1cccff8e2ccbd63c0999845478bdb"
+  },
+  "authorizes": [
+    "implementation-authorized"
+  ],
+  "candidate_binding_hash": "sha256:78d2ecfa94d3f5db5555f7ec2f5f97655a334ca5fd005f97132ceec096cd3e49",
+  "command_registry": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/command-registry.v1.json",
+    "sha256": "sha256:d17ff02fc892846b28da43f4a750a7f3f0d95256ad13d796c1d43fb8b141f517"
+  },
+  "decision": {
+    "owner": "maintainer",
+    "reason": "explicit-maintainer-authorization",
+    "transition": "implementation-authorized"
+  },
+  "does_not_authorize": [
+    "implementation-complete",
+    "acceptance-passed",
+    "knowledge-publication",
+    "bootstrap-review",
+    "release"
+  ],
+  "implementation_contract": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "sha256": "sha256:d569edf6e90dc44d35955865807c314e47eac717101583246245688e27ac2751"
+  },
+  "knowledge_context_freeze": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context.freeze.v1.json",
+    "sha256": "sha256:faa1db86b1f53f1729fae912e4b8a289794cd9dbe0184f091ac5800c1272c2d8"
+  },
+  "plan_id": "toolchain-workflow-repair",
+  "plan_validation": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/plan-validation-receipt.v1.json",
+    "sha256": "sha256:987fee669ec3c3420d854445c1d18caf45adf2a779fa266b0b634185ddcbd2c8"
+  },
+  "predecessor_authorization=<redacted>
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-authorization-receipt.successor.v1.json",
+    "sha256": "sha256:f10f2d4c2058cfb82a36871a26e67289080fbe91a585f31251e7566891343c1e"
+  },
+  "schema_version": "toolchain-workflow-repair.implementation-authorization-receipt.v1",
+  "skill_input_receipt": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/canonical-skill-input-plan-receipt.v2.json",
+    "sha256": "sha256:b1f06ef61d641deccac4be623547346890f50f3cd67b89029c5454efdf450479"
+  }
+}

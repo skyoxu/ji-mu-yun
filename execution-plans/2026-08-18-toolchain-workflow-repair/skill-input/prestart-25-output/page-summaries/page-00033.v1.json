@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/repair-candidate-manifest.v1.json",
+    "source_sha256": "sha256:ad9ac6c94c9686dcf582d491fd4bad00fe18b6ec1cc98ae1ba509d72d0151a0c",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 7647,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:ad9ac6c94c9686dcf582d491fd4bad00fe18b6ec1cc98ae1ba509d72d0151a0c"
+  },
+  "status": "accepted",
+  "summary": "schema toolchain-workflow-repair.repair-candidate-manifest.v1; source sha256:ad9ac6c94c9686dcf582d491fd4bad00fe18b6ec1cc98ae1ba509d72d0151a0c; baseline commit 2050ec682bab8cdc11770bf9823549b264a9e339; candidate identity worktree; authorizes empty; 37 present paths across quick-dev tools/tests, execution-plan receipts/contracts/state/requirements, repair artifacts, terminal results, and Python sources/bytecode; per-path SHA-256 values supplied for integrity; no explicit ambiguities"
+}

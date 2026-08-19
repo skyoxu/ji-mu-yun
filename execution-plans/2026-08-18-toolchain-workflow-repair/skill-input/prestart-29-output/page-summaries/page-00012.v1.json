@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+    "source_sha256": "sha256:d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2560,
+    "start_line": 1,
+    "end_line": 51,
+    "content_sha256": "sha256:d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50"
+  },
+  "status": "accepted",
+  "summary": "ADR-0060 accepted 2026-08-18; v1 Skill-input is historical compatibility only, never auto-promoted; v2 roles: normative_source, authority_source, implementation_input, lifecycle_projection, derived_context, execution_evidence, report, ephemeral_attempt; only first 3 authorize; separate sourceSelectionHash (roles/paths/modules/scope/resources) and sourceContentHash (selected bytes); adapter owns paging/coverage/continuation/truncation, complete bounded-lossy summaries are not truncated; ready receipts are immutable generations at skill-input-generations/<binding-hash> with validated atomically advanced non-authorizing current pointer; consumers resolve pointer only, no mtime/suffix/scan; independent execution/publication/semantic-review gates; Knowledge self-change derived from changed-set and canonical path policy; attempts require leases/heartbeats; retention protects current/references/unexpired attempts; committed evidence deletion needs maintainer approval plus non-authorizing cleanup receipt; migrate consumers to v2 before 8-18 creates current receipt; old skill-input-current dirs remain historical immutable evidence; no lifecycle authority, Knowledge publication, or Bootstrap created; extends ADR-0048/0050/0057/0058/0059; supersedes only their v1 selection/current-resolution practices"
+}

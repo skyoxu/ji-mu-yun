@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "仓库为Ji Mu Yun Phase A/B云原型平台，非游戏项目；职责层严格分离且无跨层snapshot/current/cache/LKG权限；按任务路由读取指定入口并修改前遵循最近AGENTS.md；本地检查优先FastCtx，显式不可用后才一次性回退Windows命令面；用户沟通使用中文，代码/日志/测试英文，无emoji；中文写入须Python显式UTF-8，禁止PowerShell原生写入；保护路径/认证/运行时/LLM入口/公开网络配置/证据重写均须先询问；不得手改live DB、提交秘密或泄露用户sandbox令牌；API默认向后兼容，破坏性变更需批准与兼容计划；变更须ADR依据、针对性验证与logs证据，助手文本不构成完成证明；Hosted恢复、LLM/Codex、运行时恢复均有强制规范与fail-closed顺序；workflow.md仅限索引允许触发；DoD要求测试/烟测、日志证据、保留历史失败和必要文档更新。"
+}

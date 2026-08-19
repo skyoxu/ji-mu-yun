@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "source_sha256": "sha256:5745d62e6c0dfca067ea9d45c25f9360789bed47faae5d03ba0a91ac0a25009b",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 11532,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:5745d62e6c0dfca067ea9d45c25f9360789bed47faae5d03ba0a91ac0a25009b"
+  },
+  "status": "accepted",
+  "summary": "Plan toolchain-workflow-repair; schema v1, self-hosted; authority manifest and migration bridge required; red owner quick-dev-tdd-adapter; artifacts partitioned by attempts, context capsules, terminal results; W0 canonical typed source selection, contract-hash fail-closed, TWR-W0; W1 automatic transport with hash-bound continuation, TWR-W1, depends W0; W2 adapter-owned page coverage, TWR-W2, depends W0/W1; W3 Knowledge three-gate projection with explicit review on drift/self-change, TWR-W3, depends W0; W4 immutable generations/current pointer, replay reuse and failed staging cannot advance, TWR-W4, depends W0-W2; W5 dry-run retention GC with approval-gated committed-evidence deletion, TWR-W5, depends W4; W6 end-to-end proof through retention without lifecycle or Knowledge authority, TWR-W6, depends W0-W5; changes restricted to listed skill-input/knowledge modules, tests, fixtures, docs; forbidden PhaseA.Platform, runtime/phase-a, logs, selected execution-plan and Knowledge catalog/index paths; all slices require red/green/refactor command outcomes zero; terminal-full predicate implementation-complete; ambiguities: none stated."
+}

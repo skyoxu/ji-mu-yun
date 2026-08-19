@@ -1,0 +1,763 @@
+{
+  "authorizes": [],
+  "entries": [
+    {
+      "head_sha256": "sha256:fa7b8882117ad1d76045c93bc37c5fbef4394212f20e34954ae5a2dfe2de35b8",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/95-implementation-evolution-and-completion-report.md",
+      "worktree_sha256": "sha256:fa7b8882117ad1d76045c93bc37c5fbef4394212f20e34954ae5a2dfe2de35b8"
+    },
+    {
+      "head_sha256": "sha256:6d038094b16f12709b73fa1b699a9cca7d31f761849e118f93dc609d5b81477b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/architecture-acceptance-request.v1.json",
+      "worktree_sha256": "sha256:6d038094b16f12709b73fa1b699a9cca7d31f761849e118f93dc609d5b81477b"
+    },
+    {
+      "head_sha256": "sha256:136a1d20efd2dafc6da1d1ba9d58d472545a83c3f55c589d90051b01c5002014",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/authority-manifest.v1.json",
+      "worktree_sha256": "sha256:136a1d20efd2dafc6da1d1ba9d58d472545a83c3f55c589d90051b01c5002014"
+    },
+    {
+      "head_sha256": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json",
+      "worktree_sha256": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93"
+    },
+    {
+      "head_sha256": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json",
+      "worktree_sha256": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b"
+    },
+    {
+      "head_sha256": "sha256:02b14eef01d808b5eb3ac950c87986d3e2dd68f25bcd616f25e550412f7c792b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/knowledge-context.freeze.history/e4a25ee785de0f31d679cfd1561d9c48d5316b0460dc590d5641d7e8814ab9cc.v1.json",
+      "worktree_sha256": "sha256:02b14eef01d808b5eb3ac950c87986d3e2dd68f25bcd616f25e550412f7c792b"
+    },
+    {
+      "head_sha256": "sha256:f08a5129d901cdc30c3fe1abb5cb034af5348620d3faab3e2c7f5c0260663e7e",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/knowledge-context.freeze.history/f33b21f38cdcfd320a16a3b560251282d277984a25761595bb810f277850d410.v1.json",
+      "worktree_sha256": "sha256:f08a5129d901cdc30c3fe1abb5cb034af5348620d3faab3e2c7f5c0260663e7e"
+    },
+    {
+      "head_sha256": "sha256:66f30a90d4b854557d3697bd349df3a3e7c3bb1bad1696f58425c23ffb7abe2e",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/knowledge-context.freeze.v1.json",
+      "worktree_sha256": "sha256:66f30a90d4b854557d3697bd349df3a3e7c3bb1bad1696f58425c23ffb7abe2e"
+    },
+    {
+      "head_sha256": "sha256:e4a25ee785de0f31d679cfd1561d9c48d5316b0460dc590d5641d7e8814ab9cc",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/knowledge-context.history/e4a25ee785de0f31d679cfd1561d9c48d5316b0460dc590d5641d7e8814ab9cc.v1.json",
+      "worktree_sha256": "sha256:e4a25ee785de0f31d679cfd1561d9c48d5316b0460dc590d5641d7e8814ab9cc"
+    },
+    {
+      "head_sha256": "sha256:f33b21f38cdcfd320a16a3b560251282d277984a25761595bb810f277850d410",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/knowledge-context.history/f33b21f38cdcfd320a16a3b560251282d277984a25761595bb810f277850d410.v1.json",
+      "worktree_sha256": "sha256:f33b21f38cdcfd320a16a3b560251282d277984a25761595bb810f277850d410"
+    },
+    {
+      "head_sha256": "sha256:43955cbe098e656d50cb2c825f89430323acf4a0a03a4e2d4b5a816d09c9b39f",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/knowledge-context.v1.json",
+      "worktree_sha256": "sha256:43955cbe098e656d50cb2c825f89430323acf4a0a03a4e2d4b5a816d09c9b39f"
+    },
+    {
+      "head_sha256": "sha256:665ec80f808f11ed94cfd5975997460120a2352452407fdde5e927bbecede231",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/knowledge-maintenance-request.v1.json",
+      "worktree_sha256": "sha256:665ec80f808f11ed94cfd5975997460120a2352452407fdde5e927bbecede231"
+    },
+    {
+      "head_sha256": "sha256:dc0fb3d525a4057949a61ce0b6e139f94e62ba14c88d1a6a9c3881ace204557b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/locator-request.v1.json",
+      "worktree_sha256": "sha256:dc0fb3d525a4057949a61ce0b6e139f94e62ba14c88d1a6a9c3881ace204557b"
+    },
+    {
+      "head_sha256": "sha256:7e29a84d6948023b2181d4f8ca29048aa05efd0eb76d22bd680a43eae75cdf3b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/plan-state.v1.json",
+      "worktree_sha256": "sha256:7e29a84d6948023b2181d4f8ca29048aa05efd0eb76d22bd680a43eae75cdf3b"
+    },
+    {
+      "head_sha256": "sha256:ec7a3cd071bc7ffffa031d40120b6177e205bc95c64b33b6973b2859e3adcd45",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/changed-set-manifest.v1.json",
+      "worktree_sha256": "sha256:ec7a3cd071bc7ffffa031d40120b6177e205bc95c64b33b6973b2859e3adcd45"
+    },
+    {
+      "head_sha256": "sha256:dca3185f4b5e15ccdfcb5eb1d4b69bf20b546891bfb567e5508f5891f83f8538",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/finding-set.md",
+      "worktree_sha256": "sha256:dca3185f4b5e15ccdfcb5eb1d4b69bf20b546891bfb567e5508f5891f83f8538"
+    },
+    {
+      "head_sha256": "sha256:6d4ec6d58943d5584cd8fea9ebffb7183f91d5bcd4744ea506e6b7f9beb4c808",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/producer-consumer-composition-receipt.v1.json",
+      "worktree_sha256": "sha256:6d4ec6d58943d5584cd8fea9ebffb7183f91d5bcd4744ea506e6b7f9beb4c808"
+    },
+    {
+      "head_sha256": "sha256:3c1ba78e813a6e1c649e7e2cdf82f9d41831d0c6f94995f6028c3138ac8a0a67",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/repair-plan.md",
+      "worktree_sha256": "sha256:3c1ba78e813a6e1c649e7e2cdf82f9d41831d0c6f94995f6028c3138ac8a0a67"
+    },
+    {
+      "head_sha256": "sha256:8c27ece7059c4889af288b185582a4eca7447aee39d13b5559f58a1b208216d0",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/root-cause-callsite-inventory.v1.json",
+      "worktree_sha256": "sha256:8c27ece7059c4889af288b185582a4eca7447aee39d13b5559f58a1b208216d0"
+    },
+    {
+      "head_sha256": "sha256:3717e8740b6d5b235824b048614d3d7ffce66d4a660860bf8415df3fa34d60a2",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/sibling-disposition.v1.json",
+      "worktree_sha256": "sha256:3717e8740b6d5b235824b048614d3d7ffce66d4a660860bf8415df3fa34d60a2"
+    },
+    {
+      "head_sha256": "sha256:b44e35896c0a9059d888aa96553ce0268c576df9274c9c3d93e6131b3f5da930",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+      "worktree_sha256": "sha256:b44e35896c0a9059d888aa96553ce0268c576df9274c9c3d93e6131b3f5da930"
+    },
+    {
+      "head_sha256": "sha256:f97bbd7e1a6870f88d6b28f46d4aa513ffa11966d269badf8b433fdef2d9dc28",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/resume-state.v1.json",
+      "worktree_sha256": "sha256:f97bbd7e1a6870f88d6b28f46d4aa513ffa11966d269badf8b433fdef2d9dc28"
+    },
+    {
+      "head_sha256": "sha256:ec1c63d3e2b6fe065cf19ba8da5ca611604d802c3f30ce9396f816ae862e38a7",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/child-request-result.json",
+      "worktree_sha256": "sha256:ec1c63d3e2b6fe065cf19ba8da5ca611604d802c3f30ce9396f816ae862e38a7"
+    },
+    {
+      "head_sha256": "sha256:d0d4bc4bd738b1e75c4ebfb76adf65ba317998ab92a803428e53160f4ab15b13",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/child-request.json",
+      "worktree_sha256": "sha256:d0d4bc4bd738b1e75c4ebfb76adf65ba317998ab92a803428e53160f4ab15b13"
+    },
+    {
+      "head_sha256": "sha256:41719c45c8cfb1c32b4f261dd1d0fbccf49350a8c5994b05a35d1b5ce9daf5a6",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/contract.json",
+      "worktree_sha256": "sha256:41719c45c8cfb1c32b4f261dd1d0fbccf49350a8c5994b05a35d1b5ce9daf5a6"
+    },
+    {
+      "head_sha256": "sha256:7074d53789606d58434d194ffcbb4cfa017660e40cf02d068bcd40ee2ae98d7e",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/receipt.json",
+      "worktree_sha256": "sha256:7074d53789606d58434d194ffcbb4cfa017660e40cf02d068bcd40ee2ae98d7e"
+    },
+    {
+      "head_sha256": "sha256:8eae3448657483d25f0db1be469f3dfd282f92f4adef5a8ea93faacadfbf53ee",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/request.json",
+      "worktree_sha256": "sha256:8eae3448657483d25f0db1be469f3dfd282f92f4adef5a8ea93faacadfbf53ee"
+    },
+    {
+      "head_sha256": "sha256:136a1d20efd2dafc6da1d1ba9d58d472545a83c3f55c589d90051b01c5002014",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/s/execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/authority-manifest.v1.json",
+      "worktree_sha256": "sha256:136a1d20efd2dafc6da1d1ba9d58d472545a83c3f55c589d90051b01c5002014"
+    },
+    {
+      "head_sha256": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/s/execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json",
+      "worktree_sha256": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93"
+    },
+    {
+      "head_sha256": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/s/execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json",
+      "worktree_sha256": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b"
+    },
+    {
+      "head_sha256": "sha256:28606201702c3e8b79e34b84490eefa650e92d72dac1bce5eb871784152bc67d",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/s/execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/finding-set.md",
+      "worktree_sha256": "sha256:28606201702c3e8b79e34b84490eefa650e92d72dac1bce5eb871784152bc67d"
+    },
+    {
+      "head_sha256": "sha256:b44e35896c0a9059d888aa96553ce0268c576df9274c9c3d93e6131b3f5da930",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/s/execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+      "worktree_sha256": "sha256:b44e35896c0a9059d888aa96553ce0268c576df9274c9c3d93e6131b3f5da930"
+    },
+    {
+      "head_sha256": "sha256:198a74808eeda5dd1a621a38f212d6c0d1ebed8ec13617de284d9a9b77c8822d",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/s/execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+      "worktree_sha256": "sha256:198a74808eeda5dd1a621a38f212d6c0d1ebed8ec13617de284d9a9b77c8822d"
+    },
+    {
+      "head_sha256": "sha256:64719bbf22d079f773be6941c9bb1958634565019bd71199526950fff4f225a3",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:64719bbf22d079f773be6941c9bb1958634565019bd71199526950fff4f225a3"
+    },
+    {
+      "head_sha256": "sha256:c557e7d84514348850d1f781ce842d38a3c92c34a5076c38d40d0937bcb43aab",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current10/child-request-result.json",
+      "worktree_sha256": "sha256:c557e7d84514348850d1f781ce842d38a3c92c34a5076c38d40d0937bcb43aab"
+    },
+    {
+      "head_sha256": "sha256:c86abb9880e7c726cb1362e8d22f563d020d4ece46ff06ffd738851a497e1745",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current10/child-request.json",
+      "worktree_sha256": "sha256:c86abb9880e7c726cb1362e8d22f563d020d4ece46ff06ffd738851a497e1745"
+    },
+    {
+      "head_sha256": "sha256:f34699515b813476ac8efbd08de9e67743b273530e0ec5f90cdc710aeeae84d8",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current10/child-run-result.json",
+      "worktree_sha256": "sha256:f34699515b813476ac8efbd08de9e67743b273530e0ec5f90cdc710aeeae84d8"
+    },
+    {
+      "head_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current10/contract.json",
+      "worktree_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b"
+    },
+    {
+      "head_sha256": "sha256:e99987b3cda34b04194dcffe9cc861c4b11eb8c95966c4346850e068a0711b89",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current10/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:e99987b3cda34b04194dcffe9cc861c4b11eb8c95966c4346850e068a0711b89"
+    },
+    {
+      "head_sha256": "sha256:31b832bbaf975513a6a95cc15616b7ddc4e7bf5a30de29223da0a7c80f8a82ed",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current10/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:31b832bbaf975513a6a95cc15616b7ddc4e7bf5a30de29223da0a7c80f8a82ed"
+    },
+    {
+      "head_sha256": "sha256:f67a123db75463f9db8ed52e1fd092efc83e7b71eb01d99ac2f472ea919ad6c2",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current10/receipt.json",
+      "worktree_sha256": "sha256:f67a123db75463f9db8ed52e1fd092efc83e7b71eb01d99ac2f472ea919ad6c2"
+    },
+    {
+      "head_sha256": "sha256:c191d7b90faa0fb18fc58ae6d541fa2ef68ce188ecc74b2a960500a405683928",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current10/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:c191d7b90faa0fb18fc58ae6d541fa2ef68ce188ecc74b2a960500a405683928"
+    },
+    {
+      "head_sha256": "sha256:c32c1106276e2b2ee84de85dc3ca695f76fe1048359f6090d45e56654e2f245c",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current11/child-request-result.json",
+      "worktree_sha256": "sha256:c32c1106276e2b2ee84de85dc3ca695f76fe1048359f6090d45e56654e2f245c"
+    },
+    {
+      "head_sha256": "sha256:4fe2f2bd16889ea32504632676f8dbb1f1c72f64afb02aa71b6de7c8c01726e1",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current11/child-request.json",
+      "worktree_sha256": "sha256:4fe2f2bd16889ea32504632676f8dbb1f1c72f64afb02aa71b6de7c8c01726e1"
+    },
+    {
+      "head_sha256": "sha256:795d4e3fe32d535801e6f5b7631ba233cefa4059e7921b575d9bb91521d5297c",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current11/child-run-result.json",
+      "worktree_sha256": "sha256:795d4e3fe32d535801e6f5b7631ba233cefa4059e7921b575d9bb91521d5297c"
+    },
+    {
+      "head_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current11/contract.json",
+      "worktree_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b"
+    },
+    {
+      "head_sha256": "sha256:e7a7334d9998c9ec35f9f60d19142572246eeda601f220b207296950f6802177",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current11/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:e7a7334d9998c9ec35f9f60d19142572246eeda601f220b207296950f6802177"
+    },
+    {
+      "head_sha256": "sha256:5bcffbc0aae2ae59eff06b6eb00dd52de3dbadea293cd6ef71323041930205de",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current11/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:5bcffbc0aae2ae59eff06b6eb00dd52de3dbadea293cd6ef71323041930205de"
+    },
+    {
+      "head_sha256": "sha256:b80b2727ed6d9a41c43733cc1e9af32f1ed06edce810d9d54b4058f2941b2fb1",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current11/receipt.json",
+      "worktree_sha256": "sha256:b80b2727ed6d9a41c43733cc1e9af32f1ed06edce810d9d54b4058f2941b2fb1"
+    },
+    {
+      "head_sha256": "sha256:11ecf3f0ba95a3c67c6501f660d6a9eb20cfeef1cbc80d9134b43ee6cf4c2ae3",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current11/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:11ecf3f0ba95a3c67c6501f660d6a9eb20cfeef1cbc80d9134b43ee6cf4c2ae3"
+    },
+    {
+      "head_sha256": "sha256:6a9f0fc25ca8da3f0ed2b0c054752ab76bbe027321ff879b0d6f45422f0297b6",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current12/child-request-result.json",
+      "worktree_sha256": "sha256:6a9f0fc25ca8da3f0ed2b0c054752ab76bbe027321ff879b0d6f45422f0297b6"
+    },
+    {
+      "head_sha256": "sha256:096c8e480c915e8c98a9b8c2d936f2cd4965a1571aedbbc8e6ea1d50e94df8bf",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current12/child-request.json",
+      "worktree_sha256": "sha256:096c8e480c915e8c98a9b8c2d936f2cd4965a1571aedbbc8e6ea1d50e94df8bf"
+    },
+    {
+      "head_sha256": "sha256:956401bc665756ff9b28c5e2fd9ebbe3441822f934ba2f0e3bab4900c89d4a88",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current12/child-run-result.json",
+      "worktree_sha256": "sha256:956401bc665756ff9b28c5e2fd9ebbe3441822f934ba2f0e3bab4900c89d4a88"
+    },
+    {
+      "head_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current12/contract.json",
+      "worktree_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b"
+    },
+    {
+      "head_sha256": "sha256:dc6f39fd9f5bf25104a5be139780d20ac5d13872521c2d0a78444db3312f477e",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current12/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:dc6f39fd9f5bf25104a5be139780d20ac5d13872521c2d0a78444db3312f477e"
+    },
+    {
+      "head_sha256": "sha256:5dc474af331d68ebc491470ebb9c3ae7ede11a254d747ce138dcfaa6030e96d2",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current12/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:5dc474af331d68ebc491470ebb9c3ae7ede11a254d747ce138dcfaa6030e96d2"
+    },
+    {
+      "head_sha256": "sha256:bde81a43664e7c3ed493e809df9c5c118b1484006475aef5b3109dfb7b6a1247",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current12/receipt.json",
+      "worktree_sha256": "sha256:bde81a43664e7c3ed493e809df9c5c118b1484006475aef5b3109dfb7b6a1247"
+    },
+    {
+      "head_sha256": "sha256:9a32605cddd49d3da44c576fe59d1b2048e9e3ae115397207e59c8b0c05b7964",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current12/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:9a32605cddd49d3da44c576fe59d1b2048e9e3ae115397207e59c8b0c05b7964"
+    },
+    {
+      "head_sha256": "sha256:e7b9c2757749eaa267d077127dd74157181bb9a6e3136042702ae006ce69991e",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current2/child-request-result.json",
+      "worktree_sha256": "sha256:e7b9c2757749eaa267d077127dd74157181bb9a6e3136042702ae006ce69991e"
+    },
+    {
+      "head_sha256": "sha256:a84c5cf9eacee667d16cacb350fb80a196666a0b05632de71fb8497b396fd986",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current2/child-request.json",
+      "worktree_sha256": "sha256:a84c5cf9eacee667d16cacb350fb80a196666a0b05632de71fb8497b396fd986"
+    },
+    {
+      "head_sha256": "sha256:e433df1c52de4dd4c3b85f2e6aedd502f4a589e2fe50f614104c82dff89c604b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current2/child-run-result.json",
+      "worktree_sha256": "sha256:e433df1c52de4dd4c3b85f2e6aedd502f4a589e2fe50f614104c82dff89c604b"
+    },
+    {
+      "head_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current2/contract.json",
+      "worktree_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b"
+    },
+    {
+      "head_sha256": "sha256:5b61b5317a21d3d4d88d476772b2622f30df4886a8b85d920e0b203e4ff049ff",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current2/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:5b61b5317a21d3d4d88d476772b2622f30df4886a8b85d920e0b203e4ff049ff"
+    },
+    {
+      "head_sha256": "sha256:7b68844394b474a2a2b87acf042bd6e15cd8997b65963e06a0154a7f9c3062b9",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current2/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:7b68844394b474a2a2b87acf042bd6e15cd8997b65963e06a0154a7f9c3062b9"
+    },
+    {
+      "head_sha256": "sha256:8e5ebf9841d70b75e2ceb447c724e3fae81460548a22f9619a569ee8cd6936eb",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current2/receipt.json",
+      "worktree_sha256": "sha256:8e5ebf9841d70b75e2ceb447c724e3fae81460548a22f9619a569ee8cd6936eb"
+    },
+    {
+      "head_sha256": "sha256:8eae3448657483d25f0db1be469f3dfd282f92f4adef5a8ea93faacadfbf53ee",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current2/request.json",
+      "worktree_sha256": "sha256:8eae3448657483d25f0db1be469f3dfd282f92f4adef5a8ea93faacadfbf53ee"
+    },
+    {
+      "head_sha256": "sha256:42e72bdd5ba215cfaabd18e89ba0bee929e08b851d24257a0f5c792eee3c85b9",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current2/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:42e72bdd5ba215cfaabd18e89ba0bee929e08b851d24257a0f5c792eee3c85b9"
+    },
+    {
+      "head_sha256": "sha256:87d8781df788a8596cf9bf013c417d3b50c2a99ef8a1f8dad0a62404cf77b2a7",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current3/child-request-result.json",
+      "worktree_sha256": "sha256:87d8781df788a8596cf9bf013c417d3b50c2a99ef8a1f8dad0a62404cf77b2a7"
+    },
+    {
+      "head_sha256": "sha256:3b589d0d65d033e2352a360b7daca084b44ae0239a565b4d68b7def4a638d4ab",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current3/child-request.json",
+      "worktree_sha256": "sha256:3b589d0d65d033e2352a360b7daca084b44ae0239a565b4d68b7def4a638d4ab"
+    },
+    {
+      "head_sha256": "sha256:3f5f8fe66593934e54675e28e776e8f3289118c34d207a9461e0399a9ef3a50f",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current3/child-run-result.json",
+      "worktree_sha256": "sha256:3f5f8fe66593934e54675e28e776e8f3289118c34d207a9461e0399a9ef3a50f"
+    },
+    {
+      "head_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current3/contract.json",
+      "worktree_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b"
+    },
+    {
+      "head_sha256": "sha256:1b3b462409ccbbf6cc09ca2d75074a8e58ec7fef3332cfdbd4edca76ddff70ab",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current3/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:1b3b462409ccbbf6cc09ca2d75074a8e58ec7fef3332cfdbd4edca76ddff70ab"
+    },
+    {
+      "head_sha256": "sha256:d28355217f115225a655084fb995ec347e00300059cf91882e7c7364c7cd65a5",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current3/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:d28355217f115225a655084fb995ec347e00300059cf91882e7c7364c7cd65a5"
+    },
+    {
+      "head_sha256": "sha256:1b864c1637a087938abb588e823fe718b1b042adc0dab5fa877c7c5f44ebe1d5",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current3/receipt.json",
+      "worktree_sha256": "sha256:1b864c1637a087938abb588e823fe718b1b042adc0dab5fa877c7c5f44ebe1d5"
+    },
+    {
+      "head_sha256": "sha256:8eae3448657483d25f0db1be469f3dfd282f92f4adef5a8ea93faacadfbf53ee",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current3/request.json",
+      "worktree_sha256": "sha256:8eae3448657483d25f0db1be469f3dfd282f92f4adef5a8ea93faacadfbf53ee"
+    },
+    {
+      "head_sha256": "sha256:7f8b44331d547b7b629b0f61dd6a4413e573cd047faf58b7be97ec5c3ec06f20",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current3/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:7f8b44331d547b7b629b0f61dd6a4413e573cd047faf58b7be97ec5c3ec06f20"
+    },
+    {
+      "head_sha256": "sha256:1f2dc3726a6b513d69e7d073a2098c80f87f0451bd44c249bf3e5735fd14bbc2",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current4/child-request-result.json",
+      "worktree_sha256": "sha256:1f2dc3726a6b513d69e7d073a2098c80f87f0451bd44c249bf3e5735fd14bbc2"
+    },
+    {
+      "head_sha256": "sha256:dbf7d7046612704c6e8555ab462ad540aa2422020057edbcfb47a96031ce7df2",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current4/child-request.json",
+      "worktree_sha256": "sha256:dbf7d7046612704c6e8555ab462ad540aa2422020057edbcfb47a96031ce7df2"
+    },
+    {
+      "head_sha256": "sha256:ac4a1a976905309cbc3a8a8319d2a91febbcad0e155121359f042207d36e94c4",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current4/child-run-result.json",
+      "worktree_sha256": "sha256:ac4a1a976905309cbc3a8a8319d2a91febbcad0e155121359f042207d36e94c4"
+    },
+    {
+      "head_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current4/contract.json",
+      "worktree_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b"
+    },
+    {
+      "head_sha256": "sha256:150e2a643879f605e980d84bb6dfc70c6c6e9657aab6d6a1dddf86e67be7215a",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current4/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:150e2a643879f605e980d84bb6dfc70c6c6e9657aab6d6a1dddf86e67be7215a"
+    },
+    {
+      "head_sha256": "sha256:21d01f3cf953c7606180c001cfd659647dec44f3395a97c3dd32a26aeffc6c2d",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current4/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:21d01f3cf953c7606180c001cfd659647dec44f3395a97c3dd32a26aeffc6c2d"
+    },
+    {
+      "head_sha256": "sha256:88fff122386226387e01d8620ff19921fd6adff8077b77becd9f8590d0cb1cc8",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current4/receipt.json",
+      "worktree_sha256": "sha256:88fff122386226387e01d8620ff19921fd6adff8077b77becd9f8590d0cb1cc8"
+    },
+    {
+      "head_sha256": "sha256:feb157f15e651f7a6b6e81bac2b93659bcd987e8af0b72ed95216890d603ed4e",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current4/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:feb157f15e651f7a6b6e81bac2b93659bcd987e8af0b72ed95216890d603ed4e"
+    },
+    {
+      "head_sha256": "sha256:25e4b411d1980c6fc9dc29d6dca54f492ca25a9007b35d83eb4a48e6045a9978",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current5/child-request-result.json",
+      "worktree_sha256": "sha256:25e4b411d1980c6fc9dc29d6dca54f492ca25a9007b35d83eb4a48e6045a9978"
+    },
+    {
+      "head_sha256": "sha256:4d105d74e0f3cd03c0612e13f034067ef4980b3d954427cb1524aeb908f6ece3",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current5/child-request.json",
+      "worktree_sha256": "sha256:4d105d74e0f3cd03c0612e13f034067ef4980b3d954427cb1524aeb908f6ece3"
+    },
+    {
+      "head_sha256": "sha256:e1bc23dbb19e2fe1d908faa31155affbe47bbf2ead63c58b0ef4bb18d79ed846",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current5/child-run-result.json",
+      "worktree_sha256": "sha256:e1bc23dbb19e2fe1d908faa31155affbe47bbf2ead63c58b0ef4bb18d79ed846"
+    },
+    {
+      "head_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current5/contract.json",
+      "worktree_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b"
+    },
+    {
+      "head_sha256": "sha256:4997e1b9a31b8eb48e39a862a0690cca3372066aca8446cc43455463207c7ecc",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current5/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:4997e1b9a31b8eb48e39a862a0690cca3372066aca8446cc43455463207c7ecc"
+    },
+    {
+      "head_sha256": "sha256:ea3675643dfdb6870689a40a178c17a186856606ef682f50a421428ec036f10e",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current5/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:ea3675643dfdb6870689a40a178c17a186856606ef682f50a421428ec036f10e"
+    },
+    {
+      "head_sha256": "sha256:39df818ab8013726f89fbf45bab833e039fd5acbd062a3b65256c9c2e102c65a",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current5/receipt.json",
+      "worktree_sha256": "sha256:39df818ab8013726f89fbf45bab833e039fd5acbd062a3b65256c9c2e102c65a"
+    },
+    {
+      "head_sha256": "sha256:0770d0333bb07d774efc5d4034ce460aac21068f068a1b578ba27e7b054329cd",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current5/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:0770d0333bb07d774efc5d4034ce460aac21068f068a1b578ba27e7b054329cd"
+    },
+    {
+      "head_sha256": "sha256:1f6c0d078d599cbf57308e82b42477a803a0e8f9e8bb7d273788c8b3ba19933f",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current6/child-request-result.json",
+      "worktree_sha256": "sha256:1f6c0d078d599cbf57308e82b42477a803a0e8f9e8bb7d273788c8b3ba19933f"
+    },
+    {
+      "head_sha256": "sha256:0d66683fe784c0965953b0aaac9ab88aa173c5e16d1594e57f80e8c13b15b9c7",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current6/child-request.json",
+      "worktree_sha256": "sha256:0d66683fe784c0965953b0aaac9ab88aa173c5e16d1594e57f80e8c13b15b9c7"
+    },
+    {
+      "head_sha256": "sha256:7bad0099b4c31c4c83f00f1d898f28d0e51c3a1160d1187ed76b6ac88ab43aab",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current6/child-run-result.json",
+      "worktree_sha256": "sha256:7bad0099b4c31c4c83f00f1d898f28d0e51c3a1160d1187ed76b6ac88ab43aab"
+    },
+    {
+      "head_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current6/contract.json",
+      "worktree_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b"
+    },
+    {
+      "head_sha256": "sha256:b1c00958a88295de2177f5015c1f835a78923736b4ff594b56389555dcff1c47",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current6/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:b1c00958a88295de2177f5015c1f835a78923736b4ff594b56389555dcff1c47"
+    },
+    {
+      "head_sha256": "sha256:35c087724df00f3c0f6df713409064df01cd77b9777881e037a79ac68019194c",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current6/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:35c087724df00f3c0f6df713409064df01cd77b9777881e037a79ac68019194c"
+    },
+    {
+      "head_sha256": "sha256:051aa48d3f300bbc73d65c9ec1d538e3eb417900f009930b2c16ecd75d514f83",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current6/receipt.json",
+      "worktree_sha256": "sha256:051aa48d3f300bbc73d65c9ec1d538e3eb417900f009930b2c16ecd75d514f83"
+    },
+    {
+      "head_sha256": "sha256:3ce7b69a9487807c60124b62ee9e0d896b6b83cd6a2a4866f1f75b53cb62a7fd",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current6/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:3ce7b69a9487807c60124b62ee9e0d896b6b83cd6a2a4866f1f75b53cb62a7fd"
+    },
+    {
+      "head_sha256": "sha256:b5567a416d5db7df2f156fdcb2fc9bb3509d93a934dc337a4dfaa9832e4a82b3",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current7/child-request-result.json",
+      "worktree_sha256": "sha256:b5567a416d5db7df2f156fdcb2fc9bb3509d93a934dc337a4dfaa9832e4a82b3"
+    },
+    {
+      "head_sha256": "sha256:8bce2b5527012840d4fcef93c60b1f11892c16b0e60f37eb954b8689187f82d3",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current7/child-request.json",
+      "worktree_sha256": "sha256:8bce2b5527012840d4fcef93c60b1f11892c16b0e60f37eb954b8689187f82d3"
+    },
+    {
+      "head_sha256": "sha256:37289746e45dff7ec3f009868a08236c1df3796ba5d90b53401671291d286f38",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current7/child-run-result.json",
+      "worktree_sha256": "sha256:37289746e45dff7ec3f009868a08236c1df3796ba5d90b53401671291d286f38"
+    },
+    {
+      "head_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current7/contract.json",
+      "worktree_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b"
+    },
+    {
+      "head_sha256": "sha256:1ed24bf4820809598db6f5305848a49e50a83722376029c66d58e197ef2c3693",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current7/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:1ed24bf4820809598db6f5305848a49e50a83722376029c66d58e197ef2c3693"
+    },
+    {
+      "head_sha256": "sha256:b9c9ab6746b92ab39fee267e5aa9507a702037981a934dd51a700edc5559b3a9",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current7/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:b9c9ab6746b92ab39fee267e5aa9507a702037981a934dd51a700edc5559b3a9"
+    },
+    {
+      "head_sha256": "sha256:732e85f9d3e551fcfc7b958581ef51f3a71fec4bfe23944f25e37af011318c7a",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current7/receipt.json",
+      "worktree_sha256": "sha256:732e85f9d3e551fcfc7b958581ef51f3a71fec4bfe23944f25e37af011318c7a"
+    },
+    {
+      "head_sha256": "sha256:dbf5657b2e693d7d6c09eb9cd8845b4fe1fbb088438a6717dc95a52b58973ed4",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current7/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:dbf5657b2e693d7d6c09eb9cd8845b4fe1fbb088438a6717dc95a52b58973ed4"
+    },
+    {
+      "head_sha256": "sha256:fc6b309e40514b5767b785675d7ebeabbad24b0ed9ed029ce6939f2d73e2568e",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current8/child-request-result.json",
+      "worktree_sha256": "sha256:fc6b309e40514b5767b785675d7ebeabbad24b0ed9ed029ce6939f2d73e2568e"
+    },
+    {
+      "head_sha256": "sha256:71aac83c4eb6d19dcc305654739da5a2f4a8583bc363f5950ed3af52325d16a0",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current8/child-request.json",
+      "worktree_sha256": "sha256:71aac83c4eb6d19dcc305654739da5a2f4a8583bc363f5950ed3af52325d16a0"
+    },
+    {
+      "head_sha256": "sha256:c8ce68730d4e6aa40efadd1e65454ece283a309dc9395854fc2ca6349e87a77c",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current8/child-run-result.json",
+      "worktree_sha256": "sha256:c8ce68730d4e6aa40efadd1e65454ece283a309dc9395854fc2ca6349e87a77c"
+    },
+    {
+      "head_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current8/contract.json",
+      "worktree_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b"
+    },
+    {
+      "head_sha256": "sha256:31fdb7824083ae8d663c7852f56337e86a7e3976d25d92167fb4493aaaf81957",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current8/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:31fdb7824083ae8d663c7852f56337e86a7e3976d25d92167fb4493aaaf81957"
+    },
+    {
+      "head_sha256": "sha256:5498eaaa9ebab41e3f841de8646253487a16dd0607b9b3555ce46c7af6da360f",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current8/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:5498eaaa9ebab41e3f841de8646253487a16dd0607b9b3555ce46c7af6da360f"
+    },
+    {
+      "head_sha256": "sha256:477f6e34e1c3866e52c29c6c117738adc02071532d8e7173ee0692e1219e77db",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current8/receipt.json",
+      "worktree_sha256": "sha256:477f6e34e1c3866e52c29c6c117738adc02071532d8e7173ee0692e1219e77db"
+    },
+    {
+      "head_sha256": "sha256:cbed66963d73a40ae5c746cf54fa7c992219dcb9dcf522778f0f4cd2148af5f8",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current8/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:cbed66963d73a40ae5c746cf54fa7c992219dcb9dcf522778f0f4cd2148af5f8"
+    },
+    {
+      "head_sha256": "sha256:30dc08b226d9c407cf24d7683e56cdb3e636afadb750b2253488379254d1862d",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current9/child-request-result.json",
+      "worktree_sha256": "sha256:30dc08b226d9c407cf24d7683e56cdb3e636afadb750b2253488379254d1862d"
+    },
+    {
+      "head_sha256": "sha256:e8bc5bd61b25679ff352b9a65141102b47d8a4f7c73cd7fc7a90418ebf59f642",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current9/child-request.json",
+      "worktree_sha256": "sha256:e8bc5bd61b25679ff352b9a65141102b47d8a4f7c73cd7fc7a90418ebf59f642"
+    },
+    {
+      "head_sha256": "sha256:63b1cee02df69ecbd8675f04b1ccf01dc9cc30773cce944cd30ceefcebb59a07",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current9/child-run-result.json",
+      "worktree_sha256": "sha256:63b1cee02df69ecbd8675f04b1ccf01dc9cc30773cce944cd30ceefcebb59a07"
+    },
+    {
+      "head_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current9/contract.json",
+      "worktree_sha256": "sha256:ba64df9653aeafc1d631436dd5271cd75c3627758f2de9e1352c3cb07528767b"
+    },
+    {
+      "head_sha256": "sha256:918fe211b0972cb55df8133689ecae4e328ffe851293a708740f413f1cf812ab",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current9/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:918fe211b0972cb55df8133689ecae4e328ffe851293a708740f413f1cf812ab"
+    },
+    {
+      "head_sha256": "sha256:db87570ea06040645e70af5dca8d3425477291c3c7f32a227e1ba9b6a33a94df",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current9/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:db87570ea06040645e70af5dca8d3425477291c3c7f32a227e1ba9b6a33a94df"
+    },
+    {
+      "head_sha256": "sha256:752d87af926e9698f7c01374ebcbedb69b8ad2e8c52320df06f0b17be54b8e92",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current9/receipt.json",
+      "worktree_sha256": "sha256:752d87af926e9698f7c01374ebcbedb69b8ad2e8c52320df06f0b17be54b8e92"
+    },
+    {
+      "head_sha256": "sha256:0905e31636a754775c8941b2411327162dcf16c00fab8ed557fcc51546e639f1",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-current9/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:0905e31636a754775c8941b2411327162dcf16c00fab8ed557fcc51546e639f1"
+    },
+    {
+      "head_sha256": "sha256:cb524c26bd5200bb695db20f2e70492de123f7015f9e0642a71ae471d68f8c7d",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-r18/child-request.json",
+      "worktree_sha256": "sha256:cb524c26bd5200bb695db20f2e70492de123f7015f9e0642a71ae471d68f8c7d"
+    },
+    {
+      "head_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-r18/contract.json",
+      "worktree_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9"
+    },
+    {
+      "head_sha256": "sha256:d93f3cf4fbf161278588daa806b3cd8b95b2002dfcda39f912eaa6100b501b60",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-r18/o/semantic-decision.v1.json",
+      "worktree_sha256": "sha256:d93f3cf4fbf161278588daa806b3cd8b95b2002dfcda39f912eaa6100b501b60"
+    },
+    {
+      "head_sha256": "sha256:56709aba2603229ee904f8e9ee0b74b5d7ba04b43489122be3769abfeb646f4f",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-r18/o/skill-input-context.v1.json",
+      "worktree_sha256": "sha256:56709aba2603229ee904f8e9ee0b74b5d7ba04b43489122be3769abfeb646f4f"
+    },
+    {
+      "head_sha256": "sha256:f0dbb2f9121060083cdabcca515771d3eefb843b22f46f6ff68750f3e2aab947",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-r18/receipt.json",
+      "worktree_sha256": "sha256:f0dbb2f9121060083cdabcca515771d3eefb843b22f46f6ff68750f3e2aab947"
+    },
+    {
+      "head_sha256": "sha256:8eae3448657483d25f0db1be469f3dfd282f92f4adef5a8ea93faacadfbf53ee",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-r18/request.json",
+      "worktree_sha256": "sha256:8eae3448657483d25f0db1be469f3dfd282f92f4adef5a8ea93faacadfbf53ee"
+    },
+    {
+      "head_sha256": "sha256:5b8511f5110110273abc80428f096110ef5eedb62ef9639867221d061fef3de2",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input-r18/s/source-manifest.v1.json",
+      "worktree_sha256": "sha256:5b8511f5110110273abc80428f096110ef5eedb62ef9639867221d061fef3de2"
+    },
+    {
+      "head_sha256": "sha256:c4e7fd1d7d57f391b518e33635f5c5ed6192f79359757bc42d60ceb3455d9a4a",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/R0.json",
+      "worktree_sha256": "sha256:c4e7fd1d7d57f391b518e33635f5c5ed6192f79359757bc42d60ceb3455d9a4a"
+    },
+    {
+      "head_sha256": "sha256:284eb2d01b27b91f934e54e32edffb77df040feb1df63dfb62af314c7286c67f",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/R1.json",
+      "worktree_sha256": "sha256:284eb2d01b27b91f934e54e32edffb77df040feb1df63dfb62af314c7286c67f"
+    },
+    {
+      "head_sha256": "sha256:9ddc5f3d6e94996c0352142f44b92aaad130b617788c11e88f194379470d37a1",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/R2.json",
+      "worktree_sha256": "sha256:9ddc5f3d6e94996c0352142f44b92aaad130b617788c11e88f194379470d37a1"
+    },
+    {
+      "head_sha256": "sha256:9f7888f3fb55cb4e9459691b857945f9a1bb4c09c6ea9f764a68e57a35f62dcd",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/R3.json",
+      "worktree_sha256": "sha256:9f7888f3fb55cb4e9459691b857945f9a1bb4c09c6ea9f764a68e57a35f62dcd"
+    },
+    {
+      "head_sha256": "sha256:543ea493c92c75e1574f63d23d49fa9abfc414ac3870fbd92fef89e8e1191fcb",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/R4.json",
+      "worktree_sha256": "sha256:543ea493c92c75e1574f63d23d49fa9abfc414ac3870fbd92fef89e8e1191fcb"
+    },
+    {
+      "head_sha256": "sha256:d6bfc6bb438501cd71e8a0724b2bbb7a90ca0e9eee411bfc6013458a8f54e715",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current10.json",
+      "worktree_sha256": "sha256:d6bfc6bb438501cd71e8a0724b2bbb7a90ca0e9eee411bfc6013458a8f54e715"
+    },
+    {
+      "head_sha256": "sha256:ddeef610e839b6102fb1c02ebfdf2dd0686728fd0b26d49721186d1e948dbd3a",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current11-check.json",
+      "worktree_sha256": "sha256:ddeef610e839b6102fb1c02ebfdf2dd0686728fd0b26d49721186d1e948dbd3a"
+    },
+    {
+      "head_sha256": "sha256:4271c4044df6a90cbb48237107f6f8ee3c2409652d2ae0c9b79ba2fc5aaeece3",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current11.json",
+      "worktree_sha256": "sha256:4271c4044df6a90cbb48237107f6f8ee3c2409652d2ae0c9b79ba2fc5aaeece3"
+    },
+    {
+      "head_sha256": "sha256:83a4773b7f061a812760ac167f06f58e1179b146f22cb809cd372b0d58b2f804",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current12-check.json",
+      "worktree_sha256": "sha256:83a4773b7f061a812760ac167f06f58e1179b146f22cb809cd372b0d58b2f804"
+    },
+    {
+      "head_sha256": "sha256:83a4773b7f061a812760ac167f06f58e1179b146f22cb809cd372b0d58b2f804",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current12.json",
+      "worktree_sha256": "sha256:83a4773b7f061a812760ac167f06f58e1179b146f22cb809cd372b0d58b2f804"
+    },
+    {
+      "head_sha256": "sha256:19462aec45b132c07f52ac4d208047704cb03018717ad2fe035a5257d6f2c346",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current4.json",
+      "worktree_sha256": "sha256:19462aec45b132c07f52ac4d208047704cb03018717ad2fe035a5257d6f2c346"
+    },
+    {
+      "head_sha256": "sha256:26b9208139a650f2ad7040007a02e82c29567f702e1505efbb25673bf49b429d",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current5.json",
+      "worktree_sha256": "sha256:26b9208139a650f2ad7040007a02e82c29567f702e1505efbb25673bf49b429d"
+    },
+    {
+      "head_sha256": "sha256:702c9fe54884b2ab7c2dcb0c9a30b30c57df2b1a178f548959c1ac73508f1646",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current6-final.json",
+      "worktree_sha256": "sha256:702c9fe54884b2ab7c2dcb0c9a30b30c57df2b1a178f548959c1ac73508f1646"
+    },
+    {
+      "head_sha256": "sha256:96e5b539f6731ffc0574328a278fbbf08e46377e34bb6b41705912e46a7ed6df",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current6-final2.json",
+      "worktree_sha256": "sha256:96e5b539f6731ffc0574328a278fbbf08e46377e34bb6b41705912e46a7ed6df"
+    },
+    {
+      "head_sha256": "sha256:7e5d80fcd4f17db101c9cb84805e91f415c4c6b50b442f83b930c4f93d63ddca",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current6.json",
+      "worktree_sha256": "sha256:7e5d80fcd4f17db101c9cb84805e91f415c4c6b50b442f83b930c4f93d63ddca"
+    },
+    {
+      "head_sha256": "sha256:5145f058ba7db2870e0775803be2826cd484771bc0dc78ce812bd865914e8e64",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current7.json",
+      "worktree_sha256": "sha256:5145f058ba7db2870e0775803be2826cd484771bc0dc78ce812bd865914e8e64"
+    },
+    {
+      "head_sha256": "sha256:454786765ac2b41cbec5952acfabc0ebf8acf98c439428795acc396ac08c53e7",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current8.json",
+      "worktree_sha256": "sha256:454786765ac2b41cbec5952acfabc0ebf8acf98c439428795acc396ac08c53e7"
+    },
+    {
+      "head_sha256": "sha256:b7ba2ea2555266f8fb959d25e520f4431caf7831e3d5e20f4f5a96407504a7ad",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full-current9.json",
+      "worktree_sha256": "sha256:b7ba2ea2555266f8fb959d25e520f4431caf7831e3d5e20f4f5a96407504a7ad"
+    },
+    {
+      "head_sha256": null,
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/__pycache__/terminal_full.cpython-312.pyc",
+      "worktree_sha256": "sha256:efe014f931376fb5d6eaf265a2b39be361d1fd5473109044d213b2f099d21aca"
+    },
+    {
+      "head_sha256": "sha256:1fe2c168d827446b5b6e2ec63847be40f0901f59f386bb8aa4bf680a185f76ad",
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+      "worktree_sha256": "sha256:1fe2c168d827446b5b6e2ec63847be40f0901f59f386bb8aa4bf680a185f76ad"
+    }
+  ],
+  "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery",
+  "schema_version": "toolchain-workflow-repair.read-only-manifest.v1",
+  "unchanged": false
+}

@@ -1,12 +1,20 @@
 {
   "authority_manifest": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/authority-manifest.v1.json",
-    "sha256": "sha256:4cda496e9263f7eec8c8aed078e08fc0c9b1cccff8e2ccbd63c0999845478bdb"
+    "sha256": "sha256:9855bd33f295905247dbb87d15ad4dadd37d95f46f59f82abaf262eea93fada0"
   },
   "authorizes": [
     "implementation-authorized"
   ],
-  "candidate_binding_hash": "sha256:78d2ecfa94d3f5db5555f7ec2f5f97655a334ca5fd005f97132ceec096cd3e49",
+  "bootstrap_preexisting_delta": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/bootstrap-preexisting-delta.v1.json",
+    "sha256": "sha256:a543a96e8830c5fd7d69b957c103d48c5401aab47195e27ec7e0f501f466b3c9"
+  },
+  "candidate_binding_hash": "sha256:905d60e83efa87b0bbcaa5b43e0aaf7e85377d868061d9eeeb35f0abf07ccfb8",
+  "candidate_manifest": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/repair-candidate-manifest.v1.json",
+    "sha256": "sha256:ad9ac6c94c9686dcf582d491fd4bad00fe18b6ec1cc98ae1ba509d72d0151a0c"
+  },
   "command_registry": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/command-registry.v1.json",
     "sha256": "sha256:d17ff02fc892846b28da43f4a750a7f3f0d95256ad13d796c1d43fb8b141f517"
@@ -23,9 +31,13 @@
     "bootstrap-review",
     "release"
   ],
+  "immutable_predecessor": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/authorization-predecessor.2050ec68.v1.json",
+    "sha256": "sha256:5837d4fd72488152be68d182a11c83f9ba27d715127d5e9dc362c616d9517ec0"
+  },
   "implementation_contract": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
-    "sha256": "sha256:d569edf6e90dc44d35955865807c314e47eac717101583246245688e27ac2751"
+    "sha256": "sha256:48f9a0383d864027aa7197522e0b2acad752f86ae1a5493074383995e4a766e7"
   },
   "knowledge_context_freeze": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context.freeze.v1.json",
@@ -33,16 +45,32 @@
   },
   "plan_id": "toolchain-workflow-repair",
   "plan_validation": {
-    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/plan-validation-receipt.v1.json",
-    "sha256": "sha256:987fee669ec3c3420d854445c1d18caf45adf2a779fa266b0b634185ddcbd2c8"
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/plan-validation-receipt.v2.json",
+    "sha256": "sha256:ad58707393cea4dc9b10c684319f07375286661b4b3387100939b70f0f9e3d21"
   },
   "predecessor_authorization": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-authorization-receipt.successor.v1.json",
-    "sha256": "sha256:f10f2d4c2058cfb82a36871a26e67289080fbe91a585f31251e7566891343c1e"
+    "sha256": "sha256:f083ee1e05f7647a375502846026d80df71bb34957cf6f5a65a1104192823071"
+  },
+  "repair_closure": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/repair-closure.v1.json",
+    "sha256": "sha256:55a50b73d196b61d0b281ce027f9d9966bac763eb008c88bd09c6362d2dbe510"
   },
   "schema_version": "toolchain-workflow-repair.implementation-authorization-receipt.v1",
   "skill_input_receipt": {
-    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/canonical-skill-input-plan-receipt.v2.json",
-    "sha256": "sha256:b1f06ef61d641deccac4be623547346890f50f3cd67b89029c5454efdf450479"
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-17-receipt.json",
+    "sha256": "sha256:076209586185f8868c8ff6fa6f66be9dbf1fab084027ea41d87e18ae1b28cc3d"
+  },
+  "skill_input_request": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-17-request.json",
+    "sha256": "sha256:f09b0e22ead7b23ce3c72f2e800143aa553268ec33de0c438e1b49e3a6794343"
+  },
+  "terminal_validator": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
+    "sha256": "sha256:a3802b040e9e60ca345a57c19b8b6953fa1325a191e6cd96192a02a38a572fab"
+  },
+  "validate_all": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py",
+    "sha256": "sha256:9102b02589759457cf4f6a776b413672492ccbb25a83e3ba81bbb5962f6fac33"
   }
 }

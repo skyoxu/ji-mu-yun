@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "skill=vdd-execution-plan; route only explicit complete plan-directory create/repair, standalone requirements file means direct implementation; read solo-maintainer, clarification, lifecycle references first; profiles standard/resumable/self-hosted chosen before model routing; default Sol/high, Sol/max only closed capability-proven recovery; lifecycle draft>plan-ready>implementation-authorized>implementation-complete>acceptance-passed>archived; VDD owns draft/plan-ready, Bootstrap optional/nonpublishing, Quick Dev only implementation-complete; slices declare behavior, failure intent, GREEN target, dependents, recovery; VDD must not create/import RED evidence; repair in-place repair/round-n with immutable history, closure hash; review lineage family budget 2 semantic, hard 3 with typed trigger/manual_pause; repair needs generated callsite inventory, exclusions, composition receipt, hash-bound changed set/scope; mandatory knowledge preflight before plan-ready, blocking Locator integrity/unavailable/shape failures; skill-input adapter+typed semantic child+ready validation required before knowledge freeze/artifacts; bind Git baseline and candidate identity; review optional unless requested/protected; resumable/self-hosted require indexed append-only 95 report; completion requires profile artifacts, observable acceptance per requirement, declared negative/legacy path, stable targeted repair, terminal full validation."
+}

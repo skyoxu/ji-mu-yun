@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    "source_sha256": "sha256:3b972a513740b0b969eb1939767b911b9c863de3121a272f1143b3be94b51bbb",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 31849,
+    "start_line": 1,
+    "end_line": 661,
+    "content_sha256": "sha256:3b972a513740b0b969eb1939767b911b9c863de3121a272f1143b3be94b51bbb"
+  },
+  "status": "accepted",
+  "summary": "Route planner enforces execution-plans containment and frozen knowledge context; stale context -> refresh-knowledge-context, invalid context -> external-repair-required; validates implementation contract, plan_id, slice IDs, dependencies, reports, registry, hashes and evidence freshness; repeated failure fingerprint (count >=2) -> stop; recognizes current RED handoffs only when selector, expected failures, execution fingerprint, contract/test bytes and evidence match; supports legacy RED evidence with immutable failed observations; reuses unaffected slices only when exact projection or execution fingerprint remains current; authorization requires valid plan-state and maintainer receipt bindings, otherwise awaits authorization or requires repair; active actions resolve to validate-slice, implement, or run-slice; regression/dogfood slices validate directly; completed slices require matching exit predicate/status, current roots, candidate evidence, and staged recovery constraints; terminal completion requires validated terminal receipt; otherwise next actions are run-slice, validate-terminal, implementation-complete, or repair states; CLI requires caller quick-dev-tdd-adapter"
+}
