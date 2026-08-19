@@ -1,6 +1,8 @@
 {
   "authorizes": [],
-  "coverageGaps": [],
+  "coverageGaps": [
+    "historical evidence excluded from successor custody projection"
+  ],
   "files": [
     {
       "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",

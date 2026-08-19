@@ -11,7 +11,7 @@
   "baseline_content_manifest_hash": "sha256:aa90bf67cb298b21728e38653e3dae1c45036ea2eb45a54ff2ba898fc7ede232",
   "baseline_content_manifest_path": "acceptance-inputs/acceptance-8-18-successor-5/baseline-content-manifest.v1.json",
   "baseline_revision": "00841ab5e1c112bef2577d9681f23f15a3e420fd",
-  "candidate_content_manifest_hash": "sha256:bedbb0907f0d394918275ca9178c1de6d01128d0bbcb09fdc8278a100eee06c5",
+  "candidate_content_manifest_hash": "sha256:93f69c42e32954d2d738f082474c377d4ab449ae7a4552e1b09f4d55a6c7d05d",
   "candidate_content_manifest_path": "acceptance-inputs/acceptance-8-18-successor-5/candidate-content-manifest.v1.json",
   "candidate_mode": "commit",
   "candidate_revision": "4705876990f3e01dce37b0c4dd407057cbfd4e56",

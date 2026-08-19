@@ -8,10 +8,10 @@
     "path": "acceptance-inputs/acceptance-8-18-successor-5/baseline-content-manifest.v1.json",
     "sha256": "sha256:165ac3a745d92946a21693dcf153249b5083709a43f07b35ca4f82d6b7eab7eb"
   },
-  "bundleHash": "sha256:dc46288f616114717e07340dfaa131ccdd406e5cc437316d1b5fde2a99004dd1",
+  "bundleHash": "sha256:60fcb42d16a22f383a1441cdb6ff82c79347bf6b63c956b10f888babae02d942",
   "candidateManifest": {
     "path": "acceptance-inputs/acceptance-8-18-successor-5/candidate-content-manifest.v1.json",
-    "sha256": "sha256:bedbb0907f0d394918275ca9178c1de6d01128d0bbcb09fdc8278a100eee06c5"
+    "sha256": "sha256:93f69c42e32954d2d738f082474c377d4ab449ae7a4552e1b09f4d55a6c7d05d"
   },
   "candidateSnapshotPath": ".acceptance-snapshots/acceptance-8-18-successor-5",
   "commandRegistry": {
