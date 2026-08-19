@@ -1,0 +1,510 @@
+{
+  "actions": [
+    {
+      "actionId": "w0-green",
+      "activation": true,
+      "commandId": "w0-green",
+      "dependsOn": [],
+      "order": 1
+    },
+    {
+      "actionId": "w1-green",
+      "activation": true,
+      "commandId": "w1-green",
+      "dependsOn": [],
+      "order": 2
+    },
+    {
+      "actionId": "w2-green",
+      "activation": true,
+      "commandId": "w2-green",
+      "dependsOn": [],
+      "order": 3
+    },
+    {
+      "actionId": "w3-green",
+      "activation": true,
+      "commandId": "w3-green",
+      "dependsOn": [],
+      "order": 4
+    },
+    {
+      "actionId": "w4-green",
+      "activation": true,
+      "commandId": "w4-green",
+      "dependsOn": [],
+      "order": 5
+    },
+    {
+      "actionId": "w5-green",
+      "activation": true,
+      "commandId": "w5-green",
+      "dependsOn": [],
+      "order": 6
+    },
+    {
+      "actionId": "w6-green",
+      "activation": true,
+      "commandId": "w6-green",
+      "dependsOn": [],
+      "order": 7
+    },
+    {
+      "actionId": "w0-terminal",
+      "activation": true,
+      "commandId": "w0-terminal",
+      "dependsOn": [],
+      "order": 8
+    },
+    {
+      "actionId": "w1-terminal",
+      "activation": true,
+      "commandId": "w1-terminal",
+      "dependsOn": [],
+      "order": 9
+    },
+    {
+      "actionId": "w2-terminal",
+      "activation": true,
+      "commandId": "w2-terminal",
+      "dependsOn": [],
+      "order": 10
+    },
+    {
+      "actionId": "w3-terminal",
+      "activation": true,
+      "commandId": "w3-terminal",
+      "dependsOn": [],
+      "order": 11
+    },
+    {
+      "actionId": "w4-terminal",
+      "activation": true,
+      "commandId": "w4-terminal",
+      "dependsOn": [],
+      "order": 12
+    },
+    {
+      "actionId": "w5-terminal",
+      "activation": true,
+      "commandId": "w5-terminal",
+      "dependsOn": [],
+      "order": 13
+    },
+    {
+      "actionId": "w6-terminal",
+      "activation": true,
+      "commandId": "w6-terminal",
+      "dependsOn": [],
+      "order": 14
+    },
+    {
+      "actionId": "skill-input-suite",
+      "activation": true,
+      "commandId": "skill-input-suite",
+      "dependsOn": [],
+      "order": 15
+    },
+    {
+      "actionId": "knowledge-suite",
+      "activation": true,
+      "commandId": "knowledge-suite",
+      "dependsOn": [],
+      "order": 16
+    },
+    {
+      "actionId": "workflow-repair-e2e",
+      "activation": true,
+      "commandId": "workflow-repair-e2e",
+      "dependsOn": [],
+      "order": 17
+    },
+    {
+      "actionId": "terminal-full",
+      "activation": true,
+      "commandId": "terminal-full",
+      "dependsOn": [],
+      "order": 19
+    }
+  ],
+  "affectedConsumerRefs": [
+    ".agents/skills/quick-dev-tdd-adapter",
+    ".agents/skills/run-refactor-implementation-acceptance",
+    "scripts/python/skill_input_consumption.py"
+  ],
+  "authorizes": [],
+  "baselineRevision": "2050ec682bab8cdc11770bf9823549b264a9e339",
+  "candidateRevision": "4705876990f3e01dce37b0c4dd407057cbfd4e56",
+  "changeId": "toolchain-workflow-repair-8-18-successor-acceptance",
+  "changedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+    "execution-plans/2026-08-18-toolchain-workflow-repair/95-implementation-evolution-and-completion-report.md",
+    "execution-plans/2026-08-18-toolchain-workflow-repair/authority-manifest.v1.json",
+    "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/tests/test_terminal_full.py",
+    "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
+    "scripts/python/knowledge_gate_projection.py",
+    "scripts/python/launch_skill_input_consumer.py",
+    "scripts/python/prepare_skill_input_consumption.py",
+    "scripts/python/skill_input_consumption.py",
+    "scripts/python/skill_input_coverage.py",
+    "scripts/python/skill_input_current.py",
+    "scripts/python/skill_input_generation.py",
+    "scripts/python/skill_input_retention.py",
+    "scripts/python/skill_input_transport.py",
+    "scripts/python/tests/test_knowledge_gate_matrix.py",
+    "scripts/python/tests/test_skill_input_consumption.py",
+    "scripts/python/tests/test_skill_input_coverage_v2.py",
+    "scripts/python/tests/test_skill_input_generation_pointer.py",
+    "scripts/python/tests/test_skill_input_retention.py",
+    "scripts/python/tests/test_skill_input_selection_v2.py",
+    "scripts/python/tests/test_skill_input_transport_auto.py",
+    "scripts/python/tests/test_toolchain_workflow_repair_e2e.py",
+    "scripts/python/validate_skill_input_consumption.py"
+  ],
+  "codeReviewDomain": "toolchain",
+  "codeReviewPolicyPath": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+  "commands": [
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_selection_v2.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w0-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_transport_auto.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w1-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_coverage_v2.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w2-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_knowledge_gate_matrix.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w3-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_generation_pointer.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w4-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_retention.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w5-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_toolchain_workflow_repair_e2e.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w6-green",
+      "shell": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_selection_v2.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w0-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_transport_auto.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w1-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_coverage_v2.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w2-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_knowledge_gate_matrix.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w3-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_generation_pointer.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w4-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_retention.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w5-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_toolchain_workflow_repair_e2e.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w6-terminal",
+      "shell": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_consumption.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "skill-input-suite",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_knowledge_gate_matrix.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "knowledge-suite",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_toolchain_workflow_repair_e2e.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "workflow-repair-e2e",
+      "shell": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
+        "--repository-root",
+        ".",
+        "--plan-dir",
+        "execution-plans/2026-08-18-toolchain-workflow-repair"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "terminal-full",
+      "shell": false,
+      "timeout_seconds": 1800
+    }
+  ],
+  "implementationReceiptHash": "sha256:e74f1729128c1c13bf5bfc558116b41190507fde8e45af7b3af5d22d6482c0d5",
+  "implementationReceiptPath": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/quick-dev-implementation-complete.v1.json",
+  "knowledgeContextPath": "knowledge-context.refactor-acceptance-successor.v1.json",
+  "runId": "acceptance-8-18-successor",
+  "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
+  "targetPlan": "execution-plans/2026-08-18-toolchain-workflow-repair",
+  "targetPlanPaths": [
+    "implementation-contract.v1.json",
+    "requirements-and-acceptance.md"
+  ]
+}
