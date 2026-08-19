@@ -7,10 +7,11 @@ import tempfile
 import unittest
 from unittest import mock
 
-
 TOOLS = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
 STAGE_RECOVERY_PLAN = REPOSITORY_ROOT / "execution-plans" / "2026-08-17-quick-dev-tdd-stage-recovery"
+sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
+from skill_input_consumption import artifact_identity_hash
 
 
 def load(name: str):
@@ -351,7 +352,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 path = plan / name
                 receipt_bindings[field] = {
                     "path": path.relative_to(root).as_posix(),
-                    "sha256": "sha256:" + __import__("hashlib").sha256(path.read_bytes()).hexdigest(),
+                    "sha256": artifact_identity_hash(path),
                 }
             (plan / "implementation-authorization-receipt.successor.v1.json").write_text(json.dumps({
                 "plan_id": "target",
