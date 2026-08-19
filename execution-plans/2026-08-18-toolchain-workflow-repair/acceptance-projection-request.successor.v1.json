@@ -133,7 +133,7 @@
     "scripts/python/skill_input_consumption.py"
   ],
   "authorizes": [],
-  "baselineRevision": "2050ec682bab8cdc11770bf9823549b264a9e339",
+  "baselineRevision": "00841ab5e1c112bef2577d9681f23f15a3e420fd",
   "candidateRevision": "4705876990f3e01dce37b0c4dd407057cbfd4e56",
   "changeId": "toolchain-workflow-repair-8-18-successor-acceptance",
   "changedPaths": [
@@ -472,7 +472,7 @@
   "implementationReceiptHash": "sha256:e74f1729128c1c13bf5bfc558116b41190507fde8e45af7b3af5d22d6482c0d5",
   "implementationReceiptPath": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/quick-dev-implementation-complete.v1.json",
   "knowledgeContextPath": "knowledge-context.refactor-acceptance-successor.v1.json",
-  "runId": "acceptance-8-18-successor-2",
+  "runId": "acceptance-8-18-successor-3",
   "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
   "targetPlan": "execution-plans/2026-08-18-toolchain-workflow-repair",
   "targetPlanPaths": [
