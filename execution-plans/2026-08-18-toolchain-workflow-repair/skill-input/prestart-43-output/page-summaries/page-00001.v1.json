@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "scope: explicit execution-plans/<plan-dir> with schema-valid implementation-contract.v1.json only; parent router --caller quick-dev-tdd-adapter must yield lane=strict_tdd_plan/backend=quick-dev-tdd-adapter or hard-stop; inspect only supplied target directory/file, max one valid 95-*.md; reports/run-state are non-authorizing continuity; audit/repair/validate/refreeze before RED; loop_plan_directory.py selects each next action; run_slice_lifecycle.py authors lifecycle evidence; enforce hash-bound RED expected failure before production write, then minimal GREEN, REFACTOR, slice predicate; auto-route unlocked slices, successor stale receipts, stop only terminal predicate/external repair/repeated fingerprint; terminal=implementation-complete, acceptance external; P0/P1 completion requires standard Acceptance handoff plus audit-repair-completeness without selecting/launching Bootstrap; typed Skill-input receipt/semantic child/require-ready gate mandatory, mismatches route repair; model class highest of architectural, complex, small_mechanical, normal; unknown facts=blocked complex, override upgrade-only, decision non-authorizing; frozen knowledge must hash/decision match or route VDD repair/successor refresh; persistent loop consumes explicit valid execution_snapshot_paths and exact planned_new_files only; structured commands shell=false; drift rejected and failed evidence preserved via stale-linked successor; adapter has no review, commit, release, or acceptance authority; version-sensitive staged changes require exact-version Context7 verification, repository-only changes=N/A; read implementation-backend-contract, tdd-run-protocol, evidence-and-freshness before slice implementation"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "仓库为积木云 Phase A/B 云原型平台；按任务路由读取入口及最近 AGENTS.md，禁止预载无关文档；优先 FastCtx，明确不可用后才切换 Windows 命令平面并记录一次；用户沟通用中文，代码与日志用英文，中文写入须 Python 显式 UTF-8；保护用户改动，禁破坏性操作、手工改活库、提交或泄露秘密；修改受保护的运行时、认证、LLM、网络、安全配置及活工作区前须获批；代码或测试变更引用 Accepted ADR，契约或安全策略变化须更新 ADR；浏览器 API 默认向后兼容，破坏性变化需批准及兼容计划；文件型 Hosted 路由按八源顺序恢复，缺失即关闭，实时阻塞优先；LLM/Codex 使用统一规范与 UTF-8 stdin，写入需可执行路由、workspace-write 和验收；运行时先本地健康、再标准服务脚本、后代理，禁用普通 dotnet run；workflow.md 仅限索引白名单触发，普通需求不得进入 VDD/Taskmaster 等流程；完成必须由验证器、诊断或机器证据证明，运行与验收证据追加到 logs/，保留历史失败；完成条件包括针对性测试、匹配影响面的 smoke、必要文档更新及无未授权持久化、泄密或兼容破坏；本文件维护目标 6000-8000 字符，硬上限 10000"
+}

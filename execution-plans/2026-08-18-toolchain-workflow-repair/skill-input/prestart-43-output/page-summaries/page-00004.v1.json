@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "vdd-execution-plan creates/repairs complete VDD execution-plan directories only on explicit request; standalone requirements Markdown routes to direct implementation. Before action read solo-maintainer standard, clarification gate, and lifecycle contract. Select least-complex profile first: standard, resumable, or self-hosted; pass profile to model routing. Lifecycle: draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived. Clarify only material scope, compatibility, destructive, protected-path, or acceptance boundaries; zero questions valid. Each slice needs behavior, failure intent, GREEN target, dependents, and recovery; VDD does not own RED execution. Repair is in-place under repair/round-n, preserves history, uses lineageFamilyId, default two rounds/hard limit three with typed Round-3 triggers. Repair requires hash-bound changed-set derivation, root-cause callsite inventory, producer/consumer composition receipt, and complete review scope. Mandatory knowledge preflight and skill-input consumption gate precede plan generation; missing verified required knowledge or invalid receipts blocks plan-ready. Use explicit target-plan paths; no automatic promotion from search results. Standard may omit 95 report; resumable/self-hosted require append-only 95 report and index entry. Bootstrap is optional supplemental evidence and never publishes lifecycle state. Completion requires profile artifacts, observable acceptance for every requirement, RED/legacy path, stable repairs, and current terminal full validation."
+}

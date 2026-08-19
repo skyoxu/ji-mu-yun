@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Skill run-refactor-implementation-acceptance governs deterministic evidence for one explicit execution-plans/<target> refactor; evidence only, never code approval, commit, release, or deploy; require frozen candidate and explicit baseline, complete manifests, typed request, action DAG, command registry, and implementation contract or compact VDD bundle; Quick Dev receipt is authoritative for implementation-complete projection; candidate assembly and inputs are immutable, hash-bound, append-only; create Locator-derived acceptance knowledge context and validate complete read-set, with catalog_stale degraded but non-blocking; prepare typed Skill-input receipt through canonical launcher and require ready validation; start-or-resume binds run-input, contract, context, receipt, and contract hashes, deriving stable run IDs and successor runs on drift; deterministic_only finalizes via replayed controlled receipts and does not invoke Bootstrap; required semantic routes need repository-owned lineage projection, typed route, Bootstrap handoff, high-cost acknowledgement, and exact finalized import; later discovery requires typed trigger, recommendation, confidence, and explicit confirmation; P0/P1 repairs require Quick Dev handoff and completeness audit, with focused verification limits and no Round 4; three consumed rounds lead manual_pause, whose ADR-0054 closure requires protocol review, exact mappings, maintainer acknowledgement, and deterministic finalization; maintenance mode shifts finding severities; historical runs, indexes, calibration, and legacy envelopes are non-authorizing; model launch is restricted to policy-owned recovery triggers; controlled validation permits only registered shell-free commands in isolated roots; missing, stale, ambiguous, unsafe, or schema-invalid artifacts fail closed."
+}
