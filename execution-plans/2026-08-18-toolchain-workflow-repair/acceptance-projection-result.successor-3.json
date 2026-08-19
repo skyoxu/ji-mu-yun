@@ -1,0 +1,7 @@
+{
+  "authorizes": [],
+  "bundle": "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-inputs/acceptance-8-18-successor-3/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+  "bundleHash": "sha256:4400f4f5a5646b22dfdc06bae2e66120051b492f116201d7603f26810fcba46b",
+  "runRequest": "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-run-request.acceptance-8-18-successor-3.v1.json",
+  "status": "ready"
+}

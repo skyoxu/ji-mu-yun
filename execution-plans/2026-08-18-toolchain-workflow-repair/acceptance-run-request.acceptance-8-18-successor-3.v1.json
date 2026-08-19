@@ -1,0 +1,40 @@
+{
+  "adapter_hash": "sha256:f9933d9b1130441213d20d214cc5e7c4cbdc2b58b36933a17dd795a109a62edf",
+  "adapter_id": "run-refactor-implementation-acceptance",
+  "adapter_version": "compact-vdd-projection.v1",
+  "affected_consumer_refs": [
+    ".agents/skills/quick-dev-tdd-adapter",
+    ".agents/skills/run-refactor-implementation-acceptance",
+    "scripts/python/skill_input_consumption.py"
+  ],
+  "allowed_write_roots": [],
+  "baseline_content_manifest_hash": "sha256:aa90bf67cb298b21728e38653e3dae1c45036ea2eb45a54ff2ba898fc7ede232",
+  "baseline_content_manifest_path": "acceptance-inputs/acceptance-8-18-successor-3/baseline-content-manifest.v1.json",
+  "baseline_revision": "00841ab5e1c112bef2577d9681f23f15a3e420fd",
+  "candidate_content_manifest_hash": "sha256:826c7cc1519388efca2c3326cff23c1f87bca8dbe430d8a53fe7046263e475c8",
+  "candidate_content_manifest_path": "acceptance-inputs/acceptance-8-18-successor-3/candidate-content-manifest.v1.json",
+  "candidate_mode": "commit",
+  "candidate_revision": "4705876990f3e01dce37b0c4dd407057cbfd4e56",
+  "change_id": "toolchain-workflow-repair-8-18-successor-acceptance",
+  "changed_paths": [
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py"
+  ],
+  "code_review_domain": "toolchain",
+  "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+  "code_review_policy_path": "acceptance-inputs/acceptance-8-18-successor-3/toolchain-code-review.v1.json",
+  "created_utc": "2026-08-01T00:00:00Z",
+  "execution_mode": "evidence_only",
+  "forbidden_write_roots": [
+    "logs/phase-a-innernet/",
+    "runtime/phase-a/"
+  ],
+  "run_id": "acceptance-8-18-successor-3",
+  "target": "C:\\jimuyun\\execution-plans\\2026-08-18-toolchain-workflow-repair",
+  "target_plan_hash": "sha256:1e8c96c289f9d4737a7dfe1bc71c47654aac39d313b36ad63b7523179f184036",
+  "target_plan_paths": [
+    "implementation-contract.v1.json",
+    "requirements-and-acceptance.md"
+  ],
+  "validator_hash": "sha256:ae5cf5f8eb6257c18107db37cbd6802388f7218add6c1e549e5ae5bcb00ccf06"
+}
