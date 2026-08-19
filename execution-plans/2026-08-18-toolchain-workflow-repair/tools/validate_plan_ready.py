@@ -95,7 +95,7 @@ def main() -> int:
             if args.mode == "authorized-repair-revalidate":
                 repair_state = plan / "repair" / "round-1" / "repair-state.v1.json"
                 repair_value = read_json(repair_state) if repair_state.is_file() else {}
-                if state.get("status") != "implementation-authorized" or repair_value.get("status") != "validating" or repair_value.get("blocks_execution") is not True or repair_value.get("authorizes") != []:
+                if state.get("status") != "implementation-authorized" or repair_value.get("status") != "closed" or repair_value.get("blocks_execution") is not False or repair_value.get("authorizes") != []:
                     failures.append("authorized-repair-state-invalid")
             elif state.get("status") == "draft" and state.get("authorizes") != []:
                 failures.append("draft-plan-state-authorizes")
@@ -180,7 +180,7 @@ def main() -> int:
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             failures.append(f"invalid-plan-artifact:{exc}")
     result = {
-        "schema_version": "toolchain-workflow-repair.plan-validation.v2" if args.mode == "authorized-repair-revalidate" else "toolchain-workflow-repair.plan-validation.v1",
+        "schema_version": "toolchain-workflow-repair.plan-validation.v4" if args.mode == "authorized-repair-revalidate" else "toolchain-workflow-repair.plan-validation.v1",
         "plan_id": PLAN_ID,
         "predicate": "plan-valid",
         "status": "pass" if not failures else "fail",

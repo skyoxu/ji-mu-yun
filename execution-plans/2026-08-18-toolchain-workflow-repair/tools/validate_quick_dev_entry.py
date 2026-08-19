@@ -5,11 +5,18 @@ from pathlib import Path
 def main() -> int:
     parser=argparse.ArgumentParser(); parser.add_argument('--repository-root',type=Path,required=True); parser.add_argument('--plan-dir',type=Path,required=True); parser.add_argument('--out',type=Path,required=True); args=parser.parse_args()
     root=args.repository_root.resolve(); plan=args.plan_dir.resolve(); round_dir=plan/'repair'/'round-1'; failures=[]
-    for name in ('repair-closure.v1.json','plan-validation-receipt.v2.json','quick-dev-entry-receipt.v1.json'):
+    for name in ('repair-closure.v1.json','plan-validation-receipt.v4.json','quick-dev-entry-receipt.v1.json'):
         if not (round_dir/name).is_file(): failures.append(f'missing:{name}')
     if (round_dir/'repair-closure.v1.json').is_file():
         closure=json.loads((round_dir/'repair-closure.v1.json').read_text(encoding='utf-8'))
-        if closure.get('status')!='pass' or closure.get('authorizes')!=[]: failures.append('closure-not-pass')
+        if closure.get('status')!='pass' or closure.get('failures')!=[] or closure.get('authorizes')!=[]: failures.append('closure-not-pass')
+    repair_state = round_dir / 'repair-state.v1.json'
+    if repair_state.is_file():
+        state = json.loads(repair_state.read_text(encoding='utf-8'))
+        if state.get('status') != 'closed' or state.get('blocks_execution') is not False or state.get('authorizes') != []:
+            failures.append('repair-state-not-closed')
+    else:
+        failures.append('repair-state-missing')
     authorization = plan / 'implementation-authorization-receipt.successor.v1.json'
     if not authorization.is_file():
         failures.append('authorization-receipt-missing')
@@ -27,6 +34,9 @@ def main() -> int:
             ], cwd=root, capture_output=True, text=True)
             if validation.returncode != 0:
                 failures.append('skill-input-not-ready')
+        predecessor = receipt.get('predecessor_authorization')
+        if isinstance(predecessor, dict) and predecessor.get('path') == 'execution-plans/2026-08-18-toolchain-workflow-repair/implementation-authorization-receipt.successor.v1.json':
+            failures.append('authorization-predecessor-self-reference')
     route=subprocess.run(['python','.agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py','--repository-root','.','--plan-dir',str(plan.relative_to(root)),'--caller','quick-dev-tdd-adapter'],cwd=root,capture_output=True,text=True)
     try: routed=json.loads(route.stdout)
     except json.JSONDecodeError: routed={}

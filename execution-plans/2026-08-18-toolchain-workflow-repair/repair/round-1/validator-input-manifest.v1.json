@@ -15,15 +15,15 @@
     },
     {
       "path": "knowledge-context.v1.json",
-      "sha256": "sha256:286a75b1341217966bd746db3d1ac441d1255d39bb1dd25674387e10ff31f2f9"
+      "sha256": "sha256:680fae82bf5a8684474b418dfc3637b703991c75e117053a5e7030ed3243664c"
     },
     {
       "path": "knowledge-context.freeze.v1.json",
-      "sha256": "sha256:b670e2844949c3756f2fd462ccd7d507b103fc56422026bbb3f9df15b7287ed1"
+      "sha256": "sha256:67a6019c12efb2c5902bff9035f9224daa85495c4ec45c80962db761912e4cec"
     }
   ],
   "mode": "authorized-repair-revalidate",
   "plan_id": "toolchain-workflow-repair",
   "schema_version": "toolchain-workflow-repair.validator-input-manifest.v1",
-  "skill_input_receipt": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-36-receipt.json"
+  "skill_input_receipt": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-37-receipt.json"
 }

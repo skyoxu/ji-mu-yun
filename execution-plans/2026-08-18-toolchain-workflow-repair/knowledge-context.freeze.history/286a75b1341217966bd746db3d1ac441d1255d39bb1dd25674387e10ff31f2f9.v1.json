@@ -1,10 +1,10 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:680fae82bf5a8684474b418dfc3637b703991c75e117053a5e7030ed3243664c",
-  "canonical_context_sha256": "sha256:1641f434d088da41b640ca01ed8ac5452f712ff400ab50b7230495fb1b58c993",
-  "request_sha256": "sha256:c05e1d1d7a01d30585f9d3a5efc60427fcbd7bd685e55a53f3d99a2214242226",
-  "result_sha256": "sha256:b4777f64bc53b91815ca9c207c85b42cae0b8ffadde19a3a048c6ef5718a5736",
+  "context_sha256": "sha256:286a75b1341217966bd746db3d1ac441d1255d39bb1dd25674387e10ff31f2f9",
+  "canonical_context_sha256": "sha256:da9aed1c2a738355c4281b0c91032308e5ec8495c484e24022c822447dbc1ffe",
+  "request_sha256": "sha256:3c723834fb85245ba9b02d9cc435584bf992f3f1a8b29b6a7ac72695a7dec686",
+  "result_sha256": "sha256:d10e0195918d7c7103b5e07c5d3a5703a08ff59315517935445b9b02d56b699b",
   "snapshot": {
     "ref": "refs/heads/main",
     "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
@@ -21,7 +21,7 @@
     },
     {
       "path": "scripts/python/skill_input_consumption.py",
-      "source_sha256": "8a99a8da95de2e426bd9f344d716e845366069c5d5de716b89fdc09669b90d12",
+      "source_sha256": "e1859e49890148e0b82d73a6c97c6a3c26bc81b2a510f3e471b4b10f8faa1591",
       "satisfies": [
         "skill-input-execution"
       ]
@@ -29,8 +29,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:286a75b1341217966bd746db3d1ac441d1255d39bb1dd25674387e10ff31f2f9",
-    "freeze_receipt_path": "knowledge-context.freeze.history/286a75b1341217966bd746db3d1ac441d1255d39bb1dd25674387e10ff31f2f9.v1.json",
-    "reason": "quick-dev-controlled-source-refresh"
+    "context_sha256": "sha256:6f643b247930f7689e346528c1f59f765d12ab5ddf55879e51c9e1492afa8591",
+    "freeze_receipt_path": "knowledge-context.freeze.history/6f643b247930f7689e346528c1f59f765d12ab5ddf55879e51c9e1492afa8591.v1.json",
+    "reason": "Bind current authorization candidate"
   }
 }

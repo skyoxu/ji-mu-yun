@@ -751,6 +751,18 @@ def expand_source_graph(
                 except ValueError as exc:
                     raise SkillInputError("opaque reference path escapes its source root") from exc
                 opaque_paths.add(opaque_relative)
+            # Explicit target selection is still subject to the contract's
+            # opaque boundary. A caller must not smuggle lifecycle/evidence
+            # artifacts back into the Skill input by naming them directly.
+            if role_name == "target_files":
+                for raw_path in raw_paths:
+                    _selected_path, selected_relative = contained_path(repository_root, raw_path)
+                    if selected_relative in opaque_paths or any(
+                        selected_relative.startswith(prefix + "/") for prefix in opaque_paths
+                    ):
+                        raise SkillInputError(
+                            f"target_files selects opaque lifecycle path: {selected_relative}"
+                        )
             queue.append((root_path, 0, frozenset(), set(role["reference_kinds"]), reference_root, None, frozenset(opaque_paths), role.get("payload", True)))
     expanded: list[tuple[Path, str]] = []
     seen: set[str] = set()

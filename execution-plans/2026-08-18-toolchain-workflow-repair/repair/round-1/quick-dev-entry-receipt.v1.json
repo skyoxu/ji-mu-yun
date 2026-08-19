@@ -1,12 +1,10 @@
 {
   "authorizes": [],
-  "failures": [
-    "skill-input-not-ready"
-  ],
+  "failures": [],
   "lifecycle_transition": "none",
-  "next_action": "repair",
+  "next_action": "run-slice",
   "predicate": "quick-dev-entry-ready",
   "schema_version": "toolchain-workflow-repair.quick-dev-entry-validation.v1",
-  "slice_id": null,
-  "status": "fail"
+  "slice_id": "W0",
+  "status": "pass"
 }

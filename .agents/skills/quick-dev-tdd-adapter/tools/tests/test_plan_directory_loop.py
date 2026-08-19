@@ -331,6 +331,15 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 path = plan / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("{}\n", encoding="utf-8")
+            repair_state = plan / "repair" / "round-1" / "repair-state.v1.json"
+            repair_state.write_text(json.dumps({
+                "schema_version": "toolchain-workflow-repair.repair-state.v1",
+                "plan_id": "target",
+                "round": 1,
+                "status": "closed",
+                "blocks_execution": False,
+                "authorizes": [],
+            }), encoding="utf-8")
             (plan / "plan-state.v1.json").write_text(json.dumps({
                 "schema_version": "vdd.plan-state.v2",
                 "plan_id": "target",

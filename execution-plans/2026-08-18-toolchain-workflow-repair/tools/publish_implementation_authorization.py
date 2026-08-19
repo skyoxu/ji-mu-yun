@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -21,6 +22,21 @@ def sha256(path: Path) -> str:
 
 def write_json(path: Path, value: dict) -> None:
     path.write_bytes((json.dumps(value, sort_keys=True, indent=2) + "\n").encode("utf-8"))
+
+
+def exclusive_copy(source: Path, destination: Path) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    payload = source.read_bytes()
+    descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(payload)
+    except Exception:
+        try:
+            destination.unlink()
+        except OSError:
+            pass
+        raise
 
 
 def main() -> int:
@@ -44,15 +60,18 @@ def main() -> int:
     state = json.loads(state_path.read_text(encoding="utf-8"))
     resume = json.loads(resume_path.read_text(encoding="utf-8"))
     refreshing = state.get("status") == "implementation-authorized"
+    predecessor = None
+    predecessor_path = None
     if refreshing:
         if not args.refresh_authorized_successor or state.get("authorizes") != ["plan-ready", "implementation-authorized"] or not expected_out.is_file():
             raise ValueError("authorized successor refresh requires explicit maintainer flag and predecessor receipt")
-        predecessor = {"path": expected_out.relative_to(root).as_posix(), "sha256": sha256(expected_out)}
+        previous_hash = hashlib.sha256(expected_out.read_bytes()).hexdigest()
+        predecessor_path = plan / "repair" / "round-1" / f"authorization-predecessor.{previous_hash[:16]}.v1.json"
+        if not predecessor_path.exists():
+            exclusive_copy(expected_out, predecessor_path)
+        predecessor = {"path": predecessor_path.relative_to(root).as_posix(), "sha256": sha256(predecessor_path)}
     elif state.get("plan_id") != PLAN_ID or state.get("status") != "plan-ready" or state.get("authorizes") != ["plan-ready"]:
         raise ValueError("plan is not currently plan-ready")
-    else:
-        predecessor = None
-
     relative = plan.relative_to(root).as_posix()
     bindings = {
         "implementation_contract": "implementation-contract.v1.json",
@@ -60,13 +79,13 @@ def main() -> int:
         "authority_manifest": "authority-manifest.v1.json",
         "knowledge_context": "knowledge-context.v1.json",
         "knowledge_context_freeze": "knowledge-context.freeze.v1.json",
-        "plan_validation": "repair/round-1/plan-validation-receipt.v3.json",
+        "plan_validation": "repair/round-1/plan-validation-receipt.v4.json",
         "repair_closure": "repair/round-1/repair-closure.v1.json",
         "bootstrap_preexisting_delta": "repair/round-1/bootstrap-preexisting-delta.v1.json",
         "candidate_manifest": "repair/round-1/repair-candidate-manifest.v1.json",
         "validate_all": "tools/validate_all.py",
         "terminal_validator": "tools/terminal_full.py",
-        "immutable_predecessor": "repair/round-1/authorization-predecessor.2050ec68.v1.json",
+        "immutable_predecessor": predecessor_path.relative_to(plan).as_posix() if predecessor_path else "repair/round-1/authorization-predecessor.2050ec68.v1.json",
     }
     skill_input = args.skill_input_receipt.resolve()
     try:
@@ -85,6 +104,10 @@ def main() -> int:
     # bind that exact artifact instead of requiring a second, nonexistent alias.
     candidate_binding_hash = "sha256:" + hashlib.sha256(canonical(receipt_bindings)).hexdigest()
 
+    receipt_bindings["immutable_predecessor"] = {
+        "path": f"{relative}/{bindings['immutable_predecessor']}",
+        "sha256": sha256(plan / bindings["immutable_predecessor"]),
+    }
     state.update({
         "status": "implementation-authorized",
         "owner": "maintainer",

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "knowledge/policies/consumer-policies.v2.json",
+    "source_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2174,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01"
+  },
+  "status": "accepted",
+  "summary": "schema=jimuyun.knowledge-consumer-policies.v2; revision=knowledge-consumer-policies.v2; policies=vdd,quick-dev,bootstrap,refactor-acceptance; vdd: freeze=before-plan-source-freeze, required=repository-rules, optional=existing-workflow, candidates<=20, confidence>=medium, historical=exact-only; quick-dev: freeze=vdd-owned-context, required=vdd-frozen-context, candidates=0, historical=forbidden; bootstrap: freeze=artifact-view-prepare, required=profile-context, optional=knowledge-context, candidates<=32, confidence>=medium, historical=exact-only; refactor-acceptance: freeze=acceptance-run-input, required=acceptance-scope, optional=knowledge-context|governance-context, candidates<=32, confidence>=medium, historical=exact-only; all lifecycle=repository-source; vdd/bootstrap/refactor paths=AGENTS.md|README.md plus listed repository prefixes; quick-dev has no exact paths or prefixes; status/visibility restrictions retained per consumer"
+}

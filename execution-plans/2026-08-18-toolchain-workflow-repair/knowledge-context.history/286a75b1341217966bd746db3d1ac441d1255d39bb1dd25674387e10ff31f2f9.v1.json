@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z",
+    "request_id": "TWR-20260819-plan-ready-final",
     "consumer": "vdd",
     "query": "skill-input-execution knowledge-execution-gates",
     "snapshot": {
@@ -111,7 +111,7 @@
           {
             "path": "scripts/python/skill_input_consumption.py",
             "role": "primary",
-            "source_sha256": "8a99a8da95de2e426bd9f344d716e845366069c5d5de716b89fdc09669b90d12"
+            "source_sha256": "e1859e49890148e0b82d73a6c97c6a3c26bc81b2a510f3e471b4b10f8faa1591"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json",
@@ -141,7 +141,7 @@
         ],
         "semantic_eligible": true,
         "source_role": "cli-entrypoint",
-        "source_sha256": "8a99a8da95de2e426bd9f344d716e845366069c5d5de716b89fdc09669b90d12",
+        "source_sha256": "e1859e49890148e0b82d73a6c97c6a3c26bc81b2a510f3e471b4b10f8faa1591",
         "status": "active",
         "visibility": {
           "marketplace": "excluded",
@@ -278,7 +278,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z",
+    "request_id": "TWR-20260819-plan-ready-final",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
@@ -308,7 +308,7 @@
       "owner": "adapter",
       "candidate": {
         "path": "scripts/python/skill_input_consumption.py",
-        "source_sha256": "8a99a8da95de2e426bd9f344d716e845366069c5d5de716b89fdc09669b90d12"
+        "source_sha256": "e1859e49890148e0b82d73a6c97c6a3c26bc81b2a510f3e471b4b10f8faa1591"
       },
       "decision": "accepted",
       "satisfies": [
@@ -337,19 +337,14 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:c05e1d1d7a01d30585f9d3a5efc60427fcbd7bd685e55a53f3d99a2214242226",
-  "result_sha256": "sha256:b4777f64bc53b91815ca9c207c85b42cae0b8ffadde19a3a048c6ef5718a5736",
-  "source_refresh": {
-    "schema_version": "jimuyun.knowledge-source-refresh.v1",
-    "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:d7fe0e84e47e559a12cbb94e27a240eead7b7688d85e8a792ffcba2c19d60ca9"
-  },
+  "request_sha256": "sha256:3c723834fb85245ba9b02d9cc435584bf992f3f1a8b29b6a7ac72695a7dec686",
+  "result_sha256": "sha256:d10e0195918d7c7103b5e07c5d3a5703a08ff59315517935445b9b02d56b699b",
   "preflight": {
     "status": "ready",
     "failure_code": null,
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
-    "source_freshness": "refreshed",
-    "context_sha256": "sha256:a6869cbc4ec1a091cd1ac21ac8bb01089ffab2ca7de7b5722a7db5ab4f38b739"
+    "source_freshness": "catalog_bound",
+    "context_sha256": "sha256:a2f542a66f6a4953922f7b016551744f8c832b55860c606fe75d2ee9af1fb409"
   }
 }

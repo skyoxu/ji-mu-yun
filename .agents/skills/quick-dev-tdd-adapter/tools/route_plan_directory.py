@@ -478,6 +478,25 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
         }
     if lifecycle_state == "implementation-authorized":
         if document["authorizes"] == ["plan-ready", "implementation-authorized"]:
+            repair_state_path = plan_dir / "repair" / "round-1" / "repair-state.v1.json"
+            try:
+                repair_state = json.loads(repair_state_path.read_text(encoding="utf-8"))
+                if (
+                    repair_state.get("status") != "closed"
+                    or repair_state.get("blocks_execution") is not False
+                    or repair_state.get("authorizes") != []
+                ):
+                    return {
+                        "next_action": "external-repair-required",
+                        "reason": "repair-state-not-closed",
+                        "authorizes": [],
+                    }
+            except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+                return {
+                    "next_action": "external-repair-required",
+                    "reason": "repair-state-invalid",
+                    "authorizes": [],
+                }
             receipt_path = plan_dir / "implementation-authorization-receipt.successor.v1.json"
             if not receipt_path.is_file():
                 return {

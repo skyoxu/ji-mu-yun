@@ -27,18 +27,16 @@ def main() -> int:
         "finding-set.v1.json", "repair-state.v1.json", "historical-artifact-disposition.v1.json",
         "baseline-manifest.2050ec68.v1.json", "bootstrap-preexisting-delta.v1.json",
         "repair-candidate-manifest.v1.json", "repair-changed-set.v1.json",
-        "validator-input-manifest.v1.json", "plan-validation-receipt.v2.json",
+        "validator-input-manifest.v1.json", "plan-validation-receipt.v4.json",
         "authorization-predecessor.2050ec68.v1.json", "root-cause-callsite-inventory.v1.json",
         "producer-consumer-composition-receipt.v1.json", "sibling-8-17-manifest.v1.json",
         "sibling-original-8-18-manifest.v1.json",
     ]
     missing = [name for name in required if not (round_dir / name).is_file()]
-    validation = round_dir / "plan-validation-receipt.v2.json"
+    validation = round_dir / "plan-validation-receipt.v4.json"
     value = json.loads(validation.read_text(encoding="utf-8")) if validation.is_file() else {}
     test_receipts = sorted((round_dir / "test-receipts").glob("*.v1.json"))
-    ready_input = sorted((plan / "skill-input").glob("*-receipt.json"))
-    selected_input = next((item for item in reversed(ready_input) if item.name.startswith("prestart-") and json.loads(item.read_text(encoding="utf-8")).get("ready") is True), None)
-    if missing or not test_receipts or selected_input is None or value.get("status") != "pass" or value.get("authorizes") != []:
+    if missing or not test_receipts or value.get("status") != "pass" or value.get("failures") != [] or value.get("authorizes") != []:
         raise ValueError("repair round is not ready for closure")
     refs = {name.removesuffix(".v1.json"): {"path": f"repair/round-1/{name}", "sha256": sha(round_dir / name)} for name in required}
     for receipt in test_receipts:
@@ -46,10 +44,9 @@ def main() -> int:
         if payload.get("status") != "pass" or payload.get("authorizes") != []:
             raise ValueError("repair test receipt is not a non-authorizing pass")
         refs[f"test:{receipt.stem}"] = {"path": receipt.relative_to(plan).as_posix(), "sha256": sha(receipt)}
-    refs["skill_input_ready"] = {"path": selected_input.relative_to(plan).as_posix(), "sha256": sha(selected_input)}
     refs["knowledge_context"] = {"path": "knowledge-context.v1.json", "sha256": sha(plan / "knowledge-context.v1.json")}
     refs["knowledge_freeze"] = {"path": "knowledge-context.freeze.v1.json", "sha256": sha(plan / "knowledge-context.freeze.v1.json")}
-    closure = {"schema_version": "toolchain-workflow-repair.repair-closure.v1", "plan_id": "toolchain-workflow-repair", "status": "pass", "failures": [], "bindings": refs, "requires": ["plan-validation-pass", "pre-existing-delta", "authorization-predecessor", "current-skill-input", "knowledge-preflight"], "authorizes": [], "lifecycle_transition": "none"}
+    closure = {"schema_version": "toolchain-workflow-repair.repair-closure.v1", "plan_id": "toolchain-workflow-repair", "status": "pass", "failures": [], "bindings": refs, "requires": ["plan-validation-pass", "pre-existing-delta", "authorization-predecessor", "knowledge-preflight"], "authorizes": [], "lifecycle_transition": "none"}
     write(round_dir / "repair-closure.v1.json", closure)
     print(json.dumps({"status": "pass", "closure": "repair/round-1/repair-closure.v1.json", "authorizes": []}))
     return 0

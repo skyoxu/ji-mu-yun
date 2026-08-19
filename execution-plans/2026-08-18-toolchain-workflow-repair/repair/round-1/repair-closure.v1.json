@@ -7,35 +7,75 @@
     },
     "baseline-manifest.2050ec68": {
       "path": "repair/round-1/baseline-manifest.2050ec68.v1.json",
-      "sha256": "sha256:4ddcd4d4075c1325c22900bcf0e18bb2e0d9333060ae22267b689b03643dcc14"
+      "sha256": "sha256:2c79eb92891038869102baefdb6778658ec0bcaa1238a2feddced260c231a114"
     },
     "bootstrap-preexisting-delta": {
       "path": "repair/round-1/bootstrap-preexisting-delta.v1.json",
-      "sha256": "sha256:a543a96e8830c5fd7d69b957c103d48c5401aab47195e27ec7e0f501f466b3c9"
+      "sha256": "sha256:9a8ebfd0dca55be1072d94092c72b56664800e7ca3568a4f5068303b6282d58e"
     },
     "finding-set": {
       "path": "repair/round-1/finding-set.v1.json",
-      "sha256": "sha256:0e2d9a9c599edada466511304b4d89b8e5714859c7b98f865289945deb79bb5a"
+      "sha256": "sha256:e52db0ea6f8b917e074c18833fc85c218244da60c8db77b362010554c8c9362b"
     },
     "historical-artifact-disposition": {
       "path": "repair/round-1/historical-artifact-disposition.v1.json",
       "sha256": "sha256:7948d40fa43965d6af888f646be4b138ca9e022fb4dae2eb0a060fd56c604d77"
     },
-    "plan-validation-receipt.v2.json": {
-      "path": "repair/round-1/plan-validation-receipt.v2.json",
-      "sha256": "sha256:ad58707393cea4dc9b10c684319f07375286661b4b3387100939b70f0f9e3d21"
+    "knowledge_context": {
+      "path": "knowledge-context.v1.json",
+      "sha256": "sha256:680fae82bf5a8684474b418dfc3637b703991c75e117053a5e7030ed3243664c"
+    },
+    "knowledge_freeze": {
+      "path": "knowledge-context.freeze.v1.json",
+      "sha256": "sha256:67a6019c12efb2c5902bff9035f9224daa85495c4ec45c80962db761912e4cec"
+    },
+    "plan-validation-receipt.v4.json": {
+      "path": "repair/round-1/plan-validation-receipt.v4.json",
+      "sha256": "sha256:023a338139946441a6488e106a4ff7d3797c1c5d0cd413b1d23a670cdfc5b26e"
+    },
+    "producer-consumer-composition-receipt": {
+      "path": "repair/round-1/producer-consumer-composition-receipt.v1.json",
+      "sha256": "sha256:1bd53296117219ab16fdbdacb9e8eef8ec0241dc571ae87437c4bdee40095e26"
     },
     "repair-candidate-manifest": {
       "path": "repair/round-1/repair-candidate-manifest.v1.json",
-      "sha256": "sha256:ad9ac6c94c9686dcf582d491fd4bad00fe18b6ec1cc98ae1ba509d72d0151a0c"
+      "sha256": "sha256:e6f74b15af0cc24acc9966b0633747672038ace323e726e45a95830284b000b7"
     },
     "repair-changed-set": {
       "path": "repair/round-1/repair-changed-set.v1.json",
-      "sha256": "sha256:2374af37e89585354bf54c916d2cc5a1de0e57d2b97e797ba065db3a4d4820ab"
+      "sha256": "sha256:a9cada733cb2f6b5d32c46a4ef7127e0ec101722cd41c9582000648205376e94"
     },
     "repair-state": {
       "path": "repair/round-1/repair-state.v1.json",
-      "sha256": "sha256:ef5fd8a4699aad23041822346edc469430cbabca00a9ab99bda638cd0474c063"
+      "sha256": "sha256:7954efb9e0629ac4dfc11737d7b1e290eac97347f866ea743035802421ce7fe9"
+    },
+    "root-cause-callsite-inventory": {
+      "path": "repair/round-1/root-cause-callsite-inventory.v1.json",
+      "sha256": "sha256:a93671d45205f585bfeed0392cf976ee1d413fb7d0df390b4981ca957a94ac31"
+    },
+    "sibling-8-17-manifest": {
+      "path": "repair/round-1/sibling-8-17-manifest.v1.json",
+      "sha256": "sha256:3c2344101a3678d3dd971a662f1a25bb891dd50cabf5e6490e2a4e55d0467c1a"
+    },
+    "sibling-original-8-18-manifest": {
+      "path": "repair/round-1/sibling-original-8-18-manifest.v1.json",
+      "sha256": "sha256:66407594d9a562282cac36ae8a90495b54d5cfa5a55518431750bbbf017edc33"
+    },
+    "test:plan-tool-tests.v1": {
+      "path": "repair/round-1/test-receipts/plan-tool-tests.v1.json",
+      "sha256": "sha256:f25c62f47558a5f16173923bed8b50085d656aefd4e6d2e459976253cf697d61"
+    },
+    "test:quick-dev-regression.v1": {
+      "path": "repair/round-1/test-receipts/quick-dev-regression.v1.json",
+      "sha256": "sha256:330f0c63ae7dc6e1b47591ebcb366a4e13519b0f32e2c2e6418457c2faebac2a"
+    },
+    "test:skill-input-suite.v1": {
+      "path": "repair/round-1/test-receipts/skill-input-suite.v1.json",
+      "sha256": "sha256:506e31416337547758e51d86aee559fa8bd1a7f41bf1b71754674c6358fcaa95"
+    },
+    "validator-input-manifest": {
+      "path": "repair/round-1/validator-input-manifest.v1.json",
+      "sha256": "sha256:fa1ab16b00c09ce24002a8f0859f62c583f3a1fb12e2b8da0ceb94375bc685fa"
     }
   },
   "failures": [],
@@ -44,7 +84,8 @@
   "requires": [
     "plan-validation-pass",
     "pre-existing-delta",
-    "authorization-predecessor"
+    "authorization-predecessor",
+    "knowledge-preflight"
   ],
   "schema_version": "toolchain-workflow-repair.repair-closure.v1",
   "status": "pass"

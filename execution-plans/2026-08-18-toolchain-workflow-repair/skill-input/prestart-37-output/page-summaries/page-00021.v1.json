@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py",
+    "source_sha256": "sha256:b841070c4e0a07126b5487a14e04ca968771b841a25a6b21712b2ddeed0fbc18",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 12025,
+    "start_line": 1,
+    "end_line": 217,
+    "content_sha256": "sha256:b841070c4e0a07126b5487a14e04ca968771b841a25a6b21712b2ddeed0fbc18"
+  },
+  "status": "accepted",
+  "summary": "Validator targets PLAN_ID toolchain-workflow-repair, self-hosted profile, slices W0-W6; requires listed contract, registry, authority, resume, architecture, delta, knowledge, tool, and skill artifacts (also reads plan-state.v1.json); validates TDD intent and required command IDs plan-ready, terminal-full, w0-w6 green/terminal; authority manifest must partition sources, candidates, lifecycle projections; draft cannot authorize, plan-ready requires valid VDD publication bound to plan-validation receipt; authorized-repair-revalidate requires implementation-authorized plan plus closed repair round-1 with no blocks/authorizations; resume, architecture acceptance, pre-existing delta commits 2556ea78... and a2ded39b..., exact delta paths/hashes/disposition, knowledge preflight and accepted modules are enforced; canonical skill-input receipt is mandatory, inside plan/skill-input, and must pass require-ready consumption validation; all outputs authorizes=[] and lifecycle_transition=none; writes validator input manifest and result when --out; exit 0 on pass, 1 on failures; modes select schema v1 or v4."
+}
