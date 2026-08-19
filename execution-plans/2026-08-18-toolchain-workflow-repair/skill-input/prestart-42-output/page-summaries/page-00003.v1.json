@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "skill=run-refactor-implementation-acceptance; scope=one explicit execution-plans target; disposition=orchestrates deterministic acceptance evidence only, never implementation/approval/protected handoff/commit/release/deploy; entry=require target plan, frozen baseline, clean HEAD commit or declared frozen snapshot/proposed set; prerequisites=require complete contract or compact-vdd bundle, manifests, typed request, action DAG, command registry, knowledge context, skill-input receipt; missing/ambiguous=prerequisite_blocked; QuickDev receipt stale binding=return quick-dev-tdd-adapter; candidate assembly=transactional, no historical artifact copying; skill-input=create/consume/validate ready via canonical contract, stale reconstructible=regenerate; knowledge=canonical Locator only, catalog_stale=>degraded allowed, other failures=>knowledge-context-repair-required; read-set byte drift=>same-selection successor refresh only; run=append-only start-or-resume with input/contract/context/skill-input hashes, deterministic derived ID, drift=>successor, legacy no-state=>preserve; default=evidence_only and deterministic_only; finalize deterministic replays all receipts then may acceptance-passed; semantic Bootstrap only explicit required route after deterministic evidence; high-cost model launch requires explicit acknowledgement; later review reentry requires typed trigger/recommendation/confidence/user confirmation; decline narrow eligible reentry=>decline-review-reentry; rounds=R1 full, repair usually one focused, 3=>manual_pause, never R4; manual-pause ADR-0054 closure requires repair, protocol review/composite authority, maintainer acknowledgement, finalizer; repair requires QuickDev handoff plus audit-repair-completeness and controlled composition receipts; route/import exact binding required; exact reuse=v3 envelope only; commands must originate hash-bound registry; controlled_validation cannot write production/live/history; model routing=no-launch except policy complex recovery; core CLI requires frozen knowledge context and immutable commit/snapshot custody; toolchain policy must cover all paths; Phase coverage=line-based changed executable C# only; checklist requires current stable evidence refs; test/clean review alone is not DoD"
+}

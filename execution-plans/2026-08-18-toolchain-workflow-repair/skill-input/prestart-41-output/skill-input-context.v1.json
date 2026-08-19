@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Repository rules separate control-plane, service, and sandbox responsibilities. ADRs define authoritative source handling, knowledge publication and recovery, explicit plan indexing, persisted acceptance evidence, degraded successors, and Skill input selection. Lifecycle states and ownership are fixed, while consumers remain non-authoritative.",
+      "title": "Governance"
+    },
+    {
+      "content": "The quick-dev adapter enforces typed input, closed source selection, paged transport coverage, strict RED-GREEN-REFACTOR progression, immutable evidence, and fail-closed drift handling. The execution plan defines slices W0-W6 for selection, transport, coverage, knowledge gates, generation pointers, retention, and end-to-end migration. Validators and command registries bind deterministic checks.",
+      "title": "Execution Workflow"
+    },
+    {
+      "content": "Acceptance owns persisted runs and acceptance-passed state. Plan readiness requires contracts, manifests, knowledge context, receipts, and validator agreement. Terminal validation requires one passing receipt per slice, produces implementation-complete evidence, and authorizes nothing. Tests cover knowledge degradation, coverage rejection, generation pointers, retention approval, independent identity hashes, transport resume, and end-to-end selection.",
+      "title": "Acceptance Evidence"
+    }
+  ],
+  "source_manifest_hash": "sha256:df0b74f74f0a8c63b1260a08c2d3517d4e794cdd636e8c267e649d53693efa2c",
+  "truncated": false
+}

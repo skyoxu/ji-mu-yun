@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "VDD execution-plan skill routes standalone requirements to direct implementation; explicit complete-directory create/repair only. Select standard/resumable/self-hosted profile before model routing; ordinary routes Sol/high, typed complex recovery only Sol/max with capability probes. Required authority and knowledge preflight/input-gate sequences precede plan-ready. Lifecycle: draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived; VDD owns early states, Quick Dev only implementation-complete. Plans require observable acceptance, declared failure intent, GREEN target, dependents, recovery, baseline/scope identity, targeted checks, and terminal full validation. No newly authored RED artifacts or legacy RED manufacture. Repairs are in-place under repair/round-n, preserve immutable history, bind findings/scope/hashes/receipts, require callsite inventory and composition checks; Bootstrap lineage budget default two, max three with typed triggers, exhaustion manual_pause. Resumable/self-hosted require append-only 95 report/index. Standard omits extra books/reports unless needed. Bootstrap is optional supplemental evidence and never lifecycle publication; P2-only findings do not open new semantic rounds. Current plan directory remains acceptance target unless explicit supersede/incompatible scope."
+}

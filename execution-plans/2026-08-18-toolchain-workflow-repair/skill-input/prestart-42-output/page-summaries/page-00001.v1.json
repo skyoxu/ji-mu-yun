@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "skill=quick-dev-tdd-adapter; scope=explicit execution-plans target with schema-valid implementation-contract.v1.json only; standalone/compact/missing/invalid contracts reject; parent router first with caller=quick-dev-tdd-adapter and required route strict_tdd_plan/backend match; target-only discovery and one valid 95-*.md report; reports/run-state non-authorizing; loop_plan_directory before expensive actions; slices use generated run_context and run_slice_lifecycle/LifecycleRunner artifacts; require observed shell-free expected-failing RED before production write, then GREEN/REFACTOR/slice predicate; no VDD-embedded RED provenance; auto-advance unlocked slices and stale candidate-bound receipts via successor; terminal=implementation-complete only, acceptance external; strict typed Skill input receipt/request/semantic child/ready gate before selection/prepare/RED; model class highest trigger architectural|complex|small_mechanical|normal, unknown=blocked complex, evidence non-authorizing, adapter never selects/launches provider; frozen knowledge must hash/decision match or VDD repair; persistent loop requires explicit valid execution_snapshot_paths and constrained planned_new_files bridge; reject all drift and raw shell commands; preserve failures with successors; read three named references before slice implementation; P0/P1 repair terminal triggers prescribed Acceptance handoff/audit, no acceptance/bootstrap lineage decisions; commit currency gate applies Context7 only to version-sensitive external changes; adapter is not commit/review/release authority."
+}
