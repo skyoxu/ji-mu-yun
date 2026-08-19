@@ -1,0 +1,69 @@
+结论：当前可以调用验收 Skill，但还不能进入正式的 Acceptance start-or-resume 阶段。
+正确路由应是：验收编排器发现 Quick Dev 权威交接不合格后，自动退回 Quick Dev terminal recovery；补齐权威 receipt 后再继续验收。
+
+检查基于最新 main：
+
+94d6c3b6 — Complete toolchain workflow repair Quick Dev
+
+唯一硬阻塞
+
+当前 terminal-validation.v2.json 的积极部分是：
+
+status = pass
+authorizes = ["implementation-complete"]
+W0–W6 七个 terminal command 都已列入
+contract_hash = sha256:1e8c96...，与当前 implementation-contract.v1.json 原始字节完全匹配
+
+但它不是 Acceptance 接受的 Quick Dev 权威交接格式：
+
+验收要求	当前结果
+schema_version = quick-dev-implementation-complete.v1	实际是 toolchain-workflow-repair.terminal-result.v2
+当前 contract_hash	已满足
+当前 command_registry_hash	缺失
+terminal_command_id = terminal-full	已满足
+authorizes = ["implementation-complete"]	已满足
+分支上存在可引用的 canonical receipt	不存在
+
+Acceptance 的 compact_vdd_projection.py 会因此明确拒绝该文件。
+
+而且这不是简单“再跑一次”就能解决的：当前 tools/terminal_full.py 本身仍输出旧 schema，也没有输出 command_registry_hash。原样重跑仍会生成不兼容结果。
+
+这也不是 HEAD 哈希过严导致的误阻塞：当前 contract 哈希是新鲜的；问题属于真正的 producer/consumer 权威合同不一致，应该硬阻断。
+
+修复要求
+修改 tools/terminal_full.py：
+输出 schema_version: quick-dev-implementation-complete.v1
+增加：
+command_registry_hash: sha256:d17ff02fc892846b28da43f4a750a7f3f0d95256ad13d796c1d43fb8b141f517
+保留当前 contract hash、terminal command、W0–W6、status 和 authorizes。
+
+不要改写历史 terminal-validation.v2.json；生成 append-only successor，例如：
+
+repair/round-1/quick-dev-implementation-complete.v1.json
+
+让 Quick Dev router 能发现这个 plan-local canonical receipt。当前 router 只扫描未提交的 logs/tdd-adapter/.../implementation-complete-result.json，因此新机器仅 checkout GitHub 分支时无法复现 implementation-complete。
+增加跨 Skill 合同测试：
+terminal_full.py 的输出能被 compact_vdd_projection._implementation_handoff() 接受；
+缺少 command_registry_hash 或旧 schema 必须被拒绝；
+contract/registry 任一变化后，旧 receipt 必须失效并经 terminal successor 自动刷新。
+
+重跑最终 terminal，并确认 Quick Dev route 返回：
+
+{
+  "next_action": "implementation-complete",
+  "authorizes": []
+}
+在 95-implementation-evolution-and-completion-report.md 末尾追加完成事件。当前报告仍声明“没有 RED/GREEN 和 implementation-complete”，违反 Quick Dev Skill 的报告生命周期要求。报告不是权威门禁，但必须修正。
+修复后的验收入口
+
+完成上述修改并提交后：
+
+使用新的最终 commit 作为 candidateRevision；
+显式固定 baselineRevision = 2050ec682bab8cdc11770bf9823549b264a9e339，避免与历史 2556ea78 delta 混淆；
+Acceptance 创建自己拥有的 Knowledge context 和 Skill-input receipt；
+使用新的 Quick Dev receipt 运行 compact_vdd_projection.py；
+只有输出 status=ready 和 prerequisite bundle 后，才执行 Acceptance start-or-resume。
+
+plan-state 仍是 implementation-authorized、resume-state 尚未改成完成态，并不是这里的硬阻塞——当前 Acceptance 合同明确规定，Quick Dev 的 implementation-complete 不依赖 VDD/maintainer plan-state。quick-dev-entry-validation.v1.json 的 route-not-w0 也属于完成后的旧入口检查，不应拿来阻断验收。
+
+因此最终判定是：Quick Dev 的实现与终端测试看起来已经完成，但跨 Skill 的权威交接还没完成；补一个正确、可移植、可被 Acceptance 消费的 canonical implementation receipt 后即可进入验收。
