@@ -472,7 +472,7 @@
   "implementationReceiptHash": "sha256:e74f1729128c1c13bf5bfc558116b41190507fde8e45af7b3af5d22d6482c0d5",
   "implementationReceiptPath": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/quick-dev-implementation-complete.v1.json",
   "knowledgeContextPath": "knowledge-context.refactor-acceptance-successor.v1.json",
-  "runId": "acceptance-8-18-successor",
+  "runId": "acceptance-8-18-successor-2",
   "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
   "targetPlan": "execution-plans/2026-08-18-toolchain-workflow-repair",
   "targetPlanPaths": [
