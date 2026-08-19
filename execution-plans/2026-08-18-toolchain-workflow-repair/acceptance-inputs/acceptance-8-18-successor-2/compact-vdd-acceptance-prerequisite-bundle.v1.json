@@ -1,0 +1,45 @@
+{
+  "actionDag": {
+    "path": "acceptance-inputs/acceptance-8-18-successor-2/action-dag.v1.json",
+    "sha256": "sha256:4da9f9b838219f837d0d19df7884103a82d8463477ef7388f2cdbcb550e6e8f0"
+  },
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "acceptance-inputs/acceptance-8-18-successor-2/baseline-content-manifest.v1.json",
+    "sha256": "sha256:165ac3a745d92946a21693dcf153249b5083709a43f07b35ca4f82d6b7eab7eb"
+  },
+  "bundleHash": "sha256:8c039bc7334e337666152451fa5604a7e7edc5442fdb563ce8251e3431e34bc5",
+  "candidateManifest": {
+    "path": "acceptance-inputs/acceptance-8-18-successor-2/candidate-content-manifest.v1.json",
+    "sha256": "sha256:c44828bb024a78be1a86c0b0fc62ccf6ab14b7aa0c62d56601099d5186de5ca9"
+  },
+  "candidateSnapshotPath": ".acceptance-snapshots/acceptance-8-18-successor-2",
+  "commandRegistry": {
+    "path": "acceptance-inputs/acceptance-8-18-successor-2/command-registry.v1.json",
+    "sha256": "sha256:6884ab5c3f32ae852361b818621417b54a090d1a54e71ddc3ff39a07a1cc18b5"
+  },
+  "implementationReceipt": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/quick-dev-implementation-complete.v1.json",
+    "sha256": "sha256:e74f1729128c1c13bf5bfc558116b41190507fde8e45af7b3af5d22d6482c0d5",
+    "terminalCommandId": "terminal-full"
+  },
+  "knowledgeContext": {
+    "path": "knowledge-context.refactor-acceptance-successor.v1.json",
+    "sha256": "sha256:bbbb72007b0b0e0bda6ec1bd5f4a8a4bf6675b566c786b55d78853b6c8d0678d"
+  },
+  "policy": {
+    "path": "acceptance-inputs/acceptance-8-18-successor-2/toolchain-code-review.v1.json",
+    "sha256": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4"
+  },
+  "runId": "acceptance-8-18-successor-2",
+  "runRequest": {
+    "path": "acceptance-run-request.acceptance-8-18-successor-2.v1.json",
+    "sha256": "sha256:fc5be0102057623e07fe7f1f521b8e71a92518768b60447516e876d58301d213"
+  },
+  "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+  "targetPlan": "execution-plans/2026-08-18-toolchain-workflow-repair",
+  "terminalRunner": {
+    "path": "tools/terminal_full.py",
+    "sha256": "sha256:ae5cf5f8eb6257c18107db37cbd6802388f7218add6c1e549e5ae5bcb00ccf06"
+  }
+}
