@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/skill_input_current.py",
+    "source_sha256": "sha256:9ee4d298d94edf753b0470f6645f750e08ec69e6f4a8da172551347af3211ba1",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 455,
+    "start_line": 1,
+    "end_line": 15,
+    "content_sha256": "sha256:9ee4d298d94edf753b0470f6645f750e08ec69e6f4a8da172551347af3211ba1"
+  },
+  "status": "accepted",
+  "summary": "ID scripts/python/skill_input_current.py; resolve_current(root: Path) returns optional string-keyed dict; inspect root/current.v1.json; missing pointer yields None; parse UTF-8 JSON; accept only dictionary containing string generation_id; otherwise None; malformed or unreadable JSON behavior unspecified (likely propagates error); purpose is resolving a generation pointer after complete publication; source and content SHA-256 both 9ee4d298d94edf753b0470f6645f750e08ec69e6f4a8da172551347af3211ba1"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+    "source_sha256": "sha256:d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2560,
+    "start_line": 1,
+    "end_line": 51,
+    "content_sha256": "sha256:d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50"
+  },
+  "status": "accepted",
+  "summary": "ADR-0060 accepted (2026-08-18); v1 Skill-input remains historical and cannot auto-promote to v2; v2 assigns explicit roles, with only normative_source, authority_source, implementation_input authorizing; computes separate sourceSelectionHash and sourceContentHash; adapter owns transport, paging, continuation, coverage, truncation; ready receipts are immutable generations under skill-input-generations/<binding-hash>/ with atomic validated current pointer, consumers resolve pointer only; execution/publication/semantic-review gates are independent; knowledge self-change derives from changed-set and canonical path policy; attempts require leases/heartbeats; retention protects current pointer, lifecycle/authorization/terminal refs, active attempts; committed evidence deletion needs maintainer approval plus non-authorizing cleanup receipt; migrate all consumers before 8-18 can create new current receipt; historical current directories remain immutable until approved retention; extends ADR-0048/0050/0057/0058/0059, supersedes only v1 selection/current-resolution practices."
+}

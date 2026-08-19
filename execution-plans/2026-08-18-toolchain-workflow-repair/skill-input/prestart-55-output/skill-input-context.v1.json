@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "All 31 manifest sources have complete single-page coverage with accepted status. Summaries are bounded and redacted.",
+      "title": "Coverage"
+    },
+    {
+      "content": "Sources define deterministic VDD, Quick Dev, acceptance, knowledge, lifecycle, transport, coverage, generation, retention, validation, and workflow-repair controls. Execution remains scoped, hash-bound, replayable, and fail-closed.",
+      "title": "Workflow"
+    },
+    {
+      "content": "The implementation authorization publisher contains a reported malformed predecessor mapping. Other summaries describe required validation, evidence ownership, immutable generations, pointer safety, and non-authorizing acceptance paths.",
+      "title": "Findings"
+    }
+  ],
+  "source_manifest_hash": "sha256:56c6ac193b87964cfc2f5ea7706e7120c06ea24bf4f93df0212a326fc381990d",
+  "truncated": false
+}

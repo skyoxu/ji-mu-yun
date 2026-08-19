@@ -780,7 +780,9 @@ def run_semantic_child(
                             codex_json=True,
                             codex_sandbox=SEMANTIC_CHILD_SANDBOX,
                             codex_skip_git_repo_check=True,
-                            codex_extra_args=["--ephemeral", "--ignore-user-config"],
+                            # Keep the repository's configured Codex provider/gateway;
+                            # ephemeral execution already prevents persistent session state.
+                            codex_extra_args=["--ephemeral"],
                         )
                         if exit_code != 0 or not page_output.is_file():
                             raise ChildRequestError("semantic page reader failed without a typed output")

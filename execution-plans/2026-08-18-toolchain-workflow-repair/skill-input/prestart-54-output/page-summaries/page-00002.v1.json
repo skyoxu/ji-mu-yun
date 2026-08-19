@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "Adapter enforces hidden_state=false, forbids shell commands, requires declared slice plus nonempty contract/validator hashes; execution requires strict Skill input gate and matching receipt/contract context hashes; lifecycle is prepared -> red-observed -> green-observed -> refactor-verified, with RED failing test and test/docs-only paths, GREEN passing production paths, REFACTOR passing within production/tests/docs; invalid transitions block with RMAP diagnostics; candidate is non-authoritative and authorizes nothing; resume rejects stale identity or failed/stale/superseded runs; stage bindings require capsule-attempt bundle v1, exactly one context/attempt per stage, matching plan/slice/run/attempt IDs, STAGE-{RED|GREEN|REFACTOR}, empty authorizations; protocol persistence validates artifact store, path containment, reparse-point absence, immutable conflicts, required ordered documents and preserves listed observations; execute rejects existing run dirs, requires bundle/store pairing, writes recovery-state.v1 with hashes, lineage null, stages, no authorizations; ambiguities: caller supplies events, protocol documents, artifact bytes, and authoritative acceptance/handoff/release remain outside adapter"
+}

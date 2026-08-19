@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "repository=Ji Mu Yun Phase A/B cloud prototype platform; layers=toolchain/Phase service/user sandbox strictly separated; read routing by task with nearest AGENTS before subtree edits; FastCtx preferred, fallback only after explicit unavailable/error and record once; Chinese user communication, English code/logs; Windows defaults; preserve user changes; ask before protected/high-risk edits; UTF-8 Chinese writes via Python only; protected=live logs/runtime/Caddy/auth/shared LLM endpoints/security profiles/generated evidence rewrites; never manually mutate live DB or expose/commit secrets; APIs backward compatible unless approved plan; completion requires machine evidence not assistant claim; Hosted recovery consumes 8 canonical sources in order and fails closed; LLM writes require executable route+workspace-write+acceptance; runtime recovery uses canonical scripts, no plain dotnet run; workflow.md only allowlisted; DoD=validation/tests/smokes/log evidence/docs as needed; AGENTS hard ceiling=10000 chars"
+}

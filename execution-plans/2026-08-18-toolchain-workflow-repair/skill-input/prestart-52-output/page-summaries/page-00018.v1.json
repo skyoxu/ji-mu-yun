@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py",
+    "source_sha256": "sha256:175c0db1eef4ae8a9e829323cf0741bb0b149faf6c45eb7d051c71228e725bb3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 8556,
+    "start_line": 1,
+    "end_line": 185,
+    "content_sha256": "sha256:175c0db1eef4ae8a9e829323cf0741bb0b149faf6c45eb7d051c71228e725bb3"
+  },
+  "status": "accepted",
+  "summary": "PLAN_ID toolchain-workflow-repair; CLI requires repository root, plan directory, canonical output path, skill-input receipt, and current-round plan-validation receipt; validates contract, plan/resume state, and skill-input readiness; only plan-ready state may transition, while authorized state requires explicit successor-refresh flag and immutable predecessor copy; binds contract, registries, manifests, context/freeze, validation, repair artifacts, validators, predecessor, and skill-input generation hashes; writes implementation-authorized state and receipt; appends authorization report; authorizes implementation-authorized only; explicitly excludes completion, acceptance, knowledge publication, bootstrap review, and release; output is canonical successor receipt; ambiguity: predecessor fallback filename contains fixed hash, and receipt includes an unusual redacted-key field."
+}

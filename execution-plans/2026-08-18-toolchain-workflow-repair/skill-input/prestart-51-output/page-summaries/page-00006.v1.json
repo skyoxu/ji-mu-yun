@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "Repository: Ji Mu Yun Phase A/B cloud prototype platform, not game; separate toolchain/Phase service/user-sandbox authority; task-specific read routing required and nearest AGENTS.md governs subtree edits; FastCtx preferred for local inspection/execution, explicit-error fallback only; Chinese user communication, English code/logs; Windows defaults; UTF-8 Chinese writes via Python only; preserve user changes; protected changes require approval: live logs state/workspaces, runtime/Caddy, auth, shared LLM entrypoints, delivery/security/listeners, evidence rewrite/delete; never manually mutate live DB or expose/commit secrets; APIs backward compatible by default; schema migration/recovery required; changes need accepted ADR, matching tests/smokes, logs evidence, and non-assistant proof; hosted recovery uses canonical eight-source order and fails closed; LLM writes require executable route+workspace-write+acceptance; runtime recovery local health then canonical scripts/proxy, never live dotnet run; workflow.md legacy and allowlist-only; standalone requirements do not create VDD plan dirs unless explicitly requested; DoD requires validations/evidence/docs only when ownership/public behavior changes; AGENTS maintenance ceiling 10k chars."
+}

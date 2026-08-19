@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py",
+    "source_sha256": "sha256:e17b3aadbb0c8c4c8f563bd07c885aaed45b7d692a61b6699ec5ef7c6ee92af8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 8206,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:e17b3aadbb0c8c4c8f563bd07c885aaed45b7d692a61b6699ec5ef7c6ee92af8"
+  },
+  "status": "accepted",
+  "summary": "PLAN_ID=toolchain-workflow-repair; CLI requires repository-root, plan-dir, out, skill-input-receipt; output must equal plan/implementation-authorization-receipt.successor.v1.json; contract and plan state must match canonical identifiers; normal transition requires status=plan-ready and authorizes=[plan-ready]; refresh requires explicit flag, existing authorized predecessor, and state authorizes both plan-ready and implementation-authorized; prior receipt copied immutably under repair/round-1 with hash-derived name; skill input must be inside plan and validate ready against quick-dev adapter contract; receipt binds contract, registries, manifests, context, validation, closure, candidate, validators, predecessor, and skill-input generation hashes; updates plan and resume state to implementation-authorized/run-slice; emits authorization receipt owned by maintainer; authorizes implementation-authorized only; explicitly excludes completion, acceptance, knowledge publication, bootstrap review, and release; appends implementation-authorization report; prints pass JSON; receipt contains suspicious literal key predecessor_authorization=<redacted>, requiring aggregator attention"
+}

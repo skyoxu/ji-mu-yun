@@ -259,12 +259,20 @@ def source_selection_hash(request_binding: dict[str, Any]) -> str:
     frozen dirty worktree must not create a new input generation when the
     selected authority and its content are unchanged.
     """
+    def normalize_selection(value: Any) -> Any:
+        if isinstance(value, dict):
+            return {key: normalize_selection(value[key]) for key in sorted(value)}
+        if isinstance(value, list):
+            normalized = [normalize_selection(item) for item in value]
+            return sorted(normalized, key=lambda item: canonical_bytes(item))
+        return value
+
     return canonical_hash({
         "algorithm": "skill-input-source-selection.v1",
         "consumer": request_binding["consumer"],
         "operation": request_binding["operation"],
         "target": request_binding["target"],
-        "source_roles": request_binding["source_roles"],
+        "source_roles": normalize_selection(request_binding["source_roles"]),
     })
 
 
@@ -288,6 +296,7 @@ def build_typed_source_selection_v2(
     normalized.sort(key=lambda item: (item["role"], item["path"], item["module"], item["resource_set"]))
     selection_projection = {
         "schema_version": "typed-source-selection.v2",
+        "projection_kind": "selection",
         "consumer": consumer,
         "policy_revision": policy_revision,
         "sources": [
@@ -297,6 +306,7 @@ def build_typed_source_selection_v2(
     }
     content_projection = {
         **selection_projection,
+        "projection_kind": "content",
         "sources": normalized,
     }
     return {

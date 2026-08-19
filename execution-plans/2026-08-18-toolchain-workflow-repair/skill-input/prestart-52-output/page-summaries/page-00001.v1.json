@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "quick-dev-tdd-adapter applies only to an explicit execution-plans directory/file with schema-valid implementation-contract.v1.json; standalone/compact/missing/invalid contracts reject. Parent router must run first with caller quick-dev-tdd-adapter and return lane strict_tdd_plan plus matching backend. Read only target plan directory; resolve one 95-*.md report, fail closed on duplicates/escaping/ambiguity; reports/run-state are non-authoritative. Run loop_plan_directory before expensive actions; use lifecycle tools and shell-free structured commands. Require skill-input contract preparation, typed semantic child, and ready validation before action/prepare/RED. Derive hash-bound model class (architectural, complex, normal, small_mechanical); unknown/contradictory facts block as complex; decision is non-authorizing. Verify frozen knowledge context and hashes; mismatches route to VDD repair. Execute RED with expected nonzero before production write, then GREEN, REFACTOR, slice predicate; never import/prebind RED into new VDD plans. Continue slices automatically until plan terminal predicate, external repair, or repeated failure. Adapter terminal result only implementation-complete; acceptance/commit/release remain external. P0/P1 repair completion requires repair-review handoff and Acceptance audit with preserved manifests, hashes, consumers, tests, validation, root-cause inventory, and composition receipts. Persistent loop consumes explicit execution_snapshot_paths; planned_new_files are exact and staged by RED/GREEN/REFACTOR. Version-sensitive diffs require exact-version Context7 documentation before commit; repository-owned-only diffs make gate not applicable. Never use backend text, capsules, run state, clean exit, handoff, or skill as acceptance authority."
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+    "source_sha256": "sha256:69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 3048,
+    "start_line": 1,
+    "end_line": 65,
+    "content_sha256": "sha256:69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23"
+  },
+  "status": "accepted",
+  "summary": "ADR-0048 accepted 2026-07-26; repository source and Accepted ADRs are fact authority; projections/indexes are derived_cache only; deterministic Locator returns locations, hashes, provenance, ranking evidence, confidence, never synthesized facts; callers must reread and hash-verify; trusted adapters constrain domain/path/snapshot/budget/confidence; caller LLM query intent is untrusted and cannot widen envelope; VDD records reread decisions, rejected candidates cannot satisfy required modules, uncovered modules block readiness; Quick Dev uses only VDD-frozen decisions; Bootstrap Review freezes accepted context in Artifact View; no post-freeze expansion; ambiguity fallback disabled unless approved, then Python uses scripts/sc/_llm_backend.py::run_llm_exec; maintenance pins refs/heads/main, no implicit fetch/checkout/merge/branch mutation, append-only evidence; extends ADR-0044; complements ADR-0037/0041/0043; does not supersede them; fail closed on missing, stale, low-confidence, out-of-policy, hash drift; no authorization for phase routes, Hosted E2 dispatch, live metadata, deployment, acceptance, handoff, release, commit."
+}

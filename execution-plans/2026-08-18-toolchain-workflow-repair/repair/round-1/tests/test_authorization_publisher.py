@@ -10,7 +10,7 @@ def test_authorization_successor_binds_current_control_closure():
     receipt = json.loads((PLAN / "implementation-authorization-receipt.successor.v1.json").read_text(encoding="utf-8"))
     required = {
         "implementation_contract", "command_registry", "authority_manifest",
-        "knowledge_context_freeze", "skill_input_receipt", "skill_input_request",
+        "knowledge_context_freeze", "skill_input_generation",
         "plan_validation", "repair_closure", "bootstrap_preexisting_delta",
         "candidate_manifest", "validate_all", "terminal_validator",
         "immutable_predecessor",
@@ -18,3 +18,5 @@ def test_authorization_successor_binds_current_control_closure():
     assert required <= set(receipt)
     assert receipt["decision"]["owner"] == "maintainer"
     assert receipt["authorizes"] == ["implementation-authorized"]
+    generation = receipt["skill_input_generation"]
+    assert {"receipt", "child_request_hash", "context_hash", "semantic_decision_hash", "generation_root"} <= set(generation)

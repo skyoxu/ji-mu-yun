@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_skill_input_selection_v2.py",
+    "source_sha256": "sha256:00544614127f50e731f696759f61d7d230f171925854c70249c5f0c444c39abd",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 938,
+    "start_line": 1,
+    "end_line": 14,
+    "content_sha256": "sha256:00544614127f50e731f696759f61d7d230f171925854c70249c5f0c444c39abd"
+  },
+  "status": "accepted",
+  "summary": "Fixture: scripts/python/tests/test_skill_input_selection_v2.py; page SHA-256 verified; typed source selection must produce distinct selection and content hashes; both hashes use sha256 identifiers; source entry includes normative role, docs/input.md, plan module, core resource set; successor route identity changes must not alter selection hash; selection hash inputs include consumer, execute operation, plan target, target-files role; tests cover identity separation and successor stability"
+}

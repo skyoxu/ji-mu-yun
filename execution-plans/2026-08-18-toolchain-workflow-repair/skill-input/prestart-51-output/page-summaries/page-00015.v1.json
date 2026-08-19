@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "source_sha256": "sha256:5745d62e6c0dfca067ea9d45c25f9360789bed47faae5d03ba0a91ac0a25009b",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 11532,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:5745d62e6c0dfca067ea9d45c25f9360789bed47faae5d03ba0a91ac0a25009b"
+  },
+  "status": "accepted",
+  "summary": "Plan toolchain-workflow-repair, schema implementation-contract.v1, self-hosted; runner tools/migration_bridge.py, authority authority-manifest.v1.json, registry command-registry.v1.json, red owner quick-dev-tdd-adapter; W0 canonical typed source selection, hash mismatch fail-closed, depends none; W1 automatic transport planner with continuation hash drift rejection, depends W0; W2 adapter-owned page coverage only, depends W0/W1; W3 Knowledge three-gate projection, drift or Knowledge self-change requires review, depends W0; W4 immutable generations/current pointer, failed staging cannot advance, depends W0-W2; W5 dry-run/default retention GC, committed evidence needs maintainer approval, depends W4; W6 end-to-end migration proving selection through retention without lifecycle or Knowledge authority, depends W0-W5; all slices exit slice-ready, terminal-full predicate implementation-complete; forbidden broad areas include PhaseA.Platform, runtime/phase-a, logs, and selected execution-plan paths; changes restricted to listed production/documentation/tests paths; protocol layouts attempts/<attempt-id>, context/<capsule-id>, terminal-results/<slice-or-terminal>.json; ambiguity: no explicit runtime/test results or additional acceptance interpretation provided."
+}

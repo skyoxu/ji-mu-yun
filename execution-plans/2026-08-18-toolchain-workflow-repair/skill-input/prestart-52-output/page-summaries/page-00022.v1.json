@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "knowledge/policies/consumer-policies.v2.json",
+    "source_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2174,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01"
+  },
+  "status": "accepted",
+  "summary": "policy_revision=knowledge-consumer-policies.v2;schema=jimuyun.knowledge-consumer-policies.v2;vdd: domains=toolchain,phase; freeze=before-plan-source-freeze; historical=exact-only; lifecycle=repository-source; candidates<=20; confidence=medium; required=repository-rules; optional=existing-workflow; exact=AGENTS.md,README.md; prefixes=.agents/skills/,docs/,execution-plans/,knowledge/,scripts/python/,runtime/phase-a/; statuses=active,conditional,historical; visibility=active,dependency,conditional;quick-dev: domains=toolchain,phase; freeze=vdd-owned-context; historical=forbidden; lifecycle=repository-source; candidates=0; confidence=not-applicable; required=vdd-frozen-context; statuses=active; visibility=active,dependency;bootstrap: freeze=artifact-view-prepare; historical=exact-only; candidates<=32; confidence=medium; required=profile-context; optional=knowledge-context;refactor-acceptance: domains=toolchain,phase,workspace; freeze=acceptance-run-input; historical=exact-only; candidates<=32; confidence=medium; required=acceptance-scope; optional=knowledge-context,governance-context"
+}

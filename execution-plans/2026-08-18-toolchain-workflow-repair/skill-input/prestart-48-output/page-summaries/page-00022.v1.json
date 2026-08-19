@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "knowledge/policies/consumer-policies.v2.json",
+    "source_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2174,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01"
+  },
+  "status": "accepted",
+  "summary": "Policy revision knowledge-consumer-policies.v2; schema jimuyun.knowledge-consumer-policies.v2; vdd: repository-source, toolchain/phase, freeze before-plan-source-freeze, exact historical only, AGENTS.md/README.md plus approved prefixes, max 20 candidates, medium confidence, required repository-rules, optional existing-workflow, active/conditional/historical statuses, active/dependency/conditional visibility; quick-dev: repository-source, toolchain/phase, freeze at vdd-owned-context, historical forbidden, zero candidates and no paths, required vdd-frozen-context, active status, active/dependency visibility; bootstrap: repository-source, toolchain/phase, freeze artifact-view-prepare, exact historical only, same exact paths/prefixes, max 32 candidates, medium confidence, required profile-context, optional knowledge-context, active/conditional/historical statuses, active/dependency/conditional visibility; refactor-acceptance: repository-source, toolchain/phase/workspace, freeze acceptance-run-input, exact historical only, same exact paths/prefixes, max 32 candidates, medium confidence, required acceptance-scope, optional knowledge-context/governance-context, active/conditional/historical statuses, active/dependency/conditional visibility"
+}

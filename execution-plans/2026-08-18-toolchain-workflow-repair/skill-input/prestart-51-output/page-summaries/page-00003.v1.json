@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Scope: deterministic implementation-acceptance evidence for one explicit execution-plans/<target>; no code approval, commit, release, deploy, or model launch. Require frozen baseline, candidate custody/manifests, implementation contract or compact VDD bundle, typed run request, action DAG, command registry, knowledge context, and ready Skill-input receipt. Prefer commit candidate; dirty/proposed candidates require frozen snapshot. Never infer baseline, scope, paths, commands, actions, or revisions. Use canonical Locator and hash-bound contexts; catalog_stale is degraded but non-blocking, other knowledge failures require repair route. Persist append-only binding-derived runs; never overwrite stale predecessors or auto-migrate legacy artifact-only runs. Execute prepare-run, deterministic evidence actions, receipt replay, and finalize-deterministic-run; deterministic_only avoids Bootstrap. Required semantic routes need repository-owned inspect-lineage, prepare-bootstrap, exact reviewScope across seven classes, typed route, and explicit high-cost/user reentry acknowledgement. Bootstrap exact reuse requires finalized v3, clean status, current bindings/profile/policy/authority, and immediate lineage predecessor. Repair requires Quick Dev handoff, audit-repair-completeness, complete closure, controlled receipts, targeted tests, and bounded focused/full review rules; three rounds lead manual_pause, never Round 4. Manual-pause closure requires protocol review or authorized composite, exact finding mappings, explicit acknowledgement, and finalize-manual-pause-closure. P2 findings close deterministically; P0/P1 require repair. Maintenance mode ai-native-single-maintainer; external/multi-maintainer findings are downgraded. Model routing is deterministic no-launch except policy-owned complex-recovery triggers."
+}

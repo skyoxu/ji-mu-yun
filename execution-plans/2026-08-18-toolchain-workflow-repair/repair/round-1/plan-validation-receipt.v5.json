@@ -1,0 +1,16 @@
+{
+  "authorizes": [],
+  "failures": [
+    "authorized-repair-state-invalid",
+    "canonical-skill-input-receipt-outside-plan"
+  ],
+  "lifecycle_transition": "none",
+  "plan_id": "toolchain-workflow-repair",
+  "predicate": "plan-valid",
+  "schema_version": "toolchain-workflow-repair.plan-validation.v4",
+  "status": "fail",
+  "validator_input_manifest": {
+    "path": "repair/round-1/validator-input-manifest.v1.json",
+    "sha256": "sha256:bce25af86a5b39bba4ae9eeb0436b5a819bc1142c4ea3de8dc77a5781a30a347"
+  }
+}

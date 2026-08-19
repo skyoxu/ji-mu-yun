@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z-successor-20260819T081253Z-successor-20260819T114739Z-successor-20260819T120925Z",
+    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z-successor-20260819T081253Z-successor-20260819T114739Z-successor-20260819T120925Z-successor-20260819T122127Z-successor-20260819T124914Z-successor-20260819T141032Z-successor-20260819T151600Z",
     "consumer": "vdd",
     "query": "skill-input-execution knowledge-execution-gates",
     "snapshot": {
@@ -111,7 +111,7 @@
           {
             "path": "scripts/python/skill_input_consumption.py",
             "role": "primary",
-            "source_sha256": "bb0cc067022b5649c24e4b48bb240a7e713811213e88546a290684cff906f078"
+            "source_sha256": "210d1cc87a72fd4a4c547e6836c5b8cdffe74c579589afba7bc837aa873120bc"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json",
@@ -121,7 +121,7 @@
           {
             "path": "scripts/python/launch_skill_input_consumer.py",
             "role": "launcher",
-            "source_sha256": "2f7ebacc4f08231ffc660e67b35dfa1398afed9c240d86d62bcc069468da601d"
+            "source_sha256": "54cf91be39d63e3797fcf5286ea8e46925240c88e65857032006bb761635073a"
           },
           {
             "path": "scripts/python/validate_skill_input_consumption.py",
@@ -141,7 +141,7 @@
         ],
         "semantic_eligible": true,
         "source_role": "cli-entrypoint",
-        "source_sha256": "bb0cc067022b5649c24e4b48bb240a7e713811213e88546a290684cff906f078",
+        "source_sha256": "210d1cc87a72fd4a4c547e6836c5b8cdffe74c579589afba7bc837aa873120bc",
         "status": "active",
         "visibility": {
           "marketplace": "excluded",
@@ -278,7 +278,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z-successor-20260819T081253Z-successor-20260819T114739Z-successor-20260819T120925Z",
+    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z-successor-20260819T081253Z-successor-20260819T114739Z-successor-20260819T120925Z-successor-20260819T122127Z-successor-20260819T124914Z-successor-20260819T141032Z-successor-20260819T151600Z",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
@@ -308,7 +308,7 @@
       "owner": "adapter",
       "candidate": {
         "path": "scripts/python/skill_input_consumption.py",
-        "source_sha256": "bb0cc067022b5649c24e4b48bb240a7e713811213e88546a290684cff906f078"
+        "source_sha256": "210d1cc87a72fd4a4c547e6836c5b8cdffe74c579589afba7bc837aa873120bc"
       },
       "decision": "accepted",
       "satisfies": [
@@ -337,12 +337,12 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:ae38fb1d2137504958b6fbca72fbca9ef400aae49bc9b1cbaae92eada4792785",
-  "result_sha256": "sha256:5df5037926eb58610d3c955beffaa88d7d269473b6e815b0a636a491e08c2698",
+  "request_sha256": "sha256:38fbe65896d0de513ef38e845f6b7c683df086bbe73958b1a0ee99772a8bb996",
+  "result_sha256": "sha256:c05c3f7fe4634dbd6eeb6575b5f3859ad1c87e6053ba1dfdfa61080f3933036d",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:07dfffa41042c52d85100650107f4e3fcce86641bd515312a2fefa6c9c20cc02"
+    "base_locator_result_sha256": "sha256:3f28ced5587056b1075d3134b9624a832ce682e2ffdb977f43a81961c568eb39"
   },
   "preflight": {
     "status": "ready",
@@ -350,6 +350,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:7bd852fc30200160e101274778d09254071761b8588490514e789839cd7f1356"
+    "context_sha256": "sha256:c96a9157cf3bd15f325cff050d51d2de31088a2104670256b34e865fce5e2c40"
   }
 }

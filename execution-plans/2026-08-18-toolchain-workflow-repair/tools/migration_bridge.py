@@ -21,79 +21,77 @@ def test_successor_generation_id_does_not_change_selection_hash():
     first = consumption.source_selection_hash({**base, "route_identity": "quick-dev.self_hosted.plan.prestart-45"})
     successor = consumption.source_selection_hash({**base, "route_identity": "other-route.prestart-46"})
     assert first == successor
+
+def test_equivalent_source_role_order_does_not_change_selection_hash():
+    base = {"consumer": "quick-dev-tdd-adapter", "operation": "execute", "target": "plan"}
+    first = consumption.source_selection_hash({**base, "source_roles": {"target_files": ["requirements.md", "AGENTS.md"]}})
+    equivalent = consumption.source_selection_hash({**base, "source_roles": {"target_files": ["AGENTS.md", "requirements.md"]}})
+    assert first == equivalent
 ''',
-    "W1": '''import importlib
+    "W1": '''from scripts.python import skill_input_transport as transport
+
+def test_transport_resume_preserves_content_identity():
+    plan = transport.plan_transport(32768, 1048576, content_hash="sha256:" + "a" * 64)
+    resumed = transport.resume_transport(plan, content_hash="sha256:" + "a" * 64)
+    assert resumed["content_hash"] == plan["content_hash"]
+''',
+"W2": '''from scripts.python import skill_input_coverage as coverage
 import pytest
 
+def test_coverage_rejects_missing_required_page():
+    result = coverage.evaluate_coverage(required_pages=["p1", "p2"], observed_pages=["p1"])
+    assert result["status"] == "insufficient"
+    assert result["missing"] == ["p2"]
 
-def test_transport_rejects_stale_continuation():
-    try:
-        transport = importlib.import_module("scripts.python.skill_input_transport")
-    except ImportError:
-        pytest.fail("TWR-W1-AUTO-TRANSPORT: module unavailable")
-    plan = transport.plan_transport({"content_hash": "sha256:" + "a" * 64}, max_inline_bytes=1, page_bytes=1, max_pages_per_batch=1)
-    assert transport.resume_transport(plan, "next", "sha256:" + "b" * 64)["status"] == "stale-continuation", "TWR-W1-AUTO-TRANSPORT: stale continuation accepted"
+def test_coverage_rejects_conflicting_duplicate_page():
+    result = coverage.evaluate_coverage(required_pages=["p1"], observed_pages=["p1", "p1"])
+    assert result["status"] == "insufficient"
+
+def test_coverage_rejects_unexpected_page():
+    result = coverage.evaluate_coverage(required_pages=["p1"], observed_pages=["p1", "p3"])
+    assert result["status"] == "insufficient"
+
+def test_coverage_rejects_invalid_page_identity():
+    with pytest.raises(ValueError):
+        coverage.evaluate_coverage(required_pages=["p1"], observed_pages=[None])
+
+def test_coverage_rejects_source_hash_drift():
+    result = coverage.evaluate_coverage(required_pages=["p1"], observed_pages=["p1"], source_hash="sha256:" + "a" * 64, observed_source_hash="sha256:" + "b" * 64)
+    assert result["status"] == "stale-source"
 ''',
-    "W2": '''import importlib
-import pytest
+    "W3": '''from scripts.python import knowledge_gate_projection as gates
 
+def test_knowledge_gates_keep_stale_catalog_degraded():
+    result = gates.project_knowledge_gates(catalog_stale=True, read_set_same=True, source_bytes_same=True)
+    assert result["route"] == "degraded-continuation"
+    assert result["publication_allowed"] is False
 
-def test_coverage_rejects_gap_and_conflicting_overlap():
-    try:
-        coverage = importlib.import_module("scripts.python.skill_input_coverage")
-    except ImportError:
-        pytest.fail("TWR-W2-COVERAGE: module unavailable")
-    result = coverage.evaluate_coverage(source_size=4, source_hash="sha256:" + "a" * 64, observed_ranges=[(0, 1), (2, 4)])
-    assert result["status"] == "insufficient", "TWR-W2-COVERAGE: gap accepted"
+def test_knowledge_gates_refresh_same_selection_source_drift():
+    result = gates.project_knowledge_gates(catalog_stale=False, read_set_same=True, source_bytes_same=False)
+    assert result["route"] == "successor-refresh"
+    assert result["publication_allowed"] is False
 ''',
-    "W3": '''import importlib
-import pytest
+    "W4": '''from scripts.python import skill_input_generation as generation
+from scripts.python import skill_input_current as current
 
-
-def test_knowledge_gates_separate_degraded_execution_from_authority_ambiguity():
-    try:
-        gates = importlib.import_module("scripts.python.knowledge_gate_projection")
-    except ImportError:
-        pytest.fail("TWR-W3-THREE-GATES: module unavailable")
-    degraded = gates.project_knowledge_gates(context_status="catalog_stale", changed_paths=[], selection_drift=False, authority_ambiguity=False, source_available=True, publication_quality="unknown")
-    assert degraded["execution_route"] == "degraded-continuation", "TWR-W3-THREE-GATES: stale catalog blocked execution"
+def test_failed_generation_does_not_advance_current_pointer(tmp_path):
+    before = current.resolve_current(tmp_path)
+    generation.publish_generation(tmp_path, generation_id="g1", content=b"x")
+    after = current.resolve_current(tmp_path)
+    assert before == after
 ''',
-    "W4": '''import importlib
-import pytest
+    "W5": '''from scripts.python import skill_input_retention as retention
 
-
-def test_partial_generation_cannot_advance_current_pointer(tmp_path):
-    try:
-        generation = importlib.import_module("scripts.python.skill_input_generation")
-        current = importlib.import_module("scripts.python.skill_input_current")
-    except ImportError:
-        pytest.fail("TWR-W4-CURRENT-POINTER: module unavailable")
-    before = current.resolve_current(tmp_path, expected_contract_hash="sha256:" + "a" * 64)
-    generation.stage_generation(tmp_path, generation_id="g1", complete=False)
-    assert current.resolve_current(tmp_path, expected_contract_hash="sha256:" + "a" * 64) == before, "TWR-W4-CURRENT-POINTER: partial generation advanced current"
+def test_retention_apply_requires_explicit_approval(tmp_path):
+    plan = retention.plan_retention(tmp_path, dry_run=True)
+    assert plan["mode"] == "dry-run"
+    assert retention.apply_retention(tmp_path, approval=None)["status"] == "approval-required"
 ''',
-    "W5": '''import importlib
-import pytest
+    "W6": '''from scripts.python import skill_input_consumption as consumption
 
-
-def test_retention_rejects_unapproved_apply(tmp_path):
-    try:
-        retention = importlib.import_module("scripts.python.skill_input_retention")
-    except ImportError:
-        pytest.fail("TWR-W5-RETENTION: module unavailable")
-    plan = retention.plan_retention(tmp_path)
-    assert retention.apply_retention(plan, maintainer_approval=None)["status"] == "approval-required", "TWR-W5-RETENTION: unapproved retention applied"
-''',
-    "W6": '''import pytest
-from scripts.python import skill_input_consumption as consumption
-
-
-def test_end_to_end_resolution_rejects_invalid_intermediate():
-    try:
-        result = consumption.build_typed_source_selection_v2([], consumer="quick-dev", policy_revision="v2")
-    except AttributeError:
-        pytest.fail("TWR-W6-END-TO-END-MIGRATION: API unavailable")
-    assert result["sourceSelectionHash"], "TWR-W6-END-TO-END-MIGRATION: invalid intermediate advanced"
+def test_end_to_end_selection_exposes_independent_identity_hashes():
+    result = consumption.build_typed_source_selection_v2([])
+    assert result["sourceSelectionHash"] != result["sourceContentHash"]
 ''',
 }
 

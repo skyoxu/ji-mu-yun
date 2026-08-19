@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/skill_input_current.py",
+    "source_sha256": "sha256:9ee4d298d94edf753b0470f6645f750e08ec69e6f4a8da172551347af3211ba1",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 455,
+    "start_line": 1,
+    "end_line": 15,
+    "content_sha256": "sha256:9ee4d298d94edf753b0470f6645f750e08ec69e6f4a8da172551347af3211ba1"
+  },
+  "status": "accepted",
+  "summary": "scripts/python/skill_input_current.py; resolves current generation pointer only from root/current.v1.json; returns null if pointer is absent; parses UTF-8 JSON; accepts only dictionary values containing string generation_id; otherwise returns null; identifier content SHA256 9ee4d298d94edf753b0470f6645f750e08ec69e6f4a8da172551347af3211ba1; no stated handling for malformed JSON or read errors"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py",
+    "source_sha256": "sha256:e17b3aadbb0c8c4c8f563bd07c885aaed45b7d692a61b6699ec5ef7c6ee92af8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 8206,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:e17b3aadbb0c8c4c8f563bd07c885aaed45b7d692a61b6699ec5ef7c6ee92af8"
+  },
+  "status": "accepted",
+  "summary": "PLAN_ID=toolchain-workflow-repair; requires repository-root, plan-dir, canonical out path, skill-input-receipt; contract must match plan and expected successor receipt path; accepts plan-ready state with authorizes=[plan-ready]; authorized refresh requires maintainer flag, prior receipt, and matching authorized state; refresh copies immutable predecessor named by prior hash; validates skill input receipt as ready using repository contract and requires it inside plan; binds contract, registries, manifests, context/freeze, validation, closure, delta, candidate, validators, predecessor; records skill-input generation and canonical candidate hash; updates plan/resume state to implementation-authorized and run-slice; writes successor receipt and appends report; authorizes only implementation-authorized; explicitly excludes completion, acceptance, knowledge publication, bootstrap review, release; emits pass JSON; ambiguity: receipt contains unusual literal key predecessor_authorization=<redacted>"
+}

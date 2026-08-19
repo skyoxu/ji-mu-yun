@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_skill_input_selection_v2.py",
+    "source_sha256": "sha256:e86156fc8724c87bc58831d742c411ed337d34e5e330f78c6b768fe9be4e39da",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1386,
+    "start_line": 1,
+    "end_line": 20,
+    "content_sha256": "sha256:e86156fc8724c87bc58831d742c411ed337d34e5e330f78c6b768fe9be4e39da"
+  },
+  "status": "accepted",
+  "summary": "tests skill_input_consumption v2 typed selection; source selection and content hashes must be sha256 IDs; sourceSelectionHash excludes route_identity/successor generation; sourceSelectionHash canonicalizes source_roles target_files order; tested consumer=quick-dev-tdd-adapter operation=execute target=plan; sample normative_source docs/input.md module=plan resource_set=core."
+}

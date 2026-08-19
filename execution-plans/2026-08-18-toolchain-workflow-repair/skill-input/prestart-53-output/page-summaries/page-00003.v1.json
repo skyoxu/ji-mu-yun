@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Skill governs deterministic implementation-acceptance evidence for one explicit execution-plans/<target>; no target implementation, approval, commit, release, or deploy; require complete contract or compact-vdd-acceptance-prerequisite-bundle.v1 plus baseline/candidate manifests, typed request, action DAG, command registry, and ready Skill-input receipt; prefer commit candidate, otherwise clean HEAD or frozen dirty/proposed snapshot; baseline must be explicit frozen Git revision, never candidate^; derive binding-based run IDs and preserve stale predecessors; create Locator-bound acceptance knowledge context and refresh only hashes, never widen selection; validate skill-input contract/receipt through typed launcher; default deterministic_only runs controlled receipts then finalize-deterministic-run, missing/stale/failed receipt fails closed; semantic routes require immutable Bootstrap decision, lineage projection, typed route and high-cost/user confirmation boundaries; route kinds deterministic_only, focused_repair_verification, full_implementation_conformance, manual_pause; exact reuse only bootstrap-import-envelope.v3 with current clean finalized run and immediate lineage predecessor; require seven-class minimal-complete-closure for review; P2 findings close deterministically; P0/P1 repairs require Quick Dev handoff and audit-repair-completeness; max three semantic rounds, then manual_pause, with ADR-0054 two-stage closure requiring repair evidence, protocol review/composite authority, explicit acknowledgement, and finalize-manual-pause-closure; never create Round 4 or self-approve protocol; maintenanceMode ai-native-single-maintainer alters finding severity; model launches only policy-owned complex-recovery triggers via shared launcher; historical observations are non-authorizing."
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "VDD execution-plan skill: route standalone requirements Markdown to direct implementation; explicit complete-directory create/repair only. Select least-complex profile first: standard (compact plan, lifecycle, baseline/scope, slices, failure intent, acceptance, targeted plus terminal validation); resumable adds resume/dependencies/recovery and append-only 95 report/index; self-hosted adds protocol fixtures/migrations for changed control workflows. Model routing uses selected profile; ordinary Sol/high, typed gated Sol/max recovery only. Clarify only material scope/compatibility/destructive/protected/acceptance boundaries. Lifecycle: draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived; VDD owns early states, maintainer authorizes, Quick Dev only implementation-complete. Slices require behavior, pre-change failure selector/intent, GREEN target, dependents, recovery; VDD does not emit RED evidence. Repairs are in-place under repair/round-n, preserve history, hash-bind findings/closure, lineage budget default 2 hard limit 3 with typed round-3 triggers; require current lineage projection, callsite inventory, changed-set manifests, producer/consumer composition receipts, complete review scope. Mandatory authority reads and knowledge preflight before freezing; blocked/insufficient matches remain non-authorizing. Skill input gate requires explicit paths, typed semantic child launcher, ready validation before knowledge/plan artifacts; failed/candidate gates route clarification/repair. Bind Git baseline and complete scoped identity; review closure is minimal-complete; transport retries do not create semantic rounds, P2-only does not reopen review. Completion requires artifacts, acceptance path, RED/legacy record, stable repairs, and current terminal full validation."
+}

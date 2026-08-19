@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/requirements-and-acceptance.md",
+    "source_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5019,
+    "start_line": 1,
+    "end_line": 105,
+    "content_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48"
+  },
+  "status": "accepted",
+  "summary": "Purpose: repair toolchain orchestration without automatic Knowledge-authority publication; W0/TWR-W0: typed source selection (consumer, policy, module, resource-set, authority, path/module IDs), independently verifiable projected read set and selection identity, fail closed on omission/ambiguity/authority drift; W1/TWR-W1: adapter owns deterministic chunking, pagination, offsets, bounded retries, continuation binding to selection and source identity; W2/TWR-W2: adapter proves byte/line/hash coverage, rejects gaps, conflicting overlaps, byte changes, and model promotion of incomplete reads; W3/TWR-W3: independent execution, publication, and semantic-review gates, allowing verified degraded successor for unchanged semantics while blocking invalid LKG, selection/authority drift, missing sources, integrity failure; no automatic Bootstrap or Knowledge publication; W4/TWR-W4: validator/coordinator owns immutable receipts in versioned generations, binding candidate, contract, registry, authority envelope, Skill-input receipt, Knowledge freeze, validator identity; current typed pointer advances only after validation, replay reuses or byte-identically succeeds, invalid generations cannot become current; W5/TWR-W5: attempts under .skill-input-work/<plan-id>/<attempt-id>, lifecycle states, leases/heartbeats, retention protections; dry-run candidates, apply requires explicit maintainer approval and emits non-authorizing cleanup receipt with candidates/protected objects/reasons/bytes/predecessor commit; W6/TWR-W6: non-authorizing end-to-end test covers selection through retention, resolves one current pointer, rejects invalid advancement; ownership: VDD draft/plan-ready, Maintainer implementation authorization, Quick Dev implementation-complete, Acceptance acceptance-passed; no new lifecycle authority."
+}

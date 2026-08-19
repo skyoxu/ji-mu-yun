@@ -3,7 +3,7 @@
   "inputs": [
     {
       "path": "implementation-contract.v1.json",
-      "sha256": "sha256:708a304bf7bd524f3d3a0987810c88509985503bc7840970f742e5bbcd501ecb"
+      "sha256": "sha256:1e8c96c289f9d4737a7dfe1bc71c47654aac39d313b36ad63b7523179f184036"
     },
     {
       "path": "command-registry.v1.json",
@@ -15,15 +15,15 @@
     },
     {
       "path": "knowledge-context.v1.json",
-      "sha256": "sha256:49b9ddea8f2418735978fc6054ed405cc0a895c71c1f40afb6598094da7194c6"
+      "sha256": "sha256:346812edd399de94d5c00e0e250522371330435bcd5d6cb80504a3b826f802b5"
     },
     {
       "path": "knowledge-context.freeze.v1.json",
-      "sha256": "sha256:7a3210493751730b611107fd0adb1266350649d3bcc209829546f7e88cd83792"
+      "sha256": "sha256:cd38fc3e0bd8e1c0773528694bc2e21c425d1022377f0a0a4e6849fc193287ec"
     }
   ],
   "mode": "authorized-repair-revalidate",
   "plan_id": "toolchain-workflow-repair",
   "schema_version": "toolchain-workflow-repair.validator-input-manifest.v1",
-  "skill_input_receipt": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-receipt.json"
+  "skill_input_receipt": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-55-receipt.json"
 }

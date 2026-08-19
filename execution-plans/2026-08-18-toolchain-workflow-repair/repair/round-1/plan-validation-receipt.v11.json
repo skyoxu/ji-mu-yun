@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "failures": [],
+  "lifecycle_transition": "none",
+  "plan_id": "toolchain-workflow-repair",
+  "predicate": "plan-valid",
+  "schema_version": "toolchain-workflow-repair.plan-validation.v4",
+  "status": "pass",
+  "validator_input_manifest": {
+    "path": "repair/round-1/validator-input-manifest.v1.json",
+    "sha256": "sha256:439ef3cc021954cbdf0e2f403ef4e474624d1d5de157c72905ad2786b34b9525"
+  }
+}

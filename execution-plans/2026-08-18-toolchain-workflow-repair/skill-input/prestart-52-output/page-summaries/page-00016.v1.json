@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/requirements-and-acceptance.md",
+    "source_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5019,
+    "start_line": 1,
+    "end_line": 105,
+    "content_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48"
+  },
+  "status": "accepted",
+  "summary": "Purpose: repair toolchain orchestration without automatic Knowledge publication; W0 TWR-W0 typed source selection with independently verifiable projected read set and canonical selection identity, fail-closed omission/ambiguity/authority drift; W1 TWR-W1 adapter-owned deterministic chunking, pagination, continuation, bounded retries, same selection/source identity; W2 TWR-W2 adapter-proven byte/line/hash coverage, typed failures or refresh for gaps/conflicts/source changes, model cannot complete incomplete reads; W3 TWR-W3 separate execution/publication/review gates, verified degraded successor allowed for unchanged semantics, blocking behavior retained for invalid LKG/drift/missing sources/integrity failure, no automatic Bootstrap/publication; W4 TWR-W4 validator/coordinator-owned immutable receipts in versioned generations, typed current pointer advances only after validation, replay identity/byte equivalence, invalid receipts never current; W5 TWR-W5 attempt lifecycle under .skill-input-work/<plan-id>/<attempt-id>, leases/heartbeats, deterministic retention protection and dry-run/apply approval with non-authorizing cleanup receipt; W6 TWR-W6 non-authorizing end-to-end proof from selection through retention, current-pointer resolution, deterministic gates, invalid artifact cannot advance; ownership: VDD draft/plan-ready, Maintainer implementation authorization, Quick Dev implementation-complete, Acceptance acceptance-passed; no new lifecycle authority"
+}

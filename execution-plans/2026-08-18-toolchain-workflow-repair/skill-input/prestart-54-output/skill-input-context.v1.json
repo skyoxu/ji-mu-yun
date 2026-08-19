@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-20T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "All 34 manifest sources are present with complete single-page coverage and accepted bounded summaries. No source or page coverage is omitted.",
+      "title": "Coverage"
+    },
+    {
+      "content": "The sources define strict non-authorizing workflows for typed skill input, knowledge selection, TDD execution, lifecycle control, evidence ownership, validation, retention, and publication separation.",
+      "title": "Governance"
+    },
+    {
+      "content": "The toolchain plan covers source selection, transport, coverage, knowledge gates, immutable generations, retention safeguards, and end-to-end validation. Outputs remain bounded and redacted.",
+      "title": "Implementation"
+    }
+  ],
+  "source_manifest_hash": "sha256:89be2b82e98c4b0f86dbe743dd8d898699e3ae96ccd9c6aebe621a26f4c59245",
+  "truncated": false
+}

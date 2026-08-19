@@ -16,10 +16,32 @@ def write(path: Path, value: dict) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
+def close_repair_state(path: Path) -> dict:
+    state = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        state.get("schema_version") != "toolchain-workflow-repair.repair-state.v1"
+        or state.get("plan_id") != "toolchain-workflow-repair"
+        or state.get("round") != 1
+        or state.get("status") != "validating"
+        or state.get("blocks_execution") is not True
+        or state.get("authorizes") != []
+    ):
+        raise ValueError("repair state is not a closable non-authorizing validation state")
+    closed = {
+        **state,
+        "status": "closed",
+        "blocks_execution": False,
+        "authorizes": [],
+    }
+    write(path, closed)
+    return closed
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository-root", type=Path, required=True)
     parser.add_argument("--plan-dir", type=Path, required=True)
+    parser.add_argument("--validation-receipt", type=Path, required=True)
     args = parser.parse_args()
     root, plan = args.repository_root.resolve(), args.plan_dir.resolve()
     round_dir = plan / "repair" / "round-1"
@@ -27,23 +49,30 @@ def main() -> int:
         "finding-set.v1.json", "repair-state.v1.json", "historical-artifact-disposition.v1.json",
         "baseline-manifest.2050ec68.v1.json", "bootstrap-preexisting-delta.v1.json",
         "repair-candidate-manifest.v1.json", "repair-changed-set.v1.json",
-        "validator-input-manifest.v1.json", "plan-validation-receipt.v4.json",
+        "validator-input-manifest.v1.json",
         "authorization-predecessor.2050ec68.v1.json", "root-cause-callsite-inventory.v1.json",
         "producer-consumer-composition-receipt.v1.json", "sibling-8-17-manifest.v1.json",
         "sibling-original-8-18-manifest.v1.json",
     ]
     missing = [name for name in required if not (round_dir / name).is_file()]
-    validation = round_dir / "plan-validation-receipt.v4.json"
+    validation = args.validation_receipt.resolve()
+    try:
+        validation.relative_to(round_dir)
+    except ValueError as exc:
+        raise ValueError("validation receipt must be inside the current repair round") from exc
     value = json.loads(validation.read_text(encoding="utf-8")) if validation.is_file() else {}
     test_receipts = sorted((round_dir / "test-receipts").glob("*.v1.json"))
     if missing or not test_receipts or value.get("status") != "pass" or value.get("failures") != [] or value.get("authorizes") != []:
         raise ValueError("repair round is not ready for closure")
     refs = {name.removesuffix(".v1.json"): {"path": f"repair/round-1/{name}", "sha256": sha(round_dir / name)} for name in required}
+    refs["plan-validation"] = {"path": validation.relative_to(plan).as_posix(), "sha256": sha(validation)}
     for receipt in test_receipts:
         payload = json.loads(receipt.read_text(encoding="utf-8"))
         if payload.get("status") != "pass" or payload.get("authorizes") != []:
             raise ValueError("repair test receipt is not a non-authorizing pass")
         refs[f"test:{receipt.stem}"] = {"path": receipt.relative_to(plan).as_posix(), "sha256": sha(receipt)}
+    close_repair_state(round_dir / "repair-state.v1.json")
+    refs["repair-state"] = {"path": "repair/round-1/repair-state.v1.json", "sha256": sha(round_dir / "repair-state.v1.json")}
     refs["knowledge_context"] = {"path": "knowledge-context.v1.json", "sha256": sha(plan / "knowledge-context.v1.json")}
     refs["knowledge_freeze"] = {"path": "knowledge-context.freeze.v1.json", "sha256": sha(plan / "knowledge-context.freeze.v1.json")}
     closure = {"schema_version": "toolchain-workflow-repair.repair-closure.v1", "plan_id": "toolchain-workflow-repair", "status": "pass", "failures": [], "bindings": refs, "requires": ["plan-validation-pass", "pre-existing-delta", "authorization-predecessor", "knowledge-preflight"], "authorizes": [], "lifecycle_transition": "none"}

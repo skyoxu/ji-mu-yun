@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "source_sha256": "sha256:5745d62e6c0dfca067ea9d45c25f9360789bed47faae5d03ba0a91ac0a25009b",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 11532,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:5745d62e6c0dfca067ea9d45c25f9360789bed47faae5d03ba0a91ac0a25009b"
+  },
+  "status": "accepted",
+  "summary": "Plan toolchain-workflow-repair; schema implementation-contract.v1; self-hosted profile, hidden backend; authority manifest and command registry required; adapter bridge tools/migration_bridge.py; red execution owner quick-dev-tdd-adapter; W0 canonical typed source selection, acceptance TWR-W0-EXIT, prerequisite; W1 automatic transport planner, TWR-W1-EXIT, depends W0; W2 adapter-owned coverage, TWR-W2-EXIT, depends W0/W1; W3 knowledge three-gate projection, TWR-W3-EXIT, depends W0; W4 immutable generation/current pointer, TWR-W4-EXIT, depends W0-W2; W5 attempt retention and approval-gated GC, TWR-W5-EXIT, depends W4; W6 end-to-end migration, TWR-W6-EXIT, depends W0-W5; each slice requires red expected failure, green zero exit, refactor suite zero; recovery emphasizes hash/drift rejection, observed coverage, explicit review, immutable replay, approval-gated dry-run GC; forbidden changes include PhaseA.Platform, runtime/phase-a, logs, and selected execution-plan or Knowledge catalog/index paths; protocol layouts attempts/<id>, context/<capsule>, terminal-results/<slice-or-terminal>; terminal command terminal-full with implementation-complete predicate; no explicit ambiguities."
+}

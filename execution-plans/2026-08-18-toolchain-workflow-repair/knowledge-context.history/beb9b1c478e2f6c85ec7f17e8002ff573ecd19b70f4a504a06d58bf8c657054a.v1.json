@@ -1,0 +1,355 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-context.v1",
+  "locator_request": {
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z-successor-20260819T081253Z-successor-20260819T114739Z-successor-20260819T120925Z-successor-20260819T122127Z-successor-20260819T124914Z",
+    "consumer": "vdd",
+    "query": "skill-input-execution knowledge-execution-gates",
+    "snapshot": {
+      "ref": "refs/heads/main",
+      "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
+    },
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "allow_stale_catalog": true
+  },
+  "locator_result": {
+    "candidates": [
+      {
+        "anchor": "knowledge_context_validation.py",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "governance-component",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "knowledge-execution-gates",
+        "path": "scripts/python/knowledge_context_validation.py",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "high",
+          "score": 118,
+          "strategy": "hybrid-token",
+          "token_matches": 1
+        },
+        "read_set": [
+          {
+            "path": "scripts/python/knowledge_context_validation.py",
+            "role": "primary",
+            "source_sha256": "63f6bc643dde62be0efc3a345931e2b6a682ed6c10463321ec816d0c330860d5"
+          },
+          {
+            "path": "knowledge/contracts/knowledge-consumer-context.v1.schema.json",
+            "role": "contract",
+            "source_sha256": "2b5c46987ff9d92a40a010dadcf37591bcca9b85c0ea244c7d66b9a77a4f66bf"
+          },
+          {
+            "path": "scripts/python/knowledge_locator.py",
+            "role": "locator",
+            "source_sha256": "17d4759becb2bf17e5b907baf7484330180f8c2bf23d93678ddacc826f7baeb9"
+          },
+          {
+            "path": "knowledge/policies/consumer-policies.v2.json",
+            "role": "policy",
+            "source_sha256": "eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0044",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0048",
+            "type": "governed_by"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "cli-entrypoint",
+        "source_sha256": "63f6bc643dde62be0efc3a345931e2b6a682ed6c10463321ec816d0c330860d5",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "skill_input_consumption.py",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "governance-component",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "skill-input-execution",
+        "path": "scripts/python/skill_input_consumption.py",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "high",
+          "score": 118,
+          "strategy": "hybrid-token",
+          "token_matches": 1
+        },
+        "read_set": [
+          {
+            "path": "scripts/python/skill_input_consumption.py",
+            "role": "primary",
+            "source_sha256": "e6a6487fd1795c5a6a20dae5e44848a425d0309a12cf125a01517318ed7544dc"
+          },
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json",
+            "role": "contract",
+            "source_sha256": "60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374"
+          },
+          {
+            "path": "scripts/python/launch_skill_input_consumer.py",
+            "role": "launcher",
+            "source_sha256": "2f7ebacc4f08231ffc660e67b35dfa1398afed9c240d86d62bcc069468da601d"
+          },
+          {
+            "path": "scripts/python/validate_skill_input_consumption.py",
+            "role": "validator",
+            "source_sha256": "fb20964bd1005a0005df54530504a7c22e05c3c252bb4be534d9f27e62c2df2a"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0044",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0048",
+            "type": "governed_by"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "cli-entrypoint",
+        "source_sha256": "e6a6487fd1795c5a6a20dae5e44848a425d0309a12cf125a01517318ed7544dc",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "ADR-0044: Knowledge Projection Authority And E2 Hosted Context Envelope",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0044",
+        "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 5,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+            "role": "primary",
+            "source_sha256": "2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0033",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0035",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0037",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0038",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0040",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      },
+      {
+        "anchor": "ADR-0048: Repository Knowledge Locator Workflow Consumption",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0048",
+        "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 5,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+            "role": "primary",
+            "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0037",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0041",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0043",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0044",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      }
+    ],
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z-successor-20260819T081253Z-successor-20260819T114739Z-successor-20260819T120925Z-successor-20260819T122127Z-successor-20260819T124914Z",
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "snapshot": {
+      "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
+      "ref": "refs/heads/main"
+    },
+    "source_snapshot_id": "sha256:d6616e276fe784b4aa6d4e0a349ff4541f252e098c97c8e3ffffba406bd556d3",
+    "status": "matched"
+  },
+  "required_modules": [
+    "skill-input-execution",
+    "knowledge-execution-gates"
+  ],
+  "decisions": [
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "scripts/python/knowledge_context_validation.py",
+        "source_sha256": "63f6bc643dde62be0efc3a345931e2b6a682ed6c10463321ec816d0c330860d5"
+      },
+      "decision": "accepted",
+      "satisfies": [
+        "knowledge-execution-gates"
+      ],
+      "rejection_reason": null
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "scripts/python/skill_input_consumption.py",
+        "source_sha256": "e6a6487fd1795c5a6a20dae5e44848a425d0309a12cf125a01517318ed7544dc"
+      },
+      "decision": "accepted",
+      "satisfies": [
+        "skill-input-execution"
+      ],
+      "rejection_reason": null
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+        "source_sha256": "2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+        "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    }
+  ],
+  "request_sha256": "sha256:229c84b09fa65b685116768483ae2420c56bf1301e4c6f524ebdaa0599a6df03",
+  "result_sha256": "sha256:6cbfa1f9b6cd4e003edcfb774fe23741fe2f6777e7d86f9271aef323867db988",
+  "source_refresh": {
+    "schema_version": "jimuyun.knowledge-source-refresh.v1",
+    "mode": "current_worktree_read_set",
+    "base_locator_result_sha256": "sha256:71046da6a15cca7e1df5b4d04989b25d76a0cb2cd7915d98f83f007c59763c65"
+  },
+  "preflight": {
+    "status": "ready",
+    "failure_code": null,
+    "knowledge_freshness": "degraded",
+    "catalog_failure_code": "catalog_stale",
+    "source_freshness": "refreshed",
+    "context_sha256": "sha256:814a67128008f8d4de30fbfdbed9aba651b0fe64cf1bbd74a95bdc9353e0cbf8"
+  }
+}

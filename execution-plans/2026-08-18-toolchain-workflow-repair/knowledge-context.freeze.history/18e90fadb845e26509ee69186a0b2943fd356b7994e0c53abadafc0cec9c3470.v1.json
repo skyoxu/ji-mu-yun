@@ -1,0 +1,36 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:18e90fadb845e26509ee69186a0b2943fd356b7994e0c53abadafc0cec9c3470",
+  "canonical_context_sha256": "sha256:a79d9b5b1bacc8e08e831909bd37b160862d7a1e2e5bad9c7b211279242dfe4b",
+  "request_sha256": "sha256:b7c7713ffe39363937c3bae95a65dc07bb73ed66c448c9888d8e42b4091da083",
+  "result_sha256": "sha256:7e4eda8e033b1c712684fa364365572a91d5b565acc7c050e37c4b3d31006e41",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
+  },
+  "source_snapshot_id": "sha256:d6616e276fe784b4aa6d4e0a349ff4541f252e098c97c8e3ffffba406bd556d3",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "scripts/python/knowledge_context_validation.py",
+      "source_sha256": "63f6bc643dde62be0efc3a345931e2b6a682ed6c10463321ec816d0c330860d5",
+      "satisfies": [
+        "knowledge-execution-gates"
+      ]
+    },
+    {
+      "path": "scripts/python/skill_input_consumption.py",
+      "source_sha256": "ae6b9e5f0760c819e971acc208b3dba1045ff2400205e8bfe1e2967d5a1c9213",
+      "satisfies": [
+        "skill-input-execution"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:ff29296b3bd03ef1e68641f719505bab97b5998327aa524e3f9049318157880a",
+    "freeze_receipt_path": "knowledge-context.freeze.history/ff29296b3bd03ef1e68641f719505bab97b5998327aa524e3f9049318157880a.v1.json",
+    "reason": "quick-dev-controlled-source-refresh"
+  }
+}

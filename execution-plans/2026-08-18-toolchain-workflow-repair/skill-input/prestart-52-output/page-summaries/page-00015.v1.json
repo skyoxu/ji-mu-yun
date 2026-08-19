@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "source_sha256": "sha256:3ef078d83df368995cb5d6070bce6517249d81f1358c1e13763e14a2bce57a90",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 11575,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:3ef078d83df368995cb5d6070bce6517249d81f1358c1e13763e14a2bce57a90"
+  },
+  "status": "accepted",
+  "summary": "Implementation contract v1 for plan toolchain-workflow-repair; profile self-hosted; schema toolchain-workflow-repair.implementation-contract.v1; authority authority-manifest.v1.json; registry command-registry.v1.json; adapter tools/migration_bridge.py; red owner quick-dev-tdd-adapter; backend hidden_state=false; artifacts attempts/<attempt-id>, context/<capsule-id>, terminal-results/<slice-or-terminal>.json; slices W0-W6 ordered dependencies W0→W1/W2/W3/W4→W5→W6 (W3 depends W0; W4 W0-W2; W6 all); exits TWR-W0-EXIT through TWR-W6-EXIT with slice-ready predicate; terminal terminal-full/implementation-complete via tools/terminal_full.py; forbidden broadly PhaseA.Platform/**, runtime/phase-a/**, logs/**, plus slice-specific protected paths; W0 typed canonical selection and contract-hash fail-closed; W1 automatic transport with continuation hash drift rejection; W2 adapter-observed coverage only; W3 three-gate Knowledge projection routes drift/self-change to review; W4 immutable generations/current pointer, failed staging cannot advance; W5 dry-run GC and approval-gated committed-evidence deletion; W6 E2E proves migration without lifecycle or Knowledge publishing authority; each slice requires red/green/refactor command IDs and tests; planned new files and allowed production/docs/tests are explicitly constrained per slice."
+}

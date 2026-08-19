@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "adapter.py implements deterministic TDD lifecycle; mandatory skill-input gate before prepare/execute; backend hidden_state must be false; shell command execution forbidden; declared slice and nonempty contract_hash/validator_hash required; prepare state records slice, identities, allowed_changes, no authorization for acceptance/handoff/release; transitions require RED after prepared with failing exit and expected_failure_id, test/documentation-only paths; GREEN requires observed RED, passing exit, production paths; REFACTOR requires GREEN, passing exit, production/test/documentation paths; invalid transitions block with RMAP diagnostics; finalize_candidate requires exact red-green-refactor sequence and remains non-authoritative; resume rejects stale identities and failed/stale/superseded runs; stage bindings validate bundle schema, unique context/attempt, matching IDs/hashes, empty authorizes; protocol persistence validates artifact store, paths, reparse points, immutable conflicts, ordering, undeclared files; execute rejects existing run, requires bundle/store pairing, persists recovery-state.v1 with identities/stages and empty authorizes; ambiguities: caller supplies contracts, events, protocol artifacts, and receipt; no acceptance or release authority."
+}

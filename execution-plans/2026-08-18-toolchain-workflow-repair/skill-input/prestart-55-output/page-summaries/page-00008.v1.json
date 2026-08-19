@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+    "source_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4685,
+    "start_line": 1,
+    "end_line": 88,
+    "content_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3"
+  },
+  "status": "accepted",
+  "summary": "ADR-0050 accepted 2026-07-29; formal recovery entrypoint is publish_knowledge_catalog.py --restore-lkg; recovery uses single-writer lock and validates LKG pointer, generation identity, hashes, source snapshot, policy, query report, and current main; older LKG allowed only if ancestor and all inputs byte-match main; restores four formal layers then revalidates publication, Locator gate, and canonical smoke; stale LKG never overrides newer main; failed checks/activation roll back and verify prior bytes; current pointer is last activation marker; publication control-plane scripts must match pinned main; stale lock recovery rules include PID/process identity, 60-second malformed-lock grace, live/indeterminate conflict; pruning is separate prune_knowledge_generations.py --prune; protects current, LKG, and five newest valid successful main-added generations; validity requires complete manifest/artifact/layer/policy/source/query checks, mtime not authoritative; invalid/uncommitted/unrecognized generations reported and retained; pruning requires persisted intent and per-generation authorization with atomic isolation and evidence; failure logs append-only outside pruning; extends ADR-0048, complements and does not supersede ADR-0044/0048; retention policy versioned and requires ADR/policy update"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_skill_input_generation_pointer.py",
+    "source_sha256": "sha256:6fa26f1f9c03005129d7f10718be9d30e9b4345e389e94865db805e75b6bf488",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 392,
+    "start_line": 1,
+    "end_line": 9,
+    "content_sha256": "sha256:6fa26f1f9c03005129d7f10718be9d30e9b4345e389e94865db805e75b6bf488"
+  },
+  "status": "accepted",
+  "summary": "source=scripts/python/tests/test_skill_input_generation_pointer.py; test=test_failed_generation_does_not_advance_current_pointer; imports=skill_input_generation,skill_input_current; setup=tmp_path; action=publish_generation generation_id:g1 content:x; requirement=failed generation publication must not change current pointer; assertion=resolve_current before equals after; ambiguity=publish_generation failure behavior is implied by test name, not explicitly induced or asserted"
+}

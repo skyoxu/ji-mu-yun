@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "adapter.py; deterministic TDD lifecycle adapter; REPOSITORY_ROOT parents[4]; mandatory skill input gate in prepare/execute; no hidden backend state; shell registry forbidden; slice and contract_hash+validator_hash required; states prepared->red-observed->green-observed->refactor-verified->implementation-candidate; RED must fail with expected_failure_id and only tests/docs paths; GREEN must follow RED, pass, production-only paths; REFACTOR must follow GREEN, pass, declared production/tests/docs paths; all violations return blocked with RMAP rule diagnostics; candidate is non-authoritative and grants no authorization; resume requires exact identities and rejects failed/stale/superseded; protocol bindings require one context+attempt per stage, matching IDs, non-authoritative decision; persistence rejects invalid bundles/store, escaping paths, reparse points, undeclared/conflicting artifacts; execute requires new run dir, ordered events, paired protocol inputs, writes recovery-state with empty authorizes; ambiguity: execute creates run_dir before later validation failures."
+}

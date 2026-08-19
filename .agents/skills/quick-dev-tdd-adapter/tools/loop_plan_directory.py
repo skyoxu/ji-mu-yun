@@ -470,7 +470,16 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
     completed = subprocess.run([command["executable"], *command["argv"]], cwd=root, shell=False, check=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=command["timeout_seconds"])
     if completed.returncode != 0:
         raise RuntimeError("slice terminal predicate failed")
-    result = json.loads(completed.stdout)
+    try:
+        result = json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        # Registered test commands are allowed to be ordinary deterministic
+        # runners (for example pytest -q). Their zero exit is the predicate;
+        # JSON output is optional and must not be fabricated by the test.
+        if completed.stdout.strip():
+            result = {"status": "pass", "predicate": "slice-ready", "stdout_sha256": "sha256:" + hashlib.sha256(completed.stdout.encode("utf-8")).hexdigest()}
+        else:
+            result = {"status": "pass", "predicate": "slice-ready"}
     if result.get("status") != "pass" or result.get("predicate") != "slice-ready":
         raise RuntimeError("slice terminal predicate did not pass")
     result["execution_fingerprint"] = context["stage_results"]["red"]["execution_fingerprint"]

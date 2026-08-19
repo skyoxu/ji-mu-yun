@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_knowledge_gate_matrix.py",
+    "source_sha256": "sha256:01b5aa7af0f5f37bb8732dfc93b4f5118bfe19a44cff1cd6209b6868e28ca73a",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 604,
+    "start_line": 1,
+    "end_line": 12,
+    "content_sha256": "sha256:01b5aa7af0f5f37bb8732dfc93b4f5118bfe19a44cff1cd6209b6868e28ca73a"
+  },
+  "status": "accepted",
+  "summary": "file=scripts/python/tests/test_knowledge_gate_matrix.py; test_count=2; import=scripts.python.knowledge_gate_projection as gates; test=stale_catalog; inputs=catalog_stale:true,read_set_same:true,source_bytes_same:true; expected_route=degraded-continuation; expected_publication_allowed=false; test=source_drift_with_same_selection; inputs=catalog_stale:false,read_set_same:true,source_bytes_same:false; expected_route=successor-refresh; expected_publication_allowed=false"
+}

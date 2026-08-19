@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "adapter.py implements deterministic TDD lifecycle with no hidden state; prepare requires Skill input receipt gate plus contract_hash/validator_hash; rejects shell registry, missing slice, or hidden-state backend; prepared run authorizes nothing and excludes acceptance/handoff/release; RED requires prepared state, failing exit, expected_failure_id, and test/doc-only paths; GREEN requires observed RED, success, and production-only paths; REFACTOR requires GREEN, success, and declared production/test/doc paths; lifecycle order is red,green,refactor; finalize_candidate yields implementation-candidate only after exact lifecycle and remains non-authoritative; resume rejects identity drift and failed/stale/superseded runs; key rules: RMAP-PREPARE-INVALID,RMAP-CMD-SHELL,RMAP-HASH-AUTHORITY,RMAP-TDD-RED-NOT-OBSERVED,RMAP-TDD-IMPLEMENTATION-BEFORE-RED,RMAP-TDD-EXIT-PROOF,RMAP-RECOVERY-NEW-RUN-STATE; stage bindings require rmap.capsule-attempt-bundle.v1, one context/attempt, STAGE-{STAGE}, matching IDs, and empty authorizes; persistence enforces run containment, complete immutable artifacts, no symlink/reparse points, and ordered decisions; execute requires a new run directory and paired protocol_bundle/artifact_store; writes rmap.recovery-state.v1 with empty authorizes and Skill binding hashes"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/migration_bridge.py",
+    "source_sha256": "sha256:f52db93791e1caca1d32c83ca43630e9bcce6598cb511246d781c3efe783409d",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 7646,
+    "start_line": 1,
+    "end_line": 156,
+    "content_sha256": "sha256:f52db93791e1caca1d32c83ca43630e9bcce6598cb511246d781c3efe783409d"
+  },
+  "status": "accepted",
+  "summary": "migration_bridge.py; purpose materializes one declared future RED test only, without Quick Dev execution; TEMPLATES supports W0-W6 with fixed test content targeting scripts.python modules; _plan_slice loads implementation-contract.v1.json, validates known slice, declared selector/new-file membership/template/test allowlist; materialize resolves root/plan and requires plan under execution-plans; requires snapshot_paths exactly [declared selector]; blocks absolute/traversal/logs/execution-plans targets and root escapes; existing target must exactly equal template or errors; otherwise creates parent and writes UTF-8 LF test; CLI requires repository root, plan dir, slice ID, one-or-more snapshot paths, and --materialize-only; output status materialized with slice/path and empty authorizes; no production code or slice execution authorization."
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "Purpose: strict TDD adapter for one explicit execution-plans directory containing schema-valid implementation-contract.v1.json; reject standalone, compact, missing, or invalid contracts; parent route with caller quick-dev-tdd-adapter must succeed as lane strict_tdd_plan/backend quick-dev-tdd-adapter; target path must remain under execution-plans and only supplied directory/file may be read; resolve at most one 95-* report, treat report/run-state as non-authoritative; audit and repair before identity freeze; run loop_plan_directory before expensive actions; use run_slice_lifecycle and generated run_context/artifacts; observe expected failing RED before production write, then GREEN, REFACTOR, slice predicate; no hand-authored evidence or imported RED; automatically continue slices until terminal predicate, external repair, or repeated fingerprint; terminal result only implementation-complete, acceptance external; P0/P1 repair requires repair-review-handoff and Acceptance audit with complete manifests, hashes, consumers, tests, validation, root-cause and composition receipts; input gate requires skill-input contract, generated request, semantic child, and require-ready validation; stale/unverifiable input is hard stop; classify architectural/complex/small_mechanical/normal with unknowns blocked complex, override may only upgrade; decision is non-authorizing and canonical policy controls enablement; frozen knowledge must validate hashes and selection before RED; persistent loop consumes explicit no-wildcard snapshots and planned_new_files only; structured shell-free commands and drift rejection required; preserve failures via stale-linked successors; version-sensitive commits require exact documentation lookup, repository-owned changes are N/A; read backend, TDD protocol, and evidence/freshness references before implementation."
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py",
+    "source_sha256": "sha256:25a7e0f3cdde04d240688532cb4ba6a60166f6432c9806bbd3ea9ad77c326d0f",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 12342,
+    "start_line": 1,
+    "end_line": 219,
+    "content_sha256": "sha256:25a7e0f3cdde04d240688532cb4ba6a60166f6432c9806bbd3ea9ad77c326d0f"
+  },
+  "status": "accepted",
+  "summary": "validate_plan_ready.py; PLAN_ID toolchain-workflow-repair; validates plan under execution-plans and 13 required artifacts/tools; supports initial-plan-ready, repair-preclose-validate, authorized-repair-revalidate; enforces self-hosted contract, exact W0-W6 slices, TDD metadata; requires plan-ready/terminal-full and per-slice green/terminal commands; authority partitions required; repair modes require implementation-authorized plus round-1 validating/closed state and execution block semantics; plan-ready requires VDD publication receipt bound to validation receipt; resume authorizes empty and exact slice statuses; architecture accepted with decisions; fixed delta commits 2556ea... and a2ded3...; exact six pre-existing delta paths, git SHA bindings, repair-input disposition; canonical skill-input receipt required within plan and must validate ready; knowledge preflight ready, freeze non-authorizing, required accepted modules; emits pass/fail JSON with no authorization; optional output also writes validator input manifest; artifact/read/git/subprocess errors become validation failures."
+}

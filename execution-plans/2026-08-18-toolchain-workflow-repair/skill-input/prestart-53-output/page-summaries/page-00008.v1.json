@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+    "source_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4685,
+    "start_line": 1,
+    "end_line": 88,
+    "content_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3"
+  },
+  "status": "accepted",
+  "summary": "ADR-0050 accepted 2026-07-29; formal LKG recovery only via publish_knowledge_catalog.py --restore-lkg; recovery uses single-writer lock and verifies LKG pointer, generation/artifact hashes, source snapshot, policy, query report, and current main; ancestor LKG allowed only when indexed inputs byte-match main; restores source snapshot, v2 Catalog, projections, v1 compatibility Catalog; validates publication, replays query gate, runs canonical Locator smoke; stale LKG never overrides newer main; failures roll back and verify four layers/current pointer; activation is one rollback domain, current pointer last; builders/evaluator/Locator/core/publication scripts must match pinned main; stale lock recovery rules include PID/process identity, 60s grace for malformed lock, live/unknown owner conflicts; pruning separate explicit prune_knowledge_generations.py --prune; protects current, LKG, and five newest valid successful generations; validity requires complete manifest/artifact/layer/policy/source/query checks, never mtime; invalid/uncommitted/unrecognized generations reported not deleted; pruning uses canonical main policy, intent and per-target authorization, atomic isolation, evidence for removed/remaining/failed sets; failure logs append-only outside pruning; extends ADR-0048, complements ADR-0044, supersedes neither; retention policy versioned and ADR-governed."
+}

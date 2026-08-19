@@ -1,0 +1,19 @@
+{
+  "schema_version": "skill-input-child-request.v1",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "contract_hash": "sha256:60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374",
+  "source_manifest_hash": "sha256:3cd892a54a263ffa5affcc1416ac93eb35ae818aab6b3a67990f496a6d491b57",
+  "snapshot_root": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-50",
+  "output_root": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-50-output",
+  "execution_identity": "sha256:05d76630b03bd79c91515b33eb894112ce77281fc0e37a0a314ef8bd2447f97d",
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 1048576,
+  "input_mode": "paged-frozen-snapshot-stdin",
+  "allowed_capabilities": [
+    "read-frozen-snapshot",
+    "write-context-output"
+  ],
+  "authorizes": [],
+  "max_snapshot_chunk_bytes": 32768
+}

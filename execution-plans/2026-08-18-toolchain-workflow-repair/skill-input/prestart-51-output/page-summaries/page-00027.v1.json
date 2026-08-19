@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_skill_input_selection_v2.py",
+    "source_sha256": "sha256:e86156fc8724c87bc58831d742c411ed337d34e5e330f78c6b768fe9be4e39da",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1386,
+    "start_line": 1,
+    "end_line": 20,
+    "content_sha256": "sha256:e86156fc8724c87bc58831d742c411ed337d34e5e330f78c6b768fe9be4e39da"
+  },
+  "status": "accepted",
+  "summary": "Tests require typed source selection to expose distinct SHA-256 identifiers for selection and content; successor route identity changes must not alter selection hash; equivalent source-role ordering must be hash-insensitive; consumer quick-dev-tdd-adapter, operation execute, target plan; target files include requirements.md and AGENTS.md; normative source docs/input.md in plan/core resource set; no ambiguities."
+}

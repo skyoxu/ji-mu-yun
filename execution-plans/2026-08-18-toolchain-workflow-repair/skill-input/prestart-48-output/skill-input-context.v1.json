@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Repository rules separate authority sources, derived projections, lifecycle evidence, and runtime surfaces. Knowledge selection, content identity, paging coverage, immutable generations, current pointers, degraded successors, publication, semantic review, and retention are independently validated and fail closed on missing coverage, identity drift, invalid lineage, or integrity failure. Publication and cleanup require their dedicated controlled routes, while persisted Acceptance evidence remains coordinator-owned.",
+      "title": "Governance and knowledge controls"
+    },
+    {
+      "content": "The lifecycle is draft, plan-ready, implementation-authorized, implementation-complete, acceptance-passed, then archived. VDD owns plan readiness, the maintainer owns implementation entry, Quick Dev owns implementation completion, and Acceptance alone owns acceptance passage. Quick Dev requires a valid frozen plan contract and Skill-input receipt, executes strict RED, GREEN, and REFACTOR stages with immutable evidence, and cannot establish acceptance, publication, release, deployment, or commit state.",
+      "title": "Lifecycle and skill boundaries"
+    },
+    {
+      "content": "The self-hosted toolchain-workflow-repair plan defines slices W0 through W6 for typed source selection, automatic transport, coverage proof, independent knowledge gates, immutable generation pointers, retention controls, and end-to-end migration. Registered commands are structured non-shell Python invocations. Validation binds repository baselines, manifests, contracts, registries, source hashes, receipts, and candidate identities. Tests require distinct stable selection and content hashes, stale-continuation rejection, complete page coverage, pointer stability after failed generation, explicit retention approval, degraded execution without publication, and non-authorizing terminal evidence.",
+      "title": "Toolchain repair plan"
+    }
+  ],
+  "source_manifest_hash": "sha256:efcd57290090314b5015e492beebd769a7c5ffc5c2ed300f2c0d94d56e202d39",
+  "truncated": false
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/migration_bridge.py",
+    "source_sha256": "sha256:082e3586b2291eb461f19b0abef6d877b2e4a96948136003605a2cc861cc1fb4",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 7875,
+    "start_line": 1,
+    "end_line": 164,
+    "content_sha256": "sha256:082e3586b2291eb461f19b0abef6d877b2e4a96948136003605a2cc861cc1fb4"
+  },
+  "status": "accepted",
+  "summary": "migration_bridge.py; purpose materialize exactly one declared future RED test without starting Quick Dev; templates fixed for W0-W6 with TWR identifiers; _plan_slice loads implementation-contract.v1.json and requires known slice, declared planned_new_file selector, template presence, and test write-set authorization; materialize confines plan under execution-plans, requires snapshot_paths exactly [selector], rejects absolute/traversal/logs/execution-plans targets and root escape; existing target allowed only byte-identical template else conflict; creates parent and writes UTF-8 LF; CLI requires repository-root, plan-dir, slice-id, snapshot-path, and --materialize-only; output status materialized with slice/path and empty authorizes; ambiguity: no explicit symlink policy beyond resolved containment; template assertions define intended missing module/API behavior."
+}

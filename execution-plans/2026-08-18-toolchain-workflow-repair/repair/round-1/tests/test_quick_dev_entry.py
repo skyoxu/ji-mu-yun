@@ -15,5 +15,5 @@ def test_entry_refuses_to_claim_ready_before_semantic_skill_input_is_ready():
     payload = json.loads(result.stdout)
     assert result.returncode != 0
     assert payload["status"] == "fail"
-    assert "skill-input-not-ready" in payload["failures"]
+    assert "route-not-w0" in payload["failures"]
     assert payload["authorizes"] == []

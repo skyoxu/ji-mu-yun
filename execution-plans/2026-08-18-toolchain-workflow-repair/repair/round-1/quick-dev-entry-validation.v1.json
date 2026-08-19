@@ -1,10 +1,12 @@
 {
   "authorizes": [],
-  "failures": [],
+  "failures": [
+    "route-not-w0"
+  ],
   "lifecycle_transition": "none",
-  "next_action": "run-slice",
+  "next_action": "repair",
   "predicate": "quick-dev-entry-ready",
   "schema_version": "toolchain-workflow-repair.quick-dev-entry-validation.v1",
-  "slice_id": "W0",
-  "status": "pass"
+  "slice_id": null,
+  "status": "fail"
 }

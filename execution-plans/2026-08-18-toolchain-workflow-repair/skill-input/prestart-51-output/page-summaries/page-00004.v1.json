@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "skill=vdd-execution-plan; route only explicit complete execution-plan directory create|repair, standalone requirements markdown routes direct implementation; profile first standard|resumable|self-hosted with least complexity and documented reason; standard avoids legacy books/reports/review machinery absent concrete consumer; model routing after profile via scripts/model_routing.py, ordinary=Sol/high, recovery Sol/max only closed capability gate; authority/state/callers/protected paths/tests before material clarification; lifecycle=draft>plan-ready>implementation-authorized>implementation-complete>acceptance-passed>archived, ownership VDD/maintainer/Quick Dev/acceptance distinct; slices declare behavior failure selector expected failure GREEN target dependents recovery, VDD emits no RED evidence; repair in place repair/round-n with immutable history and bounded invalidation/full replay where shared; Bootstrap lineage family target-derived, 2 semantic rounds default/3 hard with typed trigger else manual_pause; repair requires generated callsite inventory, changed-or-excluded siblings, registered producer-consumer composition receipt, hash-bound changed manifests and review scope; mandatory knowledge locator/preflight before plan-ready with blocking required misses/integrity failures and constrained output; mandatory skill-input adapter/typed child/ready validation after routing; baseline must bind commit range or scoped dirty identity/contracts/implementation/validators; review optional unless requested/protected, minimal-complete closure and transport retries do not consume rounds; resumable/self-hosted require append-only 95 report+index; completion requires profile artifacts, observable acceptance per active requirement, recorded negative/legacy path, stable targeted repairs, current terminal full validation; ambiguity=none"
+}

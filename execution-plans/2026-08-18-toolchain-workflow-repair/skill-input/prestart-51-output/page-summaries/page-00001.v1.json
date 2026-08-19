@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "Strict plan-directory TDD adapter; requires explicit execution-plans target with valid implementation-contract.v1.json; parent route caller quick-dev-tdd-adapter must yield lane strict_tdd_plan/backend quick-dev-tdd-adapter; read only target directory and resolve one 95-* report; reports/run-state non-authoritative; run loop_plan_directory before actions; use lifecycle runner for run-slice; require observed RED before production, then GREEN/REFACTOR and plan predicate; preserve stale/failed evidence via successors; stop only at implementation-complete, external-repair-required, repeated failure; acceptance remains external; enforce skill-input contract typed receipts and ready gate; classify architectural/complex/small_mechanical/normal with unknowns blocked complex; no provider/model selection; verify frozen knowledge hashes; unattended loop uses explicit execution_snapshot_paths and planned_new_files constraints; shell-free structured commands; reject authority/command/contract/write/read/dependency/baseline/predecessor drift; read backend, TDD protocol, evidence references before implementation; version-sensitive dependency changes require exact documentation gate, repository-owned changes exempt."
+}

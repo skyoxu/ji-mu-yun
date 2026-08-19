@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py",
+    "source_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 6863,
+    "start_line": 1,
+    "end_line": 143,
+    "content_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7"
+  },
+  "status": "accepted",
+  "summary": "validate_all.py identity projection module; PLAN_ID toolchain-workflow-repair; slices W0-W6; excludes logs/, plan-state.v1.json, resume-state.v1.json from semantic inputs; validates repo-relative non-symlink paths and represents present sha256 or absent; loads/validates implementation contract and slice IDs; candidate manifest derives from allowed_changes plus planned_new_files, ignores glob strings, prefixes tools/ with plan directory, deduplicates/sorts; dependency identities recursively include dependency candidate hashes; per-slice identity returns candidate_hash, predicate_input_root, authority_root, validator_root, validator_version toolchain-workflow-repair.validate-all.v1, closure_definition_hash, validator_hash; predicate covers slice, contract, registry, candidate; authority paths include manifest, ADR-0060, skill/lifecycle contracts, consumer policy; validator paths include plan validators/bridge and Quick Dev routing/invocation/loop tools; aggregate snapshot hashes all W0-W6 identities/roots and current validator file hash; ambiguity: recursive dependencies have no cycle guard."
+}

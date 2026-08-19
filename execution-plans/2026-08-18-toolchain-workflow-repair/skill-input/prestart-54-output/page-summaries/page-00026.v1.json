@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/skill_input_generation.py",
+    "source_sha256": "sha256:ea9a6aa721a9f1c6e7ac389eed6a7ad5000a18fc69e6050bb07702deb3de144d",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 581,
+    "start_line": 1,
+    "end_line": 17,
+    "content_sha256": "sha256:ea9a6aa721a9f1c6e7ac389eed6a7ad5000a18fc69e6050bb07702deb3de144d"
+  },
+  "status": "accepted",
+  "summary": "publish_generation(root: Path, generation_id: str, content: bytes) -> Path; validates nonempty string generation_id and bytes content, raising ValueError on invalid inputs; creates root/generations/{generation_id} with exist_ok=False, enforcing immutability/no overwrite; writes content to content.bin; returns generation directory path; ambiguity: root existence, filesystem errors, and path traversal are unspecified"
+}

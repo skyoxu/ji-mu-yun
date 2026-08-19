@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The repository uses hash-bound, fail-closed skill-input contexts with separate execution, publication, lifecycle, and acceptance responsibilities. Context selection and source-content identities are independent. Persisted evidence is immutable and non-authorizing unless a designated lifecycle owner publishes it.",
+      "title": "Workflow governance"
+    },
+    {
+      "content": "The toolchain workflow repair plan defines TWR-W0 through TWR-W6 for typed source selection, bounded transport, coverage verification, knowledge gate routing, immutable generations, approval-gated retention, and end-to-end migration. The implementation contract requires deterministic RED, GREEN, and REFACTOR evidence for each slice.",
+      "title": "Repair plan"
+    },
+    {
+      "content": "All listed sources have complete single-page coverage and accepted bounded summaries. Command registries define shell-free tests and terminal validation. The supplied material describes implementation and evidence controls without publishing lifecycle completion or acceptance outcomes.",
+      "title": "Validation constraints"
+    }
+  ],
+  "source_manifest_hash": "sha256:4794ac8f950f01e657104435fc94c9072d7dafa05c6269234eb59c6b93932c2c",
+  "truncated": false
+}

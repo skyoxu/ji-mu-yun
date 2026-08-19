@@ -1,0 +1,7 @@
+{
+  "status": "complete",
+  "context_artifact": "C:/jimuyun/execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-51-output/skill-input-context.v1.json",
+  "semantic_decision": "C:/jimuyun/execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-51-output/semantic-decision.v1.json",
+  "source_manifest_hash": "sha256:68ce5d4df07bf9aa461a56957bb4666cc2da45ac18f15e2d305a0ee412d35116",
+  "snapshot_read_coverage": "C:/jimuyun/execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-51-output/snapshot-read-coverage.v1.json"
+}

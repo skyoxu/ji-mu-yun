@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "Adapter enforces gated TDD slice lifecycle; Skill input receipt and current contract/validator hashes required; backend hidden state and shell execution forbidden; declared slice and write sets mandatory; RED requires prepared state, failing exit, expected failure ID, tests/docs-only changes; GREEN requires observed RED, passing exit, production-only changes; REFACTOR requires GREEN, passing exit, declared production/tests/docs set; lifecycle finalization yields non-authoritative implementation candidate; stale identities or failed/stale/superseded runs require successor; stage bindings validate unique context/attempt, matching plan/slice/run IDs, attempt IDs, capsule/context hashes, empty authorization; protocol bundle schema and artifact store validated; artifacts must remain inside run, avoid reparse points, preserve append-only observations, reject undeclared/conflicting files, write evidence immutably; execute rejects existing run, persists recovery state, does not authorize acceptance/handoff/release"
+}

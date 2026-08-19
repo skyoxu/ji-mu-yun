@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/command-registry.v1.json",
+    "source_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4240,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0"
+  },
+  "status": "accepted",
+  "summary": "schema toolchain-workflow-repair.command-registry.v1; 20 registered commands; cwd repository root; executable py; shell disabled; pytest suites cover skill input selection/transport/coverage/generation/retention/consumption, knowledge gate, workflow repair E2E; green and terminal matrices w0-w6; aggregate IDs skill-input-suite, knowledge-suite, workflow-repair-e2e; validation ID plan-ready runs validate_plan_ready.py with repository and plan directory; terminal-full runs terminal_full.py; timeouts 300s standard, 600s E2E, 1800s terminal-full; duplicate green/terminal command sets; plan path execution-plans/2026-08-18-toolchain-workflow-repair; ambiguity: no execution outcomes provided"
+}

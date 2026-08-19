@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py",
+    "source_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 6863,
+    "start_line": 1,
+    "end_line": 143,
+    "content_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7"
+  },
+  "status": "accepted",
+  "summary": "file=execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py; purpose=deterministic plan-local identity projections for Quick Dev router; PLAN_ID=toolchain-workflow-repair; slices=W0..W6; sha256=sha256:<digest>; canonical JSON=UTF-8 sorted compact keys; repository root=__file__.parents[3]; plan root=parents[1]; identity inputs reject absolute/traversal paths, root escape, symlinks, logs/, plan-state.v1.json, resume-state.v1.json; absent files represented state=absent; contract requires matching plan_id and slices list; candidate manifest flattens string/list/dict paths, ignores wildcard strings, prefixes tools/ with plan directory, deduplicates and sorts paths; dependencies use dependent current candidate hashes; per-slice identity outputs candidate_hash,predicate_input_root,authority_root,validator_root,validator_version,closure_definition_hash,validator_hash; authority inputs=manifest, ADR-0060, input/lifecycle contracts, consumer policies; validator inputs=local validators plus Quick Dev router/invocation/loop tools; validator_version=toolchain-workflow-repair.validate-all.v1; aggregate validation_snapshot hashes all W0..W6 identities; ambiguity=recursive dependency identities assume acyclic depends_on graph"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/command-registry.v1.json",
+    "source_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4240,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0"
+  },
+  "status": "accepted",
+  "summary": "schema toolchain-workflow-repair.command-registry.v1; 7 green validation commands w0-w6; matching 7 terminal commands w0-w6; skill-input-suite runs consumption tests; knowledge-suite runs knowledge-gate tests; workflow-repair-e2e runs end-to-end repair tests; plan-ready validates execution plan readiness; terminal-full executes full terminal workflow; all commands use repository root cwd and non-shell Python pytest/script invocation; standard test timeout 300s; end-to-end timeout 600s; plan-ready timeout 300s; terminal-full timeout 1800s; duplicate green/terminal entries indicate separate execution phases; source snapshot integrity recorded by descriptor SHA-256"
+}

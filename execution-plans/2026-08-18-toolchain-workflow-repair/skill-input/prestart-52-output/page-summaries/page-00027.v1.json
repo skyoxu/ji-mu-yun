@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/skill_input_retention.py",
+    "source_sha256": "sha256:c707d2445e0991d9a38c9d2f931d74dddaba96cfb3a8419f712e5d9c645a2bef",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 663,
+    "start_line": 1,
+    "end_line": 21,
+    "content_sha256": "sha256:c707d2445e0991d9a38c9d2f931d74dddaba96cfb3a8419f712e5d9c645a2bef"
+  },
+  "status": "accepted",
+  "summary": "scripts/python/skill_input_retention.py; retention planning API; plan_retention(root: Path, dry_run=True) validates Path else ValueError; returns root POSIX string, mode dry-run/apply, empty candidates; apply_retention(root: Path, approval) validates Path else ValueError; approval None => approval-required; any approval => no-op; no retention mutation implemented"
+}

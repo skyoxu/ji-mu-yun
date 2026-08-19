@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_skill_input_coverage_v2.py",
+    "source_sha256": "sha256:268012f61981ebe36071fdf4b12d26f2d802dbdbcccc624e26f381bd7620785e",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1108,
+    "start_line": 1,
+    "end_line": 24,
+    "content_sha256": "sha256:268012f61981ebe36071fdf4b12d26f2d802dbdbcccc624e26f381bd7620785e"
+  },
+  "status": "accepted",
+  "summary": "Coverage evaluation tests: missing required page p2 -> insufficient with missing list; duplicate observed p1 -> insufficient; unexpected page p3 -> insufficient; invalid identity None -> ValueError; source hash mismatch (sha256) -> stale-source"
+}

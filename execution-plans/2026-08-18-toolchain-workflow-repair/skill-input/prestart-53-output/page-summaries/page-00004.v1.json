@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "VDD execution-plan skill applies only when explicitly creating/repairing a complete execution-plan directory; standalone requirements Markdown routes to direct implementation. Before action read three mandatory references, select least-complex profile (standard/resumable/self-hosted), record rationale, then model-route selected profile. Clarify only material boundaries; explicit write authorization suffices. Lifecycle: draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived; VDD owns draft/plan-ready, maintainer may authorize, Quick Dev only implementation-complete. Each slice requires behavior, failure intent/selector, expected pre-change failure, GREEN target, dependents, recovery. VDD must not emit RED artifacts; current behavior removes implementation scope. Repair is in-place under repair/round-n, immutable history, hash-bound findings/closure, lineage family, max three rounds with typed Round 3 triggers, otherwise manual pause. Repair requires root-cause callsite inventory, explicit exclusions, producer/consumer composition receipt, complete hash-bound changed set and review scope. Mandatory knowledge-consumption and skill-input gates precede plan-ready/artifacts; blocked gates are non-authorizing. Bind Git baseline and scoped identity; review closure is minimal-complete. Reports/index required for resumable/self-hosted, optional standard. Bootstrap evidence is supplemental/non-authorizing; P2-only findings do not open semantic rounds. Completion requires required artifacts, observable acceptance, RED/legacy record, stable repairs, terminal full validation."
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/migration_bridge.py",
+    "source_sha256": "sha256:2f2547209f0c6ee82511c3522f120c21bf1d7fc63da221c56458f0f0dfcf6525",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 7427,
+    "start_line": 1,
+    "end_line": 158,
+    "content_sha256": "sha256:2f2547209f0c6ee82511c3522f120c21bf1d7fc63da221c56458f0f0dfcf6525"
+  },
+  "status": "accepted",
+  "summary": "migration_bridge.py materializes one declared future RED test without starting Quick Dev; supports slices W0-W6 with fixed test templates covering selection/content hash identity, stale continuation rejection, coverage gaps, degraded execution gates, current-pointer stability, retention approval, and end-to-end invalid-intermediate rejection; reads implementation-contract.v1.json and requires a matching slice, declared RED selector, planned new file, and test write-set permission; accepts exactly the current selector as snapshot path; plan must be under repository execution-plans; target must remain inside repository and exclude traversal, logs, and execution-plans paths; conflicting existing content fails, identical content is reused; new files are created with UTF-8 LF content; CLI requires --materialize-only and emits materialized status with slice/path and empty authorization list; unknown or undeclared slices, invalid selectors, boundary violations, and non-materialize invocation fail"
+}

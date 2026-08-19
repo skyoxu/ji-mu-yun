@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "source_sha256": "sha256:3ef078d83df368995cb5d6070bce6517249d81f1358c1e13763e14a2bce57a90",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 11575,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:3ef078d83df368995cb5d6070bce6517249d81f1358c1e13763e14a2bce57a90"
+  },
+  "status": "accepted",
+  "summary": "Contract toolchain-workflow-repair, schema v1, self-hosted; authority authority-manifest.v1.json, registry command-registry.v1.json, bridge tools/migration_bridge.py, red owner quick-dev-tdd-adapter; backend hidden_state=false; artifacts attempts/<attempt-id>, context/<capsule-id>, terminal-results/<slice-or-terminal>. W0 TWR-W0 canonical typed selection, hash mismatch fails closed; W1 TWR-W1 automatic transport, continuation binds source hash; W2 TWR-W2 adapter-owned coverage only; W3 TWR-W3 three-gate Knowledge projection, drift/self-change requires review; W4 TWR-W4 immutable generations/current pointer, failed staging cannot advance; W5 TWR-W5 dry-run GC, committed evidence requires maintainer approval; W6 TWR-W6 end-to-end migration, no lifecycle or Knowledge authority. Dependencies: W1<-W0, W2<-W0/W1, W3<-W0, W4<-W0/W1/W2, W5<-W4, W6<-all. Each slice has red/green/refactor commands and slice-ready exit; terminal-full predicate implementation-complete. Forbidden broadly PhaseA.Platform/**, runtime/phase-a/**, logs/**; some slices also forbid specified execution-plan paths and Knowledge catalogs/indexes."
+}

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The repair plan defines typed, hash-bound skill input selection, complete page coverage, immutable generations, validated current-pointer resolution, and non-authorizing execution gates.",
+      "title": "Workflow scope"
+    },
+    {
+      "content": "VDD prepares plans, the maintainer publishes implementation state, Quick Dev records implementation completion, and Acceptance alone records acceptance completion. Evidence is append-only and fails closed on drift or ambiguity.",
+      "title": "Lifecycle controls"
+    },
+    {
+      "content": "Seven ordered slices require RED, GREEN, and refactor evidence. Validators check path confinement, contract and registry bindings, coverage, source identity, retention behavior, and an end-to-end non-authorizing flow.",
+      "title": "Validation expectations"
+    }
+  ],
+  "source_manifest_hash": "sha256:16edd1f66db2da5c4270856f784da17286931a93e607a70c752c4964691133cd",
+  "truncated": false
+}

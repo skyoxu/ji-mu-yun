@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+    "source_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4685,
+    "start_line": 1,
+    "end_line": 88,
+    "content_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3"
+  },
+  "status": "accepted",
+  "summary": "ADR-0050 accepted 2026-07-29; formal recovery entrypoint is scripts/python/publish_knowledge_catalog.py --restore-lkg; recovery uses single-writer lock and verifies LKG pointer, immutable generation identity, artifact hashes, source snapshot, policy, query report, and current refs/heads/main before changes; older LKG allowed only if ancestor and all indexed inputs byte-match current main; restores source snapshot, v2 Catalog, consumer projections, and v1 compatibility Catalog; validates publication, replays Locator query gate, and runs canonical Locator smoke without bypass; stale LKG never overrides newer main; failed checks roll back four layers and current pointer with byte verification; activation rollback domain includes four layers, current/LKG pointers, and success evidence, with current pointer last; builders/evaluator/Locator/core/publication scripts must byte-match pinned main; stale locks may be recovered only for definitely dead/reused owner or malformed lock after 60-second grace, live/indeterminate remains conflict; pruning is separate scripts/python/prune_knowledge_generations.py --prune and never implicit; protects current, LKG, and five newest valid successful generations by main-addition order, not mtime; invalid/uncommitted/unrecognized generations are reported and never deleted; pruning requires canonical policy, persisted intent and per-generation authorization, atomic isolation, and per-target/partial-failure evidence; failure evidence under logs/knowledge-context/ is append-only and out of pruning scope; extends ADR-0048, complements and does not supersede ADR-0044/0048; retention policy knowledge/policies/generation-retention.v1.json is versioned and requires ADR/policy update to change"
+}

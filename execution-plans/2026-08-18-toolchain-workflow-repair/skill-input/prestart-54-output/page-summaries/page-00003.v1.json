@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "skill=run-refactor-implementation-acceptance; scope=deterministic evidence/orchestration for one explicit execution plan; excludes implementation, approval, protected handoff, commit/release/deploy; target requires execution-plans/<target>, frozen baseline, candidate custody/manifests, typed request, DAG, registry; default evidence_only; controlled_validation requires typed commands and isolated write roots; missing/ambiguous prerequisites=>prerequisite_blocked; candidate defaults clean HEAD only, never infer baseline=candidate^; compact VDD implementation-complete projection requires current Quick Dev receipt and explicit bindings; stale Quick Dev candidate/terminal binding=>return quick-dev-tdd-adapter; candidate assembly transaction and no historical artifact copying; Skill-input receipt required via canonical create/consume/validate workflow; knowledge context via canonical Locator, target-bound, hash/read-set validated; catalog_stale=>degraded but continue, other knowledge faults=>knowledge-context-repair-required; byte-only read-set drift=>successor source_refresh without widening selection; start-or-resume binds prepare input hash, contract hash, frozen context byte hash, Skill-input receipt/contract; derived run ID supports exact resume, drift=>successor, legacy no-state runs read-only; deterministic actions then finalize-deterministic-run can publish acceptance-passed when closed deterministic route; semantic routes require immutable Bootstrap decision, fresh inspect-lineage, bounded route, explicit high-cost acknowledgement before model launch; route kinds=deterministic_only|focused_repair_verification|full_implementation_conformance|manual_pause; later discovery requires recommendation/confidence/user confirmation; P2=>targeted deterministic closure; P0/P1 repair requires Quick Dev handoff and audit-repair-completeness; max 3 semantic rounds, no Round4; manual-pause closure requires protocol review, explicit acknowledgement, final CLI only; deterministic CLI never launches LLM; model routing no-launch except policy triggers; Bootstrap exact reuse only v3 with current clean finalized binding; required review scope has seven explicit classes; prepare-run requires frozen context and immutable commit or constrained snapshot; policy selection phase vs toolchain and uncovered toolchain paths fail closed; coverage denominator restricted PhaseA.Platform executable changed lines; command execution registry-bound; Program DoD remains plan-local"
+}

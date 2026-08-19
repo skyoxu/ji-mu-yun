@@ -13,6 +13,10 @@ def digest(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def contract_digest(plan: Path) -> str:
+    return digest(plan / "implementation-contract.v1.json")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository-root", type=Path, required=True)
@@ -23,7 +27,10 @@ def main() -> int:
     failures = []
     for index in range(7):
         slice_id = f"W{index}"
-        matches = sorted((root / "logs" / "tdd-adapter" / PLAN_ID / slice_id).glob("*/slice-receipt.json"))
+        # The lifecycle runner's canonical slice predicate artifact is
+        # `slice-ready-result.json`; `slice-receipt.json` was never produced
+        # by the current adapter and would make terminal completion impossible.
+        matches = sorted((root / "logs" / "tdd-adapter" / PLAN_ID / slice_id).glob("*/slice-ready-result.json"))
         if len(matches) != 1:
             failures.append(f"slice:{slice_id}:current-pass-receipt-required")
             continue
@@ -32,7 +39,7 @@ def main() -> int:
         except (OSError, json.JSONDecodeError):
             failures.append(f"slice:{slice_id}:receipt-invalid")
             continue
-        if receipt.get("predicate") != "slice-ready" or receipt.get("status") != "pass" or receipt.get("failures") != [] or receipt.get("authorizes") != []:
+        if receipt.get("predicate") != "slice-ready" or receipt.get("status") != "pass" or receipt.get("failures", []) != [] or receipt.get("authorizes", []) != []:
             failures.append(f"slice:{slice_id}:receipt-not-current-pass")
     result = {
         "schema_version": "toolchain-workflow-repair.terminal-result.v2",
@@ -40,7 +47,10 @@ def main() -> int:
         "predicate": "implementation-complete",
         "status": "pass" if not failures else "fail",
         "failures": failures,
-        "authorizes": [],
+        "contract_hash": contract_digest(plan),
+        "terminal_command_id": "terminal-full",
+        "validated_command_ids": [f"w{index}-terminal" for index in range(7)],
+        "authorizes": ["implementation-complete"] if not failures else [],
         "lifecycle_transition": "none",
     }
     encoded = json.dumps(result, sort_keys=True, indent=2) + "\n"

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/knowledge_gate_projection.py",
+    "source_sha256": "sha256:a7b90e32ec83e61458c6e01d8128ff1fcf66dfe7969258917428a9949eb5ed0f",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 669,
+    "start_line": 1,
+    "end_line": 14,
+    "content_sha256": "sha256:a7b90e32ec83e61458c6e01d8128ff1fcf66dfe7969258917428a9949eb5ed0f"
+  },
+  "status": "accepted",
+  "summary": "project_knowledge_gates is a pure projection function; inputs: catalog_stale, read_set_same, source_bytes_same booleans; stale catalog + unchanged read set + unchanged source bytes -> route degraded-continuation, publication disallowed, review not required; unchanged read set + changed source bytes -> route successor-refresh, publication disallowed, review not required; all other states -> route repair-required, publication disallowed, review required; no ambiguous behavior"
+}

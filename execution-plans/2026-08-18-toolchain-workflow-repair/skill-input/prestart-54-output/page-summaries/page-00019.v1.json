@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
+    "source_sha256": "sha256:94efa445ccb99dea30d0c09cff0ac34defb316f67d442326e467366f21c4ab6c",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2248,
+    "start_line": 1,
+    "end_line": 59,
+    "content_sha256": "sha256:94efa445ccb99dea30d0c09cff0ac34defb316f67d442326e467366f21c4ab6c"
+  },
+  "status": "accepted",
+  "summary": "terminal_full.py; PLAN_ID=toolchain-workflow-repair; CLI requires --repository-root and --plan-dir, optional --out; computes SHA-256 helper unused; validates W0 through W6; each slice requires exactly one logs/tdd-adapter/<plan>/Wn/*/slice-ready-result.json; invalid/missing/multiple receipt produces slice-specific failure; receipt must predicate=slice-ready,status=pass,empty failures,empty authorizes; outputs terminal-result.v2 with predicate=implementation-complete; status pass iff no failures; authorizes empty; lifecycle_transition=none; writes normalized JSON to --out when supplied and always prints; exit 0 on pass, 1 on failures; plan-dir is resolved but otherwise unused; comment records replacement of obsolete slice-receipt.json expectation."
+}

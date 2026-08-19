@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "source_sha256": "sha256:618c0e0c5a6e1dac468dcde1d3b5b84da03840c5bf978f7ea593814dc27e56d3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 11645,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:618c0e0c5a6e1dac468dcde1d3b5b84da03840c5bf978f7ea593814dc27e56d3"
+  },
+  "status": "accepted",
+  "summary": "plan=toolchain-workflow-repair; schema=implementation-contract.v1; profile=self-hosted; owner=quick-dev-tdd-adapter; terminal=terminal-full via tools/terminal_full.py predicate=implementation-complete; bridge=tools/migration_bridge.py; authority=authority-manifest.v1.json; registry=command-registry.v1.json; backend hidden_state=false; artifact layouts attempts/<attempt-id>,context/<capsule-id>,terminal-results/<slice-or-terminal>.json; W0 typed canonical selection, TWR-W0/TWR-W0-EXIT, red=TWR-W0-TYPED-SELECTION, then w0-green/w0-terminal; W1 auto transport depends W0, continuation binds content hash/rejects drift; W2 adapter-observed coverage depends W0,W1; W3 knowledge three-gate depends W0, selection drift/self-change requires review; W4 immutable generation/current pointer depends W0-W2, replay reuses content and failed staging cannot advance pointer; W5 retention/GC depends W4, dry-run default and committed evidence requires maintainer approval; W6 E2E depends W0-W5, proves selection through retention without lifecycle/Knowledge authority; every slice predicate=slice-ready and has red-green-refactor commands; forbidden globally includes PhaseA.Platform,runtime/phase-a,logs; additional protected paths vary by slice; allowed changes and planned tests are slice-scoped; source requirements=requirements-and-acceptance.md; recovery fails closed or routes explicit review."
+}

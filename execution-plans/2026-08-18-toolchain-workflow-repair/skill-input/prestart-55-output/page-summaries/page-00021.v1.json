@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py",
+    "source_sha256": "sha256:25a7e0f3cdde04d240688532cb4ba6a60166f6432c9806bbd3ea9ad77c326d0f",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 12342,
+    "start_line": 1,
+    "end_line": 219,
+    "content_sha256": "sha256:25a7e0f3cdde04d240688532cb4ba6a60166f6432c9806bbd3ea9ad77c326d0f"
+  },
+  "status": "accepted",
+  "summary": "validate_plan_ready.py; PLAN_ID toolchain-workflow-repair; slices W0-W6 exact; modes initial-plan-ready|repair-preclose-validate|authorized-repair-revalidate; validates plan under execution-plans and required artifacts/tools; contract requires self-hosted, exact slices, TDD metadata; registry requires plan-ready, terminal-full, w0-w6 green/terminal commands; authority requires sources/candidates/lifecycle projections; draft cannot authorize; plan-ready requires VDD publication bound to validation receipt; repair modes require implementation-authorized plus round-1 validating/closed state, execution block semantics, no authorizations; resume has all slices and no authorization; architecture accepted with decisions; candidate delta fixed commits 2556ea78... and a2ded39b..., exact six paths, git SHA bindings, repair-input disposition, no authorization; skill input receipt mandatory, inside plan skill-input, validated ready against adapter contract; knowledge preflight ready, freeze no authorization, accepted modules skill-input-execution and knowledge-execution-gates; emits pass/fail result with no authorization/lifecycle transition; optional output also writes validator input manifest; exceptions become invalid-plan-artifact"
+}

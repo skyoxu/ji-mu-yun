@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/skill_input_retention.py",
+    "source_sha256": "sha256:c707d2445e0991d9a38c9d2f931d74dddaba96cfb3a8419f712e5d9c645a2bef",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 663,
+    "start_line": 1,
+    "end_line": 21,
+    "content_sha256": "sha256:c707d2445e0991d9a38c9d2f931d74dddaba96cfb3a8419f712e5d9c645a2bef"
+  },
+  "status": "accepted",
+  "summary": "scripts/python/skill_input_retention.py; module purpose: approval-gated retention planning; plan_retention(root: Path, dry_run: bool=True) validates exact pathlib.Path input else ValueError retention root invalid; plan response contains POSIX root, mode dry-run/apply, empty candidates; apply_retention(root: Path, approval: object|None) repeats Path validation; approval None disposition approval-required; any non-None approval disposition no-op; no retention mutation or candidate discovery implemented; ambiguity: approval truthiness/type/authorization not checked beyond None."
+}

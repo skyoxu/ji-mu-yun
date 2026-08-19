@@ -1,0 +1,9 @@
+{
+  "authorizes": [],
+  "failures": [],
+  "lifecycle_transition": "none",
+  "plan_id": "toolchain-workflow-repair",
+  "predicate": "implementation-complete",
+  "schema_version": "toolchain-workflow-repair.terminal-result.v2",
+  "status": "pass"
+}

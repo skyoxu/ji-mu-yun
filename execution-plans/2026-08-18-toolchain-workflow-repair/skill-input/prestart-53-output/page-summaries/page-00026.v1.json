@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/skill_input_generation.py",
+    "source_sha256": "sha256:ea9a6aa721a9f1c6e7ac389eed6a7ad5000a18fc69e6050bb07702deb3de144d",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 581,
+    "start_line": 1,
+    "end_line": 17,
+    "content_sha256": "sha256:ea9a6aa721a9f1c6e7ac389eed6a7ad5000a18fc69e6050bb07702deb3de144d"
+  },
+  "status": "accepted",
+  "summary": "Immutable generation publication helper; publish_generation(root, generation_id, content) returns root/generations/{generation_id}; rejects empty/non-string generation_id with ValueError; rejects non-bytes content with ValueError; creates generation directory exclusively (existence failure preserved); writes content.bin bytes; no noted ambiguities"
+}

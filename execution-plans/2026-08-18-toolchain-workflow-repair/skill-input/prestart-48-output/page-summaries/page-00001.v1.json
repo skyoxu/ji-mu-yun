@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "Strict adapter requires explicit execution-plans plan directory/file with valid implementation-contract.v1.json; run parent router with caller quick-dev-tdd-adapter and require lane strict_tdd_plan/backend quick-dev-tdd-adapter; read only target directory, resolve one unambiguous 95-*.md report, treat report/run-state as non-authoritative; audit/repair/refreeze identities before RED; run loop_plan_directory before expensive actions; use run_slice_lifecycle and generated run_context/artifacts; require typed Skill input consumption receipt/consumer validation before prepare or RED; classify deterministic model route (architectural, complex, small_mechanical, normal), unknowns block as complex, decision non-authorizing; verify frozen knowledge context/source hashes before RED; use shell-free structured commands and explicit snapshot/write sets, planned_new_files only exact paths; execute expected failing RED, then GREEN, REFACTOR, plan-local predicate; auto-route slices until terminal predicate, external-repair-required, or repeated failure; terminal result only implementation-complete, acceptance external; P0/P1 repair requires handoff instructions and Acceptance audit with complete manifests/composition inputs; never use backend text, capsules, run state, reports, or skill as acceptance authority; version-sensitive dependency changes require exact-version documentation gate before commit; read implementation-backend-contract, tdd-run-protocol, evidence-and-freshness before implementation."
+}

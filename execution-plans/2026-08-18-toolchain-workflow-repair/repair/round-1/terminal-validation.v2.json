@@ -1,0 +1,22 @@
+{
+  "authorizes": [
+    "implementation-complete"
+  ],
+  "contract_hash": "sha256:1e8c96c289f9d4737a7dfe1bc71c47654aac39d313b36ad63b7523179f184036",
+  "failures": [],
+  "lifecycle_transition": "none",
+  "plan_id": "toolchain-workflow-repair",
+  "predicate": "implementation-complete",
+  "schema_version": "toolchain-workflow-repair.terminal-result.v2",
+  "status": "pass",
+  "terminal_command_id": "terminal-full",
+  "validated_command_ids": [
+    "w0-terminal",
+    "w1-terminal",
+    "w2-terminal",
+    "w3-terminal",
+    "w4-terminal",
+    "w5-terminal",
+    "w6-terminal"
+  ]
+}

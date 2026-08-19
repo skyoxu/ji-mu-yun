@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "VDD execution-plan skill applies only to explicit complete-directory create/repair requests; standalone requirements Markdown routes to direct implementation. Read mandatory standards, clarification, lifecycle, knowledge, and skill-input contracts before artifacts. Select least-complex profile first: standard, resumable, or self-hosted; route via model_routing with selected profile. Lifecycle: draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived; VDD owns early states, Quick Dev only implementation-complete. Each slice requires behavior, failure intent/selector, expected pre-change failure, GREEN target, dependents, recovery. VDD does not create RED evidence. Repair is in-place under repair/round-n, immutable history, hash-bound findings/closure, scoped invalidation, terminal full replay for shared contracts. Bootstrap lineage uses stable lineageFamilyId, two-round default, three-round hard limit, typed Round-3 triggers; exhaustion manual_pause. Repairs require root-cause callsite inventory, changed/excluded siblings, producer/consumer composition receipts, complete hash-bound changed set and review scope. Knowledge preflight and skill-input gate are mandatory before plan-ready/artifacts; typed semantic child must use provided launch adapters and readiness validator. Use Git baseline plus frozen range or complete dirty identity; exclude append-only reports/logs from normative hashes. Reports required for resumable/self-hosted and indexed. Bootstrap evidence optional, non-authorizing; P2-only findings do not open new semantic rounds. Completion requires profile artifacts, observable acceptance for every requirement, RED/legacy path, stable repairs, and current terminal full validation."
+}

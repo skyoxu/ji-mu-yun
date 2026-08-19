@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/command-registry.v1.json",
+    "source_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4240,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0"
+  },
+  "status": "accepted",
+  "summary": "Registry schema toolchain-workflow-repair.command-registry.v1; 20 noninteractive Python commands; green and terminal lanes w0-w6 run seven focused pytest modules, with w6 E2E timeout 600s and others 300s; aggregate skill-input-suite runs consumption tests; knowledge-suite runs knowledge-gate tests; workflow-repair-e2e repeats E2E; plan-ready invokes validate_plan_ready.py against repository root and dated plan directory; terminal-full invokes terminal_full.py for same plan with 1800s timeout; all commands use repo-relative cwd, shell disabled, Python 3 -B; coverage includes selection, transport, coverage, knowledge gate, generation pointer, retention, consumption, and workflow repair; no explicit ambiguity or failure disposition"
+}

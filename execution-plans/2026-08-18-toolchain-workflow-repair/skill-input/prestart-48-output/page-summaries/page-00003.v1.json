@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "run-refactor-implementation-acceptance builds deterministic evidence for one explicit execution-plans/<target>; prefer clean HEAD commit, otherwise require frozen dirty/proposed snapshot; baseline must be explicit and immutable; prerequisites include complete manifests, typed request, action DAG, command registry, contract or compact-vdd bundle, and current Quick Dev receipt; candidate assembly is atomic and never infers scope from worktree; canonical Locator creates one hash-bound Acceptance knowledge context, with catalog_stale degraded but other failures blocking; typed Skill-input receipt/contract required before start-or-resume; run identity derives from request, contract, context, receipt, and context hashes, with drift producing successor runs; deterministic inventory/policy/matrix/checklist/scan/coverage/evidence precede finalize-deterministic-run; Bootstrap is only for explicitly selected semantic routes and requires fresh inspect-lineage projection plus high-cost acknowledgement; route kinds: deterministic_only, focused_repair_verification, full_implementation_conformance, manual_pause; model launches are external and policy-gated; exact reuse requires bootstrap-import-envelope.v3, clean finalized v3 run, current bindings, and immediate lineage predecessor; P0/P1 repairs require Quick Dev handoff and audit-repair-completeness; P2 findings receive targeted deterministic closure; three semantic rounds lead manual_pause, with ADR-0054 two-stage closure and explicit acknowledgement; closure cannot create Round 4 or authorize commit/release/deploy; all replay, path, hash, schema, receipt, custody, and producer/consumer bindings are fail-closed; evidence-only is default, controlled_validation requires typed commands and isolated roots; Phase/toolchain policies are distinct and pure Godot inputs unsupported."
+}

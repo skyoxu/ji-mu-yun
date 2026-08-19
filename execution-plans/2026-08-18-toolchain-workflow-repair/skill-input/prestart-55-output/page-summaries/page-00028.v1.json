@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/skill_input_transport.py",
+    "source_sha256": "sha256:76c66047c89478d1c4fef764a52cf010a546d7cf1c30f67a7d5f9014643bd4b8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1119,
+    "start_line": 1,
+    "end_line": 25,
+    "content_sha256": "sha256:76c66047c89478d1c4fef764a52cf010a546d7cf1c30f67a7d5f9014643bd4b8"
+  },
+  "status": "accepted",
+  "summary": "scripts/python/skill_input_transport.py; plan_transport validates positive integer page_bytes/max_snapshot_bytes and sha256:-prefixed string content_hash; pages uses ceiling division of max_snapshot_bytes by page_bytes; returns page_bytes,max_snapshot_bytes,pages,content_hash,next_offset=0; resume_transport requires dict plan with matching content_hash else ValueError stale continuation; resume returns shallow plan copy with resumed=true; typing Any; ambiguity: no validation that hash suffix is a valid digest"
+}

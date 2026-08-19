@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "source_sha256": "sha256:618c0e0c5a6e1dac468dcde1d3b5b84da03840c5bf978f7ea593814dc27e56d3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 11645,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:618c0e0c5a6e1dac468dcde1d3b5b84da03840c5bf978f7ea593814dc27e56d3"
+  },
+  "status": "accepted",
+  "summary": "Plan toolchain-workflow-repair; schema implementation-contract.v1; self-hosted profile; authority manifest authority-manifest.v1.json; adapter tools/migration_bridge.py; red execution owner quick-dev-tdd-adapter; backend hidden state prohibited; artifacts use attempt/context/terminal-results layouts; W0 canonical typed source selection, contract-hash fail-closed, depends none; W1 automatic transport with continuation bound to source hash, depends W0; W2 adapter-observed coverage only, depends W0/W1; W3 knowledge three-gate projection, drift or Knowledge changes require review, depends W0; W4 immutable generations and current pointer, failed staging cannot advance, depends W0-W2; W5 dry-run retention GC and explicit approval for committed evidence, depends W4; W6 end-to-end proof through retention without lifecycle or Knowledge authority, depends W0-W5; each slice requires red/green/refactor tests and terminal predicate slice-ready; terminal-full must establish implementation-complete; forbidden changes include PhaseA.Platform, runtime/phase-a, logs, and selected unrelated plans/catalogs/indexes; allowed paths are explicitly constrained per slice."
+}

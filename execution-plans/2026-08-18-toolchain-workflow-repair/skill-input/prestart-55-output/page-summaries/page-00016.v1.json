@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/requirements-and-acceptance.md",
+    "source_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5019,
+    "start_line": 1,
+    "end_line": 105,
+    "content_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48"
+  },
+  "status": "accepted",
+  "summary": "Purpose: repair toolchain orchestration without stale-context/transport hard gates; preserve ownership; never auto-publish Knowledge authority; TWR-W0 typed consumer/policy/module/resource-set/authority/path selection with canonical independently verifiable identity, fail closed on omitted/ambiguous/authority drift; TWR-W1 adapter owns paging/chunking/offset/retries, deterministic complete transfer, reject stale/conflicting continuations; TWR-W2 adapter proves coverage from ranges/hashes, summaries are non-authoritative, typed failure/refresh for gaps/conflicts/byte changes; TWR-W3 independent execution/publication/review gates, degraded verified successor allowed only unchanged semantics, block invalid LKG/selection or authority drift/missing sources/publication failure, acceptance does not publish and Bootstrap never auto-starts; TWR-W4 validator/coordinator creates immutable versioned receipts binding candidate/contract/registry/envelope/skill receipt/freeze/validator, advance typed current pointer only after validation, replay deterministic; TWR-W5 attempts at .skill-input-work/<plan-id>/<attempt-id> with lifecycle/lease/heartbeat; retention protections; dry-run candidates; apply needs maintainer approval and cleanup receipt; TWR-W6 non-authorizing E2E validates full chain, current pointer and retention, invalid intermediate cannot advance; ownership: VDD draft+plan-ready, Maintainer implementation authorization, Quick Dev implementation-complete, Acceptance acceptance-passed; no new lifecycle authority."
+}

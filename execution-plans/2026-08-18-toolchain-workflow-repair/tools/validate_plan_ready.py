@@ -54,7 +54,7 @@ def main() -> int:
     parser.add_argument("--repository-root", type=Path, required=True)
     parser.add_argument("--plan-dir", type=Path, required=True)
     parser.add_argument("--out", type=Path)
-    parser.add_argument("--mode", choices=("initial-plan-ready", "authorized-repair-revalidate"), default="initial-plan-ready")
+    parser.add_argument("--mode", choices=("initial-plan-ready", "repair-preclose-validate", "authorized-repair-revalidate"), default="initial-plan-ready")
     parser.add_argument("--skill-input-receipt", type=Path)
     args = parser.parse_args()
     root = args.repository_root.resolve()
@@ -92,10 +92,12 @@ def main() -> int:
                 failures.append("command-registry-incomplete")
             if not authority.get("authority_sources") or not authority.get("candidate_inputs") or not authority.get("lifecycle_projections"):
                 failures.append("authority-manifest-partition-invalid")
-            if args.mode == "authorized-repair-revalidate":
+            if args.mode in {"repair-preclose-validate", "authorized-repair-revalidate"}:
                 repair_state = plan / "repair" / "round-1" / "repair-state.v1.json"
                 repair_value = read_json(repair_state) if repair_state.is_file() else {}
-                if state.get("status") != "implementation-authorized" or repair_value.get("status") != "closed" or repair_value.get("blocks_execution") is not False or repair_value.get("authorizes") != []:
+                required_repair_status = "validating" if args.mode == "repair-preclose-validate" else "closed"
+                required_blocks_execution = args.mode == "repair-preclose-validate"
+                if state.get("status") != "implementation-authorized" or repair_value.get("status") != required_repair_status or repair_value.get("blocks_execution") is not required_blocks_execution or repair_value.get("authorizes") != []:
                     failures.append("authorized-repair-state-invalid")
             elif state.get("status") == "draft" and state.get("authorizes") != []:
                 failures.append("draft-plan-state-authorizes")
@@ -180,7 +182,7 @@ def main() -> int:
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             failures.append(f"invalid-plan-artifact:{exc}")
     result = {
-        "schema_version": "toolchain-workflow-repair.plan-validation.v4" if args.mode == "authorized-repair-revalidate" else "toolchain-workflow-repair.plan-validation.v1",
+        "schema_version": "toolchain-workflow-repair.plan-validation.v4" if args.mode in {"repair-preclose-validate", "authorized-repair-revalidate"} else "toolchain-workflow-repair.plan-validation.v1",
         "plan_id": PLAN_ID,
         "predicate": "plan-valid",
         "status": "pass" if not failures else "fail",

@@ -7,15 +7,15 @@
     },
     "baseline-manifest.2050ec68": {
       "path": "repair/round-1/baseline-manifest.2050ec68.v1.json",
-      "sha256": "sha256:2c79eb92891038869102baefdb6778658ec0bcaa1238a2feddced260c231a114"
+      "sha256": "sha256:dd94efc2225e69f6a541ac9ff12c979b97f4363ee473c770c182b776ca297d99"
     },
     "bootstrap-preexisting-delta": {
       "path": "repair/round-1/bootstrap-preexisting-delta.v1.json",
-      "sha256": "sha256:9a8ebfd0dca55be1072d94092c72b56664800e7ca3568a4f5068303b6282d58e"
+      "sha256": "sha256:5b02caa0a4ad04df5402923ebb33eab24c6e9268e6846050840e723072cdbd49"
     },
     "finding-set": {
       "path": "repair/round-1/finding-set.v1.json",
-      "sha256": "sha256:e52db0ea6f8b917e074c18833fc85c218244da60c8db77b362010554c8c9362b"
+      "sha256": "sha256:a258f2733039266610de33efc22d1d11d1c6fe57fd0967913520be0103629f61"
     },
     "historical-artifact-disposition": {
       "path": "repair/round-1/historical-artifact-disposition.v1.json",
@@ -23,15 +23,15 @@
     },
     "knowledge_context": {
       "path": "knowledge-context.v1.json",
-      "sha256": "sha256:49b9ddea8f2418735978fc6054ed405cc0a895c71c1f40afb6598094da7194c6"
+      "sha256": "sha256:346812edd399de94d5c00e0e250522371330435bcd5d6cb80504a3b826f802b5"
     },
     "knowledge_freeze": {
       "path": "knowledge-context.freeze.v1.json",
-      "sha256": "sha256:7a3210493751730b611107fd0adb1266350649d3bcc209829546f7e88cd83792"
+      "sha256": "sha256:cd38fc3e0bd8e1c0773528694bc2e21c425d1022377f0a0a4e6849fc193287ec"
     },
-    "plan-validation-receipt.v4.json": {
-      "path": "repair/round-1/plan-validation-receipt.v4.json",
-      "sha256": "sha256:9cb5f3eab681a96cc2c327a99818fc8bec7e0dbf1ef38ad52fefcf96080a6676"
+    "plan-validation": {
+      "path": "repair/round-1/plan-validation-receipt.v10.json",
+      "sha256": "sha256:cdaca359a10b220f4eae43fe0f519dd2e855b93bea0a500ef1fb0b2ebd40cf88"
     },
     "producer-consumer-composition-receipt": {
       "path": "repair/round-1/producer-consumer-composition-receipt.v1.json",
@@ -39,15 +39,15 @@
     },
     "repair-candidate-manifest": {
       "path": "repair/round-1/repair-candidate-manifest.v1.json",
-      "sha256": "sha256:e6f74b15af0cc24acc9966b0633747672038ace323e726e45a95830284b000b7"
+      "sha256": "sha256:782de3b65ac556b22610c1edc61650dedd3ae0186ff80ba6a430944604830260"
     },
     "repair-changed-set": {
       "path": "repair/round-1/repair-changed-set.v1.json",
-      "sha256": "sha256:a9cada733cb2f6b5d32c46a4ef7127e0ec101722cd41c9582000648205376e94"
+      "sha256": "sha256:8ebdf81a37f0016c6585e4c2d203c1ca5781562b4e045c10120ddaa4dc4b9139"
     },
     "repair-state": {
       "path": "repair/round-1/repair-state.v1.json",
-      "sha256": "sha256:7954efb9e0629ac4dfc11737d7b1e290eac97347f866ea743035802421ce7fe9"
+      "sha256": "sha256:8c19bafebe10128e222b1969c47de6eb1baa3fc3dc12b7b28c5fa635b4d95c3e"
     },
     "root-cause-callsite-inventory": {
       "path": "repair/round-1/root-cause-callsite-inventory.v1.json",
@@ -75,7 +75,7 @@
     },
     "validator-input-manifest": {
       "path": "repair/round-1/validator-input-manifest.v1.json",
-      "sha256": "sha256:a3dc293db2df6fe10717d5791db666dc78e60f1f725280b381b094ab55b23630"
+      "sha256": "sha256:5cce5e528790f621b50b9801af52defb58eace6a27d932101547289ac21f0001"
     }
   },
   "failures": [],

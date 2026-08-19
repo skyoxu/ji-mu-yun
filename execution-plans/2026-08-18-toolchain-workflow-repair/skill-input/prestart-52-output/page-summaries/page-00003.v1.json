@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Scope: deterministic implementation-acceptance evidence for one explicit execution-plans/<target>; no target-code implementation, approval, commit, release, deploy, or archive; modes evidence_only (default) and controlled_validation; require frozen baseline, candidate custody/content manifests, implementation contract or compact-vdd prerequisite bundle, typed request, action DAG, command registry, acceptance knowledge context, and ready Skill-input receipt; never infer scope/revisions/paths/commands/actions or enumerate dirty worktree; use Quick Dev receipt/projection for implementation-complete targets; create hash-bound artifacts and append-only binding-derived runs, preserving stale predecessors and legacy artifact-only runs; canonical Locator only, catalog_stale is degraded/non-authorizing, other knowledge failures route repair-required; validate/refresh read-set without widening selection; start-or-resume requires canonical inputHash, contract/context hashes, Skill-input receipt/contract; deterministic actions replay controlled receipts and finalize only complete exact DAG; default deterministic_only bypasses Bootstrap; required semantic routes require inspect-lineage, prepare-bootstrap, typed route, explicit high-cost acknowledgement and run-phase-bootstrap-review; later discovery needs recommendation/confidence and explicit user confirmation; routes: deterministic_only, focused_repair_verification, full_implementation_conformance, manual_pause; maintenanceMode ai-native-single-maintainer; P2 closes deterministically, P0/P1 requires Quick Dev handoff and repair-completeness; max three semantic rounds, no Round 4; manual-pause closure uses ADR-0054 two-stage deterministic protocol with exact mappings, receipts, authorities, finalized protocol review, acknowledgement, and final closure only; exact Bootstrap reuse only v3 with current hashes, clean finalized run, immediate lineage predecessor/head and matching attestation; historical v1/v2 reuse non-authorizing; model routing is no-launch except policy-owned complex recovery triggers; malformed transport retries same round; pure Godot unsupported; Phase/toolchain policies selected by candidate domain; coverage uses changed executable PhaseA.Platform/**/*.cs lines and Cobertura; checklist/matrix/evidence references must be current and hash-bound; caller descriptors, requirements, profiles, risk/reason codes, hand-authored routes/rounds, unpublished inputs, live workspace substitutes, and uncovered paths fail closed."
+}

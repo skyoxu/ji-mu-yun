@@ -179,6 +179,7 @@ def current_red_handoff(repository_root: Path, plan_dir: Path, slice_id: str) ->
         return None
     evidence_root = root / "logs" / "tdd-adapter" / str(contract.get("plan_id")) / slice_id
     current_fingerprint = _current_execution_fingerprint(root, plan, slice_id)
+    expected_test_hash = _sha((root / selector).read_bytes()) if (root / selector).is_file() else None
     for handoff_path in sorted(evidence_root.glob("*/prior-red-handoff.v2.json"), reverse=True) if evidence_root.is_dir() else []:
         try:
             handoff = json.loads(handoff_path.read_text(encoding="utf-8"))
@@ -195,9 +196,33 @@ def current_red_handoff(repository_root: Path, plan_dir: Path, slice_id: str) ->
                 return {"path": reference["path"], "sha256": reference["sha256"]}
         except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
             continue
+    # A completed implementation successor may outlive a control-plane-only
+    # contract refresh (for example, terminal predicate bookkeeping). Reuse its
+    # immutable RED observation when the declared test bytes and failure intent
+    # are unchanged; do not accept a bare stage receipt or an unrelated run.
+    for run_dir in sorted(evidence_root.glob("RUN-*"), reverse=True) if evidence_root.is_dir() else []:
+        try:
+            basis = json.loads((run_dir / "red-basis.v1.json").read_text(encoding="utf-8"))
+            successor = json.loads((run_dir / "implementation-successor.v1.json").read_text(encoding="utf-8"))
+            observation = run_dir / "observations" / "red-observed.json"
+            observed = json.loads(observation.read_text(encoding="utf-8"))
+            test_path = root / selector
+            if (
+                observation.is_file()
+                and successor.get("status") == "implementation-observed"
+                and basis.get("test_selector") == selector
+                and basis.get("test_sha256") == expected_test_hash
+                and basis.get("failure_intent", {}).get("expected_failure_ids") == red.get("expected_failure_ids")
+                and observed.get("stage") == "red"
+                and isinstance(observed.get("exit_code"), int)
+                and observed["exit_code"] != 0
+                and test_path.is_file()
+            ):
+                return {"path": observation.relative_to(root).as_posix(), "sha256": _sha(observation)}
+        except (OSError, UnicodeError, json.JSONDecodeError, TypeError, AttributeError):
+            continue
     artifacts = sorted(evidence_root.glob("*/implementation-needed-result.json")) if evidence_root.is_dir() else []
     expected_contract = _sha(contract_path.read_bytes())
-    expected_test_hash = _sha((root / selector).read_bytes()) if (root / selector).is_file() else None
 
     def valid_basis(path: Path) -> bool:
         try:
@@ -707,6 +732,23 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 current = _unaffected_slice_current(
                     repository_root, target, contract, registry, result, slice_id
                 )
+            if (
+                not current
+                and exit_predicate == "slice-ready"
+                and result.get("predicate") == "slice-ready"
+                and validate_implementation_successor(result_path.parent)
+            ):
+                # A completed implementation successor may remain valid across
+                # a control-plane-only contract refresh. The lifecycle runner's
+                # RED basis and successor receipt bind the unchanged test bytes;
+                # do not require the old slice-ready projection to contain roots
+                # it was never designed to emit.
+                try:
+                    basis = json.loads((result_path.parent / "red-basis.v1.json").read_text(encoding="utf-8"))
+                    selector = next(item["tdd"]["red"]["test_selector"] for item in contract["slices"] if item.get("slice_id") == slice_id)
+                    current = basis.get("test_selector") == selector and basis.get("test_sha256") == _sha((repository_root / selector).read_bytes())
+                except (OSError, StopIteration, KeyError, TypeError, json.JSONDecodeError):
+                    current = False
             if result.get("predicate") == exit_predicate and result.get("status") == "pass" and (contract.get("plan_id") != "quick-dev-tdd-stage-recovery" or (result.get("orchestration_version") == "stage-actions.v2" and _staged_refactor_complete(result_path))) and current and (required_artifact is None or required_artifact.is_file()):
                 completed.add(slice_id)
                 break

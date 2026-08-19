@@ -68,10 +68,16 @@ def main() -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--refresh-authorized-successor", action="store_true")
     parser.add_argument("--skill-input-receipt", type=Path, required=True)
+    parser.add_argument("--plan-validation-receipt", type=Path, required=True)
     args = parser.parse_args()
     root = args.repository_root.resolve()
     plan = args.plan_dir.resolve()
     expected_out = plan / "implementation-authorization-receipt.successor.v1.json"
+    validation_receipt = args.plan_validation_receipt.resolve()
+    try:
+        validation_receipt.relative_to(plan / "repair" / "round-1")
+    except ValueError as exc:
+        raise ValueError("plan validation receipt must be inside the current repair round") from exc
     contract_path = plan / "implementation-contract.v1.json"
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     if contract.get("plan_id") != PLAN_ID or args.out.resolve() != expected_out:
@@ -101,7 +107,7 @@ def main() -> int:
         "authority_manifest": "authority-manifest.v1.json",
         "knowledge_context": "knowledge-context.v1.json",
         "knowledge_context_freeze": "knowledge-context.freeze.v1.json",
-        "plan_validation": "repair/round-1/plan-validation-receipt.v4.json",
+        "plan_validation": validation_receipt.relative_to(plan).as_posix(),
         "repair_closure": "repair/round-1/repair-closure.v1.json",
         "bootstrap_preexisting_delta": "repair/round-1/bootstrap-preexisting-delta.v1.json",
         "candidate_manifest": "repair/round-1/repair-candidate-manifest.v1.json",

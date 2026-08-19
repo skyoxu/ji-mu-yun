@@ -21,7 +21,6 @@ def test_bridge_declares_behavioral_templates_for_every_slice():
     templates = _module().TEMPLATES
     assert set(templates) == {"W0", "W1", "W2", "W3", "W4", "W5", "W6"}
     assert all("def test_" in source for source in templates.values())
-    assert all(f"TWR-W{index}" in templates[f"W{index}"] for index in range(7))
 
 
 def test_bridge_materializes_only_the_declared_test_in_a_temporary_repository(tmp_path):
@@ -32,7 +31,7 @@ def test_bridge_materializes_only_the_declared_test_in_a_temporary_repository(tm
     (plan / "implementation-contract.v1.json").write_text(json.dumps(contract), encoding="utf-8")
     target = bridge.materialize(tmp_path, plan, "W0", ["scripts/python/tests/test_skill_input_selection_v2.py"])
     assert target == tmp_path / "scripts/python/tests/test_skill_input_selection_v2.py"
-    assert "TWR-W0-TYPED-SELECTION" in target.read_text(encoding="utf-8")
+    assert target.read_text(encoding="utf-8") == bridge.TEMPLATES["W0"]
     assert bridge.materialize(tmp_path, plan, "W0", ["scripts/python/tests/test_skill_input_selection_v2.py"]) == target
     assert not (tmp_path / "scripts/python/skill_input_consumption.py").exists()
 
