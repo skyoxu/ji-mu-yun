@@ -1,0 +1,114 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+      "sha256": "sha256:1e8c96c289f9d4737a7dfe1bc71c47654aac39d313b36ad63b7523179f184036",
+      "semantic_snapshot_sha256": "sha256:618c0e0c5a6e1dac468dcde1d3b5b84da03840c5bf978f7ea593814dc27e56d3",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/requirements-and-acceptance.md",
+      "sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48",
+      "semantic_snapshot_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/knowledge_gate_projection.py",
+      "sha256": "sha256:a7b90e32ec83e61458c6e01d8128ff1fcf66dfe7969258917428a9949eb5ed0f",
+      "semantic_snapshot_sha256": "sha256:a7b90e32ec83e61458c6e01d8128ff1fcf66dfe7969258917428a9949eb5ed0f",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/skill_input_coverage.py",
+      "sha256": "sha256:e5e2e59448ee94ecae322f52786948c603578350412cb83c0131db41a956d058",
+      "semantic_snapshot_sha256": "sha256:e5e2e59448ee94ecae322f52786948c603578350412cb83c0131db41a956d058",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/skill_input_current.py",
+      "sha256": "sha256:9ee4d298d94edf753b0470f6645f750e08ec69e6f4a8da172551347af3211ba1",
+      "semantic_snapshot_sha256": "sha256:9ee4d298d94edf753b0470f6645f750e08ec69e6f4a8da172551347af3211ba1",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/skill_input_generation.py",
+      "sha256": "sha256:ea9a6aa721a9f1c6e7ac389eed6a7ad5000a18fc69e6050bb07702deb3de144d",
+      "semantic_snapshot_sha256": "sha256:ea9a6aa721a9f1c6e7ac389eed6a7ad5000a18fc69e6050bb07702deb3de144d",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/skill_input_retention.py",
+      "sha256": "sha256:c707d2445e0991d9a38c9d2f931d74dddaba96cfb3a8419f712e5d9c645a2bef",
+      "semantic_snapshot_sha256": "sha256:c707d2445e0991d9a38c9d2f931d74dddaba96cfb3a8419f712e5d9c645a2bef",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/skill_input_transport.py",
+      "sha256": "sha256:76c66047c89478d1c4fef764a52cf010a546d7cf1c30f67a7d5f9014643bd4b8",
+      "semantic_snapshot_sha256": "sha256:76c66047c89478d1c4fef764a52cf010a546d7cf1c30f67a7d5f9014643bd4b8",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/tests/test_knowledge_gate_matrix.py",
+      "sha256": "sha256:01b5aa7af0f5f37bb8732dfc93b4f5118bfe19a44cff1cd6209b6868e28ca73a",
+      "semantic_snapshot_sha256": "sha256:01b5aa7af0f5f37bb8732dfc93b4f5118bfe19a44cff1cd6209b6868e28ca73a",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/tests/test_skill_input_coverage_v2.py",
+      "sha256": "sha256:268012f61981ebe36071fdf4b12d26f2d802dbdbcccc624e26f381bd7620785e",
+      "semantic_snapshot_sha256": "sha256:268012f61981ebe36071fdf4b12d26f2d802dbdbcccc624e26f381bd7620785e",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/tests/test_skill_input_generation_pointer.py",
+      "sha256": "sha256:6fa26f1f9c03005129d7f10718be9d30e9b4345e389e94865db805e75b6bf488",
+      "semantic_snapshot_sha256": "sha256:6fa26f1f9c03005129d7f10718be9d30e9b4345e389e94865db805e75b6bf488",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/tests/test_skill_input_retention.py",
+      "sha256": "sha256:532fd45ebf9c30b9ba1e8180152412d782c34fede1640e73656d54123fc98ff7",
+      "semantic_snapshot_sha256": "sha256:532fd45ebf9c30b9ba1e8180152412d782c34fede1640e73656d54123fc98ff7",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/tests/test_skill_input_selection_v2.py",
+      "sha256": "sha256:e86156fc8724c87bc58831d742c411ed337d34e5e330f78c6b768fe9be4e39da",
+      "semantic_snapshot_sha256": "sha256:e86156fc8724c87bc58831d742c411ed337d34e5e330f78c6b768fe9be4e39da",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/tests/test_skill_input_transport_auto.py",
+      "sha256": "sha256:ad5ded466f5b603bfdddf45d434647b21c4fe14c077bd56224c73c78543ead34",
+      "semantic_snapshot_sha256": "sha256:ad5ded466f5b603bfdddf45d434647b21c4fe14c077bd56224c73c78543ead34",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/tests/test_toolchain_workflow_repair_e2e.py",
+      "sha256": "sha256:90b958f289ee24e4c2cb54e7743eda70530030c9705b4170dc20a1399b1ccd9b",
+      "semantic_snapshot_sha256": "sha256:90b958f289ee24e4c2cb54e7743eda70530030c9705b4170dc20a1399b1ccd9b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-19T17:46:00.297504Z"
+}

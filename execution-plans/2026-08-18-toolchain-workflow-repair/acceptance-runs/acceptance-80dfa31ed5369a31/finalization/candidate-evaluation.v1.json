@@ -1,0 +1,88 @@
+{
+  "actionReceipts": [
+    {
+      "path": "actions/knowledge-suite/attempt-001/result.json",
+      "sha256": "sha256:8c9c1c40e665004e2dc17ffa5ce6c3932910341d0fe5b0824fce4ca5bc7e82d3"
+    },
+    {
+      "path": "actions/skill-input-suite/attempt-001/result.json",
+      "sha256": "sha256:33f3e96f99a31cff0be217de90f9f56d0bb2731f2078f2259f9832ce84bac5df"
+    },
+    {
+      "path": "actions/terminal-full/attempt-001/result.json",
+      "sha256": "sha256:0c2f17eac2aec35472a2b21f8a6e93dcaa2e5e6ea71b621344d0e3702104f7bf"
+    },
+    {
+      "path": "actions/w0-green/attempt-001/result.json",
+      "sha256": "sha256:7b4749fbd14e5fe96ff4a60a4ad95dd0b912be6102b32de71f6b5e4ee2518c95"
+    },
+    {
+      "path": "actions/w0-terminal/attempt-001/result.json",
+      "sha256": "sha256:167b3b1a68e44a8ecce42598cae3dea8e9ae1ad5ae91d33315cfe10ba73b0e6c"
+    },
+    {
+      "path": "actions/w1-green/attempt-001/result.json",
+      "sha256": "sha256:c41f050a08fe25fdcc5590b9ba3ec1fe5912306831495d1603d2b6d4655a2269"
+    },
+    {
+      "path": "actions/w1-terminal/attempt-001/result.json",
+      "sha256": "sha256:bf8bf9de6e140b6f250bf2baa8684d9438d61528745cbac7d35918aa20878f2d"
+    },
+    {
+      "path": "actions/w2-green/attempt-001/result.json",
+      "sha256": "sha256:9bfd0338e5fee153abd0e62309f7d9e710647a09f824a5656b7f9378f540964d"
+    },
+    {
+      "path": "actions/w2-terminal/attempt-001/result.json",
+      "sha256": "sha256:c31c2bbf3ee47a866721730d9f2179a2e48881bf380127b093df60de7980bf4a"
+    },
+    {
+      "path": "actions/w3-green/attempt-001/result.json",
+      "sha256": "sha256:c5fb1a6cd67b8c01675fc5fa475823e1565936c3c1e434231b502b51bd08f8e1"
+    },
+    {
+      "path": "actions/w3-terminal/attempt-001/result.json",
+      "sha256": "sha256:f744be145613b07268daf8473b6100b5a33182e1bb3197d82190665c80e62345"
+    },
+    {
+      "path": "actions/w4-green/attempt-001/result.json",
+      "sha256": "sha256:0f8b1c5bfa9458b8c686475f4c373222eba9f88d2c980b776f3519c352a548c1"
+    },
+    {
+      "path": "actions/w4-terminal/attempt-001/result.json",
+      "sha256": "sha256:830b3a03bb220e98facb7d9a74a6dc9889e74520f04e61771309ef285334cf23"
+    },
+    {
+      "path": "actions/w5-green/attempt-001/result.json",
+      "sha256": "sha256:bf8d8403fb58147ccd41664a786e38bd3ae217812a4f99c16c6908f9e3462fd8"
+    },
+    {
+      "path": "actions/w5-terminal/attempt-001/result.json",
+      "sha256": "sha256:4554dc7c07e3f9603ce0b44332ef09ec49db2d828f3fd4aaef270c963cb7804b"
+    },
+    {
+      "path": "actions/w6-green/attempt-001/result.json",
+      "sha256": "sha256:b634e1ccf4957cb35f56ceb17cb0b581eb32bd78de65ec8a2064ab31681e1b34"
+    },
+    {
+      "path": "actions/w6-terminal/attempt-001/result.json",
+      "sha256": "sha256:108888af1a55114850905cd319fe0c6928eedc7f4c878aab31bb179056c58a07"
+    },
+    {
+      "path": "actions/workflow-repair-e2e/attempt-001/result.json",
+      "sha256": "sha256:947748fb8b06304e72f5a0cacfbb0b95d7435a7a029f70c50468887f3abe863c"
+    }
+  ],
+  "authorizes": [],
+  "candidateCustodyHash": "sha256:547519b782e2670721d429b2dd5e5f99bd9c2edee258a4d83bb7e69aff227bd5",
+  "inputBindings": {
+    "candidateCustodyHash": "sha256:547519b782e2670721d429b2dd5e5f99bd9c2edee258a4d83bb7e69aff227bd5",
+    "contractHash": "sha256:1e8c96c289f9d4737a7dfe1bc71c47654aac39d313b36ad63b7523179f184036",
+    "knowledgeContextHash": "sha256:614b5bdefe6c1308e47ecb509321a1e288c823e2ebc3a670b9a6c2d93fcb6032",
+    "runInputHash": "sha256:e8b6a0e77b6bd5bcab52f90a5636eff4c2599cc6df35f450eb39732d32c0d4d7"
+  },
+  "route": "deterministic_only",
+  "schemaVersion": "acceptance-deterministic-evaluation.v1",
+  "status": "passed",
+  "terminalResultHash": "sha256:be21064ec889518146ca4bac78750c816fadfbe6f45cdfa7b1895faca153f1dc"
+}

@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "contractHash": "sha256:1e8c96c289f9d4737a7dfe1bc71c47654aac39d313b36ad63b7523179f184036",
+  "createdUtc": "2026-08-19T17:47:37.560278Z",
+  "knowledgeContextHash": "sha256:614b5bdefe6c1308e47ecb509321a1e288c823e2ebc3a670b9a6c2d93fcb6032",
+  "runId": "acceptance-80dfa31ed5369a31",
+  "runInputHash": "sha256:e8b6a0e77b6bd5bcab52f90a5636eff4c2599cc6df35f450eb39732d32c0d4d7",
+  "schemaVersion": "acceptance-execution-run.v1",
+  "skillInputBindingHash": "sha256:e0144a9f4ccc428bd0be5462d4e6ff5ca8a5249910a7c5921f8765b7cc8d151b",
+  "skillInputContextHash": "sha256:da64bad8b97eae6f1984d50c31cadc74b91f6dcfe6911ed7394695b9688057e5",
+  "skillInputContextPath": "skill-input/skill-input-context.v1.json",
+  "skillInputContextSourcePath": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/acceptance-final/output/skill-input-context.v1.json"
+}

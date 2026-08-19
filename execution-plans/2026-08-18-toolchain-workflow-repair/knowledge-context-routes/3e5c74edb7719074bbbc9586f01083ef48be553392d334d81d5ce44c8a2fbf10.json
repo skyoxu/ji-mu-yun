@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "automatic_publication_allowed": false,
+  "failure_code": "required_modules_unsatisfied",
+  "next_action": "knowledge-context-repair-required",
+  "request_sha256": "sha256:0154aae6b7f3dfb83e29ef49aa2743735238248c51fa4a645e29923bbbbbe41c",
+  "requires_explicit_maintainer_confirmation": false,
+  "result_sha256": "sha256:108e1863cc99d8bb8e164abb35b9801c49446d5c620ac9ec8eade9e9c85361d2",
+  "route_output": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context-routes/3e5c74edb7719074bbbc9586f01083ef48be553392d334d81d5ce44c8a2fbf10.json",
+  "route_sha256": "sha256:23f51f899d581832ab1db4717eece283833033a233ee86c33a50b2e34b080a6d",
+  "schema_version": "jimuyun.acceptance-knowledge-maintenance-route.v1",
+  "snapshot": {
+    "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
+    "ref": "refs/heads/main"
+  },
+  "status": "blocked",
+  "target_plan": "execution-plans/2026-08-18-toolchain-workflow-repair"
+}

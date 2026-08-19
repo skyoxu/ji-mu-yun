@@ -8,10 +8,19 @@ import os
 import re
 import signal
 import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any
+
+try:
+    from skill_input_consumption import artifact_identity_hash
+except ModuleNotFoundError:  # direct module/test loading outside acceptance_cli
+    _PYTHON_ROOT = Path(__file__).resolve().parents[4] / "scripts" / "python"
+    if str(_PYTHON_ROOT) not in sys.path:
+        sys.path.insert(0, str(_PYTHON_ROOT))
+    from skill_input_consumption import artifact_identity_hash
 
 
 class ControlError(ValueError):
@@ -103,7 +112,7 @@ def _read_repository_artifact(
         payload = resolved.read_bytes()
     except OSError as exc:
         raise ControlError("Skill input context artifact is unreadable") from exc
-    actual_hash = "sha256:" + hashlib.sha256(payload).hexdigest()
+    actual_hash = artifact_identity_hash(resolved)
     if actual_hash != expected_hash:
         raise ControlError("Skill input context artifact hash is stale")
     return payload, normalized
@@ -146,7 +155,7 @@ def _verify_skill_input_custody(run_dir: Path, state: dict[str, Any]) -> Path | 
         raise ControlError("persisted run Skill input custody path escapes run") from exc
     if artifact.is_symlink() or not artifact.is_file():
         raise ControlError("persisted run Skill input custody artifact is missing")
-    actual_hash = "sha256:" + hashlib.sha256(artifact.read_bytes()).hexdigest()
+    actual_hash = artifact_identity_hash(artifact)
     if actual_hash != context_hash:
         raise ControlError("persisted run Skill input custody artifact is stale")
     return artifact

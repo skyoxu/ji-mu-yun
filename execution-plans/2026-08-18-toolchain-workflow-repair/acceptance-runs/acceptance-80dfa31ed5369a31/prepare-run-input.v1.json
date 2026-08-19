@@ -1,0 +1,104 @@
+{
+  "authorizes": [],
+  "candidateCustody": {
+    "authorizes": [],
+    "baselineResolvedCommit": "2050ec682bab8cdc11770bf9823549b264a9e339",
+    "candidateMode": "dirty_worktree",
+    "candidateResolvedCommit": "",
+    "schemaVersion": "acceptance-candidate-custody.v1",
+    "snapshotManifestHash": "sha256:aaa53f925d10a943d955d0f78290da76c87a5e6f6c249891abd574cc9d244c36",
+    "snapshotPath": ".acceptance-snapshots/acceptance-8-18-final-replay"
+  },
+  "input": {
+    "adapter_hash": "sha256:f9933d9b1130441213d20d214cc5e7c4cbdc2b58b36933a17dd795a109a62edf",
+    "adapter_id": "run-refactor-implementation-acceptance",
+    "adapter_version": "compact-vdd-projection.v1",
+    "affected_consumer_refs": [
+      ".agents/skills/quick-dev-tdd-adapter",
+      ".agents/skills/run-refactor-implementation-acceptance",
+      "scripts/python/skill_input_consumption.py"
+    ],
+    "allowed_write_roots": [],
+    "baseline_content_manifest_hash": "sha256:865c45df99f0332d09db900a9a5596674711942787de2d1ec756791964f71e81",
+    "baseline_content_manifest_path": "acceptance-inputs/acceptance-8-18-final-replay/baseline-content-manifest.v1.json",
+    "baseline_revision": "2050ec682bab8cdc11770bf9823549b264a9e339",
+    "candidate_content_manifest_hash": "sha256:5c8ed7a7f7c1827c209bc4f2b97b14d220c5032133b6cac3c87863a75a2b09b1",
+    "candidate_content_manifest_path": "acceptance-inputs/acceptance-8-18-final-replay/candidate-content-manifest.v1.json",
+    "candidate_frozen_snapshot_path": ".acceptance-snapshots/acceptance-8-18-final-replay",
+    "candidate_mode": "dirty_worktree",
+    "candidate_revision": "dirty-worktree:5c8ed7a7f7c1827c209bc4f2b97b14d220c5032133b6cac3c87863a75a2b09b1",
+    "change_id": "toolchain-workflow-repair-8-18",
+    "changed_paths": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "execution-plans/2026-08-18-toolchain-workflow-repair/95-implementation-evolution-and-completion-report.md",
+      "execution-plans/2026-08-18-toolchain-workflow-repair/authority-manifest.v1.json",
+      "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+      "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/tests/test_terminal_full.py",
+      "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
+      "scripts/python/knowledge_gate_projection.py",
+      "scripts/python/launch_skill_input_consumer.py",
+      "scripts/python/prepare_skill_input_consumption.py",
+      "scripts/python/skill_input_consumption.py",
+      "scripts/python/skill_input_coverage.py",
+      "scripts/python/skill_input_current.py",
+      "scripts/python/skill_input_generation.py",
+      "scripts/python/skill_input_retention.py",
+      "scripts/python/skill_input_transport.py",
+      "scripts/python/tests/test_knowledge_gate_matrix.py",
+      "scripts/python/tests/test_skill_input_consumption.py",
+      "scripts/python/tests/test_skill_input_coverage_v2.py",
+      "scripts/python/tests/test_skill_input_generation_pointer.py",
+      "scripts/python/tests/test_skill_input_retention.py",
+      "scripts/python/tests/test_skill_input_selection_v2.py",
+      "scripts/python/tests/test_skill_input_transport_auto.py",
+      "scripts/python/tests/test_toolchain_workflow_repair_e2e.py",
+      "scripts/python/validate_skill_input_consumption.py"
+    ],
+    "code_review_domain": "toolchain",
+    "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+    "code_review_policy_path": "acceptance-inputs/acceptance-8-18-final-replay/toolchain-code-review.v1.json",
+    "created_utc": "2026-08-01T00:00:00Z",
+    "execution_mode": "evidence_only",
+    "forbidden_write_roots": [
+      "logs/phase-a-innernet/",
+      "runtime/phase-a/"
+    ],
+    "run_id": "acceptance-8-18-final-replay",
+    "target": "C:\\jimuyun\\execution-plans\\2026-08-18-toolchain-workflow-repair",
+    "target_plan_hash": "sha256:1e8c96c289f9d4737a7dfe1bc71c47654aac39d313b36ad63b7523179f184036",
+    "target_plan_paths": [
+      "implementation-contract.v1.json",
+      "requirements-and-acceptance.md"
+    ],
+    "validator_hash": "sha256:ae5cf5f8eb6257c18107db37cbd6802388f7218add6c1e549e5ae5bcb00ccf06"
+  },
+  "inputHash": "sha256:e8b6a0e77b6bd5bcab52f90a5636eff4c2599cc6df35f450eb39732d32c0d4d7",
+  "knowledgeContext": {
+    "acceptedDecisions": [
+      {
+        "candidate": {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          "source_sha256": "87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "governance.refactor-implementation-acceptance"
+        ]
+      }
+    ],
+    "authorizes": [],
+    "contextHash": "sha256:790ccccec91dfe4354c8fb967fbc23ee9c74eb0706550251abea1e1d2293cee4",
+    "path": "knowledge-context.refactor-acceptance.v1.json",
+    "requestHash": "sha256:0154aae6b7f3dfb83e29ef49aa2743735238248c51fa4a645e29923bbbbbe41c",
+    "resultHash": "sha256:1e1cac7e93d778592d2a499426cb4edbdff5950a5c14339874e7e347d8737611",
+    "sha256": "sha256:614b5bdefe6c1308e47ecb509321a1e288c823e2ebc3a670b9a6c2d93fcb6032",
+    "sourceSnapshotId": "sha256:d6616e276fe784b4aa6d4e0a349ff4541f252e098c97c8e3ffffba406bd556d3"
+  },
+  "schemaVersion": "acceptance-run-input.v1"
+}

@@ -1,0 +1,120 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:c1a35ecf07e1eb11c56e7dd14a7709673d01de1f7e54f5423615f759e27fcfdb"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:49156e023b87379b1d53d89bcc31e173bf093947e9816a3c2a5459924ffe30a0"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:3a6a7d4b9eca31c263baec33cda10f6a7cba7e49221646ded5ac7a7c6a887e56"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:b7a293e625eb39caad5a90f93dd05f03c61039ed763098c7d155eb93edfaa66c"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:30d5bfdafed4104b203d86eae700cef818b39f11196c953c8efc3bebc09beeb4"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/95-implementation-evolution-and-completion-report.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:e550b79b60f66b8f6efb4f26b7af58fce71a27090b7c1d32756664e95687d01b"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/authority-manifest.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:4cda496e9263f7eec8c8aed078e08fc0c9b1cccff8e2ccbd63c0999845478bdb"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:d569edf6e90dc44d35955865807c314e47eac717101583246245688e27ac2751"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ba01100d65140752c321f5f6543e50cc585695a411d5792c4c6fda166a4881e3"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/python/launch_skill_input_consumer.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:e52b64a9ebef1375c44e7cc187d696fc19a213b5dc16619d1e45e057ab7d635f"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/python/prepare_skill_input_consumption.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:101b0c051e7401cb7bd18b82a6d05f081e8a49d2f439c5f241f9c0c8d0e77b69"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/python/skill_input_consumption.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:b9755ed529ceb45545fb1c7e49d394b502c14dd8fe7b87b5d2dde710d8730bbb"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/python/tests/test_skill_input_consumption.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:09bb52896fbf7775027520fb22febc7abeded53704402da6067838b35706d43e"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/python/validate_skill_input_consumption.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:8f461bd27c2633190eaaf7b79b327118d6065ef31d19491d782124ca7a3e9391"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

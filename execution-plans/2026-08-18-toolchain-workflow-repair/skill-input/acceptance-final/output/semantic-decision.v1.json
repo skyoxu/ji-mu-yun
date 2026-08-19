@@ -1,0 +1,29 @@
+{
+  "authorizes": [],
+  "context_artifact_hash": "sha256:da64bad8b97eae6f1984d50c31cadc74b91f6dcfe6911ed7394695b9688057e5",
+  "execution_identity": "sha256:43fe925b71b2cc2fd8d09bc3f1edc1150d273e0ed047c286c15bfe0ecf481f58",
+  "producer_role": "semantic-child",
+  "rationale": "Frozen inputs were reviewed.",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "redaction_status": "not-required",
+  "schema_version": "skill-semantic-decision.v1",
+  "source_manifest_hash": "sha256:95ae56842d99bd75e7f13cd4e62743867543cb43741104c07f38aa168b4b1ff8",
+  "source_statuses": {
+    "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json": "accepted",
+    "execution-plans/2026-08-18-toolchain-workflow-repair/requirements-and-acceptance.md": "accepted",
+    "scripts/python/knowledge_gate_projection.py": "accepted",
+    "scripts/python/skill_input_coverage.py": "accepted",
+    "scripts/python/skill_input_current.py": "accepted",
+    "scripts/python/skill_input_generation.py": "accepted",
+    "scripts/python/skill_input_retention.py": "accepted",
+    "scripts/python/skill_input_transport.py": "accepted",
+    "scripts/python/tests/test_knowledge_gate_matrix.py": "accepted",
+    "scripts/python/tests/test_skill_input_coverage_v2.py": "accepted",
+    "scripts/python/tests/test_skill_input_generation_pointer.py": "accepted",
+    "scripts/python/tests/test_skill_input_retention.py": "accepted",
+    "scripts/python/tests/test_skill_input_selection_v2.py": "accepted",
+    "scripts/python/tests/test_skill_input_transport_auto.py": "accepted",
+    "scripts/python/tests/test_toolchain_workflow_repair_e2e.py": "accepted"
+  },
+  "status": "accepted"
+}

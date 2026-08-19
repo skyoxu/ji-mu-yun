@@ -1,0 +1,18 @@
+{
+  "schema_version": "skill-input-child-request.v1",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "contract_hash": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0",
+  "source_manifest_hash": "sha256:95ae56842d99bd75e7f13cd4e62743867543cb43741104c07f38aa168b4b1ff8",
+  "snapshot_root": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/acceptance-final/snapshot",
+  "output_root": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/acceptance-final/output",
+  "execution_identity": "sha256:43fe925b71b2cc2fd8d09bc3f1edc1150d273e0ed047c286c15bfe0ecf481f58",
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 262144,
+  "input_mode": "serialized-snapshot-stdin",
+  "allowed_capabilities": [
+    "read-frozen-snapshot",
+    "write-context-output"
+  ],
+  "authorizes": []
+}

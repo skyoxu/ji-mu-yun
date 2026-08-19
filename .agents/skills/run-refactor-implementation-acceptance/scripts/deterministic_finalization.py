@@ -144,7 +144,11 @@ def finalize_deterministic_run(
     if len(terminal) != 1:
         raise InputError("deterministic finalization requires exactly one terminal-full receipt")
     try:
-        terminal_result = json.loads(terminal[0]["receiptValue"]["processResult"]["stdout"].strip().splitlines()[-1])
+        terminal_stdout = terminal[0]["receiptValue"]["processResult"]["stdout"].strip()
+        try:
+            terminal_result = json.loads(terminal_stdout)
+        except json.JSONDecodeError:
+            terminal_result = json.loads(terminal_stdout.splitlines()[-1])
     except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
         raise InputError("terminal-full receipt has no machine-readable result") from exc
     if (

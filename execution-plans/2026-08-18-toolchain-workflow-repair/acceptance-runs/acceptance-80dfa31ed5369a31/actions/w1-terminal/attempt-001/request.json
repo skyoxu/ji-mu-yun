@@ -1,0 +1,20 @@
+{
+  "actionId": "w1-terminal",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "w1-terminal",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:1e8c96c289f9d4737a7dfe1bc71c47654aac39d313b36ad63b7523179f184036",
+    "knowledgeContextHash": "sha256:614b5bdefe6c1308e47ecb509321a1e288c823e2ebc3a670b9a6c2d93fcb6032",
+    "runInputHash": "sha256:e8b6a0e77b6bd5bcab52f90a5636eff4c2599cc6df35f450eb39732d32c0d4d7"
+  },
+  "ownerToken": "owner-acceptance-80dfa31ed5369a31",
+  "processId": 3816,
+  "recordedUtc": "2026-08-19T17:48:36.527159Z",
+  "runId": "acceptance-80dfa31ed5369a31",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 25
+}

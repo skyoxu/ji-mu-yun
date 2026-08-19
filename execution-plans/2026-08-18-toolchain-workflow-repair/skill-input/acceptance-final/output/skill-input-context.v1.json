@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T17:46:00.297504Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The W0-W6 contract requires canonical typed source selection, deterministic bounded transport, adapter-observed coverage, independent Knowledge execution/publication/review gates, immutable generations with a validated current pointer, protected attempt retention, and an end-to-end non-authorizing workflow. Ownership remains separated among VDD, maintainers, Quick Dev, and acceptance.",
+      "title": "Requirements and contract"
+    },
+    {
+      "content": "The supplied modules implement deterministic transport bound to content identity, coverage checks for missing, duplicate, unexpected, and stale pages, three-route Knowledge gate projection with publication disabled, immutable generation creation, typed current-pointer resolution, and approval-gated retention planning.",
+      "title": "Implementation"
+    },
+    {
+      "content": "The supplied tests cover stable selection identity, separate selection and content hashes, continuation identity, coverage failures and source drift, degraded and successor Knowledge routes, failed-generation pointer stability, retention approval requirements, and an end-to-end identity check. Every manifested source is represented in the snapshot.",
+      "title": "Verification coverage"
+    }
+  ],
+  "source_manifest_hash": "sha256:95ae56842d99bd75e7f13cd4e62743867543cb43741104c07f38aa168b4b1ff8",
+  "truncated": false
+}
