@@ -8,6 +8,14 @@ from pathlib import Path
 import subprocess
 import sys
 
+_SKILL_INPUT_ROOT = Path(__file__).resolve().parents[4] / "scripts" / "python"
+if str(_SKILL_INPUT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SKILL_INPUT_ROOT))
+try:
+    from skill_input_consumption import artifact_identity_hash
+except ImportError:
+    artifact_identity_hash = None
+
 try:
     from stage_lifecycle_runner import derive_run_state, validate_implementation_successor
 except ModuleNotFoundError:
@@ -76,6 +84,12 @@ def _implementation_candidate_current(result: dict[str, object], current: dict[s
 
 def _sha(payload: bytes) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def _artifact_hash(path: Path) -> str:
+    if artifact_identity_hash is not None:
+        return artifact_identity_hash(path)
+    return _sha(path.read_bytes())
 
 
 def _current_execution_fingerprint(repository_root: Path, plan_dir: Path, slice_id: str) -> str | None:
@@ -536,7 +550,7 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                         raise ValueError("receipt binding missing")
                     path = (root / binding["path"]).resolve()
                     path.relative_to(root)
-                    if not path.is_file() or _sha(path.read_bytes()) != binding["sha256"]:
+                    if not path.is_file() or _artifact_hash(path) != binding["sha256"]:
                         raise ValueError("receipt binding stale")
             except (OSError, UnicodeError, json.JSONDecodeError, TypeError, ValueError):
                 return {

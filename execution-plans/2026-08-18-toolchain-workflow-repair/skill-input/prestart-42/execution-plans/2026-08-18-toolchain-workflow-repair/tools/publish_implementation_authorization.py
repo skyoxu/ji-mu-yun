@@ -128,7 +128,7 @@ def main() -> int:
         "plan_id": PLAN_ID,
         **receipt_bindings,
         "candidate_binding_hash": candidate_binding_hash,
-        "predecessor_authorization": predecessor,
+        "predecessor_authorization=<redacted>,
         "decision": {
             "owner": "maintainer",
             "transition": "implementation-authorized",

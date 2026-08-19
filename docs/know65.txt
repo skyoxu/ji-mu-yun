@@ -1,0 +1,107 @@
+我检查的最新 main 就是 ed656e45。8-18 目录的大部分前置问题已经修好，但哈希方案只完成了核心 Skill Input 内部链路，尚未贯通授权发布器和 Quick Dev 路由器。
+
+核心核验结果
+核验项	结果	影响
+prestart-40 选中源码	29/29 与当前源码匹配	通过
+HEAD 变化	已是 provenance-only	通过；bf873bbb → ed656e45 不要求 successor
+Request canonical hash	当前实际值与 receipt 一致	通过
+Manifest / decision / context canonical hash	全部与 receipt 一致	通过
+Repair closure / plan state	已关闭修复、已授权实施	通过
+Authorization 中的 request 绑定	与当前文件不一致	阻断
+Quick Dev 路由器的哈希算法	仍使用 raw-byte SHA	阻断
+当前 Quick Dev pass receipt	无法由当前代码重新生成	不能作为有效入口证据
+唯一的硬阻断问题
+
+同一个 prestart-40-request.json 目前存在三种哈希值：
+
+当前文件 raw-byte SHA：1585d2a580bb...
+当前文件 canonical JSON SHA：c14609498b6d...
+Authorization receipt 声明值：012646b70f3f...
+
+其中：
+
+prestart-40-receipt.json 使用 c1460949...，与当前 request 的 canonical hash 完全一致。
+implementation-authorization-receipt.successor.v1.json 仍保存 012646b7...，既不等于当前 raw hash，也不等于 canonical hash。
+route_plan_directory.py 对所有授权绑定统一执行 _sha(path.read_bytes())，也就是 raw-byte 校验。
+
+所以当前重新执行路由时，会得到：
+
+next_action = awaiting-implementation-authorization
+reason = implementation-authorization-stale
+
+而不是要求的：
+
+next_action = run-slice
+slice_id = W0
+
+因此现有 quick-dev-entry-receipt.v1.json 虽然写着 pass / run-slice / W0，但它已经不能被当前代码重现，不能作为可信入口证据。
+
+哈希建议落实程度
+
+已经正确落实：
+
+artifact_identity_hash() 对 JSON 使用 canonical semantic hash。
+request、manifest、semantic decision、context 的内部绑定不再受缩进、key 顺序和换行影响。
+validate_skill_input_consumption.py 已明确忽略 HEAD 差异，只校验 scoped worktree/index 和选中源码。
+当前 prestart-40 虽记录 head=bf873bbb，但在 ed656e45 上仍然有效，不需要因为提交本身生成 prestart-41。
+
+尚未落实：
+
+publish_implementation_authorization.py 仍通过 path.read_bytes() 生成 raw SHA。
+Quick Dev 路由器仍按 raw SHA 消费授权绑定。
+Authorization 仍分别绑定 request、receipt 等多个表示文件，没有收敛成 immutable generation root。
+sha256 字段没有携带 identity_kind，消费者无法判断它表示 raw-bytes-v1 还是 canonical-json-v1。
+旧的 quick-dev-entry-validation.v1.json 仍是活动路径下的 fail，与 pass receipt 并存。
+
+所以答案是：方向已经实现，但还没有形成端到端闭环。
+
+达到 GO 的最小修复
+让授权发布器和路由器统一使用共享的 artifact_identity_hash()，禁止各自实现 raw/canonical 判断。
+给绑定增加明确的 identity_kind，例如：
+{
+  "path": ".../prestart-40-request.json",
+  "identity_kind": "canonical-json-v1",
+  "sha256": "sha256:c14609498b6d..."
+}
+
+非 JSON 源码使用 raw-bytes-v1。
+
+更推荐让 Authorization 只绑定一个不可变 generation identity，例如：
+{
+  "skill_input_generation": {
+    "receipt_path": ".../prestart-41-receipt.json",
+    "generation_root": "sha256:...",
+    "selection_hash": "sha256:...",
+    "context_hash": "sha256:..."
+  }
+}
+
+不要再重复绑定 request、context、decision 等表示文件的 raw hash。
+
+由于 publish_implementation_authorization.py 本身属于当前 29 个选中源码，修复它属于真实的 selected-source 变化，因此需要最后一次合法的自动 successor，例如 prestart-41。这次 successor 是语义源码改变引起的，不是 HEAD 改变引起的。
+重新发布 implementation authorization，再重新生成唯一的 Quick Dev entry receipt。
+将旧 quick-dev-entry-validation.v1.json 移入 historical/noncanonical 路径，活动路径只保留一个当前入口结论。
+提交后必须在新 HEAD 上再次执行以下三项，但不得仅因 HEAD 改变生成下一代 successor：
+python scripts/python/validate_skill_input_consumption.py \
+  execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-41-receipt.json \
+  --repository-root . \
+  --contract .agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json \
+  --require-ready
+python .agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py \
+  --repository-root . \
+  --plan-dir execution-plans/2026-08-18-toolchain-workflow-repair \
+  --caller quick-dev-tdd-adapter
+python execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_quick_dev_entry.py \
+  --repository-root . \
+  --plan-dir execution-plans/2026-08-18-toolchain-workflow-repair \
+  --out execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/quick-dev-entry-receipt.v1.json
+
+最终必须分别得到：
+
+validation exit code = 0
+route.next_action = run-slice
+route.slice_id = W0
+quick-dev-entry.status = pass
+quick-dev-entry.failures = []
+
+简而言之：8-18 计划内容和 prestart-40 已基本合格；现在不是再补计划，而是修复“canonical producer → authorization → router”最后一段哈希协议。完成这一处并重新生成入口证据后，才可以进入 Quick Dev TDD。
