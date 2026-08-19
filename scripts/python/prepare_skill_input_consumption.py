@@ -22,6 +22,7 @@ from skill_input_consumption import (
     read_json,
     repository_identity,
     sha256_bytes,
+    artifact_identity_hash,
     validate_contract,
     validate_request_payload,
     forbidden_repository_path,
@@ -270,7 +271,7 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
     }
     manifest_path = snapshot_root / "source-manifest.v1.json"
     write_json_atomic(manifest_path, manifest)
-    manifest_hash = sha256_bytes(manifest_path.read_bytes())
+    manifest_hash = artifact_identity_hash(manifest_path)
     request_binding = {
         "request": request,
         "consumer": args.consumer,

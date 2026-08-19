@@ -29,6 +29,7 @@ from skill_input_consumption import (
     redaction_profile_hash,
     repository_identity,
     sha256_bytes,
+    artifact_identity_hash,
     validate_contract,
     validate_request_payload,
     write_bytes_atomic,
@@ -178,7 +179,7 @@ def _validate_paged_read_coverage(
         coverage_path.relative_to(output_root.resolve())
     except ValueError as exc:
         raise ReceiptValidationError("snapshot read coverage path escapes output root") from exc
-    if not coverage_path.is_file() or sha256_bytes(coverage_path.read_bytes()) != coverage_ref["sha256"]:
+    if not coverage_path.is_file() or artifact_identity_hash(coverage_path) != coverage_ref["sha256"]:
         raise ReceiptValidationError("snapshot read coverage is missing or stale")
     coverage = read_json(coverage_path)
     required = {"schema_version", "source_manifest_hash", "input_mode", "chunk_bytes", "segments"}
@@ -430,7 +431,7 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
         raise ReceiptValidationError("receipt repository identity is stale")
     root = receipt_path.parent.resolve()
     manifest_path, _ = _artifact(root, receipt.get("source_manifest"), "source_manifest")
-    if not manifest_path.is_file() or sha256_bytes(manifest_path.read_bytes()) != receipt["source_manifest"]["sha256"]:
+    if not manifest_path.is_file() or artifact_identity_hash(manifest_path) != receipt["source_manifest"]["sha256"]:
         raise ReceiptValidationError("source manifest is missing or stale")
     manifest = read_json(manifest_path)
     if not isinstance(manifest, dict) or set(manifest) != {"schema_version", "snapshot_kind", "consumer", "operation", "sources", "created_at"} or manifest.get("schema_version") != "skill-input-source-manifest.v1" or manifest.get("snapshot_kind") != "model-safe" or manifest.get("consumer") != receipt["consumer"] or manifest.get("operation") != receipt["operation"] or not isinstance(manifest.get("sources"), list) or not manifest["sources"]:
@@ -518,9 +519,9 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
         decision = read_json(decision_path)
         context = read_json(context_path)
         if (
-            sha256_bytes(child_request_path.read_bytes()) != receipt["child_request"]["sha256"]
-            or sha256_bytes(decision_path.read_bytes()) != decision_ref["sha256"]
-            or sha256_bytes(context_path.read_bytes()) != context_ref["sha256"]
+            artifact_identity_hash(child_request_path) != receipt["child_request"]["sha256"]
+            or artifact_identity_hash(decision_path) != decision_ref["sha256"]
+            or artifact_identity_hash(context_path) != context_ref["sha256"]
         ):
             raise ReceiptValidationError("sidecar hash mismatch")
         _validate_context(
@@ -597,19 +598,19 @@ def publish_ready(
         raise ReceiptValidationError("sidecars must be inside the receipt root") from exc
     child_request_path, _ = _artifact(
         root,
-        {"path": child_request_relative, "sha256": sha256_bytes(child_request.read_bytes())},
+        {"path": child_request_relative, "sha256": artifact_identity_hash(child_request)},
         "child_request",
     )
-    decision_path, _ = _artifact(root, {"path": decision_relative, "sha256": sha256_bytes(semantic_decision.read_bytes())}, "semantic_decision")
-    context_path, _ = _artifact(root, {"path": context_relative, "sha256": sha256_bytes(context_artifact.read_bytes())}, "context_artifact")
+    decision_path, _ = _artifact(root, {"path": decision_relative, "sha256": artifact_identity_hash(semantic_decision)}, "semantic_decision")
+    context_path, _ = _artifact(root, {"path": context_relative, "sha256": artifact_identity_hash(context_artifact)}, "context_artifact")
     decision_payload = read_json(decision_path)
     if isinstance(decision_payload, dict) and isinstance(decision_payload.get("source_statuses"), dict):
         for source in receipt.get("sources", []):
             if source.get("path") in decision_payload["source_statuses"]:
                 source["semantic_status"] = decision_payload["source_statuses"][source["path"]]
-    receipt["semantic_decision"] = {"path": decision_relative, "sha256": sha256_bytes(decision_path.read_bytes())}
-    receipt["context_artifact"] = {"path": context_relative, "sha256": sha256_bytes(context_path.read_bytes())}
-    receipt["child_request"] = {"path": child_request_relative, "sha256": sha256_bytes(child_request_path.read_bytes())}
+    receipt["semantic_decision"] = {"path": decision_relative, "sha256": artifact_identity_hash(decision_path)}
+    receipt["context_artifact"] = {"path": context_relative, "sha256": artifact_identity_hash(context_path)}
+    receipt["child_request"] = {"path": child_request_relative, "sha256": artifact_identity_hash(child_request_path)}
     receipt["ready"] = True
     receipt["binding_hash"] = canonical_hash({key: value for key, value in receipt.items() if key != "binding_hash"})
     proposed_path = receipt_path.with_name(f"{receipt_path.name}.{uuid.uuid4().hex}.proposed")

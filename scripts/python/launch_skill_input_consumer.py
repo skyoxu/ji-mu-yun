@@ -21,6 +21,7 @@ from skill_input_consumption import (
     DEFAULT_MAX_SNAPSHOT_BYTES,
     SkillInputError,
     canonical_hash,
+    artifact_identity_hash,
     read_json,
     redact_bytes,
     redaction_profile_hash,
@@ -359,7 +360,7 @@ def validate_child_request(request: Any, binding_root: Path, expected_contract_h
         raise ChildRequestError("snapshot_root and output_root must be disjoint")
     output = _relative_root(binding_root, output_raw, "output_root", create=True)
     manifest = snapshot / "source-manifest.v1.json"
-    if not manifest.is_file() or sha256_bytes(manifest.read_bytes()) != request["source_manifest_hash"]:
+    if not manifest.is_file() or artifact_identity_hash(manifest) != request["source_manifest_hash"]:
         raise ChildRequestError("snapshot manifest is missing or hash-mismatched")
     manifest_payload = read_json(manifest)
     if not isinstance(manifest_payload, dict) or manifest_payload.get("consumer") != request["consumer"] or manifest_payload.get("operation") != request["operation"]:
@@ -623,7 +624,7 @@ def create_child_request(
         snapshot_relative = manifest_path.parent.relative_to(binding_root.resolve()).as_posix()
     except ValueError as exc:
         raise ChildRequestError("candidate snapshot root escapes binding root") from exc
-    if snapshot_relative in {"", "."} or not manifest_path.is_file() or sha256_bytes(manifest_path.read_bytes()) != manifest_ref["sha256"]:
+    if snapshot_relative in {"", "."} or not manifest_path.is_file() or artifact_identity_hash(manifest_path) != manifest_ref["sha256"]:
         raise ChildRequestError("candidate snapshot root is invalid")
     output_candidate = (binding_root.resolve() / output_root).resolve()
     try:
@@ -700,7 +701,7 @@ def run_semantic_child(
     if any(is_reparse_point(item) for item in snapshot_root.rglob("*")):
         raise ChildRequestError("snapshot contains a symlink")
     manifest_path = snapshot_root / "source-manifest.v1.json"
-    manifest_hash = sha256_bytes(manifest_path.read_bytes())
+    manifest_hash = artifact_identity_hash(manifest_path)
     manifest = read_json(manifest_path)
     snapshot_hash_before = _snapshot_tree_hash(snapshot_root)
     serialized_snapshot = None
@@ -899,7 +900,7 @@ def run_semantic_child(
             max_context_bytes=request["max_context_bytes"],
             serialized_size=len(context_bytes),
         )
-        context_hash = sha256_bytes(context_bytes)
+        context_hash = canonical_hash(context)
         if decision.get("execution_identity") != request["execution_identity"]:
             raise ChildRequestError("semantic decision execution identity does not match child request")
         # A semantic reader has no lifecycle authority.  Preserve this boundary
@@ -926,7 +927,7 @@ def run_semantic_child(
             write_json_atomic(coverage_path, read_coverage)
             decision["snapshot_read_coverage"] = {
                 "path": coverage_path.name,
-                "sha256": sha256_bytes(coverage_path.read_bytes()),
+                "sha256": artifact_identity_hash(coverage_path),
             }
         if not isinstance(decision.get("source_statuses"), dict):
             raise ChildRequestError("semantic decision source_statuses is missing")

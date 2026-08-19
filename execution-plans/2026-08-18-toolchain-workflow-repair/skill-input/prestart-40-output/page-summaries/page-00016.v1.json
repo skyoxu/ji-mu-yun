@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/requirements-and-acceptance.md",
+    "source_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5019,
+    "start_line": 1,
+    "end_line": 105,
+    "content_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48"
+  },
+  "status": "accepted",
+  "summary": "TWR purpose: repair orchestration without stale-context/transport hard gates; preserve authority ownership; never auto-publish Knowledge; W0 typed source selection: consumer/policy/module/resource-set/authority/path IDs, canonical independently verifiable selection identity, fail closed for omission/ambiguity/authority drift; W1 adapter owns paging/chunking/offsets/retries, continuations bind selection and source identity, reject stale/conflicting continuation; W2 adapter proves byte/line/hash coverage, summaries are evidence only, incomplete cannot be promoted; W3 independent execution/publication/review Knowledge gates, verified semantics-unchanged successor may execute degraded, blocking failures remain typed, acceptance does not publish or auto-start Bootstrap; W4 validator/coordinator owns immutable versioned receipts and typed current pointer, advance only validated complete receipt, replay deterministic; W5 attempts under .skill-input-work/<plan-id>/<attempt-id>, lifecycle/lease/heartbeat, protected retention, dry-run candidates, apply needs maintainer approval and non-authorizing cleanup receipt; W6 non-authorizing E2E verifies selection through retention and invalid artifacts cannot advance pointer; ownership: VDD draft/plan-ready, Maintainer implementation authorization, Quick Dev implementation-complete, Acceptance acceptance-passed; no new lifecycle authority"
+}

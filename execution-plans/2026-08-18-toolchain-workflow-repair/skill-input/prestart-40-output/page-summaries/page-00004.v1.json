@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "VDD execution-plan skill: create/repair only on explicit request; standalone requirements Markdown routes to direct implementation. Read mandatory standards before action. Select least-complex profile: standard, resumable, or self-hosted; record rationale and route via model_routing.py (ordinary Sol/high; typed capability-gated recovery may use Sol/max). Lifecycle: draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived. Clarify only material scope/compatibility/destructive/protected-path/acceptance boundaries. Plans define slices with behavior, failure intent, GREEN target, dependents, recovery; VDD does not create RED evidence. Quick Dev owns RED and implementation-complete; current terminal full validation required. Repairs are in-place under repair/round-n, preserve immutable history, bind findings/scope/closure; lineageFamilyId, two-round default, max three with typed triggers, then manual_pause. Repair requires root-cause callsite inventory, exclusions, producer/consumer composition receipt, hash-bound changed/deleted manifests and complete review scope. Mandatory knowledge-consumption/preflight must pass before plan-ready; stale catalog may degrade freshness, invalid or missing required matches block. Create/repair must pass skill-input adapter and semantic-child validation before knowledge freeze/artifacts. Standard may omit 95 report; resumable/self-hosted require append-only 95 report/index. Bootstrap review optional, supplemental, never lifecycle authority. Completion requires required artifacts, observable acceptance for every requirement, RED/legacy path, stable repairs, terminal full validation."
+}

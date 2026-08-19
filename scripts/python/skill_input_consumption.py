@@ -63,6 +63,17 @@ def sha256_bytes(value: bytes) -> str:
     return "sha256:" + hashlib.sha256(value).hexdigest()
 
 
+def artifact_identity_hash(path: Path) -> str:
+    """Hash JSON artifacts by semantic content, other artifacts by bytes."""
+    raw = path.read_bytes()
+    if path.suffix.casefold() == ".json":
+        try:
+            return canonical_hash(json.loads(raw.decode("utf-8")))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            pass
+    return sha256_bytes(raw)
+
+
 def redaction_profile_hash() -> str:
     """Bind semantic decisions to the exact v1 redaction rules."""
     return canonical_hash({

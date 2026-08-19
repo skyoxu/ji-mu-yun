@@ -8,6 +8,6 @@
   "status": "pass",
   "validator_input_manifest": {
     "path": "repair/round-1/validator-input-manifest.v1.json",
-    "sha256": "sha256:6682ea8c16ca52385a7521a779925feebba79d133a50b2f4504b18b21dfeaa6e"
+    "sha256": "sha256:a3dc293db2df6fe10717d5791db666dc78e60f1f725280b381b094ab55b23630"
   }
 }

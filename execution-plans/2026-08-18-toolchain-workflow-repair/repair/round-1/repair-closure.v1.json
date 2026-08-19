@@ -23,15 +23,15 @@
     },
     "knowledge_context": {
       "path": "knowledge-context.v1.json",
-      "sha256": "sha256:680fae82bf5a8684474b418dfc3637b703991c75e117053a5e7030ed3243664c"
+      "sha256": "sha256:49b9ddea8f2418735978fc6054ed405cc0a895c71c1f40afb6598094da7194c6"
     },
     "knowledge_freeze": {
       "path": "knowledge-context.freeze.v1.json",
-      "sha256": "sha256:67a6019c12efb2c5902bff9035f9224daa85495c4ec45c80962db761912e4cec"
+      "sha256": "sha256:7a3210493751730b611107fd0adb1266350649d3bcc209829546f7e88cd83792"
     },
     "plan-validation-receipt.v4.json": {
       "path": "repair/round-1/plan-validation-receipt.v4.json",
-      "sha256": "sha256:f6a046cdf7a38a907f56add2c4a4bc05bcb7c11ac49b81be10f5cb27826d7a26"
+      "sha256": "sha256:9cb5f3eab681a96cc2c327a99818fc8bec7e0dbf1ef38ad52fefcf96080a6676"
     },
     "producer-consumer-composition-receipt": {
       "path": "repair/round-1/producer-consumer-composition-receipt.v1.json",
@@ -75,7 +75,7 @@
     },
     "validator-input-manifest": {
       "path": "repair/round-1/validator-input-manifest.v1.json",
-      "sha256": "sha256:6682ea8c16ca52385a7521a779925feebba79d133a50b2f4504b18b21dfeaa6e"
+      "sha256": "sha256:a3dc293db2df6fe10717d5791db666dc78e60f1f725280b381b094ab55b23630"
     }
   },
   "failures": [],

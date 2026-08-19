@@ -1,0 +1,10 @@
+{
+  "schema_version": "toolchain-workflow-repair.quick-dev-entry-history.v1",
+  "plan_id": "toolchain-workflow-repair",
+  "generation": "prestart-39",
+  "status": "historical",
+  "canonical": false,
+  "superseded_by": "skill-input/prestart-40-receipt.json",
+  "reason": "prestart-40 canonicalized JSON artifact identities and republished the current entry evidence.",
+  "authorizes": []
+}

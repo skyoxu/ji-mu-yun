@@ -13,7 +13,7 @@ PYTHON_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PYTHON_ROOT))
 
 from prepare_skill_input_consumption import prepare  # noqa: E402
-from skill_input_consumption import SkillInputError, canonical_hash, contained_path, expand_source_graph, generated_artifact_exclusions, redact_bytes, redaction_profile_hash, sha256_bytes, validate_contract, write_json_atomic  # noqa: E402
+from skill_input_consumption import SkillInputError, artifact_identity_hash, canonical_hash, contained_path, expand_source_graph, generated_artifact_exclusions, redact_bytes, redaction_profile_hash, sha256_bytes, validate_contract, write_json_atomic  # noqa: E402
 from validate_skill_input_consumption import ReceiptValidationError, _artifact, _remove_model_snapshot_payload, publish_ready, validate_receipt  # noqa: E402
 from launch_skill_input_consumer import ChildRequestError, _validate_segment_summary, create_child_request, run_semantic_child, semantic_child_execution_identity, validate_child_request  # noqa: E402
 from skill_input_gate import require_ready_skill_input  # noqa: E402
@@ -902,14 +902,14 @@ class SkillInputConsumptionTests(unittest.TestCase):
         decision = output_root / "semantic-decision.v1.json"
         context = output_root / "skill-input-context.v1.json"
         context.write_text(json.dumps({"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"}), encoding="utf-8")
-        context_hash = sha256_bytes(context.read_bytes())
+        context_hash = artifact_identity_hash(context)
         decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []}), encoding="utf-8")
         publish_ready(receipt, child_request, decision, context, root, contract)
         self.assertFalse((root / "run" / "snapshot" / "requirements.md").exists())
         self.assertEqual("ready", validate_receipt(receipt, root, contract, require_ready=True)["status"])
         gated = require_ready_skill_input(receipt_path=receipt, repository_root=root, contract_path=contract, consumer="demo-skill", operation="create")
         self.assertEqual(context.resolve(), gated["context_artifact"])
-        self.assertEqual(sha256_bytes(context.read_bytes()), gated["context_artifact_hash"])
+        self.assertEqual(artifact_identity_hash(context), gated["context_artifact_hash"])
         with self.assertRaises(ValueError):
             require_ready_skill_input(receipt_path=receipt, repository_root=root, contract_path=contract, consumer="other-skill", operation="create")
 
@@ -931,7 +931,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
         }), encoding="utf-8")
         context = output_root / "skill-input-context.v1.json"
         context.write_text(json.dumps({"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"}), encoding="utf-8")
-        context_hash = sha256_bytes(context.read_bytes())
+        context_hash = artifact_identity_hash(context)
         decision = output_root / "semantic-decision.v1.json"
         decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "failed", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []}), encoding="utf-8")
         candidate_bytes = receipt.read_bytes()
@@ -956,7 +956,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
         }), encoding="utf-8")
         context = output_root / "skill-input-context.v1.json"
         context.write_text(json.dumps({"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"}), encoding="utf-8")
-        context_hash = sha256_bytes(context.read_bytes())
+        context_hash = artifact_identity_hash(context)
         source_path = payload["sources"][0]["path"]
         decision = output_root / "semantic-decision.v1.json"
         decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []}), encoding="utf-8")
@@ -1015,7 +1015,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
         }), encoding="utf-8")
         context = output_root / "skill-input-context.v1.json"
         context.write_text(json.dumps({"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"}), encoding="utf-8")
-        context_hash = sha256_bytes(context.read_bytes())
+        context_hash = artifact_identity_hash(context)
         source_path = payload["sources"][0]["path"]
         decision = output_root / "semantic-decision.v1.json"
         decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []}), encoding="utf-8")
@@ -1050,7 +1050,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
         decision = output_root / "semantic-decision.v1.json"
         context = output_root / "skill-input-context.v1.json"
         context.write_text(json.dumps({"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "x" * 2000}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"}), encoding="utf-8")
-        context_hash = sha256_bytes(context.read_bytes())
+        context_hash = artifact_identity_hash(context)
         decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []}), encoding="utf-8")
         candidate_bytes = receipt.read_bytes()
         with self.assertRaisesRegex(ReceiptValidationError, "max_context_bytes"):
@@ -1157,7 +1157,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
             "schema_version": "skill-input-child-request.v1",
             "consumer": "demo-skill", "operation": "create",
             "contract_hash": payload["contract_hash"],
-            "source_manifest_hash": sha256_bytes(manifest_path.read_bytes()),
+            "source_manifest_hash": artifact_identity_hash(manifest_path),
             "snapshot_root": "run/snapshot", "output_root": "run/output",
             "execution_identity": self._execution_identity(),
             "max_context_bytes": 512, "max_snapshot_bytes": 65536,
@@ -1238,7 +1238,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
             self.assertEqual(line_cursor + page.count(b"\n"), segment["end_line"])
             line_cursor = segment["end_line"]
         decision = json.loads(Path(result["semantic_decision"]).read_text(encoding="utf-8"))
-        self.assertEqual(sha256_bytes(coverage.read_bytes()), decision["snapshot_read_coverage"]["sha256"])
+        self.assertEqual(artifact_identity_hash(coverage), decision["snapshot_read_coverage"]["sha256"])
         publish_ready(receipt, request_path, Path(result["semantic_decision"]), Path(result["context_artifact"]), root, contract)
         self.assertEqual("ready", validate_receipt(receipt, root, contract, require_ready=True)["status"])
         coverage.write_text("{}\n", encoding="utf-8")
