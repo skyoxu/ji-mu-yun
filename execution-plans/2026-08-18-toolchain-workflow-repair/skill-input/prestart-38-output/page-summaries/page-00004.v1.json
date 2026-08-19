@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "Skill vdd-execution-plan; use only explicit create/repair of complete execution-plan directory, not standalone requirements implementation; mandatory pre-reads: solo-maintainer standard, clarification gate, lifecycle contract; select least profile before model routing: standard/resumable/self-hosted; standard avoids extra governance artifacts; all normal profiles Sol/high, Sol/max only closed verified recovery trigger; route decision hash-bound and non-authorizing; inspect authority/state/callers/protected paths/tests before material clarification; lifecycle: draft>plan-ready>implementation-authorized>implementation-complete>acceptance-passed>archived; VDD owns first two, Quick Dev only implementation-complete; per slice declare behavior, failure intent, GREEN target, dependents, recovery; VDD never produces RED evidence; repair in-place under repair/round-n with immutable history and closure binding; repair requires callsite inventory, exclusions, producer/consumer composition receipt, hash-bound changed-set/review scope; mandatory knowledge preflight and skill-input consumption gate before plan-ready/artifacts; candidate binds baseline plus commit range or scoped dirty identity; review optional unless required; Bootstrap lineage family, 2-round default/3 hard limit with typed round-3 trigger; resumable/self-hosted require append-only indexed 95 report; completion requires artifacts, observable acceptance per requirement, declared negative path, stable repairs, current terminal full validation."
+}

@@ -25,5 +25,5 @@
   "mode": "authorized-repair-revalidate",
   "plan_id": "toolchain-workflow-repair",
   "schema_version": "toolchain-workflow-repair.validator-input-manifest.v1",
-  "skill_input_receipt": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-37-receipt.json"
+  "skill_input_receipt": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-39-receipt.json"
 }

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "Adapter enforces mandatory skill-input readiness before preparation; backend hidden state and shell execution are forbidden; preparation requires declared slice plus nonempty contract/validator identities; lifecycle is ordered RED→GREEN→REFACTOR with RED failing expected test and test/docs-only paths, GREEN passing production-only paths, REFACTOR passing within production/tests/docs write set; invalid transitions block with RMAP rule IDs; finalization yields non-authoritative implementation candidate only after complete lifecycle; resume rejects stale identities and failed/stale/superseded runs; protocol bundle requires schema rmap.capsule-attempt-bundle.v1, exactly one context/attempt per stage, consistent STAGE-* bindings and hashes; persistence requires complete contained artifact set, immutable conflicts rejected, reparse points forbidden, observation files preserved; execute requires new run directory and paired bundle/store, writes recovery-state.v1 with no authorizations; acceptance/handoff/release remain unauthorized."
+}

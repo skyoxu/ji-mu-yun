@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "仓库为 Ji Mu Yun Phase A/B 云原型平台；职责分为工具链控制面、Phase 服务层、用户沙箱层，三者不得共享快照/current/cache/LKG 权威；按任务路由读取指定入口与最近 AGENTS.md；优先 FastCtx，明确不可用后才用 Windows 命令面并记录回退；中文沟通，代码与日志用英文，中文文件必须 UTF-8；保留用户改动，避免破坏性操作，高风险或受保护路径先询问；受保护范围含 live metadata/runtime/Hosted workspace、启动监控/Caddy、认证令牌审计、共享 LLM/Codex 入口、安全交付配置及历史证据重写删除；Phase API 默认向后兼容，破坏性变更需批准和兼容方案；模式变更需迁移/恢复；API 变更覆盖 handler/DTO、浏览器调用、认证边界、文档、测试与 smoke；认证变更验证拒绝、授权、隔离、哈希、审计及无令牌泄漏；Hosted 路由变更验证边界、安全回读、恢复、状态与验收证据；运行时先本地健康再代理，禁止 plain dotnet run；所有完成必须由验证器/诊断/sidecar/数据库绑定证据证明，不能仅凭助手文本；文件变更路由恢复按八类来源顺序，缺失则 fail closed，实时阻塞优先；共享 LLM/Codex 使用 UTF-8 stdin，写入需 executable route、workspace-write、acceptance；workflow.md 仅在工具链索引允许触发时使用；独立需求 Markdown 不自动创建 VDD；完成定义含验证、测试 smoke、logs 证据、必要文档更新及无秘密泄漏/未批准持久化/兼容性破坏；维护预算目标 6000-8000 字符，硬上限 10000。"
+}

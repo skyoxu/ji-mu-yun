@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Skill: run-refactor-implementation-acceptance; scope: deterministic evidence orchestration for exactly one execution-plans/<target>, never implementation/approval/commit/release/deploy; default evidence_only, controlled_validation only with typed commands and isolated write roots; candidate: prefer clean HEAD commit else require frozen dirty/proposed snapshot; baseline explicit from plan, never infer candidate parent; prerequisites: complete contract or compact-vdd bundle, manifests, typed request, DAG, registry, Acceptance knowledge context, Skill-input receipt/contract; missing/ambiguous => prerequisite_blocked; compact projection requires explicit bindings and current Quick Dev implementation-complete receipt; stale receipt due binding change => hand off quick-dev-tdd-adapter; create typed Skill-input through launch_skill_input_consumer and require-ready validation; knowledge via canonical Locator, catalog_stale=>degraded, other faults=>knowledge-context-repair-required, byte-only drift=>successor refresh; runs: start-or-resume with input/contract/frozen-context hashes and receipt/contract, derived acceptance-<binding>, append-only successor on drift, legacy no-state dirs read-only; order: inspect existing, materialize+validate, start+prepare, deterministic actions, finalize deterministic closed route, semantic decision/route only if selected, import finalized results then finalize; deterministic_only never Bootstrap; required Bootstrap uses repository-owned inspect-lineage and exact prepare-bootstrap route; invoke run-phase-bootstrap-review and stop for high-cost acknowledgement before model launch; finding reentry requires explicit user confirmation; 3 rounds=>manual_pause, no reset/Round4; ADR-0054 closure requires frozen protocol authority, explicit acknowledgement, finalize-manual-pause-closure; model routing no-launch normally; Sol/high only policy complex-recovery triggers; Bootstrap exact reuse only v3 clean/current binding/profile/route; repair requires Quick Dev handoff plus audit-repair-completeness; required review scope is minimal complete seven-class closure; Phase policy vs toolchain policy selected by candidate, uncovered toolchain path fails; prepare-run requires frozen context and replayable manifests; coverage only changed executable Phase C# lines; checklist requires current stable references; commands registry-bound; unit tests/clean review alone not Program DoD"
+}

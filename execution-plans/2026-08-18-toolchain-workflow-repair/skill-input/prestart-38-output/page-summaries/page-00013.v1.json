@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/authority-manifest.v1.json",
+    "source_sha256": "sha256:691ede11493912f71fb60990e4e4da42788f380e2d11f2a0cb70fb636ae14bb3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2643,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:691ede11493912f71fb60990e4e4da42788f380e2d11f2a0cb70fb636ae14bb3"
+  },
+  "status": "accepted",
+  "summary": "Snapshot authority manifest for toolchain workflow repair; schema identified; authorizes none; authority sources cover repository rules, knowledge location/publication/retention/execution, evidence ownership, skill-input v2, lifecycle, VDD, quick-dev, acceptance, and consumer policy contracts; candidate inputs include requirements, implementation/command contracts, authorization publisher, migration bridge, readiness validator, bootstrap adapter, and implementation terminal; lifecycle projections are plan-state and resume-state; single page, complete hash metadata."
+}

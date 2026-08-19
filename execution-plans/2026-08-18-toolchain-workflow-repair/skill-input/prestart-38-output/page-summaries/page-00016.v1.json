@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/requirements-and-acceptance.md",
+    "source_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5019,
+    "start_line": 1,
+    "end_line": 105,
+    "content_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48"
+  },
+  "status": "accepted",
+  "summary": "scope=toolchain-workflow-repair; W0 typed source selection with independently verifiable canonical identity; fail-closed omitted/ambiguous/authority-drift selection; W1 adapter owns pagination/chunking/retries and validates continuations; W2 adapter proves hash/range coverage, model summaries non-authoritative; W3 separate execution/publication/review Knowledge gates; degraded verified successor allowed only unchanged semantics; block invalid LKG, selection/authority drift, missing sources, publication-integrity failures; acceptance never publishes Knowledge and never auto-starts Bootstrap; W4 validator/coordinator owns immutable versioned receipts and typed current pointer; advance pointer only fully validated receipt; W5 attempt path=.skill-input-work/<plan-id>/<attempt-id>, lifecycle+lease/heartbeat, protected retention, dry-run/apply approval and cleanup receipt; W6 non-authorizing E2E covers all gates and retention, invalid artifact cannot advance pointer; lifecycle ownership: VDD=draft/plan-ready, Maintainer=implementation authorization, Quick Dev=implementation-complete, Acceptance=acceptance-passed; no new lifecycle authority"
+}

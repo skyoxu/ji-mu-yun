@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "skill=run-refactor-implementation-acceptance; scope=one explicit execution-plans/<target>; no implementation/approval/commit/release/deploy authority; default=evidence_only and deterministic orchestration; require frozen baseline plus clean-HEAD commit or declared frozen snapshot/proposed set; require complete contract or compact-vdd bundle, manifests, DAG, command registry, typed request; ambiguous/missing inputs => prerequisite_blocked; Quick Dev receipt drift => quick-dev-tdd-adapter successor; canonical Locator knowledge context required, catalog_stale=degraded only, other failures=knowledge-context-repair-required; create/validate typed Skill-input receipt via launch consumer and require-ready; start-or-resume binds inputHash, contract/context byte hashes, receipt/contract; successor runs on drift, legacy artifact-only runs never migrated; deterministic closed DAG => finalize-deterministic-run, no Bootstrap; semantic only through immutable decide/prepare Bootstrap route and explicit high-cost acknowledgment; routeKinds=deterministic_only|focused_repair_verification|full_implementation_conformance|manual_pause; later discovery requires typed proposal, confidence, explicit user confirmation; Bootstrap exact reuse only v3 clean finalized bound current lineage/candidate/profile/authority; P0/P1 repair requires Quick Dev handoff plus audit-repair-completeness; P2 deterministic closure; max 3 semantic rounds then manual_pause; ADR-0054 manual closure requires frozen protocol review, explicit maintainer acknowledgement, finalize-manual-pause-closure; controlled validation cannot write production/live/history; ordinary actions pass no-launch model routing; prepare-run requires frozen acceptance knowledge context; Phase vs toolchain policy selected by candidate, uncovered toolchain paths fail; changed-line coverage only added/modified Phase C# lines; commands only from hash-bound registry; passing tests/review clean not Program DoD"
+}
