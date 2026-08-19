@@ -16,6 +16,17 @@ def test_terminal_consumes_lifecycle_slice_ready_results_and_publishes_completio
     assert result.returncode == 0
     assert payload["predicate"] == "implementation-complete"
     assert payload["authorizes"] == ["implementation-complete"]
+    assert payload["schema_version"] == "quick-dev-implementation-complete.v1"
+    assert payload["command_registry_hash"].startswith("sha256:")
     assert payload["terminal_command_id"] == "terminal-full"
     assert payload["validated_command_ids"] == [f"w{index}-terminal" for index in range(7)]
+
+
+def test_terminal_publishes_plan_local_canonical_receipt():
+    receipt = PLAN / "repair/round-1/quick-dev-implementation-complete.v1.json"
+    assert receipt.is_file()
+    payload = json.loads(receipt.read_text(encoding="utf-8"))
+    assert payload["schema_version"] == "quick-dev-implementation-complete.v1"
+    assert payload["command_registry_hash"].startswith("sha256:")
+    assert payload["authorizes"] == ["implementation-complete"]
     assert payload["failures"] == []

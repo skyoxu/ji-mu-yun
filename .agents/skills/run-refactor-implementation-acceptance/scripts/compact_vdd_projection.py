@@ -412,6 +412,49 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     return {"status": "ready", "bundle": bundle_path.relative_to(root).as_posix(), "bundleHash": bundle["bundleHash"], "runRequest": final_request.relative_to(root).as_posix(), "authorizes": []}
 
 
+def project_or_quick_dev_recovery(repository_root: Path, request_path: Path) -> dict[str, Any]:
+    """Return a typed owner handoff when only the Quick Dev receipt is stale.
+
+    Projection remains strict and unchanged.  This adapter only classifies the
+    narrow implementation-handoff failure family so an orchestrator can invoke
+    the declared Quick Dev terminal route and retry projection with its successor
+    receipt.  It never executes a command and never authorizes a lifecycle state.
+    """
+    try:
+        return project(repository_root, request_path)
+    except InputError as exc:
+        message = str(exc)
+        handoff_errors = {
+            "implementation receipt is missing or stale",
+            "implementation receipt does not match the current Quick Dev terminal contract",
+            "implementation receipt does not authorize implementation-complete",
+            "implementation receipt has no validated commands",
+            "implementation handoff terminal runner is missing",
+        }
+        if message not in handoff_errors:
+            raise
+        request = _load(request_path)
+        target = (repository_root / request["targetPlan"]).resolve()
+        contract_path = target / "implementation-contract.v1.json"
+        registry_path = target / "command-registry.v1.json"
+        contract = _load(contract_path) if contract_path.is_file() else {}
+        terminal = contract.get("terminal") if isinstance(contract, dict) else {}
+        return {
+            "schemaVersion": "quick-dev-terminal-recovery-required.v1",
+            "status": "recovery_required",
+            "reasonCode": "implementation_handoff_stale",
+            "targetPlan": request["targetPlan"],
+            "implementationReceiptPath": request["implementationReceiptPath"],
+            "contractHash": _hash_bytes(contract_path.read_bytes()) if contract_path.is_file() else None,
+            "commandRegistryHash": _hash_bytes(registry_path.read_bytes()) if registry_path.is_file() else None,
+            "terminalCommandId": terminal.get("command_id") if isinstance(terminal, dict) else None,
+            "terminalRunner": terminal.get("runner") if isinstance(terminal, dict) else None,
+            "recoveryOwner": "quick-dev-tdd-adapter",
+            "bootstrapInvoked": False,
+            "authorizes": [],
+        }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository-root", type=Path, required=True)

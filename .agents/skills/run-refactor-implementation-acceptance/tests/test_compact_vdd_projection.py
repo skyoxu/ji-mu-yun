@@ -13,7 +13,7 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 from acceptance_core import verify_manifest_bytes  # noqa: E402
-from compact_vdd_projection import InputError, project  # noqa: E402
+from compact_vdd_projection import InputError, project, project_or_quick_dev_recovery  # noqa: E402
 
 
 class CompactVddProjectionTests(unittest.TestCase):
@@ -149,6 +149,28 @@ class CompactVddProjectionTests(unittest.TestCase):
         self.write_request()
         with self.assertRaisesRegex(InputError, "does not match"):
             project(self.root, self.request_path)
+
+    def test_projection_rejects_legacy_or_unbound_implementation_receipts(self) -> None:
+        receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
+        receipt["schema_version"] = "toolchain-workflow-repair.terminal-result.v2"
+        receipt.pop("command_registry_hash")
+        self.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.request["implementationReceiptHash"] = "sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest()
+        self.write_request()
+        with self.assertRaisesRegex(InputError, "does not match"):
+            project(self.root, self.request_path)
+
+    def test_projection_can_emit_non_authorizing_quick_dev_recovery_route(self) -> None:
+        receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
+        receipt["schema_version"] = "toolchain-workflow-repair.terminal-result.v2"
+        self.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.request["implementationReceiptHash"] = "sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest()
+        self.write_request()
+        result = project_or_quick_dev_recovery(self.root, self.request_path)
+        self.assertEqual("quick-dev-terminal-recovery-required.v1", result["schemaVersion"])
+        self.assertEqual("quick-dev-tdd-adapter", result["recoveryOwner"])
+        self.assertFalse(result["bootstrapInvoked"])
+        self.assertEqual([], result["authorizes"])
 
     def test_projection_uses_explicit_baseline_overlay_without_absorbing_prior_dirty_bytes(self) -> None:
         overlay = self.target / "repair/baseline/tool.py"

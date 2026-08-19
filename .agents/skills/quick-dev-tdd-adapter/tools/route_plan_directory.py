@@ -475,6 +475,29 @@ def _terminal_completion_current(repository_root: Path, plan_dir: Path, contract
     terminal = contract.get("terminal")
     if not isinstance(terminal, dict) or terminal.get("predicate") != "implementation-complete":
         return False
+    registry_path = plan_dir / "command-registry.v1.json"
+    canonical_receipts = sorted(
+        (plan_dir / "repair" / "round-1").glob("quick-dev-implementation-complete*.v1.json"),
+        reverse=True,
+    )
+    expected_registry_hash = _sha(registry_path.read_bytes()) if registry_path.is_file() else None
+    for path in canonical_receipts:
+        try:
+            result = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if (
+            result.get("schema_version") == "quick-dev-implementation-complete.v1"
+            and result.get("predicate") == "implementation-complete"
+            and result.get("status") == "pass"
+            and result.get("plan_id") == contract["plan_id"]
+            and result.get("contract_hash") == contract_hash
+            and result.get("command_registry_hash") == expected_registry_hash
+            and result.get("terminal_command_id") == terminal.get("command_id")
+            and result.get("authorizes") == ["implementation-complete"]
+            and isinstance(result.get("validated_command_ids"), list)
+        ):
+            return True
     evidence = repository_root / "logs" / "tdd-adapter" / contract["plan_id"] / "terminal"
     for path in sorted(evidence.glob("*/implementation-complete-result.json"), reverse=True):
         try:

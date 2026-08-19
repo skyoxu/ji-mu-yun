@@ -67,6 +67,7 @@ from bootstrap_integration import (
 from review_requirement import decide_review_requirement
 from semantic_import import finalize_acceptance, project_route
 from deterministic_finalization import finalize_deterministic_run
+from compact_vdd_projection import project_or_quick_dev_recovery
 
 
 def _read_json(path: str) -> object:
@@ -1047,6 +1048,17 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
     return _publish_new_json(str(output), result)
 
 
+def project_compact_vdd_command(repository_root: str, request_path: str, output_path: str) -> dict:
+    """Project compact VDD prerequisites or emit a Quick Dev recovery route.
+
+    The recovery route is non-authorizing and only names the owner handoff;
+    Quick Dev remains responsible for executing its terminal and publishing the
+    successor receipt.  Bootstrap is intentionally outside this path.
+    """
+    result = project_or_quick_dev_recovery(Path(repository_root), Path(request_path))
+    return _publish_new_json(output_path, result)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     subcommands = parser.add_subparsers(dest="command", required=True)
@@ -1063,6 +1075,10 @@ def main() -> int:
     coordinator = subcommands.add_parser("run-coordinator")
     coordinator.add_argument("--request", required=True)
     coordinator.add_argument("--out", required=True)
+    projection = subcommands.add_parser("project-compact-vdd")
+    projection.add_argument("--repository-root", required=True)
+    projection.add_argument("--request", required=True)
+    projection.add_argument("--out", required=True)
     policy = subcommands.add_parser("resolve-code-review-policy", aliases=("resolve-phase-policy",))
     policy.add_argument("--policy", required=True)
     policy.add_argument("--baseline", required=True)
@@ -1212,6 +1228,9 @@ def main() -> int:
         return 0
     if args.command == "run-coordinator":
         print(json.dumps(run_coordinator(args.request, args.out), sort_keys=True))
+        return 0
+    if args.command == "project-compact-vdd":
+        print(json.dumps(project_compact_vdd_command(args.repository_root, args.request, args.out), sort_keys=True))
         return 0
     if args.command in {"resolve-code-review-policy", "resolve-phase-policy"}:
         command = resolve_phase_policy_command if args.command == "resolve-phase-policy" else resolve_code_review_policy_command

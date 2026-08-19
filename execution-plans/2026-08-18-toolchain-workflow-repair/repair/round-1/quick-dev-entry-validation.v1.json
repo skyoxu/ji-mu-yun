@@ -1,6 +1,7 @@
 {
   "authorizes": [],
   "failures": [
+    "skill-input-not-ready",
     "route-not-w0"
   ],
   "lifecycle_transition": "none",
