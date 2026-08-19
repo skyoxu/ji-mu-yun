@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.json",
+    "source_sha256": "sha256:ebdd8b3dfdeeefa873534e9aabbfbee357cb0e1acd8b22d3770cac99dba97b2a",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 798,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:ebdd8b3dfdeeefa873534e9aabbfbee357cb0e1acd8b22d3770cac99dba97b2a"
+  },
+  "status": "accepted",
+  "summary": "schema=vdd.lifecycle.v2; lifecycle states: draft, plan-ready, implementation-authorized, implementation-complete, acceptance-passed, archived; transitions: draft->plan-ready owner=vdd-execution-plan; plan-ready->implementation-authorized owner=maintainer; implementation-authorized->implementation-complete owner=quick-dev-tdd-adapter; implementation-complete->acceptance-passed owner=run-refactor-implementation-acceptance; acceptance-passed->archived owner=archive-skill; bootstrap_review publishes_lifecycle_state=false and required_by_default=false; compatibility_adapter accepts_legacy_input=true, emits_legacy_output=false; implementation_authorization present but redacted"
+}

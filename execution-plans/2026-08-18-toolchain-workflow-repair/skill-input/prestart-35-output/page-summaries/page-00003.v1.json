@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Skill governs deterministic implementation-acceptance evidence for one explicit execution-plans/<target>; does not modify code, approve review, commit, release, or deploy; requires frozen baseline/candidate custody, complete manifests, typed request, action DAG, command registry, implementation contract or compact-VDD bundle, and explicit scope; Quick Dev receipt is authoritative and stale candidate/terminal bindings trigger controlled Quick Dev handoff; create Locator-bound Acceptance knowledge context and typed Skill-input receipt, validate read-set/bytes, stop on ambiguity or blocking drift; derive run identity from canonical input, contract, context, receipt hashes and preserve append-only predecessors; deterministic_only replays receipts and finalizes without Bootstrap; required semantic routes need repository-owned inspect-lineage, prepare-bootstrap, bounded Bootstrap handoff, high-cost/user confirmations where typed, and exact finalized v3 reuse only under current bindings; P2 closes deterministically; P0/P1 repairs require Quick Dev handoff and audit-repair-completeness; three rounds lead manual_pause, with ADR-0054 two-stage closure requiring protocol review, exact mappings, maintainer acknowledgement, and final closure; never infer revisions/scope/changed paths, bypass Locator, copy historical artifacts, hand-author routes/rounds, launch models from deterministic CLI, create Round 4, or authorize delivery."
+}

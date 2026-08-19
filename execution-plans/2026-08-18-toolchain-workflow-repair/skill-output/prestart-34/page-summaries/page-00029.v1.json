@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_skill_input_selection_v2.py",
+    "source_sha256": "sha256:40542680a0060a6d63c258ea69b47010b1f648984503bae08657c3bc17ee5ef1",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 463,
+    "start_line": 1,
+    "end_line": 8,
+    "content_sha256": "sha256:40542680a0060a6d63c258ea69b47010b1f648984503bae08657c3bc17ee5ef1"
+  },
+  "status": "accepted",
+  "summary": "Test ID: typed_selection_keeps_selection_and_content_identity_separate; input: one normative source at docs/input.md, module plan, resource_set core, content hash sha256:a; function: build_typed_source_selection_v2; requirements: sourceSelectionHash and sourceContentHash both present and sha256-prefixed; decision: selection and content identities remain distinct"
+}

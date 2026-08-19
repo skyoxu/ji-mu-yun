@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "vdd-execution-plan applies only to explicit create/repair of complete execution-plan directories; standalone requirements Markdown routes to direct implementation; mandatory pre-reads: solo-maintainer standard, clarification gate, lifecycle contract; select profile before model routing: standard/resumable/self-hosted, least complexity; all normal profiles Sol/high, Sol/max only closed capability-proven recovery; lifecycle: draft>plan-ready>implementation-authorized>implementation-complete>acceptance-passed>archived; VDD owns draft/plan-ready, Quick Dev only implementation-complete; clarify only material boundaries after authority/state inspection; slices declare behavior, failure intent, GREEN/acceptance, dependents, recovery; VDD never executes or publishes RED evidence; repair is in-place repair/round-n, immutable history, original acceptance target; repair requires stabilized affected layer, downstream invalidation, terminal full replay when global/shared changes; Bootstrap optional, lineage family budget max 3 semantic rounds with typed round-3 trigger; repair review requires generated callsite inventory, exclusions, producer-consumer composition receipt, hash-bound changed manifests/scope; mandatory knowledge preflight and typed skill-input gate precede plan artifacts/knowledge freeze; candidate binds Git baseline and frozen range or scoped dirty identity; review optional unless requested/rule-required; resumable/self-hosted require append-only 95 report plus index; completion requires profile artifacts, observable acceptance for active requirements, declared negative/legacy path, stable targeted repair, terminal full validation"
+}

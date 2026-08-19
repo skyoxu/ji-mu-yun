@@ -60,7 +60,8 @@ def main() -> int:
         "authority_manifest": "authority-manifest.v1.json",
         "knowledge_context": "knowledge-context.v1.json",
         "knowledge_context_freeze": "knowledge-context.freeze.v1.json",
-        "plan_validation": "repair/round-1/plan-validation-receipt.v3.json",
+        "plan_validation": "repair/round-1/plan-validation-receipt.v2.json",
+        "plan_ready_revalidation": "repair/round-1/plan-ready-revalidation-receipt.v1.json",
         "repair_closure": "repair/round-1/repair-closure.v1.json",
         "bootstrap_preexisting_delta": "repair/round-1/bootstrap-preexisting-delta.v1.json",
         "candidate_manifest": "repair/round-1/repair-candidate-manifest.v1.json",
@@ -81,8 +82,6 @@ def main() -> int:
         name: {"path": f"{relative}/{path}", "sha256": sha256(plan / path)}
         for name, path in bindings.items()
     }
-    # The revalidation command emits the versioned plan-validation receipt;
-    # bind that exact artifact instead of requiring a second, nonexistent alias.
     candidate_binding_hash = "sha256:" + hashlib.sha256(canonical(receipt_bindings)).hexdigest()
 
     state.update({
@@ -102,7 +101,7 @@ def main() -> int:
         "plan_id": PLAN_ID,
         **receipt_bindings,
         "candidate_binding_hash": candidate_binding_hash,
-        "predecessor_authorization": predecessor,
+        "predecessor_authorization=<redacted>,
         "decision": {
             "owner": "maintainer",
             "transition": "implementation-authorized",

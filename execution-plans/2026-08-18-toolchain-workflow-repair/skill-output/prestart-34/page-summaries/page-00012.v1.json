@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+    "source_sha256": "sha256:d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2560,
+    "start_line": 1,
+    "end_line": 51,
+    "content_sha256": "sha256:d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50"
+  },
+  "status": "accepted",
+  "summary": "ADR-0060 accepted 2026-08-18; v1 Skill-input remains historical and cannot auto-promote to v2 authority; v2 assigns candidate roles: normative_source, authority_source, implementation_input, lifecycle_projection, derived_context, execution_evidence, report, ephemeral_attempt; only first three authorize; compute separate sourceSelectionHash and sourceContentHash; selection binds roles, relative paths, modules, scope, resources, content binds selected bytes; adapter owns transport, pages, continuation validity, coverage, truncation and must not summarize proven-complete coverage as truncated; publish ready receipts only as immutable generations under skill-input-generations/<binding-hash>/; atomically advance validated non-authorizing current pointer; consumers use pointer only, never mtimes, suffixes, scans; execution/publication/semantic-review gates independent; derive Knowledge self-change from changed-set and canonical path policy, not caller flag; attempts require leases/heartbeats; retention protects current pointer, lifecycle/authorization/terminal references, active unexpired attempts; committed evidence deletion needs maintainer approval plus non-authorizing cleanup receipt; migrate all consumers before 8-18 can create new current receipt; existing skill-input-current* directories remain immutable historical evidence pending approved retention; ADR extends 0048, 0050, 0057, 0058, 0059 and supersedes only their v1 selection/current-resolution practices; does not create lifecycle authority, publish Knowledge, or start Bootstrap"
+}

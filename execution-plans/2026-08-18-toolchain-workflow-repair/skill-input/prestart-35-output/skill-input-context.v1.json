@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Repository governance separates VDD planning, Quick Dev implementation, and Acceptance evidence ownership. Lifecycle transitions are explicit and non-authorizing artifacts cannot advance ownership.",
+      "title": "Workflow governance"
+    },
+    {
+      "content": "Typed skill input v2 separates source selection from content identity. Complete adapter coverage, immutable generations, validated current pointers, and bounded redacted context are required for consumers.",
+      "title": "Skill input controls"
+    },
+    {
+      "content": "The toolchain workflow repair plan defines slices W0 through W6 for selection, transport, coverage, knowledge gates, generation pointers, retention, and end-to-end checks. Current findings identify required validator, bridge, receipt, and authorization-predecessor repairs.",
+      "title": "Repair plan"
+    }
+  ],
+  "source_manifest_hash": "sha256:02a857dee983389ed8d5e3e8bb1f2d9f093a6021ad212024380ca432a9ca445c",
+  "truncated": false
+}

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "All listed sources have complete single-page coverage. Summaries are bounded and redacted while preserving source status and key behavioral constraints.",
+      "title": "Coverage"
+    },
+    {
+      "content": "The materials define strict typed skill-input gates, deterministic transport and coverage checks, non-authorizing lifecycle evidence, plan-local validation, TDD progression, immutable receipts, and fail-closed handling for drift or missing inputs.",
+      "title": "Execution Guidance"
+    },
+    {
+      "content": "Repository guidance requires scoped changes, protected-path care, explicit authority ownership, validated evidence, and targeted verification. ADRs govern knowledge selection, publication, recovery, retention, and acceptance evidence.",
+      "title": "Repository Constraints"
+    }
+  ],
+  "source_manifest_hash": "sha256:46ed62dc1669ed081c89a858b7afe019133a36ecc96334995e42c5a8ddfd7e11",
+  "truncated": false
+}

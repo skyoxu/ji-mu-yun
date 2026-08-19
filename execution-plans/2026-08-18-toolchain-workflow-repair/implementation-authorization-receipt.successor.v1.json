@@ -8,12 +8,12 @@
   ],
   "bootstrap_preexisting_delta": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/bootstrap-preexisting-delta.v1.json",
-    "sha256": "sha256:a543a96e8830c5fd7d69b957c103d48c5401aab47195e27ec7e0f501f466b3c9"
+    "sha256": "sha256:9a8ebfd0dca55be1072d94092c72b56664800e7ca3568a4f5068303b6282d58e"
   },
-  "candidate_binding_hash": "sha256:905d60e83efa87b0bbcaa5b43e0aaf7e85377d868061d9eeeb35f0abf07ccfb8",
+  "candidate_binding_hash": "sha256:1f4ab4a23d50eaa16e5311ee942cd6ebef9762d16b3e10693c63d4584affad35",
   "candidate_manifest": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/repair-candidate-manifest.v1.json",
-    "sha256": "sha256:ad9ac6c94c9686dcf582d491fd4bad00fe18b6ec1cc98ae1ba509d72d0151a0c"
+    "sha256": "sha256:e6f74b15af0cc24acc9966b0633747672038ace323e726e45a95830284b000b7"
   },
   "command_registry": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/command-registry.v1.json",
@@ -37,20 +37,24 @@
   },
   "implementation_contract": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
-    "sha256": "sha256:48f9a0383d864027aa7197522e0b2acad752f86ae1a5493074383995e4a766e7"
+    "sha256": "sha256:708a304bf7bd524f3d3a0987810c88509985503bc7840970f742e5bbcd501ecb"
+  },
+  "knowledge_context": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context.v1.json",
+    "sha256": "sha256:6f643b247930f7689e346528c1f59f765d12ab5ddf55879e51c9e1492afa8591"
   },
   "knowledge_context_freeze": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context.freeze.v1.json",
-    "sha256": "sha256:faa1db86b1f53f1729fae912e4b8a289794cd9dbe0184f091ac5800c1272c2d8"
+    "sha256": "sha256:50e67b631940a6e7eb9517249df2514308f5dd24027f4f770cc55906511774e3"
   },
   "plan_id": "toolchain-workflow-repair",
   "plan_validation": {
-    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/plan-validation-receipt.v2.json",
-    "sha256": "sha256:ad58707393cea4dc9b10c684319f07375286661b4b3387100939b70f0f9e3d21"
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/plan-validation-receipt.v3.json",
+    "sha256": "sha256:9bb6da775c0d141e4fd125e4833f00d29b7babfc2eaf0bec0e2cf06585da08d0"
   },
   "predecessor_authorization": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-authorization-receipt.successor.v1.json",
-    "sha256": "sha256:f083ee1e05f7647a375502846026d80df71bb34957cf6f5a65a1104192823071"
+    "sha256": "sha256:14472aec05ca1bee7eaecd32b655c33a759345f53c8ecc80d826f155596dce7e"
   },
   "repair_closure": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/repair-closure.v1.json",
@@ -58,12 +62,12 @@
   },
   "schema_version": "toolchain-workflow-repair.implementation-authorization-receipt.v1",
   "skill_input_receipt": {
-    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-17-receipt.json",
-    "sha256": "sha256:076209586185f8868c8ff6fa6f66be9dbf1fab084027ea41d87e18ae1b28cc3d"
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-35-receipt.json",
+    "sha256": "sha256:df55877ed39e09d40e69d8843dae1a68b3b3e61559594a57a5650d9cb2cab659"
   },
   "skill_input_request": {
-    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-17-request.json",
-    "sha256": "sha256:f09b0e22ead7b23ce3c72f2e800143aa553268ec33de0c438e1b49e3a6794343"
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-35-request.json",
+    "sha256": "sha256:963429969b91ec31e33530ec2d9949a877cc16b6fc798458792440bfe4023366"
   },
   "terminal_validator": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
@@ -71,6 +75,6 @@
   },
   "validate_all": {
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py",
-    "sha256": "sha256:9102b02589759457cf4f6a776b413672492ccbb25a83e3ba81bbb5962f6fac33"
+    "sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7"
   }
 }

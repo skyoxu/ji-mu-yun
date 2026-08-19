@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/finding-set.v1.json",
+    "source_sha256": "sha256:78b930fc1da918f661935c2c7ba78f9c1c7076674d239a04eef16e62f2e04940",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 6167,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:78b930fc1da918f661935c2c7ba78f9c1c7076674d239a04eef16e62f2e04940"
+  },
+  "status": "accepted",
+  "summary": "plan_id=toolchain-workflow-repair; schema=toolchain-workflow-repair.finding-set.v1; 12 open findings; P0: TWR-ENTRY-001 validate_all.py missing plan-local current-candidate projection, consumers quick-dev-tdd-adapter router/build_slice_invocation, tests test_validate_all.py, refs K2/K9; P0: TWR-ENTRY-002..008 validate_plan_ready.py prestart contract incomplete: no real terminal pass/fail path, W0-only migration bridge, receipt lacks full input closure, canonical authorization predecessor overwriteable, authorization gate lacks complete closure verification, shared bootstrap changes incompletely classified, RED-test snapshot coverage incomplete; P1: TWR-ENTRY-009 interim receipt misrepresented as canonical v2 authority; TWR-ENTRY-010 required accepted knowledge modules unspecified; TWR-ENTRY-011 no authorized-repair revalidation; all TWR-ENTRY-002..011 target repair/round-1/tests and ref K2; P1 TWR-ENTRY-012 migration_bridge.py/validate_all.py lack temporary-repository dogfood test, target test_migration_bridge.py, ref K9; all affected-path sets omit 54 paths; no finding authorizations."
+}

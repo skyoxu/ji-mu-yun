@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "knowledge/policies/consumer-policies.v2.json",
+    "source_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2174,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01"
+  },
+  "status": "accepted",
+  "summary": "Policy revision knowledge-consumer-policies.v2; schema jimuyun.knowledge-consumer-policies.v2; vdd: toolchain/phase, freeze before-plan-source-freeze, repository-source only, exact historical matching, up to 20 candidates, medium confidence, repository-rules required, existing-workflow optional, active/conditional/historical visibility; quick-dev: vdd-frozen-context required, historical disallowed, zero candidates, active-only; bootstrap: freeze at artifact-view-prepare, exact historical matching, up to 32 candidates, medium confidence, profile-context required, knowledge-context optional; refactor-acceptance: toolchain/phase/workspace, freeze at acceptance-run-input, exact historical matching, up to 32 candidates, medium confidence, acceptance-scope required, knowledge/governance context optional; shared paths include agent/readme roots and approved agents/docs/plans/knowledge/scripts/runtime prefixes"
+}

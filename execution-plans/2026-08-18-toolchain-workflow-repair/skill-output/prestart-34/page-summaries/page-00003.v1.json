@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "skill=run-refactor-implementation-acceptance; scope=one explicit execution-plans/<target>; non-authorizing: no implementation/approval/protected handoff/commit/release/deploy; default=evidence_only, controlled_validation needs typed commands+isolated roots; candidate=clean HEAD commit preferred else declared frozen snapshot/proposed commits; baseline must be explicit from plan, never infer parent; prerequisites=contract or compact-vdd bundle+baseline/candidate manifests+run request+DAG+command registry+knowledge context+skill-input ready receipt; missing/ambiguous=>prerequisite_blocked; stale Quick Dev receipt binding=>route quick-dev-tdd-adapter terminal loop; canonical Locator knowledge context only; catalog_stale=>degraded continue, other knowledge faults=>knowledge-context-repair-required; worktree byte drift may refresh same read-set only; start-or-resume binds run-input/contract/context hashes and skill-input receipt+contract; derived run ID, drift=>successor, legacy no run-state=>preserve/new run; deterministic-only=>finalize-deterministic-run and may acceptance-passed without Bootstrap; semantic Bootstrap requires immutable decision, fresh inspect-lineage, prepared route, user high-cost acknowledgement before launch; later discovery requires typed proposal+recommendation+confidence+explicit confirmation; exact Bootstrap reuse=v3 clean validated current binding only; P0/P1 repair requires Quick Dev handoff+audit-repair-completeness; max 3 rounds=>manual_pause, special ADR-0054 closure requires protocol review and maintainer acknowledgement; ordinary model route=no-launch, Sol/high only policy triggers; prepare-run requires frozen knowledge context and replayable custody manifests; Phase policy vs toolchain policy selection; changed toolchain path coverage mandatory; coverage denominator=added/modified executable PhaseA.Platform cs lines; command execution only registry descriptors; pass tests/Bootstrap clean alone not Program DoD"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "adapter.py; REPOSITORY_ROOT parents[4], imports strict skill input gate and canonical evidence bytes; prepare requires backend.hidden_state exactly false, shell registry forbidden, declared slice, nonempty contract_hash+validator_hash; prepare routes through require_ready_skill_input consumer quick-dev-tdd-adapter operation execute and records context/binding hashes; lifecycle states prepared->red-observed->green-observed->refactor-verified; RED requires failing exit/nonempty expected_failure_id and tests/docs-only paths; GREEN requires observed RED, passing exit, production-only paths; REFACTOR requires GREEN, passing exit, declared production/tests/docs paths; violations block with RMAP rule diagnostics; candidate only after exact red/green/refactor sequence and remains non-authoritative; resume rejects identity mismatch and failed/stale/superseded runs; protocol stage binding validates one context+attempt, STAGE-{RED|GREEN|REFACTOR}, matching plan/slice/run/attempt, empty authorizes, returns hashes; persistence validates bundle/store, containment, no links/reparse points, immutable artifact conflicts, ordered writes with decisions after attempt evidence, limited observation-file exceptions; execute rejects existing run, prepares/transitions events, requires bundle/store together, persists state recovery document with no authorizations; ambiguity: execute creates run_dir before some later blocked outcomes."
+}

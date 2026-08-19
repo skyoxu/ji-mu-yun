@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "knowledge/policies/consumer-policies.v2.json",
+    "source_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2174,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01"
+  },
+  "status": "accepted",
+  "summary": "id=knowledge-consumer-policies.v2; vdd: freeze=before-plan-source-freeze, repository-source, required=repository-rules, optional=existing-workflow, candidates<=20, confidence>=medium, historical=exact-only; bootstrap: freeze=artifact-view-prepare, required=profile-context, optional=knowledge-context, candidates<=32, confidence>=medium, historical=exact-only; refactor-acceptance: freeze=acceptance-run-input, required=acceptance-scope, optional=knowledge-context|governance-context, candidates<=32, confidence>=medium, historical=exact-only; vdd/bootstrap/refactor exact=AGENTS.md|README.md and shared prefixes=.agents/skills|docs|execution-plans|knowledge|scripts/python|runtime/phase-a; vdd domains=toolchain|phase, bootstrap=same, refactor=toolchain|phase|workspace; vdd/bootstrap/refactor statuses=active|conditional|historical and visibility=active|dependency|conditional; quick-dev: freeze=vdd-owned-context, required=vdd-frozen-context, active repository-source only, visibility=active|dependency, historical=forbidden, candidates=0, confidence=n/a"
+}

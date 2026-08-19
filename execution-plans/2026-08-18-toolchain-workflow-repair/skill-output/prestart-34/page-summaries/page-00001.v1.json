@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "skill: quick-dev-tdd-adapter; scope: explicit execution-plans target with schema-valid implementation-contract.v1.json only; routing: parent router first with caller quick-dev-tdd-adapter, require lane strict_tdd_plan and matching backend; reject standalone/compact/missing/invalid contracts and routing failures; target isolation: supplied plan dir/file under execution-plans only, inspect target dir only, one valid 95-*.md report max; continuity: report and logs/tdd-adapter/<plan-id>/run-state.v1.json non-authorizing; lifecycle: audit/repair/validate/refreeze identities before RED; loop: loop_plan_directory before expensive action, run_slice_lifecycle-generated artifacts only; TDD: shell-free structured RED expected nonzero before write, then minimal GREEN/refactor/slice predicate; reject newly generated VDD plans containing RED/run bindings; progression: auto-route unlocked slices; stale candidate receipt reruns controlled terminal path as successor; stop terminal/external repair/repeated fingerprint; terminal: implementation-complete only, acceptance external; input gate: typed skill-input receipt/request/semantic child, validate ready before selection/prepare/RED, failures route repair; routing: derive closed facts, highest class architectural>complex>small_mechanical>normal, uncertainty blocked complex, override upgrade-only, decision non-authorizing; knowledge: frozen context/hash verification before RED, mismatch VDD repair or VDD-owned refresh; unattended: persistent_plan_loop, explicit existing snapshot paths or exact planned_new_files bridge rules; authority: only registered plan-local predicate authorizes declared state; boundaries: shell:false descriptors; reject all authority/identity/write/read/dependency/baseline/predecessor drift; preserve failures as stale-linked successors; no Stock BMAD authority; P0/P1 terminal invokes specified acceptance handoff/audit without selecting acceptance/Bootstrap; pre-slice references required: implementation backend, TDD protocol, evidence freshness; commit gate: Context7 exact pinned versions only for version-sensitive diffs; repository-only gate N/A"
+}

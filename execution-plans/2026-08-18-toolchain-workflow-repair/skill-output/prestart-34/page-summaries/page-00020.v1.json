@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py",
+    "source_sha256": "sha256:9303a60cfbd6759dff47a15cf8af00adc92101bb276521d129a3082cae874aaa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5832,
+    "start_line": 1,
+    "end_line": 124,
+    "content_sha256": "sha256:9303a60cfbd6759dff47a15cf8af00adc92101bb276521d129a3082cae874aaa"
+  },
+  "status": "accepted",
+  "summary": "PLAN_ID=toolchain-workflow-repair; CLI requires repository root, plan dir, output, skill-input receipt; canonical output is implementation-authorization-receipt.successor.v1.json; contract and state/resume files are validated; supports initial plan-ready authorization or explicit successor refresh with predecessor receipt; binds contract, registries, manifests, validation/repair receipts, validators, immutable predecessor, and in-plan skill input; computes binding hash; updates state/resume to implementation-authorized and run-slice; emits maintainer decision and explicit non-authorizations for completion, acceptance, publication, bootstrap, release; appends completion report; apparent malformed receipt dictionary key involving predecessor authorization is an implementation ambiguity."
+}

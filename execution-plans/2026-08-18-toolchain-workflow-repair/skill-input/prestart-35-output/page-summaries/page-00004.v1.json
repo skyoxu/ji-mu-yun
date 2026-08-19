@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "Skill vdd-execution-plan: use only for explicit complete plan directory create/repair; standalone requirements Markdown routes direct implementation; profiles standard/resumable/self-hosted selected before model route; mandatory authority, clarification, lifecycle, knowledge, and input-contract reads/gates; lifecycle draft>plan-ready>implementation-authorized>implementation-complete>acceptance-passed>archived with distinct owners; plans declare slices, failure intent, acceptance, dependents, recovery but VDD never executes/emits RED evidence; repair is in-place under repair/round-n with immutable history, bounded lineage rounds, callsite inventory, hash-bound manifests, composition receipts, full replay when global impact; knowledge preflight and typed semantic child receipt must pass before plan artifacts/plan-ready; bind Git baseline/current candidate and normative hashes; review optional unless required, scope minimal complete closure; resumable/self-hosted require indexed append-only 95 report; completion requires required profile artifacts, observable acceptance, recorded negative/legacy path, stable targeted checks, and current terminal full validation"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py",
+    "source_sha256": "sha256:9303a60cfbd6759dff47a15cf8af00adc92101bb276521d129a3082cae874aaa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5832,
+    "start_line": 1,
+    "end_line": 124,
+    "content_sha256": "sha256:9303a60cfbd6759dff47a15cf8af00adc92101bb276521d129a3082cae874aaa"
+  },
+  "status": "accepted",
+  "summary": "publish_implementation_authorization.py; PLAN_ID=toolchain-workflow-repair; CLI requires repository-root, plan-dir, out, skill-input-receipt; optional refresh-authorized-successor; canonical output implementation-authorization-receipt.successor.v1.json; validates contract plan_id/output; transition allowed from plan-ready or explicit authorized-successor refresh; refresh requires predecessor receipt and authorizes=[plan-ready,implementation-authorized]; binds contract/registry/authority/knowledge/validation/repair/tools/predecessor/skill receipt artifacts with SHA-256; optional derived skill request binding; candidate_binding_hash is canonical JSON SHA-256; updates plan-state to implementation-authorized owner=maintainer; updates resume next_action=run-slice; receipt limits authorization to implementation-authorized and denies completion/acceptance/publication/bootstrap/release; appends report entry; critical syntax defect: malformed predecessor_authorization field (unterminated string) prevents parsing/execution; intended predecessor value is ambiguous and never incorporated despite computed predecessor."
+}

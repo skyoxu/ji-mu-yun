@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+    "source_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4685,
+    "start_line": 1,
+    "end_line": 88,
+    "content_sha256": "sha256:6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3"
+  },
+  "status": "accepted",
+  "summary": "ADR-0050 accepted 2026-07-29; extends ADR-0048, complements but does not supersede ADR-0044/0048; sole formal LKG recovery: publish_knowledge_catalog.py --restore-lkg; recovery lock plus LKG/generation/artifact/source/policy/query/main verification; stale LKG allowed only ancestor with all indexed and bundled inputs byte-matching main; restore source snapshot, v2 catalog, consumer projections, v1 compatibility catalog; validate current publication, replay query gate, canonical Locator smoke; stale LKG never promotes over newer main; rollback domain=four layers/current/LKG/success evidence, current written last; activation/restore failures preserve generation and verify rollback bytes; publication control-plane scripts must byte-match pinned main; lock recovery only dead/reused owner or malformed lock after 60s, otherwise conflict; pruning only explicit prune_knowledge_generations.py --prune, never publication/recovery; protect current/LKG/five newest valid successful added-to-main generations; retention ordering excludes mtime; invalid/uncommitted/unrecognized dirs report-only; pruning policy from current main, intent+per-target authorization+atomic isolation+outcome evidence; failure evidence append-only logs/knowledge-context and never pruned; retention changes require policy and ADR update"
+}

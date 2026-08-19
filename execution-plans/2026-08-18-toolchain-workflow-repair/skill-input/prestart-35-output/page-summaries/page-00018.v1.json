@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/requirements-and-acceptance.md",
+    "source_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5019,
+    "start_line": 1,
+    "end_line": 105,
+    "content_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48"
+  },
+  "status": "accepted",
+  "summary": "purpose: repair toolchain orchestration without stale-context/transport hard gates; Knowledge authority never auto-published; TWR-W0 typed consumer/policy/module/resource-set/authority/path selection with canonical identity and fail-closed omission/ambiguity/authority drift; TWR-W1 adapter owns paging/chunking/retries and continuation binding; TWR-W2 adapter proves byte/line/hash coverage, model summaries non-authoritative; TWR-W3 separate execution/publication/review gates; degraded verified successor allowed only unchanged semantics; invalid LKG, selection/authority drift, missing required sources, publication-integrity failure block typed; acceptance does not publish Knowledge or auto-start Bootstrap; TWR-W4 validator/coordinator owns immutable receipts in versioned generations; receipt binds candidate/contract/registry/authority/Skill input/Knowledge freeze/validator; pointer advances only fully validated receipt; replay reuse or byte-identical successor; TWR-W5 attempts under .skill-input-work/<plan-id>/<attempt-id>, lifecycle/lease/heartbeat; retention protects current/references/unexpired leases; dry-run candidates, apply explicit maintainer approval and cleanup receipt; TWR-W6 non-authorizing E2E from selection through retention, invalid artifact cannot advance pointer; ownership VDD draft+plan-ready, Maintainer implementation authorization, Quick Dev implementation-complete, Acceptance acceptance-passed; no new lifecycle authority"
+}

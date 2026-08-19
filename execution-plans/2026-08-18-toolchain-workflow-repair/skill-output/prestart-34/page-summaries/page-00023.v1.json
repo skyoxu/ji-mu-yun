@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py",
+    "source_sha256": "sha256:77866eeee59a477fd0dd12e8797f3103fe61bf2a1b31fa1c3c9edae7661bce7d",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 12028,
+    "start_line": 1,
+    "end_line": 217,
+    "content_sha256": "sha256:77866eeee59a477fd0dd12e8797f3103fe61bf2a1b31fa1c3c9edae7661bce7d"
+  },
+  "status": "accepted",
+  "summary": "PLAN_ID=toolchain-workflow-repair; required slices W0-W6 and listed contract/registry/authority/resume/architecture/delta/skill-input/knowledge artifacts plus 3 tools; contract profile=self-hosted, all slices TDD; command registry requires plan-ready, terminal-full, and green/terminal commands for W0-W6; authority manifest partitions sources, candidates, lifecycle projections; draft authorizes=[]; plan-ready requires vdd publication authorizing only plan-ready and binding validation receipt hash; authorized-repair mode requires implementation-authorized state plus round-1 validating repair state, blocks_execution=true, authorizes=[]; resume and delta authorizations must be empty; architecture status accepted with decisions; delta baseline=2556ea78f41657e5a740016ff97da0b0614631ea, candidate=a2ded39b0f67dcbe5f27acedb56c0bafbd3f3fc5, exact expected paths and Git-bound hashes, disposition pre-existing-regression-or-repair-input; canonical skill-input receipt is required, inside plan/skill-input, validated ready; knowledge preflight ready, freeze authorizes=[], accepted modules must include skill-input-execution and knowledge-execution-gates; output status pass/fail with failures, authorizes=[], lifecycle_transition=none; optional output writes validator input manifest and result; exit 0 only without failures"
+}

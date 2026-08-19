@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py",
+    "source_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 6863,
+    "start_line": 1,
+    "end_line": 143,
+    "content_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7"
+  },
+  "status": "accepted",
+  "summary": "Plan ID toolchain-workflow-repair; slices W0-W6; identity uses canonical sorted JSON and SHA-256; repository paths must be relative, non-traversing, non-symlink, and remain within root; logs/ and plan-state.v1.json/resume-state.v1.json excluded; contract must match plan ID and contain slice list; candidate manifest combines allowed_changes and planned_new_files, normalizing tools/ paths into plan tools directory; dependencies include current candidate hashes; predicate includes selected slice, implementation contract, command registry, and candidate; authority inputs: authority manifest, ADR-0060, skill-input contract, lifecycle-state contract, consumer policies; validator inputs include validate_all, validate_plan_ready, terminal_full, migration_bridge, and quick-dev routing/build/loop tools; outputs include candidate, predicate, authority, validator, closure-definition, and validator hashes plus fixed validator version; missing files represented absent; invalid slice/path/contract raises ValueError; validation snapshot aggregates all seven slices."
+}

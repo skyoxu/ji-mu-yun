@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/repair-closure.v1.json",
+    "source_sha256": "sha256:353820f8001305380d540d312f4488c6b0c6b73648ca2c9c60a17a1ffbbc2cd3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1649,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:353820f8001305380d540d312f4488c6b0c6b73648ca2c9c60a17a1ffbbc2cd3"
+  },
+  "status": "accepted",
+  "summary": "repair-closure v1; plan_id=toolchain-workflow-repair; status=pass; lifecycle_transition=none; failures=[]; authorizes=[]; requires=plan-validation-pass,pre-existing-delta,authorization-predecessor; bindings present: authorization-predecessor.2050ec68 redacted, baseline-manifest.2050ec68, bootstrap-preexisting-delta, finding-set, historical-artifact-disposition, plan-validation-receipt.v2.json, repair-candidate-manifest, repair-changed-set, repair-state; all bound artifacts include paths and SHA-256 digests"
+}

@@ -503,7 +503,6 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                     "skill_input_receipt",
                     "skill_input_request",
                     "plan_validation",
-                    "plan_ready_revalidation",
                     "repair_closure",
                     "bootstrap_preexisting_delta",
                     "candidate_manifest",

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "skill=quick-dev-tdd-adapter; scope=explicit execution-plans target with schema-valid implementation-contract.v1.json only; reject standalone/compact/missing/invalid contracts; pre-route via parent with caller=quick-dev-tdd-adapter and require lane=strict_tdd_plan/backend match; target paths confined to one plan directory; resolve max one 95-*.md or fail to VDD repair; reports/run-state non-authorizing; loop_plan_directory before expensive actions; run slices via run_slice_lifecycle and generated artifacts only; RED must be shell-free, observed failing, after identity freeze and before production write; then GREEN/refactor/slice predicate; no RED data in new VDD plans; auto-progress unlocked slices; terminal=implementation-complete only under plan-local predicate; acceptance/review/commit/release external; skill-input typed receipt/request/semantic child gate must be ready before action/prepare/RED; model classification highest trigger architectural|complex|small_mechanical|normal; unknown=>blocked complex; decision non-authorizing and adapter neither selects provider nor launches model; frozen knowledge/context hashes must verify or VDD repair; persistent loop requires explicit valid snapshot paths and bounded planned_new_files bridge; structured shell:false commands only; reject all identity/authority/write/read/dependency/baseline/predecessor drift; preserve failed evidence with successor runs; read required backend/TDD/evidence references before slice implementation; version gate applies before caller commit; no Stock BMAD authority."
+}

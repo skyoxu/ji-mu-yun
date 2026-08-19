@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "source_sha256": "sha256:5745d62e6c0dfca067ea9d45c25f9360789bed47faae5d03ba0a91ac0a25009b",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 11532,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:5745d62e6c0dfca067ea9d45c25f9360789bed47faae5d03ba0a91ac0a25009b"
+  },
+  "status": "accepted",
+  "summary": "plan_id=toolchain-workflow-repair; profile=self-hosted; owner=quick-dev-tdd-adapter; bridge=tools/migration_bridge.py; authority manifest=authority-manifest.v1.json; registry=command-registry.v1.json; hidden_state=false; terminal=terminal-full via tools/terminal_full.py predicate=implementation-complete; ordered slices W0,W1,W2,W3,W4,W5,W6; all slices require red->green->refactor and slice-ready terminal command; W0 canonical typed source selection, TWR-W0/TWR-W0-EXIT, no deps, typed role rebuild/hash mismatch fail-closed; W1 automatic transport, depends W0, continuation tokens bind selected content hash/reject drift; W2 adapter-owned coverage, depends W0/W1, readiness only adapter-observed coverage; W3 knowledge three-gate projection, depends W0, selection drift/self-change explicit review; W4 immutable generation/current pointer, depends W0/W1/W2, replay reuse and failed staging no pointer advance; W5 retention/approval-gated GC, depends W4, dry-run default and apply requires maintainer approval for committed evidence; W6 E2E migration, depends all prior, proves selection through retention without lifecycle/publishing Knowledge authority; common forbidden scope includes PhaseA.Platform, runtime/phase-a, logs; W0/W5/W6 also forbid prior acceptance-coordinator plan; W3 also forbids knowledge catalogs/indexes; allowed paths and planned tests are slice-specific in contract."
+}
