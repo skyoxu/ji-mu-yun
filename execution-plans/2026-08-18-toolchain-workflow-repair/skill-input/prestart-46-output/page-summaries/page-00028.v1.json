@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_skill_input_transport_auto.py",
+    "source_sha256": "sha256:ad5ded466f5b603bfdddf45d434647b21c4fe14c077bd56224c73c78543ead34",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 347,
+    "start_line": 1,
+    "end_line": 7,
+    "content_sha256": "sha256:ad5ded466f5b603bfdddf45d434647b21c4fe14c077bd56224c73c78543ead34"
+  },
+  "status": "accepted",
+  "summary": "Python test imports scripts.python.skill_input_transport as transport; test_transport_resume_preserves_content_identity plans transport with sizes 32768 and 1048576 plus SHA-256 identifier of 64 lowercase a characters; resume_transport receives the plan and identical hash; requirement: resumed content_hash equals planned content_hash."
+}

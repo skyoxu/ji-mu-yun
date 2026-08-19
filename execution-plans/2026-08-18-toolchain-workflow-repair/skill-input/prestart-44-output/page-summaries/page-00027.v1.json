@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_skill_input_selection_v2.py",
+    "source_sha256": "sha256:40542680a0060a6d63c258ea69b47010b1f648984503bae08657c3bc17ee5ef1",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 463,
+    "start_line": 1,
+    "end_line": 8,
+    "content_sha256": "sha256:40542680a0060a6d63c258ea69b47010b1f648984503bae08657c3bc17ee5ef1"
+  },
+  "status": "accepted",
+  "summary": "Test `test_typed_selection_keeps_selection_and_content_identity_separate` imports `skill_input_consumption`; builds typed selection from one normative source (`docs/input.md`, module `plan`, resource set `core`, sha256:a); requires distinct `sourceSelectionHash` and `sourceContentHash`, each prefixed `sha256:`."
+}

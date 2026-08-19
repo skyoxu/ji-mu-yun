@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "项目为 Ji Mu Yun Phase A/B 云原型平台；严格分离工具链、Phase 服务、用户沙箱三层权限；按任务路由读取最小必要入口及最近 AGENTS.md；优先 FastCtx，明确不可用后方可切换 Windows 命令面；中文沟通，代码与日志用英文，禁用 emoji；中文写入须 Python 显式 UTF-8；保留用户改动，禁止破坏性操作及禁用测试；受保护路径、高风险配置、认证、共享 LLM/Codex、运行时脚本修改前须询问；代码或测试变更引用 Accepted ADR；API 默认向后兼容，破坏性变更需批准和兼容计划；数据库变更须保留数据并提供迁移或恢复路径；禁止手工修改实时数据库、提交或泄露密钥；Hosted 路由恢复按规定八类来源顺序，缺失即关闭，实时阻塞优先；LLM/Codex 使用统一架构和 UTF-8 stdin，写入需可执行路由、workspace-write 与验收；运行时先本地健康检查，禁用 plain dotnet run，追加证据；workflow.md 仅允许列表触发，普通工作不得进入完整交付编排；完成必须由当前机器证据、验证、测试或 smoke 支撑，证据追加至 logs 且保留历史失败；AGENTS.md 目标 6000-8000 字符，硬上限 10000。"
+}

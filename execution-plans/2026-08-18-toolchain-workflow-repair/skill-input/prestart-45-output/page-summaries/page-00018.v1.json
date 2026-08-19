@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py",
+    "source_sha256": "sha256:e17b3aadbb0c8c4c8f563bd07c885aaed45b7d692a61b6699ec5ef7c6ee92af8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 8206,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:e17b3aadbb0c8c4c8f563bd07c885aaed45b7d692a61b6699ec5ef7c6ee92af8"
+  },
+  "status": "accepted",
+  "summary": "PLAN_ID=toolchain-workflow-repair; requires repository-root, plan-dir, canonical out path, and in-plan ready skill-input receipt; validates implementation contract, plan/resume state, and skill-input contract; only plan-ready state authorizes initial transition; authorized-state refresh requires explicit flag and existing predecessor receipt; refresh snapshots prior authorization receipt under hashed immutable predecessor path; binds contract, registry, authority, knowledge, validation, repair, candidate, validator, and predecessor artifacts; records skill-input source/context/semantic/child hashes and generation root; updates plan and resume status to implementation-authorized with next_action=run-slice; emits canonical implementation-authorization receipt; authorizes implementation-authorized only; explicitly excludes completion, acceptance, knowledge publication, bootstrap review, and release; appends maintainer authorization report; receipt contains unusual literal predecessor_authorization=<redacted>; fallback predecessor filename embeds fixed hash prefix when no predecessor exists"
+}

@@ -22,7 +22,8 @@ def main() -> int:
         failures.append('authorization-receipt-missing')
     else:
         receipt = json.loads(authorization.read_text(encoding='utf-8'))
-        binding = receipt.get('skill_input_receipt')
+        generation = receipt.get('skill_input_generation')
+        binding = generation.get('receipt') if isinstance(generation, dict) else receipt.get('skill_input_receipt')
         if not isinstance(binding, dict) or not isinstance(binding.get('path'), str):
             failures.append('skill-input-binding-missing')
         else:

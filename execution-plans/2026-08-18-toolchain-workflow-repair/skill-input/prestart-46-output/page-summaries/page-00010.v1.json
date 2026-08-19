@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0058-acceptance-coordinator-persisted-evidence-ownership.md",
+    "source_sha256": "sha256:fdd3fbdbb08e7e3b8654307d95aede6776ee749b34a7ff3311748d7d6f98df6b",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1399,
+    "start_line": 1,
+    "end_line": 36,
+    "content_sha256": "sha256:fdd3fbdbb08e7e3b8654307d95aede6776ee749b34a7ff3311748d7d6f98df6b"
+  },
+  "status": "accepted",
+  "summary": "ADR-0058 accepted 2026-08-18; persisted Acceptance runs, action DAGs, events, command registries, route projections, and receipts are authoritative evidence; requests identify only target plan and prepared run input; caller route/lifecycle claims lack authority; action results bind run, event, registry, candidate, contract, Knowledge, Skill-input, and validator identities; v2 request data is historical-only; Bootstrap ownership and automatic startup remain excluded; replayable/reentrant coordination; caller-complete graphs, mismatched receipts, and unregistered actions rejected; Acceptance alone owns acceptance-passed; no release or commit authority"
+}

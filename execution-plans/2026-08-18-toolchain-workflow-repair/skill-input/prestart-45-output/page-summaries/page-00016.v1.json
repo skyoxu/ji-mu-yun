@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/requirements-and-acceptance.md",
+    "source_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5019,
+    "start_line": 1,
+    "end_line": 105,
+    "content_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48"
+  },
+  "status": "accepted",
+  "summary": "Purpose: repair toolchain orchestration without automatic Knowledge-authority publication; TWR-W0 typed source selection with canonical independently verifiable identity and fail-closed omission/ambiguity/authority drift; TWR-W1 adapter-owned deterministic pagination/chunking/retries with continuation bound to selection and source identity; TWR-W2 adapter proves byte/line/hash coverage, rejects gaps/conflicts/source changes, model cannot complete incomplete reads; TWR-W3 separate execution/publication/review gates, permit verified degraded successor only when semantics unchanged, preserve blocking for invalid LKG/drift/missing sources/integrity failure, never auto-publish or auto-start Bootstrap; TWR-W4 validator/coordinator creates immutable versioned receipts binding candidate, contract, registry, authority envelope, Skill-input receipt, Knowledge freeze, validator, with validated-only current-pointer advancement and replay stability; TWR-W5 retain protected generations/references/leases, deterministic dry-run candidates, approval-gated apply, non-authorizing cleanup receipt; TWR-W6 non-authorizing end-to-end proof from selection through retention, current pointer resolves valid generation and invalid artifacts cannot advance; attempts under .skill-input-work/<plan-id>/<attempt-id>/ with lifecycle and active lease/heartbeat; ownership: VDD draft/plan-ready, Maintainer implementation authorization, Quick Dev implementation-complete, Acceptance acceptance-passed; no new lifecycle authority."
+}

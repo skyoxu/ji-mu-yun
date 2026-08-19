@@ -119,15 +119,16 @@ def main() -> int:
         validated_input = validate_receipt(skill_input, root, skill_input_contract, require_ready=True)
     except ReceiptValidationError as exc:
         raise ValueError(f"skill input generation is not ready: {exc}") from exc
-    identity = validated_input["repository_identity"]
+    ready_receipt = json.loads(skill_input.read_text(encoding="utf-8"))
+    identity = ready_receipt["repository_identity"]
     generation = {
         "schema_version": "skill-input-generation.v1",
         "receipt": binding(root, skill_input),
         "source_selection_hash": identity["source_selection_hash"],
         "selected_source_content_root": identity["selected_source_content_root"],
-        "context_hash": validated_input["context_artifact"]["sha256"],
-        "semantic_decision_hash": validated_input["semantic_decision"]["sha256"],
-        "child_request_hash": validated_input["child_request"]["sha256"],
+        "context_hash": ready_receipt["context_artifact"]["sha256"],
+        "semantic_decision_hash": ready_receipt["semantic_decision"]["sha256"],
+        "child_request_hash": ready_receipt["child_request"]["sha256"],
     }
     generation["generation_root"] = canonical_hash(generation)
     receipt_bindings = {

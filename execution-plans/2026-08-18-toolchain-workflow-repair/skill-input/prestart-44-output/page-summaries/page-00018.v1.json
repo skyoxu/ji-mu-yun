@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py",
+    "source_sha256": "sha256:4c3fd301ccc00f6ba896a6808128c3e7f75e8008b6c017f67775aa99af56b926",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 8142,
+    "start_line": 1,
+    "end_line": 178,
+    "content_sha256": "sha256:4c3fd301ccc00f6ba896a6808128c3e7f75e8008b6c017f67775aa99af56b926"
+  },
+  "status": "accepted",
+  "summary": "PLAN_ID=toolchain-workflow-repair; CLI requires repository-root, plan-dir, out, skill-input-receipt; canonical output is implementation-authorization-receipt.successor.v1.json; contract plan_id and output path must match; initial state must be plan-ready with authorizes=[plan-ready]; authorized refresh requires explicit flag, matching authorizes, and predecessor receipt; refresh snapshots predecessor exclusively under repair/round-1; skill receipt must reside inside plan and validate ready against quick-dev-tdd-adapter contract; receipt binds contract, registries, context, validation, closure, candidate, validators, predecessor, and skill-input generation; generation_root and candidate_binding_hash use canonical hashing; state/resume transition to implementation-authorized and next_action=run-slice; decision owner=maintainer and reason=explicit-maintainer-authorization; authorization excludes completion, acceptance, publication, bootstrap review, and release; report is appended and pass JSON printed; source contains malformed/redacted predecessor_authorization entry, making the shown snapshot invalid Python and leaving that receipt field ambiguous; state files are updated before receipt/report, so failures can leave partial transition."
+}

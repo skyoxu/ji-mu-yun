@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "knowledge/policies/consumer-policies.v2.json",
+    "source_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2174,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:180abbbfad80f80a3f0e8effabad690f49e8962d233ec8d484466d5d5ea43a01"
+  },
+  "status": "accepted",
+  "summary": "schema=jimuyun.knowledge-consumer-policies.v2; revision=knowledge-consumer-policies.v2; vdd: freeze before-plan-source-freeze, repository-source, requires repository-rules, optional existing-workflow, exact-only history, max 20, confidence>=medium; quick-dev: freeze vdd-owned-context, repository-source, requires vdd-frozen-context, history forbidden, active only, max 0, confidence N/A; bootstrap: freeze artifact-view-prepare, repository-source, requires profile-context, optional knowledge-context, exact-only history, max 32, confidence>=medium; refactor-acceptance: toolchain/phase/workspace, freeze acceptance-run-input, repository-source, requires acceptance-scope, optional knowledge-context and governance-context, exact-only history, max 32, confidence>=medium; vdd/bootstrap/refactor exact paths AGENTS.md and README.md plus prefixes .agents/skills/, docs/, execution-plans/, knowledge/, scripts/python/, runtime/phase-a/; vdd/bootstrap/refactor admit active/conditional/historical statuses and active/dependency/conditional visibility; quick-dev admits active status and active/dependency visibility"
+}

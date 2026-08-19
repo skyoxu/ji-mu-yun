@@ -7,7 +7,7 @@
     "consumer": "quick-dev-tdd-adapter",
     "operation": "execute",
     "target": "execution-plans/2026-08-18-toolchain-workflow-repair",
-    "route_identity": "quick-dev.self_hosted.toolchain-workflow-repair.prestart-44",
+    "route_identity": "quick-dev.self_hosted.toolchain-workflow-repair.prestart-46",
     "source_roles": {
       "plan_directory": [
         "execution-plans/2026-08-18-toolchain-workflow-repair"
@@ -23,26 +23,26 @@
       ]
     }
   },
-  "request_hash": "sha256:7bc98ac240ac4b843c48320ea439b6cddc0a14bc7bf78a739cbf771b19f55476",
+  "request_hash": "sha256:1e6129e8c0ffbeed7dcb3cc73ad2d6bba4d4620b0bbce1ec9a95a5794f42d7b7",
   "target": "execution-plans/2026-08-18-toolchain-workflow-repair",
-  "route_identity": "quick-dev.self_hosted.toolchain-workflow-repair.prestart-44",
+  "route_identity": "quick-dev.self_hosted.toolchain-workflow-repair.prestart-46",
   "repository_identity": {
-    "head": "1f8f905a069fe6420f9aee1cfd70eab1c01e8c79",
+    "head": "0e1f8c3977b3e23a4292f2e6b5556592e62dfef5",
     "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "scoped_worktree_hash": "sha256:cfc297e4d5fb09b833dfc9feaa1830f93ac45528f9fddb73d281ede29ca7aaf6",
-    "source_selection_hash": "sha256:7a3830be2414a0bc171191ebeb586b643b8c943c21e5069fbc690a19fbfb5c05",
-    "selected_source_content_root": "sha256:0b8ce1f7b65fda3bbb35769e1812a52604d5d7f40650af3e3ecf100040c12311"
+    "scoped_worktree_hash": "sha256:953712f58b666d6384e4d3acc6012faeca25284ca856c4c9d75a70e46fce7c3f",
+    "source_selection_hash": "sha256:89b5e9a34aea65239a0f3eac92631e4313a534c45181c41a69dd6c2ba8e5b83e",
+    "selected_source_content_root": "sha256:d977a8f1a05dc0a0ea1d0eb54b7b511f92fa8a2aa384d9cc9ed0b5f2dafd831f"
   },
   "adapter_version": "skill-input-adapter.v1",
-  "created_at": "2026-08-19T10:57:59.576333Z",
+  "created_at": "2026-08-19T11:48:55.598773Z",
   "contract_hash": "sha256:60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374",
   "source_manifest": {
-    "path": "prestart-44/source-manifest.v1.json",
-    "sha256": "sha256:948b76d3fa79b3bb5fba4bf1a4826b2443b067f04a9ea4eac6151401ee338676"
+    "path": "prestart-46/source-manifest.v1.json",
+    "sha256": "sha256:8542a3d0c9a0bfc6f405e49d53d5986ddd62ed9da2fb23f47aa506151ac85fcc"
   },
   "child_request": {
-    "path": "prestart-44-request.json",
-    "sha256": "sha256:e4b5b714d8c482b1e41b725e55e20e9ee39246f41cd48f5b523be831352f4cc3"
+    "path": "prestart-46-request.json",
+    "sha256": "sha256:5f98ee6dc91168e90ce3a8e79ed9e267fc62d526be7540a0d1d8639aac7c12fc"
   },
   "sources": [
     {
@@ -388,18 +388,18 @@
     {
       "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py",
       "required": true,
-      "sha256_before": "sha256:dcfb83ef8985ca62b6eb7959a40ff20f520bcf7cc50a74f448a8f504052d2de6",
-      "sha256_after": "sha256:dcfb83ef8985ca62b6eb7959a40ff20f520bcf7cc50a74f448a8f504052d2de6",
-      "size_bytes": 8145,
-      "line_count": 177,
+      "sha256_before": "sha256:8c1eae253af3113445e7939042b60a975692048eb69d2fa319b69258d787ac51",
+      "sha256_after": "sha256:8c1eae253af3113445e7939042b60a975692048eb69d2fa319b69258d787ac51",
+      "size_bytes": 8209,
+      "line_count": 178,
       "sensitivity": "credential-bearing",
-      "semantic_snapshot_sha256": "sha256:4c3fd301ccc00f6ba896a6808128c3e7f75e8008b6c017f67775aa99af56b926",
+      "semantic_snapshot_sha256": "sha256:e17b3aadbb0c8c4c8f563bd07c885aaed45b7d692a61b6699ec5ef7c6ee92af8",
       "redaction_status": "complete",
       "ranges_consumed": [
         {
           "unit": "line",
           "start": 1,
-          "end": 177
+          "end": 178
         }
       ],
       "transport_status": "complete",
@@ -629,15 +629,15 @@
   "missing_sources": [],
   "changed_sources": [],
   "semantic_decision": {
-    "path": "prestart-44-output/semantic-decision.v1.json",
-    "sha256": "sha256:72337b6feb4274e3cdfd793b5d81ecfa2f2cd68eb0fa0d5f7208f7bbf9fb6b2e"
+    "path": "prestart-46-output/semantic-decision.v1.json",
+    "sha256": "sha256:cb91d322d873d3af22ea10a624a895bbbbcae33d09dd2f8a5af9ec0e0950a943"
   },
   "context_artifact": {
-    "path": "prestart-44-output/skill-input-context.v1.json",
-    "sha256": "sha256:eed31607693026d7aa30122ae54c203fbd08d97387050b4e9ca5393b2d87e1d5"
+    "path": "prestart-46-output/skill-input-context.v1.json",
+    "sha256": "sha256:17fa8beb70615054547656f217edc155441d17b8cd4266a2ac4311d280b86f07"
   },
   "diagnostic_authorization": null,
   "authorizes": [],
   "ready": true,
-  "binding_hash": "sha256:964539ca8042915ade1d0ccd94dc70ca87f61df6caa93ed423f5ddc7a192c96f"
+  "binding_hash": "sha256:999b4e2c316d90826ad8ad2701d0722842b94ef29e1e2291a428a95c555cab0e"
 }

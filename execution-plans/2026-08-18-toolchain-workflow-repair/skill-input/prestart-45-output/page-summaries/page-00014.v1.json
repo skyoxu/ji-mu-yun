@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/command-registry.v1.json",
+    "source_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4240,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0"
+  },
+  "status": "accepted",
+  "summary": "schema=toolchain-workflow-repair.command-registry.v1; 19 commands; all cwd repo_path '.', executable=py, shell=false, argv starts -3 -B; w0-green..w6-green run six focused tests plus workflow E2E; w0-terminal..w6-terminal duplicate green tests; focused tests cover selection_v2, transport_auto, coverage_v2, knowledge_gate_matrix, generation_pointer, retention; skill-input-suite runs test_skill_input_consumption.py; knowledge-suite reruns test_knowledge_gate_matrix.py; workflow-repair-e2e reruns test_toolchain_workflow_repair_e2e.py; plan-ready invokes tools/validate_plan_ready.py with repository-root . and plan-dir execution-plans/2026-08-18-toolchain-workflow-repair; terminal-full invokes tools/terminal_full.py with same arguments; default timeout 300s; E2E commands timeout 600s; terminal-full timeout 1800s"
+}

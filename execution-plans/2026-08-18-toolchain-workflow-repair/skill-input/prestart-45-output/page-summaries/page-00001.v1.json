@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "Strict adapter applies only to explicit execution-plans directory/file with schema-valid implementation-contract.v1.json; parent router must run with caller quick-dev-tdd-adapter and yield lane strict_tdd_plan/backend quick-dev-tdd-adapter; reject standalone/compact/missing/invalid inputs; read only target directory, resolve at most one 95-*.md, fail closed on ambiguity; report/run-state are non-authoritative; audit/repair/refreeze identities before RED; run loop_plan_directory before actions; run-slice uses generated run_context and lifecycle tools; enforce shell-free expected-failing RED then GREEN, REFACTOR, slice predicate; use skill-input contract typed receipt/consumer and require ready; derive hash-bound model class (architectural/complex/small_mechanical/normal, contradictions=>complex), non-authorizing; verify frozen knowledge context/hashes before RED; persistent loop consumes explicit snapshot paths and planned_new_files constraints; terminal only implementation-complete, acceptance external; P0/P1 repair requires acceptance handoff/audit preserving manifests, hashes, consumers, tests, composition receipts; no Bootstrap/review authority; version-sensitive diffs require exact Context7 docs before commit; reject drift, preserve failures via stale-linked successors; read backend contract, TDD protocol, evidence/freshness references."
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "skill=vdd-execution-plan;scope=create/repair complete execution-plan directories only;standalone requirements Markdown routes to direct implementation without VDD artifacts;mandatory authority references: solo-maintainer-vdd-standard, clarification-gate, lifecycle-state-contract;profiles standard/resumable/self-hosted selected before routing;standard requires plan,lifecycle,baseline/scope,slices,failure intent,acceptance,commands,terminal validation;resumable adds resume/dependencies/recovery and append-only 95 report/index;self-hosted adds protocol fixtures/migrations;model routing via scripts/model_routing.py, ordinary Sol/high, typed capability-gated Sol/max only; lifecycle draft->plan-ready->implementation-authorized->implementation-complete->acceptance-passed->archived;VDD owns draft/plan-ready, Quick Dev only implementation-complete;new plans cannot publish RED artifacts, legacy RED is read-only;repairs stay in original directory under repair/round-n with immutable history and lineage budget max three;repair requires callsite inventory, composition receipts, hash-bound changed/deleted manifests, complete review scope;knowledge preflight and skill-input gate are mandatory before plan-ready/artifact generation;Bootstrap review optional, minimal-complete-closure, P2-only findings do not open rounds;terminal full validation required before implementation-complete;reports are non-authorizing and excluded from hashes;avoid adversarial controls, mutable live directories, dated or machine-specific paths"
+}

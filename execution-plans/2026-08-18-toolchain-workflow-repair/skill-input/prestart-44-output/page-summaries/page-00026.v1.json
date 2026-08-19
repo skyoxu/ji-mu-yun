@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_skill_input_retention.py",
+    "source_sha256": "sha256:532fd45ebf9c30b9ba1e8180152412d782c34fede1640e73656d54123fc98ff7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 318,
+    "start_line": 1,
+    "end_line": 7,
+    "content_sha256": "sha256:532fd45ebf9c30b9ba1e8180152412d782c34fede1640e73656d54123fc98ff7"
+  },
+  "status": "accepted",
+  "summary": "Python test scripts/python/tests/test_skill_input_retention.py; imports scripts.python.skill_input_retention as retention; test_retention_apply_requires_explicit_approval uses tmp_path; plan_retention(tmp_path,dry_run=True) must return mode=dry-run; apply_retention(tmp_path,approval=None) must return status=approval-required; decision: retention application requires explicit approval"
+}

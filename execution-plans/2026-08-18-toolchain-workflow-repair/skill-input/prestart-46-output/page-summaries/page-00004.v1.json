@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "Route standalone requirements to direct implementation; VDD create/repair requires explicit directory request; choose standard/resumable/self-hosted first, then hash-bound model routing; read three mandatory references and repository authority; clarify only material blockers; lifecycle: draft>plan-ready>implementation-authorized>implementation-complete>acceptance-passed>archived with distinct owners; each slice declares behavior, failure selector/intent, GREEN target, dependents, recovery; VDD never executes or emits RED evidence; terminal full validation is mandatory; repair in place under repair/round-N with immutable history and hash-bound closure; Bootstrap review optional, lineage budget two, hard limit three with typed trigger; repair requires generated callsite inventory, sibling dispositions, controlled composition receipt, and manifest-derived changed set; knowledge preflight is mandatory before source freeze and plan-ready; skill-input adapter, semantic-child launcher, and ready validator are mandatory before artifacts; Git baseline/current scope must be frozen and dirty state fully bound; review scope uses minimal complete closure; resumable/self-hosted require indexed append-only 95 report; completion requires artifacts, observable acceptance, failure path, stable targeted checks, and current full validation."
+}

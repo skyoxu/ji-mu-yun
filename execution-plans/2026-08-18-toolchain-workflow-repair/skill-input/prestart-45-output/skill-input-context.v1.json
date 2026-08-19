@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Repository rules separate authority layers and require fail-closed validation, immutable evidence, bounded scope, and protected-path controls. Lifecycle ownership progresses from VDD planning through maintainer implementation approval, Quick Dev completion, Acceptance validation, and archival. Reviews, reports, tests, and knowledge projections do not independently advance lifecycle state.",
+      "title": "Governance and lifecycle"
+    },
+    {
+      "content": "Skill-input v2 separates typed source selection from content identity, requires complete adapter-observed page coverage, immutable validated generations, atomic current pointers, and reference-aware retention. Knowledge execution, publication, and semantic review remain separate gates. Verified unchanged inputs may support degraded execution, while integrity, policy, authority, selection, or source drift blocks or requires review.",
+      "title": "Skill input and knowledge"
+    },
+    {
+      "content": "The self-hosted repair plan defines slices W0 through W6 for typed selection, resumable transport, coverage, knowledge gates, generation pointers, retention, and end-to-end proof. Commands are registered without shell execution, TDD stages require observed RED then GREEN and REFACTOR, and terminal completion depends on passing slice receipts. Persisted artifacts are hash-bound, append-only, non-authorizing, and constrained to declared paths.",
+      "title": "Repair plan and evidence"
+    }
+  ],
+  "source_manifest_hash": "sha256:ed8abdfeab73cf0c7fc5217311e34a2f639f1dbd393b8bb2461613934f3b68be",
+  "truncated": false
+}

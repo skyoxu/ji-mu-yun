@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+    "source_sha256": "sha256:69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 3048,
+    "start_line": 1,
+    "end_line": 65,
+    "content_sha256": "sha256:69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23"
+  },
+  "status": "accepted",
+  "summary": "ADR-0048 accepted 2026-07-26; source files and accepted ADRs remain authoritative; projections/indexes are derived caches; deterministic Locator emits locations, hashes, provenance, ranking evidence, confidence, never synthesized facts; callers reread and hash-check sources; trusted adapters constrain domain/path/snapshot/budget/confidence; LLM intent cannot broaden scope; VDD records accept/reject decisions and uncovered required modules block readiness; Quick Dev uses VDD-frozen accepted context; Bootstrap Review freezes accepted context in Artifact View; no post-freeze expansion; ambiguity fallback defaults off and approved Python fallback uses scripts/sc/_llm_backend.py::run_llm_exec; maintenance pins local refs/heads/main without implicit fetch or branch mutation; failures are closed on missing/stale/weak/out-of-policy/hash-drift results; extends ADR-0044, complements but does not replace ADR-0037/0041/0043; excludes phase routes, Hosted E2 changes, live metadata, deployment, acceptance, handoff, release, commit"
+}

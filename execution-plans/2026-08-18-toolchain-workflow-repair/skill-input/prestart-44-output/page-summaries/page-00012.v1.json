@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+    "source_sha256": "sha256:d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2560,
+    "start_line": 1,
+    "end_line": 51,
+    "content_sha256": "sha256:d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50"
+  },
+  "status": "accepted",
+  "summary": "ADR-0060 accepted 2026-08-18; v1 remains historical compatibility and cannot auto-promote to v2 authority; v2 assigns one typed role per candidate; only normative_source, authority_source, implementation_input authorize; separate sourceSelectionHash and sourceContentHash; selection binds roles, repo-relative paths, modules, scope, resource sets; content binds selected bytes; adapter owns transport, paging, continuation, coverage, truncation; proven complete coverage prevents bounded-lossy summary being treated as truncated; ready receipts are immutable generations at skill-input-generations/<binding-hash>/; validated non-authorizing current pointer advances atomically; consumers resolve only pointer, never scans, suffixes, or mtime; Knowledge has independent execution, publication, semantic-review gates; Knowledge self-change derives from changed-set and canonical path policy; attempts require leases and heartbeats; retention protects current, lifecycle/authorization/terminal references, and active unexpired attempts; committed-evidence deletion needs maintainer approval plus non-authorizing cleanup receipt; all consumers must migrate to v2 before 8-18 creates a new current receipt; existing skill-input-current* remains immutable pending approved retention; creates no lifecycle authority, Knowledge publication, or Bootstrap start; extends ADR-0048/0050/0057/0058/0059 and supersedes only their v1 selection/current-resolution practices"
+}

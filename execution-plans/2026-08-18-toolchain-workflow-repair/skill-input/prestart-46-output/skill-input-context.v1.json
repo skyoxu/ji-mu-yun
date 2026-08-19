@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "All 29 manifest sources have one complete page segment with matching source and content hashes. No source or page coverage is omitted.",
+      "title": "Coverage"
+    },
+    {
+      "content": "Repository guidance and accepted ADRs define bounded knowledge location, lifecycle ownership, execution evidence, retention, publication separation, and non-authoritative semantic decisions.",
+      "title": "Governance"
+    },
+    {
+      "content": "The execution plan specifies W0-W6 typed selection, transport, coverage, knowledge gates, immutable generations, retention controls, and non-authorizing end-to-end validation. Tests cover stale knowledge degradation, coverage rejection, pointer safety, approval-gated retention, typed selection identity, transport continuity, and independent hashes.",
+      "title": "Workflow"
+    }
+  ],
+  "source_manifest_hash": "sha256:8542a3d0c9a0bfc6f405e49d53d5986ddd62ed9da2fb23f47aa506151ac85fcc",
+  "truncated": false
+}

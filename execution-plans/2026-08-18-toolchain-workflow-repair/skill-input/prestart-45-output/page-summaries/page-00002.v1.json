@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "Adapter is stateless and requires the strict Skill input gate; preparation blocks hidden state, shell execution, missing slice, or absent contract_hash/validator_hash (RMAP-PREPARE-INVALID, RMAP-CMD-SHELL, RMAP-HASH-AUTHORITY); RED requires prepared state, declared failure, nonzero exit, and tests/docs-only changes; GREEN requires observed RED, zero exit, and production-path changes; REFACTOR requires observed GREEN, zero exit, and declared production/tests/docs write set; invalid transitions block with RMAP-TDD-RED-NOT-OBSERVED or RMAP-TDD-EXIT-PROOF; finalization accepts only exact RED-GREEN-REFACTOR lifecycle and remains non-authoritative; resume requires identical identities and successor for failed/stale/superseded runs; stage binding validates capsule-attempt bundle schema, unique stage context/attempt, matching IDs/hashes, and empty authorizations; protocol persistence validates artifacts, containment, no reparse points, immutable conflicts, and declared existing files, writing non-decision artifacts before decisions; execute rejects existing run directories, requires bundle/store together, persists recovery-state.v1 with hashes, stages, and no authorizations."
+}

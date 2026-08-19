@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z-successor-20260819T081253Z-successor-20260819T114739Z",
+    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z-successor-20260819T081253Z",
     "consumer": "vdd",
     "query": "skill-input-execution knowledge-execution-gates",
     "snapshot": {
@@ -111,7 +111,7 @@
           {
             "path": "scripts/python/skill_input_consumption.py",
             "role": "primary",
-            "source_sha256": "b985034a0e3624f1e4934d3363a6280c103df6e6c4ad5e69bc424a5a1e4ee0dc"
+            "source_sha256": "d820020e691a3c44b2faed208bdf954d6e9e72c5c7559ffa611603883015a730"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json",
@@ -126,7 +126,7 @@
           {
             "path": "scripts/python/validate_skill_input_consumption.py",
             "role": "validator",
-            "source_sha256": "fb20964bd1005a0005df54530504a7c22e05c3c252bb4be534d9f27e62c2df2a"
+            "source_sha256": "c21bf237f830086723c3d74b222d3e783b8a574dee64d0eba1259217d2942852"
           }
         ],
         "relations": [
@@ -141,7 +141,7 @@
         ],
         "semantic_eligible": true,
         "source_role": "cli-entrypoint",
-        "source_sha256": "b985034a0e3624f1e4934d3363a6280c103df6e6c4ad5e69bc424a5a1e4ee0dc",
+        "source_sha256": "d820020e691a3c44b2faed208bdf954d6e9e72c5c7559ffa611603883015a730",
         "status": "active",
         "visibility": {
           "marketplace": "excluded",
@@ -278,7 +278,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z-successor-20260819T081253Z-successor-20260819T114739Z",
+    "request_id": "TWR-20260819-plan-ready-final-successor-20260819T063723Z-successor-20260819T081253Z",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
@@ -308,7 +308,7 @@
       "owner": "adapter",
       "candidate": {
         "path": "scripts/python/skill_input_consumption.py",
-        "source_sha256": "b985034a0e3624f1e4934d3363a6280c103df6e6c4ad5e69bc424a5a1e4ee0dc"
+        "source_sha256": "d820020e691a3c44b2faed208bdf954d6e9e72c5c7559ffa611603883015a730"
       },
       "decision": "accepted",
       "satisfies": [
@@ -337,12 +337,12 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:cddec3dab3cb81b73ec380b2cdf6a06cba2529217c0b3cd411f2da9ea5e18a13",
-  "result_sha256": "sha256:b31c520608fce5854fcb9794f009443929210514a9cc41303c20a1904af1d140",
+  "request_sha256": "sha256:3b859d78f681385c09fc8885e59b54112fd2bae31d61ab8526f6c9aa7ff49fb0",
+  "result_sha256": "sha256:46a627f8d61a741b9d97423e40a279504bb16a126fcda6636534c5c8486f5d49",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:b5811ce2abacccec03df47a1a6c26730deef26932ce6de485068a8ba63e80f28"
+    "base_locator_result_sha256": "sha256:2babc9b808d0e76be7d22b7f42abcc627804b152559257a2fd9656b42daf6557"
   },
   "preflight": {
     "status": "ready",
@@ -350,6 +350,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:bb43a3169d7da75a11acfd7b16ad2e8832ecdbfa0566e0cf9560696a989a1cde"
+    "context_sha256": "sha256:853cd2627431040e938f2dab58569fa4a0730122edbed2d6089189ee217d2eb3"
   }
 }

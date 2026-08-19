@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    "source_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16803,
+    "start_line": 1,
+    "end_line": 352,
+    "content_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+  },
+  "status": "accepted",
+  "summary": "adapter enforces stateless backend and forbids shell registry; prepare requires declared slice plus contract_hash/validator_hash and mandatory skill-input receipt gate; lifecycle strictly red→green→refactor with scoped paths and exit/failure proofs; completion yields non-authoritative implementation-candidate and never authorizes acceptance/handoff/release; resume rejects identity drift and terminal stale states; stage bindings require bundle v1, exactly one context/attempt, STAGE-* IDs, matching plan/slice/run/attempt, and empty authorizes; protocol persistence rejects incomplete, escaping, reparse, conflicting, or undeclared artifacts and preserves named observation files; execute requires a new run directory, paired protocol bundle/store, persists recovery-state v1 with hashes, stages, empty authorizes, and optional skill-input hashes; key diagnostics: RMAP-PREPARE-INVALID, RMAP-CMD-SHELL, RMAP-HASH-AUTHORITY, RMAP-TDD-RED-NOT-OBSERVED, RMAP-TDD-IMPLEMENTATION-BEFORE-RED, RMAP-TDD-EXIT-PROOF, RMAP-RECOVERY-NEW-RUN-STATE"
+}

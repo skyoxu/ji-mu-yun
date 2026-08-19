@@ -1,0 +1,80 @@
+{
+  "authority_manifest": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/authority-manifest.v1.json",
+    "sha256": "sha256:9855bd33f295905247dbb87d15ad4dadd37d95f46f59f82abaf262eea93fada0"
+  },
+  "authorizes": [
+    "implementation-authorized"
+  ],
+  "bootstrap_preexisting_delta": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/bootstrap-preexisting-delta.v1.json",
+    "sha256": "sha256:9a8ebfd0dca55be1072d94092c72b56664800e7ca3568a4f5068303b6282d58e"
+  },
+  "candidate_binding_hash": "sha256:66934bfa4638b4aaf5f190663c2722dde5b74b6931fb8a38cccb837c0e0d214c",
+  "candidate_manifest": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/repair-candidate-manifest.v1.json",
+    "sha256": "sha256:e6f74b15af0cc24acc9966b0633747672038ace323e726e45a95830284b000b7"
+  },
+  "command_registry": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/command-registry.v1.json",
+    "sha256": "sha256:d17ff02fc892846b28da43f4a750a7f3f0d95256ad13d796c1d43fb8b141f517"
+  },
+  "decision": {
+    "owner": "maintainer",
+    "reason": "explicit-maintainer-authorization",
+    "transition": "implementation-authorized"
+  },
+  "does_not_authorize": [
+    "implementation-complete",
+    "acceptance-passed",
+    "knowledge-publication",
+    "bootstrap-review",
+    "release"
+  ],
+  "immutable_predecessor": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/authorization-predecessor.a53b4eba9724dc5e.v1.json",
+    "sha256": "sha256:a53b4eba9724dc5ef9cf225c24fe950c8da1f84d76f45fd36834322b76c0dfa4"
+  },
+  "implementation_contract": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/implementation-contract.v1.json",
+    "sha256": "sha256:708a304bf7bd524f3d3a0987810c88509985503bc7840970f742e5bbcd501ecb"
+  },
+  "knowledge_context": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context.v1.json",
+    "sha256": "sha256:49b9ddea8f2418735978fc6054ed405cc0a895c71c1f40afb6598094da7194c6"
+  },
+  "knowledge_context_freeze": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context.freeze.v1.json",
+    "sha256": "sha256:7a3210493751730b611107fd0adb1266350649d3bcc209829546f7e88cd83792"
+  },
+  "plan_id": "toolchain-workflow-repair",
+  "plan_validation": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/plan-validation-receipt.v4.json",
+    "sha256": "sha256:9cb5f3eab681a96cc2c327a99818fc8bec7e0dbf1ef38ad52fefcf96080a6676"
+  },
+  "predecessor_authorization": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/authorization-predecessor.a53b4eba9724dc5e.v1.json",
+    "sha256": "sha256:a53b4eba9724dc5ef9cf225c24fe950c8da1f84d76f45fd36834322b76c0dfa4"
+  },
+  "repair_closure": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/repair-closure.v1.json",
+    "sha256": "sha256:101982bc1db1e9e4d7f0d00ba8325c2af2cc3b03fcb96c43ec78f5fafba84678"
+  },
+  "schema_version": "toolchain-workflow-repair.implementation-authorization-receipt.v1",
+  "skill_input_receipt": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-receipt.json",
+    "sha256": "sha256:9297763b52bfdd66fb36b6313345eb048469ed1efee2cb93a5c7222421cb4c74"
+  },
+  "skill_input_request": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-request.json",
+    "sha256": "sha256:012646b70f3fe35bf45612ab0d49b45023567dc20096c584c597f812e1dd0e08"
+  },
+  "terminal_validator": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
+    "sha256": "sha256:a3802b040e9e60ca345a57c19b8b6953fa1325a191e6cd96192a02a38a572fab"
+  },
+  "validate_all": {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py",
+    "sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7"
+  }
+}

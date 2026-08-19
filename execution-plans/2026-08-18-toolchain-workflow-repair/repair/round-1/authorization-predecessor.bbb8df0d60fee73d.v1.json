@@ -12,7 +12,7 @@
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/bootstrap-preexisting-delta.v1.json",
     "sha256": "sha256:939ad019a8ebc4e9c662b1740af28058f1deba18a2c0e32e30f1a05ca865cf26"
   },
-  "candidate_binding_hash": "sha256:673c7d9e38e40c7698d29012d0de2ca711b0aac02319429d5edd3bddc87940b0",
+  "candidate_binding_hash": "sha256:b8f24c617dba5730f4f7e974f3da20cb3b6da2ce7a6ed936ce90b70a05b61d61",
   "candidate_manifest": {
     "identity_kind": "canonical-json-v1",
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/repair-candidate-manifest.v1.json",
@@ -37,8 +37,8 @@
   ],
   "immutable_predecessor": {
     "identity_kind": "canonical-json-v1",
-    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/authorization-predecessor.bbb8df0d60fee73d.v1.json",
-    "sha256": "sha256:400f9aff510437961c8afe21a1487e885e11a6f01c2edeb5612c9a86d2855423"
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/authorization-predecessor.82958b022ac446ee.v1.json",
+    "sha256": "sha256:6645a206a5230492413f6e2840eddd26d84c150142706b7bf32d2ca7efae7c83"
   },
   "implementation_contract": {
     "identity_kind": "canonical-json-v1",
@@ -48,12 +48,12 @@
   "knowledge_context": {
     "identity_kind": "canonical-json-v1",
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context.v1.json",
-    "sha256": "sha256:c86cc087af9900c4337d7d07b002907452f770cade7936ff9d681d79c607f446"
+    "sha256": "sha256:d2a0fb2f36e4df3645a98a78c80b3057fce12299ade57d457d1295c554f256e7"
   },
   "knowledge_context_freeze": {
     "identity_kind": "canonical-json-v1",
     "path": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context.freeze.v1.json",
-    "sha256": "sha256:63f2b1849a5949ecaef58779136ca65dae2149f13872674d7788166909e98e7b"
+    "sha256": "sha256:3fdb02fceb4a8fa08cfaa894185122ca9151114f715b64fb218758ef9868c2af"
   },
   "plan_id": "toolchain-workflow-repair",
   "plan_validation": {
@@ -63,8 +63,8 @@
   },
   "predecessor_authorization": {
     "identity_kind": "canonical-json-v1",
-    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/authorization-predecessor.bbb8df0d60fee73d.v1.json",
-    "sha256": "sha256:400f9aff510437961c8afe21a1487e885e11a6f01c2edeb5612c9a86d2855423"
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/repair/round-1/authorization-predecessor.82958b022ac446ee.v1.json",
+    "sha256": "sha256:6645a206a5230492413f6e2840eddd26d84c150142706b7bf32d2ca7efae7c83"
   },
   "repair_closure": {
     "identity_kind": "canonical-json-v1",
@@ -73,18 +73,18 @@
   },
   "schema_version": "toolchain-workflow-repair.implementation-authorization-receipt.v1",
   "skill_input_generation": {
-    "child_request_hash": "sha256:5f98ee6dc91168e90ce3a8e79ed9e267fc62d526be7540a0d1d8639aac7c12fc",
-    "context_hash": "sha256:17fa8beb70615054547656f217edc155441d17b8cd4266a2ac4311d280b86f07",
-    "generation_root": "sha256:6584b10c5653e24e5d4ec81c2506c848f6f5f412cb3b9aae4cd8258edb2082d1",
+    "child_request_hash": "sha256:8e5a85a10d59600327ee0dd55b427741dca8c08c54fc8606ad5c45a95627e450",
+    "context_hash": "sha256:1788c2a1ca03047e2bbd0ac3c9786f63b82a69d5087ef6125171cf4367f90ca6",
+    "generation_root": "sha256:cc1d3fe6001d6a16b6909aa2c6c7d3082352d92bb566595c2f5ed85881defaa9",
     "receipt": {
       "identity_kind": "canonical-json-v1",
-      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-46-receipt.json",
-      "sha256": "sha256:6ff1612ea62ca30d65a51bfab69a382f0bc36504af888e5d24438e5b4c43abc7"
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-45-receipt.json",
+      "sha256": "sha256:4255852b6ac97221304af637154b7627000ad22687715b2c19e5a225a54dc966"
     },
     "schema_version": "skill-input-generation.v1",
     "selected_source_content_root": "sha256:d977a8f1a05dc0a0ea1d0eb54b7b511f92fa8a2aa384d9cc9ed0b5f2dafd831f",
-    "semantic_decision_hash": "sha256:cb91d322d873d3af22ea10a624a895bbbbcae33d09dd2f8a5af9ec0e0950a943",
-    "source_selection_hash": "sha256:89b5e9a34aea65239a0f3eac92631e4313a534c45181c41a69dd6c2ba8e5b83e"
+    "semantic_decision_hash": "sha256:309e67109e173c9f48ce120231aa47428b00bdd7a1ec72395132ec22e6d92c62",
+    "source_selection_hash": "sha256:5baba66f6ad8164f70c30bae069de104819fc7ff7097e84c4b06508ae2740451"
   },
   "terminal_validator": {
     "identity_kind": "raw-bytes-v1",

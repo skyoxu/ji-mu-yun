@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Skill run-refactor-implementation-acceptance coordinates deterministic acceptance evidence for one explicit execution-plans/<target>; non-authorizing: no code approval, commit, release, deploy, or archive; require complete contract or compact-vdd-acceptance-prerequisite-bundle.v1 plus baseline/candidate manifests, typed request, action DAG, command registry; prefer commit candidate, use clean HEAD only, otherwise frozen dirty/proposed snapshot; baseline must be explicit, never inferred as candidate^; Quick Dev implementation-complete receipt is mandatory and stale candidate bindings trigger Quick Dev regeneration; build knowledge context via canonical Locator and freeze validated read-set, with catalog_stale=degraded but other failures blocking; create Skill-input receipt through typed launcher and require ready validation; derive run from canonical input, contract, context, receipt hashes and resume only matching bindings; deterministic_only finalizes via replayed controlled receipts, otherwise required Bootstrap route uses inspect-lineage and typed route; semantic review needs high-cost acknowledgement and later discovery needs explicit confirmation; lineage budget: Round 1 full conformance, repair focused verification only without triggers, three rounds => manual_pause, never Round 4; P2 is disposed deterministically, P0/P1 repair requires Quick Dev handoff and audit-repair-completeness; closure lane requires exact finding mappings, composition receipts, protocol review, acknowledgement, and final closure result; review scope is seven implementation-conformance classes and exact changed-path custody; model launches only for policy-owned complex recovery triggers; evidence_only default is non-authorizing, controlled_validation requires typed commands and isolated roots."
+}

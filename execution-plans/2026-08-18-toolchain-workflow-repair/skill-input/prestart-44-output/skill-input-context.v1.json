@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Repository guidance separates control-plane, service, and sandbox responsibilities, preserves compatibility, protects sensitive and live paths, and requires evidence-backed validation. The referenced skills define VDD planning, Quick Dev TDD execution, and acceptance review as separate non-authorizing stages with explicit lifecycle ownership. ADRs establish immutable knowledge sources, hash-bound locator and publication workflows, degraded successor handling, persisted acceptance evidence, and v2 skill-input selection with complete coverage and retention controls.",
+      "title": "Governance and lifecycle"
+    },
+    {
+      "content": "The toolchain repair plan defines slices W0 through W6 for typed source selection, transport, coverage, knowledge gates, immutable generations, retention, and end-to-end migration. Contracts require hidden-state-free execution, shell-disabled structured commands, hash-bound identities, declared write sets, staged RED/GREEN/REFACTOR evidence, and empty authorizations. Validators check canonical identities, authority and validator roots, required artifacts, lifecycle projections, plan readiness, and terminal implementation-complete predicates.",
+      "title": "Execution plan and validation"
+    },
+    {
+      "content": "The supplied tests cover degraded knowledge continuation, missing-page rejection, immutable current-pointer behavior, approval-gated retention, separate selection and content identities, transport resume identity, and end-to-end typed selection. Acceptance evidence is persisted and replayable, requires matching registries, contracts, receipts, and context bindings, and keeps publication, lifecycle transitions, bootstrap review, release, and commit outside these inputs.",
+      "title": "Tests and acceptance"
+    }
+  ],
+  "source_manifest_hash": "sha256:948b76d3fa79b3bb5fba4bf1a4826b2443b067f04a9ea4eac6151401ee338676",
+  "truncated": false
+}

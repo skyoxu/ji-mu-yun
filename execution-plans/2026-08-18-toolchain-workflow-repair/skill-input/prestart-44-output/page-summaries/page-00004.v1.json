@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "Purpose: create/repair complete VDD execution-plan directory only on explicit request; standalone requirements file routes to direct implementation. Mandatory authority reads precede action; choose least-complex profile: standard, resumable, or self-hosted, recording rationale. Model route is post-profile, hash-bound, non-authorizing; ordinary profiles use Sol/high; Sol/max only for typed closed recovery trigger with capability/shadow evidence. Clarify only material scope/compatibility/destructive/protected-path/acceptance boundaries. Lifecycle: draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived; VDD owns first two, maintainer authorization, Quick Dev implementation-complete, acceptance/archive separate. Slices require behavior, intended failure selector/expected RED, GREEN target, dependents, recovery; VDD does not emit RED artifacts. Repair is in-place under repair/round-n, immutable history, bounded lineage budget (default 2, max 3 typed triggers), current inspect-lineage required. Repair requires root-cause callsite inventory, changed/excluded siblings, producer/consumer composition receipts, hash-bound changed/deleted manifests, complete generated review scope. Knowledge preflight and skill-input consumption are mandatory gates before plan artifacts/knowledge freeze; blocked/candidate gates cannot publish plan-ready. Baseline/current scope must be Git-bound; reports for resumable/self-hosted are append-only/non-authorizing and indexed. Bootstrap review optional/supplemental; minimal-complete closure only; P2-only findings do not reopen semantic round. Completion requires profile artifacts, observable acceptance, RED/legacy record, stable repairs, and terminal full validation."
+}

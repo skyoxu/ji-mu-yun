@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py",
+    "source_sha256": "sha256:b841070c4e0a07126b5487a14e04ca968771b841a25a6b21712b2ddeed0fbc18",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 12025,
+    "start_line": 1,
+    "end_line": 217,
+    "content_sha256": "sha256:b841070c4e0a07126b5487a14e04ca968771b841a25a6b21712b2ddeed0fbc18"
+  },
+  "status": "accepted",
+  "summary": "Validator for plan_id toolchain-workflow-repair; requires plan under execution-plans with 14 named artifacts; validates self-hosted contract, slices W0-W6, TDD intents, command registry (plan-ready, terminal-full, w0-w6 green/terminal), authority partitions, lifecycle state and publication receipt; supports initial-plan-ready and authorized-repair-revalidate modes; requires canonical skill-input receipt inside plan and ready validation; binds pre-existing delta to baseline 2556ea78f41657e5a740016ff97da0b0614631ea and candidate a2ded39b0f67dcbe5f27acedb56c0bafbd3f3fc5 with exact path set and SHA256/disposition checks; requires accepted architecture decisions, empty authorizations, resume slice set, knowledge preflight ready/freeze no authorization, accepted modules skill-input-execution and knowledge-execution-gates; emits pass/fail receipt and optional validator-input manifest with hashes; exits 0 only on no failures."
+}

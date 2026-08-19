@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Skill governs deterministic implementation-acceptance evidence for one explicit execution-plan target; no target-code implementation, approval, commit, release, or deployment; resolve candidate custody and explicit frozen baseline, never infer revisions or scope; require complete manifests, typed run request, action DAG, command registry, implementation contract or current compact prerequisite bundle, and Quick Dev receipt; build Acceptance knowledge context only through canonical Locator with hash/read-set validation; create typed Skill-input receipt through launcher and require ready validation; persist binding-derived append-only runs, preserve stale/legacy artifacts, rebuild successors on drift; execute registered deterministic evidence actions and finalize only with replayable current receipts; deterministic_only bypasses Bootstrap, semantic routes require repository-owned lineage projection and typed route; Bootstrap launch is external, high-cost acknowledgement required, later reentry needs trigger, recommendation, confidence, and user confirmation; enforce repair completeness, focused verification rules, three-round budget, and manual-pause closure protocol; exact reuse requires finalized v3 clean envelope, current bindings, eligible route, and lineage predecessor; P2 findings close deterministically; maintenance mode is single-maintainer with severity shifts for concurrency/injection; model routing is no-launch except policy-defined recovery; review scope must minimally cover seven implementation-conformance classes; unsupported pure Godot inputs; controlled_validation permits only typed shell-free commands in isolated roots."
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "仓库为 Ji Mu Yun Phase A/B 云原型平台；职责分为工具链控制面、Phase 服务层、用户沙箱层，三者不得共享 snapshot/current/cache/LKG 权威；按任务路由读取对应入口与最近 AGENTS.md，勿预加载无关文档；本地检查优先 FastCtx，明确不可用后才回退 Windows 命令面并记录一次；用户沟通必须中文，代码/脚本/测试/日志/打印英文，不使用 emoji；保留用户改动，避免破坏性 Git/文件操作，高风险或受保护路径先询问；中文写入须 Python 显式 UTF-8，勿用 PowerShell 写中文；受保护范围含 live metadata/runtime/Hosted 工作区、启动 watchdog/Caddy、认证令牌与审计、共享 LLM/Codex 入口、交付/安全配置与公开监听、生成证据重写/删除；不得手工修改 live Phase DB 或泄露/提交秘密；API 默认向后兼容，破坏性变更需批准与兼容计划，schema 需迁移/恢复；API 改动覆盖 handler/DTO、浏览器调用、认证边界、文档、平台测试与 smoke；认证改动验证拒绝、授权、隔离、哈希、审计及无沙箱令牌泄露；Hosted 路由变更验证边界、安全回读、恢复、状态和验收证据；完成必须有当前机器验证器/诊断/sidecar/数据库证据，不能仅凭助手文本；文件变更路由恢复按八源顺序：解析路由 profile、Skill prompt、执行指南、原型契约、路由状态、目标/session 状态、修复/诊断证据、最新 live blocker，缺源 fail closed 且 live blocker 优先；LLM/Codex 遵循专门文档与 UTF-8 stdin，写入需 executable route、workspace-write 与 acceptance；运行时先本地健康再代理，使用 canonical live-server 脚本，禁止 plain dotnet run；workflow.md 仅在 allowlist 触发时使用；DoD 含定向验证/差距记录、匹配测试与 smoke、logs 证据追加、文档按公开行为更新、无未批准持久化/兼容破坏；AGENTS.md 维护目标 6000-8000 字符，硬上限 10000。"
+}

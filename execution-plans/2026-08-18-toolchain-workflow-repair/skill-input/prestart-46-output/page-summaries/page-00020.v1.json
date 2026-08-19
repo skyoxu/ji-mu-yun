@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_all.py",
+    "source_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 6863,
+    "start_line": 1,
+    "end_line": 143,
+    "content_sha256": "sha256:1d65821f68635d5cffe5c4c0a0916842ed7bb0f7ab9ead72d87b7123396f00c7"
+  },
+  "status": "accepted",
+  "summary": "Deterministic Quick Dev identity projections for plan toolchain-workflow-repair; slices W0-W6; excludes logs/ and plan/resume state files; validates repository-relative non-symlink paths and marks missing files absent; loads implementation contract and rejects invalid/missing slices; candidate manifest derives allowed changes plus planned new files, normalizes tools paths, deduplicates and sorts; dependency identities include candidate hashes; identity includes candidate, contract, registry, authority inputs, validator inputs, closure definition, and file hashes; validator version toolchain-workflow-repair.validate-all.v1; exposes per-slice and aggregate validation snapshots; path escape, wildcard, invalid slice, contract, symlink conditions are rejection cases"
+}

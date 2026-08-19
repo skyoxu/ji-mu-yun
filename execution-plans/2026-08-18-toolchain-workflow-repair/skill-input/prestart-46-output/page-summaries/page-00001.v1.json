@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "quick-dev-tdd-adapter applies only to explicit execution-plan directories with valid implementation-contract.v1.json; parent route must use caller quick-dev-tdd-adapter and yield lane strict_tdd_plan/backend quick-dev-tdd-adapter; target must be under execution-plans and isolated to supplied directory; resolve at most one 95-*.md report; reports/run-state are non-authoritative; audit, repair, validate, and refreeze identities before RED; run loop_plan_directory before expensive actions; use lifecycle tooling for run-slice artifacts; require observed failing RED before production writes, then GREEN, REFACTOR, slice predicate; auto-route slices until implementation-complete, external-repair-required, or repeated failure fingerprint; acceptance remains external; P0/P1 repair requires repair-review-handoff and Acceptance audit with preserved manifests, hashes, consumers, tests, validation, root-cause inventory, and composition receipts; strict skill-input contract/typed semantic child and require-ready validation are mandatory; model classes architectural, complex, normal, small_mechanical, with unknown/contradictory facts blocked as complex; decisions are non-authorizing and canonical policy controls execution; frozen knowledge context must hash-verify, mismatch routes to VDD repair/refresh; persistent loop consumes explicit no-wildcard snapshots and planned_new_files only; adapter is not commit authority; version-sensitive dependency changes require exact-version Context7 verification; structured shell-free commands and immutable failed evidence/successor runs are required; never use Stock BMAD or adapter artifacts as acceptance authority"
+}
