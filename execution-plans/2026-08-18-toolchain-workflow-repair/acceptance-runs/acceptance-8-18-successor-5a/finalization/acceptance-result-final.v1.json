@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "candidateHash": "sha256:273070dc006480a11ccfa008cb63310acb01427c737c36fd7dac4c766996e394",
+  "candidatePath": "C:\\jimuyun\\execution-plans\\2026-08-18-toolchain-workflow-repair\\acceptance-runs\\acceptance-8-18-successor-5a\\finalization\\acceptance-result-candidate.v1.json",
+  "final": {
+    "acceptanceMode": "unattended",
+    "authorizes": [
+      "acceptance-passed"
+    ],
+    "identityHash": "sha256:563daae9d6384bd01e863070aac0a4129851a3dba4aa3993677a8bfd02a86ad8",
+    "lifecycleTransition": "acceptance-passed",
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-passed.v1",
+    "triggerIds": []
+  },
+  "impactProjectionHash": "sha256:0e4bb8fb5c96666f04604464bec962d19d397cd7167a7553710425ab53a8222b",
+  "schemaVersion": "acceptance-result-final.v1"
+}

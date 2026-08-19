@@ -1,0 +1,7 @@
+{
+  "acceptanceMode": "unattended",
+  "authorizes": [],
+  "bootstrapRequired": false,
+  "route": "deterministic_only",
+  "triggerIds": []
+}

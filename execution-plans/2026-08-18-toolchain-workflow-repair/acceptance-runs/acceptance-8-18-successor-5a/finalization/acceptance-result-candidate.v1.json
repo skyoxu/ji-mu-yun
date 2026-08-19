@@ -1,0 +1,94 @@
+{
+  "authorizes": [],
+  "candidate": {
+    "actionReceipts": [
+      {
+        "path": "actions/knowledge-suite/attempt-001/result.json",
+        "sha256": "sha256:a0d1aa6f04b69a626f687b0bd29d7924ea2d47ee29177542de9e463b0a77fded"
+      },
+      {
+        "path": "actions/skill-input-suite/attempt-001/result.json",
+        "sha256": "sha256:3dd2cb63facda52ed653fb60a9def6b57374106f9404f026e50372d42ed91d56"
+      },
+      {
+        "path": "actions/terminal-full/attempt-001/result.json",
+        "sha256": "sha256:e38e7cec38a7047066342aa4e50173a490986462040e0fb873f729f8530c8082"
+      },
+      {
+        "path": "actions/w0-green/attempt-001/result.json",
+        "sha256": "sha256:6e939e6e2a62f0bc421a28bd5bbdd1b52611c6a5db2f21da9463e6b5d8baa310"
+      },
+      {
+        "path": "actions/w0-terminal/attempt-001/result.json",
+        "sha256": "sha256:0d5bc61edd5a37d054356c434a891308146e349d8513c67a83b35065504e12d2"
+      },
+      {
+        "path": "actions/w1-green/attempt-001/result.json",
+        "sha256": "sha256:aa858454a8d0db6744892894c919c9a25bb8c85547eac9c66973c60fba18579f"
+      },
+      {
+        "path": "actions/w1-terminal/attempt-001/result.json",
+        "sha256": "sha256:3cf8843874906b4f2ceea71773fe1f68ad3c23c4cf383ab3e1e7358e19195022"
+      },
+      {
+        "path": "actions/w2-green/attempt-001/result.json",
+        "sha256": "sha256:36752e3d5a4c6bbb4617a388dd611c8efa40a7cd25711010724c8beb5a7d2cb0"
+      },
+      {
+        "path": "actions/w2-terminal/attempt-001/result.json",
+        "sha256": "sha256:15f886feac4261bc89b544f8c8bb264138d07fa4972c4a85e579d06b6a47a272"
+      },
+      {
+        "path": "actions/w3-green/attempt-001/result.json",
+        "sha256": "sha256:8d25c443a6cba9e1ae67212bf0f085f7a28f0f83f23433b01743e83752b24baa"
+      },
+      {
+        "path": "actions/w3-terminal/attempt-001/result.json",
+        "sha256": "sha256:fa47e479651579819e4b19c2ff4e23784a4f64712dfae09ddaf74221bfdac540"
+      },
+      {
+        "path": "actions/w4-green/attempt-001/result.json",
+        "sha256": "sha256:0e19649f6595fd52d305db1631dc14860ff66d5d2fed4f14fe7d872d9866bae0"
+      },
+      {
+        "path": "actions/w4-terminal/attempt-001/result.json",
+        "sha256": "sha256:f2f42c27009e94b68af0d9dd6c390076c02f3c38dd91087b6a8f3b29d538e2fb"
+      },
+      {
+        "path": "actions/w5-green/attempt-001/result.json",
+        "sha256": "sha256:55f9cc64698fdd92d2f37d2b419c92f0a017ae59009730ea9a671a122d9eb984"
+      },
+      {
+        "path": "actions/w5-terminal/attempt-001/result.json",
+        "sha256": "sha256:16c893cbe1ace292e4c63659c3c1dd45001b65e21b4d0334f72930267c2ab74e"
+      },
+      {
+        "path": "actions/w6-green/attempt-001/result.json",
+        "sha256": "sha256:ff6de12aaf6c3a38d8619909c07935140d5392d78770e1bc49a39779e443aa73"
+      },
+      {
+        "path": "actions/w6-terminal/attempt-001/result.json",
+        "sha256": "sha256:8ae290d059d9551e6631a06233cf943b33599e0985d03ac9a556dd17023dda8d"
+      },
+      {
+        "path": "actions/workflow-repair-e2e/attempt-001/result.json",
+        "sha256": "sha256:29d31a0e9278b6d2ae4b3af02655051e266859fa20c4ad2d6f0d07cc4ca3034e"
+      }
+    ],
+    "authorizes": [],
+    "candidateCustodyHash": "sha256:de035ffcc535089de0cf6c0197cfe35c0b54c9af766aaee15a9022f9eb47a055",
+    "inputBindings": {
+      "candidateCustodyHash": "sha256:de035ffcc535089de0cf6c0197cfe35c0b54c9af766aaee15a9022f9eb47a055",
+      "contractHash": "sha256:1e8c96c289f9d4737a7dfe1bc71c47654aac39d313b36ad63b7523179f184036",
+      "knowledgeContextHash": "sha256:933007771b772e48c727a01b0037c353fad07b0135709d4be886682b587130b9",
+      "runInputHash": "sha256:237a6fa980c710aec2c08afad45d95e0d4612e1cb121a022d107d27ccac0e230"
+    },
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-deterministic-evaluation.v1",
+    "status": "passed",
+    "terminalResultHash": "sha256:be21064ec889518146ca4bac78750c816fadfbe6f45cdfa7b1895faca153f1dc"
+  },
+  "candidateHash": "sha256:273070dc006480a11ccfa008cb63310acb01427c737c36fd7dac4c766996e394",
+  "candidateInputHash": "sha256:0613580d5a715ddd5c764475c8cb5131cf12ce66d59356bb011227d9c9e14ab7",
+  "schemaVersion": "acceptance-result-candidate.v1"
+}

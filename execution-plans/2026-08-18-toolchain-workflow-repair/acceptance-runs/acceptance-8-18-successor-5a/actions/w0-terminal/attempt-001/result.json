@@ -1,0 +1,83 @@
+{
+  "authorizes": [],
+  "commandId": "w0-terminal",
+  "commandRegistryHash": "sha256:fa6cb6ef08b8725eb9bed570341cade9b6ebe17b8a04ea09c4de4563d1a844bc",
+  "environmentIdentity": {
+    "hash": "sha256:3d83924597c385d0a288d12c4263e250a6e330ac01419f4c241825cefb9a5fa7",
+    "names": [
+      "APPDATA",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "-m",
+      "pytest",
+      "scripts/python/tests/test_skill_input_selection_v2.py",
+      "-q"
+    ],
+    "commandId": "w0-terminal",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 300
+  },
+  "invocationHash": "sha256:e3b864b2705792c8ae788418d8d7b3226c3b2be4bf4097c94a4acf7bf9b5a4ce",
+  "processResult": {
+    "commandId": "w0-terminal",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "...                                                                      [100%]\r\n3 passed in 0.06s\r\n",
+    "stdoutSha256": "sha256:5ecba242b02ec850da76ffde88104df086be1f7ca54f1fa149c07ad3ca1373e6"
+  },
+  "processResultHash": "sha256:f122d77d1f02a16382c19498ca00b4da457ec68e653a5ce1f7703a12b7066160",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

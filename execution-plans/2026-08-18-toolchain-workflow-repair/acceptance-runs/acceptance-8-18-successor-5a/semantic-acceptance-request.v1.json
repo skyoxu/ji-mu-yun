@@ -1,0 +1,16 @@
+{
+  "acceptanceMode": "unattended",
+  "route": "deterministic_only",
+  "triggerIds": [],
+  "identities": {
+    "candidateCustodyHash": "sha256:de035ffcc535089de0cf6c0197cfe35c0b54c9af766aaee15a9022f9eb47a055",
+    "candidateRevisionHash": "sha256:cfd1ef44a4ea042e80c9ea608b9e61ff3cf9e5701551a716975af6744752dcdb",
+    "directTestsHash": "sha256:d8f239d2d2fe2fd7dbee4240202fbf456b288b6191b514038fdc8e7f2fdf16ec",
+    "semanticTriggerPolicyHash": "sha256:0fa12d7820ce0527be7ff7bb3bb05993193fe64673db61768ef2569db7908b73",
+    "skillInputReceiptHash": "sha256:19782f9a0fb13458cc29fa911a813ed8d2358f7cb6dd250493d8ca183e8c6b07",
+    "runInputHash": "sha256:237a6fa980c710aec2c08afad45d95e0d4612e1cb121a022d107d27ccac0e230",
+    "contractHash": "sha256:1e8c96c289f9d4737a7dfe1bc71c47654aac39d313b36ad63b7523179f184036"
+  },
+  "supervisedDecision": null,
+  "bootstrapImport": null
+}

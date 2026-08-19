@@ -1,0 +1,83 @@
+{
+  "authorizes": [],
+  "candidateCustody": {
+    "authorizes": [],
+    "baselineResolvedCommit": "00841ab5e1c112bef2577d9681f23f15a3e420fd",
+    "candidateMode": "commit",
+    "candidateResolvedCommit": "4705876990f3e01dce37b0c4dd407057cbfd4e56",
+    "schemaVersion": "acceptance-candidate-custody.v1",
+    "snapshotManifestHash": "",
+    "snapshotPath": ""
+  },
+  "input": {
+    "adapter_hash": "sha256:f9933d9b1130441213d20d214cc5e7c4cbdc2b58b36933a17dd795a109a62edf",
+    "adapter_id": "run-refactor-implementation-acceptance",
+    "adapter_version": "compact-vdd-projection.v1",
+    "affected_consumer_refs": [
+      ".agents/skills/quick-dev-tdd-adapter",
+      ".agents/skills/run-refactor-implementation-acceptance",
+      "scripts/python/skill_input_consumption.py"
+    ],
+    "allowed_write_roots": [],
+    "baseline_content_manifest_hash": "sha256:aa90bf67cb298b21728e38653e3dae1c45036ea2eb45a54ff2ba898fc7ede232",
+    "baseline_content_manifest_path": "acceptance-inputs/acceptance-8-18-successor-5/baseline-content-manifest.v1.json",
+    "baseline_revision": "00841ab5e1c112bef2577d9681f23f15a3e420fd",
+    "candidate_content_manifest_hash": "sha256:93f69c42e32954d2d738f082474c377d4ab449ae7a4552e1b09f4d55a6c7d05d",
+    "candidate_content_manifest_path": "acceptance-inputs/acceptance-8-18-successor-5/candidate-content-manifest.v1.json",
+    "candidate_mode": "commit",
+    "candidate_revision": "4705876990f3e01dce37b0c4dd407057cbfd4e56",
+    "change_id": "toolchain-workflow-repair-8-18-successor-acceptance",
+    "changed_paths": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-command-registry.v1.json",
+      "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-projection-request.v1.json",
+      "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-projection-result.final.json",
+      "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-run-request.acceptance-8-18-final-replay.v1.json",
+      "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context-routes/3e5c74edb7719074bbbc9586f01083ef48be553392d334d81d5ce44c8a2fbf10.json",
+      "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context.refactor-acceptance.v1.json"
+    ],
+    "code_review_domain": "toolchain",
+    "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+    "code_review_policy_path": "acceptance-inputs/acceptance-8-18-successor-5/toolchain-code-review.v1.json",
+    "created_utc": "2026-08-01T00:00:00Z",
+    "execution_mode": "evidence_only",
+    "forbidden_write_roots": [
+      "logs/phase-a-innernet/",
+      "runtime/phase-a/"
+    ],
+    "run_id": "acceptance-8-18-successor-5",
+    "target": "C:\\jimuyun\\execution-plans\\2026-08-18-toolchain-workflow-repair",
+    "target_plan_hash": "sha256:1e8c96c289f9d4737a7dfe1bc71c47654aac39d313b36ad63b7523179f184036",
+    "target_plan_paths": [
+      "implementation-contract.v1.json",
+      "requirements-and-acceptance.md"
+    ],
+    "validator_hash": "sha256:ae5cf5f8eb6257c18107db37cbd6802388f7218add6c1e549e5ae5bcb00ccf06"
+  },
+  "inputHash": "sha256:237a6fa980c710aec2c08afad45d95e0d4612e1cb121a022d107d27ccac0e230",
+  "knowledgeContext": {
+    "acceptedDecisions": [
+      {
+        "candidate": {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          "source_sha256": "87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "governance.refactor-implementation-acceptance"
+        ]
+      }
+    ],
+    "authorizes": [],
+    "contextHash": "sha256:933007771b772e48c727a01b0037c353fad07b0135709d4be886682b587130b9",
+    "path": "knowledge-context.refactor-acceptance-successor.v1.json",
+    "requestHash": "sha256:91b650c9cd52015da15c2800395d30cb6670780d718092bd41f4ba194daad7c9",
+    "resultHash": "sha256:7678deda7cd02a61fc5c8dae0ce1d5b440a867bb5c6c735bc7492e09c77a433a",
+    "sha256": "sha256:bbbb72007b0b0e0bda6ec1bd5f4a8a4bf6675b566c786b55d78853b6c8d0678d",
+    "sourceSnapshotId": "sha256:d6616e276fe784b4aa6d4e0a349ff4541f252e098c97c8e3ffffba406bd556d3"
+  },
+  "schemaVersion": "acceptance-run-input.v1"
+}

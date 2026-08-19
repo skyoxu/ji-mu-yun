@@ -1,0 +1,5 @@
+{
+  "acceptanceMode": "unattended",
+  "requestedRoute": "deterministic_only",
+  "triggerIds": []
+}
