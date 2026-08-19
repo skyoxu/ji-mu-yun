@@ -1,0 +1,42 @@
+{
+  "authorizes": [],
+  "automatic_publication_allowed": false,
+  "failure_code": "catalog_stale",
+  "locator_request": {
+    "allow_stale_catalog": true,
+    "consumer": "vdd",
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "query": "toolchain workflow repair typed skill input selection immutable generation current pointer retention knowledge gates",
+    "request_id": "TWR-20260819-prestart",
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "snapshot": {
+      "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
+      "ref": "refs/heads/main"
+    }
+  },
+  "locator_result": {
+    "candidates": [],
+    "request_id": "TWR-20260819-prestart",
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "snapshot": {
+      "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
+      "ref": "refs/heads/main"
+    },
+    "status": "blocked"
+  },
+  "missing_modules": [
+    "knowledge-execution-gates",
+    "skill-input-execution"
+  ],
+  "next_action": "knowledge-maintenance-required",
+  "required_modules": [
+    "knowledge-execution-gates",
+    "skill-input-execution"
+  ],
+  "requires_explicit_maintainer_confirmation": true,
+  "route_output": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context-routes/78e77ebb673c512ac5de0ede53b83de9d45c5b772f583266b91e3ad5ea33d885.json",
+  "route_sha256": "sha256:b6c3dc97352a934c4844fb3077d114873ea6a90893d4a838d20f0607365ea0a3",
+  "schema_version": "jimuyun.acceptance-knowledge-maintenance-route.v1",
+  "status": "blocked",
+  "target_plan": "execution-plans/2026-08-18-toolchain-workflow-repair"
+}
