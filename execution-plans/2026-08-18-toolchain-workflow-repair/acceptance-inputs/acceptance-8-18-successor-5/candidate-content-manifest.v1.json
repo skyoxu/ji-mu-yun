@@ -1,0 +1,96 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "baseline_sha256": "sha256:78b3c6586e85ef3b6ba7c10527854f5b829a810847c136a52bd09be1e3be89c5",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "candidate_sha256": "sha256:4c0dd30aaa13b59af140b995149abb608cf62c068a680bfd760299d51e654563",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "baseline_sha256": "sha256:bb293dcfa1dff49f8ae28d2001eea6f7b788e6b08acc3bd91cc5e8cfbb717042",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "candidate_sha256": "sha256:46fa580206c2b41cda0e98d503084a28e7a743dfb71ac88f09bf41ac7dcc7489",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-command-registry.v1.json",
+      "candidate_sha256": "sha256:93de6e83ab1b75447d7af5848d9174c07a47adf0e6218223765a5299159e6563",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-projection-request.v1.json",
+      "candidate_sha256": "sha256:38c40588f6a8b44a150caa439e9cf4b889e72114bd40f8a93d343b88850ae336",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-projection-result.final.json",
+      "candidate_sha256": "sha256:4542eb9645b478ef6f08cbbe4afca33893036d975dae91f354015c44cc2b655c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-run-request.acceptance-8-18-final-replay.v1.json",
+      "candidate_sha256": "sha256:b471ae8b2b3f34d3adef3f0b075da3d20afae956de48404d60738616b7230f8c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context-routes/3e5c74edb7719074bbbc9586f01083ef48be553392d334d81d5ce44c8a2fbf10.json",
+      "candidate_sha256": "sha256:5b3a2e7037fce905b2fb0fae08fca9dcebf8996b460fa3829508e8b0dae0cfbe",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-18-toolchain-workflow-repair/knowledge-context.refactor-acceptance.v1.json",
+      "candidate_sha256": "sha256:614b5bdefe6c1308e47ecb509321a1e288c823e2ebc3a670b9a6c2d93fcb6032",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "partial"
+}

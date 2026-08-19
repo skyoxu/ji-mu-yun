@@ -1,0 +1,24 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:78b3c6586e85ef3b6ba7c10527854f5b829a810847c136a52bd09be1e3be89c5"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:bb293dcfa1dff49f8ae28d2001eea6f7b788e6b08acc3bd91cc5e8cfbb717042"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

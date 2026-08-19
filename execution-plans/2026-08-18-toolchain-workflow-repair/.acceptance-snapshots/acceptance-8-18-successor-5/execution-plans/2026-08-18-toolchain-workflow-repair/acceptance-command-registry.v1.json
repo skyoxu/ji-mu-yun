@@ -1,0 +1,349 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_selection_v2.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w0-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_transport_auto.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w1-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_coverage_v2.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w2-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_knowledge_gate_matrix.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w3-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_generation_pointer.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w4-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_retention.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w5-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_toolchain_workflow_repair_e2e.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w6-green",
+      "shell": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_selection_v2.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w0-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_transport_auto.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w1-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_coverage_v2.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w2-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_knowledge_gate_matrix.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w3-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_generation_pointer.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w4-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_retention.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w5-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_toolchain_workflow_repair_e2e.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "w6-terminal",
+      "shell": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_skill_input_consumption.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "skill-input-suite",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_knowledge_gate_matrix.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "knowledge-suite",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "scripts/python/tests/test_toolchain_workflow_repair_e2e.py",
+        "-q"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "workflow-repair-e2e",
+      "shell": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py",
+        "--repository-root",
+        ".",
+        "--plan-dir",
+        "execution-plans/2026-08-18-toolchain-workflow-repair"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "plan-ready",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
+        "--repository-root",
+        ".",
+        "--plan-dir",
+        "execution-plans/2026-08-18-toolchain-workflow-repair"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "terminal-full",
+      "shell": false,
+      "timeout_seconds": 1800
+    }
+  ],
+  "schema_version": "ria.command-registry.v1"
+}
