@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+    "source_sha256": "sha256:1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 3227,
+    "start_line": 1,
+    "end_line": 66,
+    "content_sha256": "sha256:1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7"
+  },
+  "status": "accepted",
+  "summary": "ADR-0057 accepted 2026-08-05; publication owner=maintain-knowledge-base only; require append-only confirmed request binding caller, trigger, one existing pinned-main target plan, local-main commit, timestamp, nonautomatic status, knowledge-publication authority, hash-verified stale route; publish_knowledge_catalog.py --publish fail-closed; Acceptance stale output=typed hash-bound nonauthorizing append-only stop route in target plan; VDD/Acceptance require exactly one target plan and reject outputs outside it; global plan catalog indexes stable semantic sources only, excluding authority manifests and knowledge contexts; catalog builder read-only; only publication gate activates formal layers/pointers with validated capability; versioned top-level requirements/contract/state/command registry select highest numeric version; support requirements-ledger and requirements naming; historical/read-only compatibility retained; new publications record request summary+hash; extends ADR-0044/0048/0050; no supersession; refs knowledge publication schema and named scripts/skills."
+}

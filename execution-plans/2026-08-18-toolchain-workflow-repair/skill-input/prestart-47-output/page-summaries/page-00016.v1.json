@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/requirements-and-acceptance.md",
+    "source_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5019,
+    "start_line": 1,
+    "end_line": 105,
+    "content_sha256": "sha256:f53bb5f75ba878bfb0bd03896bac97f834b904277faaabb2479609650c4dee48"
+  },
+  "status": "accepted",
+  "summary": "Purpose: repair orchestration without stale-context/transport hard gates, authority transfer, or automatic Knowledge publication; TWR-W0: typed source selection, canonical independently verifiable identity, fail closed on omission/ambiguity/authority drift; TWR-W1: adapter owns deterministic paging, offsets, retries, and rejects stale/conflicting continuations; TWR-W2: adapter proves byte/line/hash coverage; gaps, conflicts, or mutations yield typed failure/refresh; TWR-W3: separate execution, publication, and semantic-review gates; unchanged semantics may use verified degraded successor, but invalid LKG, drift, missing sources, and integrity failures remain blocking; acceptance neither publishes Knowledge nor starts Bootstrap; TWR-W4: validator/coordinator creates immutable bound receipts in versioned generations; current pointer advances only after full validation; replay is identical; consumers use typed pointer; TWR-W5: attempts under .skill-input-work/<plan-id>/<attempt-id>/ with lifecycle, lease, heartbeat, protected references; dry-run lists deterministic candidates; apply needs maintainer approval for committed evidence and emits non-authorizing cleanup receipt with audit details; TWR-W6: non-authorizing end-to-end test covers W0-W5, protects retained current generation, and prevents invalid pointer advancement; Ownership: VDD=draft/plan-ready, Maintainer=implementation authorization, Quick Dev=implementation-complete, Acceptance=acceptance-passed; no new lifecycle authority"
+}

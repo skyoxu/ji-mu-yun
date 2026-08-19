@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_skill_input_selection_v2.py",
+    "source_sha256": "sha256:215d0d0317f4884468e78e53f6fcdd3c97f048bea5ef8d9a5146cba45099aaa3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 954,
+    "start_line": 1,
+    "end_line": 15,
+    "content_sha256": "sha256:215d0d0317f4884468e78e53f6fcdd3c97f048bea5ef8d9a5146cba45099aaa3"
+  },
+  "status": "accepted",
+  "summary": "Tests require typed source selection to produce distinct sha256-prefixed selection and content hashes; selection hash must remain stable across successor route generations; canonical consumer quick-dev-tdd-adapter executes against plan; source role target_files includes requirements.md; route identities prestart-45 and prestart-46 must yield equal selection hashes; fixture is normative plan input with core resource set and sha256 identity."
+}

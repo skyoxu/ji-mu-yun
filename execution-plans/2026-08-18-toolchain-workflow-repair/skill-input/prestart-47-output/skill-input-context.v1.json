@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-19T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "All 29 manifest sources have complete single-page coverage and accepted summaries. No source or page coverage is omitted.",
+      "title": "Coverage"
+    },
+    {
+      "content": "The repository routes work through typed, hash-bound, non-authorizing skill inputs. Quick Dev owns ordered RED, GREEN, and REFACTOR execution; VDD defines planning and lifecycle boundaries; acceptance builds evidence without granting release or publication authority.",
+      "title": "Repository and Skills"
+    },
+    {
+      "content": "The toolchain repair plan covers typed selection, transport continuity, adapter coverage, knowledge gates, immutable generations, retention controls, and end-to-end validation. ADRs, validators, registries, tools, policies, and focused tests consistently require fail-closed integrity checks and empty authorizations.",
+      "title": "Plan and Tests"
+    }
+  ],
+  "source_manifest_hash": "sha256:1669dff12c53f5d8b8c98ecdc50877e0290d15acc68be3f9b87b34df0a4a42cf",
+  "truncated": false
+}

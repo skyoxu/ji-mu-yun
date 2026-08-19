@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/command-registry.v1.json",
+    "source_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4240,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:8de57f97a906ef5e02518a76ab399160212eab6637ba1aad972f17a76fdf6fd0"
+  },
+  "status": "accepted",
+  "summary": "Command registry schema v1 for toolchain-workflow-repair; cwd repository root, executable py, shell disabled; w0-w6-green and w0-w6-terminal run seven targeted pytest modules, with workflow repair E2E timeout 600s and others 300s; skill-input-suite runs consumption tests 300s; knowledge-suite runs knowledge-gate tests 300s; workflow-repair-e2e repeats repair E2E 600s; plan-ready runs validate_plan_ready.py against repository and plan directory 300s; terminal-full runs terminal_full.py against same paths 1800s; green/terminal command groups intentionally duplicate targeted coverage; source and content hashes match descriptor"
+}

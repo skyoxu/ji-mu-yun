@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Skill builds/resumes evidence for exactly one execution-plans/<target>; never implements, approves, commits, releases, or deploys; default evidence_only, controlled_validation requires typed commands and isolated roots; prefer clean HEAD commit, otherwise frozen snapshot, with explicit Git baseline never candidate^; require implementation contract or current compact-VDD bundle, complete manifests, typed request, DAG, registry, knowledge context, and validated Skill-input receipt; missing/ambiguous inputs yield prerequisite_blocked; knowledge catalog staleness is degraded but usable, other context faults require repair; runs are append-only and derived from input, contract, context, and receipt hashes; stale bindings create successor runs, legacy runs remain unchanged; deterministic_only replays controlled receipts then may publish acceptance-passed without Bootstrap; semantic review requires immutable decision, fresh lineage, seven-class minimal scope, explicit high-cost acknowledgement, and run-phase-bootstrap-review; exact reuse requires bootstrap-import-envelope.v3, current bindings, clean finalized v3, and current lineage head; P0/P1 repairs require Quick Dev handoff and repair-completeness audit; Round 1 is full review, later focused verification is bounded, three consumed rounds cause manual_pause, never Round 4; ADR-0054 closure requires repaired Round 3 evidence, independent protocol review, challenge-bound maintainer acknowledgement, and finalize-manual-pause-closure; model routing is deterministic except policy-owned complex recovery, and this Skill never launches an LLM; all artifacts and routes are hash-bound, non-authorizing unless the plan-local final predicate passes"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/validate_plan_ready.py",
+    "source_sha256": "sha256:b841070c4e0a07126b5487a14e04ca968771b841a25a6b21712b2ddeed0fbc18",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 12025,
+    "start_line": 1,
+    "end_line": 217,
+    "content_sha256": "sha256:b841070c4e0a07126b5487a14e04ca968771b841a25a6b21712b2ddeed0fbc18"
+  },
+  "status": "accepted",
+  "summary": "Validator for plan toolchain-workflow-repair; supports initial-plan-ready and authorized-repair-revalidate modes; requires 10 named artifacts plus 3 tools under execution-plans; validates self-hosted contract, slices W0-W6, TDD intent, command registry, authority partitions, resume state, architecture acceptance, fixed baseline/candidate commits, exact delta paths and bound hashes, knowledge preflight/freeze, accepted modules, and canonical skill-input receipt; draft state authorizes nothing; plan-ready requires valid publication receipt bound to validation hash; authorized repair requires implementation-authorized plan and closed repair round with no blocks/authorizations; outputs pass/fail receipt with no authorizations and optional input-manifest hash; missing or malformed artifacts produce failure."
+}

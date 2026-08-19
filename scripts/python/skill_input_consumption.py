@@ -264,9 +264,45 @@ def source_selection_hash(request_binding: dict[str, Any]) -> str:
         "consumer": request_binding["consumer"],
         "operation": request_binding["operation"],
         "target": request_binding["target"],
-        "route_identity": request_binding["route_identity"],
         "source_roles": request_binding["source_roles"],
     })
+
+
+def build_typed_source_selection_v2(
+    sources: Iterable[dict[str, Any]],
+    *,
+    consumer: str = "quick-dev-tdd-adapter",
+    policy_revision: str = "v2",
+) -> dict[str, str]:
+    """Build independently verifiable selection and content identities."""
+    normalized: list[dict[str, str]] = []
+    for source in sources:
+        if not isinstance(source, dict):
+            raise SkillInputError("typed source selection entry is invalid")
+        required = ("role", "path", "module", "resource_set", "sha256")
+        if any(not isinstance(source.get(key), str) or not source[key] for key in required):
+            raise SkillInputError("typed source selection entry is incomplete")
+        if not SHA256_PATTERN.fullmatch(source["sha256"]):
+            raise SkillInputError("typed source selection content hash is invalid")
+        normalized.append({key: source[key] for key in required})
+    normalized.sort(key=lambda item: (item["role"], item["path"], item["module"], item["resource_set"]))
+    selection_projection = {
+        "schema_version": "typed-source-selection.v2",
+        "consumer": consumer,
+        "policy_revision": policy_revision,
+        "sources": [
+            {key: item[key] for key in ("role", "path", "module", "resource_set")}
+            for item in normalized
+        ],
+    }
+    content_projection = {
+        **selection_projection,
+        "sources": normalized,
+    }
+    return {
+        "sourceSelectionHash": canonical_hash(selection_projection),
+        "sourceContentHash": canonical_hash(content_projection),
+    }
 
 
 def selected_source_content_root(sources: Iterable[tuple[Path, str]]) -> str:

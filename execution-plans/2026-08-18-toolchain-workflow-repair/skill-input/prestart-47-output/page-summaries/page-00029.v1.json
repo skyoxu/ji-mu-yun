@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/python/tests/test_toolchain_workflow_repair_e2e.py",
+    "source_sha256": "sha256:90b958f289ee24e4c2cb54e7743eda70530030c9705b4170dc20a1399b1ccd9b",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 269,
+    "start_line": 1,
+    "end_line": 6,
+    "content_sha256": "sha256:90b958f289ee24e4c2cb54e7743eda70530030c9705b4170dc20a1399b1ccd9b"
+  },
+  "status": "accepted",
+  "summary": "Python pytest E2E regression; imports scripts.python.skill_input_consumption as consumption; calls build_typed_source_selection_v2([]); requires result[sourceSelectionHash] and result[sourceContentHash] to be distinct for empty input; ambiguity: expected hash values and result schema beyond these keys are unspecified"
+}

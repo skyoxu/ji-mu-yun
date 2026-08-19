@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "Route standalone requirements to direct implementation; VDD create/repair requires explicit complete-directory request. Profiles: standard, resumable, self-hosted; choose least complex before model routing. Read three required references, repository authority, then knowledge and skill-input contracts. Lifecycle: draft>plan-ready>implementation-authorized>implementation-complete>acceptance-passed>archived; Bootstrap is optional and non-authorizing. Each slice declares behavior, failure selector/expected failure, acceptance, dependents, recovery; Quick Dev alone executes/owns RED. Terminal full validation is mandatory. Repairs stay in place under repair/round-n; historical artifacts immutable; default two semantic rounds, hard limit three with typed trigger, then manual_pause. Repair requires hash-bound lineage, changed-set manifests, callsite inventory, sibling disposition, controlled producer/consumer composition receipt, and complete review scope. Knowledge preflight and typed semantic-child skill-input gate must be ready before plan artifacts/plan-ready. Bind Git baseline plus frozen range or complete scoped dirty-worktree identity. Review is optional unless requested or protected-path rules require it; use minimal-complete-closure. Resumable/self-hosted require indexed append-only 95 report; standard usually omits it. Completion requires artifacts, observable acceptance paths, recorded negative/legacy path, stable targeted checks, and current terminal full validation."
+}

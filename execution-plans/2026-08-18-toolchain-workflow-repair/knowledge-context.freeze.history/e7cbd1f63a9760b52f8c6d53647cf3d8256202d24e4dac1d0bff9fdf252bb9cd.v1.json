@@ -1,10 +1,10 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:ff29296b3bd03ef1e68641f719505bab97b5998327aa524e3f9049318157880a",
-  "canonical_context_sha256": "sha256:1f4183cb77a0aefd2235f124a883c145c2b8491fc80be00cdd9c279070118dc5",
-  "request_sha256": "sha256:ae38fb1d2137504958b6fbca72fbca9ef400aae49bc9b1cbaae92eada4792785",
-  "result_sha256": "sha256:5df5037926eb58610d3c955beffaa88d7d269473b6e815b0a636a491e08c2698",
+  "context_sha256": "sha256:e7cbd1f63a9760b52f8c6d53647cf3d8256202d24e4dac1d0bff9fdf252bb9cd",
+  "canonical_context_sha256": "sha256:c86cc087af9900c4337d7d07b002907452f770cade7936ff9d681d79c607f446",
+  "request_sha256": "sha256:cddec3dab3cb81b73ec380b2cdf6a06cba2529217c0b3cd411f2da9ea5e18a13",
+  "result_sha256": "sha256:b31c520608fce5854fcb9794f009443929210514a9cc41303c20a1904af1d140",
   "snapshot": {
     "ref": "refs/heads/main",
     "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
@@ -21,7 +21,7 @@
     },
     {
       "path": "scripts/python/skill_input_consumption.py",
-      "source_sha256": "bb0cc067022b5649c24e4b48bb240a7e713811213e88546a290684cff906f078",
+      "source_sha256": "b985034a0e3624f1e4934d3363a6280c103df6e6c4ad5e69bc424a5a1e4ee0dc",
       "satisfies": [
         "skill-input-execution"
       ]
@@ -29,8 +29,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:e7cbd1f63a9760b52f8c6d53647cf3d8256202d24e4dac1d0bff9fdf252bb9cd",
-    "freeze_receipt_path": "knowledge-context.freeze.history/e7cbd1f63a9760b52f8c6d53647cf3d8256202d24e4dac1d0bff9fdf252bb9cd.v1.json",
+    "context_sha256": "sha256:49b9ddea8f2418735978fc6054ed405cc0a895c71c1f40afb6598094da7194c6",
+    "freeze_receipt_path": "knowledge-context.freeze.history/49b9ddea8f2418735978fc6054ed405cc0a895c71c1f40afb6598094da7194c6.v1.json",
     "reason": "quick-dev-controlled-source-refresh"
   }
 }

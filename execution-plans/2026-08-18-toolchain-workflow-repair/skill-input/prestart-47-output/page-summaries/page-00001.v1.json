@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "source_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13251,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  "status": "accepted",
+  "summary": "Skill quick-dev-tdd-adapter applies only to explicit execution-plans targets with schema-valid implementation-contract.v1.json; parent route must use caller quick-dev-tdd-adapter and yield strict_tdd_plan/backend quick-dev-tdd-adapter; inspect only target plan directory and resolve at most one 95-*.md report; reports/run-state are non-authoritative; audit and repair before identity freeze; run loop_plan_directory.py before expensive actions; run slices through generated run_context and run_slice_lifecycle.py; observe expected failing RED before production writes, then GREEN, REFACTOR, and plan-local predicate; no hand-authored lifecycle evidence; stop only at implementation-complete, external-repair-required, or repeated failure fingerprint; acceptance/commit/release remain external; consume skill input via prepared typed receipt/request and require ready validation; classify architectural/complex/small_mechanical/normal with unknowns blocked complex; decisions are non-authorizing and canonical policy controls execution; verify frozen knowledge hashes before RED; persistent loop requires explicit existing execution_snapshot_paths and exact planned_new_files handling; use shell-free structured commands; preserve failed evidence as stale-linked successors; read referenced backend, TDD protocol, and evidence documents before implementation; version-sensitive dependency changes require exact-version Context7 verification before commit; repository-owned-only changes make version gate not applicable"
+}

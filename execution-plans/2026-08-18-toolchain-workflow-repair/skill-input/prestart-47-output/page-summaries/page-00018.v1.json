@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/publish_implementation_authorization.py",
+    "source_sha256": "sha256:e17b3aadbb0c8c4c8f563bd07c885aaed45b7d692a61b6699ec5ef7c6ee92af8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 8206,
+    "start_line": 1,
+    "end_line": 179,
+    "content_sha256": "sha256:e17b3aadbb0c8c4c8f563bd07c885aaed45b7d692a61b6699ec5ef7c6ee92af8"
+  },
+  "status": "accepted",
+  "summary": "PLAN_ID toolchain-workflow-repair; CLI requires repository root, plan directory, canonical output path, maintainer refresh flag, and in-plan skill-input receipt; contract and output path must match canonical plan locations; initial state must be plan-ready with authorizes=[plan-ready]; refresh requires implementation-authorized state, explicit flag, expected predecessor receipt, and preserves prior output under hash-derived repair path; state/resume advance to implementation-authorized/run-slice; skill input must validate as ready against repository skill-input contract; generation binds receipt, source-selection, selected-content-root, context, semantic-decision, and child-request hashes, then derives generation root; receipt binds contract, registries, manifests, frozen knowledge, validation/closure/delta/candidate artifacts, validators, and immutable predecessor; candidate binding hash covers bindings plus generation; writes successor authorization receipt and appends implementation report; authorizes implementation-authorized only; explicitly excludes completion, acceptance, knowledge publication, bootstrap review, and release; receipt includes a malformed-looking predecessor_authorization=<redacted>; output reports pass, receipt path, and authorization"
+}

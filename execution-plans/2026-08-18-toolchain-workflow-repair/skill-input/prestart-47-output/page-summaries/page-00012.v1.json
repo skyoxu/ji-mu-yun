@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+    "source_sha256": "sha256:d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2560,
+    "start_line": 1,
+    "end_line": 51,
+    "content_sha256": "sha256:d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50"
+  },
+  "status": "accepted",
+  "summary": "ADR-0060 accepted 2026-08-18; v1 Skill-input remains historical compatibility and cannot auto-promote to v2 authority; v2 assigns candidate roles: normative_source, authority_source, implementation_input, lifecycle_projection, derived_context, execution_evidence, report, ephemeral_attempt; only first three authorize inputs; separate sourceSelectionHash and sourceContentHash; selection binds roles, repo-relative paths, modules, scope, resources, content binds selected bytes; adapter owns transport, pages, continuation validity, coverage, truncation; complete adapter coverage prevents lossy-summary truncation; ready receipt is immutable generation under skill-input-generations/<binding-hash>; validated non-authorizing current pointer advances atomically; consumers use pointer only, never mtimes, suffixes, scans; execution, publication, semantic-review gates independent; Knowledge self-change derived from changed-set and canonical path policy, not caller flag; attempts require leases/heartbeats; retention protects current pointer, lifecycle/authorization/terminal references, active unexpired attempts; committed evidence deletion requires maintainer approval plus non-authorizing cleanup receipt; migrate all consumers to v2 before 8-18 creates current receipt; existing skill-input-current* remain immutable historical evidence pending approved retention; ADR does not create lifecycle authority, publish Knowledge, or start Bootstrap; extends ADR-0048/0050/0057/0058/0059 and supersedes only their v1 selection/current-resolution practices"
+}

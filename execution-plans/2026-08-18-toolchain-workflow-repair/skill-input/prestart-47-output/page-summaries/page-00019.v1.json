@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py",
+    "source_sha256": "sha256:a3802b040e9e60ca345a57c19b8b6953fa1325a191e6cd96192a02a38a572fab",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2007,
+    "start_line": 1,
+    "end_line": 56,
+    "content_sha256": "sha256:a3802b040e9e60ca345a57c19b8b6953fa1325a191e6cd96192a02a38a572fab"
+  },
+  "status": "accepted",
+  "summary": "Python CLI terminal verifier for PLAN_ID toolchain-workflow-repair; requires --repository-root and --plan-dir, accepts optional --out; resolves root/plan though plan is otherwise unused; checks W0-W6 under logs/tdd-adapter/toolchain-workflow-repair/<slice>/ for exactly one */slice-receipt.json; failures: current-pass-receipt-required, receipt-invalid, receipt-not-current-pass; valid receipt requires predicate=slice-ready, status=pass, failures=[], authorizes=[]; emits schema toolchain-workflow-repair.terminal-result.v2 with predicate implementation-complete, pass only with no failures, authorizes=[], lifecycle_transition=none; sorted indented JSON to stdout and optional output file; exit 0 on pass, 1 on fail; digest helper is unused."
+}
