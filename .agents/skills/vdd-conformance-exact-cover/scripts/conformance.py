@@ -526,6 +526,91 @@ def _contained_artifact(root: Path, path: Path, label: str) -> dict[str, str]:
     return {"path": relative, "sha256": file_hash(resolved)}
 
 
+def _validate_repair_lineage_successor(
+    root: Path, manifest: dict[str, Any], mapping_path: Path
+) -> None:
+    """Validate the current successor chain at the exact-cover boundary.
+
+    A source-freeze only establishes that the lineage file exists and is tied to
+    its repair input. Exact-cover is where the actual mapping and current
+    validator become known, so this boundary closes the remaining substitution
+    opportunities.
+    """
+    binding = manifest.get("repair_lineage_successor")
+    if binding is None:
+        return
+    if not isinstance(binding, dict) or set(binding) != {"path", "sha256"}:
+        raise ValueError("repair lineage binding is invalid")
+    lineage_path = root / binding["path"]
+    if _contained_artifact(root, lineage_path, "repair lineage successor") != binding:
+        raise ValueError("repair lineage binding is stale")
+    lineage = json.loads(lineage_path.read_text(encoding="utf-8"))
+    required = {
+        "schema_version", "predecessor_repair_input", "predecessor_conformance", "predecessor_semantic_decision_hash",
+        "semantic_decision_hash", "predecessor_validator_identity", "current_validator_identity",
+        "predecessor_source_freeze", "current_predecessor_freeze", "predecessor_obligation_set_hash",
+        "current_obligation_set_hash", "predecessor_semantic_fingerprint_root",
+        "current_semantic_fingerprint_root", "selection_unchanged", "authority_unchanged",
+        "semantic_inputs_unchanged", "mapping_decision_unchanged", "migration_reason",
+        "current_reviewed_mapping", "current_repair_input", "validation_envelope_hash",
+        "validation_envelope", "authorizes", "canonical_hash",
+    }
+    if (
+        not isinstance(lineage, dict) or set(lineage) != required
+        or lineage.get("schema_version") != "vdd-repair-lineage-successor.v1"
+        or lineage.get("authorizes") != []
+        or any(lineage.get(flag) is not True for flag in (
+            "selection_unchanged", "authority_unchanged", "semantic_inputs_unchanged", "mapping_decision_unchanged"
+        ))
+        or not isinstance(lineage.get("migration_reason"), str) or not lineage["migration_reason"]
+    ):
+        raise ValueError("repair lineage schema is invalid")
+    body = {key: value for key, value in lineage.items() if key != "canonical_hash"}
+    if lineage.get("canonical_hash") != _domain_hash("jimuyun.vdd-repair-lineage-successor.v1.artifact.v1", body):
+        raise ValueError("repair lineage canonical hash is stale")
+    expected_mapping = _contained_artifact(root, mapping_path, "repair lineage mapping")
+    if lineage.get("current_reviewed_mapping") != expected_mapping:
+        raise ValueError("repair lineage mapping is stale")
+    if lineage.get("current_repair_input") != manifest.get("repair_input"):
+        raise ValueError("repair lineage repair input is stale")
+    current_validator = _contained_artifact(root, Path(__file__), "repair lineage validator")
+    if lineage.get("current_validator_identity") != current_validator:
+        raise ValueError("repair lineage validator is stale")
+    envelope = lineage.get("validation_envelope")
+    expected_envelope_keys = {
+        "validator", "canonical_evidence", "current_predecessor_freeze", "current_reviewed_mapping",
+        "current_repair_input", "policy", "terminal_validator", "preflight_validator",
+    }
+    if not isinstance(envelope, dict) or set(envelope) != expected_envelope_keys:
+        raise ValueError("repair lineage validation envelope is invalid")
+    if (
+        envelope["validator"] != current_validator
+        or envelope["current_reviewed_mapping"] != expected_mapping
+        or envelope["current_repair_input"] != manifest["repair_input"]
+        or envelope["current_predecessor_freeze"] != lineage.get("current_predecessor_freeze")
+        or lineage.get("validation_envelope_hash") != _domain_hash(
+            "jimuyun.vdd-repair-lineage-successor.v1.validation-envelope.v1", envelope
+        )
+    ):
+        raise ValueError("repair lineage validation envelope is stale")
+    for label in expected_envelope_keys:
+        value = envelope[label]
+        if not isinstance(value, dict) or set(value) != {"path", "sha256"}:
+            raise ValueError("repair lineage artifact reference is invalid")
+        if _contained_artifact(root, root / value["path"], f"repair lineage {label}") != value:
+            raise ValueError("repair lineage artifact reference is stale")
+    for label in ("predecessor_repair_input", "predecessor_conformance", "predecessor_source_freeze"):
+        value = lineage.get(label)
+        if not isinstance(value, dict) or set(value) != {"path", "sha256"}:
+            raise ValueError("repair lineage predecessor reference is invalid")
+        if _contained_artifact(root, root / value["path"], f"repair lineage {label}") != value:
+            raise ValueError("repair lineage predecessor reference is stale")
+    if lineage.get("current_obligation_set_hash") != lineage.get("predecessor_obligation_set_hash") or (
+        lineage.get("current_semantic_fingerprint_root") != lineage.get("predecessor_semantic_fingerprint_root")
+    ):
+        raise ValueError("repair lineage semantic inputs drifted")
+
+
 def build_repair_input(
     root: Path,
     result: dict[str, Any],
@@ -598,6 +683,7 @@ def validate_conformance(root: Path, manifest_path: Path, mapping_path: Path) ->
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     _load_vdd_source_freeze(root).validate_manifest(root, manifest)
     mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
+    _validate_repair_lineage_successor(root, manifest, mapping_path)
     result = exact_cover(mapping["requirements"], mapping["acceptance_ids"], mapping["reverse_mapping"])
     obligations = build_obligation_inventory(root, manifest)
     expected_ids = {

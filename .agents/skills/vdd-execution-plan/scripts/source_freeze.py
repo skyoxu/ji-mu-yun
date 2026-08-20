@@ -220,6 +220,7 @@ def build_manifest(
     run_id: str,
     repair_input: dict[str, str] | None = None,
     requirements_manifest: dict[str, str] | None = None,
+    repair_lineage_successor: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     root, spec_path = root.resolve(), spec_path.resolve()
     try:
@@ -256,6 +257,7 @@ def build_manifest(
         "knowledge_bindings": _knowledge_bindings(root, target_root),
         "unresolved_inputs": [],
         "repair_input": repair_input,
+        "repair_lineage_successor": repair_lineage_successor,
         "requirements_manifest": requirements_manifest,
         "authorizes": [],
     }
@@ -274,7 +276,11 @@ def validate_manifest(root: Path, manifest: dict[str, Any]) -> None:
         "selection_record_path", "selection_pointer_path", "sources", "repository_rules",
         "knowledge_bindings", "unresolved_inputs", "repair_input", "requirements_manifest", "authorizes", "canonical_hash",
     }
-    if set(manifest) != required:
+    optional = {"repair_lineage_successor"}
+    # Sets are not hashable, so compare the two permitted field sets directly.
+    # Keep this explicit: a source-freeze manifest must not silently accept
+    # arbitrary lineage metadata.
+    if set(manifest) != required and set(manifest) != required | optional:
         raise ValueError("source-freeze manifest fields are incomplete")
     if not isinstance(manifest.get("sources"), list) or not manifest["sources"]:
         raise ValueError("source-freeze sources are invalid")
@@ -335,6 +341,22 @@ def validate_manifest(root: Path, manifest: dict[str, Any]) -> None:
             raise ValueError("source-freeze repair input is stale")
         if validate_repair_input(root, repair_path, manifest["target_root"]) != repair_input:
             raise ValueError("source-freeze repair input binding is invalid")
+    lineage = manifest.get("repair_lineage_successor")
+    if lineage is not None:
+        if repair_input is None:
+            raise ValueError("source-freeze repair lineage requires a repair input")
+        lineage_ref = _artifact_ref(root, lineage, "source-freeze repair lineage successor")
+        lineage_value = json.loads((root / lineage_ref["path"]).read_text(encoding="utf-8"))
+        if (
+            lineage_value.get("schema_version") != "vdd-repair-lineage-successor.v1"
+            or lineage_value.get("current_repair_input") != repair_input
+            or lineage_value.get("authorizes") != []
+            or lineage_value.get("canonical_hash") != _domain_hash(
+                "jimuyun.vdd-repair-lineage-successor.v1.artifact.v1",
+                {key: value for key, value in lineage_value.items() if key != "canonical_hash"},
+            )
+        ):
+            raise ValueError("source-freeze repair lineage successor is invalid")
     requirements_manifest = manifest["requirements_manifest"]
     if requirements_manifest is not None and _artifact_ref(root, requirements_manifest, "source-freeze requirements manifest") != requirements_manifest:
         raise ValueError("source-freeze requirements identity is invalid")
@@ -361,6 +383,7 @@ def main() -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--repair-input", type=Path)
     parser.add_argument("--requirements-manifest", type=Path)
+    parser.add_argument("--repair-lineage-successor", type=Path)
     args = parser.parse_args()
     try:
         root = args.repository_root.resolve()
@@ -369,13 +392,22 @@ def main() -> int:
         if args.requirements_manifest:
             requirements_path = args.requirements_manifest.resolve()
             requirements_manifest = {"path": relative(root, requirements_path), "sha256": file_hash(requirements_path)}
+        repair_lineage_successor = None
+        if args.repair_lineage_successor:
+            lineage_path = args.repair_lineage_successor.resolve()
+            repair_lineage_successor = _artifact_ref(root, {
+                "path": relative(root, lineage_path), "sha256": file_hash(lineage_path)
+            }, "source-freeze repair lineage successor")
         if repair_input is not None:
             if requirements_manifest is None:
                 raise ValueError("explicit VDD repair requires a repaired requirements manifest")
             repair_value = json.loads(args.repair_input.read_text(encoding="utf-8"))
             if repair_value["repaired_requirements_manifest"] != requirements_manifest:
                 raise ValueError("VDD repair requirements identity does not match repair input")
-        result = build_manifest(root, args.spec, args.target_root, args.run_id, repair_input, requirements_manifest)
+        result = build_manifest(
+            root, args.spec, args.target_root, args.run_id, repair_input,
+            requirements_manifest, repair_lineage_successor,
+        )
         validate_manifest(args.repository_root.resolve(), result)
         _write_new(args.out, result)
     except (OSError, ValueError, json.JSONDecodeError) as exc:

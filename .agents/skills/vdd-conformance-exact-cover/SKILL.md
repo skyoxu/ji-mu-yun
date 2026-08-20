@@ -16,3 +16,13 @@ Run `scripts/validate_conformance.py` with explicit `--repository-root`,
 `--manifest`, and `--mapping` paths. Results, diagnostics, checkpoints, and
 receipts always contain `authorizes: []`; this Skill never changes the target,
 lifecycle state, review state, acceptance state, or authorization state.
+
+For an already accepted semantic-review/repair chain whose validator or
+canonical-evidence envelope is stale, use `scripts/vdd_repair_lineage.py
+successor`. It accepts immutable predecessor freeze, reviewed mapping, review,
+repair input, and conformant receipt references, then reuses the semantic
+decision only after deterministic equivalence checks. It emits a new repair
+input, source-freeze, conformance receipt, and preflight under one replay-safe
+generation. Any authority, obligation, semantic, policy, or predecessor-chain
+drift fails closed; this route never invokes Bootstrap or publishes lifecycle
+state.

@@ -18,6 +18,7 @@
     "unresolved_inputs": {"type": "array", "items": {"type": "object", "required": ["id", "reason", "target_plan"], "additionalProperties": false, "properties": {"id": {"type": "string", "minLength": 1}, "reason": {"type": "string", "minLength": 1}, "target_plan": {"type": "string", "minLength": 1}}}},
     "repair_input": {"type": ["null", "object"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}, "required": ["path", "sha256"], "additionalProperties": false},
     "requirements_manifest": {"type": ["null", "object"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}, "required": ["path", "sha256"], "additionalProperties": false},
+    "repair_lineage_successor": {"type": ["null", "object"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}, "required": ["path", "sha256"], "additionalProperties": false},
     "authorizes": {"const": []}
   },
   "$defs": {
