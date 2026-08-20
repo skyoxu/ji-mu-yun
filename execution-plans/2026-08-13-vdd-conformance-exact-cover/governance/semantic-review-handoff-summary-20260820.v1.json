@@ -12,6 +12,10 @@
     "sha256": "sha256:42bc84cdc89efb1543a56a0832bfedb867bb875ac836dda252514be576885bcd"
   },
   "handoff_hash": "sha256:61fea034608480ab92ca7351324c01f8b65b9e54208a043fcef224daaa337a4d",
+  "complete_handoff": {
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/semantic-handoff-20260820.v1.json",
+    "sha256": "sha256:663d94502972dfd14302366415af77bba635ef15346562c3ce2d3efbfee4a588"
+  },
   "affected_obligation_count": 108,
   "affected_requirement_ids": [],
   "decision_required": "Explicit VDD semantic review must classify each deferred obligation as not_applicable or repair it into a stable requirement. This summary is not the review decision and cannot authorize Acceptance."

@@ -24,6 +24,7 @@
       "uncovered_delta": {
         "type": "vdd_semantic_disposition_review",
         "record": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/semantic-review-handoff-summary-20260820.v1.json",
+        "complete_handoff": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/semantic-handoff-20260820.v1.json",
         "mapping_candidate": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/requirements-acceptance-slice-command-20260820.v1.json"
       },
       "notes": "The implementation is not reopened. The current full-universe exact-cover receipt requires a fresh VDD mapping bound to the regenerated source-freeze."

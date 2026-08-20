@@ -53,6 +53,9 @@ The mapping refresh is complete. The remaining delta is the VDD-owned semantic
 decision for 108 deferred obligations. The validator emitted a complete,
 non-authorizing handoff with hash
 `sha256:61fea034608480ab92ca7351324c01f8b65b9e54208a043fcef224daaa337a4d`.
+The complete handoff artifact is
+`governance/semantic-handoff-20260820.v1.json` with file hash
+`sha256:663d94502972dfd14302366415af77bba635ef15346562c3ce2d3efbfee4a588`.
 It must be explicitly accepted as `not_applicable` or repaired into stable
 requirements before a conformant receipt can be issued. This governance record
 does not make that decision.
