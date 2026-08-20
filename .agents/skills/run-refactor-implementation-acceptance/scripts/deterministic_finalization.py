@@ -154,7 +154,7 @@ def _verified_quick_dev_receipt(root: Path, target: Path, prepared: dict[str, An
         raise InputError("prepared implementation receipt binding is stale")
     if not isinstance(receipt_ref, dict) or set(receipt_ref) != {"path", "sha256", "terminalCommandId"}:
         raise InputError("prepared implementation receipt binding is invalid")
-    receipt_path = _inside(root, receipt_ref["path"], "Quick Dev implementation receipt")
+    receipt_path = _inside(target, receipt_ref["path"], "Quick Dev implementation receipt")
     if not receipt_path.is_file() or _sha(receipt_path) != receipt_ref["sha256"]:
         raise InputError("Quick Dev implementation receipt is stale")
     receipt = _load(receipt_path)
