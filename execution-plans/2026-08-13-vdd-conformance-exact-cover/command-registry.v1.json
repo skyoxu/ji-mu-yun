@@ -8,15 +8,15 @@
     },
     {
       "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-      "sha256": "sha256:98d29dc34a6fba2c2806abe9f7cb47f1a76d1fb704dbb725b365a8078dde11d3"
+      "sha256": "sha256:0750280ddcadcc368443e2397c517645869ee549a7db671c0f15e4f0084e6c56"
     },
     {
       "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-source-freeze-manifest.v1.schema.json",
-      "sha256": "sha256:8e3240bd55ed24f5f7a505c9857e669e6a2a3142c39b3a5c74414cd5152a77d9"
+      "sha256": "sha256:fbf3102653cdb20c1ef0321ab7bcb9330f18bf2e2dae7bbabf732c77f9d671dc"
     },
     {
       "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-      "sha256": "sha256:0d0d1862f7b1a497bd27f0607e738dd4ffd23272644f7c53815f09f574a157b6"
+      "sha256": "sha256:4d5a6db3aab4844c49fa811789ae240047754966d56c8117e71a61b6d438b3f0"
     },
     {
       "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
@@ -52,11 +52,11 @@
       "dependencies": [
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:98d29dc34a6fba2c2806abe9f7cb47f1a76d1fb704dbb725b365a8078dde11d3"
+          "sha256": "sha256:0750280ddcadcc368443e2397c517645869ee549a7db671c0f15e4f0084e6c56"
         },
         {
           "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-source-freeze-manifest.v1.schema.json",
-          "sha256": "sha256:8e3240bd55ed24f5f7a505c9857e669e6a2a3142c39b3a5c74414cd5152a77d9"
+          "sha256": "sha256:fbf3102653cdb20c1ef0321ab7bcb9330f18bf2e2dae7bbabf732c77f9d671dc"
         },
         {
           "path": ".agents/skills/bmad-spec/scripts/canonical_package.py",
@@ -95,7 +95,7 @@
       "dependencies": [
         {
           "path": ".agents/skills/authorization/tests/conformance_preflight_runner.py",
-          "sha256": "sha256:ae8a30b5dbadbe69c1a3b00a3254803f3c56f28761df1176523f0308121f5321"
+          "sha256": "sha256:69b8cf986763a1ca21dca02fbe3dab41975925855209263e8c26ff723fc0ddca"
         },
         {
           "path": ".agents/skills/authorization/scripts/conformance_preflight.py",
@@ -103,11 +103,11 @@
         },
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:98d29dc34a6fba2c2806abe9f7cb47f1a76d1fb704dbb725b365a8078dde11d3"
+          "sha256": "sha256:0750280ddcadcc368443e2397c517645869ee549a7db671c0f15e4f0084e6c56"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-          "sha256": "sha256:0d0d1862f7b1a497bd27f0607e738dd4ffd23272644f7c53815f09f574a157b6"
+          "sha256": "sha256:4d5a6db3aab4844c49fa811789ae240047754966d56c8117e71a61b6d438b3f0"
         }
       ],
       "args": []
@@ -148,11 +148,11 @@
       "dependencies": [
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:98d29dc34a6fba2c2806abe9f7cb47f1a76d1fb704dbb725b365a8078dde11d3"
+          "sha256": "sha256:0750280ddcadcc368443e2397c517645869ee549a7db671c0f15e4f0084e6c56"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-          "sha256": "sha256:0d0d1862f7b1a497bd27f0607e738dd4ffd23272644f7c53815f09f574a157b6"
+          "sha256": "sha256:4d5a6db3aab4844c49fa811789ae240047754966d56c8117e71a61b6d438b3f0"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
@@ -180,11 +180,11 @@
       "dependencies": [
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:98d29dc34a6fba2c2806abe9f7cb47f1a76d1fb704dbb725b365a8078dde11d3"
+          "sha256": "sha256:0750280ddcadcc368443e2397c517645869ee549a7db671c0f15e4f0084e6c56"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-          "sha256": "sha256:0d0d1862f7b1a497bd27f0607e738dd4ffd23272644f7c53815f09f574a157b6"
+          "sha256": "sha256:4d5a6db3aab4844c49fa811789ae240047754966d56c8117e71a61b6d438b3f0"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
