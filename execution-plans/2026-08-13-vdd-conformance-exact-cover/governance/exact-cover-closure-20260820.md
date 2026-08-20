@@ -30,13 +30,16 @@ capability. It does not reopen implementation or Acceptance.
 
 ## Current Formal Result
 
-At current HEAD, exact-cover with the regenerated source-freeze returns
-`blocked/deterministic_coverage_gap/frozen_obligation_universe_mismatch`.
-This is an authority/mapping freshness delta: the Round 5 mapping contains 705
-obligations while the current frozen package produces 716. Its 36 canonical
-VCEC IDs and 43 acceptance IDs remain present, but source hashes embedded in
-non-canonical obligation IDs changed, so the old mapping cannot claim current
-full-universe conformance.
+At current HEAD, the regenerated mapping candidate
+`governance/requirements-acceptance-slice-command-20260820.v1.json` passes
+deterministic exact-cover and returns the only remaining typed result:
+`requirement_semantic_review_required` (`authorizes: []`). The prior Round 5
+mapping remains historical and is not used for this result.
+
+The original failure was an authority/mapping freshness delta: the Round 5
+mapping contains 705 obligations while the current frozen package produces 716.
+The refreshed candidate preserves all 36 canonical VCEC IDs and 43 acceptance
+IDs while rebinding the current source hashes.
 
 The current inventory has 80 active obligations, 108 explicit deferred semantic
 boundaries, and 528 `not_applicable` structural or explanatory records. The
@@ -46,10 +49,13 @@ silently promoted, dismissed as covered, or represented as accepted.
 
 ## Uncovered Delta And Next Gate
 
-The only uncovered delta is a VDD-owned mapping refresh bound to the current
-source-freeze, followed by the existing exact-cover validator. It must preserve
-the 36 requirement IDs, 43 acceptance IDs, and explicit treatment of all
-deferred boundaries. This governance record does not perform that repair.
+The mapping refresh is complete. The remaining delta is the VDD-owned semantic
+decision for 108 deferred obligations. The validator emitted a complete,
+non-authorizing handoff with hash
+`sha256:61fea034608480ab92ca7351324c01f8b65b9e54208a043fcef224daaa337a4d`.
+It must be explicitly accepted as `not_applicable` or repaired into stable
+requirements before a conformant receipt can be issued. This governance record
+does not make that decision.
 
 No compact Acceptance is warranted yet: no behavior regression was found in
 the source-freeze, retry, recovery, or dogfood positive programs, and the

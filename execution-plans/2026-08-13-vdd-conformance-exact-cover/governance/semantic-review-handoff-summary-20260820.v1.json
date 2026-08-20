@@ -1,0 +1,18 @@
+{
+  "schema_version": "vdd-requirement-semantic-handoff-summary.v1",
+  "status": "requirement_semantic_review_required",
+  "profile": "bootstrap-upstream-plan",
+  "authorizes": [],
+  "source_manifest": {
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/source-freeze-20260820.v1.json",
+    "sha256": "sha256:4bdd7ab7858480e6b32b00bc80c78842f82c27b8c6a5c514d7fc14348bfff4f9"
+  },
+  "requirements_mapping": {
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/requirements-acceptance-slice-command-20260820.v1.json",
+    "sha256": "sha256:42bc84cdc89efb1543a56a0832bfedb867bb875ac836dda252514be576885bcd"
+  },
+  "handoff_hash": "sha256:61fea034608480ab92ca7351324c01f8b65b9e54208a043fcef224daaa337a4d",
+  "affected_obligation_count": 108,
+  "affected_requirement_ids": [],
+  "decision_required": "Explicit VDD semantic review must classify each deferred obligation as not_applicable or repair it into a stable requirement. This summary is not the review decision and cannot authorize Acceptance."
+}
