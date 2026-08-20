@@ -13,6 +13,21 @@
       "notes": "Later plans may cite this record as a validated-by baseline. This registry does not replay or reopen Acceptance."
     },
     {
+      "plan_directory": "2026-08-13-vdd-conformance-exact-cover",
+      "implemented_by": "2026-08-13-vdd-conformance-exact-cover",
+      "validated_by": {
+        "plan_directory": "2026-08-15-acceptance-review-bootstrap-efficiency",
+        "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/acceptance-runs/acceptance-9d4f50ad88a01456/finalization/acceptance-passed.v1.json",
+        "identity_hash": "sha256:ae95d320635f2567fc3938c7144ab3615208d5619531497c169f1cd450e3c4d4"
+      },
+      "baseline_status": "implemented_with_upstream_mapping_refresh_pending",
+      "uncovered_delta": {
+        "type": "vdd_mapping_and_semantic_disposition_refresh",
+        "record": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/exact-cover-closure-20260820.md"
+      },
+      "notes": "The implementation is not reopened. The current full-universe exact-cover receipt requires a fresh VDD mapping bound to the regenerated source-freeze."
+    },
+    {
       "plan_directory": "2026-08-18-toolchain-workflow-repair",
       "validated_by": {
         "path": "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-runs/acceptance-8-18-successor-5a/finalization/successor-acceptance-passed.v1.json",
