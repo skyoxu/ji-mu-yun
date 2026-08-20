@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vdd-source-freeze-manifest.v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "target_root", "package_root", "selection_hash", "selection_record_path", "selection_pointer_path", "canonical_hash", "sources", "repository_rules", "knowledge_bindings", "unresolved_inputs", "repair_input", "requirements_manifest", "authorizes"],
+  "properties": {
+    "schema_version": {"const": "vdd-source-freeze-manifest.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "target_root": {"type": "string", "minLength": 1},
+    "package_root": {"type": "string", "minLength": 1},
+    "selection_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "canonical_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "selection_record_path": {"type": "string", "minLength": 1},
+    "selection_pointer_path": {"type": "string", "minLength": 1},
+    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}},
+    "repository_rules": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
+    "knowledge_bindings": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
+    "unresolved_inputs": {"type": "array", "items": {"type": "object", "required": ["id", "reason", "target_plan"], "additionalProperties": false, "properties": {"id": {"type": "string", "minLength": 1}, "reason": {"type": "string", "minLength": 1}, "target_plan": {"type": "string", "minLength": 1}}}},
+    "repair_input": {"type": ["null", "object"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}, "required": ["path", "sha256"], "additionalProperties": false},
+    "requirements_manifest": {"type": ["null", "object"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}, "required": ["path", "sha256"], "additionalProperties": false},
+    "repair_lineage_successor": {"type": ["null", "object"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}, "required": ["path", "sha256"], "additionalProperties": false},
+    "authorizes": {"const": []}
+  },
+  "$defs": {
+    "binding": {"type": "object", "required": ["path", "sha256", "relationship"], "additionalProperties": false, "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "relationship": {"type": "string", "minLength": 1}}},
+    "source": {"type": "object", "required": ["path", "role", "sha256", "relationship"], "additionalProperties": false, "properties": {"path": {"type": "string", "minLength": 1}, "role": {"enum": ["canonical", "normative_companion", "adopted_companion", "provenance", "repository_authority"]}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "relationship": {"type": "string", "minLength": 1}}}
+  },
+  "additionalProperties": false
+}

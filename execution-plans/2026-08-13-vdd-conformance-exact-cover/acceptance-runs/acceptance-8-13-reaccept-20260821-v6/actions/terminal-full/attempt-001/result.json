@@ -1,0 +1,85 @@
+{
+  "authorizes": [],
+  "commandId": "terminal-full",
+  "commandRegistryHash": "sha256:b42180dd053dae7e71d682d6290292881d14de614275e46b00fcd549de11f203",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 1,
+  "invocation": {
+    "argv": [
+      "-3",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_full.py",
+      "--repository-root",
+      ".",
+      "--plan-dir",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+      "--out",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/terminal-results/terminal-successor-v6.json"
+    ],
+    "commandId": "terminal-full",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 600
+  },
+  "invocationHash": "sha256:d2edf11da4830c22782a6b623b3ce3aa62e17f6cbaa001163d4aefb26ad2b339",
+  "processResult": {
+    "commandId": "terminal-full",
+    "exitCode": 1,
+    "stderr": "Traceback (most recent call last):\r\n  File \"C:\\jimuyun\\execution-plans\\2026-08-13-vdd-conformance-exact-cover\\tools\\terminal_full.py\", line 83, in <module>\r\n    raise SystemExit(main())\r\n                     ^^^^^^\r\n  File \"C:\\jimuyun\\execution-plans\\2026-08-13-vdd-conformance-exact-cover\\tools\\terminal_full.py\", line 75, in main\r\n    result[\"canonical_receipt_path\"] = publish_receipt(plan, result).relative_to(plan).as_posix()\r\n                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\jimuyun\\execution-plans\\2026-08-13-vdd-conformance-exact-cover\\tools\\terminal_full.py\", line 26, in publish_receipt\r\n    raise RuntimeError(\"implementation-complete successor conflicts\")\r\nRuntimeError: implementation-complete successor conflicts\r\n",
+    "stderrSha256": "sha256:db6c5d5bf9ee1032df9c02d737bccf92e5c4d4a4998e15a9ecf8fe976060e2ab",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:5146055f48c8d35a3a327fe7699e732515e50418b5ca52522a0d2d85472a4ca7",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}
