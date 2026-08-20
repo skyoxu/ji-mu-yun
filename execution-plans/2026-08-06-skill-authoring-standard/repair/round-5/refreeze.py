@@ -42,8 +42,8 @@ def refresh_authority_and_baseline(main_commit: str) -> None:
     write(PLAN / "authority-manifest.v1.json", authority)
     baseline = json.loads((PLAN / "baseline-and-scope.v1.json").read_text(encoding="utf-8"))
     baseline["git"] = {"commit": main_commit, "tree": subprocess.check_output(["git", "rev-parse", f"{main_commit}^{{tree}}"], cwd=ROOT, text=True).strip(), "main_ref": "refs/heads/main"}
-    baseline["scope"]["untracked_paths"] = ["docs/know69.txt"]
-    baseline["scope"]["untracked_manifest"] = [{"path":"docs/know69.txt","sha256":digest(ROOT / "docs/know69.txt")}] if (ROOT / "docs/know69.txt").is_file() else []
+    baseline["scope"]["untracked_paths"] = ["docs/know70.txt"]
+    baseline["scope"]["untracked_manifest"] = [{"path":"docs/know70.txt","sha256":digest(ROOT / "docs/know70.txt")}] if (ROOT / "docs/know70.txt").is_file() else []
     baseline["scope"]["dirty_scope_hash"] = digest(ROOT / "docs/workflows/skill-control-plane-evolution-requirements.md")
     write(PLAN / "baseline-and-scope.v1.json", baseline)
 

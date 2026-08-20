@@ -1,0 +1,63 @@
+P1：finalizer 将非授权结果提升成授权事实
+
+实际 terminal 输出是：
+
+terminal-validation=implementation-complete authorizes=[]
+
+但最新 deterministic_finalization.py 将它人工转换为：
+
+{
+  "predicate": "implementation-complete",
+  "authorizes": ["implementation-complete"]
+}
+
+也就是说，finalizer 把明确的 authorizes=[] 提升成了 implementation-complete 授权。
+
+仓库里确实存在真正的 Quick Dev implementation-complete receipt，但最终 acceptance evaluation 没有直接绑定它的路径和哈希，只在上游 prerequisite bundle 中出现。
+
+修复要求：
+
+prepared run input、candidate evaluation 和 final result 都必须绑定 prerequisite bundle 与 Quick Dev receipt；
+finalizer 重新验证 receipt 的 contract、registry、terminal command、当前字节和 authorizes;
+terminal 文本 marker 只能作为执行成功信号，不能被转换成授权。
+P1：验收证据绑定本机绝对路径，不可跨 checkout 重放
+
+当前 run input 写入：
+
+C:\jimuyun\execution-plans\...
+
+final wrapper 的 candidatePath 也是完整 Windows 绝对路径。由于 finalizer 采用 append-only 精确比较，换目录、换机器或 Linux checkout 后无法产生相同 wrapper。
+
+应改为：
+
+"targetPlan": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+"candidatePath": "finalization/acceptance-result-candidate.v1.json"
+
+运行时再相对于明确的 repository_root 解析。
+
+状态投影仍然落后
+
+当前 plan-state.v1.json 仍是：
+
+state = implementation-authorized
+所有 slice = pending
+does_not_authorize = acceptance-passed
+
+VDD 不拥有 Acceptance 授权是合理的，但目录缺少一个顶层 canonical acceptance-current pointer，普通消费者仍会把该目录识别成尚未实施。
+
+建议生成新的 immutable successor run：
+
+acceptance-8-13-reaccept-20260820-v2
+
+并补充顶层 acceptance-current.v1.json，指向新的 final result；不要覆盖现有 run。
+
+最终判断：
+
+代码实施：通过
+Quick Dev TDD：通过
+Acceptance 命令执行：通过
+候选字节新鲜度：通过
+Acceptance 内部证据一致性：通过
+授权语义闭环：未通过
+跨环境可重放性：未通过
+最终状态：暂不能认定为严格验收通过

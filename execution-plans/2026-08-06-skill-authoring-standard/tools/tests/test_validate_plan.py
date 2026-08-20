@@ -24,7 +24,7 @@ class ValidatePlanTests(unittest.TestCase):
         contract_path = ROOT / "implementation-contract.v1.json"
         original = contract_path.read_text(encoding="utf-8")
         try:
-            changed = original.replace("docs/architecture/ADR_INDEX_PHASE.md", "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**", 1)
+            changed = original.replace("docs/architecture/ADR_INDEX_PHASE.md", ".agents/skills/run-phase-bootstrap-review/**", 1)
             contract_path.write_text(changed, encoding="utf-8", newline="\n")
             self.assertTrue(any(item.startswith("forbidden-write:") for item in MODULE.validate(allow_draft=True)))
         finally:

@@ -32,7 +32,7 @@
     },
     {
       "path": "tools/tests/test_validate_plan.py",
-      "disposition": "unchanged",
+      "disposition": "changed",
       "consumer": "plan-validator"
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "path": "00-index.md",
-      "disposition": "changed",
+      "disposition": "unchanged",
       "consumer": "plan-validator"
     },
     {
@@ -57,12 +57,12 @@
     },
     {
       "path": "implementation-contract.v1.json",
-      "disposition": "changed",
+      "disposition": "unchanged",
       "consumer": "plan-validator"
     },
     {
       "path": "requirements.v1.json",
-      "disposition": "changed",
+      "disposition": "unchanged",
       "consumer": "plan-validator"
     },
     {

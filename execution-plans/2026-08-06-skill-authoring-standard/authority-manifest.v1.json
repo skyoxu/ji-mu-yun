@@ -2,8 +2,8 @@
   "schema_version": "vdd.authority-manifest.v1",
   "plan_id": "skill-authoring-standard",
   "git": {
-    "commit": "4af157d934bacde02db4f27e0ebe266dccfb6939",
-    "tree": "4762a189d8810a97d39274d6fd5f07cc94f6ab77"
+    "commit": "f7e8b508303756d2bf1976cfa6b08234e39f122b",
+    "tree": "2ef422c1eb3eb502edb2c2988b1d4d286f9c9188"
   },
   "source_files": [
     {
@@ -36,7 +36,7 @@
     },
     {
       "path": "docs/workflows/skill-control-plane-evolution-requirements.md",
-      "sha256": "sha256:9a849078e82107c4217437235dc6d16ae1cf0ccb33c2a781efd0421cf2497ad3"
+      "sha256": "sha256:97b74b10cfd91bfb56d205d3fbe5b49e034b532b285fb443064aa9057d23cf4a"
     },
     {
       "path": ".agents/skills/vdd-execution-plan/SKILL.md",

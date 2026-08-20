@@ -1,0 +1,80 @@
+需要修复的问题
+1. 阻断：Knowledge Catalog 没有更新
+
+当前 main 是 f7e8b508，但 current.json 和 LKG 仍绑定：
+
+main_commit = 84b96458f00f253b04c3d3f9389734c7d4b30f63
+generation  = 088242399d9de0f1d8f6f2e1a44df229aac6745e16323484a2425538e5e665b9
+
+并且当前生成物仍然索引三个已删除目录：
+
+repository-knowledge-catalog.v1.json：每个目录仍出现 11 次
+consumer-projections.v1.json：每个仍出现 3 次
+derived-index.v1.json：每个仍出现 15 次
+当前 source snapshot 也仍包含它们
+
+这次提交实际上没有修改任何 knowledge/** 文件。因此“更新知识库”尚未完成，Locator 仍可能返回已删除计划或因源文件不存在而失败。
+
+2. 高风险：把 authorizes=[] 转换成了实施完成授权
+
+提交修改了 deterministic_finalization.py：
+
+terminal-validation=implementation-complete authorizes=[]
+
+现在会被转换为：
+
+{
+  "authorizes": ["implementation-complete"]
+}
+
+但该字符串来自 terminal_validation.py，它明确输出 authorizes=[]。与此同时，08-13 的 plan-state.v1.json 仍是 implementation-authorized，并明确不授权 implementation-complete 和 acceptance-passed。
+
+这与当前 Acceptance Skill 要求消费真实 Quick Dev quick-dev-implementation-complete.v1 receipt 的规则冲突。
+
+建议：
+
+保留“从噪声输出中反向寻找合法 JSON”的增强；
+删除对纯文本 authorizes=[] marker 的授权转换；
+marker 用例应预期阻断；
+08-13 新增的 acceptance-passed 结果应通过 successor evidence 标记为无效/被替代，不要重写历史文件；
+重新走真实 Quick Dev receipt → Acceptance 路径。
+3. 活动文档仍残留 Package C 语义
+
+skill-control-plane-evolution-requirements.md 仍写着：
+
+“three sequential VDD plan operations”
+“For each package A, B, and C”
+
+但现在只有 A、B。应分别改为：
+
+two sequential VDD plan operations
+For each package A and B:
+4. 95 报告索引仍有悬空条目
+
+execution-plans/95-implementation-report-index.v1.json 仍索引：
+
+2026-08-06-quick-dev-phase-regression-repair-mode
+2026-08-06-toolchain-plan-delivery-loop-skill
+
+对应目录已经不存在，应删除这两个条目。
+
+5. Skill Authoring validator 仍引用被删除目录
+
+skill-authoring-standard/tools/validate_plan.py 的 FORBIDDEN 中仍有 delivery-loop 目录。虽然当前不会导致目录恢复，但属于活动控制面的陈旧路径，应通过计划 repair/refreeze 移除。
+
+6. docs/know69.txt 不建议保留
+
+新增的 docs/know69.txt 是完整复制的清理指令，持续包含三个已废弃目录。除非你明确希望它成为长期 source brief，否则建议删除，避免未来又被作为需求输入或知识源消费。
+
+建议的下一次修复提交
+
+按以下顺序处理：
+
+修复 Acceptance 的 marker 授权转换。
+为受影响的 08-13 Acceptance 结果追加 successor/invalidated evidence。
+修正文档中 “three” 和 “A, B, C”。
+清理 95 报告索引。
+删除 docs/know69.txt，并修复/refreeze skill-authoring-standard。
+提交源修复进入 main。
+使用正式 maintain-knowledge-base + publication route 发布新 generation。
+验证当前 Catalog、projections、derived index 不再包含三个活动计划模块。

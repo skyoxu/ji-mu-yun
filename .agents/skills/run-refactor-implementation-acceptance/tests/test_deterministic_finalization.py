@@ -111,11 +111,10 @@ def test_terminal_machine_result_skips_unrelated_json_after_completion() -> None
     assert result["predicate"] == "implementation-complete"
 
 
-def test_terminal_machine_result_accepts_exact_terminal_validation_marker() -> None:
+def test_terminal_machine_result_rejects_authority_free_text_marker() -> None:
     import deterministic_finalization
 
-    result = deterministic_finalization._terminal_machine_result(
-        "validator output\nterminal-validation=implementation-complete authorizes=[]\n"
-    )
-
-    assert result["authorizes"] == ["implementation-complete"]
+    with pytest.raises(Exception, match="machine-readable result"):
+        deterministic_finalization._terminal_machine_result(
+            "validator output\nterminal-validation=implementation-complete authorizes=[]\n"
+        )

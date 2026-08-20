@@ -4,7 +4,7 @@
   "files": [
     {
       "path": "tools/validate_plan.py",
-      "sha256": "sha256:90912d08319526f138a8525c08679ee2543c8f2618bde5553f2622fa7b7e27e8"
+      "sha256": "sha256:f913623986fd7b7e330119438957f732b52e42d6adc1fd14146f3a849265661c"
     },
     {
       "path": "tools/validate_implementation.py",
@@ -12,7 +12,7 @@
     },
     {
       "path": "tools/tests/test_validate_plan.py",
-      "sha256": "sha256:3a7d6cbc91f39aa5c82eb8c36fc39566cdb22522a3bcb0f48b3ddc64092fcde2"
+      "sha256": "sha256:355baa60c2845848230de58610b50dbf04efa39a53345eb976508b087df6483c"
     },
     {
       "path": "tools/tests/test_validate_implementation.py",
@@ -24,11 +24,11 @@
     },
     {
       "path": "authority-manifest.v1.json",
-      "sha256": "sha256:14595df0e873b13b8d7adbbf392bc19986c4745f6c195ff05b6a9227fe925062"
+      "sha256": "sha256:d72a520b2f509b0001a2e6d564d31a32735e0710dd18db2d76adb03080e8e0e7"
     },
     {
       "path": "baseline-and-scope.v1.json",
-      "sha256": "sha256:0023e2ba836bfc088697b2328ca4c762c23992c9841f520a3dc49ea2c50669c6"
+      "sha256": "sha256:bca864137e3f8493ad4a46fdb161cb79b8ce8fc9334b1558be4c4f68219999f7"
     },
     {
       "path": "implementation-contract.v1.json",

@@ -41,7 +41,6 @@ FORBIDDEN = (
     "PhaseA.Platform.Tests/",
     "runtime/phase-a/",
     "logs/phase-a-innernet/",
-    "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/",
 )
 ROUND3_ROOT = PLAN_ROOT / "repair" / "round-3"
 ROUND3_CLOSURE = ROUND3_ROOT / "repair-closure.json"

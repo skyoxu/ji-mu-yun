@@ -6,7 +6,7 @@ Scope: repository-local non-BMAD Skill control plane
 
 ## Purpose
 
-This document is the explicit input for three sequential VDD plan operations.
+This document is the explicit input for two sequential VDD plan operations.
 It is not itself an execution-plan directory and must not be implemented as a
 single code change. The maintainer will ask `vdd-execution-plan` to consume
 each work package below and create or repair one complete execution-plan
@@ -35,7 +35,7 @@ Out of scope:
 
 ## VDD Consumption Contract
 
-For each package A, B, and C:
+For each package A and B:
 
 1. Read this document and the repository authority named in `AGENTS.md`.
 2. Create or repair a complete VDD execution-plan directory only because the

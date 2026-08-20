@@ -35,7 +35,7 @@
       "evidence": [
         {
           "path": "docs/workflows/skill-control-plane-evolution-requirements.md",
-          "sha256": "sha256:9a849078e82107c4217437235dc6d16ae1cf0ccb33c2a781efd0421cf2497ad3"
+          "sha256": "sha256:97b74b10cfd91bfb56d205d3fbe5b49e034b532b285fb443064aa9057d23cf4a"
         }
       ]
     },
@@ -49,26 +49,26 @@
       "evidence": [
         {
           "path": "repair/round-5/candidate-content-manifest.v1.json",
-          "sha256": "sha256:ed7dbb58dde1d27d41ba07a2b7f28a162c59cc22e99338f7a7fc2a356fb9286e"
+          "sha256": "sha256:3dd2aa28c2ffee11192bd66497461b16c5bb6839f133b3b798fc4aacebc5c56a"
         }
       ]
     }
   ],
   "baselineManifest": {
     "path": "repair/round-5/baseline-content-manifest.v1.json",
-    "sha256": "sha256:b6241f061f4a3e4a3db5574acb840dd0d90c9f19b3bf8d4eb9417b8c9203c9f8"
+    "sha256": "sha256:b68ebe0085b4569448bddea7630942caf7d43e5421499301306c9d4fdaaf3b09"
   },
   "candidateManifest": {
     "path": "repair/round-5/candidate-content-manifest.v1.json",
-    "sha256": "sha256:ed7dbb58dde1d27d41ba07a2b7f28a162c59cc22e99338f7a7fc2a356fb9286e"
+    "sha256": "sha256:3dd2aa28c2ffee11192bd66497461b16c5bb6839f133b3b798fc4aacebc5c56a"
   },
   "callsiteInventory": {
     "path": "repair/round-5/callsite-inventory.v1.json",
-    "sha256": "sha256:a97885da36e0289f44c376a79c06506bc03a7dfc041fe3727f50ec00a4fd9125"
+    "sha256": "sha256:fee9a4a37dd230409e633ab2eb688584a18473cb05d8c0328d402452461b4b68"
   },
   "compositionReceipt": {
     "path": "logs/tdd-adapter/skill-authoring-standard/repair-round-5/plan-validator-composition-receipt.v1.json",
-    "sha256": "sha256:f6cda7d6aea49a8eca7ab77f581040f7a71c6b9e2553beb717639577c02465f7"
+    "sha256": "sha256:d99b049be8ac62e13eb8138f5950d3f16000ec5938aedaa0e1d51f18e489dc78"
   },
   "authorizes": []
 }

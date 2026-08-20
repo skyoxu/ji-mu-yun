@@ -1,0 +1,560 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "request_binding": {
+    "request": {},
+    "consumer": "vdd-execution-plan",
+    "operation": "repair",
+    "target": "execution-plans/2026-08-06-skill-authoring-standard",
+    "route_identity": "skill-authoring-standard-package-ab-retirement-20260820-r8",
+    "source_roles": {
+      "target_plan": [
+        "execution-plans/2026-08-06-skill-authoring-standard"
+      ],
+      "repair_finding": [
+        "docs/know70.txt"
+      ],
+      "requirements": [
+        ".agents/skills/vdd-execution-plan/references"
+      ]
+    }
+  },
+  "request_hash": "sha256:3fc1e995c0acc23d71c5aa6ab677abb564d32c46a807bfe3b5b509a31f38bc1d",
+  "target": "execution-plans/2026-08-06-skill-authoring-standard",
+  "route_identity": "skill-authoring-standard-package-ab-retirement-20260820-r8",
+  "repository_identity": {
+    "head": "f7e8b508303756d2bf1976cfa6b08234e39f122b",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:a3287cbcadcc0ed54bf55409fe29fd898de5041664c8e2e5662a2345cafeb03b",
+    "source_selection_hash": "sha256:4541c349e43932cf958a5ce7d19e156c2198f7f33cb11b2aa495e1bbde1af71f",
+    "selected_source_content_root": "sha256:df038dd2fb22b8dc82f98b3ab0d10aa967400114ac1cb357f9270ce3b2d0d7ae"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-20T15:16:06.548754Z",
+  "contract_hash": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+  "source_manifest": {
+    "path": "acceptance-inputs/skill-input-repair-20260820-r8/source-manifest.v1.json",
+    "sha256": "sha256:b9d8a4588809f2f3d0f5e8ec9a790cb0b6ecff521dd47ccead3f3e3f2ef432e0"
+  },
+  "child_request": {
+    "path": "skill-input-output-repair-20260820-r8/skill-input-child-request.v1.json",
+    "sha256": "sha256:8741a142328e68be7ebd203aed76a4bd18150144edf31a0a6f5cfb770636ce14"
+  },
+  "sources": [
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "required": false,
+      "sha256_before": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "sha256_after": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "size_bytes": 16141,
+      "line_count": 205,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 205
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/clarification-gate.md",
+      "required": false,
+      "sha256_before": "sha256:f4265c931334ad2c6034bedde2e61f225da6e32e5fefe1813095abb5948e2350",
+      "sha256_after": "sha256:f4265c931334ad2c6034bedde2e61f225da6e32e5fefe1813095abb5948e2350",
+      "size_bytes": 1595,
+      "line_count": 11,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:f4265c931334ad2c6034bedde2e61f225da6e32e5fefe1813095abb5948e2350",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 11
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/knowledge-consumption.md",
+      "required": false,
+      "sha256_before": "sha256:5f01cb1f13f835a906fd7e23c7e9d28d956a3d7253dd8f0f65240b6884ee2dc3",
+      "sha256_after": "sha256:5f01cb1f13f835a906fd7e23c7e9d28d956a3d7253dd8f0f65240b6884ee2dc3",
+      "size_bytes": 2622,
+      "line_count": 41,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:5f01cb1f13f835a906fd7e23c7e9d28d956a3d7253dd8f0f65240b6884ee2dc3",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 41
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.json",
+      "required": false,
+      "sha256_before": "sha256:1acc483d886b8a15da829d825022541448277f72fee7eb8e0280a436b4889291",
+      "sha256_after": "sha256:1acc483d886b8a15da829d825022541448277f72fee7eb8e0280a436b4889291",
+      "size_bytes": 980,
+      "line_count": 1,
+      "sensitivity": "credential-bearing",
+      "semantic_snapshot_sha256": "sha256:ebdd8b3dfdeeefa873534e9aabbfbee357cb0e1acd8b22d3770cac99dba97b2a",
+      "redaction_status": "complete",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.md",
+      "required": false,
+      "sha256_before": "sha256:0b6b5a056dc72015ede28f71a0ae65484091356da617ba75e741c98a58c6c846",
+      "sha256_after": "sha256:0b6b5a056dc72015ede28f71a0ae65484091356da617ba75e741c98a58c6c846",
+      "size_bytes": 906,
+      "line_count": 9,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:0b6b5a056dc72015ede28f71a0ae65484091356da617ba75e741c98a58c6c846",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 9
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
+      "required": false,
+      "sha256_before": "sha256:64d322719f1448a02f5c88c6216b586dad1e3020b26d8476ed50587a081f2619",
+      "sha256_after": "sha256:64d322719f1448a02f5c88c6216b586dad1e3020b26d8476ed50587a081f2619",
+      "size_bytes": 2401,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:7a7d3eb6aa0ffe16c0c8f6c1bae3e5e5e8759fd1ba5e2efb8dac92b3156c23c5",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-source-freeze-manifest.v1.schema.json",
+      "required": false,
+      "sha256_before": "sha256:fbf3102653cdb20c1ef0321ab7bcb9330f18bf2e2dae7bbabf732c77f9d671dc",
+      "sha256_after": "sha256:fbf3102653cdb20c1ef0321ab7bcb9330f18bf2e2dae7bbabf732c77f9d671dc",
+      "size_bytes": 3034,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:d55b5acb7f1e7f7eb7b8f6b0e613e97e970d9492f668edf90015107ea8fc44cd",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/skill-compliance-protocol.md",
+      "required": false,
+      "sha256_before": "sha256:22e3e5b495e6cecc0de6beeb0d5f10949bf6a89325a7f44788e752ab5b81c989",
+      "sha256_after": "sha256:22e3e5b495e6cecc0de6beeb0d5f10949bf6a89325a7f44788e752ab5b81c989",
+      "size_bytes": 708,
+      "line_count": 12,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:22e3e5b495e6cecc0de6beeb0d5f10949bf6a89325a7f44788e752ab5b81c989",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 12
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json",
+      "required": false,
+      "sha256_before": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "sha256_after": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "size_bytes": 1466,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:2491a8467d2fcda9c940b9a633daad479af00ccbc1042d95dd31ae39aa91a2d6",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/solo-maintainer-vdd-standard.md",
+      "required": false,
+      "sha256_before": "sha256:ba113d1d509b9a802b0d9e03de56129ec24e321bc4a05690d6adf3690d9e21ee",
+      "sha256_after": "sha256:ba113d1d509b9a802b0d9e03de56129ec24e321bc4a05690d6adf3690d9e21ee",
+      "size_bytes": 6196,
+      "line_count": 72,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:ba113d1d509b9a802b0d9e03de56129ec24e321bc4a05690d6adf3690d9e21ee",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 72
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
+      "required": false,
+      "sha256_before": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
+      "sha256_after": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
+      "size_bytes": 20680,
+      "line_count": 408,
+      "sensitivity": "credential-bearing",
+      "semantic_snapshot_sha256": "sha256:1408b7bba1b454d4a9cb05188ca7b7280f4323f9012d67670a567a3efa11cce2",
+      "redaction_status": "complete",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 408
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "docs/know70.txt",
+      "required": true,
+      "sha256_before": "sha256:aa480c98282dcc4043bccb7b7e7523c86a4a42d4d7b61ebfc7248ce7a6bc3741",
+      "sha256_after": "sha256:aa480c98282dcc4043bccb7b7e7523c86a4a42d4d7b61ebfc7248ce7a6bc3741",
+      "size_bytes": 3366,
+      "line_count": 80,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:aa480c98282dcc4043bccb7b7e7523c86a4a42d4d7b61ebfc7248ce7a6bc3741",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 80
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "docs/standards/repository-maintenance-agent-protocol.md",
+      "required": false,
+      "sha256_before": "sha256:3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "sha256_after": "sha256:3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "size_bytes": 3435,
+      "line_count": 46,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 46
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "docs/workflows/skill-control-plane-evolution-requirements.md",
+      "required": false,
+      "sha256_before": "sha256:97b74b10cfd91bfb56d205d3fbe5b49e034b532b285fb443064aa9057d23cf4a",
+      "sha256_after": "sha256:97b74b10cfd91bfb56d205d3fbe5b49e034b532b285fb443064aa9057d23cf4a",
+      "size_bytes": 7150,
+      "line_count": 170,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:97b74b10cfd91bfb56d205d3fbe5b49e034b532b285fb443064aa9057d23cf4a",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 170
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+      "required": true,
+      "sha256_before": "sha256:69d684c6647847ce78304c4bf71e02d7e9fd30e17223ff2aa95deb75f202de1c",
+      "sha256_after": "sha256:69d684c6647847ce78304c4bf71e02d7e9fd30e17223ff2aa95deb75f202de1c",
+      "size_bytes": 6234,
+      "line_count": 137,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:69d684c6647847ce78304c4bf71e02d7e9fd30e17223ff2aa95deb75f202de1c",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 137
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/authority-manifest.v1.json",
+      "required": true,
+      "sha256_before": "sha256:d72a520b2f509b0001a2e6d564d31a32735e0710dd18db2d76adb03080e8e0e7",
+      "sha256_after": "sha256:d72a520b2f509b0001a2e6d564d31a32735e0710dd18db2d76adb03080e8e0e7",
+      "size_bytes": 3231,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:d597e6cd51deb429a492198b609464c4f33198737b480d313fedf4b15c856c99",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/baseline-and-scope.v1.json",
+      "required": true,
+      "sha256_before": "sha256:bca864137e3f8493ad4a46fdb161cb79b8ce8fc9334b1558be4c4f68219999f7",
+      "sha256_after": "sha256:bca864137e3f8493ad4a46fdb161cb79b8ce8fc9334b1558be4c4f68219999f7",
+      "size_bytes": 1464,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:6062e06949ee9e1334bd759309a25d313f351586de2d14ceae758a8644804f25",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
+      "required": true,
+      "sha256_before": "sha256:5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514",
+      "sha256_after": "sha256:5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514",
+      "size_bytes": 2548,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:cce2de3ab1e83f49874acd65c66ec1ff325cd01a1ef0e67549e3d2002f4fbb31",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+      "required": true,
+      "sha256_before": "sha256:83e8eb8bf6ee912c79ae7c2370f6fb63ef0ba765f4aa48ba7a24a15e346b1675",
+      "sha256_after": "sha256:83e8eb8bf6ee912c79ae7c2370f6fb63ef0ba765f4aa48ba7a24a15e346b1675",
+      "size_bytes": 10961,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:21d6cbe335535622bd25aaae4bc3fb1d1b4a351bb2cf5f97be35604787445be2",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/model-route-decision.v1.json",
+      "required": true,
+      "sha256_before": "sha256:e50fd4e029511f7a4be1d1fbc822c31e311bf8b377410a08550171265cd47567",
+      "sha256_after": "sha256:e50fd4e029511f7a4be1d1fbc822c31e311bf8b377410a08550171265cd47567",
+      "size_bytes": 1109,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:e0e447350851198f911d1e068dcf63597fd87e03f27289706f9e96711f992ff5",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+      "required": true,
+      "sha256_before": "sha256:be7769f95771a2dcf50dcc18d9fbfe23e20a2aebb16ad151fcd5ee374ce49150",
+      "sha256_after": "sha256:be7769f95771a2dcf50dcc18d9fbfe23e20a2aebb16ad151fcd5ee374ce49150",
+      "size_bytes": 5536,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:03da64996fb7ea19f5608b6930bc271a8ee76ab6e852e0e5d1236c3812033777",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/tests/test_validate_implementation.py",
+      "required": true,
+      "sha256_before": "sha256:944668d359ee1db6c3010f272a2660cceea8f93a9ba76872d89cf73e9e0d6155",
+      "sha256_after": "sha256:944668d359ee1db6c3010f272a2660cceea8f93a9ba76872d89cf73e9e0d6155",
+      "size_bytes": 4112,
+      "line_count": 88,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:944668d359ee1db6c3010f272a2660cceea8f93a9ba76872d89cf73e9e0d6155",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 88
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/tests/test_validate_plan.py",
+      "required": true,
+      "sha256_before": "sha256:355baa60c2845848230de58610b50dbf04efa39a53345eb976508b087df6483c",
+      "sha256_after": "sha256:355baa60c2845848230de58610b50dbf04efa39a53345eb976508b087df6483c",
+      "size_bytes": 8228,
+      "line_count": 164,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:355baa60c2845848230de58610b50dbf04efa39a53345eb976508b087df6483c",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 164
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/validate_implementation.py",
+      "required": true,
+      "sha256_before": "sha256:471a5712c7127e66672996e09b9e2e82009d33dd4f5467b330e2aee4b66f1584",
+      "sha256_after": "sha256:471a5712c7127e66672996e09b9e2e82009d33dd4f5467b330e2aee4b66f1584",
+      "size_bytes": 7131,
+      "line_count": 139,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:471a5712c7127e66672996e09b9e2e82009d33dd4f5467b330e2aee4b66f1584",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 139
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/validate_plan.py",
+      "required": true,
+      "sha256_before": "sha256:f913623986fd7b7e330119438957f732b52e42d6adc1fd14146f3a849265661c",
+      "sha256_after": "sha256:f913623986fd7b7e330119438957f732b52e42d6adc1fd14146f3a849265661c",
+      "size_bytes": 42668,
+      "line_count": 772,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:f913623986fd7b7e330119438957f732b52e42d6adc1fd14146f3a849265661c",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 772
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "skill-input-output-repair-20260820-r8/semantic-decision.v1.json",
+    "sha256": "sha256:9f4d1a304a74ee8d76f3d003370fff92048c1c7bd23da15f32496ca95790f7ae"
+  },
+  "context_artifact": {
+    "path": "skill-input-output-repair-20260820-r8/context.v1.json",
+    "sha256": "sha256:abfa8734dce599dc9adfcf2f45469bd3879881ad2098686da96b217f426ef0fc"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:19709ebba4a592fc303293c7f31131b5b316c8e903c3924316d9697330ade873"
+}

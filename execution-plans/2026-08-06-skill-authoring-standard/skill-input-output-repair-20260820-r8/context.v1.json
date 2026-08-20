@@ -1,0 +1,17 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:b9d8a4588809f2f3d0f5e8ec9a790cb0b6ecff521dd47ccead3f3e3f2ef432e0",
+  "sections": [
+    {
+      "title": "repair-scope",
+      "content": "Authorized Package C retirement and Package A/B scope repair."
+    },
+    {
+      "title": "validation-scope",
+      "content": "Refresh authority, baseline, repair closure, plan validator evidence, and VDD knowledge context without lifecycle authorization."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-20T15:16:31Z"
+}

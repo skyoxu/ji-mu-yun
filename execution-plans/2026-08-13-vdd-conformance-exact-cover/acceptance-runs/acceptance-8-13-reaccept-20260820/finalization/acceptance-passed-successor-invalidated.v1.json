@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "acceptance-passed-successor-invalidated.v1",
+  "status": "invalidated",
+  "predecessor": {
+    "path": "finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:d13807b6264e3ea555be239588b56baac6d829f9712a26f1a6bcbbe2cf812f1e"
+  },
+  "reasons": [
+    "terminal-full evidence did not contain a Quick Dev quick-dev-implementation-complete.v1 receipt",
+    "candidate custody was dirty_worktree rather than a committed candidate",
+    "historical acceptance result is retained but must not be used as current lifecycle evidence"
+  ],
+  "successorRequirement": "rerun Quick Dev terminal-full on the committed candidate and publish a hash-bound implementation-complete receipt before Acceptance",
+  "authorizes": []
+}

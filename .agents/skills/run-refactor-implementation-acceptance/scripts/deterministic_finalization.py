@@ -109,18 +109,10 @@ def _terminal_machine_result(stdout: Any) -> dict[str, Any]:
     """Extract the last JSON object emitted by a noisy terminal runner."""
     if not isinstance(stdout, str):
         raise InputError("terminal-full receipt has no machine-readable result")
-    terminal_marker = "terminal-validation=implementation-complete authorizes=[]"
     for line in reversed(stdout.splitlines()):
         candidate = line.strip()
         if not candidate:
             continue
-        if candidate == terminal_marker:
-            return {
-                "schema_version": "quick-dev-implementation-complete.v1",
-                "predicate": "implementation-complete",
-                "status": "pass",
-                "authorizes": ["implementation-complete"],
-            }
         try:
             value = json.loads(candidate)
         except json.JSONDecodeError:
