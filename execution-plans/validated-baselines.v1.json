@@ -20,14 +20,14 @@
         "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/acceptance-runs/acceptance-9d4f50ad88a01456/finalization/acceptance-passed.v1.json",
         "identity_hash": "sha256:ae95d320635f2567fc3938c7144ab3615208d5619531497c169f1cd450e3c4d4"
       },
-      "baseline_status": "implemented_with_semantic_review_pending",
+      "baseline_status": "exact_cover_conformant_acceptance_owner_pending",
       "uncovered_delta": {
-        "type": "vdd_semantic_disposition_review",
-        "record": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/semantic-review-handoff-summary-20260820.v1.json",
-        "complete_handoff": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/semantic-handoff-20260820.v1.json",
-        "mapping_candidate": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/requirements-acceptance-slice-command-20260820.v1.json"
+        "type": "acceptance_owner_finalization",
+        "record": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/exact-cover-closure-20260820.md",
+        "conformance_receipt": "execution-plans/2026-08-13-vdd-conformance-exact-cover/governance/conformance-result-20260820-review-v2.v1.json",
+        "conformance_receipt_sha256": "sha256:861b47f0ef1b2ab98bd9d139e14c75f54d25f3d09c5119eae2c696f6614318da"
       },
-      "notes": "The implementation is not reopened. The current full-universe exact-cover receipt requires a fresh VDD mapping bound to the regenerated source-freeze."
+      "notes": "The current successor mapping and source-freeze are conformant. Acceptance-passed remains owned by the Acceptance route and is not published by this VDD governance record."
     },
     {
       "plan_directory": "2026-08-18-toolchain-workflow-repair",
