@@ -1,0 +1,41 @@
+{
+  "authorizes": [],
+  "candidate": {
+    "actionReceipts": [
+      {
+        "path": "actions/terminal-full/attempt-001/result.json",
+        "sha256": "sha256:8f22c757c22c5209a34269e96cd53b1294d24dd87f60a10bbfc3344716b61788"
+      }
+    ],
+    "authorizes": [],
+    "candidateCustodyHash": "sha256:4bf4227752b39a20be7ee1cd3cd4725b0d0e528ad749db93d63ba2b25b60c7b6",
+    "inputBindings": {
+      "candidateCustodyHash": "sha256:4bf4227752b39a20be7ee1cd3cd4725b0d0e528ad749db93d63ba2b25b60c7b6",
+      "contractHash": "sha256:6ea21487f24268b9edd960f68bc1f7cee4581cadf1b9b5d875a4287b3a66d2ea",
+      "knowledgeContextHash": "sha256:29026c87f93b9b0dad0de47836930fdab72331bf5946d91b7308067a940c94db",
+      "runInputHash": "sha256:3ebdb9ac3147b824469063fdccdc16ce296cd17202fee0073ad24197bc23581d"
+    },
+    "prerequisiteBundle": {
+      "bundleHash": "sha256:46aeb562adb74584c07059a660939c1749b8633d415d6f2fa056c94dce16f4dc",
+      "implementationReceipt": {
+        "path": "repair/round-1/quick-dev-implementation-complete.6ea21487f24268b9.v1.json",
+        "sha256": "sha256:bd4a2b6687534568620543ba6c5959594d3c7783582f8adbb0fe70aad490e7fb",
+        "terminalCommandId": "terminal-full"
+      },
+      "path": "acceptance-inputs/acceptance-8-13-reaccept-20260821-v8/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+      "sha256": "sha256:ae7c9f32a6385d08030370a4d012e107644d4ff1444301a34b5325bd49700787"
+    },
+    "quickDevImplementationReceipt": {
+      "path": "repair/round-1/quick-dev-implementation-complete.6ea21487f24268b9.v1.json",
+      "sha256": "sha256:bd4a2b6687534568620543ba6c5959594d3c7783582f8adbb0fe70aad490e7fb",
+      "terminalCommandId": "terminal-full"
+    },
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-deterministic-evaluation.v1",
+    "status": "passed",
+    "terminalResultHash": "sha256:203fa0b9012cbd1d4f8b7c3b308808773bed26488a81217e9cb1ad66b778398f"
+  },
+  "candidateHash": "sha256:869e775522f1345881b923fc3831dc60bd7929d33db4c784a10fec0d4a73383c",
+  "candidateInputHash": "sha256:ef5c3d2676eeb05ff6d33ae4ebd89d67655ef9d77a289157b370df3516af9885",
+  "schemaVersion": "acceptance-result-candidate.v1"
+}

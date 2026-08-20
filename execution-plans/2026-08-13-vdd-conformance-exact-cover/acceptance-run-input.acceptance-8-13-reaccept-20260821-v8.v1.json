@@ -1,0 +1,143 @@
+{
+  "authorizes": [],
+  "candidateCustody": {
+    "authorizes": [],
+    "baselineResolvedCommit": "186481cd70562e766f684935b1beb3532d974819",
+    "candidateMode": "commit",
+    "candidateResolvedCommit": "7bc87d3ccd47fc8ca667aa102a8272ada92561a5",
+    "schemaVersion": "acceptance-candidate-custody.v1",
+    "snapshotManifestHash": "",
+    "snapshotPath": ""
+  },
+  "input": {
+    "adapter_hash": "sha256:d47eccbf89b96b95c7a7efa75b2552347b06b266a90867a706eaa58668b45bff",
+    "adapter_id": "run-refactor-implementation-acceptance",
+    "adapter_version": "compact-vdd-projection.v1",
+    "affected_consumer_refs": [
+      ".agents/skills/authorization/scripts/conformance_preflight.py",
+      ".agents/skills/bmad-spec/scripts/canonical_package.py",
+      ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+      ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+      "scripts/python/launch_skill_input_consumer.py"
+    ],
+    "allowed_write_roots": [],
+    "baseline_content_manifest_hash": "sha256:7794727601d17e5f8befc29bc3729667970406e40917ac3b7ba91e8339454ebf",
+    "baseline_content_manifest_path": "acceptance-inputs/acceptance-8-13-reaccept-20260821-v8/baseline-content-manifest.v1.json",
+    "baseline_revision": "186481cd70562e766f684935b1beb3532d974819",
+    "candidate_content_manifest_hash": "sha256:3fdb3bac430b79cf656cdad2d7d38d73a78860ef7b13d2afdf94bf04597e0f0c",
+    "candidate_content_manifest_path": "acceptance-inputs/acceptance-8-13-reaccept-20260821-v8/candidate-content-manifest.v1.json",
+    "candidate_mode": "commit",
+    "candidate_revision": "7bc87d3ccd47fc8ca667aa102a8272ada92561a5",
+    "change_id": "vdd-conformance-exact-cover-reacceptance",
+    "changed_paths": [
+      ".agents/skills/authorization/scripts/conformance_preflight.py",
+      ".agents/skills/authorization/tests/conformance_preflight_runner.py",
+      ".agents/skills/authorization/tests/validators/preflight.py",
+      ".agents/skills/authorization/tests/validators/preflight_negative.py",
+      ".agents/skills/bmad-spec/scripts/canonical_package.py",
+      ".agents/skills/bmad-spec/tests/fixtures/selection_registry_negative.py",
+      ".agents/skills/vdd-conformance-exact-cover/SKILL.md",
+      ".agents/skills/vdd-conformance-exact-cover/references/runtime-policy-registry.v1.json",
+      ".agents/skills/vdd-conformance-exact-cover/schemas/vdd-repair-lineage-successor.v1.schema.json",
+      ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+      ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
+      ".agents/skills/vdd-conformance-exact-cover/scripts/vdd_repair_lineage.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/dogfood_runner.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/composition_negative.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/fingerprint_shard.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/fingerprint_shard_negative.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/manifest_composition.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/recovery_context.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/recovery_context_negative.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/repair_lineage_successor.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/retry_taxonomy.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/retry_taxonomy_negative.py",
+      ".agents/skills/vdd-execution-plan/SKILL.md",
+      ".agents/skills/vdd-execution-plan/references/knowledge-consumption.md",
+      ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
+      ".agents/skills/vdd-execution-plan/references/schemas/vdd-source-freeze-manifest.v1.schema.json",
+      ".agents/skills/vdd-execution-plan/references/solo-maintainer-vdd-standard.md",
+      ".agents/skills/vdd-execution-plan/scripts/fixtures/profile-cases.json",
+      ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+      ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+      ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+      ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
+      ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+      ".agents/skills/vdd-execution-plan/tests/source_freeze_runner.py",
+      ".agents/skills/vdd-execution-plan/tests/validators/scope_boundary_negative.py",
+      ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff.py",
+      ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff_negative.py",
+      ".agents/skills/vdd-execution-plan/tests/validators/source_freeze.py",
+      ".agents/skills/vdd-execution-plan/tests/validators/source_freeze_negative.py",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/00-index.md",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/95-implementation-evolution-and-completion-report.md",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/authority-manifest.v1.json",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-authorization-receipt.successor.v1.json",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/publish_implementation_authorization.py",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/stage_projection_builder.py",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/tdd_bridge.py",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_full.py",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_validation.py",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/validate_all.py"
+    ],
+    "code_review_domain": "toolchain",
+    "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+    "code_review_policy_path": "acceptance-inputs/acceptance-8-13-reaccept-20260821-v8/toolchain-code-review.v1.json",
+    "created_utc": "2026-08-01T00:00:00Z",
+    "execution_mode": "evidence_only",
+    "forbidden_write_roots": [
+      "logs/phase-a-innernet/",
+      "runtime/phase-a/"
+    ],
+    "run_id": "acceptance-8-13-reaccept-20260821-v8",
+    "target": "C:\\jimuyun\\execution-plans\\2026-08-13-vdd-conformance-exact-cover",
+    "target_plan_hash": "sha256:6ea21487f24268b9edd960f68bc1f7cee4581cadf1b9b5d875a4287b3a66d2ea",
+    "target_plan_paths": [
+      "implementation-contract.v1.json"
+    ],
+    "validator_hash": "sha256:a88cf2c298bd65995400696a4d7566b69eeaead74c760af8e32934da280b1437"
+  },
+  "inputHash": "sha256:3ebdb9ac3147b824469063fdccdc16ce296cd17202fee0073ad24197bc23581d",
+  "knowledgeContext": {
+    "acceptedDecisions": [
+      {
+        "candidate": {
+          "path": "AGENTS.md",
+          "source_sha256": "59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "repository-rules"
+        ]
+      }
+    ],
+    "authorizes": [],
+    "contextHash": "sha256:d65478ad5f6c3b005722e5bca4943a07a47ec8e8a9bb917fc49a0821d903da36",
+    "path": "knowledge-context.refactor-acceptance-reaccept-20260821-v3.v1.json",
+    "requestHash": "sha256:ae089b8855a32962f3f7a5e70de5f00cf34822748496aab3ae1f8b33e82b731b",
+    "resultHash": "sha256:fd8df6d544380309c90eb932559af939738edc8214d7d6f9554e9fd582e095d2",
+    "sha256": "sha256:29026c87f93b9b0dad0de47836930fdab72331bf5946d91b7308067a940c94db",
+    "sourceSnapshotId": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4"
+  },
+  "prerequisiteBundle": {
+    "bundleHash": "sha256:46aeb562adb74584c07059a660939c1749b8633d415d6f2fa056c94dce16f4dc",
+    "implementationReceipt": {
+      "path": "repair/round-1/quick-dev-implementation-complete.6ea21487f24268b9.v1.json",
+      "sha256": "sha256:bd4a2b6687534568620543ba6c5959594d3c7783582f8adbb0fe70aad490e7fb",
+      "terminalCommandId": "terminal-full"
+    },
+    "path": "acceptance-inputs/acceptance-8-13-reaccept-20260821-v8/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+    "sha256": "sha256:ae7c9f32a6385d08030370a4d012e107644d4ff1444301a34b5325bd49700787"
+  },
+  "schemaVersion": "acceptance-run-input.v1"
+}

@@ -1316,7 +1316,14 @@ def main() -> int:
         )
         output = Path(args.out)
         if output.exists():
-            if _read_json(str(output)) != result:
+            # The finalizer itself owns and publishes the canonical wrapper.
+            # Allow callers to name that wrapper as --out; it is not the CLI's
+            # smaller status summary and must not be compared to it.
+            existing = _read_json(str(output))
+            if existing.get("schemaVersion") == "acceptance-result-final.v1":
+                print(json.dumps(result, sort_keys=True))
+                return 0
+            if existing != result:
                 raise InputError("deterministic finalization summary is not append-only")
         else:
             output.parent.mkdir(parents=True, exist_ok=True)
