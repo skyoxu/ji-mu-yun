@@ -83,14 +83,14 @@ def test_deterministic_finalization_requires_and_publishes_hash_bound_receipts(t
     implementation_receipt = {
         "schema_version": "quick-dev-implementation-complete.v1", "predicate": "implementation-complete",
         "status": "pass", "authorizes": ["implementation-complete"],
-        "contract_hash": _sha(contract.read_bytes()), "command_registry_hash": acceptance_core.canonical_hash(registry),
+        "contract_hash": _sha(contract.read_bytes()), "command_registry_hash": _sha(registry_path.read_bytes()),
         "terminal_command_id": "terminal-full",
     }
     implementation_receipt_path = target / "quick-dev-implementation-complete.v1.json"
     implementation_receipt_path.write_text(json.dumps(implementation_receipt), encoding="utf-8")
     bundle = {
         "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
-        "implementationReceipt": {"path": "execution-plans/target/quick-dev-implementation-complete.v1.json", "sha256": _sha(implementation_receipt_path.read_bytes()), "terminalCommandId": "terminal-full"},
+        "implementationReceipt": {"path": "quick-dev-implementation-complete.v1.json", "sha256": _sha(implementation_receipt_path.read_bytes()), "terminalCommandId": "terminal-full"},
         "terminalRunner": {"path": "tools/terminal_full.py", "sha256": _sha(terminal_runner.read_bytes())},
     }
     bundle["bundleHash"] = acceptance_core.canonical_hash(bundle)

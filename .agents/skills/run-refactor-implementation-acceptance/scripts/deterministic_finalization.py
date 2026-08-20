@@ -173,7 +173,7 @@ def _verified_quick_dev_receipt(root: Path, target: Path, prepared: dict[str, An
         or receipt.get("status") != "pass"
         or receipt.get("authorizes") != ["implementation-complete"]
         or receipt.get("contract_hash") != _sha(contract_path)
-        or receipt.get("command_registry_hash") != canonical_hash(_load(registry_path))
+        or receipt.get("command_registry_hash") != _sha(registry_path)
         or receipt.get("terminal_command_id") != receipt_ref["terminalCommandId"]
         or receipt_ref["terminalCommandId"] != "terminal-full"
     ):
