@@ -130,7 +130,7 @@ class RunInputTests(unittest.TestCase):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         with self.assertRaises(module.InputError):
-            module.parse_run_input({"target": "relative"})
+            module.parse_run_input({"target": "../relative"})
         parsed = module.parse_run_input({"target": "C:/jimuyun/execution-plans/example"})
         self.assertEqual("evidence_only", parsed["execution_mode"])
 

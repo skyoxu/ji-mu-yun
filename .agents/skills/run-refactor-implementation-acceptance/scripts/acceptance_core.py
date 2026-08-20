@@ -384,8 +384,8 @@ def parse_run_input(value: Any) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise InputError("run input must be an object")
     target = value.get("target")
-    if not isinstance(target, str) or not Path(target).is_absolute():
-        raise InputError("target must be an absolute path")
+    if not isinstance(target, str) or not target or (not Path(target).is_absolute() and ".." in Path(target).parts):
+        raise InputError("target must be an absolute or repository-relative path")
     mode = value.get("execution_mode", "evidence_only")
     if mode not in _MODES:
         raise InputError("execution_mode is invalid")

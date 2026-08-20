@@ -289,7 +289,7 @@ def load_current_bootstrap_route(repository_root: Path, route_path: str) -> dict
     }
 
 
-def _bundle_knowledge_context(target_root: Path, bundle_path: str) -> str:
+def _load_prerequisite_bundle(target_root: Path, bundle_path: str) -> tuple[str, dict[str, Any], str]:
     relative = Path(bundle_path)
     if relative.is_absolute() or ".." in relative.parts:
         raise InputError("prerequisite bundle path must stay inside the target root")
@@ -307,16 +307,21 @@ def _bundle_knowledge_context(target_root: Path, bundle_path: str) -> str:
     context = bundle.get("knowledgeContext")
     if not isinstance(context, dict) or not isinstance(context.get("path"), str) or not isinstance(context.get("sha256"), str):
         raise InputError("prerequisite bundle knowledge context is invalid")
-    return context["path"]
+    return context["path"], bundle, _file_hash(path)
 
 
 def prepare_run(input_path: str, output_path: str, knowledge_context_path: str | None = None, prerequisite_bundle_path: str | None = None) -> dict:
     input_file = Path(input_path).resolve()
     value = _read_json(input_file)
     validate_run_input(value)
-    target_root = Path(value["target"]).resolve()
+    declared_target = value["target"]
+    if not isinstance(declared_target, str) or not declared_target:
+        raise InputError("run input target is invalid")
+    target_root = Path(declared_target).resolve() if Path(declared_target).is_absolute() else input_file.parent
     if input_file.parent != target_root:
         raise InputError("run input must be stored at its declared target root")
+    if not Path(declared_target).is_absolute() and ".." in Path(declared_target).parts:
+        raise InputError("run input target must be repository-relative")
     def target_file(relative_path: str, field: str) -> Path:
         resolved = (target_root / relative_path).resolve()
         try:
@@ -336,11 +341,30 @@ def prepare_run(input_path: str, output_path: str, knowledge_context_path: str |
     if canonical_hash(candidate) != value["candidate_content_manifest_hash"]:
         raise InputError("candidate content manifest hash is stale")
     candidate_custody = verify_manifest_bytes(target_root, value, baseline, candidate)
+    prerequisite_binding = None
     if prerequisite_bundle_path is not None:
-        bundle_context_path = _bundle_knowledge_context(target_root, prerequisite_bundle_path)
+        bundle_context_path, bundle, bundle_file_hash = _load_prerequisite_bundle(target_root, prerequisite_bundle_path)
         if knowledge_context_path is not None and knowledge_context_path != bundle_context_path:
             raise InputError("caller knowledge context cannot override prerequisite bundle")
         knowledge_context_path = bundle_context_path
+        implementation_receipt = bundle.get("implementationReceipt")
+        if (
+            not isinstance(implementation_receipt, dict)
+            or set(implementation_receipt) != {"path", "sha256", "terminalCommandId"}
+            or not isinstance(implementation_receipt["path"], str)
+            or not isinstance(implementation_receipt["sha256"], str)
+            or not isinstance(implementation_receipt["terminalCommandId"], str)
+        ):
+            raise InputError("prerequisite bundle implementation receipt is invalid")
+        receipt_path = target_file(implementation_receipt["path"], "implementation receipt")
+        if not receipt_path.is_file() or _file_hash(receipt_path) != implementation_receipt["sha256"]:
+            raise InputError("prerequisite bundle implementation receipt is stale")
+        prerequisite_binding = {
+            "path": Path(prerequisite_bundle_path).as_posix(),
+            "sha256": bundle_file_hash,
+            "bundleHash": bundle["bundleHash"],
+            "implementationReceipt": implementation_receipt,
+        }
     knowledge_context = (
         freeze_knowledge_context(target_root, knowledge_context_path)
         if knowledge_context_path is not None
@@ -351,6 +375,7 @@ def prepare_run(input_path: str, output_path: str, knowledge_context_path: str |
         "input": value,
         "inputHash": canonical_hash(value),
         "candidateCustody": candidate_custody,
+        **({"prerequisiteBundle": prerequisite_binding} if prerequisite_binding is not None else {}),
         **({"knowledgeContext": knowledge_context} if knowledge_context is not None else {}),
         "authorizes": [],
     }

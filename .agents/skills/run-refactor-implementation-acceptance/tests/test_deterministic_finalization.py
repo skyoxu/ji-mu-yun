@@ -68,14 +68,43 @@ def test_deterministic_finalization_requires_and_publishes_hash_bound_receipts(t
         "adapter_id": "test", "adapter_version": "v1", "adapter_hash": _sha(b"adapter"),
         "allowed_write_roots": [], "forbidden_write_roots": [], "changed_paths": ["tracked.txt"], "affected_consumer_refs": ["consumer.py"],
     }
-    prepared = {"schemaVersion": "acceptance-run-input.v1", "input": run_input, "inputHash": acceptance_core.canonical_hash(run_input), "candidateCustody": acceptance_core.verify_manifest_bytes(target, run_input, baseline, candidate), "authorizes": []}
-    prepared_path = target / "prepared.json"
-    prepared_path.write_text(json.dumps(prepared), encoding="utf-8")
     registry = {"schema_version": "ria.command-registry.v1", "commands": [{
         "id": "terminal-full", "executable": sys.executable,
         "argv": ["-c", "import json; print(json.dumps({'schema_version':'quick-dev-implementation-complete.v1','predicate':'implementation-complete','status':'pass','authorizes':['implementation-complete']}))"],
         "cwd": ".", "timeout_seconds": 30, "shell": False,
     }]}
+    contract = target / "implementation-contract.v1.json"
+    contract.write_text("{}\n", encoding="utf-8")
+    registry_path = target / "command-registry.v1.json"
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+    terminal_runner = target / "tools/terminal_full.py"
+    terminal_runner.parent.mkdir()
+    terminal_runner.write_text("# terminal runner\n", encoding="utf-8")
+    implementation_receipt = {
+        "schema_version": "quick-dev-implementation-complete.v1", "predicate": "implementation-complete",
+        "status": "pass", "authorizes": ["implementation-complete"],
+        "contract_hash": _sha(contract.read_bytes()), "command_registry_hash": acceptance_core.canonical_hash(registry),
+        "terminal_command_id": "terminal-full",
+    }
+    implementation_receipt_path = target / "quick-dev-implementation-complete.v1.json"
+    implementation_receipt_path.write_text(json.dumps(implementation_receipt), encoding="utf-8")
+    bundle = {
+        "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+        "implementationReceipt": {"path": "execution-plans/target/quick-dev-implementation-complete.v1.json", "sha256": _sha(implementation_receipt_path.read_bytes()), "terminalCommandId": "terminal-full"},
+        "terminalRunner": {"path": "tools/terminal_full.py", "sha256": _sha(terminal_runner.read_bytes())},
+    }
+    bundle["bundleHash"] = acceptance_core.canonical_hash(bundle)
+    bundle_path = target / "inputs/bundle.json"
+    bundle_path.write_text(json.dumps(bundle), encoding="utf-8")
+    prepared = {
+        "schemaVersion": "acceptance-run-input.v1", "input": run_input,
+        "inputHash": acceptance_core.canonical_hash(run_input),
+        "candidateCustody": acceptance_core.verify_manifest_bytes(target, run_input, baseline, candidate),
+        "prerequisiteBundle": {"path": "inputs/bundle.json", "sha256": _sha(bundle_path.read_bytes()), "bundleHash": bundle["bundleHash"], "implementationReceipt": bundle["implementationReceipt"]},
+        "authorizes": [],
+    }
+    prepared_path = target / "prepared.json"
+    prepared_path.write_text(json.dumps(prepared), encoding="utf-8")
     actions = [{"actionId": "terminal-full", "dependsOn": [], "order": 1, "commandId": "terminal-full", "activation": True}]
     runs_root = target / "runs"
     runs_root.mkdir()
@@ -86,6 +115,7 @@ def test_deterministic_finalization_requires_and_publishes_hash_bound_receipts(t
     assert deterministic_finalization.finalize_deterministic_run(root, run, prepared_path, actions, registry) == result
     assert json.loads((run / "finalization/acceptance-passed.v1.json").read_text(encoding="utf-8"))["authorizes"] == ["acceptance-passed"]
     assert json.loads((run / "finalization/acceptance-result-final.v1.json").read_text(encoding="utf-8"))["authorizes"] == []
+    assert json.loads((run / "finalization/acceptance-result-final.v1.json").read_text(encoding="utf-8"))["candidatePath"] == "finalization/acceptance-result-candidate.v1.json"
 
 
 def test_terminal_machine_result_accepts_json_before_non_json_tail() -> None:

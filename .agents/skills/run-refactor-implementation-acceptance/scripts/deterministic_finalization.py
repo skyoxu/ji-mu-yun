@@ -128,6 +128,51 @@ def _terminal_machine_result(stdout: Any) -> dict[str, Any]:
     raise InputError("terminal-full receipt has no machine-readable result")
 
 
+def _verified_quick_dev_receipt(root: Path, target: Path, prepared: dict[str, Any]) -> dict[str, Any]:
+    """Replay the owner-published implementation receipt referenced by the prerequisite bundle."""
+    binding = prepared.get("prerequisiteBundle")
+    if not isinstance(binding, dict) or set(binding) != {"path", "sha256", "bundleHash", "implementationReceipt"}:
+        raise InputError("prepared Acceptance run does not bind a prerequisite bundle")
+    bundle_path = _inside(target, binding["path"], "prerequisite bundle")
+    if not bundle_path.is_file() or _sha(bundle_path) != binding["sha256"]:
+        raise InputError("prepared prerequisite bundle is stale")
+    bundle = _load(bundle_path)
+    if not isinstance(bundle, dict) or bundle.get("schemaVersion") != "compact-vdd-acceptance-prerequisite-bundle.v1":
+        raise InputError("prepared prerequisite bundle is invalid")
+    if bundle.get("bundleHash") != binding["bundleHash"] or bundle.get("bundleHash") != canonical_hash({key: value for key, value in bundle.items() if key != "bundleHash"}):
+        raise InputError("prepared prerequisite bundle hash is stale")
+    receipt_ref = binding["implementationReceipt"]
+    if bundle.get("implementationReceipt") != receipt_ref:
+        raise InputError("prepared implementation receipt binding is stale")
+    if not isinstance(receipt_ref, dict) or set(receipt_ref) != {"path", "sha256", "terminalCommandId"}:
+        raise InputError("prepared implementation receipt binding is invalid")
+    receipt_path = _inside(root, receipt_ref["path"], "Quick Dev implementation receipt")
+    if not receipt_path.is_file() or _sha(receipt_path) != receipt_ref["sha256"]:
+        raise InputError("Quick Dev implementation receipt is stale")
+    receipt = _load(receipt_path)
+    contract_path = target / "implementation-contract.v1.json"
+    registry_path = target / "command-registry.v1.json"
+    terminal_runner = bundle.get("terminalRunner")
+    if not contract_path.is_file() or not registry_path.is_file() or not isinstance(terminal_runner, dict):
+        raise InputError("Quick Dev receipt validation inputs are unavailable")
+    runner_path = _inside(target, terminal_runner.get("path"), "terminal runner")
+    if not runner_path.is_file() or _sha(runner_path) != terminal_runner.get("sha256"):
+        raise InputError("Quick Dev terminal runner is stale")
+    if (
+        not isinstance(receipt, dict)
+        or receipt.get("schema_version") != "quick-dev-implementation-complete.v1"
+        or receipt.get("predicate") != "implementation-complete"
+        or receipt.get("status") != "pass"
+        or receipt.get("authorizes") != ["implementation-complete"]
+        or receipt.get("contract_hash") != _sha(contract_path)
+        or receipt.get("command_registry_hash") != canonical_hash(_load(registry_path))
+        or receipt.get("terminal_command_id") != receipt_ref["terminalCommandId"]
+        or receipt_ref["terminalCommandId"] != "terminal-full"
+    ):
+        raise InputError("Quick Dev implementation receipt does not prove the current terminal contract")
+    return {"path": receipt_ref["path"], "sha256": receipt_ref["sha256"], "terminalCommandId": receipt_ref["terminalCommandId"]}
+
+
 def finalize_deterministic_run(
     repository_root: Path,
     run_dir: Path,
@@ -151,17 +196,25 @@ def finalize_deterministic_run(
     validate_run_input(input_value)
     if prepared.get("inputHash") != canonical_hash(input_value) or state.get("runInputHash") != prepared["inputHash"]:
         raise InputError("prepared Acceptance run input binding is stale")
-    target = Path(input_value["target"]).resolve()
+    declared_target = input_value.get("target")
+    if not isinstance(declared_target, str) or not declared_target:
+        raise InputError("acceptance target is invalid")
+    target = Path(declared_target).resolve() if Path(declared_target).is_absolute() else run_input_path.parent
     try:
         target.relative_to(root)
     except ValueError as exc:
         raise InputError("acceptance target escapes repository root") from exc
+    if run_input_path.parent != target:
+        raise InputError("acceptance run input is not stored at its declared target root")
+    if not Path(declared_target).is_absolute() and ".." in Path(declared_target).parts:
+        raise InputError("acceptance target must be repository-relative")
     baseline = _load(target / input_value["baseline_content_manifest_path"])
     candidate = _load(target / input_value["candidate_content_manifest_path"])
     validate_baseline_manifest(baseline)
     validate_candidate_manifest(candidate, baseline)
     if verify_manifest_bytes(target, input_value, baseline, candidate) != prepared.get("candidateCustody"):
         raise InputError("candidate custody is stale")
+    quick_dev_receipt = _verified_quick_dev_receipt(root, target, prepared)
     receipts = _completed_receipts(run_dir, actions, command_registry)
     terminal = [item for item in receipts if item["commandId"] == "terminal-full"]
     if len(terminal) != 1:
@@ -193,6 +246,8 @@ def finalize_deterministic_run(
         "route": "deterministic_only",
         "candidateCustodyHash": state_hashes["candidateCustodyHash"],
         "terminalResultHash": canonical_hash(terminal_result),
+        "prerequisiteBundle": prepared["prerequisiteBundle"],
+        "quickDevImplementationReceipt": quick_dev_receipt,
         "actionReceipts": [item["receipt"] for item in receipts],
         "inputBindings": state_hashes,
         "authorizes": [],
@@ -240,7 +295,7 @@ def finalize_deterministic_run(
     _publish(final_path, final)
     wrapper = {
         "schemaVersion": "acceptance-result-final.v1",
-        "candidatePath": str(candidate_path),
+        "candidatePath": candidate_path.relative_to(run_dir).as_posix(),
         "candidateHash": candidate_result["candidateHash"],
         "impactProjectionHash": canonical_hash(impact),
         "final": final,

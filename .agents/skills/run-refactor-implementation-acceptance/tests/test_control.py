@@ -728,7 +728,7 @@ class ExecutionControlTests(unittest.TestCase):
             source_relative = f"execution-plans/feature-a/{context_name}"
             context_path = repository / "execution-plans" / "feature-a" / context_name
             context_path.write_text('{"context":"accepted"}\n', encoding="utf-8", newline="\n")
-            hashes[4] = "sha256:" + hashlib.sha256(context_path.read_bytes()).hexdigest()
+            hashes[4] = execution_control.artifact_identity_hash(context_path)
             created = execution_control.start_or_resume_target_run(
                 repository,
                 "execution-plans/feature-a",
@@ -805,7 +805,7 @@ class ExecutionControlTests(unittest.TestCase):
             source.parent.mkdir(parents=True)
             run_root.mkdir()
             source.write_text('{"summary":"ok"}\n', encoding="utf-8", newline="\n")
-            context_hash = "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()
+            context_hash = execution_control.artifact_identity_hash(source)
             run = execution_control.create_persisted_run(
                 run_root,
                 "run-context",
@@ -889,7 +889,7 @@ class ExecutionControlTests(unittest.TestCase):
             root = Path(directory)
             source = root / "context.json"
             source.write_text('{"context":"accepted"}\n', encoding="utf-8", newline="\n")
-            context_hash = "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()
+            context_hash = execution_control.artifact_identity_hash(source)
             predecessor = execution_control.create_persisted_run(
                 root,
                 "run-context-bound",
