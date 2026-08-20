@@ -1,20 +1,20 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:cfcc2f9271075b6f18d95bbbeac2fa34700707a4ad34a0420992306cff582f5c",
-  "canonical_context_sha256": "sha256:a17c94365fd7c5d3a4eaefb858d29b90473d43264a387ac66bf4d5583a86f4eb",
-  "request_sha256": "sha256:db4bf8bf0d462c2541e6ebbb11a8e13ffebd50f6f4de9b17ec6e88be573c0413",
-  "result_sha256": "sha256:50299018eb6d7387dc9f0bbdade2aed269776e49a8ac0791b2906ed9ab4275f7",
+  "context_sha256": "sha256:184bad70dcefb043d2302ea5fb0cc9a10c37e82ebda85a18c25f15eda9f16d08",
+  "canonical_context_sha256": "sha256:2c8d26a787a6d39c774f060fb507837f304a3ce8958df2467ad6fe44863061d6",
+  "request_sha256": "sha256:411f7c14c101b379e45fb658e645df2d97f48e157b5ec6b35453e595399de2b8",
+  "result_sha256": "sha256:5a349de945e9c58e5fdc6d92997d558c4af7d1843e9fd8448a541709f43227e4",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "dbf8670c1fb6c394b3aa1b422069045e142be68c"
+    "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
   },
-  "source_snapshot_id": "sha256:a12d2d7f074bca91f16b075bacc32e919922fdea7ed4aa49254d37f731ee96f8",
+  "source_snapshot_id": "sha256:d6616e276fe784b4aa6d4e0a349ff4541f252e098c97c8e3ffffba406bd556d3",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
       "path": "AGENTS.md",
-      "source_sha256": "4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
+      "source_sha256": "59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
       "satisfies": [
         "repository-rules"
       ]
@@ -22,8 +22,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:793bd01582cf51234948ab6b6cba25692db175bd9257076d784b58a428381700",
-    "freeze_receipt_path": "knowledge-context.freeze.history/793bd01582cf51234948ab6b6cba25692db175bd9257076d784b58a428381700.v1.json",
-    "reason": "Refresh frozen VDD knowledge context before the exact-cover implementation repair against the current candidate worktree."
+    "context_sha256": "sha256:cfcc2f9271075b6f18d95bbbeac2fa34700707a4ad34a0420992306cff582f5c",
+    "freeze_receipt_path": "knowledge-context.freeze.history/cfcc2f9271075b6f18d95bbbeac2fa34700707a4ad34a0420992306cff582f5c.v1.json",
+    "reason": "quick-dev-terminal-receipt-refresh"
   }
 }

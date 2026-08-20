@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-conformance-exact-cover-20260814-implementation-repair-successor-20260820",
+    "request_id": "vdd-conformance-exact-cover-20260814-implementation-repair",
     "consumer": "vdd",
     "query": "repository rules AGENTS.md",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
+      "commit": "dbf8670c1fb6c394b3aa1b422069045e142be68c"
     },
     "policy_revision": "knowledge-consumer-policies.v2",
     "allow_stale_catalog": true
@@ -43,13 +43,13 @@
           {
             "path": "AGENTS.md",
             "role": "primary",
-            "source_sha256": "59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+            "source_sha256": "4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8"
           }
         ],
         "relations": [],
         "semantic_eligible": true,
         "source_role": "repository-authority",
-        "source_sha256": "59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "source_sha256": "4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
         "status": "active",
         "visibility": {
           "marketplace": "excluded",
@@ -224,8 +224,8 @@
         "enforcement_level": "E1",
         "kind": "adr-scope-index",
         "lifecycle": "repository-source",
-        "line_end": 60,
-        "line_start": 60,
+        "line_end": 57,
+        "line_start": 57,
         "module_id": "adr-index.phase",
         "path": "docs/architecture/ADR_INDEX_PHASE.md",
         "primary_domain": "phase",
@@ -243,13 +243,13 @@
           {
             "path": "docs/architecture/ADR_INDEX_PHASE.md",
             "role": "primary",
-            "source_sha256": "6251a73901bc95a55642d78c8df2426b61ecae7b801d0d2f8c6bee9d83d1e567"
+            "source_sha256": "a5ad263d3b281d03bd034364a392515d6d91235f0d7819cc4a3309430f2b0b6e"
           }
         ],
         "relations": [],
         "semantic_eligible": true,
         "source_role": "collection-index",
-        "source_sha256": "6251a73901bc95a55642d78c8df2426b61ecae7b801d0d2f8c6bee9d83d1e567",
+        "source_sha256": "a5ad263d3b281d03bd034364a392515d6d91235f0d7819cc4a3309430f2b0b6e",
         "status": "active",
         "visibility": {
           "marketplace": "excluded",
@@ -625,13 +625,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-conformance-exact-cover-20260814-implementation-repair-successor-20260820",
+    "request_id": "vdd-conformance-exact-cover-20260814-implementation-repair",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
+      "commit": "dbf8670c1fb6c394b3aa1b422069045e142be68c",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:d6616e276fe784b4aa6d4e0a349ff4541f252e098c97c8e3ffffba406bd556d3",
+    "source_snapshot_id": "sha256:a12d2d7f074bca91f16b075bacc32e919922fdea7ed4aa49254d37f731ee96f8",
     "status": "matched"
   },
   "required_modules": [
@@ -642,7 +642,7 @@
       "owner": "adapter",
       "candidate": {
         "path": "AGENTS.md",
-        "source_sha256": "59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+        "source_sha256": "4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8"
       },
       "decision": "accepted",
       "satisfies": [
@@ -684,7 +684,7 @@
       "owner": "adapter",
       "candidate": {
         "path": "docs/architecture/ADR_INDEX_PHASE.md",
-        "source_sha256": "6251a73901bc95a55642d78c8df2426b61ecae7b801d0d2f8c6bee9d83d1e567"
+        "source_sha256": "a5ad263d3b281d03bd034364a392515d6d91235f0d7819cc4a3309430f2b0b6e"
       },
       "decision": "rejected",
       "satisfies": [],
@@ -761,14 +761,11 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:411f7c14c101b379e45fb658e645df2d97f48e157b5ec6b35453e595399de2b8",
-  "result_sha256": "sha256:5a349de945e9c58e5fdc6d92997d558c4af7d1843e9fd8448a541709f43227e4",
+  "request_sha256": "sha256:db4bf8bf0d462c2541e6ebbb11a8e13ffebd50f6f4de9b17ec6e88be573c0413",
+  "result_sha256": "sha256:50299018eb6d7387dc9f0bbdade2aed269776e49a8ac0791b2906ed9ab4275f7",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "knowledge_freshness": "degraded",
-    "catalog_failure_code": "catalog_stale",
-    "source_freshness": "catalog_bound",
-    "context_sha256": "sha256:26bbaee4da08316c1f7d4e173b5a289cef651bd2b7d7df44056796ac13ff913e"
+    "context_sha256": "sha256:1579f285b9c98201aada4d60b94f479cd7dce45aae902d53fa2ad29606ad9284"
   }
 }

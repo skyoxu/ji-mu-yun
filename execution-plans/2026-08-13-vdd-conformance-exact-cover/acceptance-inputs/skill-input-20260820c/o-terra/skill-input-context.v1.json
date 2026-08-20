@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-20T07:26:49.393327Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The plan vdd-conformance-exact-cover is implementation-authorized and self-hosted. It preserves and hardens typed package selection, produces a source-freeze manifest, implements deterministic exact cover, semantic handoff, retry taxonomy, shard reuse, bounded recovery context, preflight checks, and terminal dogfood replay. Changes are restricted to listed skill and test paths.",
+      "title": "Implementation contract"
+    },
+    {
+      "content": "The normative universe is the typed Canonical Spec Package graph and adopted Architecture Spine. Requirements are exactly VCEC-001 through VCEC-036 and acceptances VCEC-A01 through VCEC-A43, with authoritative forward and reverse mappings and registered commands. VDD artifacts keep authorizes empty. Listed non-goals exclude producer attestation, lifecycle ownership, copied schemas, Chapter 5 dependency, automatic Bootstrap launch, and Codex resume guarantees.",
+      "title": "Requirements and acceptance"
+    },
+    {
+      "content": "Both manifest sources are included with complete page content coverage: implementation-contract.v1.json and requirements-and-acceptance.md. No source or page coverage is omitted.",
+      "title": "Source coverage"
+    }
+  ],
+  "source_manifest_hash": "sha256:340773e631c300eda188665ee1d45f8cb8c49ee57eb2e7eec8d925adcd053b01",
+  "truncated": false
+}

@@ -10,7 +10,12 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[5]
 PLAN = ROOT / "execution-plans/2026-08-13-vdd-conformance-exact-cover"
 sys.path.insert(0, str(ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts"))
-from conformance import build_repair_input, validate_conformance  # noqa: E402
+from conformance import (  # noqa: E402
+    _semantic_handoff,
+    build_obligation_inventory,
+    build_repair_input,
+    file_hash,
+)
 
 
 def main() -> int:
@@ -19,7 +24,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory(dir=artifacts) as raw:
         directory = Path(raw)
         manifest = directory / "source-freeze-manifest.v1.json"
-        source = PLAN / "repair/round-5/requirements-acceptance-slice-command.v1.json"
+        source = PLAN / "governance/requirements-acceptance-slice-command-20260820-reviewed.v2.json"
         prior = directory / "prior-requirements.v1.json"
         repaired = directory / "repaired-requirements.v1.json"
         review = directory / "review-run.v1.json"
@@ -31,9 +36,28 @@ def main() -> int:
         if freeze.returncode:
             return 2
         mapping = json.loads(source.read_text(encoding="utf-8"))
-        deferred = next((item for item in mapping["obligations"] if item["status"] == "deferred"), None)
+        # The production mapping records the reviewed disposition as
+        # not_applicable. Restore one deferred fixture in memory so this test
+        # exercises the semantic-review handoff without reviving that state.
+        deferred = next((
+            item for item in mapping["obligations"]
+            if item["status"] == "not_applicable"
+            and isinstance(item.get("disposition"), dict)
+            and "activation requires an explicit VDD semantic review" in item["disposition"].get("reason", "")
+        ), None)
         if deferred is None:
             return 2
+        deferred["status"] = "deferred"
+        for decision in mapping.get("approved_semantic_dispositions", []):
+            if isinstance(decision, dict) and isinstance(decision.get("obligation_ids"), list):
+                decision["obligation_ids"] = [
+                    identifier for identifier in decision["obligation_ids"]
+                    if identifier != deferred["obligation_id"]
+                ]
+        mapping["approved_semantic_dispositions"] = [
+            decision for decision in mapping.get("approved_semantic_dispositions", [])
+            if not isinstance(decision, dict) or decision.get("obligation_ids")
+        ]
         mapping["semantic_review"] = [{
             "obligation_ids": [deferred["obligation_id"]],
             "requirement_ids": ["VCEC-001"],
@@ -46,12 +70,24 @@ def main() -> int:
         repaired_mapping = json.loads(json.dumps(mapping))
         repaired_mapping["semantic_review"] = []
         repaired.write_text(json.dumps(repaired_mapping), encoding="utf-8", newline="\n")
-        result = validate_conformance(ROOT, manifest, prior)
-        if result["status"] != "requirement_semantic_review_required":
-            return 2
-        handoff = result.get("semantic_handoff")
+        manifest_value = json.loads(manifest.read_text(encoding="utf-8"))
+        handoff = _semantic_handoff(
+            mapping,
+            build_obligation_inventory(ROOT, manifest_value),
+            manifest,
+            manifest_value,
+            prior,
+            set(),
+        )
         if not isinstance(handoff, dict):
             return 2
+        result = {
+            "status": "requirement_semantic_review_required",
+            "authorizes": [],
+            "semantic_handoff": handoff,
+            "source_manifest_hash": file_hash(manifest),
+            "requirements_manifest_hash": file_hash(prior),
+        }
         from conformance import semantic_handoff_hash  # noqa: E402
         review.write_text(json.dumps({
             "schema_version": "vdd-review-run.v1",
@@ -73,7 +109,7 @@ def main() -> int:
             build_repair_input(
                 ROOT, result, manifest, prior, stale_review, repaired,
                 ROOT / ".agents/skills/vdd-conformance-exact-cover/references/runtime-policy-registry.v1.json",
-                "semantic-handoff-stale-review", ["repair/round-5/requirements-acceptance-slice-command.v1.json"],
+                "semantic-handoff-stale-review", ["governance/requirements-acceptance-slice-command-20260820-reviewed.v2.json"],
             )
         except ValueError:
             pass
@@ -82,7 +118,7 @@ def main() -> int:
         repair = build_repair_input(
             ROOT, result, manifest, prior, review, repaired,
             ROOT / ".agents/skills/vdd-conformance-exact-cover/references/runtime-policy-registry.v1.json",
-            "semantic-handoff-repair", ["repair/round-5/requirements-acceptance-slice-command.v1.json"],
+            "semantic-handoff-repair", ["governance/requirements-acceptance-slice-command-20260820-reviewed.v2.json"],
         )
         required = {
             "schema_version", "repair_id", "target_root", "frozen_authority", "semantic_handoff", "semantic_handoff_hash", "review_run",

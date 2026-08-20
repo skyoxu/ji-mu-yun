@@ -1,0 +1,97 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "request_binding": {
+    "request": {},
+    "consumer": "run-refactor-implementation-acceptance",
+    "operation": "acceptance",
+    "target": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+    "route_identity": "acceptance.exact-cover.20260820",
+    "source_roles": {
+      "implementation_target": [
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json"
+      ],
+      "acceptance_requirements": [
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md"
+      ]
+    }
+  },
+  "request_hash": "sha256:c1e450d099bcb171b57e94e6e126a86510b9f96f9d2beffb2e73ffbc5d5bad19",
+  "target": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+  "route_identity": "acceptance.exact-cover.20260820",
+  "repository_identity": {
+    "head": "c72edabae2b8b7dd1458f3ab68660d7dcc920cf2",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_selection_hash": "sha256:10cca7a59c18e7f0c519bdb8a324633c51fc6f21ea09a53a33b7519e9653c122",
+    "selected_source_content_root": "sha256:2c57d0a5d24000db2536d078f148febb79f8e685a757fb81d71627e8fa96c8b1"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-20T07:26:49.487221Z",
+  "contract_hash": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0",
+  "source_manifest": {
+    "path": "s/source-manifest.v1.json",
+    "sha256": "sha256:340773e631c300eda188665ee1d45f8cb8c49ee57eb2e7eec8d925adcd053b01"
+  },
+  "child_request": {
+    "path": "request-terra.json",
+    "sha256": "sha256:690af008a845842d07b9b1baa8dcf403b9a031e8d7ea2c8747c23d807ee89a06"
+  },
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "required": true,
+      "sha256_before": "sha256:7238e23f14642eae24f6d80aa40ec2c32ab7bb3764ef69c992e9cb041c538408",
+      "sha256_after": "sha256:7238e23f14642eae24f6d80aa40ec2c32ab7bb3764ef69c992e9cb041c538408",
+      "size_bytes": 20279,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:855d8f3d368be50d8cf3e2f5a71c727ae5acc14aba0db7247e78108248767272",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md",
+      "required": true,
+      "sha256_before": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "sha256_after": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "size_bytes": 1258,
+      "line_count": 25,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 25
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "o-terra/semantic-decision.v1.json",
+    "sha256": "sha256:177e17c5df75577fa2e4e9afb8f6ffa5e54ecb07b70b4034ab2496c8383e28c4"
+  },
+  "context_artifact": {
+    "path": "o-terra/skill-input-context.v1.json",
+    "sha256": "sha256:156748895cfeff46ef7d7dc404615b445cf579b4445b3b1c1bf6b3099e021920"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:a9ad28c07d42f1fb5b4c484f6e75eb8c0a904b22af71b04eddfbdfc390cd0757"
+}

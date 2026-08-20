@@ -6,8 +6,13 @@ import hashlib
 import importlib.util
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any, Iterable
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from scripts.toolchain.canonical_evidence import canonical_bytes, domain_hash as _domain_hash
 
@@ -244,10 +249,17 @@ def _approved_semantic_dispositions(
         if not isinstance(repair_binding, dict) or set(repair_binding) != {"path", "sha256"}:
             raise ValueError("approved semantic disposition requires an explicit VDD repair manifest")
         repair_value = json.loads((root / repair_binding["path"]).read_text(encoding="utf-8"))
-        source_ref = repair_value.get("frozen_authority", {}).get("source_manifest")
-        if not isinstance(source_ref, dict):
+        source_binding = repair_value.get("frozen_authority", {}).get("source_manifest")
+        if not isinstance(source_binding, dict):
             raise ValueError("approved semantic disposition repair source authority is invalid")
-        source_ref = _contained_artifact(root, Path(source_ref["path"]), "source manifest")
+        # A repair input deliberately binds its predecessor freeze. The current
+        # manifest is a successor that binds this repair input, so requiring the
+        # two freeze artifacts to be identical would reject every valid repair.
+        source_ref = _contained_artifact(
+            root, Path(source_binding.get("path", "")), "source manifest"
+        )
+        if source_ref.get("sha256") != source_binding.get("sha256"):
+            raise ValueError("approved semantic disposition repair source hash is stale")
         prior_ref = _contained_artifact(root, Path(record["prior_requirements_manifest"]["path"]), "prior requirements manifest")
         if sorted(handoff.get("affected_obligation_ids", [])) != sorted(identifiers):
             raise ValueError("approved semantic disposition obligations are incomplete")

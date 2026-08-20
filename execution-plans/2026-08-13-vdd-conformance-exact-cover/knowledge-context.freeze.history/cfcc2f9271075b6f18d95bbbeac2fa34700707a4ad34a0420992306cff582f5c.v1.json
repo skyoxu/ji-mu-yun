@@ -1,0 +1,29 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:cfcc2f9271075b6f18d95bbbeac2fa34700707a4ad34a0420992306cff582f5c",
+  "canonical_context_sha256": "sha256:a17c94365fd7c5d3a4eaefb858d29b90473d43264a387ac66bf4d5583a86f4eb",
+  "request_sha256": "sha256:db4bf8bf0d462c2541e6ebbb11a8e13ffebd50f6f4de9b17ec6e88be573c0413",
+  "result_sha256": "sha256:50299018eb6d7387dc9f0bbdade2aed269776e49a8ac0791b2906ed9ab4275f7",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "dbf8670c1fb6c394b3aa1b422069045e142be68c"
+  },
+  "source_snapshot_id": "sha256:a12d2d7f074bca91f16b075bacc32e919922fdea7ed4aa49254d37f731ee96f8",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
+      "satisfies": [
+        "repository-rules"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:793bd01582cf51234948ab6b6cba25692db175bd9257076d784b58a428381700",
+    "freeze_receipt_path": "knowledge-context.freeze.history/793bd01582cf51234948ab6b6cba25692db175bd9257076d784b58a428381700.v1.json",
+    "reason": "Refresh frozen VDD knowledge context before the exact-cover implementation repair against the current candidate worktree."
+  }
+}

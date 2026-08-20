@@ -6,9 +6,14 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from pathlib import Path, PurePosixPath
 import tempfile
 from typing import Any
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from scripts.toolchain.canonical_evidence import canonical_bytes, domain_hash
 

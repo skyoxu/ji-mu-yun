@@ -1,0 +1,23 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "sha256": "sha256:7238e23f14642eae24f6d80aa40ec2c32ab7bb3764ef69c992e9cb041c538408",
+      "semantic_snapshot_sha256": "sha256:855d8f3d368be50d8cf3e2f5a71c727ae5acc14aba0db7247e78108248767272",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md",
+      "sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "semantic_snapshot_sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-20T07:26:49.393327Z"
+}
