@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "automatic_publication_allowed": false,
+  "failure_code": "required_modules_unsatisfied",
+  "next_action": "knowledge-context-repair-required",
+  "request_sha256": "sha256:795c6608d347a2693100f031beb939fa338047db52375b4a606a059892bc897b",
+  "requires_explicit_maintainer_confirmation": false,
+  "result_sha256": "sha256:8fd3882fc00e72de2d24beb5d6cd21a3035439b0599b074f2c73132a321f9f87",
+  "route_output": "execution-plans/2026-08-13-vdd-conformance-exact-cover/knowledge-context-routes/5b0952b9968ad136115e4525627f40c96e67e48deba5f3c37c68438785b2ad03.json",
+  "route_sha256": "sha256:456d02401656c815f5fb9475ece5d07ff6fb82544c7ef6ce8c59f466fe9b9abf",
+  "schema_version": "jimuyun.acceptance-knowledge-maintenance-route.v1",
+  "snapshot": {
+    "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
+    "ref": "refs/heads/main"
+  },
+  "status": "blocked",
+  "target_plan": "execution-plans/2026-08-13-vdd-conformance-exact-cover"
+}
