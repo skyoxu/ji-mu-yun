@@ -379,7 +379,10 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
             "targetPlan": request["targetPlan"],
             "runId": run_id,
             "implementationReceipt": {
-                "path": receipt_path.relative_to(root).as_posix(),
+                # The prerequisite bundle is consumed from the target root.
+                # Preserve a replayable target-relative reference rather than
+                # leaking the request's repository-relative transport path.
+                "path": receipt_path.relative_to(target).as_posix(),
                 "sha256": request["implementationReceiptHash"],
                 "terminalCommandId": receipt["terminal_command_id"],
             },

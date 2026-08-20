@@ -1,0 +1,24 @@
+{
+  "schema_version": "vdd-conformance-runtime-policy-registry.v1",
+  "current_policy_id": "vdd-conformance-default-2026-08-13",
+  "policies": [
+    {
+      "policy_id": "vdd-conformance-default-2026-08-13",
+      "status": "approved",
+      "retry_maximums": {
+        "timeout": 3,
+        "transport_failure": 3,
+        "obligation_extraction_invalid": 2,
+        "obligation_extraction_unstable": 3
+      },
+      "exhaustion_actions": {
+        "timeout": "inspect_transport",
+        "transport_failure": "inspect_transport",
+        "obligation_extraction_invalid": "inspect_extraction",
+        "obligation_extraction_unstable": "inspect_extraction"
+      },
+      "authorizes": []
+    }
+  ],
+  "authorizes": []
+}

@@ -1,0 +1,16 @@
+{
+  "authorizes": [],
+  "context_artifact_hash": "sha256:85a9e6076ce2373769a2666262835601dc56fccd4ca4ab604275ea9a728a9674",
+  "execution_identity": "sha256:c1ccd1c1fc496a3af7dcb0bd5bee796dbb7ecfe21a2d928404eb0f74306131e0",
+  "producer_role": "semantic-child",
+  "rationale": "Frozen inputs were reviewed.",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "redaction_status": "not-required",
+  "schema_version": "skill-semantic-decision.v1",
+  "source_manifest_hash": "sha256:f65a60795f2ee977f062b958c6cfef04385d9fba37a8d66613c28ad5a3a25448",
+  "source_statuses": {
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md": "accepted"
+  },
+  "status": "accepted"
+}

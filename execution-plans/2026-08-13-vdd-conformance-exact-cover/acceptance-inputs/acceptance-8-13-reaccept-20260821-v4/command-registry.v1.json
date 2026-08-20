@@ -1,0 +1,19 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_validation.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "terminal-full",
+      "shell": false,
+      "timeout_seconds": 600
+    }
+  ],
+  "schema_version": "ria.command-registry.v1"
+}

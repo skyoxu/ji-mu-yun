@@ -48,7 +48,7 @@ class CompactVddProjectionTests(unittest.TestCase):
         (self.target / "knowledge-context.refactor-acceptance.v1.json").write_text("{}\n", encoding="utf-8")
         policy = self.root / "toolchain-code-review.v1.json"
         policy.write_text("{}\n", encoding="utf-8")
-        self.receipt_path = self.root / "logs/quick-dev/implementation-complete.json"
+        self.receipt_path = self.target / "repair/implementation-complete.json"
         self.receipt_path.parent.mkdir(parents=True)
         contract_hash = "sha256:" + hashlib.sha256((self.target / "implementation-contract.v1.json").read_bytes()).hexdigest()
         registry_hash = "sha256:" + hashlib.sha256((self.target / "command-registry.v1.json").read_bytes()).hexdigest()
@@ -76,7 +76,7 @@ class CompactVddProjectionTests(unittest.TestCase):
             "knowledgeContextPath":"knowledge-context.refactor-acceptance.v1.json",
             "codeReviewDomain":"toolchain",
             "codeReviewPolicyPath":"toolchain-code-review.v1.json",
-            "implementationReceiptPath":"logs/quick-dev/implementation-complete.json",
+            "implementationReceiptPath":"execution-plans/target/repair/implementation-complete.json",
             "implementationReceiptHash":"sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest(),
             "commands":[{"id":"validate","executable":"py","argv":["-3","tools/validate_implementation.py"],"cwd":".","timeout_seconds":30,"shell":False}],
             "actions":[{"actionId":"validate","dependsOn":[],"order":1,"commandId":"validate","activation":True}],
@@ -95,6 +95,7 @@ class CompactVddProjectionTests(unittest.TestCase):
         self.assertEqual("ready", result["status"])
         bundle = json.loads((self.root / result["bundle"]).read_text(encoding="utf-8"))
         self.assertEqual([], bundle["authorizes"])
+        self.assertEqual("repair/implementation-complete.json", bundle["implementationReceipt"]["path"])
         snapshot = self.target / bundle["candidateSnapshotPath"]
         observed = sorted(path.relative_to(snapshot).as_posix() for path in snapshot.rglob("*") if path.is_file())
         self.assertEqual(["scripts/sc/added.py", "scripts/sc/tool.py"], observed)
