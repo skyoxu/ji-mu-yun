@@ -1,0 +1,7 @@
+{
+  "authorizes": [],
+  "bundle": "execution-plans/2026-08-13-vdd-conformance-exact-cover/acceptance-inputs/acceptance-8-13-reaccept-20260820/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+  "bundleHash": "sha256:3ce3622ba84c1e4066d4942a17063365f6c28d2738d7229338151361f81d8ea3",
+  "runRequest": "execution-plans/2026-08-13-vdd-conformance-exact-cover/acceptance-run-request.acceptance-8-13-reaccept-20260820.v1.json",
+  "status": "ready"
+}

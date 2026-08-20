@@ -77,6 +77,20 @@ ROUND4_FINDING_IDS = (
     "BSR-D631C746D61600DF", "BSR-DB3124C18B728E7C", "BSR-DD90EC54AC523D2C",
     "BSR-E6D64A04D3575134", "BSR-FE5426B30C6AA6B5",
 )
+ROUND5_ROOT = PLAN_ROOT / "repair" / "round-5"
+ROUND5_CLOSURE = ROUND5_ROOT / "repair-closure.json"
+ROUND5_BASELINE_MANIFEST = ROUND5_ROOT / "baseline-content-manifest.v1.json"
+ROUND5_CANDIDATE_MANIFEST = ROUND5_ROOT / "candidate-content-manifest.v1.json"
+ROUND5_CALLSITE_INVENTORY = ROUND5_ROOT / "callsite-inventory.v1.json"
+ROUND5_COMPOSITION_RECEIPT = REPOSITORY_ROOT / "logs" / "tdd-adapter" / "skill-authoring-standard" / "repair-round-5" / "plan-validator-composition-receipt.v1.json"
+ROUND5_REPAIR_PATHS = (
+    "tools/validate_plan.py", "tools/validate_implementation.py",
+    "tools/tests/test_validate_plan.py", "tools/tests/test_validate_implementation.py",
+    "00-index.md", "authority-manifest.v1.json", "baseline-and-scope.v1.json",
+    "implementation-contract.v1.json", "requirements.v1.json", "resume-state.v1.json",
+)
+SKILL_INPUT_RECEIPT = max(PLAN_ROOT.glob("skill-input-receipt.repair-20260820-r*.v1.json"), key=lambda path: path.name)
+SKILL_INPUT_CONTRACT = REPOSITORY_ROOT / ".agents" / "skills" / "vdd-execution-plan" / "references" / "skill-input-contract.v1.json"
 ROUND4_INVENTORY_ARGV = [
     "-l", "FORBIDDEN|terminal_replay_command_ids|authority.*source_files|validate_round4_repair|run_terminal_replay",
     "execution-plans/2026-08-06-skill-authoring-standard/tools",
@@ -426,6 +440,44 @@ def validate_round4_repair() -> list[str]:
     return errors
 
 
+def validate_round5_repair() -> list[str]:
+    errors: list[str] = []
+    required = (ROUND5_CLOSURE, ROUND5_BASELINE_MANIFEST, ROUND5_CANDIDATE_MANIFEST, ROUND5_CALLSITE_INVENTORY, ROUND5_COMPOSITION_RECEIPT)
+    for path in required:
+        if not path.is_file():
+            errors.append(f"round5-repair-missing:{path.relative_to(REPOSITORY_ROOT).as_posix()}")
+    if errors:
+        return errors
+    try:
+        closure = json.loads(ROUND5_CLOSURE.read_text(encoding="utf-8"))
+        baseline = json.loads(ROUND5_BASELINE_MANIFEST.read_text(encoding="utf-8"))
+        candidate = json.loads(ROUND5_CANDIDATE_MANIFEST.read_text(encoding="utf-8"))
+        inventory = json.loads(ROUND5_CALLSITE_INVENTORY.read_text(encoding="utf-8"))
+        receipt = json.loads(ROUND5_COMPOSITION_RECEIPT.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"round5-repair-invalid-json:{exc}"]
+    if closure.get("schemaVersion") != "vdd-repair-closure.v1" or closure.get("authorizes") != []:
+        errors.append("round5-repair-closure-invalid")
+    if tuple(closure.get("repairPaths", [])) != ROUND5_REPAIR_PATHS:
+        errors.append("round5-repair-path-set-mismatch")
+    for manifest, label in ((baseline, "baseline"), (candidate, "candidate")):
+        entries = manifest.get("files")
+        if not isinstance(entries, list) or {item.get("path") for item in entries if isinstance(item, dict)} != set(ROUND5_REPAIR_PATHS):
+            errors.append(f"round5-{label}-manifest-path-set-mismatch")
+    candidate_map = _manifest_map(candidate)
+    for path in ROUND5_REPAIR_PATHS:
+        actual = sha256(PLAN_ROOT / path)
+        if candidate_map.get(path) != actual:
+            errors.append(f"round5-candidate-drift:{path}")
+    if inventory.get("schemaVersion") != "vdd-root-cause-callsite-inventory.v1" or {item.get("path") for item in inventory.get("callSites", []) if isinstance(item, dict)} != set(ROUND5_REPAIR_PATHS):
+        errors.append("round5-callsite-inventory-invalid")
+    if receipt.get("schemaVersion") != "vdd-producer-consumer-composition-receipt.v1" or receipt.get("status") != "passed" or receipt.get("authorizes") != []:
+        errors.append("round5-composition-receipt-invalid")
+    if closure.get("compositionReceipt", {}).get("path") != ROUND5_COMPOSITION_RECEIPT.relative_to(REPOSITORY_ROOT).as_posix() or closure.get("compositionReceipt", {}).get("sha256") != sha256(ROUND5_COMPOSITION_RECEIPT):
+        errors.append("round5-composition-receipt-binding-drift")
+    return errors
+
+
 def receipt_output_path(raw: str) -> Path:
     candidate = Path(raw)
     if candidate.is_absolute():
@@ -673,7 +725,7 @@ def validate(*, allow_draft: bool = False) -> list[str]:
             errors.append("knowledge-freeze-context-hash-drift")
         if not binding_errors:
             try:
-                preflight = subprocess.run([sys.executable, "-B", ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py", "--input", str(context), "--repository-root", str(REPOSITORY_ROOT)], cwd=REPOSITORY_ROOT, capture_output=True, text=True, encoding="utf-8", check=False, timeout=180)
+                preflight = subprocess.run([sys.executable, "-B", ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py", "--input", str(context), "--repository-root", str(REPOSITORY_ROOT), "--skill-input-receipt", str(SKILL_INPUT_RECEIPT), "--skill-input-operation", "repair", "--skill-input-contract", str(SKILL_INPUT_CONTRACT)], cwd=REPOSITORY_ROOT, capture_output=True, text=True, encoding="utf-8", check=False, timeout=180)
                 if preflight.returncode:
                     errors.append("current-knowledge-preflight-failed")
             except (OSError, subprocess.TimeoutExpired):
@@ -686,7 +738,7 @@ def validate(*, allow_draft: bool = False) -> list[str]:
         except (OSError, subprocess.TimeoutExpired) as exc:
             errors.append(f"adapter-validator-unavailable:{exc}")
     errors.extend(validate_round3_repair())
-    errors.extend(validate_round4_repair())
+    errors.extend(validate_round5_repair() if ROUND5_CLOSURE.is_file() else validate_round4_repair())
     return errors
 
 

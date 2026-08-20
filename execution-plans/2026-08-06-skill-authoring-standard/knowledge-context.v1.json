@@ -2,14 +2,15 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "skill-authoring-standard-r2",
+    "request_id": "skill-authoring-standard-package-ab-retirement-20260820-final",
     "consumer": "vdd",
     "query": "repository-maintenance-agent-protocol",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "49c5cff216646cf82179d906db60426d5f1ef314"
+      "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
     },
-    "policy_revision": "knowledge-consumer-policies.v2"
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "allow_stale_catalog": true
   },
   "locator_result": {
     "candidates": [
@@ -111,6 +112,91 @@
         }
       },
       {
+        "anchor": "Authority",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "execution-plan",
+        "lifecycle": "repository-source",
+        "line_end": 38,
+        "line_start": 38,
+        "module_id": "plan.2026-08-06-skill-authoring-standard",
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "high",
+          "score": 35,
+          "strategy": "hybrid-token",
+          "token_matches": 1
+        },
+        "read_set": [
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+            "role": "primary",
+            "source_sha256": "69d684c6647847ce78304c4bf71e02d7e9fd30e17223ff2aa95deb75f202de1c"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
+            "role": "command-registry",
+            "source_sha256": "5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+            "role": "implementation-contract",
+            "source_sha256": "83e8eb8bf6ee912c79ae7c2370f6fb63ef0ba765f4aa48ba7a24a15e346b1675"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/plan-state.v1.json",
+            "role": "plan-state",
+            "source_sha256": "5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+            "role": "requirements-ledger",
+            "source_sha256": "be7769f95771a2dcf50dcc18d9fbfe23e20a2aebb16ad151fcd5ee374ce49150"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0041",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0043",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0048",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0057",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0060",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "plan-index",
+        "source_sha256": "69d684c6647847ce78304c4bf71e02d7e9fd30e17223ff2aa95deb75f202de1c",
+        "status": "conditional",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
         "anchor": "ADR-0037: Shared LLM And Codex Execution Entrypoints",
         "consumer_ids": [
           "bootstrap",
@@ -175,7 +261,7 @@
         ],
         "rank_evidence": {
           "confidence": "medium",
-          "score": 3,
+          "score": 1,
           "strategy": "relation-expansion",
           "token_matches": 0
         },
@@ -197,16 +283,248 @@
           "toolchain": "active",
           "workspace": "excluded"
         }
+      },
+      {
+        "anchor": "ADR-0043: VDD Solo-Maintainer Clarification Recovery",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0043",
+        "path": "docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md",
+            "role": "primary",
+            "source_sha256": "3532ee1870b33f2a5cd17fb6967a695dd0fe1c8e1cad73c166d411798b34ba43"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0041",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "3532ee1870b33f2a5cd17fb6967a695dd0fe1c8e1cad73c166d411798b34ba43",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      },
+      {
+        "anchor": "ADR-0048: Repository Knowledge Locator Workflow Consumption",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0048",
+        "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+            "role": "primary",
+            "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0037",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0041",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0043",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0044",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      },
+      {
+        "anchor": "ADR-0057: Explicit Knowledge Publication And Nonrecursive Plan Indexing",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0057",
+        "path": "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+            "role": "primary",
+            "source_sha256": "1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0044",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0048",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0050",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      },
+      {
+        "anchor": "ADR-0060: Skill-Input Typed Selection, Immutable Generations, And Retention",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0060",
+        "path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+            "role": "primary",
+            "source_sha256": "d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0048",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0050",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0057",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0058",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0059",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "skill-authoring-standard-r2",
+    "request_id": "skill-authoring-standard-package-ab-retirement-20260820-final",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "49c5cff216646cf82179d906db60426d5f1ef314",
+      "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:963510ed834bc7c3e96ff0fc2cacd775cbea4736386172ea59bd94d18b79b02d",
+    "source_snapshot_id": "sha256:d6616e276fe784b4aa6d4e0a349ff4541f252e098c97c8e3ffffba406bd556d3",
     "status": "matched"
   },
   "required_modules": [
@@ -240,6 +558,16 @@
     {
       "owner": "adapter",
       "candidate": {
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+        "source_sha256": "69d684c6647847ce78304c4bf71e02d7e9fd30e17223ff2aa95deb75f202de1c"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
         "path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
         "source_sha256": "c11097f51a38412c5672505e180a48c62fd52f10d999f0543e2a6946affe6f36"
       },
@@ -256,13 +584,61 @@
       "decision": "rejected",
       "satisfies": [],
       "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md",
+        "source_sha256": "3532ee1870b33f2a5cd17fb6967a695dd0fe1c8e1cad73c166d411798b34ba43"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+        "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+        "source_sha256": "1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+        "source_sha256": "d7e97d724cf06caf180e5f773e95bd94c7cd6a06a43f0931368936f83df63c50"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:eb66cbfad3ec946c294692d36930e284ac3f3a680e874546f404baaa0be82396",
-  "result_sha256": "sha256:957738e00ff2a2782dae4f3f8109bbb73af56b9a19c842f53b8ab55c13565a5a",
+  "request_sha256": "sha256:cf9ab73400a69315d117eae6572fbccf97038b46430e9b464aff1a8938b5192d",
+  "result_sha256": "sha256:da781906e35f6e993ddfebf037929aedc7910fda877ed015c946387845cba096",
+  "source_refresh": {
+    "schema_version": "jimuyun.knowledge-source-refresh.v1",
+    "mode": "current_worktree_read_set",
+    "base_locator_result_sha256": "sha256:355ed18a05cbc31028a5a0d93f4a7d3747c931dcf06b7e86f22e3068cc474b08"
+  },
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:a2443a704a3ef4503fc7a05d32ed0d394238722d94a7c2c550c6a2fa7bfcd7c1"
+    "knowledge_freshness": "degraded",
+    "catalog_failure_code": "catalog_stale",
+    "source_freshness": "refreshed",
+    "context_sha256": "sha256:0b7b6706e877cb629dc2a5fbdfbd144e0aefbd5cb6c0af02b242688ecffff15c"
   }
 }

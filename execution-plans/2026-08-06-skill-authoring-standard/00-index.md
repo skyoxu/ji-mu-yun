@@ -25,9 +25,9 @@ conditioned safety rules without changing existing Skill authority.
 
 ## First-Class Directory Boundary
 
-This plan owns only Package A. It does not create or repair Package B, does
-not implement `orchestrate-plan-delivery`, and does not modify any existing
-Skill package. Package B and Package C remain separate acceptance targets.
+This plan owns only Package A. It does not create or repair Package B and does
+not modify any existing Skill package. Package B is a separate acceptance
+target; delivery-loop orchestration is outside this plan.
 
 ## Authority
 
@@ -75,7 +75,6 @@ scope. All output is repository-relative and machine-independent.
   targets.
 - `.agents/skills/bmad-*/**`, `.agents/skills/gds-*/**`, and
   `.agents/skills/workflow-chapter*/**`.
-- `execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**`.
 - `PhaseA.Platform/**`, `PhaseA.Platform.Tests/**`, `runtime/phase-a/**`,
   `logs/phase-a-innernet/**`, `knowledge/indexes/current.json`, live database,
   hosted workspaces, authentication, Caddy, and shared LLM entrypoints.

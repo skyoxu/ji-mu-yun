@@ -1,1 +1,0 @@
-{"schema_version":"vdd.plan-state.v1","plan_id":"bootstrap-control-plane-closure-repair","profile":"self-hosted","state":"plan-ready","state_owner":"vdd-execution-plan","authorizes":["plan-ready"],"does_not_authorize":["implementation-authorized","implementation-complete","acceptance-passed","release","archived"]}

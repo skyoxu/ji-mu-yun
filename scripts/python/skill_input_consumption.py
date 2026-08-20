@@ -761,6 +761,8 @@ def generated_artifact_exclusions(repository_root: Path, target: Path) -> frozen
     }
     directory_names = {
         "__pycache__",
+        "acceptance-inputs",
+        "repair",
         "skill-input",
         "terminal-results",
         "attempts",
@@ -790,7 +792,7 @@ def generated_artifact_exclusions(repository_root: Path, target: Path) -> frozen
     excluded: set[str] = set()
     for item in target.rglob("*"):
         relative = item.relative_to(root).as_posix()
-        if item.is_dir() and item.name in directory_names:
+        if item.is_dir() and (item.name in directory_names or item.name.startswith("skill-input-output")):
             excluded.add(relative)
             continue
         if item.is_file() and (item.name in exact_names or any(fnmatch.fnmatchcase(item.name, pattern) for pattern in file_patterns)):

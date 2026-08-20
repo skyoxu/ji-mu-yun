@@ -1,0 +1,79 @@
+{
+  "authorizes": [],
+  "commandId": "terminal-full",
+  "commandRegistryHash": "sha256:2d76d5bb041dcbc7428ec1d3dbb3eb4815433e6cab2839a1e957c8e20eafd10d",
+  "environmentIdentity": {
+    "hash": "sha256:3d83924597c385d0a288d12c4263e250a6e330ac01419f4c241825cefb9a5fa7",
+    "names": [
+      "APPDATA",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_validation.py"
+    ],
+    "commandId": "terminal-full",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 600
+  },
+  "invocationHash": "sha256:305cac394592720ce1aadac3005e1223aa8cc61c8409c0a81a8eadec16d05c92",
+  "processResult": {
+    "commandId": "terminal-full",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "============================= test session starts =============================\r\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\r\nrootdir: C:\\jimuyun\r\nplugins: anyio-4.13.0\r\ncollected 5 items\r\n\r\n.agents\\skills\\bmad-spec\\scripts\\tests\\test_canonical_package.py .....   [100%]\r\n\r\n============================== 5 passed in 0.07s ==============================\r\n{\"status\": \"source_frozen\", \"manifest_hash\": \"sha256:556ce7ff6a149404f3dc8f98b9446c47fbaf8cdc998906d56c82acf5bc7ffcc2\", \"authorizes\": []}\r\n{\"status\": \"blocked\", \"family\": \"artifact_integrity_failure\", \"detail\": \"conformance receipt schema is invalid\", \"authorizes\": []}\r\n{\"status\": \"preflight_passed\", \"authorizes\": []}\r\n{\"status\": \"source_frozen\", \"manifest_hash\": \"sha256:607b02a6e483574875d9a2bca3d9f2291ab7163f171cc274ab95ec6493aefc13\", \"authorizes\": []}\r\n{\"status\": \"source_frozen\", \"manifest_hash\": \"sha256:bb7931a3aeb908c2287999a9d8e04a2b60b0eb96120a312d900d65d9395f4191\", \"authorizes\": []}\r\n{\"status\":\"repair_input_created\",\"repair_input_hash\":\"sha256:8d47adc7c398e8e78b70b351455c35f77cd0fe3178fb652a5cd3aacf836f7ad7\",\"authorizes\":[]}\r\n{\"status\": \"source_frozen\", \"manifest_hash\": \"sha256:f4b035318a1d4cdecf92f6c15a2aecd0dacd053765c9be76830d18dd2ca76a69\", \"authorizes\": []}\r\n{\"status\": \"preflight_passed\", \"authorizes\": []}\r\nterminal-validation=implementation-complete authorizes=[]\r\n",
+    "stdoutSha256": "sha256:21c99dd123bb689c4b4f440e8d05a8a541aa4fdf3b430f1da615978cbfc5d44a"
+  },
+  "processResultHash": "sha256:9eac2557cf2b8df655e0e26c69ad2f11f3eb9223504deb2fc5d867edaff6a82d",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

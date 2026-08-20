@@ -2,26 +2,25 @@
   "schema_version": "vdd.baseline-and-scope.v1",
   "plan_id": "skill-authoring-standard",
   "git": {
-    "commit": "49c5cff216646cf82179d906db60426d5f1ef314",
-    "tree": "bb82574606412a36a235a9c8ab49a1cc1b2a246e",
+    "commit": "4af157d934bacde02db4f27e0ebe266dccfb6939",
+    "tree": "4762a189d8810a97d39274d6fd5f07cc94f6ab77",
     "main_ref": "refs/heads/main"
   },
   "source_requirements": "docs/workflows/skill-control-plane-evolution-requirements.md",
   "scope": {
     "tracked_paths": [],
     "untracked_paths": [
-      "docs/workflows/skill-control-plane-evolution-requirements.md"
+      "docs/know69.txt"
     ],
     "excluded_dirty_paths": [
       ".agents/skills/run-phase-bootstrap-review/**",
-      "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**",
       "knowledge/**"
     ],
-    "dirty_scope_hash": "sha256:3051ed7504ffe1956123ccd682daf01d9e3c318d6b0c4abed8925a459686bb20",
+    "dirty_scope_hash": "sha256:9a849078e82107c4217437235dc6d16ae1cf0ccb33c2a781efd0421cf2497ad3",
     "untracked_manifest": [
       {
-        "path": "docs/workflows/skill-control-plane-evolution-requirements.md",
-        "sha256": "sha256:3051ed7504ffe1956123ccd682daf01d9e3c318d6b0c4abed8925a459686bb20"
+        "path": "docs/know69.txt",
+        "sha256": "sha256:1f4f12cc6bd7dd638b2c8231bea2b8b9073ccf113e97428204e557a050e05201"
       }
     ]
   },

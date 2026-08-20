@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:97a3a78763b11d9f969022eaab4a2b89e337665fad3774f49221ed42415112ad",
-  "canonical_context_sha256": "sha256:35713411c8e1694f3c698e677df947b495913dda89ee790e1574435c5dd9e48a",
-  "request_sha256": "sha256:eb66cbfad3ec946c294692d36930e284ac3f3a680e874546f404baaa0be82396",
-  "result_sha256": "sha256:957738e00ff2a2782dae4f3f8109bbb73af56b9a19c842f53b8ab55c13565a5a",
+  "context_sha256": "sha256:d3a7fbaf9920ef33e9985b623caa30f18ae550650dee6d6f472727e011d1a7ce",
+  "canonical_context_sha256": "sha256:7158924d9932e536d6fd8410b5d503d97525155e94a8dd94f9d8685e73631e6c",
+  "request_sha256": "sha256:cf9ab73400a69315d117eae6572fbccf97038b46430e9b464aff1a8938b5192d",
+  "result_sha256": "sha256:da781906e35f6e993ddfebf037929aedc7910fda877ed015c946387845cba096",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "49c5cff216646cf82179d906db60426d5f1ef314"
+    "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
   },
-  "source_snapshot_id": "sha256:963510ed834bc7c3e96ff0fc2cacd775cbea4736386172ea59bd94d18b79b02d",
+  "source_snapshot_id": "sha256:d6616e276fe784b4aa6d4e0a349ff4541f252e098c97c8e3ffffba406bd556d3",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -23,8 +23,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:8a25793edf5f95167daca20dd83b659bf3ec7b97b027d94b1d9a6cbc60228b6a",
-    "freeze_receipt_path": "knowledge-context.freeze.history/8a25793edf5f95167daca20dd83b659bf3ec7b97b027d94b1d9a6cbc60228b6a.v1.json",
-    "reason": "Bootstrap Round 1 repair changed plan validators and requires a current worktree-matched knowledge freeze."
+    "context_sha256": "sha256:917fb8d1163e0ad4f70aa9e780e26d5058ed3d1d44b8cd4987a30c892b8d7b51",
+    "freeze_receipt_path": "knowledge-context.freeze.history/917fb8d1163e0ad4f70aa9e780e26d5058ed3d1d44b8cd4987a30c892b8d7b51.v1.json",
+    "reason": "retire-package-c-and-remove-three-authorized-plan-targets"
   }
 }

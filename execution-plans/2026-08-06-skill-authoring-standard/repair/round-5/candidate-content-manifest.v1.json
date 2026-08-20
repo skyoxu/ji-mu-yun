@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "vdd-repair-content-manifest.v1",
+  "role": "candidate",
+  "files": [
+    {
+      "path": "tools/validate_plan.py",
+      "sha256": "sha256:90912d08319526f138a8525c08679ee2543c8f2618bde5553f2622fa7b7e27e8"
+    },
+    {
+      "path": "tools/validate_implementation.py",
+      "sha256": "sha256:471a5712c7127e66672996e09b9e2e82009d33dd4f5467b330e2aee4b66f1584"
+    },
+    {
+      "path": "tools/tests/test_validate_plan.py",
+      "sha256": "sha256:3a7d6cbc91f39aa5c82eb8c36fc39566cdb22522a3bcb0f48b3ddc64092fcde2"
+    },
+    {
+      "path": "tools/tests/test_validate_implementation.py",
+      "sha256": "sha256:944668d359ee1db6c3010f272a2660cceea8f93a9ba76872d89cf73e9e0d6155"
+    },
+    {
+      "path": "00-index.md",
+      "sha256": "sha256:69d684c6647847ce78304c4bf71e02d7e9fd30e17223ff2aa95deb75f202de1c"
+    },
+    {
+      "path": "authority-manifest.v1.json",
+      "sha256": "sha256:14595df0e873b13b8d7adbbf392bc19986c4745f6c195ff05b6a9227fe925062"
+    },
+    {
+      "path": "baseline-and-scope.v1.json",
+      "sha256": "sha256:0023e2ba836bfc088697b2328ca4c762c23992c9841f520a3dc49ea2c50669c6"
+    },
+    {
+      "path": "implementation-contract.v1.json",
+      "sha256": "sha256:83e8eb8bf6ee912c79ae7c2370f6fb63ef0ba765f4aa48ba7a24a15e346b1675"
+    },
+    {
+      "path": "requirements.v1.json",
+      "sha256": "sha256:be7769f95771a2dcf50dcc18d9fbfe23e20a2aebb16ad151fcd5ee374ce49150"
+    },
+    {
+      "path": "resume-state.v1.json",
+      "sha256": "sha256:213e6cfc7fc156d0be1e647d7e6de64bb0e9a75e2be698ac312f77adb5d8ce90"
+    }
+  ],
+  "authorizes": []
+}

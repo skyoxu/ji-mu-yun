@@ -1,0 +1,268 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-context.v1",
+  "locator_request": {
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "request_id": "skill-authoring-standard-r2",
+    "consumer": "vdd",
+    "query": "repository-maintenance-agent-protocol",
+    "snapshot": {
+      "ref": "refs/heads/main",
+      "commit": "49c5cff216646cf82179d906db60426d5f1ef314"
+    },
+    "policy_revision": "knowledge-consumer-policies.v2"
+  },
+  "locator_result": {
+    "candidates": [
+      {
+        "anchor": "Repository Maintenance Agent Protocol",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "standard",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "standard.repository-maintenance-agent-protocol",
+        "path": "docs/standards/repository-maintenance-agent-protocol.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "high",
+          "score": 71,
+          "strategy": "hybrid-token",
+          "token_matches": 1
+        },
+        "read_set": [
+          {
+            "path": "docs/standards/repository-maintenance-agent-protocol.md",
+            "role": "primary",
+            "source_sha256": "3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0037",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0041",
+            "type": "governed_by"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "standard",
+        "source_sha256": "3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Reading Order",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "standards-collection",
+        "lifecycle": "repository-source",
+        "line_end": 17,
+        "line_start": 17,
+        "module_id": "standards.index",
+        "path": "docs/standards/_index.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "high",
+          "score": 35,
+          "strategy": "hybrid-token",
+          "token_matches": 1
+        },
+        "read_set": [
+          {
+            "path": "docs/standards/_index.md",
+            "role": "primary",
+            "source_sha256": "899501ea899747811c655d926a5f55cdf373275d5ee377cf80994195e42d31e0"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "collection-index",
+        "source_sha256": "899501ea899747811c655d926a5f55cdf373275d5ee377cf80994195e42d31e0",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "ADR-0037: Shared LLM And Codex Execution Entrypoints",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0037",
+        "path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 3,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+            "role": "primary",
+            "source_sha256": "c11097f51a38412c5672505e180a48c62fd52f10d999f0543e2a6946affe6f36"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "c11097f51a38412c5672505e180a48c62fd52f10d999f0543e2a6946affe6f36",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "ADR-0041: Bootstrap Review Execution Control Plane Ownership",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0041",
+        "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 3,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+            "role": "primary",
+            "source_sha256": "23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      }
+    ],
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "request_id": "skill-authoring-standard-r2",
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "snapshot": {
+      "commit": "49c5cff216646cf82179d906db60426d5f1ef314",
+      "ref": "refs/heads/main"
+    },
+    "source_snapshot_id": "sha256:963510ed834bc7c3e96ff0fc2cacd775cbea4736386172ea59bd94d18b79b02d",
+    "status": "matched"
+  },
+  "required_modules": [
+    "repository-rules",
+    "governance-context"
+  ],
+  "decisions": [
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/standards/repository-maintenance-agent-protocol.md",
+        "source_sha256": "3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550"
+      },
+      "decision": "accepted",
+      "satisfies": [
+        "repository-rules",
+        "governance-context"
+      ],
+      "rejection_reason": null
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/standards/_index.md",
+        "source_sha256": "899501ea899747811c655d926a5f55cdf373275d5ee377cf80994195e42d31e0"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+        "source_sha256": "c11097f51a38412c5672505e180a48c62fd52f10d999f0543e2a6946affe6f36"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "source_sha256": "23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    }
+  ],
+  "request_sha256": "sha256:eb66cbfad3ec946c294692d36930e284ac3f3a680e874546f404baaa0be82396",
+  "result_sha256": "sha256:957738e00ff2a2782dae4f3f8109bbb73af56b9a19c842f53b8ab55c13565a5a",
+  "preflight": {
+    "status": "ready",
+    "failure_code": null,
+    "context_sha256": "sha256:a2443a704a3ef4503fc7a05d32ed0d394238722d94a7c2c550c6a2fa7bfcd7c1"
+  }
+}

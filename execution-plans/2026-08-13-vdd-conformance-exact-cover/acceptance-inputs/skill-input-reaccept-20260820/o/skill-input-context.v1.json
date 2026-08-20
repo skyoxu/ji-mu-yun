@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-20T11:49:17.050719Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The vdd-conformance-exact-cover plan is implementation-authorized for a self-hosted profile. It uses a TDD bridge, a selection pointer, a command registry, and terminal validation. Protected areas include PhaseA.Platform, runtime phase-a, phase-a logs, and user sandbox data.",
+      "title": "Implementation contract"
+    },
+    {
+      "content": "Nine ordered slices cover typed package registry hardening, source-freeze manifests, deterministic exact cover, semantic handoff and repair, retry policy, fingerprint shards, recovery context, receipt preflight, and terminal dogfood replay. Each slice defines allowed paths, dependencies, red and green commands, recovery guidance, and acceptance mappings.",
+      "title": "Delivery slices"
+    },
+    {
+      "content": "The normative source is the typed Canonical Spec Package graph with its canonical root, six companions, adopted Architecture Spine, and content-addressed selection record. Requirements are VCEC-001 through VCEC-036 and acceptance IDs are VCEC-A01 through VCEC-A43. Historical provenance has no active obligation, and listed non-goals exclude lifecycle ownership and automatic bootstrap behavior.",
+      "title": "Requirements scope"
+    }
+  ],
+  "source_manifest_hash": "sha256:01b2dd4fbf633d9c0a44cee670d36ff064bae697e6f948793be36144deed2bd9",
+  "truncated": false
+}

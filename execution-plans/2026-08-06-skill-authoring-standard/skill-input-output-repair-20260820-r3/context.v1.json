@@ -1,0 +1,17 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:65cbfdc5e994be80d01222c6781a381ac66ef4b7b5659005183425c1722de2e2",
+  "sections": [
+    {
+      "title": "repair-scope",
+      "content": "Retire the three explicitly authorized Package C plan targets while preserving historical evidence and keeping Package A and Package B active."
+    },
+    {
+      "title": "validation-scope",
+      "content": "Refresh authority, baseline, repair closure, plan validator evidence, and VDD-owned knowledge context without authorizing implementation or publication."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-20T14:07:25Z"
+}

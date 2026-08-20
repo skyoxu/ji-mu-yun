@@ -15,7 +15,7 @@
     {"id":"SAS-009","text":"Define Context7-first latest-version lookup, official HTTPS fallback, version/source/date recording, and a local-only not-applicable path.","acceptance_ids":["SAS-A09"],"slice_ids":["SAS-S0","SAS-S2"]},
     {"id":"SAS-010","text":"Define capability-conditioned security rules for secrets, destructive confirmation, database backup and restore, prompt-injection boundaries, filesystem containment, subprocesses, HTTPS, and timeouts.","acceptance_ids":["SAS-A10"],"slice_ids":["SAS-S0","SAS-S2"]},
     {"id":"SAS-011","text":"Provide positive, boundary, and negative validator fixtures and a migration policy that preserves existing Skill authority, lifecycle ownership, and compatibility behavior.","acceptance_ids":["SAS-A11"],"slice_ids":["SAS-S2","SAS-S3"]},
-    {"id":"SAS-012","text":"Integrate the standard validator into a repository-owned terminal command and document Package B and Package C consumption without modifying their files in this plan.","acceptance_ids":["SAS-A12"],"slice_ids":["SAS-S3"]}
+    {"id":"SAS-012","text":"Integrate the standard validator into a repository-owned terminal command and document Package B consumption without modifying its files in this plan.","acceptance_ids":["SAS-A12"],"slice_ids":["SAS-S3"]}
   ],
   "acceptance": [
     {"id":"SAS-A01","assertion":"The standard document contains explicit scope, non-goals, responsibility, trigger, I/O, dependency, evidence, and lifecycle sections."},

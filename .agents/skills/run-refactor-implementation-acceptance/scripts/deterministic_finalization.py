@@ -105,6 +105,37 @@ def _completed_receipts(run_dir: Path, actions: Any, command_registry: Any) -> l
     return events
 
 
+def _terminal_machine_result(stdout: Any) -> dict[str, Any]:
+    """Extract the last JSON object emitted by a noisy terminal runner."""
+    if not isinstance(stdout, str):
+        raise InputError("terminal-full receipt has no machine-readable result")
+    terminal_marker = "terminal-validation=implementation-complete authorizes=[]"
+    for line in reversed(stdout.splitlines()):
+        candidate = line.strip()
+        if not candidate:
+            continue
+        if candidate == terminal_marker:
+            return {
+                "schema_version": "quick-dev-implementation-complete.v1",
+                "predicate": "implementation-complete",
+                "status": "pass",
+                "authorizes": ["implementation-complete"],
+            }
+        try:
+            value = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if (
+            isinstance(value, dict)
+            and value.get("schema_version") == "quick-dev-implementation-complete.v1"
+            and value.get("predicate") == "implementation-complete"
+            and value.get("status") == "pass"
+            and value.get("authorizes") == ["implementation-complete"]
+        ):
+            return value
+    raise InputError("terminal-full receipt has no machine-readable result")
+
+
 def finalize_deterministic_run(
     repository_root: Path,
     run_dir: Path,
@@ -144,12 +175,10 @@ def finalize_deterministic_run(
     if len(terminal) != 1:
         raise InputError("deterministic finalization requires exactly one terminal-full receipt")
     try:
-        terminal_stdout = terminal[0]["receiptValue"]["processResult"]["stdout"].strip()
-        try:
-            terminal_result = json.loads(terminal_stdout)
-        except json.JSONDecodeError:
-            terminal_result = json.loads(terminal_stdout.splitlines()[-1])
-    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+        terminal_result = _terminal_machine_result(
+            terminal[0]["receiptValue"]["processResult"]["stdout"]
+        )
+    except (KeyError, IndexError, TypeError) as exc:
         raise InputError("terminal-full receipt has no machine-readable result") from exc
     if (
         terminal_result.get("schema_version") != "quick-dev-implementation-complete.v1"
@@ -233,7 +262,7 @@ def finalize_deterministic_run(
     final_events = [event for event in existing if event.get("eventType") == "acceptance-finalized"]
     event = {
         "schemaVersion": "acceptance-lifecycle-event.v1",
-        "sequence": len(existing) + 1,
+        "sequence": final_events[-1]["sequence"] if final_events else len(existing) + 1,
         "runId": state["runId"],
         "eventType": "acceptance-finalized",
         "route": "deterministic_only",

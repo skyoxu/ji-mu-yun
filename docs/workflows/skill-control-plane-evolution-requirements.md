@@ -22,8 +22,6 @@ In scope:
 - Repository-local control-plane Skills under `.agents/skills/`.
 - Skill package contracts, examples, routing diagrams, dependencies,
   validation scripts, tests, references, and safety gates.
-- The existing `toolchain-plan-delivery-loop-skill` execution-plan directory
-  as the C implementation target.
 
 Out of scope:
 
@@ -61,7 +59,7 @@ A Skill Authoring Standard
 B Existing Skill Compliance Migration
         |
         v
-C Orchestrate Plan Delivery implementation
+Package A/B downstream implementation
 ```
 
 If a package is blocked, stop the sequence. Do not start a dependent package
@@ -151,44 +149,6 @@ Package B is complete only when all five Skill packages pass the Package A
 validator, existing Skill-specific tests remain green, and a route review shows
 no authority, lifecycle, security, or compatibility regression.
 
-## Package C: Orchestrate Plan Delivery
-
-### Objective
-
-Implement the existing opt-in plan `toolchain-plan-delivery-skill` as a thin
-coordinator that consumes the final Package A standard and Package B public
-contracts. Do not create a duplicate C plan directory.
-
-Target directory:
-
-`execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/`
-
-Before implementation, VDD must revalidate or repair that target so its
-implementation contract, dependency closure, knowledge context, and acceptance
-inputs bind the accepted Package A and Package B hashes. This is a controlled
-plan-binding update, not a rewrite of the original product intent.
-
-### Required outcomes
-
-- Accept exactly one existing plan target with canonical containment checks.
-- Route only from current typed owner evidence and recompute next action before
-  expensive work.
-- Invoke VDD for plan repair, Quick Dev for strict implementation, Bootstrap
-  through its owning route, and Acceptance as the acceptance owner.
-- Preserve child lifecycle ownership and `authorizes=[]` for coordinator
-  checkpoints and observations.
-- Keep the loop filesystem-backed, append-only, idempotent, replayable, and
-  free of hidden polling, detached global launchers, process-name detection,
-  automatic protected-path approval, or silent high-cost acknowledgement.
-- Add the Package A quality contract and Package B final Skill hashes to the
-  coordinator's declared dependency/read-set and terminal validation.
-
-### Acceptance gate
-
-Package C is complete only when the existing plan's terminal implementation
-validator and acceptance route pass with current Package A/B bindings. A
-passing intermediate child state is not sufficient.
-
 ## Cross-Package Stop Conditions
 
 Stop and create a new repair/successor path when any of the following drifts:
@@ -208,6 +168,3 @@ or silently applying a newer Skill contract to an old frozen plan.
 |---:|---|---|
 | 1 | VDD create/repair Package A | Accepted standard and passing validator |
 | 2 | VDD create/repair Package B | Five Skills migrated and individually validated |
-| 3 | VDD repair/refreeze existing Package C target | A/B hashes bound in current plan inputs |
-| 4 | Implement and validate Package C | Implementation-complete, then Acceptance-owned result |
-

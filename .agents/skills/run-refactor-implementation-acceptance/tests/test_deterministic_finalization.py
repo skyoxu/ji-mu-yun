@@ -83,5 +83,39 @@ def test_deterministic_finalization_requires_and_publishes_hash_bound_receipts(t
     execution_control.resume_persisted_run(root, run, actions, registry, prepared["inputHash"], "sha256:" + "a" * 64)
     result = deterministic_finalization.finalize_deterministic_run(root, run, prepared_path, actions, registry)
     assert result["status"] == "acceptance-passed"
+    assert deterministic_finalization.finalize_deterministic_run(root, run, prepared_path, actions, registry) == result
     assert json.loads((run / "finalization/acceptance-passed.v1.json").read_text(encoding="utf-8"))["authorizes"] == ["acceptance-passed"]
     assert json.loads((run / "finalization/acceptance-result-final.v1.json").read_text(encoding="utf-8"))["authorizes"] == []
+
+
+def test_terminal_machine_result_accepts_json_before_non_json_tail() -> None:
+    import deterministic_finalization
+
+    result = deterministic_finalization._terminal_machine_result(
+        "pytest output\n"
+        "{\"schema_version\": \"quick-dev-implementation-complete.v1\", \"predicate\": \"implementation-complete\", \"status\": \"pass\", \"authorizes\": [\"implementation-complete\"]}\n"
+        "trailing diagnostic\n"
+    )
+
+    assert result["status"] == "pass"
+
+
+def test_terminal_machine_result_skips_unrelated_json_after_completion() -> None:
+    import deterministic_finalization
+
+    result = deterministic_finalization._terminal_machine_result(
+        "{\"schema_version\": \"quick-dev-implementation-complete.v1\", \"predicate\": \"implementation-complete\", \"status\": \"pass\", \"authorizes\": [\"implementation-complete\"]}\n"
+        "{\"status\": \"source_frozen\"}\n"
+    )
+
+    assert result["predicate"] == "implementation-complete"
+
+
+def test_terminal_machine_result_accepts_exact_terminal_validation_marker() -> None:
+    import deterministic_finalization
+
+    result = deterministic_finalization._terminal_machine_result(
+        "validator output\nterminal-validation=implementation-complete authorizes=[]\n"
+    )
+
+    assert result["authorizes"] == ["implementation-complete"]

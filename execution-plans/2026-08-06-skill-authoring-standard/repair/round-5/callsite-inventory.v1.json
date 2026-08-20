@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "vdd-root-cause-callsite-inventory.v1",
+  "inventoryCommand": {
+    "argv": [
+      "git",
+      "diff",
+      "--name-only",
+      "refs/heads/main",
+      "--",
+      "tools/validate_plan.py",
+      "tools/validate_implementation.py",
+      "tools/tests/test_validate_plan.py",
+      "tools/tests/test_validate_implementation.py",
+      "00-index.md",
+      "authority-manifest.v1.json",
+      "baseline-and-scope.v1.json",
+      "implementation-contract.v1.json",
+      "requirements.v1.json",
+      "resume-state.v1.json"
+    ]
+  },
+  "callSites": [
+    {
+      "path": "tools/validate_plan.py",
+      "disposition": "changed",
+      "consumer": "plan-validator"
+    },
+    {
+      "path": "tools/validate_implementation.py",
+      "disposition": "unchanged",
+      "consumer": "plan-validator"
+    },
+    {
+      "path": "tools/tests/test_validate_plan.py",
+      "disposition": "unchanged",
+      "consumer": "plan-validator"
+    },
+    {
+      "path": "tools/tests/test_validate_implementation.py",
+      "disposition": "unchanged",
+      "consumer": "plan-validator"
+    },
+    {
+      "path": "00-index.md",
+      "disposition": "changed",
+      "consumer": "plan-validator"
+    },
+    {
+      "path": "authority-manifest.v1.json",
+      "disposition": "changed",
+      "consumer": "plan-validator"
+    },
+    {
+      "path": "baseline-and-scope.v1.json",
+      "disposition": "changed",
+      "consumer": "plan-validator"
+    },
+    {
+      "path": "implementation-contract.v1.json",
+      "disposition": "changed",
+      "consumer": "plan-validator"
+    },
+    {
+      "path": "requirements.v1.json",
+      "disposition": "changed",
+      "consumer": "plan-validator"
+    },
+    {
+      "path": "resume-state.v1.json",
+      "disposition": "unchanged",
+      "consumer": "plan-validator"
+    }
+  ],
+  "authorizes": []
+}

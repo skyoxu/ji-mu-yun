@@ -1,0 +1,148 @@
+请整理 ji-mu-yun 仓库中的以下需求目录，并更新当前 Knowledge Catalog。
+
+一、授权范围
+
+用户明确授权删除以下三个完整目录：
+
+1. execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill
+2. execution-plans/2026-08-06-bootstrap-control-plane-closure-repair
+3. execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode
+
+授权仅覆盖这三个精确目录及其当前活动引用，不得扩展删除其他 execution-plans、logs、历史 knowledge generations、acceptance snapshots 或 _bmad-output。
+
+三、开始前检查
+
+1. 完整阅读根 AGENTS.md。
+2. 按仓库规则优先发现并使用 FastCtx；不可用时记录一次 fallback。
+3. 阅读：
+   - knowledge/README.md
+   - .agents/skills/maintain-knowledge-base/SKILL.md
+   - docs/workflows/skill-control-plane-evolution-requirements.md
+   - 四个相关计划的 00-index.md、plan-state.v1.json、requirements、implementation-contract
+4. 执行 git status --short，确认并保护用户已有修改。
+5. 用 git ls-files 精确列出三个待删除目录。
+6. 如果待删除目录内存在未提交的用户修改，立即停止并报告，不得删除。
+7. 记录删除前 refs/heads/main 的 commit。
+
+四、活动需求源修订
+
+更新 docs/workflows/skill-control-plane-evolution-requirements.md：
+
+- 保留 Package A：Skill Authoring Standard。
+- 保留 Package B：现有核心 Skills 的标准迁移。
+- 取消 Package C：Orchestrate Plan Delivery。
+- 删除将 delivery-loop Skill 作为必须实现目标的活动要求。
+- 更新 Recommended Execution Order，只保留 A、B。
+- 更新 cross-package 条件中只为 Package C 服务的表述。
+- 不要添加新的 delivery-loop Skill、替代 Skill 或重复需求目录。
+- 不需要建立 tombstone/deprecated 目录；Git 历史已经提供历史留痕。
+
+五、修复 skill-authoring-standard 的依赖绑定
+
+保留 execution-plans/2026-08-06-skill-authoring-standard，但检查其中所有对以下内容的引用：
+
+- Package C
+- toolchain-plan-delivery-loop-skill
+- 被删除目录的路径、hash、read-set、downstream consumer、validator fixture
+
+由于该计划仍是 plan-ready 且存在冻结知识上下文，不得随意手工修改几个 JSON 后宣称有效。
+
+如其 implementation contract、requirements、baseline、validator 或 frozen knowledge context 绑定了 Package C：
+
+1. 使用 VDD 所有者支持的 plan repair/refreeze 路径修复该计划；
+2. 将有效范围收缩为 Package A + Package B；
+3. 重新生成当前权威的 requirements/contract/read-set/knowledge freeze；
+4. 保留历史 knowledge-context.history 和 repair evidence；
+5. 运行该计划自己的 plan-ready validator；
+6. 不得因此发布 implementation-authorized。
+
+六、引用清理
+
+对三个目录名分别运行仓库范围的精确 rg 搜索。
+
+分类处理：
+
+A. 必须更新的活动源
+- docs/workflows/**
+- 当前活动 execution plan 的 requirements、contract、validator、索引
+- execution-plans/95-implementation-report-index.v1.json
+- 当前 knowledge source policy 或活动路由文件
+
+B. 不得手工重写的历史/不可变内容
+- logs/**
+- _bmad-output/**
+- **/.acceptance-snapshots/**
+- **/knowledge-context.history/**
+- knowledge/indexes/generations/**
+- 历史 repair evidence
+
+历史文件中仍出现旧目录名是允许的；验收目标是当前活动控制面和当前 Knowledge Catalog 不再把这些目录作为有效需求模块。
+
+七、删除执行
+
+完成引用分类、确认精确范围后，删除三个授权目录。
+
+不得使用通配符删除，不得执行 git clean、reset --hard 或 checkout 丢弃操作。
+
+删除后验证：
+
+- 三个目录均不存在；
+- skill-authoring-standard 仍存在；
+- 08-05 TC-D1、07-31 TC-E0、08-01 routing 仍存在；
+- Phase 服务代码、runtime、Hosted workspace 没有变化。
+
+八、知识库更新
+
+严禁直接手工编辑以下生成物：
+
+- knowledge/catalogs/repository-knowledge-catalog.v1.json
+- knowledge/catalogs/repository-knowledge-catalog.v2.json
+- knowledge/projections/**
+- knowledge/indexes/current.json
+- knowledge/indexes/last-known-good.json
+- knowledge/indexes/generations/**
+
+知识发布只能使用 maintain-knowledge-base 和正式 publication CLI。
+
+注意：知识发布只读取 pinned refs/heads/main，不能把 dirty worktree 当作事实。因此分两阶段：
+
+阶段 1：
+- 完成源文件修改、计划 repair/refreeze 和测试；
+- 展示 git diff、删除清单及验证结果；
+- 在获得用户明确的 commit/合入 main 授权前，不执行提交或发布。
+
+阶段 2：
+- 源修改进入本地 refs/heads/main 后，重新确认 main commit；
+- 使用 maintain-knowledge-base 的 existing-only 模式检查已注册条目；
+- 先使用 --dry-run；
+- 运行：
+  py -3 -B scripts/python/publish_knowledge_catalog.py --check
+- 如果报告 stale，必须通过仓库现有、hash-verified 的 stale-maintenance route 和一个仍存在于 main、带 00-index.md 的 target plan 创建 publication request。
+- 如果不存在合法 target plan/source route，停止并报告 blocker；不得伪造 route 或绕过发布门禁。
+- 在 maintainer 明确确认后才使用 prepare_publication_request.py --ack-maintainer 和正式 --publish。
+- 发布失败时保留旧 LKG 和 append-only failure evidence，不得手工修复 current/LKG。
+- 不运行 --prune；旧 immutable generations 即使包含已删除目录名也保留。
+
+九、最终验收
+
+必须满足：
+
+1. 三个授权目录从当前 main 源树中消失。
+2. 当前 docs/workflows 只要求 Package A/B，不再要求 Package C。
+3. skill-authoring-standard 仍可通过自己的 plan validator。
+4. 当前 Knowledge Catalog 不再包含三个目录的活动 plan module/source_path。
+5. current consumer projections 不再将其返回为活动需求。
+6. Knowledge publication 完整验证和真实查询套件通过。
+7. current/LKG 指针有效，旧 generation 未被删除。
+8. 当前活动源不存在指向已删除目录的 dangling reference。
+9. 历史 evidence 中的旧引用没有被重写。
+10. 输出报告包括：
+   - deleted_paths
+   - updated_active_references
+   - preserved_historical_references
+   - validation_commands_and_results
+   - knowledge_generation_id
+   - remaining_blockers
+   - git diff summary
+
+不要自动 commit、push 或创建 PR；分别等待用户明确授权。

@@ -1,0 +1,20 @@
+{
+  "actionReceipts": [
+    {
+      "path": "actions/terminal-full/attempt-001/result.json",
+      "sha256": "sha256:95c67b9d109d4cb0032fdbb959a2f61229fdf783657f3c7f99991e6a1e03ab8b"
+    }
+  ],
+  "authorizes": [],
+  "candidateCustodyHash": "sha256:766e675ed46fe75d512764580913af6da364b693636b617f32f8bcdf30d792c6",
+  "inputBindings": {
+    "candidateCustodyHash": "sha256:766e675ed46fe75d512764580913af6da364b693636b617f32f8bcdf30d792c6",
+    "contractHash": "sha256:6ea21487f24268b9edd960f68bc1f7cee4581cadf1b9b5d875a4287b3a66d2ea",
+    "knowledgeContextHash": "sha256:f36ebd7cf2bee93c8553b9f94daf3167a520ed98ac63871d29b37334258b454f",
+    "runInputHash": "sha256:75fd949648a5961511b581c609b57ac4709d51c6537c863e3037ed9da916449c"
+  },
+  "route": "deterministic_only",
+  "schemaVersion": "acceptance-deterministic-evaluation.v1",
+  "status": "passed",
+  "terminalResultHash": "sha256:22aee8ad0abf8ac6505d33558e98eb805aa1035e83868880aff9c67628435a1b"
+}

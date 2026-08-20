@@ -1,0 +1,97 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "request_binding": {
+    "request": {},
+    "consumer": "run-refactor-implementation-acceptance",
+    "operation": "acceptance",
+    "target": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+    "route_identity": "acceptance.vdd-exact-cover.reaccept-20260820",
+    "source_roles": {
+      "implementation_target": [
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json"
+      ],
+      "acceptance_requirements": [
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md"
+      ]
+    }
+  },
+  "request_hash": "sha256:b8bb408932074c3d89b6a86c6737d45d20b32bc22ea63c1204e60966eeb748f2",
+  "target": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+  "route_identity": "acceptance.vdd-exact-cover.reaccept-20260820",
+  "repository_identity": {
+    "head": "4af157d934bacde02db4f27e0ebe266dccfb6939",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_selection_hash": "sha256:10cca7a59c18e7f0c519bdb8a324633c51fc6f21ea09a53a33b7519e9653c122",
+    "selected_source_content_root": "sha256:ad3d46648291cfccdf370e8c93de31ad7006f62993372fe2f224352e01079967"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-20T11:49:17.114591Z",
+  "contract_hash": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0",
+  "source_manifest": {
+    "path": "s/source-manifest.v1.json",
+    "sha256": "sha256:01b2dd4fbf633d9c0a44cee670d36ff064bae697e6f948793be36144deed2bd9"
+  },
+  "child_request": {
+    "path": "request.json",
+    "sha256": "sha256:81a5b0e45679f2cd3845b2e593982d428c89562064cdaa617970f265b5fad312"
+  },
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "required": true,
+      "sha256_before": "sha256:6ea21487f24268b9edd960f68bc1f7cee4581cadf1b9b5d875a4287b3a66d2ea",
+      "sha256_after": "sha256:6ea21487f24268b9edd960f68bc1f7cee4581cadf1b9b5d875a4287b3a66d2ea",
+      "size_bytes": 20751,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:c24b0b0c3e914d5d38566aea9ba33f435fda6fd0f9f0fe6046978b874ec6d670",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md",
+      "required": true,
+      "sha256_before": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "sha256_after": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "size_bytes": 1258,
+      "line_count": 25,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 25
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "o/semantic-decision.v1.json",
+    "sha256": "sha256:0a39f1534c8b1bff2c01ce4571c3468adcd719271f61f76647b8747d7064eb34"
+  },
+  "context_artifact": {
+    "path": "o/skill-input-context.v1.json",
+    "sha256": "sha256:48980c85cac6a6d4d49c14fd814ef214b84b984c4bd427ff7de38ef862f39db7"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:1017a28965a8e706ed30d96f571642c967fa9b29ab8f67eb4eff042956ffe8d4"
+}

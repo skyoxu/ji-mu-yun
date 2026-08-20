@@ -1,0 +1,184 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "sources": [
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "semantic_snapshot_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/clarification-gate.md",
+      "sha256": "sha256:f4265c931334ad2c6034bedde2e61f225da6e32e5fefe1813095abb5948e2350",
+      "semantic_snapshot_sha256": "sha256:f4265c931334ad2c6034bedde2e61f225da6e32e5fefe1813095abb5948e2350",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/knowledge-consumption.md",
+      "sha256": "sha256:5f01cb1f13f835a906fd7e23c7e9d28d956a3d7253dd8f0f65240b6884ee2dc3",
+      "semantic_snapshot_sha256": "sha256:5f01cb1f13f835a906fd7e23c7e9d28d956a3d7253dd8f0f65240b6884ee2dc3",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.json",
+      "sha256": "sha256:1acc483d886b8a15da829d825022541448277f72fee7eb8e0280a436b4889291",
+      "semantic_snapshot_sha256": "sha256:ebdd8b3dfdeeefa873534e9aabbfbee357cb0e1acd8b22d3770cac99dba97b2a",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.md",
+      "sha256": "sha256:0b6b5a056dc72015ede28f71a0ae65484091356da617ba75e741c98a58c6c846",
+      "semantic_snapshot_sha256": "sha256:0b6b5a056dc72015ede28f71a0ae65484091356da617ba75e741c98a58c6c846",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
+      "sha256": "sha256:64d322719f1448a02f5c88c6216b586dad1e3020b26d8476ed50587a081f2619",
+      "semantic_snapshot_sha256": "sha256:7a7d3eb6aa0ffe16c0c8f6c1bae3e5e5e8759fd1ba5e2efb8dac92b3156c23c5",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-source-freeze-manifest.v1.schema.json",
+      "sha256": "sha256:fbf3102653cdb20c1ef0321ab7bcb9330f18bf2e2dae7bbabf732c77f9d671dc",
+      "semantic_snapshot_sha256": "sha256:d55b5acb7f1e7f7eb7b8f6b0e613e97e970d9492f668edf90015107ea8fc44cd",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/skill-compliance-protocol.md",
+      "sha256": "sha256:22e3e5b495e6cecc0de6beeb0d5f10949bf6a89325a7f44788e752ab5b81c989",
+      "semantic_snapshot_sha256": "sha256:22e3e5b495e6cecc0de6beeb0d5f10949bf6a89325a7f44788e752ab5b81c989",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json",
+      "sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "semantic_snapshot_sha256": "sha256:2491a8467d2fcda9c940b9a633daad479af00ccbc1042d95dd31ae39aa91a2d6",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/solo-maintainer-vdd-standard.md",
+      "sha256": "sha256:ba113d1d509b9a802b0d9e03de56129ec24e321bc4a05690d6adf3690d9e21ee",
+      "semantic_snapshot_sha256": "sha256:ba113d1d509b9a802b0d9e03de56129ec24e321bc4a05690d6adf3690d9e21ee",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
+      "sha256": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
+      "semantic_snapshot_sha256": "sha256:1408b7bba1b454d4a9cb05188ca7b7280f4323f9012d67670a567a3efa11cce2",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": "docs/know69.txt",
+      "sha256": "sha256:1f4f12cc6bd7dd638b2c8231bea2b8b9073ccf113e97428204e557a050e05201",
+      "semantic_snapshot_sha256": "sha256:1f4f12cc6bd7dd638b2c8231bea2b8b9073ccf113e97428204e557a050e05201",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "docs/standards/repository-maintenance-agent-protocol.md",
+      "sha256": "sha256:3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "semantic_snapshot_sha256": "sha256:3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "docs/workflows/skill-control-plane-evolution-requirements.md",
+      "sha256": "sha256:72c362bc2dad8f0ab9283f3fdd63e6db00df55282f326ebc52df4cf9e6fdfbb2",
+      "semantic_snapshot_sha256": "sha256:72c362bc2dad8f0ab9283f3fdd63e6db00df55282f326ebc52df4cf9e6fdfbb2",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+      "sha256": "sha256:ad82fd74c4520084454d9a8f0f2172512f7fd91630b7199ac94d08873f2bd58d",
+      "semantic_snapshot_sha256": "sha256:ad82fd74c4520084454d9a8f0f2172512f7fd91630b7199ac94d08873f2bd58d",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/authority-manifest.v1.json",
+      "sha256": "sha256:3fc219e2fea7f161847d5286dbf26060577f937b23ec34699ad6f76b46fe2b7a",
+      "semantic_snapshot_sha256": "sha256:d58f9539d1f27a464593548a13b6b5d46bbca0abbfa8ef99359b26c09d9c192b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/baseline-and-scope.v1.json",
+      "sha256": "sha256:9b12e6a42d62e6ff804ca282d849beddaf3c6aa0aaa95b6d95002a0f0d51bd5f",
+      "semantic_snapshot_sha256": "sha256:b64bbcefd710d61ab380ab32452283da43aa9126edefe631e1eb4a132a3109b1",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
+      "sha256": "sha256:5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514",
+      "semantic_snapshot_sha256": "sha256:cce2de3ab1e83f49874acd65c66ec1ff325cd01a1ef0e67549e3d2002f4fbb31",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+      "sha256": "sha256:83e8eb8bf6ee912c79ae7c2370f6fb63ef0ba765f4aa48ba7a24a15e346b1675",
+      "semantic_snapshot_sha256": "sha256:21d6cbe335535622bd25aaae4bc3fb1d1b4a351bb2cf5f97be35604787445be2",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/model-route-decision.v1.json",
+      "sha256": "sha256:e50fd4e029511f7a4be1d1fbc822c31e311bf8b377410a08550171265cd47567",
+      "semantic_snapshot_sha256": "sha256:e0e447350851198f911d1e068dcf63597fd87e03f27289706f9e96711f992ff5",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+      "sha256": "sha256:be7769f95771a2dcf50dcc18d9fbfe23e20a2aebb16ad151fcd5ee374ce49150",
+      "semantic_snapshot_sha256": "sha256:03da64996fb7ea19f5608b6930bc271a8ee76ab6e852e0e5d1236c3812033777",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/tests/test_validate_implementation.py",
+      "sha256": "sha256:944668d359ee1db6c3010f272a2660cceea8f93a9ba76872d89cf73e9e0d6155",
+      "semantic_snapshot_sha256": "sha256:944668d359ee1db6c3010f272a2660cceea8f93a9ba76872d89cf73e9e0d6155",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/tests/test_validate_plan.py",
+      "sha256": "sha256:3a7d6cbc91f39aa5c82eb8c36fc39566cdb22522a3bcb0f48b3ddc64092fcde2",
+      "semantic_snapshot_sha256": "sha256:3a7d6cbc91f39aa5c82eb8c36fc39566cdb22522a3bcb0f48b3ddc64092fcde2",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/validate_implementation.py",
+      "sha256": "sha256:471a5712c7127e66672996e09b9e2e82009d33dd4f5467b330e2aee4b66f1584",
+      "semantic_snapshot_sha256": "sha256:471a5712c7127e66672996e09b9e2e82009d33dd4f5467b330e2aee4b66f1584",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/validate_plan.py",
+      "sha256": "sha256:0002b92d17901be2ded202ecad68e2086d4d123560e33d95fb178d5da47d55a2",
+      "semantic_snapshot_sha256": "sha256:0002b92d17901be2ded202ecad68e2086d4d123560e33d95fb178d5da47d55a2",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-20T14:04:05.866353Z"
+}
