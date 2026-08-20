@@ -478,6 +478,11 @@ def successor(args: argparse.Namespace) -> dict[str, Any]:
         "conformance_result": artifact_ref(root, conformance_path),
         "authorization_preflight": artifact_ref(root, preflight_path), "authorizes": [],
     }
+    # This test-only crash seam proves a completed generation cannot become
+    # current until its pointer is published. It is intentionally checked after
+    # all immutable artifacts are durable and before the single current write.
+    if os.environ.get("VDD_REPAIR_LINEAGE_TEST_INTERRUPT_BEFORE_POINTER") == "1":
+        raise LineageError("generation_interrupted_before_pointer")
     _write_once(output_root / "repair-lineage-current.v1.json", pointer)
     return {"status": "conformant", "generation_id": generation_id, "pointer": artifact_ref(root, output_root / "repair-lineage-current.v1.json"), "authorizes": []}
 

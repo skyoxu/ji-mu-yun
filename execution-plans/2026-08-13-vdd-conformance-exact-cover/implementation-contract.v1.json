@@ -130,10 +130,13 @@
       ],
       "allowed_changes": {
         "production": [
-          ".agents/skills/vdd-execution-plan/**"
+          ".agents/skills/vdd-execution-plan/**",
+          ".agents/skills/vdd-conformance-exact-cover/scripts/**",
+          ".agents/skills/vdd-conformance-exact-cover/schemas/**"
         ],
         "tests": [
-          ".agents/skills/vdd-execution-plan/tests/**"
+          ".agents/skills/vdd-execution-plan/tests/**",
+          ".agents/skills/vdd-conformance-exact-cover/tests/**"
         ],
         "documentation": []
       },
@@ -346,18 +349,23 @@
             {
               "command_id": "semantic-handoff",
               "expected_exit": "zero"
+            },
+            {
+              "command_id": "repair-lineage-successor",
+              "expected_exit": "zero"
             }
           ]
         }
       },
-      "post_refactor_command_id": "semantic-handoff",
+      "post_refactor_command_id": "repair-lineage-successor",
       "exit_predicate": "slice-ready",
       "recovery": "preserve prior requirements",
       "red_command_ids": [
         "semantic-handoff-negative"
       ],
       "green_command_ids": [
-        "semantic-handoff"
+        "semantic-handoff",
+        "repair-lineage-successor"
       ]
     },
     {

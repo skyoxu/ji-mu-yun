@@ -1,3 +1,7 @@
+> Historical repair input. Consumed and resolved by commits `a0fac063` and
+> `a8345e44`; its "current" status section describes the pre-repair state and
+> must not be used as current execution authority.
+
 真正缺失的自动化能力
 
 当前只有两条路：

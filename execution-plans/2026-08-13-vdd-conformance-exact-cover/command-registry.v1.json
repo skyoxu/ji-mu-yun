@@ -33,6 +33,14 @@
     {
       "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
       "sha256": "sha256:64d322719f1448a02f5c88c6216b586dad1e3020b26d8476ed50587a081f2619"
+    },
+    {
+      "path": ".agents/skills/vdd-conformance-exact-cover/scripts/vdd_repair_lineage.py",
+      "sha256": "sha256:0ed8e1d6b61a0bc9619c6390b23684fcbfd4a8e372504f3656cf8d58d35c2396"
+    },
+    {
+      "path": ".agents/skills/vdd-conformance-exact-cover/schemas/vdd-repair-lineage-successor.v1.schema.json",
+      "sha256": "sha256:74e96b0692e619ad1f9745571d4e908c82a8319298e7bc5b02fd0941ad024750"
     }
   ],
   "behavior_programs": {
@@ -210,6 +218,17 @@
     "exact-cover-readonly-target": {
       "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
       "sha256": "sha256:bb48be45c906d67151f2e48e62aa3f1b99b076fac0c41d208c0aa9333ea40087",
+      "args": []
+    },
+    "repair-lineage-successor": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/repair_lineage_successor.py",
+      "sha256": "sha256:3ae323f8d7ae21333803d32f5496fd89bdb32839aba53643b22b0780b772ad6e",
+      "dependencies": [
+        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/vdd_repair_lineage.py", "sha256": "sha256:0ed8e1d6b61a0bc9619c6390b23684fcbfd4a8e372504f3656cf8d58d35c2396"},
+        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py", "sha256": "sha256:4d5a6db3aab4844c49fa811789ae240047754966d56c8117e71a61b6d438b3f0"},
+        {"path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py", "sha256": "sha256:0750280ddcadcc368443e2397c517645869ee549a7db671c0f15e4f0084e6c56"},
+        {"path": ".agents/skills/vdd-conformance-exact-cover/schemas/vdd-repair-lineage-successor.v1.schema.json", "sha256": "sha256:74e96b0692e619ad1f9745571d4e908c82a8319298e7bc5b02fd0941ad024750"}
+      ],
       "args": []
     }
   },
@@ -722,6 +741,17 @@
         "type": "repo_path",
         "value": "."
       },
+      "timeout_seconds": 600,
+      "shell": false
+    },
+    {
+      "id": "repair-lineage-successor",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/repair_lineage_successor.py",
+      "purpose": "Prove repair-lineage successors reject semantic and authority drift, replay after interruption, and publish only a current v3 chain.",
+      "acceptance_ids": ["VCEC-A13", "VCEC-A14", "VCEC-A15", "VCEC-A16", "VCEC-A17", "VCEC-A18", "VCEC-A19"],
+      "executable": "py",
+      "argv": ["-3", ".agents/skills/vdd-conformance-exact-cover/tests/validators/repair_lineage_successor.py"],
+      "cwd": {"type": "repo_path", "value": "."},
       "timeout_seconds": 600,
       "shell": false
     },
