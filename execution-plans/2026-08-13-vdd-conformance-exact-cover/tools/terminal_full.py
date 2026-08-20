@@ -18,11 +18,25 @@ def publish_receipt(plan: Path, result: dict[str, object]) -> Path:
     repair.mkdir(parents=True, exist_ok=True)
     base = repair / "quick-dev-implementation-complete.v1.json"
     encoded = json.dumps(result, sort_keys=True, indent=2) + "\n"
-    if base.is_file() and base.read_text(encoding="utf-8") != encoded:
+
+    # Terminal stdout is operational evidence: source-freeze and repair tests
+    # legitimately emit fresh manifest hashes on an otherwise identical replay.
+    # It must not create a new implementation-complete identity.
+    def identity(payload: dict[str, object]) -> dict[str, object]:
+        return {key: value for key, value in payload.items() if key not in {"terminal_stdout_sha256", "canonical_receipt_path"}}
+
+    def same_identity(path: Path) -> bool:
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return False
+        return isinstance(existing, dict) and identity(existing) == identity(result)
+
+    if base.is_file() and not same_identity(base):
         base = repair / f"quick-dev-implementation-complete.{str(result['contract_hash']).split(':', 1)[-1][:16]}.v1.json"
     if not base.is_file():
         base.write_text(encoded, encoding="utf-8", newline="\n")
-    elif base.read_text(encoding="utf-8") != encoded:
+    elif not same_identity(base):
         raise RuntimeError("implementation-complete successor conflicts")
     return base
 
