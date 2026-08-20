@@ -1,0 +1,197 @@
+真正缺失的自动化能力
+
+当前只有两条路：
+
+完整重新产生 semantic handoff、review、repair input；
+手工改 hash。
+
+第二条不安全，第一条会无意义地重复108条已经接受的语义判断。
+
+缺少的是第三条正式路径：
+
+validated predecessor repair chain
+    + deterministic semantic-equivalence proof
+    -> repair-lineage successor
+    -> current repair input
+    -> current reviewed mapping
+    -> successor source-freeze
+    -> current conformance receipt
+正确的修复模型
+1. 分离语义决定和执行校验身份
+
+需要明确两个独立 identity：
+
+semanticDecisionHash
+validationEnvelopeHash
+
+semanticDecisionHash 应绑定：
+
+108个 obligation ID；
+obligation semantic fingerprint；
+prior requirements semantic identity；
+semantic handoff；
+review decision；
+applicable policy语义。
+
+validationEnvelopeHash 应绑定：
+
+当前 validator bytes；
+canonical-evidence domain/version；
+当前 source-freeze；
+当前 mapping bytes；
+当前 policy artifact；
+terminal/preflight validator。
+
+validator 文件变化必须使旧 conformance receipt 失效，但不应自动抹掉已经完成的语义决定。
+
+2. 增加正式 successor artifact
+
+建议新增：
+
+vdd-repair-lineage-successor.v1
+
+至少包含：
+
+predecessorRepairInput
+predecessorSemanticDecisionHash
+predecessorValidatorIdentity
+currentValidatorIdentity
+predecessorSourceFreeze
+currentPredecessorFreeze
+predecessorObligationSetHash
+currentObligationSetHash
+predecessorSemanticFingerprintRoot
+currentSemanticFingerprintRoot
+selectionUnchanged
+authorityUnchanged
+semanticInputsUnchanged
+mappingDecisionUnchanged
+migrationReason
+authorizes: []
+3. 自动 successor 只能在以下条件全部成立时执行
+Canonical Spec Package selection 不变；
+authority role graph 不变；
+normative source bytes 不变，或者只发生已声明的 canonical serialization 迁移；
+108个 obligation ID 集合完全一致；
+每个 obligation 的语义指纹一致；
+prior requirements 的语义集合一致；
+decision 仍为相同的 not_applicable；
+review policy 没有发生语义变化；
+旧 repair/review chain 可从不可变内容验证；
+当前 validator 支持该 predecessor schema。
+
+否则必须返回 typed route：
+
+obligation_drift
+source_semantic_drift
+authority_drift
+review_policy_drift
+predecessor_validator_unavailable
+semantic_rereview_required
+
+不得自动 successor。
+
+4. 增加单一自动化入口
+
+建议新增类似：
+
+vdd_repair_lineage.py successor
+
+输入：
+
+predecessor source-freeze；
+predecessor mapping；
+predecessor review run；
+predecessor repair input；
+current validator；
+current canonical-evidence identity；
+current package selection；
+target repaired mapping。
+
+输出到临时 generation：
+
+predecessor-chain validation；
+current obligation inventory；
+semantic equivalence result；
+repair-lineage successor；
+current repair input；
+reviewed mapping successor；
+successor source-freeze；
+current conformance receipt；
+current preflight result。
+
+只有第1～9步全部通过，才能原子推进 current pointer。失败 generation 不得成为 current。
+
+当前仓库的修复顺序
+第一阶段：只改代码
+
+先实现：
+
+repair lineage successor schema；
+semantic decision hash；
+obligation semantic fingerprint root；
+successor producer/validator；
+source-freeze 对 repair successor 的消费；
+exact-cover 对 successor chain 的验证；
+typed failure taxonomy；
+crash-safe temporary generation。
+
+这一阶段不要生成最终 v3 evidence。
+
+第二阶段：冻结代码后生成证据
+
+代码提交后，确认 validator 不再变化，再执行自动 successor：
+
+将 v1/v2 全部保留为历史 evidence；
+验证原始108条 review decision；
+重建当前 predecessor freeze；
+比较旧/新 obligation semantic fingerprint；
+生成 repair-lineage-successor.v1；
+生成 reviewed.v3.json；
+生成 vdd-repair-input-v3.v1.json；
+生成 source-freeze-review-v3.v1.json；
+运行 exact-cover；
+生成绑定当前 validator 的 conformance result；
+运行 authorization preflight。
+第三阶段：证据提交
+
+证据提交中不得再修改：
+
+conformance.py
+source_freeze.py
+canonical-evidence 实现
+runtime policy
+schema
+
+否则又会使刚生成的 receipt 失效。
+
+必须增加的回归测试
+
+至少覆盖：
+
+仅 validator 实现字节变化，语义输入不变：允许 successor；
+canonical-evidence serializer/domain 合法迁移：允许 successor；
+obligation ID 增减：阻断；
+obligation prose/semantic fingerprint 改变：阻断并要求重新 review；
+authority role/path/scope 改变：阻断；
+review policy 改变：阻断；
+旧 validator 内容无法验证：阻断；
+successor 中途 crash：重试复用同一 generation；
+identical replay：返回同一 successor；
+手工修改旧 repair input hash：阻断；
+当前 preflight 必须绑定当前 validator，而不是 predecessor validator；
+旧 v1/v2 evidence 保持不可变且不能成为 current。
+当前判断
+108条语义决定不一定需要重新人工评审。
+但在自动化证明新旧 semantic inputs 等价之前，不能直接复用。
+597bf2ab 修正了 predecessor/successor freeze 关系，但没有完成 repair lineage migration。
+当前 v2 conformance result 已因 validator hash 漂移失效。
+8-13 当前应回到 typed 状态：
+implementation: present
+semantic decision: historical-valid
+repair lineage: stale
+current conformance: invalid
+authorization preflight: blocked
+acceptance entry: not-ready
+
+所以必须先补 VDD repair lineage successor 自动化，再继续 8-13 Acceptance。
