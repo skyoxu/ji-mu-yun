@@ -26,7 +26,8 @@ def _snapshot(slice_id: str) -> dict[str, str]:
         if item.get("slice_id") == slice_id:
             break
     registry = PLAN_ROOT / "command-registry.v1.json"
-    authority = REPOSITORY_ROOT / contract["authority"]["authority_manifest"]
+    authority_candidate = PLAN_ROOT / contract["authority"]["authority_manifest"]
+    authority = authority_candidate if authority_candidate.is_file() else REPOSITORY_ROOT / contract["authority"]["authority_manifest"]
     validator_root = _value({
         "validator": (PLAN_ROOT / "tools/validate_all.py").read_bytes().decode("utf-8"),
         "bridge": (PLAN_ROOT / "tools/tdd_bridge.py").read_bytes().decode("utf-8"),
@@ -41,6 +42,7 @@ def _snapshot(slice_id: str) -> dict[str, str]:
         "predicate_input_root": _value({"candidate_hash": candidate, "closure_definition_hash": closure}),
         "authority_root": authority_root,
         "validator_root": validator_root,
+        "validator_hash": validator_root,
         "validator_version": f"{VALIDATOR_VERSION}+{validator_root}",
         "closure_definition_hash": closure,
     }

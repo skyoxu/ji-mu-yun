@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md",
+    "source_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 7281,
+    "start_line": 1,
+    "end_line": 82,
+    "content_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04"
+  },
+  "status": "accepted",
+  "summary": "SPEC-vdd-conformance-exact-cover canonical package; companions normative/adopted architecture spine AD-1..AD-11; CAP-1 bmad-spec publishes typed descriptor, content-addressed selection record/current pointer; VDD freezes source and binds plan/exact-cover to manifest identity/hash; CAP-2 deterministic exact-cover proves complete sound coverage, rejects unknown/orphan/duplicate/weakening/conflict/omission; machine-undecidable weakening only via explicit semantic-review handoff; CAP-3 deterministic failures blocked, source-bound structural ambiguity uses unauthorized bootstrap-upstream-plan then VDD repair; CAP-4 hash-bound artifacts/checkpoints enable fresh-process recovery with unchanged requirements; CAP-5 authorization owner preflight requires current matching receipts, rejects stale/missing/mismatch/nonconformant/prose/boolean; CAP-6 manifest-proven shard reuse, quarantine blocks conformant, bounded retry, deterministic aggregate; CAP-7 schemas/negative fixtures/composition/dogfood; constraints: bmad-spec owns package/registry, VDD owns freeze/create/repair/draft/plan-ready, adapter alone authorizes; artifacts hash-bound authorizes=[] and only deterministic recomputation yields conformant; schema/hash/path/ID/set/mapping/disposition checks precede semantic work; semantic lane pre-implementation only; recovery policy registry-owned/versioned/approved/hash-bound; non-goals include lifecycle/implementation/release authority, legacy migration, second discovery system, LLM/prose/caller PASS, Chapter-5 workflows; success requires one real package frozen and receipt-gated authorization with deterministic mutation/drift/ambiguity/retry/shard/recovery outcomes"
+}

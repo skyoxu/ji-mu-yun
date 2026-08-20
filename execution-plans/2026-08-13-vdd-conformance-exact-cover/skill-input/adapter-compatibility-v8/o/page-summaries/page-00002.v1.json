@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md",
+    "source_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 7281,
+    "start_line": 1,
+    "end_line": 82,
+    "content_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04"
+  },
+  "status": "accepted",
+  "summary": "SPEC-vdd-conformance-exact-cover; canonical package requires six normative companions plus adopted ARCHITECTURE-SPINE and provenance source; CAP-1 selection descriptor/record/current pointer then VDD hash-bound source manifest with preserved authority roles; CAP-2 exact cover of active obligations, reject unknown/orphan/duplicate/provable weakening/conflict/omission; CAP-3 only source-bound structurally complete ambiguity may hand off via non-authorizing bootstrap-upstream-plan, deterministic failures remain blocked; CAP-4 compact hash-bound restart artifacts and deterministic recovery routes with unchanged target requirements bytes; CAP-5 authorization adapter exclusively owns receipt preflight and implementation-authorized; CAP-6 manifest-proven shard reuse only, quarantine blocks conformance, bounded retries, deterministic aggregate recompute; CAP-7 falsifiable acceptances, fail-closed negatives, real authorization chain, no lifecycle transfer; bmad-spec owns package/selection registry and must be upgraded producer; VDD owns source-freeze/create-repair/draft/plan-ready; exact-cover target-plan read-only and authorizes=[]; deterministic validation precedes semantic work and cannot be bypassed by retry/context/Bootstrap; semantic lane is pre-implementation only; runtime policy registry-owned/versioned/approved/hash-bound, numeric defaults not frozen; exclude Chapter 5 implementation and all lifecycle/review/release/migration authority; adopt AD-1..AD-11; execution-policy has candidate defaults/invariants but not maintainer runtime ownership."
+}

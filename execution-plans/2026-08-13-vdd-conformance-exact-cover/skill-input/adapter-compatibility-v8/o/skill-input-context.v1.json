@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-20T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Repository policy requires routed, evidence-backed, fail-closed work with protected runtime boundaries. The canonical VDD specification defines exact active-obligation coverage, hash-bound inputs, deterministic validation, and a pre-implementation semantic lane with no lifecycle transfer.",
+      "title": "Governance"
+    },
+    {
+      "content": "The implementation contract sequences S0 through S5 for producer hardening, source freeze, exact cover, handoff and repair, retry and shard reuse, recovery, authorization, and dogfood. Requirements VCEC-001 through VCEC-036 and acceptances VCEC-A01 through VCEC-A43 are mapped by the Round 5 artifact. The authority manifest names the specification and repository policy and contains no explicit grants.",
+      "title": "Plan"
+    },
+    {
+      "content": "The command registry contains 29 hash-bound commands and paired negative checks. The TDD bridge runs declared red, green, refactor, and validation stages with captured evidence and no grants. Validation derives deterministic hashes and snapshots. The publisher can emit an implementation-authorized receipt only after explicit maintainer input. Terminal completion tooling is separate and is not evidence of current permission.",
+      "title": "Tools"
+    }
+  ],
+  "source_manifest_hash": "sha256:fa7ef9c93c7601bb33d0b4422818395f9bf06c157efb477ba1a324a5211b18b1",
+  "truncated": false
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md",
+    "source_sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1258,
+    "start_line": 1,
+    "end_line": 26,
+    "content_sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c"
+  },
+  "status": "accepted",
+  "summary": "Normative universe: typed Canonical Spec Package graph comprising canonical root, six normative companions, adopted Architecture Spine, content-addressed selection record, and current pointer; requirement IDs exactly VCEC-001..VCEC-036; acceptance IDs exactly VCEC-A01..VCEC-A43; authoritative bidirectional requirement/acceptance-to-slice/command mapping at repair/round-5/requirements-acceptance-slice-command.v1.json; 2026-08-10 requirements plan is provenance only with no active obligation; Round 1 is immutable historical evidence and superseded for current consumption; authorizes is always []; non-goals: producer attestation, exact-cover-owned lifecycle transition, copied VDD schema, Chapter 5 dependency, automatic Bootstrap launch, Codex resume guarantee"
+}

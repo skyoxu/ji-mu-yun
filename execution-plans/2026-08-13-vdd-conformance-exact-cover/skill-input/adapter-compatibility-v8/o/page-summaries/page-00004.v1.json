@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json",
+    "source_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 23240,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133"
+  },
+  "status": "accepted",
+  "summary": "registry=vdd-conformance-exact-cover.command-registry.v1; plan_id=vdd-conformance-exact-cover; 29 hash-bound commands, all repo-root py/python, 600s; authorizes empty; coverage VCEC-A01..A43 with A05/A06/A20/A21 and A25-A43; core gates: skill-input, knowledge-preflight, source-freeze, semantic-handoff, authorization, composition, retry, fingerprint, exact-cover, recovery, lineage; paired negatives required for source-freeze, handoff, authorization, composition, retry, fingerprint, exact-cover, recovery, bmad-spec; terminal-full executes current self-hosted TDD programs; dogfood validates create-to-rerun flow; dependencies pin producer, freeze, conformance, policy, authorization, repair schema/lineage artifacts; duplicate composition and repair-knowledge-composition invoke same Round-5 closure receipt; ambiguity: registry lists commands and hashes but no execution results or ordering contract"
+}

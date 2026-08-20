@@ -1,0 +1,65 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+      "semantic_snapshot_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md",
+      "sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04",
+      "semantic_snapshot_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/authority-manifest.v1.json",
+      "sha256": "sha256:f1b801b78baaf559ae6e9c8cc58e6201c21b4154a733caa08464534b8680c854",
+      "semantic_snapshot_sha256": "sha256:a0f62d166f44170f92b279eab4ab1a347bfed696fc011def76ddb18da0febc68",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json",
+      "sha256": "sha256:9b90e012bc8aff54c96294a0f93997909ae1a359037bdc7f2610685d1b4c2685",
+      "semantic_snapshot_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "sha256": "sha256:da559a6d29aabd07568b28bbd7a1ff209aab99b21fc6b17607d707850cc2873e",
+      "semantic_snapshot_sha256": "sha256:119a6a40f4f1072714e04f028fc6eb922f266bd00ab6a6ddc40ac94b2edfdb6d",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md",
+      "sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "semantic_snapshot_sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/publish_implementation_authorization.py",
+      "sha256": "sha256:c8d53713b2d3caa81ea1035c1823cd35d074b5e7f04caff02d98a95c9e29950b",
+      "semantic_snapshot_sha256": "sha256:c8d53713b2d3caa81ea1035c1823cd35d074b5e7f04caff02d98a95c9e29950b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_full.py",
+      "sha256": "sha256:81673e8702efe4d90a5a4b036ae4bd40ed1a8a6098b51c191e635dbd9822bd7e",
+      "semantic_snapshot_sha256": "sha256:81673e8702efe4d90a5a4b036ae4bd40ed1a8a6098b51c191e635dbd9822bd7e",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-20T10:53:51.413589Z"
+}

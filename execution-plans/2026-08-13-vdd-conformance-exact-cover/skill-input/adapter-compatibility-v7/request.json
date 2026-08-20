@@ -1,0 +1,19 @@
+{
+  "schema_version": "skill-input-child-request.v1",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "contract_hash": "sha256:60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374",
+  "source_manifest_hash": "sha256:16c17cfcac934b5c2ca81d7fdeaeabecb0eb7521dbb03f12d6e23e7a13bbf326",
+  "snapshot_root": "execution-plans/2026-08-13-vdd-conformance-exact-cover/skill-input/adapter-compatibility-v7/s",
+  "output_root": "execution-plans/2026-08-13-vdd-conformance-exact-cover/skill-input/adapter-compatibility-v7/o",
+  "execution_identity": "sha256:e72ddbe5b5c630aaa536e2ead87c22a8c2e22e7378b4e08a4b6ce96beb3b9d8e",
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 1048576,
+  "input_mode": "paged-frozen-snapshot-stdin",
+  "allowed_capabilities": [
+    "read-frozen-snapshot",
+    "write-context-output"
+  ],
+  "authorizes": [],
+  "max_snapshot_chunk_bytes": 32768
+}

@@ -916,6 +916,10 @@ def run_semantic_child(
             decision["source_statuses"] = {
                 source["path"]: "accepted" for source in manifest["sources"]
             }
+            # Complete per-page coverage is the authoritative sufficiency fact
+            # for paged transport. The final model response supplies bounded
+            # context only; it cannot downgrade a fully consumed snapshot.
+            decision["status"] = "accepted"
         # Rationale is an operational audit label, not an unbounded model
         # channel. The typed status remains the semantic outcome.
         decision["producer_role"] = "semantic-child"

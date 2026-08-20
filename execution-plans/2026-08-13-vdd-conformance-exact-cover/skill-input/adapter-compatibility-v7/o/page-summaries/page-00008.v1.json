@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/tdd_bridge.py",
+    "source_sha256": "sha256:cec2124c6491fbe423502675129fc9767501d8b12f2d07df1c4b2eec418c92dc",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4033,
+    "start_line": 1,
+    "end_line": 69,
+    "content_sha256": "sha256:cec2124c6491fbe423502675129fc9767501d8b12f2d07df1c4b2eec418c92dc"
+  },
+  "status": "accepted",
+  "summary": "Python TDD bridge identified by tdd_bridge.py; required inputs: repository root, plan directory, slice ID, one or more snapshot paths; optional materialize-only mode; loads implementation contract and command registry; materialize mode requires snapshot paths exactly match slice declaration and returns no authorizations; execution runs red expecting failure, green and each refactor expecting success, then terminal command; commands use declared executable/arguments, repository cwd, captured output, timeout; creates unique UTC run log directory; stage mismatch writes failure record and exits 2; terminal failure writes terminal record and exits 2; successful validation derives slice roots, writes predicate result with plan/slice/contract hash and empty authorizations; updates plan run-state to route; emits run ID and slice ID; ambiguities: exceptions from missing/invalid contract entries or subprocess timeout are uncaught"
+}

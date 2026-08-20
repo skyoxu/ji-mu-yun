@@ -1224,7 +1224,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
                 self.assertIn("PAGED_READ_SUMMARIES_BEGIN", kwargs["prompt"])
                 output = {
                     "context": {"schema_version": "skill-input-context.v1", "source_manifest_hash": receipt_payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "All pages were consumed."}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"},
-                    "decision": {"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": request["execution_identity"], "source_manifest_hash": receipt_payload["source_manifest"]["sha256"], "context_artifact_hash": "sha256:" + "0" * 64, "source_statuses": {"requirements.md": "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []},
+                    "decision": {"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": request["execution_identity"], "source_manifest_hash": receipt_payload["source_manifest"]["sha256"], "context_artifact_hash": "sha256:" + "0" * 64, "source_statuses": {"requirements.md": "accepted"}, "status": "insufficient", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []},
                 }
             kwargs["output_last_message"].write_text(json.dumps(output), encoding="utf-8")
             return 0, "", ["fake"]
@@ -1247,6 +1247,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
             self.assertEqual(line_cursor + page.count(b"\n"), segment["end_line"])
             line_cursor = segment["end_line"]
         decision = json.loads(Path(result["semantic_decision"]).read_text(encoding="utf-8"))
+        self.assertEqual("accepted", decision["status"])
         self.assertEqual(artifact_identity_hash(coverage), decision["snapshot_read_coverage"]["sha256"])
         publish_ready(receipt, request_path, Path(result["semantic_decision"]), Path(result["context_artifact"]), root, contract)
         self.assertEqual("ready", validate_receipt(receipt, root, contract, require_ready=True)["status"])

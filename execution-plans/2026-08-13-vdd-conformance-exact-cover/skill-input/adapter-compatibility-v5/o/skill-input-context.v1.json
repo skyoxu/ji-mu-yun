@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-20T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The exact-cover package defines deterministic, fail-closed conformance checks for a typed canonical specification graph. Semantic work is pre-implementation only and exact-cover has no lifecycle or release authority.",
+      "title": "Scope"
+    },
+    {
+      "content": "The contract defines ordered slices for registry hardening, source freeze, exact cover, handoff and repair, retry handling, shard reuse, recovery context, preflight, and terminal dogfood. Protected runtime and platform paths are excluded.",
+      "title": "Implementation Plan"
+    },
+    {
+      "content": "The command registry requires deterministic regression, negative, recovery, composition, and terminal gates. The terminal tool validates the contract and registry, writes a receipt, and reports pass only when validation and command coverage succeed.",
+      "title": "Validation"
+    }
+  ],
+  "source_manifest_hash": "sha256:02c26fb18e820d32a7a8d056ef8ab549cdffebb718e396155824a346a821f6a7",
+  "truncated": false
+}

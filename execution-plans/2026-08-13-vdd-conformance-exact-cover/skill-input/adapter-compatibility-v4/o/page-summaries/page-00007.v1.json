@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/publish_implementation_authorization.py",
+    "source_sha256": "sha256:c8d53713b2d3caa81ea1035c1823cd35d074b5e7f04caff02d98a95c9e29950b",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5611,
+    "start_line": 1,
+    "end_line": 86,
+    "content_sha256": "sha256:c8d53713b2d3caa81ea1035c1823cd35d074b5e7f04caff02d98a95c9e29950b"
+  },
+  "status": "accepted",
+  "summary": "publish_implementation_authorization.py; PLAN_ID=vdd-conformance-exact-cover; requires --repository-root, --plan-dir, --maintainer-authorize; rejects absent explicit authorization; requires contract.plan_id match and plan-state state=implementation-authorized; JSON identities are canonical-json-v1 sorted compact UTF-8, others raw-bytes-v1; writes authority manifest, legacy predecessor, repair round-1 state/validation/candidate/delta, and successor receipt; receipt binds 11 required artifacts including repair/round-8 closure; candidate hashes contract, registry, and five tool files; decision owner=maintainer transition=implementation-authorized; authorizes only implementation-authorized; explicitly excludes completion, acceptance, knowledge publication, bootstrap review, release; potential ambiguity: writes authorization artifacts after checking already-authorized state."
+}

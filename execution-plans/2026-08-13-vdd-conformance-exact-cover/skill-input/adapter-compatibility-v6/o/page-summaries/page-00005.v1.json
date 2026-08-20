@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+    "source_sha256": "sha256:119a6a40f4f1072714e04f028fc6eb922f266bd00ab6a6ddc40ac94b2edfdb6d",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13814,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:119a6a40f4f1072714e04f028fc6eb922f266bd00ab6a6ddc40ac94b2edfdb6d"
+  },
+  "status": "accepted",
+  "summary": "plan=vdd-conformance-exact-cover; lifecycle=implementation-authorized; authority=_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md; selection pointer canonical-spec-package-selections/current/SPEC-vdd-conformance-exact-cover.json; adapter=vdd-conformance-tdd-bridge.v1 via tools/tdd_bridge.py; prerequisites: typed descriptor/selection producer regression hardening; allow_stale_catalog is separate tested VDD knowledge-control work; global forbidden: PhaseA.Platform/**, runtime/phase-a/**, logs/phase-a-innernet/**, user sandbox data; S0 VCEC-036/A43 bmad-spec producer; S1 after S0 source-freeze VCEC-003/004/005/019/020 A04-06/A20-21; S2 after S1 exact-cover VCEC-001/002/006-011/026 A01-03/A07-12; S3a after S2 handoff/repair VCEC-012-015/033 A13-16/A39; S3b after S2 retry VCEC-027/028/034 A30-32/A40/A42; S3c after S2 shard VCEC-029-032 A33-38; S3d after S2,S3c recovery VCEC-021-023/035 A22-24/A41; S4 after S2,S3a authorization VCEC-016-018 A17-19; S5 after all terminal dogfood VCEC-024/025 A25-27; each slice red expected nonzero specified rejection family then green zero then refactor green; terminal=terminal-full implementation-complete runner tools/terminal_full.py; terminal validation=py -3 execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_validation.py"
+}

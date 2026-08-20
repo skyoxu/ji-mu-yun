@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "repo=Ji Mu Yun Phase A/B cloud prototype platform, not game; layers=toolchain/Phase service/user sandbox strictly isolated for snapshot/current/cache/LKG; route task-specific entry only and nearest AGENTS before subtree edits; FastCtx preferred, fallback only on explicit unavailable/error and record once; Chinese user communication, English code/logs; Windows default; preserve changes/no destructive actions; ask before protected/high-risk changes; UTF-8 Chinese writes require Python; protected=live logs workspace/runtime-Caddy/auth/shared LLM entrypoints/security profiles/generated evidence rewrites; no manual live DB or secrets; APIs backward-compatible, schema migration/recovery, contract-wide tests/smokes; completion requires machine evidence under logs, not assistant claim; Hosted recovery consumes 8 canonical sources in order and fails closed; LLM writes require executable route+workspace-write+acceptance; live runtime uses canonical scripts/local health first, never plain dotnet run; workflow.md restricted by toolchain allowlist; DoD=targeted validation/evidence/tests/docs as needed/no leaks or unapproved breaks"
+}

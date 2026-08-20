@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/authority-manifest.v1.json",
+    "source_sha256": "sha256:a0f62d166f44170f92b279eab4ab1a347bfed696fc011def76ddb18da0febc68",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 519,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:a0f62d166f44170f92b279eab4ab1a347bfed696fc011def76ddb18da0febc68"
+  },
+  "status": "accepted",
+  "summary": "schema=vdd-conformance-exact-cover.authority-manifest.v1; authority: _bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md canonical_spec; authority: AGENTS.md repository_rule; candidate input: execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json implementation_contract; candidate input: execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json command_registry; authorizes empty"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_full.py",
+    "source_sha256": "sha256:81673e8702efe4d90a5a4b036ae4bd40ed1a8a6098b51c191e635dbd9822bd7e",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 3492,
+    "start_line": 1,
+    "end_line": 84,
+    "content_sha256": "sha256:81673e8702efe4d90a5a4b036ae4bd40ed1a8a6098b51c191e635dbd9822bd7e"
+  },
+  "status": "accepted",
+  "summary": "terminal_full.py; CLI requires repository-root, plan-dir, out; loads implementation contract and command registry; runs terminal_validation.py from repository root; validates all slice red/green command IDs exist in registry; result schema quick-dev-implementation-complete.v1; status pass only when validation succeeds and registry has all IDs; failure IDs terminal-validation-failed, terminal-command-registry-drift; hashes contract and registry; records terminal command ID, validated IDs, stdout SHA-256; pass authorizes implementation-complete and publishes idempotent/conflict-protected receipt under repair/round-1; always writes output JSON and prints it; exit 0 pass, 1 fail."
+}

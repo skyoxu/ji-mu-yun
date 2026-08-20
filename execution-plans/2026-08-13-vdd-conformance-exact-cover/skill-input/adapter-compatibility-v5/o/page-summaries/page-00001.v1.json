@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "Repo: Ji Mu Yun Phase A/B cloud prototype platform, not game; layers isolated: toolchain, phase service, user sandbox; task routing requires matching entry only and nearest AGENTS before subtree edits; FastCtx preferred, fallback only after explicit unavailable/error; Chinese user communication, Windows default, English code/logs, no emoji; preserve changes, ask before protected/high-risk edits; UTF-8 Chinese writes via Python only; protected: live logs workspaces, runtime/Caddy, auth/audit, shared LLM entrypoints, delivery/security/network settings, rewriting evidence; no manual live DB or secrets; APIs backward compatible by default; code/tests cite Accepted ADR; evidence under logs and machine evidence required for completion; hosted recovery has ordered 8 sources and fails closed; shared LLM uses canonical doc/UTF-8 stdin, writes need executable route+workspace-write+acceptance; live runtime recovery local health then canonical scripts, no plain dotnet run; workflow.md legacy and allowlist-only; DoD requires validation, matching tests/smokes, appended evidence, scoped docs, no unsupported breaks; AGENTS maintenance cap 10k chars."
+}

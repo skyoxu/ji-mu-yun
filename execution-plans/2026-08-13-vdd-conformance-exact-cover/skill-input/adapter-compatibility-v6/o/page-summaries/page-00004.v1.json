@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json",
+    "source_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 23240,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133"
+  },
+  "status": "accepted",
+  "summary": "command-registry v1; plan_id=vdd-conformance-exact-cover; 30 hash-bound Python commands, repo-root cwd, 600s timeout; canonical package, skill-input, knowledge preflight, source-freeze, semantic handoff, authorization, composition, retry, fingerprint, exact-cover, recovery, dogfood, terminal, lineage, scope, readonly coverage; positive and negative validators paired for principal behaviors; acceptance IDs VCEC-A01..A43 with intentional gaps/overlap; implementation dependencies include canonical-package, source-freeze, conformance, authorization preflight, repair-lineage, schemas and runtime policy; authorizes empty; behavior programs define paths/hashes and some dependency closure; duplicate repair-knowledge composition command IDs composition and repair-knowledge-composition; source-freeze has separate implementation entrypoint and validator; terminal-full is stated current self-hosted gate; ambiguity: no execution outcomes or ordering guarantees beyond listed registry order"
+}

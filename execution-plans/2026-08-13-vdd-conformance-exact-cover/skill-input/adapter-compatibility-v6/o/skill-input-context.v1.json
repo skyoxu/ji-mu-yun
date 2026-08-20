@@ -1,0 +1,21 @@
+{
+  "generated_at": "unspecified",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The repository defines protected paths, evidence requirements, compatibility expectations, and Windows-oriented execution rules. Changes require approved architecture support, validation, and recorded evidence.",
+      "title": "Repository rules"
+    },
+    {
+      "content": "The specification defines exact-cover validation for a canonical package, deterministic checks before semantic handling, bounded recovery, ambiguity handoff, and hash-bound lifecycle artifacts. The requested work excludes runtime and release implementation.",
+      "title": "Conformance scope"
+    },
+    {
+      "content": "The implementation contract defines staged slices from source freeze through validation, repair, recovery, and terminal dogfood. Registered Python commands and adapters execute red, green, refactor, and terminal checks with hash-bound receipts.",
+      "title": "Implementation plan"
+    }
+  ],
+  "source_manifest_hash": "sha256:e3cd994bfa178da2c127e1b4b0aa42028b7c2516adadf2aabed485a30eb45376",
+  "truncated": false
+}

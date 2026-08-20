@@ -19,11 +19,18 @@ def main() -> int:
     parser.add_argument("--plan-dir", type=Path, required=True)
     parser.add_argument("--slice-id", required=True)
     parser.add_argument("--snapshot-path", action="append", required=True)
+    parser.add_argument("--materialize-only", action="store_true")
     args = parser.parse_args()
     root, plan = args.repository_root.resolve(), args.plan_dir.resolve()
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
     registry = json.loads((plan / contract["command_registry"]).read_text(encoding="utf-8"))
     selected = next(item for item in contract["slices"] if item["slice_id"] == args.slice_id)
+    if args.materialize_only:
+        declared = selected.get("execution_snapshot_paths")
+        if args.snapshot_path != declared:
+            raise ValueError("bridge snapshot paths do not match the declared slice snapshot")
+        print(json.dumps({"status": "materialized", "slice_id": args.slice_id, "authorizes": []}))
+        return 0
     commands = {item["id"]: item for item in registry["commands"]}
     run_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
     run_dir = root / "logs" / "tdd-adapter" / contract["plan_id"] / args.slice_id / run_id

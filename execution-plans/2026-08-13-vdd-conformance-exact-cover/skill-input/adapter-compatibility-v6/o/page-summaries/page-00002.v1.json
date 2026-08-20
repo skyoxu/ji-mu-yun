@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md",
+    "source_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 7281,
+    "start_line": 1,
+    "end_line": 82,
+    "content_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04"
+  },
+  "status": "accepted",
+  "summary": "SPEC-vdd-conformance-exact-cover; CAP-1..7: frozen canonical-package selection, source manifest, exact-cover, ambiguity handoff, recovery, authorization prerequisite, incremental extraction, dogfood; bmad-spec owns package/selection registry and must be upgraded; VDD owns freeze/create-repair/draft/plan-ready; authorization adapter solely owns preflight and implementation-authorized; exact-cover read-only and no lifecycle authority; artifacts hash-bound authorizes=[]; deterministic recomputation solely yields conformant; deterministic checks precede semantic work and cannot be bypassed; semantic lane only pre-implementation bootstrap-upstream-plan; target requirements bytes immutable; retry/recovery bounded and registry policy versioned/approved/hash-bound; reject unknown/orphan/duplicate/weakened/conflicting/omitted mappings; structural source-bound ambiguity yields non-authorizing handoff then explicit VDD repair; current matching conformant receipt required for authorization; shard reuse manifest-proven only and quarantined shards block; no Bootstrap/repair/authorization/release implementation or legacy migration; prohibit LLM/prose/boolean/cached output as PASS authority; adopted AD-1..AD-11 govern; companions are normative; execution-policy has defaults/invariants but not runtime-value ownership"
+}

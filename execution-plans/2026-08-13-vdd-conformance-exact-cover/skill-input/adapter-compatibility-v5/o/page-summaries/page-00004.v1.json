@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json",
+    "source_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 23240,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133"
+  },
+  "status": "accepted",
+  "summary": "Plan vdd-conformance-exact-cover; schema vdd-conformance-exact-cover.command-registry.v1; no authorizations granted; commands run with Python from repository root, 600s timeout; required gates: canonical bmad-spec regression plus tamper-negative; stale-catalog policy; Skill Input receipt readiness; knowledge preflight and VDD binding; source-freeze producer and reduced/drifted-input negative; semantic handoff and stale/implicit negative; authorization preflight must reject until bound repair, with missing/stale-receipt negatives; composition-negative and closure-bound repair composition; retry taxonomy with stop-loss and negative; fingerprint/shard reuse and unsafe-reuse negative; deterministic exact-cover core and negative; bounded recovery/context and stale-lineage/overflow negative; exact-cover dogfood create-to-rerun; terminal full gate; repair-lineage successor rejects semantic/authority drift, supports replay, publishes current v3 chain; manifest identity validator; VDD scope-boundary negative; readonly-target validator; implementation dependencies are hash-bound; ambiguities: none stated"
+}

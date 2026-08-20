@@ -1,0 +1,118 @@
+{
+  "schema_version": "skill-input-read-coverage.v1",
+  "source_manifest_hash": "sha256:16c17cfcac934b5c2ca81d7fdeaeabecb0eb7521dbb03f12d6e23e7a13bbf326",
+  "input_mode": "paged-frozen-snapshot-stdin",
+  "chunk_bytes": 32768,
+  "segments": [
+    {
+      "source_path": "AGENTS.md",
+      "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 9904,
+      "start_line": 1,
+      "end_line": 198,
+      "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+    },
+    {
+      "source_path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md",
+      "source_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 7281,
+      "start_line": 1,
+      "end_line": 82,
+      "content_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04"
+    },
+    {
+      "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/authority-manifest.v1.json",
+      "source_sha256": "sha256:a0f62d166f44170f92b279eab4ab1a347bfed696fc011def76ddb18da0febc68",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 519,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:a0f62d166f44170f92b279eab4ab1a347bfed696fc011def76ddb18da0febc68"
+    },
+    {
+      "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json",
+      "source_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 23240,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133"
+    },
+    {
+      "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "source_sha256": "sha256:119a6a40f4f1072714e04f028fc6eb922f266bd00ab6a6ddc40ac94b2edfdb6d",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 13814,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:119a6a40f4f1072714e04f028fc6eb922f266bd00ab6a6ddc40ac94b2edfdb6d"
+    },
+    {
+      "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md",
+      "source_sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 1258,
+      "start_line": 1,
+      "end_line": 26,
+      "content_sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c"
+    },
+    {
+      "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/publish_implementation_authorization.py",
+      "source_sha256": "sha256:02bb0f773423276b9c57d742eb6d228a8860a0c10974f11021297f14ebe36443",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 7042,
+      "start_line": 1,
+      "end_line": 109,
+      "content_sha256": "sha256:02bb0f773423276b9c57d742eb6d228a8860a0c10974f11021297f14ebe36443"
+    },
+    {
+      "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/tdd_bridge.py",
+      "source_sha256": "sha256:cec2124c6491fbe423502675129fc9767501d8b12f2d07df1c4b2eec418c92dc",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 4033,
+      "start_line": 1,
+      "end_line": 69,
+      "content_sha256": "sha256:cec2124c6491fbe423502675129fc9767501d8b12f2d07df1c4b2eec418c92dc"
+    },
+    {
+      "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_full.py",
+      "source_sha256": "sha256:81673e8702efe4d90a5a4b036ae4bd40ed1a8a6098b51c191e635dbd9822bd7e",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 3492,
+      "start_line": 1,
+      "end_line": 84,
+      "content_sha256": "sha256:81673e8702efe4d90a5a4b036ae4bd40ed1a8a6098b51c191e635dbd9822bd7e"
+    },
+    {
+      "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/validate_all.py",
+      "source_sha256": "sha256:da5cfbfe0e4ccffddda40c75510bf29e961e175dfeca4eb458ecf9707e29be12",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 2487,
+      "start_line": 1,
+      "end_line": 69,
+      "content_sha256": "sha256:da5cfbfe0e4ccffddda40c75510bf29e961e175dfeca4eb458ecf9707e29be12"
+    }
+  ]
+}

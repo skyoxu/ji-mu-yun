@@ -1,0 +1,8 @@
+{
+  "authorizes": [],
+  "blocks_execution": false,
+  "plan_id": "vdd-conformance-exact-cover",
+  "round": 1,
+  "schema_version": "vdd-conformance-exact-cover.repair-state.v1",
+  "status": "closed"
+}

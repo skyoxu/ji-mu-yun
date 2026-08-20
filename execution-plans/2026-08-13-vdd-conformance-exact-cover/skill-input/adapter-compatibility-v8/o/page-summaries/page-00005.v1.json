@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+    "source_sha256": "sha256:c24b0b0c3e914d5d38566aea9ba33f435fda6fd0f9f0fe6046978b874ec6d670",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13781,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:c24b0b0c3e914d5d38566aea9ba33f435fda6fd0f9f0fe6046978b874ec6d670"
+  },
+  "status": "accepted",
+  "summary": "plan=vdd-conformance-exact-cover; lifecycle=implementation-authorized; profile=self-hosted; authority=authority-manifest.v1.json; bridge=vdd-conformance-tdd-bridge.v1 via tools/tdd_bridge.py; selection_pointer=_bmad-output/specs/canonical-spec-package-selections/current/SPEC-vdd-conformance-exact-cover.json; prerequisite=typed descriptor/selection producer hardening; allow_stale_catalog separate tested knowledge-control change; forbidden=PhaseA.Platform/**,runtime/phase-a/**,logs/phase-a-innernet/**,user sandbox data; slices order S0->S1->S2->{S3a,S3b,S3c}; S3d after S2+S3c; S4 after S2+S3a; S5 after all; S0 bmad-spec producer VCEC-036/A43; S1 source freeze VCEC-003/004/005/019/020 A04/05/06/20/21; S2 deterministic exact cover VCEC-001/002/006-011/026 A01-03/07-12; S3a handoff/repair VCEC-012-015/033 A13-16/39; S3b retry taxonomy VCEC-027/028/034 A30-32/40/42; S3c shard reuse VCEC-029-032 A33-38; S3d recovery/context VCEC-021-023/035 A22-24/41; S4 authorization VCEC-016-018 A17-19; S5 dogfood VCEC-024/025 A25-27; each slice requires prescribed red nonzero family then green zero and refactor validation; terminal=terminal-full/tools/terminal_full.py predicate implementation-complete; terminal_validation=py -3 execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_validation.py"
+}

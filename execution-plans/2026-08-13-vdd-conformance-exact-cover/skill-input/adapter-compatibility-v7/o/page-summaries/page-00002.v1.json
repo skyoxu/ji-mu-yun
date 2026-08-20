@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md",
+    "source_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 7281,
+    "start_line": 1,
+    "end_line": 82,
+    "content_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04"
+  },
+  "status": "accepted",
+  "summary": "SPEC-vdd-conformance-exact-cover; canonical package v1 with six normative companions and adopted architecture spine; CAP-1 source selection commitment, typed descriptor/selection record/current pointer/source manifest identity binding; CAP-2 sound-complete exact cover of active obligations, reject unknown/orphan/duplicate/provable weakening/conflict/omission; CAP-3 only structurally complete source-bound ambiguity may hand off non-authorizing bootstrap-upstream-plan, deterministic failures remain blocked; CAP-4 hash-bound compact recovery artifacts and bounded deterministic repair routing; CAP-5 authorization adapter exclusively owns receipt preflight and implementation-authorized, rejects missing/stale/mismatch/nonconformant/prose/boolean; CAP-6 manifest-proven shard reuse, quarantined blocks conformance, bounded retries, deterministic aggregate; CAP-7 schemas/negative fixtures/real composition/dogfood; ownership: bmad-spec selection registry and producer upgrade, VDD freeze/create-repair/draft/plan-ready, adapter authorization; exact-cover read-only and authorizes=[]; deterministic validation precedes semantic work and cannot be bypassed; semantic pre-implementation lane separated from Acceptance lifecycle; runtime policy registry-owned/versioned/approved/hash-bound, values unfrozen; exclude Chapter 5 implementation and lifecycle/review/release authority; AD-1..AD-11 adopted."
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json",
+    "source_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 23240,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133"
+  },
+  "status": "accepted",
+  "summary": "plan vdd-conformance-exact-cover; schema command-registry.v1; no authorizations granted; behavior programs are hash-bound with declared dependencies; Python 3 commands run from repository root, non-shell, 600s timeout; bmad-spec-regression and negative cover package/registry integrity (VCEC-A43); stale-catalog-policy and skill-input validate explicit opt-in and complete canonical transport; knowledge-preflight validates VDD knowledge binding; source-freeze plus negative enforce frozen inputs (A04,A06); semantic-handoff plus negative enforce current repair state (A13-A16,A39); authorization preflight and negative enforce bound repair and receipt freshness (A17-A19); composition-negative and repair-knowledge-composition validate producer-consumer closure; retry-taxonomy pair enforce retry and stop-loss behavior (A30-A32,A40,A42); fingerprint-shard pair enforce safe reuse (A33-A38); exact-cover plus negative enforce deterministic coverage (A01-A03,A07-A12,A28-A29); recovery-context pair enforce bounded lineage/overflow handling (A22-A24,A41); exact-cover-dogfood covers create-to-rerun flow (A25-A26); terminal-full is self-hosted hash-bound gate; repair-lineage-successor enforces current v3 successor chain and replay (A13-A19); manifest-composition checks shared VDD/exact-cover identity (A05); scope-boundary-negative checks VDD boundaries (A20); readonly-target checks read-only enforcement (A21)"
+}

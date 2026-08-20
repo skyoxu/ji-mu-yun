@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "平台为Ji Mu Yun Phase A/B云原型，非游戏项目; 责任层严格分离：工具链、Phase服务、用户沙箱; 按任务路由读取指定入口并先遵循最近AGENTS.md; 本地检查优先FastCtx，明确不可用后才切Windows命令平面并记录回退; 中文沟通，代码与日志英文，Windows兼容，中文写入须Python显式UTF-8; 保留用户改动，避免破坏操作，高风险及受保护路径修改须先询问; 代码/测试变更须引用已接受ADR，阈值/契约/安全/发布变更须更新ADR; 证据写入logs且完成需机器证据，不能仅凭助手声明; 受保护：live metadata/工作区、运行时/Caddy、认证隔离审计、共享LLM入口、交付安全网络配置、既有证据重写删除; 禁止手动改live数据库、提交或暴露密钥/用户令牌; API默认向后兼容，破坏性变更需批准与兼容计划; schema保数据并提供迁移或恢复; API/认证/运行时/Hosted路由各有覆盖验证与证据要求; Hosted恢复按8类实时来源顺序，缺失失败关闭，live blocker优先; LLM读决策须schema/JSON解析，写入需可执行路由、workspace-write与验收; live服务恢复先本地健康，禁用plain dotnet run; workflow.md仅限工具链索引允许的触发条件; DoD：目标验证、匹配测试/烟测、追加证据、必要文档、无未批准风险; AGENTS维护上限10000字符，细节留归属文档"
+}

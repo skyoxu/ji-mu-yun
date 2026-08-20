@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_full.py",
+    "source_sha256": "sha256:81673e8702efe4d90a5a4b036ae4bd40ed1a8a6098b51c191e635dbd9822bd7e",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 3492,
+    "start_line": 1,
+    "end_line": 84,
+    "content_sha256": "sha256:81673e8702efe4d90a5a4b036ae4bd40ed1a8a6098b51c191e635dbd9822bd7e"
+  },
+  "status": "accepted",
+  "summary": "Python terminal wrapper for legacy exact-cover Quick Dev plan; requires repository root, plan directory, and output path arguments; reads implementation contract and command registry JSON; runs terminal validation subprocess from repository root; collects all red/green command IDs from contract slices and checks registry coverage; failures are validation nonzero or command-registry drift; emits implementation-complete receipt result with schema version, plan ID, pass/fail status, failure list, contract and registry SHA-256 digests, terminal command ID, validated IDs, authorization only on pass, lifecycle transition none, and terminal stdout digest; on pass publishes canonical receipt under repair/round-1 with conflict-safe successor naming; writes requested output JSON and exits success only when no failures"
+}

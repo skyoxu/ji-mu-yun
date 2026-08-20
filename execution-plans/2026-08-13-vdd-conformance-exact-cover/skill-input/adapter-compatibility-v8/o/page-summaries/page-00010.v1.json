@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/validate_all.py",
+    "source_sha256": "sha256:9ce178060b71f40972af16c2ec44625d026c5be8ab586788d68ca68c6d395498",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2627,
+    "start_line": 1,
+    "end_line": 70,
+    "content_sha256": "sha256:9ce178060b71f40972af16c2ec44625d026c5be8ab586788d68ca68c6d395498"
+  },
+  "status": "accepted",
+  "summary": "validate_all.py; VALIDATOR_VERSION=vdd-conformance-exact-cover.validator.v1; PLAN_ROOT=parent of tools; REPOSITORY_ROOT=two levels above plan; hashes files as sha256:<hex>; canonical value hashes use UTF-8 JSON with sorted keys and compact separators; snapshot loads implementation-contract.v1.json; selected slices are contract slices through requested slice_id inclusive, with no missing-ID guard; authority manifest prefers PLAN_ROOT path then repository-root fallback, missing authority hashes canonical string \"missing\"; validator root hashes source text of validate_all.py and tdd_bridge.py; candidate hash covers contract, command registry, authority, validator roots; closure hash covers slice_id, selected slices, terminal_validation; predicate input hashes candidate plus closure; exposes current_candidate_identity default S0, slice_validation_snapshot, validation_snapshot S5; main always emits status pass with S5 snapshot and exits 0"
+}

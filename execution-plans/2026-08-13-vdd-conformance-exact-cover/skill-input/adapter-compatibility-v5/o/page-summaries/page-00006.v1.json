@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md",
+    "source_sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1258,
+    "start_line": 1,
+    "end_line": 26,
+    "content_sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c"
+  },
+  "status": "accepted",
+  "summary": "normative-universe=typed Canonical Spec Package graph; canonical-root=_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md; companions=6 normative_companion files; includes=adopted Architecture Spine+content-addressed selection record+current pointer; provenance-only=execution-plans/2026-08-10-vdd-conformance-exact-cover-requirements.md; requirements=VCEC-001..VCEC-036 exact; acceptances=VCEC-A01..VCEC-A43 exact; mapping=bidirectional, falsifiable, requirements<->acceptances+slices+registered commands; authoritative-map=repair/round-5/requirements-acceptance-slice-command.v1.json; round-1=immutable historical evidence, superseded for current consumption; authorizes=[] always; non-goals=no producer attestation|exact-cover lifecycle transition|copied VDD schema|Chapter 5 dependency|automatic Bootstrap launch|Codex resume guarantee"
+}

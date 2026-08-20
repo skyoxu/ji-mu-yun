@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-20T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "All eight manifest sources are present with complete single-segment page coverage and accepted status. Summaries are bounded and redacted.",
+      "title": "Coverage"
+    },
+    {
+      "content": "The canonical specification defines typed package publication, frozen source identity, deterministic exact-cover validation, semantic repair handoff, hash-bound recovery, receipt-gated preflight, shard reuse controls, schemas, negative fixtures, and dogfood validation. Artifacts retain authorizes as an empty list.",
+      "title": "Specification"
+    },
+    {
+      "content": "The authority manifest names repository rules, specification, implementation contract, and command registry. The contract defines sequential implementation slices, required checks, forbidden paths, and terminal validation. Supporting tools publish implementation artifacts and emit a completion receipt only after registry and validation checks pass.",
+      "title": "Implementation"
+    }
+  ],
+  "source_manifest_hash": "sha256:110570694c303d55cf21ec46e360bb99f18a2e013bd41c974a2c04fd1df80332",
+  "truncated": false
+}

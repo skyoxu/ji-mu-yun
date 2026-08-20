@@ -16,7 +16,7 @@
     "protocol": "vdd-conformance-tdd-bridge.v1"
   },
   "authority": {
-    "authority_manifest": "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md"
+    "authority_manifest": "authority-manifest.v1.json"
   },
   "selection_pointer": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-vdd-conformance-exact-cover.json",
   "required_upstream": [
@@ -770,6 +770,11 @@
       ]
     }
   ],
+  "terminal": {
+    "command_id": "terminal-full",
+    "runner": "tools/terminal_full.py",
+    "predicate": "implementation-complete"
+  },
   "terminal_validation": "py -3 execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_validation.py",
   "authorizes": []
 }

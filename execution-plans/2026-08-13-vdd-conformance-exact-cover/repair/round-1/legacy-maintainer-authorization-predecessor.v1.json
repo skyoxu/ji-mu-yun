@@ -1,0 +1,100 @@
+{
+  "authorizes": [],
+  "plan_state": {
+    "authorizes": [
+      "plan-ready",
+      "implementation-authorized"
+    ],
+    "blocking_conditions": [],
+    "does_not_authorize": [
+      "implementation-complete",
+      "acceptance-passed",
+      "archived"
+    ],
+    "plan_id": "vdd-conformance-exact-cover",
+    "profile": "self-hosted",
+    "repair_round": 8,
+    "repair_status": "repair-validated",
+    "resume": {
+      "last_completed_step": "repair-round-8-custody-closure-written",
+      "next_action": "Implement S0 through S5 in dependency order, then run repair/round-8/terminal-full.py.",
+      "recovery_instruction": "Revalidate Round 8 closure, changed-set entry hashes, registry command bindings, receipt hashes, full command universe, knowledge freshness, and current pointer hashes before continuing."
+    },
+    "schema_version": "vdd.plan-state.v1",
+    "slices": [
+      {
+        "depends_on": [],
+        "id": "S0",
+        "status": "pending"
+      },
+      {
+        "depends_on": [
+          "S0"
+        ],
+        "id": "S1",
+        "status": "pending"
+      },
+      {
+        "depends_on": [
+          "S1"
+        ],
+        "id": "S2",
+        "status": "pending"
+      },
+      {
+        "depends_on": [
+          "S2"
+        ],
+        "id": "S3a",
+        "status": "pending"
+      },
+      {
+        "depends_on": [
+          "S2"
+        ],
+        "id": "S3b",
+        "status": "pending"
+      },
+      {
+        "depends_on": [
+          "S2"
+        ],
+        "id": "S3c",
+        "status": "pending"
+      },
+      {
+        "depends_on": [
+          "S2",
+          "S3c"
+        ],
+        "id": "S3d",
+        "status": "pending"
+      },
+      {
+        "depends_on": [
+          "S2",
+          "S3a"
+        ],
+        "id": "S4",
+        "status": "pending"
+      },
+      {
+        "depends_on": [
+          "S0",
+          "S1",
+          "S2",
+          "S3a",
+          "S3b",
+          "S3c",
+          "S3d",
+          "S4"
+        ],
+        "id": "S5",
+        "status": "pending"
+      }
+    ],
+    "state": "implementation-authorized",
+    "state_owner": "maintainer"
+  },
+  "schema_version": "vdd-conformance-exact-cover.legacy-authorization-predecessor.v1"
+}

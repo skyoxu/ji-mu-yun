@@ -1,0 +1,39 @@
+{
+  "authorizes": [
+    "implementation-complete"
+  ],
+  "command_registry_hash": "sha256:9b90e012bc8aff54c96294a0f93997909ae1a359037bdc7f2610685d1b4c2685",
+  "contract_hash": "sha256:6ea21487f24268b9edd960f68bc1f7cee4581cadf1b9b5d875a4287b3a66d2ea",
+  "failures": [],
+  "lifecycle_transition": "none",
+  "plan_id": "vdd-conformance-exact-cover",
+  "predicate": "implementation-complete",
+  "schema_version": "quick-dev-implementation-complete.v1",
+  "status": "pass",
+  "terminal_command_id": "terminal-full",
+  "terminal_stdout_sha256": "sha256:5391b7982586fa93c330925acfc1769fe9c4fdcd833ce98f3f177b9e669846a3",
+  "validated_command_ids": [
+    "bmad-spec-regression-negative",
+    "bmad-spec-regression",
+    "vdd-source-freeze-negative",
+    "vdd-source-freeze",
+    "vdd-exact-cover-manifest-composition",
+    "vdd-scope-boundary-negative",
+    "exact-cover-readonly-target",
+    "exact-cover-negative",
+    "exact-cover",
+    "semantic-handoff-negative",
+    "semantic-handoff",
+    "repair-lineage-successor",
+    "retry-taxonomy-negative",
+    "retry-taxonomy",
+    "fingerprint-shard-negative",
+    "fingerprint-shard",
+    "recovery-context-negative",
+    "recovery-context",
+    "authorization-preflight-negative",
+    "authorization-preflight",
+    "composition-negative",
+    "exact-cover-dogfood"
+  ]
+}

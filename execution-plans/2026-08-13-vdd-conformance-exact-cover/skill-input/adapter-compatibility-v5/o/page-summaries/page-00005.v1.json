@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+    "source_sha256": "sha256:119a6a40f4f1072714e04f028fc6eb922f266bd00ab6a6ddc40ac94b2edfdb6d",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 13814,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:119a6a40f4f1072714e04f028fc6eb922f266bd00ab6a6ddc40ac94b2edfdb6d"
+  },
+  "status": "accepted",
+  "summary": "plan=vdd-conformance-exact-cover; lifecycle=implementation-authorized; authority=SPEC.md; adapter=vdd-conformance-tdd-bridge.v1 via tools/tdd_bridge.py; selection pointer=canonical-spec-package-selections/current/SPEC-vdd-conformance-exact-cover.json; no direct authorizations; prerequisite=allow_stale_catalog independent tested knowledge-control change; global forbidden=PhaseA.Platform/**, runtime/phase-a/**, logs/phase-a-innernet/**, user sandbox data; upstream=typed bmad-spec descriptor/selection-registry regression hardening; order S0->S1->S2; then S3a,S3b,S3c; S3d requires S2+S3c; S4 requires S2+S3a; S5 requires all; slices use red expected nonzero and green/refactor expected zero; S0 bmad-spec typed registry VCEC-036/A43; S1 source-freeze VCEC-003/004/005/019/020; S2 deterministic exact cover VCEC-001/002/006-011/026; S3a handoff/repair VCEC-012-015/033; S3b retry taxonomy VCEC-027/028/034; S3c fingerprint shards VCEC-029-032; S3d recovery/context VCEC-021-023/035; S4 authorization preflight VCEC-016-018; S5 terminal dogfood VCEC-024/025; terminal=terminal-full/tools/terminal_full.py; validation=py -3 execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_validation.py"
+}

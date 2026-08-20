@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-20T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The canonical package defines a read-only exact-cover conformance capability with deterministic validation, source identity binding, bounded recovery context, and a separation between semantic work and lifecycle control.",
+      "title": "Scope"
+    },
+    {
+      "content": "The implementation contract sequences typed package selection, source freezing, exact-cover validation, semantic handoff and repair, retry and shard handling, recovery context, preflight checks, and terminal dogfood validation. Protected runtime, sandbox, and live-log paths are excluded.",
+      "title": "Requirements"
+    },
+    {
+      "content": "All listed inputs have complete accepted coverage. Repository rules require fail-closed handling for invalid or stale evidence, compatibility preservation, contract-specific validation, and recorded evidence. The manifest and requirements state that the exact-cover surface remains non-authorizing.",
+      "title": "Controls"
+    }
+  ],
+  "source_manifest_hash": "sha256:16c17cfcac934b5c2ca81d7fdeaeabecb0eb7521dbb03f12d6e23e7a13bbf326",
+  "truncated": false
+}

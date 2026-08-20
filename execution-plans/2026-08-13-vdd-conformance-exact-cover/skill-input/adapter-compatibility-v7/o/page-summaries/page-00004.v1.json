@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json",
+    "source_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 23240,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:1ca5d91ee92f0667fcc6784ed24a02215e8334642bdb76fd55f3471648a56133"
+  },
+  "status": "accepted",
+  "summary": "registry accepted; plan_id=vdd-conformance-exact-cover; schema=vdd-conformance-exact-cover.command-registry.v1; source hash=1ca5d91e...a56133; no authorizations; commands are hash-bound Python/py invocations from repo root, shell=false, timeout=600s; primary gates: skill-input, knowledge-preflight, source-freeze, semantic-handoff, authorization-preflight, composition, retry-taxonomy, fingerprint-shard, exact-cover, recovery-context, dogfood, terminal-full; each major behavior has negative validator; acceptance IDs span VCEC-A01..A43 with intentional grouped coverage; exact-cover dependencies freeze canonical package/source manifest/conformance validators; repair lineage requires v3 current chain and rejects semantic/authority drift/replay issues; scope boundary and readonly target explicitly negative-tested; stale catalog policy requires explicit opt-in and fail-closed corruption; bmad selection registry has regression and tamper-negative coverage; duplicate repair-knowledge-composition command appears as ids repair-knowledge-composition and composition with same Round-5 receipt/closure validation; implementation dependencies enumerate canonical package, source freeze, schemas, conformance, runtime policy, authorization preflight, repair lineage."
+}

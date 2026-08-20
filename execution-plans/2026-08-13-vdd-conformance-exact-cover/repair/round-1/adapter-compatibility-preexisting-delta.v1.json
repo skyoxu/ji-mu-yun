@@ -1,0 +1,6 @@
+{
+  "authorizes": [],
+  "disposition": "legacy-plan-adapter-compatibility",
+  "plan_id": "vdd-conformance-exact-cover",
+  "schema_version": "vdd-conformance-exact-cover.adapter-compatibility-preexisting-delta.v1"
+}

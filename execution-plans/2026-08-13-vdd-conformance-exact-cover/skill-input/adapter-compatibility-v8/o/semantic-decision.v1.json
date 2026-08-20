@@ -1,0 +1,28 @@
+{
+  "authorizes": [],
+  "context_artifact_hash": "sha256:a66a99e355aa3dd91342dfa5d264cfacd14d6480549a07868926c471720bbcb7",
+  "execution_identity": "sha256:e72ddbe5b5c630aaa536e2ead87c22a8c2e22e7378b4e08a4b6ce96beb3b9d8e",
+  "producer_role": "semantic-child",
+  "rationale": "Frozen inputs were reviewed.",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "redaction_status": "complete",
+  "schema_version": "skill-semantic-decision.v1",
+  "source_manifest_hash": "sha256:fa7ef9c93c7601bb33d0b4422818395f9bf06c157efb477ba1a324a5211b18b1",
+  "source_statuses": {
+    "AGENTS.md": "accepted",
+    "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/authority-manifest.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/publish_implementation_authorization.py": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/tdd_bridge.py": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_full.py": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/validate_all.py": "accepted"
+  },
+  "status": "accepted",
+  "snapshot_read_coverage": {
+    "path": "snapshot-read-coverage.v1.json",
+    "sha256": "sha256:74de65e0c2959d8e4072cc14a33603dbd7c308e3001e111e4460ff3d54de07b3"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md",
+    "source_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 7281,
+    "start_line": 1,
+    "end_line": 82,
+    "content_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04"
+  },
+  "status": "accepted",
+  "summary": "SPEC-vdd-conformance-exact-cover; canonical package includes six normative companions and adopted architecture spine; CAP-1 selection commitment/authority graph; CAP-2 exact sound-complete obligation cover with fail-closed deterministic checks; CAP-3 only structurally complete source-bound ambiguity may hand off via non-authorizing bootstrap-upstream-plan; CAP-4 hash-bound restartable diagnostics/recovery; CAP-5 authorization adapter exclusively preflights current conformant receipt; CAP-6 manifest-proven shard reuse, quarantines block, bounded retry, deterministic aggregate; CAP-7 falsifiable acceptance/negative fixtures/real lifecycle chain; bmad-spec owns package contract/selection registry and must produce/maintain selection record/current pointer; VDD owns freeze/create-repair/draft/plan-ready; adapter alone publishes implementation-authorized; exact-cover read-only and has no lifecycle/review/evidence/release authority; artifacts hash-bound authorizes=[]; only deterministic recomputation yields conformant; deterministic validation precedes semantic work and cannot be bypassed; semantic lane is pre-implementation only; runtime policy registry-owned/versioned/approved/hash-bound, numeric values unfrozen; exclude Chapter 5 workflow implementations and new LLM stages; adopted AD-1..AD-11 govern; execution-policy is non-owning for runtime values"
+}

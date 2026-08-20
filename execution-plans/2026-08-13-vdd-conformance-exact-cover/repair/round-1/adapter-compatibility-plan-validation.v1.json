@@ -1,0 +1,8 @@
+{
+  "authorizes": [],
+  "failures": [],
+  "plan_id": "vdd-conformance-exact-cover",
+  "predicate": "plan-valid",
+  "schema_version": "vdd-conformance-exact-cover.adapter-compatibility-plan-validation.v1",
+  "status": "pass"
+}

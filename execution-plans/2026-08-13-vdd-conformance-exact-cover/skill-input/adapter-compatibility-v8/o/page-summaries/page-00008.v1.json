@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/tdd_bridge.py",
+    "source_sha256": "sha256:cec2124c6491fbe423502675129fc9767501d8b12f2d07df1c4b2eec418c92dc",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4033,
+    "start_line": 1,
+    "end_line": 69,
+    "content_sha256": "sha256:cec2124c6491fbe423502675129fc9767501d8b12f2d07df1c4b2eec418c92dc"
+  },
+  "status": "accepted",
+  "summary": "tdd_bridge.py; CLI requires repository root, plan dir, slice ID, one-or-more snapshot paths; loads implementation contract and command registry; materialize-only accepts only exact declared snapshot-path sequence and emits materialized/no authorizations; normal run creates unique UTC RUN-* log directory under logs/tdd-adapter/{plan_id}/{slice_id}; executes TDD red expected fail, green expected pass, then each declared refactor expected pass; commands use registry executable/argv, repository cwd, shell disabled, captured text output, registry timeout; stage expectation mismatch writes failure.json with outputs and returns 2; records passing stage metadata; runs post-refactor command and writes terminal failure output/returns 2 on failure; imports validate_all.slice_validation_snapshot; success result includes exit predicate, pass status, plan/slice IDs, SHA-256 contract hash, validation roots, no authorizations; updates plan run-state to last slice and next_action=route; success stdout returns run ID/slice ID/no authorizations; uncaught missing slice/registry/config/import/filesystem/subprocess timeout errors remain possible."
+}

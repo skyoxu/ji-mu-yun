@@ -1,0 +1,31 @@
+{
+  "authorizes": [],
+  "paths": [
+    {
+      "path": "implementation-contract.v1.json",
+      "sha256": "sha256:d17aca29b755e072b2badb42664dfca11097da3e96fdbc50e53d21d984e520dc"
+    },
+    {
+      "path": "command-registry.v1.json",
+      "sha256": "sha256:5e96e3ae826db703ec39bc30936330837ddad44c384b730158c250fe5d3e9479"
+    },
+    {
+      "path": "tools/terminal_full.py",
+      "sha256": "sha256:81673e8702efe4d90a5a4b036ae4bd40ed1a8a6098b51c191e635dbd9822bd7e"
+    },
+    {
+      "path": "tools/terminal_validation.py",
+      "sha256": "sha256:f3edc7a2cf1953e66f6b6d9baa2b3c384ecd073c42d3d92a443de2b32c9f906b"
+    },
+    {
+      "path": "tools/validate_all.py",
+      "sha256": "sha256:9ce178060b71f40972af16c2ec44625d026c5be8ab586788d68ca68c6d395498"
+    },
+    {
+      "path": "tools/tdd_bridge.py",
+      "sha256": "sha256:cec2124c6491fbe423502675129fc9767501d8b12f2d07df1c4b2eec418c92dc"
+    }
+  ],
+  "plan_id": "vdd-conformance-exact-cover",
+  "schema_version": "vdd-conformance-exact-cover.adapter-compatibility-candidate-manifest.v1"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "AGENTS.md",
+    "source_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9904,
+    "start_line": 1,
+    "end_line": 198,
+    "content_sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+  },
+  "status": "accepted",
+  "summary": "Repository: Ji Mu Yun Phase A/B cloud prototype platform, not game; layers: toolchain, phase service, user sandbox must retain separate snapshot/current/cache/LKG authority; route reads by task table and nearest AGENTS.md before subtree changes; FastCtx preferred, fallback only after explicit unavailable/error and record once; Chinese user communication, English code/logs, Windows default, UTF-8 Chinese write rules; preserve user changes, ask before protected/high-risk changes, append evidence under logs; code/tests require Accepted ADR; protected: live logs workspaces, runtime/proxy, auth, shared LLM entrypoints, delivery/security/listeners, rewriting evidence; never manual live DB or secrets; APIs backward compatible, schemas preserve/migrate, contract-specific validation required; hosted recovery has ordered 8-source fail-closed process; LLM writes require executable route/workspace-write/acceptance; live recovery uses canonical scripts, never dotnet run; workflow.md legacy and allowlisted only; DoD requires validation/evidence/tests/docs as applicable and no assistant-only claim; AGENTS maintenance hard ceiling 10k chars."
+}

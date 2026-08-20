@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/publish_implementation_authorization.py",
+    "source_sha256": "sha256:02bb0f773423276b9c57d742eb6d228a8860a0c10974f11021297f14ebe36443",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 7042,
+    "start_line": 1,
+    "end_line": 109,
+    "content_sha256": "sha256:02bb0f773423276b9c57d742eb6d228a8860a0c10974f11021297f14ebe36443"
+  },
+  "status": "accepted",
+  "summary": "id=vdd-conformance-exact-cover; tool=publish_implementation_authorization.py; requires repository-root, plan-dir, skill-input-receipt, explicit --maintainer-authorize; rejects unless contract plan_id matches and plan-state=implementation-authorized; receipt must reside under plan; skill receipt ready=true with source_selection_hash and selected_source_content_root; generation root canonically hashes receipt binding, repository identity, context, semantic decision, child request; writes authority, legacy predecessor, closed repair state, pass validation, candidate manifest, delta, successor authorization receipt; candidate paths include contract, registry, terminal tools, validator, TDD bridge; binds required inputs with canonical JSON/raw-byte SHA-256; successor decision owner=maintainer transition=implementation-authorized; authorizes only implementation-authorized; explicitly excludes completion, acceptance, knowledge publication, bootstrap review, release; prints pass status and receipt path"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/authority-manifest.v1.json",
+    "source_sha256": "sha256:a0f62d166f44170f92b279eab4ab1a347bfed696fc011def76ddb18da0febc68",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 519,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:a0f62d166f44170f92b279eab4ab1a347bfed696fc011def76ddb18da0febc68"
+  },
+  "status": "accepted",
+  "summary": "authority manifest v1; schema=vdd-conformance-exact-cover.authority-manifest.v1; authority_sources: SPEC.md canonical_spec, AGENTS.md repository_rule; authorizes=[]; candidate_inputs: implementation-contract.v1.json implementation_contract, command-registry.v1.json command_registry; source SHA256=a0f62d166f44170f92b279eab4ab1a347bfed696fc011def76ddb18da0febc68"
+}
