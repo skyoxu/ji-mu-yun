@@ -1,0 +1,37 @@
+{
+  "schema_version": "jimuyun.execution-plan-validated-baselines.v1",
+  "purpose": "Non-authorizing governance registry for later execution plans to cite accepted toolchain baselines.",
+  "baselines": [
+    {
+      "plan_directory": "2026-08-15-acceptance-review-bootstrap-efficiency",
+      "validated_by": {
+        "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/acceptance-runs/acceptance-9d4f50ad88a01456/finalization/acceptance-passed.v1.json",
+        "identity_hash": "sha256:ae95d320635f2567fc3938c7144ab3615208d5619531497c169f1cd450e3c4d4"
+      },
+      "lifecycle_state": "acceptance-passed",
+      "baseline_status": "trusted",
+      "notes": "Later plans may cite this record as a validated-by baseline. This registry does not replay or reopen Acceptance."
+    },
+    {
+      "plan_directory": "2026-08-18-toolchain-workflow-repair",
+      "validated_by": {
+        "path": "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-runs/acceptance-8-18-successor-5a/finalization/successor-acceptance-passed.v1.json",
+        "identity_hash": "sha256:0c8c8e34274d62e2d7baf5fbc26f1ccfcd1a9750242c01ca5392231ff929c1ab"
+      },
+      "lifecycle_state": "acceptance-passed",
+      "baseline_status": "trusted",
+      "projection_sidecar_governance": {
+        "obsolete": {
+          "path": "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-projection-result.successor-5.json",
+          "reason": "Its bundleHash does not match the referenced bundle's self-hash. Historical evidence is retained unchanged and must not be selected as a current projection authority."
+        },
+        "self_hash_valid_replacement": {
+          "path": "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-projection-result.final.json",
+          "bundle_path": "execution-plans/2026-08-18-toolchain-workflow-repair/acceptance-inputs/acceptance-8-18-final-replay/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+          "bundle_hash": "sha256:6e357b15924080884a04789a6a8a70662c02a11735f455d3f675ab2216aba41c"
+        }
+      },
+      "notes": "The authoritative successor acceptance-passed receipt remains final. This governance annotation does not reopen Acceptance or change lifecycle state."
+    }
+  ]
+}
