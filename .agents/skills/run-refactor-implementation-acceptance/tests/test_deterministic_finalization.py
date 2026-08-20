@@ -116,6 +116,9 @@ def test_deterministic_finalization_requires_and_publishes_hash_bound_receipts(t
     assert json.loads((run / "finalization/acceptance-passed.v1.json").read_text(encoding="utf-8"))["authorizes"] == ["acceptance-passed"]
     assert json.loads((run / "finalization/acceptance-result-final.v1.json").read_text(encoding="utf-8"))["authorizes"] == []
     assert json.loads((run / "finalization/acceptance-result-final.v1.json").read_text(encoding="utf-8"))["candidatePath"] == "finalization/acceptance-result-candidate.v1.json"
+    pointer = json.loads((target / "acceptance-current.v1.json").read_text(encoding="utf-8"))
+    assert pointer["currentRun"] == "execution-plans/target/runs/acceptance-test"
+    assert pointer["authorizes"] == []
 
 
 def test_terminal_machine_result_accepts_json_before_non_json_tail() -> None:

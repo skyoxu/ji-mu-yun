@@ -56,6 +56,14 @@ def _publish(path: Path, value: dict[str, Any]) -> None:
     path.write_text(encoded, encoding="utf-8", newline="\n")
 
 
+def _publish_current_pointer(path: Path, value: dict[str, Any]) -> None:
+    """Publish the target-owned current projection; finalized runs remain immutable."""
+    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    if path.exists() and path.read_text(encoding="utf-8") == encoded:
+        return
+    path.write_text(encoded, encoding="utf-8", newline="\n")
+
+
 def _completed_receipts(run_dir: Path, actions: Any, command_registry: Any) -> list[dict[str, Any]]:
     try:
         inspection = inspect_persisted_run(
@@ -304,6 +312,14 @@ def finalize_deterministic_run(
     wrapper_path = run_dir / "finalization" / "acceptance-result-final.v1.json"
     _publish(wrapper_path, wrapper)
     final_ref = {"path": final_path.relative_to(run_dir).as_posix(), "sha256": _sha(final_path)}
+    pointer = {
+        "schemaVersion": "acceptance-current.v1",
+        "currentRun": run_dir.relative_to(root).as_posix(),
+        "finalResult": {"path": final_path.relative_to(root).as_posix(), "sha256": _sha(final_path)},
+        "finalWrapper": {"path": wrapper_path.relative_to(root).as_posix(), "sha256": _sha(wrapper_path)},
+        "authorizes": [],
+    }
+    _publish_current_pointer(target / "acceptance-current.v1.json", pointer)
     event_path = run_dir / "acceptance-events.jsonl"
     existing = [json.loads(line) for line in event_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     final_events = [event for event in existing if event.get("eventType") == "acceptance-finalized"]
