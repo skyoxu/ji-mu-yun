@@ -1,0 +1,30 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:d3a7fbaf9920ef33e9985b623caa30f18ae550650dee6d6f472727e011d1a7ce",
+  "canonical_context_sha256": "sha256:7158924d9932e536d6fd8410b5d503d97525155e94a8dd94f9d8685e73631e6c",
+  "request_sha256": "sha256:cf9ab73400a69315d117eae6572fbccf97038b46430e9b464aff1a8938b5192d",
+  "result_sha256": "sha256:da781906e35f6e993ddfebf037929aedc7910fda877ed015c946387845cba096",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
+  },
+  "source_snapshot_id": "sha256:d6616e276fe784b4aa6d4e0a349ff4541f252e098c97c8e3ffffba406bd556d3",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "docs/standards/repository-maintenance-agent-protocol.md",
+      "source_sha256": "3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "satisfies": [
+        "governance-context",
+        "repository-rules"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:917fb8d1163e0ad4f70aa9e780e26d5058ed3d1d44b8cd4987a30c892b8d7b51",
+    "freeze_receipt_path": "knowledge-context.freeze.history/917fb8d1163e0ad4f70aa9e780e26d5058ed3d1d44b8cd4987a30c892b8d7b51.v1.json",
+    "reason": "retire-package-c-and-remove-three-authorized-plan-targets"
+  }
+}

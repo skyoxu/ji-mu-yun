@@ -2,8 +2,8 @@
   "schema_version": "vdd.authority-manifest.v1",
   "plan_id": "skill-authoring-standard",
   "git": {
-    "commit": "f7e8b508303756d2bf1976cfa6b08234e39f122b",
-    "tree": "2ef422c1eb3eb502edb2c2988b1d4d286f9c9188"
+    "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc",
+    "tree": "db1b3827be82f97236c9431d320b76a61bbadad7"
   },
   "source_files": [
     {

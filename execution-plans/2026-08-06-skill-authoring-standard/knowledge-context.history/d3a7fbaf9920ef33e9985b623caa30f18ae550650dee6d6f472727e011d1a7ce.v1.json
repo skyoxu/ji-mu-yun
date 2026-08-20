@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "skill-authoring-standard-package-ab-retirement-20260820-r8",
+    "request_id": "skill-authoring-standard-package-ab-retirement-20260820-final",
     "consumer": "vdd",
     "query": "repository-maintenance-agent-protocol",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
+      "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
     },
     "policy_revision": "knowledge-consumer-policies.v2",
     "allow_stale_catalog": true
@@ -124,7 +124,7 @@
         "line_end": 38,
         "line_start": 38,
         "module_id": "plan.2026-08-06-skill-authoring-standard",
-        "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-inputs/skill-input-repair-20260820/execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
         "primary_domain": "phase",
         "provenance": [
           "catalog-v2",
@@ -138,24 +138,29 @@
         },
         "read_set": [
           {
-            "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-inputs/skill-input-repair-20260820/execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
             "role": "primary",
-            "source_sha256": "ad82fd74c4520084454d9a8f0f2172512f7fd91630b7199ac94d08873f2bd58d"
+            "source_sha256": "69d684c6647847ce78304c4bf71e02d7e9fd30e17223ff2aa95deb75f202de1c"
           },
           {
-            "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-inputs/skill-input-repair-20260820/execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
             "role": "command-registry",
-            "source_sha256": "cce2de3ab1e83f49874acd65c66ec1ff325cd01a1ef0e67549e3d2002f4fbb31"
+            "source_sha256": "5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514"
           },
           {
-            "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-inputs/skill-input-repair-20260820/execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
             "role": "implementation-contract",
-            "source_sha256": "21d6cbe335535622bd25aaae4bc3fb1d1b4a351bb2cf5f97be35604787445be2"
+            "source_sha256": "83e8eb8bf6ee912c79ae7c2370f6fb63ef0ba765f4aa48ba7a24a15e346b1675"
           },
           {
-            "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-inputs/skill-input-repair-20260820/execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/plan-state.v1.json",
+            "role": "plan-state",
+            "source_sha256": "5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
             "role": "requirements-ledger",
-            "source_sha256": "03da64996fb7ea19f5608b6930bc271a8ee76ab6e852e0e5d1236c3812033777"
+            "source_sha256": "be7769f95771a2dcf50dcc18d9fbfe23e20a2aebb16ad151fcd5ee374ce49150"
           }
         ],
         "relations": [
@@ -182,7 +187,7 @@
         ],
         "semantic_eligible": true,
         "source_role": "plan-index",
-        "source_sha256": "ad82fd74c4520084454d9a8f0f2172512f7fd91630b7199ac94d08873f2bd58d",
+        "source_sha256": "69d684c6647847ce78304c4bf71e02d7e9fd30e17223ff2aa95deb75f202de1c",
         "status": "conditional",
         "visibility": {
           "marketplace": "excluded",
@@ -513,13 +518,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "skill-authoring-standard-package-ab-retirement-20260820-r8",
+    "request_id": "skill-authoring-standard-package-ab-retirement-20260820-final",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc",
+      "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4",
+    "source_snapshot_id": "sha256:d6616e276fe784b4aa6d4e0a349ff4541f252e098c97c8e3ffffba406bd556d3",
     "status": "matched"
   },
   "required_modules": [
@@ -553,8 +558,8 @@
     {
       "owner": "adapter",
       "candidate": {
-        "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-inputs/skill-input-repair-20260820/execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
-        "source_sha256": "ad82fd74c4520084454d9a8f0f2172512f7fd91630b7199ac94d08873f2bd58d"
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+        "source_sha256": "69d684c6647847ce78304c4bf71e02d7e9fd30e17223ff2aa95deb75f202de1c"
       },
       "decision": "rejected",
       "satisfies": [],
@@ -621,14 +626,19 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:9995855ba8759a197ff028acca3e0ee48a99f26622cf96d2eb6a14119e2efd5a",
-  "result_sha256": "sha256:b5ff081abbcba36bfdfc8152120271536c0ac1e386a69663c86632abcdba76aa",
+  "request_sha256": "sha256:cf9ab73400a69315d117eae6572fbccf97038b46430e9b464aff1a8938b5192d",
+  "result_sha256": "sha256:da781906e35f6e993ddfebf037929aedc7910fda877ed015c946387845cba096",
+  "source_refresh": {
+    "schema_version": "jimuyun.knowledge-source-refresh.v1",
+    "mode": "current_worktree_read_set",
+    "base_locator_result_sha256": "sha256:355ed18a05cbc31028a5a0d93f4a7d3747c931dcf06b7e86f22e3068cc474b08"
+  },
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "knowledge_freshness": "current",
-    "catalog_failure_code": null,
-    "source_freshness": "catalog_bound",
-    "context_sha256": "sha256:893e1ea432ff32760850801aa6cb53b146612fb35385db73cd53b352dab10812"
+    "knowledge_freshness": "degraded",
+    "catalog_failure_code": "catalog_stale",
+    "source_freshness": "refreshed",
+    "context_sha256": "sha256:0b7b6706e877cb629dc2a5fbdfbd144e0aefbd5cb6c0af02b242688ecffff15c"
   }
 }

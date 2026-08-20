@@ -24,11 +24,11 @@
     },
     {
       "path": "authority-manifest.v1.json",
-      "sha256": "sha256:d72a520b2f509b0001a2e6d564d31a32735e0710dd18db2d76adb03080e8e0e7"
+      "sha256": "sha256:70a6cc4685b5084b6841767238bdf85057374165dc4072f8a4060c623d7b2aab"
     },
     {
       "path": "baseline-and-scope.v1.json",
-      "sha256": "sha256:bca864137e3f8493ad4a46fdb161cb79b8ce8fc9334b1558be4c4f68219999f7"
+      "sha256": "sha256:38186fc09926eedef11c3929a26339019d636a99428d7ed292991319f4417062"
     },
     {
       "path": "implementation-contract.v1.json",

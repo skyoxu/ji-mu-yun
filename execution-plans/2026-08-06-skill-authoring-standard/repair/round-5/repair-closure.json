@@ -49,26 +49,26 @@
       "evidence": [
         {
           "path": "repair/round-5/candidate-content-manifest.v1.json",
-          "sha256": "sha256:3dd2aa28c2ffee11192bd66497461b16c5bb6839f133b3b798fc4aacebc5c56a"
+          "sha256": "sha256:2016aaf42ab858b44a9369d80f59e8875cbee77c1d07ddd27826778bd8a69a11"
         }
       ]
     }
   ],
   "baselineManifest": {
     "path": "repair/round-5/baseline-content-manifest.v1.json",
-    "sha256": "sha256:b68ebe0085b4569448bddea7630942caf7d43e5421499301306c9d4fdaaf3b09"
+    "sha256": "sha256:8d3489079e00388c8cbc09ac5da0dff859ac6fdc508d8b62bcaf06640691a9b5"
   },
   "candidateManifest": {
     "path": "repair/round-5/candidate-content-manifest.v1.json",
-    "sha256": "sha256:3dd2aa28c2ffee11192bd66497461b16c5bb6839f133b3b798fc4aacebc5c56a"
+    "sha256": "sha256:2016aaf42ab858b44a9369d80f59e8875cbee77c1d07ddd27826778bd8a69a11"
   },
   "callsiteInventory": {
     "path": "repair/round-5/callsite-inventory.v1.json",
-    "sha256": "sha256:fee9a4a37dd230409e633ab2eb688584a18473cb05d8c0328d402452461b4b68"
+    "sha256": "sha256:c023a287462ac7882e71bfa94cc4a843d1aa2608b081256f4b697e81c6778a1d"
   },
   "compositionReceipt": {
     "path": "logs/tdd-adapter/skill-authoring-standard/repair-round-5/plan-validator-composition-receipt.v1.json",
-    "sha256": "sha256:d99b049be8ac62e13eb8138f5950d3f16000ec5938aedaa0e1d51f18e489dc78"
+    "sha256": "sha256:06f1e2d4185014991c5638a2a7715f1787bf7fdb20ba969db1ab21c5a2843f47"
   },
   "authorizes": []
 }

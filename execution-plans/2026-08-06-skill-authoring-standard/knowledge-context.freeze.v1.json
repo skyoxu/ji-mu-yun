@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:d3a7fbaf9920ef33e9985b623caa30f18ae550650dee6d6f472727e011d1a7ce",
-  "canonical_context_sha256": "sha256:7158924d9932e536d6fd8410b5d503d97525155e94a8dd94f9d8685e73631e6c",
-  "request_sha256": "sha256:cf9ab73400a69315d117eae6572fbccf97038b46430e9b464aff1a8938b5192d",
-  "result_sha256": "sha256:da781906e35f6e993ddfebf037929aedc7910fda877ed015c946387845cba096",
+  "context_sha256": "sha256:0eb013bd8dbbde6bd161e1c84257344e0e1fb958d6128f88390097304e64d86b",
+  "canonical_context_sha256": "sha256:8ccb32c071ac01f5d764943c0f93c977d231ae0105488e2b09c12a6ab0512159",
+  "request_sha256": "sha256:9995855ba8759a197ff028acca3e0ee48a99f26622cf96d2eb6a14119e2efd5a",
+  "result_sha256": "sha256:b5ff081abbcba36bfdfc8152120271536c0ac1e386a69663c86632abcdba76aa",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "84b96458f00f253b04c3d3f9389734c7d4b30f63"
+    "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
   },
-  "source_snapshot_id": "sha256:d6616e276fe784b4aa6d4e0a349ff4541f252e098c97c8e3ffffba406bd556d3",
+  "source_snapshot_id": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -23,8 +23,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:917fb8d1163e0ad4f70aa9e780e26d5058ed3d1d44b8cd4987a30c892b8d7b51",
-    "freeze_receipt_path": "knowledge-context.freeze.history/917fb8d1163e0ad4f70aa9e780e26d5058ed3d1d44b8cd4987a30c892b8d7b51.v1.json",
-    "reason": "retire-package-c-and-remove-three-authorized-plan-targets"
+    "context_sha256": "sha256:d3a7fbaf9920ef33e9985b623caa30f18ae550650dee6d6f472727e011d1a7ce",
+    "freeze_receipt_path": "knowledge-context.freeze.history/d3a7fbaf9920ef33e9985b623caa30f18ae550650dee6d6f472727e011d1a7ce.v1.json",
+    "reason": "package-c-retirement-and-acceptance-authority-repair"
   }
 }

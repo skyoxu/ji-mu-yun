@@ -22,7 +22,7 @@
   "callSites": [
     {
       "path": "tools/validate_plan.py",
-      "disposition": "changed",
+      "disposition": "unchanged",
       "consumer": "plan-validator"
     },
     {
@@ -32,7 +32,7 @@
     },
     {
       "path": "tools/tests/test_validate_plan.py",
-      "disposition": "changed",
+      "disposition": "unchanged",
       "consumer": "plan-validator"
     },
     {
