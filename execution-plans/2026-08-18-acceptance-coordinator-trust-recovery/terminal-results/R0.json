@@ -1,9 +1,9 @@
 {
   "authorizes": [],
   "binding_hashes": {},
-  "candidate_binding_hash": "sha256:5422e3643b9add9434e31072163aab9f898c8a02e59f5c991d614b8776106cfd",
-  "command_registry_hash": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
-  "contract_hash": "sha256:0140bb0cd5db1e5fb783a941544209a5728fff759aba60f25b0b5c23f3665f37",
+  "candidate_binding_hash": "sha256:86cf16613d4bdcef6f98261263de654b21ba7fe8fcfbbe51b7127cdbfa53f76a",
+  "command_registry_hash": "sha256:0bfc0a76e616ed2a3b1507a16a2d2005b1fbc324ede6351ac7b121afd35fe22b",
+  "contract_hash": "sha256:b8603c1ab17c0a63c6852336050cb82d31bdd2f9679a5dd510b61e154b728117",
   "failures": [],
   "lifecycle_transition": "none",
   "plan_id": "acceptance-coordinator-trust-recovery",

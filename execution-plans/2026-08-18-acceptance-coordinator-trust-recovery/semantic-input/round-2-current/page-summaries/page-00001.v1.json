@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+    "source_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9569,
+    "start_line": 1,
+    "end_line": 176,
+    "content_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae"
+  },
+  "status": "accepted",
+  "summary": "Plan=acceptance-coordinator-trust-recovery; baseline=3c285bcc; creation=868328c8; profile=self-hosted; preserve 2026-08-17 historical evidence; no Knowledge publication/automatic Bootstrap/Phase runtime/release/archive/multi-maintainer signing; lifecycle: Maintainer authorization, Quick Dev completion, Acceptance pass; R0=v3 request plus target/hash-bound prepared input only; derive run via start_or_resume_target_run and persisted DAG/registry/route projection; reject local assertions, v2 current completion, unbound receipts; R1=reserve successor identity pre-materialization; byte-identical reuse only; retries resume or fail closed; one recoverable GREEN/prior-RED transition; R2=base authorization binds contract/manifest/selection/successors/Skill input; refresh only unchanged eligible selection and validated full chain; semantic changes require reauthorization; freshness needs Accepted ADR superseding ADR-0057 while retaining ADR-0050 LKG gate; verified published/LKG only, failed/tampered/non-ancestor LKG hard-block; same selection non-authority byte drift=>one degraded/refreshed successor; Knowledge self-change with failed query gate requires semantic review; validator produces successor receipt with chain/context/selection/authority/LKG/read-set/command bindings and no publication authority; R3=legacy RED only if selector/test bytes/fingerprint/failure IDs match; R4=read-only 8-17 replay with new current bindings/authorization, no writes, idempotent; R5=completion binds explicit candidate source manifest, terminal result, current receipt; exclude generated evidence/Git HEAD/logs/timestamps; reject tampering and preserve append-only retry receipts"
+}

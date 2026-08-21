@@ -6,9 +6,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 
-def test_s1_route_contains_machine_projection_facts(tmp_path: Path) -> None:
+def test_s1_route_projection_cannot_be_supplied_by_caller(tmp_path: Path) -> None:
     import acceptance_cli
-    from test_coordinator import _request
-    source, output, _ = _request(tmp_path)
-    result = acceptance_cli.run_coordinator(str(source), str(output))
-    assert result["routeProjection"]["sourceReadSetHash"].startswith("sha256:")
+    from test_coordinator import _legacy_request
+    import pytest
+    with pytest.raises(acceptance_cli.InputError, match="caller control"):
+        acceptance_cli.run_coordinator(str(_legacy_request(tmp_path)), str(tmp_path / "result.json"))

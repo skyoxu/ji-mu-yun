@@ -6,9 +6,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 
-def test_s0_result_publishes_bundle_owned_authority_projection(tmp_path: Path) -> None:
+def test_s0_legacy_bundle_authority_is_not_a_current_input(tmp_path: Path) -> None:
     import acceptance_cli
-    from test_coordinator import _request
-    source, output, _ = _request(tmp_path)
-    result = acceptance_cli.run_coordinator(str(source), str(output))
-    assert result["authority"]["bundlePath"] == "bundle/compact-vdd-acceptance-prerequisite-bundle.v1.json"
+    from test_coordinator import _legacy_request
+    import pytest
+    with pytest.raises(acceptance_cli.InputError, match="caller control"):
+        acceptance_cli.run_coordinator(str(_legacy_request(tmp_path)), str(tmp_path / "result.json"))

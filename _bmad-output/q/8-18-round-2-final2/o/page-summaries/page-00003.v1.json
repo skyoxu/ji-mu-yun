@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+    "source_sha256": "sha256:5b7feaeb98d821ab3850aae0f597d517bc6ee9056f963b2b257e67c69a57dc20",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 23477,
+    "start_line": 1,
+    "end_line": 463,
+    "content_sha256": "sha256:5b7feaeb98d821ab3850aae0f597d517bc6ee9056f963b2b257e67c69a57dc20"
+  },
+  "status": "accepted",
+  "summary": "file=execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py; purpose=terminal validator and canonical receipt publisher for plan acceptance-coordinator-trust-recovery; computes candidate-source manifest from a fixed source list and hashes only declared files; blocks generated paths, escape paths, missing files, and manifest collisions; validates plan-state, authority/authorization receipt, knowledge-context plus freeze hash, skill-input receipt, full-slice terminal receipts, and registered commands; slice map R0-R5 binds specific tests and green command ids; full pass writes repair/round-2 quick-dev implementation receipt, updates resume-state and plan-state to implementation-complete, and records hashes for contract, registry, receipt, and bindings; result payload is quick-dev-tdd-adapter.terminal-result.v1 with predicate slice-ready or implementation-complete, empty authorizes, and collected failures; ambiguities= _candidate_binding requires plan but only derives manifest hash from root, and full-mode command ids are derived from slice keys"
+}

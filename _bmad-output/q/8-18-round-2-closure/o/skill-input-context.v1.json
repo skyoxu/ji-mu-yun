@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Acceptance plan for trust recovery against baseline 3c285bcc and commit 868328c8. It preserves current lifecycle ownership, requires self-hosted execution, and excludes Knowledge publication, auto Bootstrap, runtime or release archive steps, and multi-maintainer signing. Core rules bind requests to contract, authority manifest, Knowledge selection, successor kinds, and Skill-input contract, with strict handling for freshness drift, successor reservation, legacy prior-RED checks, and completion handoff evidence.",
+      "title": "Requirements"
+    },
+    {
+      "content": "migration_bridge.py materializes declared Quick Dev RED tests for slices R0, R1, and R2 only, writes known test paths under repository root, and aborts on undeclared slices or conflicting existing targets. test_completion_handoff_integrity.py checks candidate source identity stability and excludes generated evidence paths. These sources describe constrained test generation and integrity checks for the completion handoff flow.",
+      "title": "Migration And Test Coverage"
+    },
+    {
+      "content": "terminal_full.py is the validator and receipt publisher. It binds hashes for contract, registry, candidate source manifest, and receipts; enforces declared slice maps and repo-bounded sources; requires authorization state alignment and valid receipts; and publishes a canonical completion receipt on full pass. validate_all.py supplies slice identity helpers and snapshot hashing for candidate sources, registry, terminal state, and closure definitions.",
+      "title": "Terminal Validation"
+    }
+  ],
+  "source_manifest_hash": "sha256:d09176c2df6377b35c9309997f7e698b1b421a9fd67a38eff6969cedfe73f41a",
+  "truncated": false
+}

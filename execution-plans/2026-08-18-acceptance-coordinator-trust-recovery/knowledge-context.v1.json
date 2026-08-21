@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z-successor-20260821T073105Z-successor-20260821T080606Z-successor-20260821T081625Z-successor-20260821T081857Z-successor-20260821T082003Z-successor-20260821T082135Z-successor-20260821T093928Z-successor-20260821T094104Z-successor-20260821T094744Z-successor-20260821T095441Z",
+    "request_id": "ACR-20260818-round2-preauthorization",
     "consumer": "vdd",
     "query": "acceptance coordinator trust recovery persisted run successor knowledge authorization workflow repair",
     "snapshot": {
@@ -811,7 +811,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z-successor-20260821T073105Z-successor-20260821T080606Z-successor-20260821T081625Z-successor-20260821T081857Z-successor-20260821T082003Z-successor-20260821T082135Z-successor-20260821T093928Z-successor-20260821T094104Z-successor-20260821T094744Z-successor-20260821T095441Z",
+    "request_id": "ACR-20260818-round2-preauthorization",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "ref": "refs/heads/main",
@@ -953,8 +953,8 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:40b76009fa552cee63e3dd061dc59417b8d084d7a60da310bee5ed7d079c1872",
-  "result_sha256": "sha256:6164ea3a433de9d094f35815f5b5459de15c8ed1e59cfe30cf96139670d3f4ed",
+  "request_sha256": "sha256:d49b6e3acc8bd2a79753db7adb3cdd5a0bdca87c81d2b441b86d2cea3e577e62",
+  "result_sha256": "sha256:07572bfda1b338398594c91ace475148a711c5aaedb870c48ff32ceabddd7ff9",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
@@ -966,6 +966,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:ebfd4abf2d46cc1365ac172be9dca1bb1af4967e8cab8c8c5acb6bf8d3b20c7f"
+    "context_sha256": "sha256:258deaf22fb8c57c51ec668c34ac29c7558daf4c4f705658bf4a04599e20d794"
   }
 }

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+    "source_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9569,
+    "start_line": 1,
+    "end_line": 176,
+    "content_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae"
+  },
+  "status": "accepted",
+  "summary": "Plan repairs Acceptance/Quick Dev trust gaps against baseline 3c285bcc; plan commit 868328c8; self-hosted required; no Knowledge publication, auto Bootstrap, runtime/release/archive, or multi-maintainer signing; lifecycle owners preserved: Maintainer implementation-authorized, Quick Dev implementation-complete, Acceptance acceptance-passed; ACR-R0 requires v3 request plus hash-bound prepared input and persisted run/DAG/registry evidence only, rejects request-local assertions and unbound receipts; ACR-R1 reserves successors before materialization and retries must resume byte-identical lineage or fail closed; ACR-R2 binds authorization to contract, authority manifest, Knowledge selection, successor kinds, Skill-input contract; eligible unchanged refresh may continue, selection/execution-semantics drift routes to awaiting-implementation-authorization; ACR-R2-FRESHNESS treats stale catalog/source drift as degraded execution with frozen-selection replay, but authority/resource/policy/required-source drift blocks; Knowledge-system self-change with failed query gate needs semantic review; successor receipt must be validator-produced and bind predecessor/successor context, selection, authority envelope, LKG, read-set, command identity, full chain; ACR-R3 allows legacy prior-RED only when selector, test bytes, execution fingerprint, and expected failure IDs match; ACR-R4 dogfoods repaired plane against read-only 8-17 evidence with new current bindings and authorization, no historical rewrite; ACR-R5 completion handoff binds stable candidate source manifest, terminal result, and current receipt pointer; candidate manifest includes explicit source/test/validator/consumer bytes and excludes HEAD, generated artifacts, evidence, logs, timestamps; retries after publication boundaries must reuse append-only receipt after chain verification"
+}

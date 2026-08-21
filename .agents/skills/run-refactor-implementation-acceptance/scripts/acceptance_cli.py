@@ -1014,61 +1014,85 @@ def _load_coordinator_evidence(base: Path, reference: object, binding: str, bund
     return evidence, {"path": ref["path"], "sha256": ref["sha256"], "actions": observed}
 
 
-def run_coordinator(request_path: str, output_path: str) -> dict:
-    """Project and execute one Acceptance route from immutable machine evidence.
+_COORDINATOR_FORBIDDEN_CALLER_FIELDS = {
+    "candidateBindingHash", "bundle", "evidence", "deterministicSourceSufficient",
+    "semanticReviewRequired", "route", "actionReceipts", "actionDag", "recovery",
+    "successor", "telemetry", "publicationAuthorized",
+}
 
-    The caller supplies evidence, never a route.  This keeps route ownership in
-    the Acceptance coordinator and makes replay a pure binding check.
-    """
-    request = _read_json(request_path)
-    required = {"schemaVersion", "candidateBindingHash", "bundle", "evidence", "authorizes"}
-    if not isinstance(request, dict) or set(request) != required:
+
+def _load_current_coordinator_inputs(request_path: Path, request: object) -> dict:
+    required = {"schemaVersion", "targetPlan", "preparedRunInput", "skillInputReceipt", "skillInputContract", "authorizes"}
+    if not isinstance(request, dict):
         raise InputError("coordinator request is invalid")
-    binding, bundle, evidence_ref = request["candidateBindingHash"], request["bundle"], request["evidence"]
-    if (
-        request["schemaVersion"] != "acceptance-coordinator-request.v3"
-        or not isinstance(binding, str) or not __import__("re").fullmatch(r"sha256:[a-f0-9]{64}", binding)
-        or not isinstance(bundle, dict)
-        or request["authorizes"] != []
-    ):
+    if _COORDINATOR_FORBIDDEN_CALLER_FIELDS & set(request):
+        raise InputError("coordinator caller control fields are forbidden")
+    if set(request) != required or request.get("schemaVersion") != "jimuyun.acceptance-coordinator-request.v3" or request.get("authorizes") != []:
         raise InputError("coordinator request is invalid")
-    if bundle.get("schemaVersion") != "compact-vdd-acceptance-prerequisite-bundle.v1":
-        raise InputError("coordinator bundle is invalid")
-    if bundle.get("candidateBindingHash") != binding:
-        raise InputError("coordinator bundle candidate binding is stale")
-    if bundle.get("bundleHash") != canonical_hash({key: value for key, value in bundle.items() if key != "bundleHash"}):
-        raise InputError("coordinator bundle hash is stale")
-    evidence, evidence_record = _load_coordinator_evidence(Path(request_path).resolve().parent, evidence_ref, binding, bundle["bundleHash"])
-    # Semantic ambiguity always wins over the deterministic fast path.
-    route = "semantic_review_required" if evidence["semanticReviewRequired"] else "deterministic_only"
-    if not evidence["deterministicSourceSufficient"] and route == "deterministic_only":
-        raise InputError("deterministic route lacks source sufficiency")
-    bundle_hash = bundle["bundleHash"]
-    action_dag = {"actions": evidence_record["actions"], "evidence": {"path": evidence_record["path"], "sha256": evidence_record["sha256"]}}
-    result = {
-        "schemaVersion": "acceptance-coordinator-result.v2", "candidateBindingHash": binding,
-        "bundleHash": bundle_hash,
-        "route": route, "status": "completed" if route == "deterministic_only" else "semantic_handoff_required",
-        "authority": {"bundle": bundle_hash, "bundlePath": "bundle/compact-vdd-acceptance-prerequisite-bundle.v1.json", "candidate": binding},
-        "routeProjection": {"deterministicSourceSufficient": evidence["deterministicSourceSufficient"], "semanticReviewRequired": evidence["semanticReviewRequired"], "projectionHash": canonical_hash({"deterministicSourceSufficient": evidence["deterministicSourceSufficient"], "semanticReviewRequired": evidence["semanticReviewRequired"]}), "sourceReadSetHash": canonical_hash(bundle.get("knowledgeContext", {}))},
-        "recovery": {"latestSuccessorPointer": canonical_hash({"candidateBindingHash": binding, "bundleHash": bundle_hash}), "successorKind": "same-binding", "replayFingerprint": canonical_hash({"candidateBindingHash": binding, "bundleHash": bundle_hash, "route": route}), "successorReason": "same-binding-replay", "disposition": "successor-replay"},
-        "bootstrapInvoked": False,
-        "typedHandoff": None if route == "deterministic_only" else {
-            "schemaVersion": "acceptance-semantic-handoff.v2", "candidateBindingHash": binding,
-            "bundleHash": bundle_hash, "reason": "semantic-review-required", "authorizes": [],
-        },
-        "actionDag": action_dag,
-        "actionDagHash": canonical_hash(action_dag),
-        "telemetry": {"elapsedMs": 0, "waitMs": 0, "interventionCount": 0, "replayed": False}, "authorizes": [],
-    }
+    if not isinstance(request.get("targetPlan"), str) or not request["targetPlan"]:
+        raise InputError("coordinator target plan is invalid")
+
+    def load(field: str) -> tuple[dict, dict]:
+        reference = request.get(field)
+        if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+            raise InputError(f"coordinator {field} reference is invalid")
+        raw = reference["path"]
+        if not isinstance(raw, str) or not raw or Path(raw).is_absolute() or ".." in Path(raw).parts:
+            raise InputError(f"coordinator {field} path is invalid")
+        path = (request_path.parent / raw).resolve()
+        try:
+            path.relative_to(request_path.parent.resolve())
+        except ValueError as exc:
+            raise InputError(f"coordinator {field} path escapes request root") from exc
+        if not path.is_file() or _file_hash(path) != reference["sha256"]:
+            label = "prepared run input" if field == "preparedRunInput" else field
+            raise InputError(f"coordinator {label} is stale")
+        value = _read_json(str(path))
+        if not isinstance(value, dict):
+            raise InputError(f"coordinator {field} artifact is invalid")
+        return value, {"path": raw.replace("\\", "/"), "sha256": reference["sha256"]}
+
+    prepared, prepared_ref = load("preparedRunInput")
+    receipt, receipt_ref = load("skillInputReceipt")
+    contract, contract_ref = load("skillInputContract")
+    if prepared.get("schemaVersion") != "acceptance-run-input.v1":
+        raise InputError("coordinator prepared run input is invalid")
+    if receipt.get("ready") is not True or receipt.get("authorizes") not in (None, []):
+        raise InputError("coordinator Skill input receipt is not ready")
+    if contract.get("schema_version") != "skill-input-contract.v1":
+        raise InputError("coordinator Skill input contract is invalid")
+    return {"prepared": prepared, "prepared_ref": prepared_ref, "receipt_ref": receipt_ref, "contract_ref": contract_ref, "target_plan": request["targetPlan"]}
+
+
+def run_coordinator(request_path: str, output_path: str) -> dict:
+    """Derive a route from a persisted Acceptance run, never caller assertions."""
+    source = Path(request_path).resolve()
+    loaded = _load_current_coordinator_inputs(source, _read_json(str(source)))
+    prepared = loaded["prepared"]
+    run_input = prepared.get("input")
+    if not isinstance(run_input, dict):
+        raise InputError("coordinator prepared run input is incomplete")
+    run_input_hash = prepared.get("inputHash")
+    context = prepared.get("knowledgeContext")
+    knowledge_hash = context.get("sha256") if isinstance(context, dict) else None
+    if not isinstance(run_input_hash, str) or not isinstance(knowledge_hash, str):
+        raise InputError("coordinator prepared run input binding is invalid")
+    contract_hash = canonical_hash({"preparedRunInput": loaded["prepared_ref"], "skillInputContract": loaded["contract_ref"]})
+    entry = start_or_resume_target_run(REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash)
+    inspection = inspect_persisted_run((REPOSITORY_ROOT / entry["runDirectory"]).resolve(), run_input.get("actions", []), run_input_hash, contract_hash, knowledge_hash)
+    state = inspection.get("state")
+    if state == "complete":
+        route, status = "deterministic_only", "completed"
+    elif state in {"waiting", "ready", "blocked"}:
+        route, status = "waiting_for_persisted_action", "waiting"
+    else:
+        route, status = "semantic_review_required", "semantic_handoff_required"
+    result = {"schemaVersion": "acceptance-coordinator-result.v3", "runId": entry["runId"], "runDirectory": entry["runDirectory"], "runInputHash": run_input_hash, "requestAuthority": "none", "route": route, "status": status, "persistedActionState": inspection, "bootstrapInvoked": False, "authorizes": []}
     output = Path(output_path)
     if output.exists():
         existing = _read_json(str(output))
         if existing != result:
             raise InputError("coordinator replay binding does not match existing result")
-        result["telemetry"]["replayed"] = True
-        if existing.get("telemetry", {}).get("replayed") is False:
-            existing["telemetry"]["replayed"] = True
         return existing
     return _publish_new_json(str(output), result)
 

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The recovery plan defines R0 through R5 controls for request validation, successor reservation, authorization binding, legacy reuse, refresh, and completion handoff. It requires hash-bound inputs, persisted evidence, fail-closed retries, immutable historical evidence, and rejection of tampered or incomplete chains.",
+      "title": "Acceptance Requirements"
+    },
+    {
+      "content": "Migration tooling materializes fixed RED tests only for R0-R2 and rejects conflicting content. The validator builds deterministic slice snapshots from contract, registry, terminal, authority manifest, candidate files, and repair closure identities.",
+      "title": "Migration And Validation Tools"
+    },
+    {
+      "content": "The terminal validator derives a declared candidate-source manifest, rejects generated, escaped, missing, or colliding paths, validates required receipts and commands, and publishes completion state only after all slices pass. Tests confirm candidate roots are content-sensitive and generated handoff artifacts are excluded.",
+      "title": "Terminal And Handoff Coverage"
+    }
+  ],
+  "source_manifest_hash": "sha256:ec3d78c6107cb7373bc9f179b021a779d7064342bd5b90802b7920464c0eaa41",
+  "truncated": false
+}

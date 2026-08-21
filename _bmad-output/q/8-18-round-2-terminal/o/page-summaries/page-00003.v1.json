@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+    "source_sha256": "sha256:b4e11f57e90a5c83469e1cae234e8ee5572a9072c4a6ed0834cb5bce6490cf94",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 23230,
+    "start_line": 1,
+    "end_line": 461,
+    "content_sha256": "sha256:b4e11f57e90a5c83469e1cae234e8ee5572a9072c4a6ed0834cb5bce6490cf94"
+  },
+  "status": "accepted",
+  "summary": "Terminal validator and receipt publisher; plan acceptance-coordinator-trust-recovery; full validation covers slices R0-R5 and registered commands; slice mode validates one slice; enforces authority, authorization, knowledge, skill-input, terminal-receipt, resume-state, and binding checks; requires confined paths and matching SHA-256 hashes; candidate manifest contains 8 declared sources and excludes generated paths; passed full runs publish immutable completion receipt and transition resume/plan state; failures return nonzero; unknown slices or missing directories fail; receipt lookup falls back to newest matching JSON when resume pointer is unavailable"
+}

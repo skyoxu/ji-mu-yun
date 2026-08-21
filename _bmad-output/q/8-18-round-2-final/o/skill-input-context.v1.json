@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The plan preserves lifecycle ownership and requires hash-bound, fail-closed evidence across coordinator recovery, authorization freshness, legacy handling, dogfood, and completion handoff. Published or LKG replay may tolerate same-selection catalog drift, while authority, selection, resource, and semantic drift block progress.",
+      "title": "Recovery requirements"
+    },
+    {
+      "content": "The migration bridge materializes fixed RED tests only for R0 through R2 and writes declared test files only. The plan-local validator maps R0 through R4 to source tests, derives canonical validator and candidate identities, validates slice selection, and emits snapshot fields.",
+      "title": "Migration and validation"
+    },
+    {
+      "content": "The terminal validator executes registered repo-bound commands, validates contracts, manifests, receipts, authority, knowledge, freeze, and skill-input bindings, then publishes a non-authorizing implementation receipt on full success. Candidate source manifests exclude generated evidence and bind source content identity; integrity tests verify stable roots and source-change detection.",
+      "title": "Terminal completion"
+    }
+  ],
+  "source_manifest_hash": "sha256:45ed90a7565d1c879ca77d7d23156e88ce451b3e4f5a280d3b44dd7daeed91ff",
+  "truncated": false
+}

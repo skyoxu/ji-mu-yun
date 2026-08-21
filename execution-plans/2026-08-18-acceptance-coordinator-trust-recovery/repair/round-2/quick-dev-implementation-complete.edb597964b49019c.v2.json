@@ -1,0 +1,37 @@
+{
+  "authorizes": [
+    "acceptance-handoff"
+  ],
+  "candidate_source_manifest": {
+    "candidate_source_root": "sha256:edb597964b49019c489203362d9f79c0d9c8d528eba1fea0cdd42492e580434d",
+    "path": "repair/round-2/candidate-source-manifest.edb597964b49019c.v1.json",
+    "sha256": "sha256:c6457b4ac401bfa0a80aad6086b671f54107b60498aa8eeb8c77678ce97305cb"
+  },
+  "command_registry": {
+    "path": "command-registry.v1.json",
+    "sha256": "sha256:0bfc0a76e616ed2a3b1507a16a2d2005b1fbc324ede6351ac7b121afd35fe22b"
+  },
+  "implementation_contract": {
+    "path": "implementation-contract.v1.json",
+    "sha256": "sha256:b8603c1ab17c0a63c6852336050cb82d31bdd2f9679a5dd510b61e154b728117"
+  },
+  "plan_id": "acceptance-coordinator-trust-recovery",
+  "predicate": "implementation-complete",
+  "repair_round": 2,
+  "schema_version": "quick-dev-implementation-complete.v2",
+  "status": "pass",
+  "terminal_result": {
+    "path": "terminal-results/terminal-full.json",
+    "sha256": "sha256:2022d680a41e6d8399151b913570624c719e7c60668a05075f85b4c9716cd287"
+  },
+  "validated_command_ids": [
+    "r0-green",
+    "r1-green",
+    "r2-green",
+    "r3-green",
+    "r4-green",
+    "r5-green",
+    "quick-dev-suite",
+    "acceptance-suite"
+  ]
+}

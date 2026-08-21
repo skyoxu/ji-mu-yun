@@ -1,22 +1,31 @@
 {
-  "schema_version": "jimuyun.vdd-plan-resume-state.v1",
-  "plan_id": "acceptance-coordinator-trust-recovery",
-  "status": "implementation-complete",
-  "next_action": "acceptance-handoff",
-  "current_slice": null,
-  "slice_status": {
-    "R0": "slice-ready",
-    "R1": "slice-ready",
-    "R2": "slice-ready",
-    "R3": "slice-ready",
-    "R4": "slice-ready"
-  },
-  "repair_round": "repair/round-1",
   "authorizes": [],
+  "current_slice": null,
   "does_not_authorize": [
     "acceptance-passed",
     "knowledge-publication",
     "bootstrap-review"
   ],
-  "implementation_receipt": "repair/round-1/quick-dev-implementation-complete.v1.json"
+  "implementation_receipt": {
+    "candidate_source_root": "sha256:2c729d35bddb4b4a31825a8ff3e5816459c303cd878d808915568073031589c9",
+    "path": "repair/round-2/quick-dev-implementation-complete.2c729d35bddb4b4a.v2.json",
+    "sha256": "sha256:4ba69d03ac8830eaab636102989b49683d7e8fe123d9b5b83f2fdb55a9c9b735"
+  },
+  "next_action": "acceptance-handoff",
+  "plan_id": "acceptance-coordinator-trust-recovery",
+  "repair_round": "repair/round-2",
+  "schema_version": "jimuyun.vdd-plan-resume-state.v1",
+  "skill_input_receipt": {
+    "path": "_bmad-output/q/8-18-round-2-final2/receipt.json",
+    "sha256": "sha256:2c2201abd224a374cfa6c9a4f177bf4dfebc8c2d714536978a099920fe4917a6"
+  },
+  "slice_status": {
+    "R0": "slice-ready",
+    "R1": "slice-ready",
+    "R2": "slice-ready",
+    "R3": "slice-ready",
+    "R4": "slice-ready",
+    "R5": "slice-ready"
+  },
+  "status": "implementation-complete"
 }

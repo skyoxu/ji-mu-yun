@@ -1,0 +1,22 @@
+{
+  "authorizes": [],
+  "context_artifact_hash": "sha256:b90466b64648cc61633da92da64e06dd95bcbd7755c717c72b763baaf2692135",
+  "execution_identity": "sha256:283f3b3f44b2128ad27aacf7196f9115a86a07689f2b4587fc92b1dc46587adb",
+  "producer_role": "semantic-child",
+  "rationale": "Frozen inputs were reviewed.",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "redaction_status": "complete",
+  "schema_version": "skill-semantic-decision.v1",
+  "source_manifest_hash": "sha256:90574d9c38fe86c46b6a8e7ec39486f525e4f37284bd16418a36dc9d2153526f",
+  "source_statuses": {
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/migration_bridge.py": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py": "accepted",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py": "accepted"
+  },
+  "status": "accepted",
+  "snapshot_read_coverage": {
+    "path": "snapshot-read-coverage.v1.json",
+    "sha256": "sha256:8ff0b5b273088f8b7d0b84b38299fc16f7dd09f90ef56df700921d0304318207"
+  }
+}

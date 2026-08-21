@@ -1,0 +1,7 @@
+{
+  "status": "complete",
+  "context_artifact": "C:/jimuyun/execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input/round-2-ready/o/skill-input-context.v1.json",
+  "semantic_decision": "C:/jimuyun/execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input/round-2-ready/o/semantic-decision.v1.json",
+  "source_manifest_hash": "sha256:2df2efadce27dc1b6d27f41fe8d2ea3ae2ba4b342c78641585cc4c9337f25177",
+  "snapshot_read_coverage": "C:/jimuyun/execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input/round-2-ready/o/snapshot-read-coverage.v1.json"
+}

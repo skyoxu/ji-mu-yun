@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+    "source_sha256": "sha256:99bd54a70ec8b9abf12d9c897e8b35f1ad6de1a287cda17ed7de527ae2b7d906",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 22799,
+    "start_line": 1,
+    "end_line": 457,
+    "content_sha256": "sha256:99bd54a70ec8b9abf12d9c897e8b35f1ad6de1a287cda17ed7de527ae2b7d906"
+  },
+  "status": "accepted",
+  "summary": "terminal_full.py is Quick Dev terminal validator and receipt publisher; computes sha256 descriptors for contracts, registry, receipts, manifests; canonical pass publishes repair/round-2 candidate source manifest and implementation-complete receipt; candidate manifest is restricted to declared non-generated source entries R0-R5 and rejects escapes/missing/invalid entries; registered commands execute from command-registry with repo-bound cwd only; slice map R0-R5 selects specific pytest files and green command IDs; full run validates all slice commands plus quick-dev-suite and acceptance-suite; required final bindings include implementation contract, command registry, authority manifest, knowledge context, freeze, and skill-input receipt; skill-input receipt can be found via resume pointer or latest schema match and must be ready, non-authorizing, target-bound, contract-validated; maintainer authorization receipt required and checked for plan, transition, paths, hashes, and v2 registry/contract hashes; full run requires per-slice terminal receipts to be slice-ready/non-authorizing and resume-state bound/non-authorizing; knowledge context allows catalog_stale but other preflight/catalog failures require review; authority state must be implementation-authorized with authorization or implementation-complete with completion authorizer; freeze context hash must match live context; CLI requires repository-root and plan-dir, optional out and slice; result schema is terminal-result v1 with non-authorizing lifecycle_transition none; full pass mutates resume-state to implementation-complete and acceptance-handoff and records implementation receipt; failure output accumulates stable failure codes and exits nonzero"
+}

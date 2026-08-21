@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The recovery plan defines R0 through R5 trust and handoff requirements. Requests, successor identity, authorization refresh, legacy RED compatibility, historical replay, and completion handoff must be hash-bound, replay-safe, and fail closed on required source drift or invalid state.",
+      "title": "Requirements"
+    },
+    {
+      "content": "terminal_full validates Quick Dev terminal state by slice or full suite. It produces non-authorizing terminal receipts, validates fixed candidate-source manifests and required bindings, and emits an immutable completion receipt only when the full success predicate passes.",
+      "title": "Terminal Validation"
+    },
+    {
+      "content": "migration_bridge materializes declared RED test templates without overwriting differing files. validate_all provides R0 through R4 slice validation and hash binding. Completion-handoff tests verify stable content-based candidate roots and exclude generated evidence paths.",
+      "title": "Supporting Tools"
+    }
+  ],
+  "source_manifest_hash": "sha256:3a8f332590ddfe6e15b23b9b284996f701abb026abfa359d10fdb9a66a6a8244",
+  "truncated": false
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": "skill-input-read-coverage.v1",
+  "source_manifest_hash": "sha256:d09176c2df6377b35c9309997f7e698b1b421a9fd67a38eff6969cedfe73f41a",
+  "input_mode": "paged-frozen-snapshot-stdin",
+  "chunk_bytes": 32768,
+  "segments": [
+    {
+      "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+      "source_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 9569,
+      "start_line": 1,
+      "end_line": 176,
+      "content_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae"
+    },
+    {
+      "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/migration_bridge.py",
+      "source_sha256": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 5074,
+      "start_line": 1,
+      "end_line": 149,
+      "content_sha256": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259"
+    },
+    {
+      "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+      "source_sha256": "sha256:4cb25fd261992b8b086a0dc5e75e5312d998746160cdbc26df86844128f5f88c",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 23389,
+      "start_line": 1,
+      "end_line": 462,
+      "content_sha256": "sha256:4cb25fd261992b8b086a0dc5e75e5312d998746160cdbc26df86844128f5f88c"
+    },
+    {
+      "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/tests/test_completion_handoff_integrity.py",
+      "source_sha256": "sha256:6305a55044a3e69f2c25c100644f6744da17f9626bfbfcbdbc67d68e56eb2517",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 1600,
+      "start_line": 1,
+      "end_line": 34,
+      "content_sha256": "sha256:6305a55044a3e69f2c25c100644f6744da17f9626bfbfcbdbc67d68e56eb2517"
+    },
+    {
+      "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py",
+      "source_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 2926,
+      "start_line": 1,
+      "end_line": 60,
+      "content_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7"
+    }
+  ]
+}

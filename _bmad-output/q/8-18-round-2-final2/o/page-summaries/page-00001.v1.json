@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+    "source_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9569,
+    "start_line": 1,
+    "end_line": 176,
+    "content_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae"
+  },
+  "status": "accepted",
+  "summary": "plan=2026-08-18-acceptance-coordinator-trust-recovery; baseline=3c285bcc; plan_commit=868328c8; profile=self-hosted; historical_8-17 immutable/no writes; lifecycle: Maintainer=implementation-authorized, QuickDev=implementation-complete, Acceptance=acceptance-passed; bootstrap never automatic; R0 accept only request.v3 with target+hash-bound prepared input; derive runs via start_or_resume_target_run and persisted DAG/registry/route evidence; reject request-local assertions and v2 current publication; R1 reserve successor identity pre-materialization; reuse only byte-identical lineage/bindings; retries resume-or-fail-closed/no overwrite; R2 base auth binds contract/authority/Knowledge selection/successors/Skill input; validated refresh only unchanged eligible selection; semantics or authority changes require reauth; freshness permits verified published/LKG frozen-selection replay for non-authority byte drift; failed/tampered/non-ancestor LKG and required-source failures block; Knowledge self-change plus failed query gate requires semantic review; validator-produced successor receipt binds full chain and recomputed no-publication/no-authorizations; R3 legacy RED reusable only exact selector/test/fingerprint/failure-ID match; R4 regenerate current bindings/new auth then read-only dogfood historical evidence to fresh terminal; R5 completion binds explicit candidate source manifest, terminal result, resume receipt; exclude Git/lifecycle/generated evidence/logs/timestamps; reject tampering and preserve append-only retry identity"
+}

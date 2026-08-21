@@ -1,16 +1,16 @@
 {
   "authorizes": [],
   "binding_hashes": {
-    "authority-manifest.v1.json": "sha256:136a1d20efd2dafc6da1d1ba9d58d472545a83c3f55c589d90051b01c5002014",
-    "command-registry.v1.json": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
-    "implementation-contract.v1.json": "sha256:0140bb0cd5db1e5fb783a941544209a5728fff759aba60f25b0b5c23f3665f37",
-    "knowledge-context.freeze.v1.json": "sha256:334ce5bf42cbbbda46945f726d28488019f6e1d78de80ddf14143d7829bf1cac",
-    "knowledge-context.v1.json": "sha256:6beb74c4f211872e408ff017ab91cac6bc7d6756f10cf6a98491c37c3cbd2d53",
-    "skill-input/current17/receipt.json": "sha256:519f74172b8b6c602c022ad7f6a9396ae40ee0191dca6663b5195ab741cb20c1"
+    "_bmad-output/q/8-18-round-2-final2/receipt.json": "sha256:2c2201abd224a374cfa6c9a4f177bf4dfebc8c2d714536978a099920fe4917a6",
+    "authority-manifest.v1.json": "sha256:90a7c17f873834c25fb6f49e24f0a21860ff6c0178d53bc99d14e60f41f87a77",
+    "command-registry.v1.json": "sha256:0bfc0a76e616ed2a3b1507a16a2d2005b1fbc324ede6351ac7b121afd35fe22b",
+    "implementation-contract.v1.json": "sha256:b8603c1ab17c0a63c6852336050cb82d31bdd2f9679a5dd510b61e154b728117",
+    "knowledge-context.freeze.v1.json": "sha256:ddcb6527685a65e7db7df63bedc4d18a7f38fabe73c761edf913139def1ea471",
+    "knowledge-context.v1.json": "sha256:d5dda13e21f4c91011d821ccd040ecb5d0127b95db3f9b54cdfa87c2b73ec35e"
   },
-  "candidate_binding_hash": "sha256:f6d8a2c9f59f3e7818ce23b5fd55eba87a6bccf35d1857744496d591f07aaddf",
-  "command_registry_hash": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
-  "contract_hash": "sha256:0140bb0cd5db1e5fb783a941544209a5728fff759aba60f25b0b5c23f3665f37",
+  "candidate_binding_hash": "sha256:2c729d35bddb4b4a31825a8ff3e5816459c303cd878d808915568073031589c9",
+  "command_registry_hash": "sha256:0bfc0a76e616ed2a3b1507a16a2d2005b1fbc324ede6351ac7b121afd35fe22b",
+  "contract_hash": "sha256:b8603c1ab17c0a63c6852336050cb82d31bdd2f9679a5dd510b61e154b728117",
   "failures": [],
   "lifecycle_transition": "none",
   "plan_id": "acceptance-coordinator-trust-recovery",
@@ -24,6 +24,7 @@
     "r2-green",
     "r3-green",
     "r4-green",
+    "r5-green",
     "quick-dev-suite",
     "acceptance-suite"
   ],
@@ -33,6 +34,7 @@
     ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_authorization_refresh_chain.py",
     ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py",
     ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
-    ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py"
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/tests/test_completion_handoff_integrity.py"
   ]
 }

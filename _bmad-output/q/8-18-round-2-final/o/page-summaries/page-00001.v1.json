@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+    "source_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9569,
+    "start_line": 1,
+    "end_line": 176,
+    "content_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae"
+  },
+  "status": "accepted",
+  "summary": "Plan: Acceptance Coordinator Trust Recovery; baseline=3c285bcc; plan-creation=868328c8; profile=self-hosted; preserve lifecycle ownership Maintainer=implementation-authorized, Quick Dev=implementation-complete, Acceptance=acceptance-passed; no auto Bootstrap, Knowledge publication, Phase runtime, release/archive, or multi-maintainer signing; R0=v3 hash-bound request and persisted binding-derived run/DAG/registry/route evidence only, v2 historical-only; R1=reserved byte-identical reentrant Quick Dev successors with recoverable GREEN/prior-RED transition; R2=base authorization binds contract/manifest/Knowledge selection/successors/Skill inputs, refresh only unchanged eligible selection and full-chain validation; ACR-R2-FRESHNESS=verified published/LKG frozen-selection replay may continue degraded on same-selection catalog/source drift, authority/selection/resource/semantics drift blocks; ADR decision superseding ADR-0057 stale-stop required before plan-ready while retaining ADR-0050 gates; no degraded exception for Knowledge-system self-change; validator-produced successor receipt binds full predecessor/successor/LKG/readset/command chain and recomputed no-publication fields; R3=legacy prior-RED usable only on exact selector/test/fingerprint/failure-ID match; R4=read-only 8-17 dogfood with fresh current bindings/auth and no writes there; R5=completion binds explicit candidate source manifest, terminal result, current receipt pointer; source manifest excludes HEAD/lifecycle/generated evidence/logs/timestamps; all tamper/stale/conflict paths fail closed; ambiguity: Accepted architecture decision prerequisite not yet identified."
+}

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The recovery plan defines R0 through R5 validation, hash-bound evidence, immutable receipt reuse, fail-closed recovery, and preservation of lifecycle ownership.",
+      "title": "Acceptance requirements"
+    },
+    {
+      "content": "The terminal validator checks registered slices, bindings, confined paths, candidate manifests, receipts, resume state, and full-run publication behavior.",
+      "title": "Validation tooling"
+    },
+    {
+      "content": "Migration tooling materializes declared RED tests without overwriting divergent files. Supporting tests verify stable candidate roots and exclusion of generated evidence. Validator identities bind selected sources and contract inputs.",
+      "title": "Tests and identities"
+    }
+  ],
+  "source_manifest_hash": "sha256:a383f2541fac2447920aa135b89534f5eb967833ab39a2fea0580156fb863f3a",
+  "truncated": false
+}

@@ -1,0 +1,43 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:6beb74c4f211872e408ff017ab91cac6bc7d6756f10cf6a98491c37c3cbd2d53",
+  "canonical_context_sha256": "sha256:aace82cbddb04ffacce98639ef8e724b4fe8ef3725311b20e94ab102f9725910",
+  "request_sha256": "sha256:40b76009fa552cee63e3dd061dc59417b8d084d7a60da310bee5ed7d079c1872",
+  "result_sha256": "sha256:6164ea3a433de9d094f35815f5b5459de15c8ed1e59cfe30cf96139670d3f4ed",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
+  },
+  "source_snapshot_id": "sha256:73439257113cd841332d7289e45f8bf3297be2c38652ecf4b97ed074f6f0e740",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "source_sha256": "87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+      "satisfies": [
+        "governance.refactor-implementation-acceptance"
+      ]
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "source_sha256": "3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "satisfies": [
+        "governance.vdd-execution-plan"
+      ]
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+      "satisfies": [
+        "governance.quick-dev-tdd-adapter"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:acfcddcb10b51a8f92eb5fd0748c3a44dfb1e36be063cc0e5980114b24d6eef1",
+    "freeze_receipt_path": "knowledge-context.freeze.history/acfcddcb10b51a8f92eb5fd0748c3a44dfb1e36be063cc0e5980114b24d6eef1.v1.json",
+    "reason": "quick-dev-controlled-source-refresh"
+  }
+}

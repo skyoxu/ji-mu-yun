@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py",
+    "source_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2926,
+    "start_line": 1,
+    "end_line": 60,
+    "content_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7"
+  },
+  "status": "accepted",
+  "summary": "validator v1; PLAN=parent directory; identities derive from implementation-contract and command-registry; supports R0-R4 only; unknown slice rejected; validator_hash binds plan_id/slice/registry/terminal; candidate_hash binds configured source bytes plus relative paths; R0/R4 source acceptance_cli; R1 loop_plan_directory; R2 two knowledge_context sources; R3 route_plan_directory; snapshot candidate_hash is contract-file hash; predicate root and authority/validator paths fixed; closure hash derives repair/round-1/repair-closure.json; slice snapshot merges base and candidate identity"
+}
