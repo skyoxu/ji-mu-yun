@@ -1,0 +1,43 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:f769d6f17c4427f9ad29f011a54a0f25884b6a53d4f79df75cda0f79ee7ab87a",
+  "canonical_context_sha256": "sha256:ef175b70754c29b725104a8d7d015c05e8eb825edffd8479bcf38fc7e048017f",
+  "request_sha256": "sha256:324f8633672b5b9a5492d618d98a174447428581edea8bec4aaae7eb6cd1f3ff",
+  "result_sha256": "sha256:c6682c354a4d7340e612b56767fcd18ef2a4ec1a9b4a2e6423423abd9d742079",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
+  },
+  "source_snapshot_id": "sha256:73439257113cd841332d7289e45f8bf3297be2c38652ecf4b97ed074f6f0e740",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "source_sha256": "87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+      "satisfies": [
+        "governance.refactor-implementation-acceptance"
+      ]
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "source_sha256": "3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "satisfies": [
+        "governance.vdd-execution-plan"
+      ]
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+      "satisfies": [
+        "governance.quick-dev-tdd-adapter"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:8106ecec94cb3d7a5e5476965ddc26d454fc5d5eda76cabb22735d4787a5993a",
+    "freeze_receipt_path": "knowledge-context.freeze.history/8106ecec94cb3d7a5e5476965ddc26d454fc5d5eda76cabb22735d4787a5993a.v1.json",
+    "reason": "quick-dev-controlled-source-refresh"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/migration_bridge.py",
+    "source_sha256": "sha256:6a73fde11a92372c8ccc45cb89964b7c5b856afcce8ebf965d4ef1de07beaa4e",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 4208,
+    "start_line": 1,
+    "end_line": 121,
+    "content_sha256": "sha256:6a73fde11a92372c8ccc45cb89964b7c5b856afcce8ebf965d4ef1de07beaa4e"
+  },
+  "status": "accepted",
+  "summary": "file migration_bridge.py; purpose materialize declared Quick Dev RED tests before invocation prep; Python argparse tool; constants R0_TEST/R1_TEST/R2_TEST define pytest templates; TEMPLATES maps slice IDs R0/R1/R2 to repo-relative test paths; CLI requires --repository-root, --plan-dir, --slice-id, one+ --snapshot-path; --plan-dir and --snapshot-path parsed but unused; requires --materialize-only and known slice else exits; target path resolved under repository root; creates parent dirs; if existing target differs from template exits conflict; writes template with UTF-8 LF; outputs JSON test_path and empty authorizes; R0 test loads acceptance_cli.py and expects run_coordinator accepts schemaVersion acceptance-coordinator-request.v3 before failing on coordinator bundle; R1 test loads loop_plan_directory.py and expects reserve_successor_run idempotently reuses identical lineage and writes successor-lineage.v1.json; R2 test loads knowledge_context.py and expects refresh_context_read_set exists; ambiguity: no validation of snapshot_path content or plan_dir despite args."
+}

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Acceptance and Quick Dev trust recovery preserves lifecycle boundaries, requires prepared hash-bound requests, derives runs through start-or-resume behavior, and rejects unbound historical evidence.",
+      "title": "Scope"
+    },
+    {
+      "content": "Migration materializes declared R0-R2 tests. Terminal validation covers R0-R4, allowlisted commands, plan state, knowledge context, receipts, artifact bindings, candidate hashes, and structured failure reporting.",
+      "title": "Validation"
+    },
+    {
+      "content": "Successor identity and lineage must be reserved before materialization, retries must resume or fail closed, freshness and source drift are gated, legacy RED reuse is exact-match only, and historical dogfood remains read-only.",
+      "title": "Requirements"
+    }
+  ],
+  "source_manifest_hash": "sha256:c63d93f0af4d781af4809c77740e5ea976a0695daa7446bb8f11ceb1571dd506",
+  "truncated": false
+}

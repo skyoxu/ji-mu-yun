@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py",
+    "source_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2926,
+    "start_line": 1,
+    "end_line": 60,
+    "content_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7"
+  },
+  "status": "accepted",
+  "summary": "file validate_all.py; purpose exposes plan-local validator identity for Quick Dev; PLAN is parent of tools dir; candidate source map per slice R0 acceptance_cli.py, R1 loop_plan_directory.py, R2 knowledge_context.py in quick-dev and acceptance paths, R3 route_plan_directory.py, R4 acceptance_cli.py; _identity loads implementation-contract.v1.json and command-registry.v1.json; optional slice_id selects matching contract slice or raises unknown slice; validator_hash hashes canonical JSON payload plan_id,slice,registry,terminal; current_candidate_identity requires defined slice source list, hashes relative path plus source bytes into candidate_hash; validation_snapshot returns whole-plan validator identity plus candidate_hash of implementation contract bytes, predicate_input_root, authority_root, validator_root, validator_version acceptance-coordinator-trust-recovery-validator.v1, closure_definition_hash from repair/round-1/repair-closure.json; slice_validation_snapshot merges validation_snapshot with current_candidate_identity; constraints include SHA256 identities, UTF-8 reads, canonical JSON separators/sort_keys; ambiguity R0 and R4 share same candidate source"
+}

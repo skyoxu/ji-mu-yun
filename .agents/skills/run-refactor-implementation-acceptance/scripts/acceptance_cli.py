@@ -1026,7 +1026,7 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
         raise InputError("coordinator request is invalid")
     binding, bundle, evidence_ref = request["candidateBindingHash"], request["bundle"], request["evidence"]
     if (
-        request["schemaVersion"] != "acceptance-coordinator-request.v2"
+        request["schemaVersion"] != "acceptance-coordinator-request.v3"
         or not isinstance(binding, str) or not __import__("re").fullmatch(r"sha256:[a-f0-9]{64}", binding)
         or not isinstance(bundle, dict)
         or request["authorizes"] != []

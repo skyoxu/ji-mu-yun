@@ -164,7 +164,14 @@ def _skill_input_validation_failures(root: Path, plan: Path) -> list[str]:
     receipt = _find_skill_input_receipt(plan)
     if receipt is None:
         return ["skill-input-receipt-not-found"]
-    contract = receipt.parent / "contract.json"
+    try:
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ["skill-input-receipt-invalid-json"]
+    contracts = {
+        "quick-dev-tdd-adapter": root / ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json",
+    }
+    contract = contracts.get(payload.get("consumer"), receipt.parent / "contract.json")
     validator = root / "scripts/python/validate_skill_input_consumption.py"
     if not contract.is_file() or not validator.is_file():
         return ["skill-input-validator-or-contract-not-found"]

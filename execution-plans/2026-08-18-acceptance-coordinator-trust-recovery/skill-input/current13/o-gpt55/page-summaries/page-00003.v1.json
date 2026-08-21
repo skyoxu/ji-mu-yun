@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+    "source_sha256": "sha256:1fe2c168d827446b5b6e2ec63847be40f0901f59f386bb8aa4bf680a185f76ad",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 15434,
+    "start_line": 1,
+    "end_line": 368,
+    "content_sha256": "sha256:1fe2c168d827446b5b6e2ec63847be40f0901f59f386bb8aa4bf680a185f76ad"
+  },
+  "status": "accepted",
+  "summary": "file terminal_full.py; CLI requires --repository-root and --plan-dir, optional --out and --slice; emits quick-dev-tdd-adapter.terminal-result.v1 JSON; plan_id read from implementation-contract.v1.json; slice IDs R0-R4 map to fixed pytest selectors and command ids r*-green; full run validates all slices plus quick-dev-suite and acceptance-suite; generated paths excluded from candidate binding include logs, skill/semantic/knowledge inputs, terminal-results, attempts, pages, sidecars, histories, state/closure/composition files; candidate_binding hashes HEAD, binary diff, and non-generated untracked file hashes; authority requires plan-state status implementation-authorized and authorizes contains implementation-authorized; maintainer authorization receipt required and bound to plan_id acceptance-coordinator-trust-recovery, transition implementation-authorized, contract/manifest/freeze paths and hashes; knowledge freeze context_sha256 must match knowledge-context.v1.json; knowledge preflight accepts catalog_stale as degraded case, other failures require review; source_refresh required when catalog_failure_code is catalog_stale; full run requires terminal-results/R*.json receipts predicate slice-ready and non-authorizing plus resume-state bound to plan and non-authorizing; skill input receipt discovered by schema skill-input-consumption.v1 newest mtime, must be ready, non-authorizing, target plan path, and pass validator with sibling contract.json; final bindings require implementation-contract, command-registry, authority-manifest, knowledge-context, knowledge-freeze, and skill-input receipt hashes; registered commands execute only if id exists, executable/argv valid strings, cwd resolves under repository root; result authorizes empty and lifecycle_transition none; pass iff no failures; returns process 0 on pass else 1; ambiguity: contract and registry are read without missing/JSON guards in main"
+}

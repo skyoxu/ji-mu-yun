@@ -53,7 +53,7 @@ def _request(tmp_path: Path, *, semantic: bool = False) -> tuple[Path, Path, dic
         "authorizes": [],
     })
     request = {
-        "schemaVersion": "acceptance-coordinator-request.v2",
+        "schemaVersion": "acceptance-coordinator-request.v3",
         "candidateBindingHash": binding,
         "bundle": bundle,
         "evidence": evidence,

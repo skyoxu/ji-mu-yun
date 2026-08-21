@@ -1,20 +1,15 @@
 {
   "authorizes": [],
   "binding_hashes": {},
-  "candidate_binding_hash": "sha256:37a9f62bf7d623c40ddb27785ab058cf8ecb56132d8c833be28e318b03b81d37",
+  "candidate_binding_hash": "sha256:5422e3643b9add9434e31072163aab9f898c8a02e59f5c991d614b8776106cfd",
   "command_registry_hash": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
-  "contract_hash": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b",
-  "failures": [
-    "maintainer-implementation-authorization-required",
-    "implementation-authorization-not-published",
-    "maintainer-authorization-receipt-required",
-    "command:r0-green"
-  ],
+  "contract_hash": "sha256:0140bb0cd5db1e5fb783a941544209a5728fff759aba60f25b0b5c23f3665f37",
+  "failures": [],
   "lifecycle_transition": "none",
   "plan_id": "acceptance-coordinator-trust-recovery",
   "predicate": "slice-ready",
   "schema_version": "quick-dev-tdd-adapter.terminal-result.v1",
-  "status": "fail",
+  "status": "pass",
   "terminal_command_id": "r0-terminal",
   "validated_command_ids": [
     "r0-green"

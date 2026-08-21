@@ -8,7 +8,7 @@
   },
   "implementation_contract": {
     "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json",
-    "sha256": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b"
+    "sha256": "sha256:0140bb0cd5db1e5fb783a941544209a5728fff759aba60f25b0b5c23f3665f37"
   },
   "authority_manifest": {
     "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/authority-manifest.v1.json",
@@ -16,7 +16,7 @@
   },
   "knowledge_context_freeze": {
     "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/knowledge-context.freeze.v1.json",
-    "sha256": "sha256:02986a9a43c861731f6c62f4d2f163045ab80ed57a164b9ca97c4c6740a49a74"
+    "sha256": "sha256:17f55d580bb628302ca70c57d602ca82d0d5ed1a0bb7b2cc88c360f1c5c75894"
   },
   "repair_closure": {
     "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/repair-closure.json",

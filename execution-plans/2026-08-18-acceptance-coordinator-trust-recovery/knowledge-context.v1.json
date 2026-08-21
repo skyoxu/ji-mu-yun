@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z",
+    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z-successor-20260821T073105Z-successor-20260821T080606Z-successor-20260821T081625Z-successor-20260821T081857Z-successor-20260821T082003Z-successor-20260821T082135Z-successor-20260821T093928Z",
     "consumer": "vdd",
     "query": "acceptance coordinator trust recovery persisted run successor knowledge authorization workflow repair",
     "snapshot": {
@@ -53,7 +53,7 @@
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
             "role": "cli",
-            "source_sha256": "a43c5ddfb49238c204d85494060d134cee4c9ca56cce2c965a7e3f0f95f99879"
+            "source_sha256": "efb2647ea6df9eb47512b8d074721efe109dba50e87e6b4a9b01f35fbc4082bd"
           },
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
@@ -68,7 +68,7 @@
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
             "role": "knowledge-validator",
-            "source_sha256": "94dc1c7e7cb7a8f7e530ba944fd6c11eba28bec8841eb034fc132f13332dd088"
+            "source_sha256": "b53bc52216ceb0310074bd7faa4b911659c856bb15063ecb26713402ee019074"
           },
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
@@ -703,12 +703,12 @@
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
             "role": "orchestrator",
-            "source_sha256": "b6d4247fc75970b1dc38f65f22ab1724f90d162921cedf1c90f481b82cfe9cfd"
+            "source_sha256": "7c3a2c673c0f6bc46a4bcb583eefdd4b6b20efe3517a814f0aa92cdab4356afc"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
             "role": "validator",
-            "source_sha256": "4c78416e5714839995198712ce52187470e744bee9d04938642e15b5f3e3ea35"
+            "source_sha256": "91095c5a9b4e5566178c6b530e45603d1441b0d63ab3133ee775f48eb42bc1af"
           }
         ],
         "relations": [
@@ -811,7 +811,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z",
+    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z-successor-20260821T073105Z-successor-20260821T080606Z-successor-20260821T081625Z-successor-20260821T081857Z-successor-20260821T082003Z-successor-20260821T082135Z-successor-20260821T093928Z",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "ref": "refs/heads/main",
@@ -953,12 +953,12 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:d5c8b4da52b8ae57c93a9d027b35351520802e087f4796eafb664c0beeb612c5",
-  "result_sha256": "sha256:942334e0a9b18611520c6f0b900ea2875aab476fc43d1070fa349baf48cbabc6",
+  "request_sha256": "sha256:59370ef256ef24ed390f11975448aaae1765528fa536fa83e4641512be8899ea",
+  "result_sha256": "sha256:0394c2934e26350f8ec5306da02fec96bc5b47c3da2c500b4b5c54251792f5db",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:e2313e40e3faa42ea6bd712ba1a740a74610036754217ecb5419893f0763c551"
+    "base_locator_result_sha256": "sha256:a8c5ba20bcca4cab1120fd08e076ee55fc4e8066afd062977351aa2f4d8f4050"
   },
   "preflight": {
     "status": "ready",
@@ -966,6 +966,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:77f0b8745a337754d6030d8f48f62cd7741746ca8d3baf174cb67c023aa42baa"
+    "context_sha256": "sha256:503c6c5824bead03021888305f3dd4fe08a6e5c28fda0d099774651447f92065"
   }
 }

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+    "source_sha256": "sha256:5983d22f9edeb01ab2aee78b51f2a25783e3dd578ec5e1e7ecb2ffadb06b637e",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 15779,
+    "start_line": 1,
+    "end_line": 375,
+    "content_sha256": "sha256:5983d22f9edeb01ab2aee78b51f2a25783e3dd578ec5e1e7ecb2ffadb06b637e"
+  },
+  "status": "accepted",
+  "summary": "terminal_full.py: CLI requires repository root and plan dir; validates R0-R4 or one slice; registered commands are allowlisted by registry id/executable/argv and repo-contained cwd; full requires terminal receipts and resume state; validates plan state, maintainer authorization binding, knowledge context/freeze, skill-input receipt/current contract; full binds required artifacts plus ready non-authorizing skill receipt; candidate hash covers HEAD, binary diff, relevant untracked content excluding generated paths; emits non-authorizing terminal result with hashes/selectors/failures; exit 0 only on no failures; ambiguities: contract/registry files are read before existence/JSON handling, so malformed/missing inputs raise rather than structured failure; receipt selection uses newest mtime."
+}

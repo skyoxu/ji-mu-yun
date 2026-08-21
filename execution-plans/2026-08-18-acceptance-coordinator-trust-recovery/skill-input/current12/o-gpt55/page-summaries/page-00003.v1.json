@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+    "source_sha256": "sha256:1fe2c168d827446b5b6e2ec63847be40f0901f59f386bb8aa4bf680a185f76ad",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 15434,
+    "start_line": 1,
+    "end_line": 368,
+    "content_sha256": "sha256:1fe2c168d827446b5b6e2ec63847be40f0901f59f386bb8aa4bf680a185f76ad"
+  },
+  "status": "accepted",
+  "summary": "terminal_full.py; Python CLI validates acceptance-coordinator-trust-recovery terminal/full or slice readiness; args required --repository-root --plan-dir, optional --out --slice; computes sha256: prefixes; uses git HEAD+binary diff+non-generated untracked content for candidate_binding_hash; generated exclusions include logs, skill/semantic/knowledge inputs, 95-* names, plan/resume/repair state, changed/root/sibling/composition outputs, terminal-results/attempts/pages/sidecars/history dirs; slice tests R0..R4 map to specific pytest selectors; no slice validates all slice green commands plus quick-dev-suite and acceptance-suite; command registry execution constrained to repo-relative cwd and string executable/argv else 127; authority requires plan-state status implementation-authorized and authorizes contains implementation-authorized; freeze context hash must match knowledge-context; maintainer authorization receipt required and must bind plan_id, transition implementation-authorized, and hashes/paths for implementation contract, authority manifest, freeze; knowledge preflight permits only catalog_stale without semantic review, catalog_stale catalog failure requires source_refresh; full mode requires non-authorizing terminal receipts for R0-R4 and resume-state with correct plan_id and no authorizes; skill input receipt is newest json with schema skill-input-consumption.v1, must validate via scripts/python/validate_skill_input_consumption.py using sibling contract.json and --require-ready; final full bindings require contract, registry, authority manifest, knowledge context, freeze, and ready non-authorizing skill-input receipt target matching plan path; result schema quick-dev-tdd-adapter.terminal-result.v1; predicate slice-ready or implementation-complete; terminal_command_id slice lower + -terminal or terminal-full; output includes hashes, selectors, command IDs, failures, binding_hashes, authorizes empty, lifecycle_transition none; writes --out if provided; exits 0 on pass else 1; ambiguity: contract/registry read before missing-file handling may raise instead of JSON fail if absent."
+}

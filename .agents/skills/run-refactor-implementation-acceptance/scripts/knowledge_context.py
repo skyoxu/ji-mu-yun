@@ -102,3 +102,4 @@ def freeze_knowledge_context(target_root: Path, raw_path: str) -> dict[str, Any]
         "acceptedDecisions": accepted,
         "authorizes": [],
     }
+

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The plan defines R0 through R4 recovery controls, hash-bound prepared inputs, fail-closed validation, successor identity reuse, refresh-chain checks, legacy replay constraints, and read-only historical dogfooding. ADR-0057 is required before readiness.",
+      "title": "Recovery requirements"
+    },
+    {
+      "content": "The migration bridge only materializes the R0 RED test. It rejects unsupported invocations and conflicting existing test content, then emits the test path with an empty authorizes array.",
+      "title": "Materialization bridge"
+    },
+    {
+      "content": "Terminal validation checks plan authority, binding hashes, required receipts, ready skill-input evidence, test selectors, and non-authorizing outputs. The companion identity utility derives contract, registry, candidate, and closure hashes.",
+      "title": "Terminal validation"
+    }
+  ],
+  "source_manifest_hash": "sha256:131c529cef14a575a1580b7ffe354de6a0a877cee9bb837eaa96a77a70375850",
+  "truncated": false
+}

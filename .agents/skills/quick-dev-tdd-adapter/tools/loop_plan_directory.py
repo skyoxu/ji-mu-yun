@@ -293,6 +293,34 @@ def _active_slice_run(root: Path, plan_id: str, slice_id: str) -> tuple[Path, st
     return None
 
 
+def reserve_successor_run(predecessor: Path, lineage: dict[str, object]) -> Path:
+    """Reserve one replayable successor before materializing any stage evidence.
+
+    The lineage bytes are the reservation identity.  Repeating the same request
+    returns the original reservation; a competing lineage cannot overwrite it.
+    """
+    if not predecessor.is_dir() or not isinstance(lineage, dict):
+        raise ValueError("successor reservation input is invalid")
+    if lineage.get("authorizes") != [] or not isinstance(lineage.get("predecessor_run"), str) or not lineage["predecessor_run"]:
+        raise ValueError("successor lineage is invalid")
+    successor = predecessor.parent / f"{predecessor.name}-SUCCESSOR"
+    lineage_path = successor / "successor-lineage.v1.json"
+    encoded = json.dumps(lineage, indent=2, sort_keys=True) + "\n"
+    if successor.exists():
+        if not successor.is_dir() or successor.is_symlink():
+            raise RuntimeError("successor reservation identity is invalid")
+        if not lineage_path.is_file() or lineage_path.read_text(encoding="utf-8") != encoded:
+            raise RuntimeError("successor reservation identity conflicts")
+        return successor
+    successor.mkdir(parents=True)
+    try:
+        with lineage_path.open("x", encoding="utf-8", newline="\n") as stream:
+            stream.write(encoded)
+    except FileExistsError as exc:
+        raise RuntimeError("successor reservation identity conflicts") from exc
+    return successor
+
+
 def _active_prior_red_handoff(run_dir: Path) -> dict[str, str] | None:
     path = run_dir / "prior-red-handoff.v2.json"
     try:

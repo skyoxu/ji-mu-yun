@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Trust-recovery plan targets Acceptance and Quick Dev at baseline 3c285bcc and plan commit 868328c8. Lifecycle state records implementation authorized, Quick Dev complete, and acceptance passed. The plan requires v3 hash-bound inputs, persisted DAG and registry projections only, fail-closed retry behavior, successor identity reservation before materialization, byte-identical lineage reuse only, one recoverable prior-RED to GREEN transition, full chain validation, freshness through an accepted ADR superseding ADR-0057 while preserving the ADR-0050 LKG gate, and read-only treatment of 2026-08-17 evidence.",
+      "title": "Requirements Summary"
+    },
+    {
+      "content": "migration_bridge.py materializes declared Quick Dev RED tests for R0 through R2 using fixed pytest templates and exits on unknown slices or conflicting existing files. terminal_full.py validates plan authority, knowledge freeze, skill input receipt, command registry entries, candidate bindings, and terminal receipts, then emits a non-authorizing terminal-result JSON for selected slices or the full suite. validate_all.py produces plan-local validator identities and slice candidate hashes using canonical JSON and SHA256 over declared source sets.",
+      "title": "Tooling Summary"
+    },
+    {
+      "content": "All four manifest sources were covered by one complete page each and accepted. Noted ambiguities include unused migration_bridge arguments for plan and snapshots, missing JSON or missing-file guards around contract and registry reads in terminal_full.py, and shared candidate source selection for R0 and R4 in validate_all.py.",
+      "title": "Coverage And Risks"
+    }
+  ],
+  "source_manifest_hash": "sha256:c4449ad3299f08d143b003edefd947de5e6614a0e7205a7ea35d92e957e8fc8b",
+  "truncated": false
+}

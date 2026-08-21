@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/migration_bridge.py",
+    "source_sha256": "sha256:0ea1cb61cfe9436f0d177b796f0c95709d8d337ac73edf9510e84a728fb1acd5",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2334,
+    "start_line": 1,
+    "end_line": 65,
+    "content_sha256": "sha256:0ea1cb61cfe9436f0d177b796f0c95709d8d337ac73edf9510e84a728fb1acd5"
+  },
+  "status": "accepted",
+  "summary": "migration_bridge.py; purpose materialize Quick Dev RED test before invocation prep; CLI requires --repository-root --plan-dir --slice-id --snapshot-path; only accepts --materialize-only with slice-id R0; otherwise exits; writes .agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py; rejects existing differing content; emitted JSON includes relative test_path and empty authorizes; RED test loads acceptance_cli.py and asserts v3 coordinator request reaches coordinator bundle validation before other failure; request uses schemaVersion acceptance-coordinator-request.v3 and placeholder candidateBindingHash"
+}

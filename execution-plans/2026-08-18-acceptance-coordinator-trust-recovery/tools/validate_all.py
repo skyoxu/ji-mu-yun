@@ -8,6 +8,17 @@ from pathlib import Path
 
 PLAN = Path(__file__).resolve().parents[1]
 
+_CANDIDATE_SOURCES = {
+    "R0": [".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py"],
+    "R1": [".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py"],
+    "R2": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+    ],
+    "R3": [".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"],
+    "R4": [".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py"],
+}
+
 
 def _identity(slice_id: str | None = None) -> dict[str, str]:
     contract = json.loads((PLAN / "implementation-contract.v1.json").read_text(encoding="utf-8"))
@@ -20,7 +31,17 @@ def _identity(slice_id: str | None = None) -> dict[str, str]:
 
 
 def current_candidate_identity(slice_id: str) -> dict[str, str]:
-    return _identity(slice_id)
+    identity = _identity(slice_id)
+    root = PLAN.parents[1]
+    sources = _CANDIDATE_SOURCES.get(slice_id)
+    if not sources:
+        raise ValueError("slice candidate sources are undefined")
+    digest = hashlib.sha256()
+    for relative in sources:
+        source = root / relative
+        digest.update(relative.encode("utf-8") + b"\0" + source.read_bytes())
+    identity["candidate_hash"] = "sha256:" + digest.hexdigest()
+    return identity
 
 
 def validation_snapshot() -> dict[str, str]:
