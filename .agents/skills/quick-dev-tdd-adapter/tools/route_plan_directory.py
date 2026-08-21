@@ -591,7 +591,29 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
             "authorizes": [],
         }
     if lifecycle_state == "implementation-authorized":
-        if document["authorizes"] == ["plan-ready", "implementation-authorized"]:
+        if document["authorizes"] in (["implementation-authorized"], ["plan-ready", "implementation-authorized"]):
+            minimal_receipts = sorted(plan_dir.glob("implementation-authorization-receipt.v1.json"))
+            if minimal_receipts:
+                receipt_path = minimal_receipts[-1]
+                try:
+                    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+                    required = ("implementation_contract", "authority_manifest", "knowledge_context_freeze")
+                    if (
+                        receipt.get("plan_id") == plan_id
+                        and receipt.get("decision", {}).get("owner") == "maintainer"
+                        and receipt.get("decision", {}).get("transition") == "implementation-authorized"
+                        and receipt.get("authorizes") == ["implementation-authorized"]
+                        and all(_binding_is_current(plan_dir.resolve().parents[1], receipt.get(field)) for field in required)
+                    ):
+                        return None
+                except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+                    pass
+            if document["authorizes"] == ["implementation-authorized"]:
+                return {
+                    "next_action": "external-repair-required",
+                    "reason": "invalid-plan-state",
+                    "authorizes": [],
+                }
             repair_state_path = plan_dir / "repair" / "round-1" / "repair-state.v1.json"
             try:
                 repair_state = json.loads(repair_state_path.read_text(encoding="utf-8"))

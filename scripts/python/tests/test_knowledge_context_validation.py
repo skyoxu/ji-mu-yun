@@ -48,6 +48,29 @@ def payload(*, path: str = "AGENTS.md", digest: str = "a" * 64) -> dict:
 
 
 class KnowledgeContextValidationTests(unittest.TestCase):
+    def test_refresh_ignores_rejected_missing_candidates(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            accepted = root / "accepted.md"
+            accepted.write_text("current\n", encoding="utf-8")
+            payload = {
+                "schema_version": "jimuyun.vdd-knowledge-context.v1",
+                "locator_request": {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": "r", "consumer": "vdd"},
+                "locator_result": {"schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "r", "status": "matched", "candidates": [
+                    {"path": "accepted.md", "source_sha256": "0" * 64, "read_set": [{"path": "accepted.md", "source_sha256": "0" * 64}]},
+                    {"path": "deleted-history.md", "source_sha256": "1" * 64},
+                ]},
+                "required_modules": ["rules"],
+                "decisions": [
+                    {"owner": "adapter", "decision": "accepted", "satisfies": ["rules"], "candidate": {"path": "accepted.md", "source_sha256": "0" * 64}},
+                    {"owner": "adapter", "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity", "candidate": {"path": "deleted-history.md", "source_sha256": "1" * 64}},
+                ],
+            }
+            payload["request_sha256"] = canonical_hash(payload["locator_request"])
+            payload["result_sha256"] = canonical_hash(payload["locator_result"])
+            refreshed = validation.refresh_context_read_set(payload, root)
+            self.assertEqual(hashlib.sha256(accepted.read_bytes()).hexdigest(), refreshed["decisions"][0]["candidate"]["source_sha256"])
+            self.assertEqual("deleted-history.md", refreshed["decisions"][1]["candidate"]["path"])
     def test_stale_catalog_flag_cannot_bypass_validator_implementation_freshness(self) -> None:
         prepare = Path(__file__).resolve().parents[3] / ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py"
         source = prepare.read_text(encoding="utf-8")

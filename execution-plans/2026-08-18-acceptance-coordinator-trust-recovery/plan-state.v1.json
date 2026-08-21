@@ -1,7 +1,7 @@
 {
   "schema_version": "jimuyun.plan-state.v1",
   "plan_id": "acceptance-coordinator-trust-recovery",
-  "status": "plan-ready",
-  "authorizes": ["plan-ready"],
+  "status": "implementation-authorized",
+  "authorizes": ["implementation-authorized"],
   "owner": "vdd"
 }

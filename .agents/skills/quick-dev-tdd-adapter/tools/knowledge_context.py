@@ -125,6 +125,7 @@ def refresh_successor_context(repository_root: Path, plan_dir: Path) -> dict[str
         "--repository-root", str(root), "--request-id", successor_id,
         "--query", str(request.get("query", "")), "--target-plan", target,
         "--output", output, "--supersede-frozen-context",
+        "--replay-frozen-selection-context", output,
         "--expected-context-sha256", "sha256:" + hashlib.sha256(before_bytes).hexdigest(),
         "--supersession-reason", "quick-dev-controlled-source-refresh",
     ]

@@ -372,6 +372,32 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             self.assertEqual("awaiting-implementation-authorization", result["next_action"])
             self.assertEqual("implementation-authorization-stale", result["reason"])
 
+    def test_router_accepts_minimal_maintainer_authorization_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
+            bindings = {}
+            for field, name in {
+                "implementation_contract": "implementation-contract.v1.json",
+                "authority_manifest": "authority-manifest.v1.json",
+                "knowledge_context_freeze": "knowledge-context.freeze.v1.json",
+            }.items():
+                path = plan / name
+                if not path.exists():
+                    path.write_text("{}\n", encoding="utf-8")
+                bindings[field] = {"path": path.relative_to(root).as_posix(), "sha256": artifact_identity_hash(path)}
+            (plan / "plan-state.v1.json").write_text(json.dumps({
+                "schema_version": "vdd.plan-state.v2", "plan_id": "target",
+                "status": "implementation-authorized", "authorizes": ["implementation-authorized"],
+            }), encoding="utf-8")
+            (plan / "implementation-authorization-receipt.v1.json").write_text(json.dumps({
+                "plan_id": "target", **bindings,
+                "decision": {"owner": "maintainer", "transition": "implementation-authorized"},
+                "authorizes": ["implementation-authorized"],
+            }), encoding="utf-8")
+            with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+
     def test_top_level_active_route_exposes_implementation_handoff(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

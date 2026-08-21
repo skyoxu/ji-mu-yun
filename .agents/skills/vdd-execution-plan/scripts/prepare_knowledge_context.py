@@ -1,6 +1,7 @@
 """Create a VDD-owned, Locator-bound knowledge context before plan freeze."""
 from __future__ import annotations
 import argparse
+import copy
 import hashlib
 import importlib.util
 import json
@@ -60,6 +61,41 @@ def _validator(root: Path):
         sys.path[:] = previous_path
     return module
 
+
+def _replay_frozen_selection(
+    *,
+    frozen_context: Path,
+    request_id: str,
+    catalog_snapshot: dict,
+    policy_revision: str,
+    validator,
+    repository_root: Path,
+) -> dict:
+    """Rebind an already accepted selection without another catalog query."""
+    frozen = json.loads(frozen_context.read_text(encoding="utf-8"))
+    payload = copy.deepcopy(frozen)
+    request = payload.get("locator_request")
+    result = payload.get("locator_result")
+    if not isinstance(request, dict) or not isinstance(result, dict):
+        raise ValueError("frozen knowledge context is invalid")
+    if validator.validate_context(
+        {key: value for key, value in payload.items() if key != "preflight"},
+        expected_consumer="vdd",
+        require_selection=True,
+    ) is not None:
+        raise ValueError("frozen knowledge selection is invalid")
+    request["request_id"] = request_id
+    request["snapshot"] = catalog_snapshot
+    request["policy_revision"] = policy_revision
+    request["allow_stale_catalog"] = True
+    result["request_id"] = request_id
+    result["snapshot"] = catalog_snapshot
+    result["policy_revision"] = policy_revision
+    payload["request_sha256"] = validator.canonical_hash(request)
+    payload["result_sha256"] = validator.canonical_hash(result)
+    payload.pop("preflight", None)
+    return validator.refresh_context_read_set(payload, repository_root)
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
@@ -74,6 +110,7 @@ def main() -> int:
     parser.add_argument("--supersede-frozen-context", action="store_true")
     parser.add_argument("--expected-context-sha256")
     parser.add_argument("--supersession-reason")
+    parser.add_argument("--replay-frozen-selection-context", type=Path)
     parser.add_argument("--allow-stale-catalog", action="store_true", help="Deprecated: catalog staleness is recorded as degraded by default")
     args = parser.parse_args()
     root = args.repository_root.resolve()
@@ -99,33 +136,52 @@ def main() -> int:
     snapshot = json.loads(catalog_path.read_text(encoding="utf-8")).get("source_snapshot", {})
     request = {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": args.request_id, "consumer": "vdd", "query": args.query, "snapshot": {"ref": snapshot.get("ref"), "commit": snapshot.get("commit")}, "policy_revision": _policy_revision(root)}
     request["allow_stale_catalog"] = True
-    completed = subprocess.run(
-        [
-            sys.executable, "-B", str(root / "scripts/python/knowledge_locator.py"),
-            "--repository-root", str(root), "--catalog", str(catalog_path),
-            "--allow-stale-catalog",
-        ],
-        input=json.dumps(request), text=True, encoding="utf-8", capture_output=True, check=False,
-    )
-    if completed.returncode:
-        raise SystemExit(completed.stderr or "knowledge locator failed")
-    result = json.loads(completed.stdout)
+    replay_context = args.replay_frozen_selection_context
+    if replay_context is not None:
+        if not args.supersede_frozen_context:
+            raise SystemExit("frozen selection replay requires --supersede-frozen-context")
+        replay_path = (replay_context if replay_context.is_absolute() else root / replay_context).resolve()
+        if replay_path != output:
+            raise SystemExit("frozen selection replay must use the current target context")
+        payload = _replay_frozen_selection(
+            frozen_context=replay_path,
+            request_id=args.request_id,
+            catalog_snapshot=request["snapshot"],
+            policy_revision=request["policy_revision"],
+            validator=validator,
+            repository_root=root,
+        )
+        request = payload["locator_request"]
+        result = payload["locator_result"]
+    else:
+        completed = subprocess.run(
+            [
+                sys.executable, "-B", str(root / "scripts/python/knowledge_locator.py"),
+                "--repository-root", str(root), "--catalog", str(catalog_path),
+                "--allow-stale-catalog",
+            ],
+            input=json.dumps(request), text=True, encoding="utf-8", capture_output=True, check=False,
+        )
+        if completed.returncode:
+            raise SystemExit(completed.stderr or "knowledge locator failed")
+        result = json.loads(completed.stdout)
     accepted: dict[str, list[str]] = {}
     for value in args.accept:
         path, separator, modules = value.partition("=")
         if not separator or not path or not modules:
             raise SystemExit("--accept must be candidate-path=module[,module]")
         accepted[path] = [item for item in modules.split(",") if item]
-    decisions = [{"owner": "adapter", "candidate": {"path": item.get("path"), "source_sha256": item.get("source_sha256")}, "decision": "accepted" if accepted.get(item.get("path")) else "rejected", "satisfies": accepted.get(item.get("path"), []), "rejection_reason": None if accepted.get(item.get("path")) else "insufficient_specificity"} for item in result.get("candidates", [])]
-    payload = {
-        "schema_version": "jimuyun.vdd-knowledge-context.v1",
-        "locator_request": request,
-        "locator_result": result,
-        "required_modules": args.required_module,
-        "decisions": decisions,
-        "request_sha256": validator.canonical_hash(request),
-        "result_sha256": validator.canonical_hash(result),
-    }
+    if replay_context is None:
+        decisions = [{"owner": "adapter", "candidate": {"path": item.get("path"), "source_sha256": item.get("source_sha256")}, "decision": "accepted" if accepted.get(item.get("path")) else "rejected", "satisfies": accepted.get(item.get("path"), []), "rejection_reason": None if accepted.get(item.get("path")) else "insufficient_specificity"} for item in result.get("candidates", [])]
+        payload = {
+            "schema_version": "jimuyun.vdd-knowledge-context.v1",
+            "locator_request": request,
+            "locator_result": result,
+            "required_modules": args.required_module,
+            "decisions": decisions,
+            "request_sha256": validator.canonical_hash(request),
+            "result_sha256": validator.canonical_hash(result),
+        }
     catalog_failure_code = validator.validate_catalog_freshness(root)
     failure_code = validator.validate_context(
         payload,
@@ -136,7 +192,7 @@ def main() -> int:
     )
     if failure_code is None:
         failure_code = validator.validate_worktree_sources(payload, root)
-    if failure_code == "candidate_worktree_source_hash_mismatch":
+    if failure_code == "candidate_worktree_source_hash_mismatch" and replay_context is None:
         try:
             payload = validator.refresh_context_read_set(payload, root)
         except (OSError, ValueError):

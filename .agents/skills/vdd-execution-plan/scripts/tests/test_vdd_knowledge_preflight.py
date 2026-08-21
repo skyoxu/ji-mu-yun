@@ -54,6 +54,25 @@ def bound_payload(module, payload: dict) -> dict:
 
 
 class VddKnowledgePreflightTests(unittest.TestCase):
+    def test_replay_frozen_selection_rehashes_without_locator_query(self) -> None:
+        module = load_prepare()
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            source = root / "AGENTS.md"
+            source.write_text("current\n", encoding="utf-8")
+            frozen = root / "knowledge-context.v1.json"
+            request = {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": "old", "consumer": "vdd", "snapshot": {"ref": "refs/heads/main", "commit": "a" * 40}, "policy_revision": "old", "allow_stale_catalog": True}
+            result = {"schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "old", "snapshot": request["snapshot"], "status": "matched", "source_snapshot_id": "old", "policy_revision": "old", "candidates": [{"path": "AGENTS.md", "source_sha256": "0" * 64, "read_set": [{"path": "AGENTS.md", "source_sha256": "0" * 64}]}]}
+            payload = {"schema_version": "jimuyun.vdd-knowledge-context.v1", "locator_request": request, "locator_result": result, "required_modules": ["repository-rules"], "decisions": [{"owner": "adapter", "candidate": {"path": "AGENTS.md", "source_sha256": "0" * 64}, "decision": "accepted", "satisfies": ["repository-rules"], "rejection_reason": None}]}
+            validator = __import__("importlib").import_module("knowledge_context_validation")
+            payload["request_sha256"] = validator.canonical_hash(request)
+            payload["result_sha256"] = validator.canonical_hash(result)
+            frozen.write_text(json.dumps(payload), encoding="utf-8")
+            replayed = module._replay_frozen_selection(frozen_context=frozen, request_id="new", catalog_snapshot={"ref": "refs/heads/main", "commit": "b" * 40}, policy_revision="new", validator=validator, repository_root=root)
+            self.assertEqual("new", replayed["locator_request"]["request_id"])
+            self.assertEqual("AGENTS.md", replayed["decisions"][0]["candidate"]["path"])
+            self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(), replayed["decisions"][0]["candidate"]["source_sha256"])
+            self.assertEqual("current_worktree_read_set", replayed["source_refresh"]["mode"])
     def test_cli_consumes_real_ready_skill_input_context(self) -> None:
         module = load_preflight()
         with tempfile.TemporaryDirectory() as raw:

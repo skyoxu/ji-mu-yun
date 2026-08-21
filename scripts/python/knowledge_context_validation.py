@@ -212,11 +212,18 @@ def refresh_context_read_set(payload: dict[str, Any], repository_root: Path) -> 
     base_result_hash = refreshed.get("result_sha256")
     if not isinstance(base_result_hash, str) or base_result_hash != canonical_hash(result):
         raise ValueError("locator_hash_mismatch")
+    accepted_keys = {
+        (decision.get("candidate", {}).get("path"), decision.get("candidate", {}).get("source_sha256"))
+        for decision in payload.get("decisions", [])
+        if isinstance(decision, dict) and decision.get("decision") == "accepted" and isinstance(decision.get("candidate"), dict)
+    }
     refreshed_candidates: dict[tuple[object, object], str] = {}
     for candidate in candidates:
         if not isinstance(candidate, dict):
             raise ValueError("locator_candidates_invalid")
         original_key = (candidate.get("path"), candidate.get("source_sha256"))
+        if original_key not in accepted_keys:
+            continue
         read_set = candidate.get("read_set")
         if read_set is None:
             read_set = [{"path": candidate.get("path"), "source_sha256": candidate.get("source_sha256")}]
