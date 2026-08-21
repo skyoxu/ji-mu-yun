@@ -3,6 +3,7 @@
   "plan_id": "acceptance-coordinator-trust-recovery",
   "profile": "self-hosted",
   "red_execution_owner": "quick-dev-tdd-adapter",
+  "adapter_bridge": {"runner": "tools/migration_bridge.py"},
   "command_registry": "command-registry.v1.json",
   "backend": {"hidden_state": false},
   "protocol_artifacts": {"context_layout": "context/<capsule-id>", "attempt_layout": "attempts/<attempt-id>", "terminal_results": "terminal-results/<slice-or-terminal>.json"},
