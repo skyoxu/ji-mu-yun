@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -395,6 +396,12 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 "decision": {"owner": "maintainer", "transition": "implementation-authorized"},
                 "authorizes": ["implementation-authorized"],
             }), encoding="utf-8")
+            with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+
+            raw_receipt = json.loads((plan / "implementation-authorization-receipt.v1.json").read_text(encoding="utf-8"))
+            raw_receipt["knowledge_context_freeze"]["sha256"] = "sha256:" + hashlib.sha256((plan / "knowledge-context.freeze.v1.json").read_bytes()).hexdigest()
+            (plan / "implementation-authorization-receipt.v1.json").write_text(json.dumps(raw_receipt), encoding="utf-8")
             with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
                 self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
 

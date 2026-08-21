@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z",
+    "request_id": "ACR-20260818-successor-2",
     "consumer": "vdd",
     "query": "acceptance coordinator trust recovery persisted run successor knowledge authorization workflow repair",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
+      "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb"
     },
     "policy_revision": "knowledge-consumer-policies.v2",
     "allow_stale_catalog": true
@@ -53,7 +53,7 @@
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
             "role": "cli",
-            "source_sha256": "a43c5ddfb49238c204d85494060d134cee4c9ca56cce2c965a7e3f0f95f99879"
+            "source_sha256": "3a6a7d4b9eca31c263baec33cda10f6a7cba7e49221646ded5ac7a7c6a887e56"
           },
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
@@ -73,7 +73,7 @@
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
             "role": "orchestrator",
-            "source_sha256": "5e9744f6dc7ce4211af2929beda63c44f607ef3016af081b1241b1f1b03f7662"
+            "source_sha256": "3013eaf3a085449f35cec85e7a5bc51571ed682e1a30e961295347623f80a862"
           },
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json",
@@ -415,7 +415,7 @@
           {
             "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
             "role": "orchestrator",
-            "source_sha256": "470afa2e7eb8101f0f3bfbdcc98613106065032dd559fe637796e85c9ebc4961"
+            "source_sha256": "ca54c561f500f0e7b6655df4f42b6a996ec599d3873a0a206dc7c4a8ca1fa454"
           },
           {
             "path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
@@ -703,12 +703,12 @@
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
             "role": "orchestrator",
-            "source_sha256": "b6d4247fc75970b1dc38f65f22ab1724f90d162921cedf1c90f481b82cfe9cfd"
+            "source_sha256": "e5966c3a8215dab55a5e9bd40713e85fb5a489ddad27e6b0dbd5c3729dfd23f2"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
             "role": "validator",
-            "source_sha256": "4c78416e5714839995198712ce52187470e744bee9d04938642e15b5f3e3ea35"
+            "source_sha256": "a7ba1c59ad1f72aa14273aca3d219c6572c9609324cd9af794df01b42f19bcb0"
           }
         ],
         "relations": [
@@ -811,11 +811,11 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z",
+    "request_id": "ACR-20260818-successor-2",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "ref": "refs/heads/main",
-      "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
+      "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb",
+      "ref": "refs/heads/main"
     },
     "source_snapshot_id": "sha256:73439257113cd841332d7289e45f8bf3297be2c38652ecf4b97ed074f6f0e740",
     "status": "matched"
@@ -953,12 +953,12 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:d5c8b4da52b8ae57c93a9d027b35351520802e087f4796eafb664c0beeb612c5",
-  "result_sha256": "sha256:942334e0a9b18611520c6f0b900ea2875aab476fc43d1070fa349baf48cbabc6",
+  "request_sha256": "sha256:4416fdd0c0ac88ad34e549d984dbfdc2ed9e2390d178ce8b5dc22b447487c6b6",
+  "result_sha256": "sha256:d72d36c9e124fba336c886d76a8f7f2f58657ecde55ed994faeadfb5fcd798c3",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:e2313e40e3faa42ea6bd712ba1a740a74610036754217ecb5419893f0763c551"
+    "base_locator_result_sha256": "sha256:4318d0ab9ab97ed163b30f0931b3baae38b13c4c85b808013cf06ed47de89521"
   },
   "preflight": {
     "status": "ready",
@@ -966,6 +966,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:77f0b8745a337754d6030d8f48f62cd7741746ca8d3baf174cb67c023aa42baa"
+    "context_sha256": "sha256:2d6671d5ecbc2f8e18a93bfa3edf9ca2242c1e4d75c31370363ee1ab0d2a15e5"
   }
 }

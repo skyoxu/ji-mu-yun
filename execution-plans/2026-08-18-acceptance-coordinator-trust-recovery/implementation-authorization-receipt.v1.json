@@ -16,7 +16,7 @@
   },
   "knowledge_context_freeze": {
     "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/knowledge-context.freeze.v1.json",
-    "sha256": "sha256:66f30a90d4b854557d3697bd349df3a3e7c3bb1bad1696f58425c23ffb7abe2e"
+    "sha256": "sha256:02986a9a43c861731f6c62f4d2f163045ab80ed57a164b9ca97c4c6740a49a74"
   },
   "repair_closure": {
     "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/repair/round-1/repair-closure.json",

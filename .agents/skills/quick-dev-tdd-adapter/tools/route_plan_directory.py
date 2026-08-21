@@ -117,6 +117,22 @@ def _binding_is_current(root: Path, binding: object) -> bool:
     return declared_kind is None or declared_kind == _artifact_identity_kind(path)
 
 
+def _minimal_authorization_binding_is_current(root: Path, binding: object) -> bool:
+    """Accept the plan-local receipt's explicitly raw or canonical file identity."""
+    if not isinstance(binding, dict) or not isinstance(binding.get("path"), str) or not isinstance(binding.get("sha256"), str):
+        return False
+    try:
+        path = (root / binding["path"]).resolve()
+        path.relative_to(root)
+    except ValueError:
+        return False
+    if not path.is_file():
+        return False
+    raw = _sha(path.read_bytes())
+    canonical = _artifact_hash(path)
+    return binding["sha256"] in {raw, canonical}
+
+
 def _skill_input_generation_is_current(root: Path, generation: object) -> bool:
     required = {
         "schema_version", "receipt", "source_selection_hash", "selected_source_content_root",
@@ -603,7 +619,7 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                         and receipt.get("decision", {}).get("owner") == "maintainer"
                         and receipt.get("decision", {}).get("transition") == "implementation-authorized"
                         and receipt.get("authorizes") == ["implementation-authorized"]
-                        and all(_binding_is_current(plan_dir.resolve().parents[1], receipt.get(field)) for field in required)
+                        and all(_minimal_authorization_binding_is_current(plan_dir.resolve().parents[1], receipt.get(field)) for field in required)
                     ):
                         return None
                 except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
