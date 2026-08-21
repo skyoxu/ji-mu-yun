@@ -415,6 +415,19 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
 
 def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> None:
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+    selected = next((item for item in contract.get("slices", []) if item.get("slice_id") == slice_id), None)
+    if not isinstance(selected, dict):
+        raise RuntimeError("slice terminal is not declared")
+    if selected.get("execution_mode") in {"regression", "dogfood-replay"}:
+        # Read-only verification slices deliberately have no new RED/GREEN/
+        # REFACTOR lifecycle. Their registered terminal is the full evidence.
+        runner = plan / contract["terminal"]["runner"]
+        output = plan / "terminal-results" / f"{slice_id}.json"
+        _run([
+            str(runner), "--repository-root", str(root), "--plan-dir", str(plan),
+            "--slice", slice_id, "--out", str(output),
+        ], timeout_seconds=7200)
+        return
     active = _active_slice_run(root, str(contract["plan_id"]), slice_id)
     if active is None or active[1] != "slice-terminal":
         raise RuntimeError("slice terminal requires a completed refactor observation")

@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z-successor-20260821T073105Z-successor-20260821T080606Z-successor-20260821T081625Z-successor-20260821T081857Z-successor-20260821T082003Z-successor-20260821T082135Z-successor-20260821T093928Z-successor-20260821T094104Z-successor-20260821T094744Z",
+    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z-successor-20260821T073105Z-successor-20260821T080606Z-successor-20260821T081625Z-successor-20260821T081857Z-successor-20260821T082003Z-successor-20260821T082135Z-successor-20260821T093928Z",
     "consumer": "vdd",
     "query": "acceptance coordinator trust recovery persisted run successor knowledge authorization workflow repair",
     "snapshot": {
@@ -68,7 +68,7 @@
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
             "role": "knowledge-validator",
-            "source_sha256": "1750fab488f47b83c29a416cac889df12a3ca38382a4b0285c98208422aa66d8"
+            "source_sha256": "b53bc52216ceb0310074bd7faa4b911659c856bb15063ecb26713402ee019074"
           },
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
@@ -811,7 +811,7 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z-successor-20260821T073105Z-successor-20260821T080606Z-successor-20260821T081625Z-successor-20260821T081857Z-successor-20260821T082003Z-successor-20260821T082135Z-successor-20260821T093928Z-successor-20260821T094104Z-successor-20260821T094744Z",
+    "request_id": "ACR-20260818-successor-2-successor-20260821T072605Z-successor-20260821T073105Z-successor-20260821T080606Z-successor-20260821T081625Z-successor-20260821T081857Z-successor-20260821T082003Z-successor-20260821T082135Z-successor-20260821T093928Z",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
       "ref": "refs/heads/main",
@@ -953,12 +953,12 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:410e533546cb032b0e89af232d3223c4b63959f0a07e4b16237c1fe466fe5143",
-  "result_sha256": "sha256:9f73d19205db1adba9d58fbd0633f6b07ee06794b0f4c24af399610b70e905ac",
+  "request_sha256": "sha256:59370ef256ef24ed390f11975448aaae1765528fa536fa83e4641512be8899ea",
+  "result_sha256": "sha256:0394c2934e26350f8ec5306da02fec96bc5b47c3da2c500b4b5c54251792f5db",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:21bf834428746fa9384d38198604ba8ec6779821fb3a28c00f38684ce560ec00"
+    "base_locator_result_sha256": "sha256:a8c5ba20bcca4cab1120fd08e076ee55fc4e8066afd062977351aa2f4d8f4050"
   },
   "preflight": {
     "status": "ready",
@@ -966,6 +966,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:137608713936a7ea49b0618b485d4016a13f0e6cddbf7ba98161fcf05be1b308"
+    "context_sha256": "sha256:503c6c5824bead03021888305f3dd4fe08a6e5c28fda0d099774651447f92065"
   }
 }

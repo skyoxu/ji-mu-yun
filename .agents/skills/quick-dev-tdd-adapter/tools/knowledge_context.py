@@ -150,6 +150,11 @@ def refresh_successor_context(repository_root: Path, plan_dir: Path) -> dict[str
     return {"status": "refreshed", "authorizes": []}
 
 
+def refresh_context_read_set(repository_root: Path, plan_dir: Path) -> dict[str, Any]:
+    """Expose the controlled same-selection refresh through the Quick Dev boundary."""
+    return refresh_successor_context(repository_root, plan_dir)
+
+
 def verify_plan_context(repository_root: Path, plan_dir: Path) -> dict[str, Any]:
     """Fail closed when a declared VDD context no longer matches local sources."""
     context_path = plan_dir / "knowledge-context.v1.json"

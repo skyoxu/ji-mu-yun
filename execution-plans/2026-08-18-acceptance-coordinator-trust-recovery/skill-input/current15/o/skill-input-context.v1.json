@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Trust recovery requires hash-bound v3 inputs, persisted run evidence, successor identity controls, bound knowledge selection, validator receipts, and read-only dogfood replay. R0 through R4 define recovery, freshness, legacy reuse, and replay constraints.",
+      "title": "Requirements"
+    },
+    {
+      "content": "The migration bridge materializes fixed RED-test templates for R0, R1, and R2 only. It rejects undeclared slices and conflicting existing content, emits test paths, and produces no authority-bearing output.",
+      "title": "Migration Bridge"
+    },
+    {
+      "content": "terminal_full validates plan state, receipts, knowledge context, bindings, registered commands, and slice tests with fail-closed behavior. validate_all derives deterministic validation identities from plan, slice, registry, contract, and candidate source bytes.",
+      "title": "Validation Tools"
+    }
+  ],
+  "source_manifest_hash": "sha256:6805666bd507177f00c7fe2db94a66417d31bcaccc97f88cbff26b39b0385636",
+  "truncated": false
+}

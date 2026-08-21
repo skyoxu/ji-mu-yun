@@ -1,11 +1,9 @@
 import importlib.util
-import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[5]
-SCRIPT = ROOT / ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py"
-sys.path.insert(0, str(SCRIPT.parent))
+SCRIPT = ROOT / ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py"
 
 
 def _load():

@@ -103,3 +103,11 @@ def freeze_knowledge_context(target_root: Path, raw_path: str) -> dict[str, Any]
         "authorizes": [],
     }
 
+
+def refresh_context_read_set(context: dict[str, Any], repository_root: Path) -> dict[str, Any]:
+    """Refresh bytes with the shared validated selected-read-set primitive."""
+    validation = _validator(repository_root.resolve())
+    refreshed = validation.refresh_context_read_set(context, repository_root.resolve())
+    if not isinstance(refreshed, dict):
+        raise InputError("knowledge read-set refresh is invalid")
+    return refreshed
