@@ -765,7 +765,10 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
         exit_predicate = slice_item.get("exit_predicate", "slice-ready")
         if not isinstance(exit_predicate, str) or not exit_predicate:
             raise ValueError("slice exit predicate is invalid")
-        for result_path in (evidence_root / slice_id).glob(f"*/{exit_predicate}-result.json"):
+        result_paths = list((evidence_root / slice_id).glob(f"*/{exit_predicate}-result.json"))
+        if execution_mode in {"regression", "dogfood-replay"}:
+            result_paths.append(target / "terminal-results" / f"{slice_id}.json")
+        for result_path in result_paths:
             try:
                 result = json.loads(result_path.read_text(encoding="utf-8"))
             except (OSError, ValueError):

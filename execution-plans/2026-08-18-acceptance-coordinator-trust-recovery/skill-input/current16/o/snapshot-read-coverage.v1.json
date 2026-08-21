@@ -1,0 +1,52 @@
+{
+  "schema_version": "skill-input-read-coverage.v1",
+  "source_manifest_hash": "sha256:48258d772e32ba2cee17b15cd9820e900b5e64d4ffdc09923993389f8a449eaa",
+  "input_mode": "paged-frozen-snapshot-stdin",
+  "chunk_bytes": 32768,
+  "segments": [
+    {
+      "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+      "source_sha256": "sha256:b44e35896c0a9059d888aa96553ce0268c576df9274c9c3d93e6131b3f5da930",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 8723,
+      "start_line": 1,
+      "end_line": 161,
+      "content_sha256": "sha256:b44e35896c0a9059d888aa96553ce0268c576df9274c9c3d93e6131b3f5da930"
+    },
+    {
+      "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/migration_bridge.py",
+      "source_sha256": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 5074,
+      "start_line": 1,
+      "end_line": 149,
+      "content_sha256": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259"
+    },
+    {
+      "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+      "source_sha256": "sha256:bd1537f6eb5e25ff96025891cd2a166988d8bfc9fc3378d02c130f3479358919",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 17464,
+      "start_line": 1,
+      "end_line": 407,
+      "content_sha256": "sha256:bd1537f6eb5e25ff96025891cd2a166988d8bfc9fc3378d02c130f3479358919"
+    },
+    {
+      "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py",
+      "source_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 2926,
+      "start_line": 1,
+      "end_line": 60,
+      "content_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7"
+    }
+  ]
+}

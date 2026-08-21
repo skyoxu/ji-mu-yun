@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Defines v3-only acceptance recovery requirements for R0-R4, including bound inputs, durable lineage, freshness and reauthorization rules, closed legacy reuse, and read-only historical dogfood.",
+      "title": "Requirements"
+    },
+    {
+      "content": "Materializes declared RED test templates for R0-R2 only, rejects unsupported use and conflicting overwrites, and emits non-authorizing JSON results.",
+      "title": "Migration Tool"
+    },
+    {
+      "content": "Terminal runner validates plan state, receipts, knowledge context, candidate bindings, targeted commands, and immutable completion output. Validation helper derives contract, registry, and candidate identities for R0-R4.",
+      "title": "Validation Tools"
+    }
+  ],
+  "source_manifest_hash": "sha256:48258d772e32ba2cee17b15cd9820e900b5e64d4ffdc09923993389f8a449eaa",
+  "truncated": false
+}

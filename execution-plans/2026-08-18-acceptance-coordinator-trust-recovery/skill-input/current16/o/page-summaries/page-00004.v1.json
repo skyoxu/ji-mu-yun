@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py",
+    "source_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2926,
+    "start_line": 1,
+    "end_line": 60,
+    "content_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7"
+  },
+  "status": "accepted",
+  "summary": "validation helper at execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py; PLAN root is parent of tools dir; CANDIDATE_SOURCES keyed R0-R4 map to acceptance_cli.py, loop_plan_directory.py, knowledge_context.py, route_plan_directory.py; _identity(slice_id) loads implementation-contract.v1.json and command-registry.v1.json, checks optional slice_id against contract.slices, returns validator_hash from plan_id+slic e+registry+terminal payload; current_candidate_identity(slice_id) uses PLAN.parents[1], requires defined slice sources, hashes each relative path plus file bytes, adds candidate_hash; validation_snapshot() extends _identity(None) with candidate_hash from implementation-contract.v1.json bytes, predicate_input_root, authority_root, validator_root, validator_version=acceptance-coordinator-trust-recovery-validator.v1, closure_definition_hash from repair/round-1/repair-closure.json; slice_validation_snapshot(slice_id) merges validation_snapshot and current_candidate_identity; error conditions: unknown slice and undefined slice sources raise ValueError"
+}

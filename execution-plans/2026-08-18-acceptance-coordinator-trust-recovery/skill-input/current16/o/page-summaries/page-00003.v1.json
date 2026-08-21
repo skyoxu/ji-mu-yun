@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+    "source_sha256": "sha256:bd1537f6eb5e25ff96025891cd2a166988d8bfc9fc3378d02c130f3479358919",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 17464,
+    "start_line": 1,
+    "end_line": 407,
+    "content_sha256": "sha256:bd1537f6eb5e25ff96025891cd2a166988d8bfc9fc3378d02c130f3479358919"
+  },
+  "status": "accepted",
+  "summary": "terminal_full.py; CLI requires repository root and plan dir, optional out and slice R0-R4; executes registered commands only with repo-contained cwd; slices map to targeted tests and <slice>-green command; full validates all slice receipts, resume state, final bindings and full command IDs; requires plan state implementation-authorized plus published authorization; validates maintainer receipt plan, transition, artifact paths and hashes; validates knowledge context/freeze and permits catalog_stale only with source_refresh; validates ready non-authorizing skill-input receipt via repository validator; candidate binding hashes HEAD, binary diff, and non-generated untracked files; full pass emits immutable quick-dev implementation-complete receipt, successor on content conflict; terminal result is non-authorizing and includes contract/registry/candidate hashes, commands, selectors, failures; errors yield status fail and nonzero exit; ambiguities: contract/registry read before existence/error handling; receipt selection is latest mtime; plan arg in candidate binding unused."
+}

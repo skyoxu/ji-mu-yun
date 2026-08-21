@@ -1,7 +1,7 @@
 {
   "authorizes": [],
   "binding_hashes": {},
-  "candidate_binding_hash": "sha256:4480b00874f9bbeef66f05f10b27b4245b559c0339dbaa81f158b2a4eb2df1cf",
+  "candidate_binding_hash": "sha256:012733cdfcd5b48699f17c1aefd7614c2d9e3fb29083684c3b1f389274a4196d",
   "command_registry_hash": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
   "contract_hash": "sha256:0140bb0cd5db1e5fb783a941544209a5728fff759aba60f25b0b5c23f3665f37",
   "failures": [],

@@ -4,6 +4,7 @@ import argparse
 import base64
 from datetime import datetime, timezone
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import subprocess
@@ -14,7 +15,6 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from route_plan_directory import route
-from knowledge_context import refresh_successor_context
 from stage_lifecycle_runner import (
     LifecycleRunner,
     derive_run_state,
@@ -26,6 +26,20 @@ from stage_lifecycle_runner import (
 
 HELPER_TIMEOUT_SECONDS = 900
 LIFECYCLE_TIMEOUT_OVERHEAD_SECONDS = 60
+
+
+def _refresh_successor_context(root: Path, plan: Path) -> dict[str, object]:
+    """Load the adapter-owned Knowledge boundary without a shared module name."""
+    module_path = TOOLS / "knowledge_context.py"
+    spec = importlib.util.spec_from_file_location("quick_dev_loop_knowledge_context", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("Quick Dev knowledge refresh boundary is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    result = module.refresh_successor_context(root, plan)
+    if not isinstance(result, dict):
+        raise RuntimeError("Quick Dev knowledge refresh result is invalid")
+    return result
 
 
 def _terminal_contract(plan: Path) -> dict[str, str]:
@@ -546,7 +560,7 @@ def main() -> int:
             _run_terminal(root, plan)
             continue
         if result["next_action"] == "refresh-knowledge-context":
-            refreshed = refresh_successor_context(root, plan)
+            refreshed = _refresh_successor_context(root, plan)
             if refreshed.get("status") != "refreshed":
                 raise RuntimeError(str(refreshed.get("failure_code", "knowledge successor refresh failed")))
             continue

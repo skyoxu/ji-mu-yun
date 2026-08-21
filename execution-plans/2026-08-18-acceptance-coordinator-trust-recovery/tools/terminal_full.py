@@ -12,6 +12,22 @@ def _sha256(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
+def publish_canonical_receipt(plan: Path, result: dict[str, object]) -> Path:
+    """Publish the immutable Quick Dev completion handoff for a passed terminal."""
+    repair = plan / "repair" / "round-1"
+    repair.mkdir(parents=True, exist_ok=True)
+    destination = repair / "quick-dev-implementation-complete.v1.json"
+    encoded = json.dumps(result, indent=2, sort_keys=True) + "\n"
+    if destination.is_file() and destination.read_text(encoding="utf-8") != encoded:
+        suffix = hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:16]
+        destination = repair / f"quick-dev-implementation-complete.{suffix}.v1.json"
+    if destination.is_file() and destination.read_text(encoding="utf-8") != encoded:
+        raise RuntimeError("canonical implementation receipt successor conflicts")
+    if not destination.is_file():
+        destination.write_text(encoded, encoding="utf-8", newline="\n")
+    return destination
+
+
 def _git(root: Path, *args: str) -> str:
     result = subprocess.run(
         ["git", *args], cwd=root, check=False, capture_output=True, text=True
@@ -284,10 +300,16 @@ def _authority_failures(plan: Path) -> list[str]:
         state = json.loads(state_path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return ["invalid-plan-state"]
-    if state.get("status") != "implementation-authorized":
+    if state.get("status") == "implementation-authorized":
+        if "implementation-authorized" not in state.get("authorizes", []):
+            failures.append("implementation-authorization-not-published")
+    elif state.get("status") == "implementation-complete":
+        # A completed Quick Dev plan may be revalidated without reverting its
+        # lifecycle owner to the maintainer authorization stage.
+        if state.get("authorizes") != ["implementation-complete"]:
+            failures.append("implementation-completion-state-invalid")
+    else:
         failures.append("maintainer-implementation-authorization-required")
-    if "implementation-authorized" not in state.get("authorizes", []):
-        failures.append("implementation-authorization-not-published")
     freeze_path = plan / "knowledge-context.freeze.v1.json"
     context_path = plan / "knowledge-context.v1.json"
     if not freeze_path.is_file() or not context_path.is_file():
@@ -366,6 +388,22 @@ def main() -> int:
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(encoded, encoding="utf-8", newline="\n")
+    if passed and args.slice is None:
+        receipt = {
+            "schema_version": "quick-dev-implementation-complete.v1",
+            "plan_id": contract["plan_id"],
+            "predicate": "implementation-complete",
+            "status": "pass",
+            "failures": [],
+            "contract_hash": result["contract_hash"],
+            "command_registry_hash": result["command_registry_hash"],
+            "terminal_command_id": "terminal-full",
+            "terminal_result_hash": _sha256(encoded.encode("utf-8")),
+            "validated_command_ids": result["validated_command_ids"],
+            "authorizes": ["implementation-complete"],
+            "lifecycle_transition": "none",
+        }
+        publish_canonical_receipt(plan, receipt)
     print(encoded, end="")
     return 0 if passed else 1
 
