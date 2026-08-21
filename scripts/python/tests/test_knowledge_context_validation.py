@@ -48,6 +48,23 @@ def payload(*, path: str = "AGENTS.md", digest: str = "a" * 64) -> dict:
 
 
 class KnowledgeContextValidationTests(unittest.TestCase):
+    def test_stale_catalog_source_refresh_rebinds_current_bytes_without_snapshot_match(self) -> None:
+        payload = validation.refresh_context_read_set
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / "knowledge/catalogs").mkdir(parents=True)
+            (root / "knowledge/policies").mkdir(parents=True)
+            (root / "AGENTS.md").write_text("current\n", encoding="utf-8")
+            catalog = {"schema_version": "jimuyun.repository-knowledge-catalog.v2", "source_snapshot": {"ref": "refs/heads/main", "commit": "new", "snapshot_id": "new"}}
+            (root / "knowledge/catalogs/repository-knowledge-catalog.v2.json").write_text(json.dumps(catalog), encoding="utf-8")
+            (root / "knowledge/policies/consumer-policies.v2.json").write_text(json.dumps({"policy_revision": "policy"}), encoding="utf-8")
+            original = {"schema_version": "jimuyun.vdd-knowledge-context.v1", "locator_request": {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": "r", "consumer": "vdd", "snapshot": {"ref": "refs/heads/main", "commit": "old"}, "policy_revision": "policy", "allow_stale_catalog": True}, "locator_result": {"schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "r", "snapshot": {"ref": "refs/heads/main", "commit": "old"}, "status": "matched", "source_snapshot_id": "old", "policy_revision": "policy", "candidates": [{"path": "AGENTS.md", "source_sha256": "0" * 64, "read_set": [{"path": "AGENTS.md", "source_sha256": "0" * 64}]}]}, "required_modules": ["rules"], "decisions": [{"owner": "adapter", "decision": "accepted", "satisfies": ["rules"], "candidate": {"path": "AGENTS.md", "source_sha256": "0" * 64}}]}
+            original["request_sha256"] = canonical_hash(original["locator_request"])
+            original["result_sha256"] = canonical_hash(original["locator_result"])
+            refreshed = payload(original, root)
+            refreshed["preflight"] = {"status": "ready", "failure_code": None, "knowledge_freshness": "degraded", "catalog_failure_code": "catalog_stale", "source_freshness": "refreshed", "context_sha256": canonical_hash({key: value for key, value in refreshed.items() if key != "preflight"})}
+            with mock.patch.object(validation, "validate_catalog_freshness", return_value="catalog_stale"):
+                self.assertIsNone(validate_context(refreshed, repository_root=root, verify_catalog=True, verify_sources=True, expected_consumer="vdd", require_preflight=True))
     def test_refresh_ignores_rejected_missing_candidates(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

@@ -418,6 +418,19 @@ def validate_context(
                     return "preflight_catalog_freshness_invalid"
             elif catalog_freshness == "catalog_stale" and require_preflight:
                 return "preflight_catalog_freshness_missing"
+        if source_refresh and catalog_freshness == "catalog_stale":
+            # A controlled successor preserves the previously verified
+            # selection and rebinds its current read-set bytes.  Its locator
+            # snapshot cannot equal a stale catalog's current snapshot by
+            # definition, so validate current policy and sources instead of
+            # requiring an impossible catalog replay.
+            try:
+                policies = json.loads((repository_root / POLICY_RELATIVE).read_text(encoding="utf-8"))
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                return "consumer_projection_invalid"
+            if request.get("policy_revision") != policies.get("policy_revision"):
+                return "catalog_policy_revision_mismatch"
+            return validate_worktree_sources(payload, repository_root) if verify_sources else None
         catalog = json.loads((repository_root / CATALOG_RELATIVE).read_text(encoding="utf-8"))
         source_snapshot = catalog.get("source_snapshot", {})
         if request.get("snapshot") != {"ref": source_snapshot.get("ref"), "commit": source_snapshot.get("commit")}:
