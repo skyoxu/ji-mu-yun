@@ -96,6 +96,23 @@ def _replay_frozen_selection(
     payload.pop("preflight", None)
     return validator.refresh_context_read_set(payload, repository_root)
 
+
+def _accepted_worktree_projection(payload: dict) -> dict:
+    accepted = {
+        (decision.get("candidate", {}).get("path"), decision.get("candidate", {}).get("source_sha256"))
+        for decision in payload.get("decisions", [])
+        if isinstance(decision, dict) and decision.get("decision") == "accepted" and isinstance(decision.get("candidate"), dict)
+    }
+    projected = copy.deepcopy(payload)
+    result = projected.get("locator_result")
+    if not isinstance(result, dict) or not isinstance(result.get("candidates"), list):
+        raise ValueError("locator candidates are invalid")
+    result["candidates"] = [
+        candidate for candidate in result["candidates"]
+        if isinstance(candidate, dict) and (candidate.get("path"), candidate.get("source_sha256")) in accepted
+    ]
+    return projected
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
@@ -187,11 +204,11 @@ def main() -> int:
         payload,
         repository_root=root,
         verify_catalog=True,
-        verify_sources=True,
+        verify_sources=catalog_failure_code != "catalog_stale",
         expected_consumer="vdd",
     )
     if failure_code is None:
-        failure_code = validator.validate_worktree_sources(payload, root)
+        failure_code = validator.validate_worktree_sources(_accepted_worktree_projection(payload), root)
     if failure_code == "candidate_worktree_source_hash_mismatch" and replay_context is None:
         try:
             payload = validator.refresh_context_read_set(payload, root)

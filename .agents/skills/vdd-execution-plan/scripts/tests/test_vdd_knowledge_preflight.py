@@ -73,6 +73,21 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             self.assertEqual("AGENTS.md", replayed["decisions"][0]["candidate"]["path"])
             self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(), replayed["decisions"][0]["candidate"]["source_sha256"])
             self.assertEqual("current_worktree_read_set", replayed["source_refresh"]["mode"])
+
+    def test_stale_preflight_ignores_rejected_missing_source_before_refresh(self) -> None:
+        module = load_prepare()
+        payload = {
+            "locator_result": {"candidates": [
+                {"path": "accepted.md", "source_sha256": "a"},
+                {"path": "retired.md", "source_sha256": "b"},
+            ]},
+            "decisions": [
+                {"decision": "accepted", "candidate": {"path": "accepted.md", "source_sha256": "a"}},
+                {"decision": "rejected", "candidate": {"path": "retired.md", "source_sha256": "b"}},
+            ],
+        }
+        projected = module._accepted_worktree_projection(payload)
+        self.assertEqual(["accepted.md"], [item["path"] for item in projected["locator_result"]["candidates"]])
     def test_cli_consumes_real_ready_skill_input_context(self) -> None:
         module = load_preflight()
         with tempfile.TemporaryDirectory() as raw:
