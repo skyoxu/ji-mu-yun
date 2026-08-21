@@ -58,7 +58,7 @@ def test_deterministic_finalization_requires_and_publishes_hash_bound_receipts(t
     policy.write_text("{}\n", encoding="utf-8")
     run_input = {
         "run_id": "acceptance-test", "created_utc": "2026-08-17T00:00:00Z", "change_id": "test",
-        "target": str(target), "target_plan_paths": ["inputs/candidate.json"],
+        "target": target.relative_to(root).as_posix(), "target_plan_paths": ["inputs/candidate.json"],
         "baseline_revision": baseline_revision, "candidate_revision": candidate_revision, "candidate_mode": "commit",
         "execution_mode": "evidence_only", "baseline_content_manifest_path": "inputs/baseline.json",
         "baseline_content_manifest_hash": acceptance_core.canonical_hash(baseline), "candidate_content_manifest_path": "inputs/candidate.json",
@@ -103,12 +103,12 @@ def test_deterministic_finalization_requires_and_publishes_hash_bound_receipts(t
         "prerequisiteBundle": {"path": "inputs/bundle.json", "sha256": _sha(bundle_path.read_bytes()), "bundleHash": bundle["bundleHash"], "implementationReceipt": bundle["implementationReceipt"]},
         "authorizes": [],
     }
-    prepared_path = target / "prepared.json"
-    prepared_path.write_text(json.dumps(prepared), encoding="utf-8")
     actions = [{"actionId": "terminal-full", "dependsOn": [], "order": 1, "commandId": "terminal-full", "activation": True}]
     runs_root = target / "runs"
     runs_root.mkdir()
     run = execution_control.create_persisted_run(runs_root, "acceptance-test", prepared["inputHash"], "sha256:" + "a" * 64)
+    prepared_path = run / "prepare-run.v1.json"
+    prepared_path.write_text(json.dumps(prepared), encoding="utf-8")
     execution_control.resume_persisted_run(root, run, actions, registry, prepared["inputHash"], "sha256:" + "a" * 64)
     result = deterministic_finalization.finalize_deterministic_run(root, run, prepared_path, actions, registry)
     assert result["status"] == "acceptance-passed"

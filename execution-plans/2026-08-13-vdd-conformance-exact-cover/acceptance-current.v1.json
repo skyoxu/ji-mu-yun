@@ -1,13 +1,13 @@
 {
   "authorizes": [],
-  "currentRun": "execution-plans/2026-08-13-vdd-conformance-exact-cover/acceptance-runs/acceptance-8-13-reaccept-20260821-v8",
+  "currentRun": "execution-plans/2026-08-13-vdd-conformance-exact-cover/acceptance-runs/acceptance-8-13-reaccept-20260821-v12",
   "finalResult": {
-    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/acceptance-runs/acceptance-8-13-reaccept-20260821-v8/finalization/acceptance-passed.v1.json",
-    "sha256": "sha256:81ee71871ae9b4d84c3be89a1bb9d7cb067b5cafc5d8eac8e773c7ecc000f610"
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/acceptance-runs/acceptance-8-13-reaccept-20260821-v12/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:a2d2d640a4081040cc2b2cbbb6bd81cb7db90d2b998c2a8cdfff7a0bf477d99d"
   },
   "finalWrapper": {
-    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/acceptance-runs/acceptance-8-13-reaccept-20260821-v8/finalization/acceptance-result-final.v1.json",
-    "sha256": "sha256:a7d9a888c23bf5565e7740258f878d21f52217b7fc962597a55b816f349cd966"
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/acceptance-runs/acceptance-8-13-reaccept-20260821-v12/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:ecec27bb227ccbc62e9e797affb521b96dc537943dc4a984b1d5a566d1592569"
   },
   "schemaVersion": "acceptance-current.v1"
 }

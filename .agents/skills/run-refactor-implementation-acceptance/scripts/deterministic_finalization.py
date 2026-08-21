@@ -207,15 +207,22 @@ def finalize_deterministic_run(
     declared_target = input_value.get("target")
     if not isinstance(declared_target, str) or not declared_target:
         raise InputError("acceptance target is invalid")
-    target = Path(declared_target).resolve() if Path(declared_target).is_absolute() else run_input_path.parent
+    target = (
+        Path(declared_target).resolve()
+        if Path(declared_target).is_absolute()
+        else (root / declared_target).resolve()
+    )
     try:
         target.relative_to(root)
     except ValueError as exc:
         raise InputError("acceptance target escapes repository root") from exc
-    if run_input_path.parent != target:
-        raise InputError("acceptance run input is not stored at its declared target root")
     if not Path(declared_target).is_absolute() and ".." in Path(declared_target).parts:
         raise InputError("acceptance target must be repository-relative")
+    if Path(declared_target).is_absolute():
+        if run_input_path.parent != target:
+            raise InputError("absolute-target run input is not stored at its declared target root")
+    elif run_input_path.parent != run_dir:
+        raise InputError("repository-relative run input must be stored in its persisted run directory")
     baseline = _load(target / input_value["baseline_content_manifest_path"])
     candidate = _load(target / input_value["candidate_content_manifest_path"])
     validate_baseline_manifest(baseline)
