@@ -141,6 +141,8 @@ class CompactVddProjectionTests(unittest.TestCase):
         self.assertEqual("commit", request["candidate_mode"])
         self.assertEqual(candidate, request["candidate_revision"])
         self.assertNotIn("candidate_frozen_snapshot_path", request)
+        self.assertEqual("execution-plans/target", request["target"])
+        self.assertFalse(Path(request["target"]).is_absolute())
 
     def test_projection_rejects_handoff_that_no_longer_matches_the_terminal_contract(self) -> None:
         receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))

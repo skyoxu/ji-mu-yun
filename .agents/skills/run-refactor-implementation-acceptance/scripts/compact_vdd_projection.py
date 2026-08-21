@@ -342,7 +342,10 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
             "run_id": run_id,
             "created_utc": "2026-08-01T00:00:00Z",
             "change_id": request["changeId"],
-            "target": str(target),
+            # Run inputs are persisted evidence and must replay from another
+            # checkout.  Keep the target as the repository-relative authority
+            # identity rather than the local custody location.
+            "target": request["targetPlan"],
             "target_plan_paths": request["targetPlanPaths"],
             "baseline_revision": resolved_revision,
             "candidate_revision": request.get("candidateRevision") or "dirty-worktree:" + canonical_hash(candidate_manifest).split(":", 1)[1],
