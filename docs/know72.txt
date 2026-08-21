@@ -1,0 +1,111 @@
+阻断原因不是需求缺漏，而是 VDD 目录尚未完成最后的 plan-ready → implementation-authorized 入口转换。
+
+当前完整度
+部分	判断
+R0–R4 需求与验收条件	完整
+R2 Knowledge 降级/authority 边界	完整
+切片依赖顺序	完整
+production/test/documentation 写集	完整
+禁止写入 8-17 历史目录	完整
+RED selector、GREEN、terminal 命令	完整
+ADR-0058、ADR-0059	已 Accepted
+Knowledge preflight	ready，允许 degraded
+Skill Input	ready: true
+VDD repair closure	未完成
+plan-ready	未发布
+maintainer implementation authorization	未发布
+
+需求和实施合同见：
+
+requirements-and-acceptance.md
+implementation-contract.v1.json
+command-registry.v1.json
+
+我给出的估算是：
+
+需求语义完整度约 95%；进入实施的生命周期准备度约 70%。
+
+当前真正的入口阻断
+
+plan-state.v1.json 仍是：
+
+{
+  "status": "draft",
+  "authorizes": [],
+  "owner": "vdd"
+}
+
+resume-state.v1.json 也明确要求：
+
+"status": "draft",
+"next_action": "repair-closure-validation"
+
+而且：
+
+changed-set-manifest 还是 candidate-not-closed；
+root-cause inventory 还是 pending-targeted-validation；
+composition receipt 还是 candidate-not-closed；
+正式的 repair/round-1/repair-closure.json 尚不存在；
+maintainer implementation authorization receipt 尚不存在。
+
+最新 terminal-full-current12 因此仍然正确地失败：
+
+maintainer-implementation-authorization-required
+implementation-authorization-not-published
+maintainer-authorization-receipt-required
+
+R0、R1、R2 的 GREEN 失败目前属于计划中的 RED 基线，不是功能缺陷。
+
+一个需要修正的闭环顺序
+
+当前 composition receipt 写的是：
+
+"requires_before_closure": [
+  "targeted-validation",
+  "maintainer-implementation-authorization"
+]
+
+这个顺序有循环依赖：
+
+VDD closure
+→ plan-ready
+→ maintainer authorization
+→ implementation-authorized
+
+不能要求 maintainer authorization 先于 VDD closure。
+
+应调整为：
+
+"requires_before_closure": [
+  "targeted-validation",
+  "workflow-repair-disposition"
+],
+"requires_before_implementation": [
+  "maintainer-implementation-authorization"
+]
+
+这是目前唯一需要修正的实质性合同问题。
+
+最小补完步骤
+
+不需要重做需求目录，只需要一次入口收尾：
+
+将 root-cause inventory 标记为已完成 targeted validation。
+在 sibling disposition 中引用 2026-08-18-toolchain-workflow-repair 已有的 Quick Dev implementation-complete receipt；按当前宽松标准，其功能实现已经足以解除“无人负责的共享修改”问题。
+将 changed-set 和 composition receipt 更新为 closed/passed。
+生成 repair/round-1/repair-closure.json，由 VDD 授权 plan-ready。
+更新：
+plan-state.status = "plan-ready"
+resume-state.next_action = "request-implementation-authorization"
+由 maintainer 发布 implementation authorization receipt。
+更新：
+plan-state.status = "implementation-authorized"
+resume-state.status = "implementation-authorized"
+resume-state.next_action = "run-slice"
+resume-state.current_slice = "R0"
+
+完成这七步后即可正式进入 Quick Dev TDD，从 R0 的真实 RED 开始。
+
+最终判断：
+
+需求设计没有需要重新规划的大缺口；当前不应直接实施，但距离实施只差一次 VDD repair closure 和 maintainer authorization，不需要再扩写 R0–R4。

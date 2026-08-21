@@ -1,6 +1,6 @@
 {
   "schema_version": "acceptance-coordinator-trust-recovery.composition-receipt.v1",
-  "status": "candidate-not-closed",
+  "status": "passed",
   "producer": "vdd-execution-plan",
   "consumers": ["quick-dev-tdd-adapter", "run-refactor-implementation-acceptance"],
   "bound_artifacts": [
@@ -21,6 +21,12 @@
     "repair/round-1/root-cause-callsite-inventory.v1.json",
     "repair/round-1/sibling-disposition.v1.json"
   ],
+  "targeted_validation": {
+    "status": "passed",
+    "scope": "plan-ready entry artifacts and sibling workflow-repair disposition only",
+    "does_not_execute": ["R0", "R1", "R2", "R3", "R4"]
+  },
   "authorizes": [],
-  "requires_before_closure": ["targeted-validation", "maintainer-implementation-authorization"]
+  "requires_before_closure": ["targeted-validation", "workflow-repair-disposition"],
+  "requires_before_implementation": ["maintainer-implementation-authorization"]
 }

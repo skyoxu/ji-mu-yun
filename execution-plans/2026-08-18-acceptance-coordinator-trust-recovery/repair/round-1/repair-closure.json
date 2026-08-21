@@ -1,0 +1,66 @@
+{
+  "schema_version": "acceptance-coordinator-trust-recovery.vdd-repair-closure.v1",
+  "plan_id": "acceptance-coordinator-trust-recovery",
+  "round": 1,
+  "status": "repair-validated",
+  "scope": "VDD plan-ready entry closure; no Quick Dev slice execution",
+  "finding_source": {
+    "path": "docs/know72.txt",
+    "sha256": "sha256:fb55e04eff8eb022ef449aa7823241073cdf6fb026a95b1aef6b325f29c5bbdf"
+  },
+  "bindings": {
+    "changed_set": {
+      "path": "repair/round-1/changed-set-manifest.v1.json",
+      "sha256": "sha256:54e91dca2e4d2160533a1a384d1a059d0ffb3861d3cf3619b18112d213c00b5b"
+    },
+    "composition": {
+      "path": "repair/round-1/producer-consumer-composition-receipt.v1.json",
+      "sha256": "sha256:9311cdcd9166620182355b9c1e2e9a35f928bdbe88f424c4f2c2cb63a47d89d5"
+    },
+    "root_cause_inventory": {
+      "path": "repair/round-1/root-cause-callsite-inventory.v1.json",
+      "sha256": "sha256:0494bfeafcabce08788a07ab1ec9f9dc7462cdd3650cced3a3557ef3e6d68afb"
+    },
+    "sibling_disposition": {
+      "path": "repair/round-1/sibling-disposition.v1.json",
+      "sha256": "sha256:f84d0bf3a443f9b3398097eba4d2e9813e54c41bfd749ba71f49ebe0f43ca6a1"
+    },
+    "implementation_contract": {
+      "path": "implementation-contract.v1.json",
+      "sha256": "sha256:54428b61ac784cbd8701ca928ddcf2c216e532a7f037c50dbda6f81a3520195b"
+    },
+    "command_registry": {
+      "path": "command-registry.v1.json",
+      "sha256": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93"
+    },
+    "knowledge_context": {
+      "path": "knowledge-context.v1.json",
+      "sha256": "sha256:43955cbe098e656d50cb2c825f89430323acf4a0a03a4e2d4b5a816d09c9b39f"
+    },
+    "knowledge_context_freeze": {
+      "path": "knowledge-context.freeze.v1.json",
+      "sha256": "sha256:66f30a90d4b854557d3697bd349df3a3e7c3bb1bad1696f58425c23ffb7abe2e"
+    },
+    "skill_input_receipt": {
+      "path": "skill-input-current12/receipt.json",
+      "sha256": "sha256:bde81a43664e7c3ed493e809df9c5c118b1484006475aef5b3109dfb7b6a1247"
+    }
+  },
+  "verification": [
+    "all bound JSON artifacts parse and match recorded SHA-256 values",
+    "ADR-0058 and ADR-0059 remain accepted through architecture-acceptance-request.v1.json",
+    "knowledge preflight is ready or catalog_stale-degraded under ADR-0059",
+    "Skill-input receipt is ready and non-authorizing",
+    "workflow-repair sibling has a recorded Quick Dev implementation-complete receipt",
+    "R0-R4 remain pending and their RED/GREEN observations are reserved for Quick Dev"
+  ],
+  "lifecycle_transition": "plan-ready",
+  "authorizes": ["plan-ready"],
+  "does_not_authorize": [
+    "implementation-authorized",
+    "implementation-complete",
+    "acceptance-passed",
+    "knowledge-publication",
+    "bootstrap-review"
+  ]
+}
