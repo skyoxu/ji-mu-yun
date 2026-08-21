@@ -8,7 +8,7 @@
     "knowledge-context.freeze.v1.json": "sha256:ddcb6527685a65e7db7df63bedc4d18a7f38fabe73c761edf913139def1ea471",
     "knowledge-context.v1.json": "sha256:d5dda13e21f4c91011d821ccd040ecb5d0127b95db3f9b54cdfa87c2b73ec35e"
   },
-  "candidate_binding_hash": "sha256:2c729d35bddb4b4a31825a8ff3e5816459c303cd878d808915568073031589c9",
+  "candidate_binding_hash": "sha256:e858d9c72dacea1a8f6692869547f71bf6bb1b76c0bdbdc84af3e881a671d438",
   "command_registry_hash": "sha256:0bfc0a76e616ed2a3b1507a16a2d2005b1fbc324ede6351ac7b121afd35fe22b",
   "contract_hash": "sha256:b8603c1ab17c0a63c6852336050cb82d31bdd2f9679a5dd510b61e154b728117",
   "failures": [],

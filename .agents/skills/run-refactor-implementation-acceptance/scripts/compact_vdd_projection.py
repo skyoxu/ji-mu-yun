@@ -429,7 +429,9 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
                 # leaking the request's repository-relative transport path.
                 "path": receipt_path.relative_to(target).as_posix(),
                 "sha256": request["implementationReceiptHash"],
-                "terminalCommandId": receipt["terminal_command_id"],
+            "terminalCommandId": receipt.get("terminal_command_id")
+            or (receipt.get("terminal_result") or {}).get("command_id")
+            or "terminal-full",
             },
             "terminalRunner": {
                 "path": validator.relative_to(target).as_posix(),
