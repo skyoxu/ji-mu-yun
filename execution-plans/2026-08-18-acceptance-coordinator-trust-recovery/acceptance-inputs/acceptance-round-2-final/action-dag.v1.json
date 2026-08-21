@@ -1,0 +1,135 @@
+[
+  {
+    "actionId": "r0-green",
+    "activation": true,
+    "commandId": "r0-green",
+    "dependsOn": [],
+    "order": 1
+  },
+  {
+    "actionId": "r0-terminal",
+    "activation": true,
+    "commandId": "r0-terminal",
+    "dependsOn": [
+      "r0-green"
+    ],
+    "order": 2
+  },
+  {
+    "actionId": "r1-green",
+    "activation": true,
+    "commandId": "r1-green",
+    "dependsOn": [
+      "r0-terminal"
+    ],
+    "order": 3
+  },
+  {
+    "actionId": "r1-terminal",
+    "activation": true,
+    "commandId": "r1-terminal",
+    "dependsOn": [
+      "r1-green"
+    ],
+    "order": 4
+  },
+  {
+    "actionId": "r2-green",
+    "activation": true,
+    "commandId": "r2-green",
+    "dependsOn": [
+      "r1-terminal"
+    ],
+    "order": 5
+  },
+  {
+    "actionId": "r2-terminal",
+    "activation": true,
+    "commandId": "r2-terminal",
+    "dependsOn": [
+      "r2-green"
+    ],
+    "order": 6
+  },
+  {
+    "actionId": "r3-green",
+    "activation": true,
+    "commandId": "r3-green",
+    "dependsOn": [
+      "r2-terminal"
+    ],
+    "order": 7
+  },
+  {
+    "actionId": "r3-terminal",
+    "activation": true,
+    "commandId": "r3-terminal",
+    "dependsOn": [
+      "r3-green"
+    ],
+    "order": 8
+  },
+  {
+    "actionId": "r4-green",
+    "activation": true,
+    "commandId": "r4-green",
+    "dependsOn": [
+      "r3-terminal"
+    ],
+    "order": 9
+  },
+  {
+    "actionId": "r5-green",
+    "activation": true,
+    "commandId": "r5-green",
+    "dependsOn": [
+      "r4-green"
+    ],
+    "order": 10
+  },
+  {
+    "actionId": "r5-terminal",
+    "activation": true,
+    "commandId": "r5-terminal",
+    "dependsOn": [
+      "r5-green"
+    ],
+    "order": 11
+  },
+  {
+    "actionId": "quick-dev-suite",
+    "activation": true,
+    "commandId": "quick-dev-suite",
+    "dependsOn": [
+      "r5-terminal"
+    ],
+    "order": 12
+  },
+  {
+    "actionId": "acceptance-suite",
+    "activation": true,
+    "commandId": "acceptance-suite",
+    "dependsOn": [
+      "quick-dev-suite"
+    ],
+    "order": 13
+  },
+  {
+    "actionId": "r4-terminal",
+    "activation": true,
+    "commandId": "r4-terminal",
+    "dependsOn": [
+      "acceptance-suite"
+    ],
+    "order": 14
+  },
+  {
+    "actionId": "terminal-full",
+    "activation": true,
+    "commandId": "terminal-full",
+    "dependsOn": [
+      "r4-terminal"
+    ],
+    "order": 15
+  }
+]

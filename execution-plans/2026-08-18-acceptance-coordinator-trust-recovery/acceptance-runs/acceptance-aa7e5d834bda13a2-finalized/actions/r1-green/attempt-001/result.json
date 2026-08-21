@@ -1,0 +1,83 @@
+{
+  "authorizes": [],
+  "commandId": "r1-green",
+  "commandRegistryHash": "sha256:3f6ad6126664d18961b0eba12592824a467db3738fd963b0f81c0aea42d6f753",
+  "environmentIdentity": {
+    "hash": "sha256:3d83924597c385d0a288d12c4263e250a6e330ac01419f4c241825cefb9a5fa7",
+    "names": [
+      "APPDATA",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "-m",
+      "pytest",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_successor_crash_recovery.py",
+      "-q"
+    ],
+    "commandId": "r1-green",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 300
+  },
+  "invocationHash": "sha256:938836cf865d727e71bdb79260e05acb59a2008b1e72dc93266aa38137884e9f",
+  "processResult": {
+    "commandId": "r1-green",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "..                                                                       [100%]\r\n2 passed in 0.07s\r\n",
+    "stdoutSha256": "sha256:8e9af2e5f4ad40ae4fa8ce5c79012938bafa5fd891695c2eff233b48d2196c3d"
+  },
+  "processResultHash": "sha256:8a9299159f9d6f75bb551ef4784858969bd9e1c991837aecd04af881e576c41b",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

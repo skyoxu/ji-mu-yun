@@ -1,0 +1,100 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "request_binding": {
+    "request": {
+      "target_plan": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery",
+      "operation": "execute"
+    },
+    "consumer": "run-refactor-implementation-acceptance",
+    "operation": "acceptance",
+    "target": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    "route_identity": "run-refactor-implementation-acceptance.acceptance.round-2",
+    "source_roles": {
+      "implementation_target": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py"
+      ],
+      "acceptance_requirements": [
+        "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md"
+      ]
+    }
+  },
+  "request_hash": "sha256:8d41cda246b2ebe35516f7935fb33f8ee9931389cdd3e45815bfdddfd47cc839",
+  "target": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+  "route_identity": "run-refactor-implementation-acceptance.acceptance.round-2",
+  "repository_identity": {
+    "head": "c9552f1126f2e7a0f7ad286710b5ba93976b0a0a",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:0774814c918500508b52bc7ceb06e786afe2c22bd3a359bea31edd1d30b84ba0",
+    "source_selection_hash": "sha256:ccc6a5af9e307b54103ae0b2b63e83501ee330e1c6c6000f5ff3f88d65ad94c9",
+    "selected_source_content_root": "sha256:453b2d0528d3b25598c81da1687b1ffc02ef7c286c36f0ff47de07d11da75c3f"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-21T17:04:21.061659Z",
+  "contract_hash": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0",
+  "source_manifest": {
+    "path": "s/source-manifest.v1.json",
+    "sha256": "sha256:33b0a99ce8e5cb31875afbed46c8b2169fa81dc3a3914828a18edcc0f1a23770"
+  },
+  "child_request": {
+    "path": "child-request.json",
+    "sha256": "sha256:da471682d817b3c6bc596cc2159a6cffd8cef4af2503a6cb3fb73e502f0d7085"
+  },
+  "sources": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "required": true,
+      "sha256_before": "sha256:f71ee319359962718784c9e0afe50fe785b30829846ca093da3a6d5c0a62c650",
+      "sha256_after": "sha256:f71ee319359962718784c9e0afe50fe785b30829846ca093da3a6d5c0a62c650",
+      "size_bytes": 78924,
+      "line_count": 1509,
+      "sensitivity": "credential-bearing",
+      "semantic_snapshot_sha256": "sha256:c0cbd90b2c4a698a05cd383aed8bb8d2d3e543ad18ee4dbd214a267396cf1c43",
+      "redaction_status": "complete",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1509
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+      "required": true,
+      "sha256_before": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+      "sha256_after": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+      "size_bytes": 9569,
+      "line_count": 175,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 175
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "o/semantic-decision.v1.json",
+    "sha256": "sha256:be911c98221751d636331af2b6b358fd059ac5c1258d543a8c6d8e20f29539c8"
+  },
+  "context_artifact": {
+    "path": "o/skill-input-context.v1.json",
+    "sha256": "sha256:8c1bdb162609d8b7216582290942a0bfd5441d6e77f1734c623464eb76fd9254"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:8365030e06a351f20832f3ea6ac3ad7970995dca5832a4ae86bf2c1d1de60112"
+}

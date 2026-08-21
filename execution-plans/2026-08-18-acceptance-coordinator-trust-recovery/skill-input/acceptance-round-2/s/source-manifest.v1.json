@@ -1,0 +1,23 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "sources": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "sha256": "sha256:f71ee319359962718784c9e0afe50fe785b30829846ca093da3a6d5c0a62c650",
+      "semantic_snapshot_sha256": "sha256:c0cbd90b2c4a698a05cd383aed8bb8d2d3e543ad18ee4dbd214a267396cf1c43",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+      "sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+      "semantic_snapshot_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-21T17:04:20.986983Z"
+}
