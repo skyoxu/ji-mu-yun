@@ -105,6 +105,8 @@ def _candidate_source_entries() -> list[dict[str, object]]:
         {"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py", "role": "contract-consumer", "slice_ids": ["R5"]},
         {"path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py", "role": "validator", "slice_ids": ["R5"]},
         {"path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py", "role": "validator", "slice_ids": ["R5"]},
+        {"path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/tests/test_completion_handoff_integrity.py", "role": "test", "slice_ids": ["R5"]},
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py", "role": "test", "slice_ids": ["R5"]},
         {"path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json", "role": "contract-consumer", "slice_ids": ["R0", "R1", "R2", "R3", "R4", "R5"]},
         {"path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json", "role": "contract-consumer", "slice_ids": ["R0", "R1", "R2", "R3", "R4", "R5"]},
     ]
