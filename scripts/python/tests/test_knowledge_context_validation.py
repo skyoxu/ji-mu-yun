@@ -59,6 +59,8 @@ class KnowledgeContextValidationTests(unittest.TestCase):
             (root / "knowledge/catalogs/repository-knowledge-catalog.v2.json").write_text(json.dumps(catalog), encoding="utf-8")
             (root / "knowledge/policies/consumer-policies.v2.json").write_text(json.dumps({"policy_revision": "policy"}), encoding="utf-8")
             original = {"schema_version": "jimuyun.vdd-knowledge-context.v1", "locator_request": {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": "r", "consumer": "vdd", "snapshot": {"ref": "refs/heads/main", "commit": "old"}, "policy_revision": "policy", "allow_stale_catalog": True}, "locator_result": {"schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "r", "snapshot": {"ref": "refs/heads/main", "commit": "old"}, "status": "matched", "source_snapshot_id": "old", "policy_revision": "policy", "candidates": [{"path": "AGENTS.md", "source_sha256": "0" * 64, "read_set": [{"path": "AGENTS.md", "source_sha256": "0" * 64}]}]}, "required_modules": ["rules"], "decisions": [{"owner": "adapter", "decision": "accepted", "satisfies": ["rules"], "candidate": {"path": "AGENTS.md", "source_sha256": "0" * 64}}]}
+            original["locator_result"]["candidates"].append({"path": "retired.md", "source_sha256": "1" * 64})
+            original["decisions"].append({"owner": "adapter", "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity", "candidate": {"path": "retired.md", "source_sha256": "1" * 64}})
             original["request_sha256"] = canonical_hash(original["locator_request"])
             original["result_sha256"] = canonical_hash(original["locator_result"])
             refreshed = payload(original, root)

@@ -430,7 +430,20 @@ def validate_context(
                 return "consumer_projection_invalid"
             if request.get("policy_revision") != policies.get("policy_revision"):
                 return "catalog_policy_revision_mismatch"
-            return validate_worktree_sources(payload, repository_root) if verify_sources else None
+            if not verify_sources:
+                return None
+            accepted_keys = {
+                (decision.get("candidate", {}).get("path"), decision.get("candidate", {}).get("source_sha256"))
+                for decision in decisions
+                if isinstance(decision, dict) and decision.get("decision") == "accepted" and isinstance(decision.get("candidate"), dict)
+            }
+            projected = copy.deepcopy(payload)
+            projected["locator_result"] = dict(result)
+            projected["locator_result"]["candidates"] = [
+                candidate for candidate in candidates
+                if (candidate.get("path"), candidate.get("source_sha256")) in accepted_keys
+            ]
+            return validate_worktree_sources(projected, repository_root)
         catalog = json.loads((repository_root / CATALOG_RELATIVE).read_text(encoding="utf-8"))
         source_snapshot = catalog.get("source_snapshot", {})
         if request.get("snapshot") != {"ref": source_snapshot.get("ref"), "commit": source_snapshot.get("commit")}:
