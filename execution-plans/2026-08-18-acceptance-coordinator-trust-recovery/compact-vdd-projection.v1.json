@@ -1,0 +1,7 @@
+{
+  "authorizes": [],
+  "bundle": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/acceptance-inputs/acceptance-round-2-final/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+  "bundleHash": "sha256:d7b73cd68786f2f7336143a39ce88b4a377447034b129de0c0ce4db618ee3468",
+  "runRequest": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/acceptance-run-request.acceptance-round-2-final.v1.json",
+  "status": "ready"
+}

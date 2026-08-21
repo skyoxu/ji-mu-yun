@@ -1,0 +1,160 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "request_binding": {
+    "request": {},
+    "consumer": "quick-dev-tdd-adapter",
+    "operation": "execute",
+    "target": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery",
+    "route_identity": "quick-dev-tdd-adapter:acceptance-coordinator-trust-recovery:round-2",
+    "source_roles": {
+      "plan_directory": [
+        "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery"
+      ],
+      "target_files": [
+        "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools"
+      ],
+      "requirements": [
+        "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md"
+      ]
+    }
+  },
+  "request_hash": "sha256:f4a0266b35dee55afc20361658b0b0942aa59e731c684019304fd7698da88d4d",
+  "target": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery",
+  "route_identity": "quick-dev-tdd-adapter:acceptance-coordinator-trust-recovery:round-2",
+  "repository_identity": {
+    "head": "84445b8e575d915c9c1b5678649318d3a3c95cbe",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:a867d8150e915fb166e898556a174f7a0817d6b15f4f380d0ca08a1ca7af24b5",
+    "source_selection_hash": "sha256:00a5ed5b52b8cd9b5688d0d008e3d6aeb4837f7101c9239eb324ee27e2926a37",
+    "selected_source_content_root": "sha256:0aa3de3bc9716f5c8d1ec66c98d0797fd6090a211b71ab7977ecf843e9913f29"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-21T11:36:34.336547Z",
+  "contract_hash": "sha256:60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374",
+  "source_manifest": {
+    "path": "s/source-manifest.v1.json",
+    "sha256": "sha256:45ed90a7565d1c879ca77d7d23156e88ce451b3e4f5a280d3b44dd7daeed91ff"
+  },
+  "child_request": {
+    "path": "child-request.json",
+    "sha256": "sha256:3c793d1000bd2e765831a74aa20888ae33d3313f3cbaf7c5fb320eac38fd7e35"
+  },
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+      "required": true,
+      "sha256_before": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+      "sha256_after": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+      "size_bytes": 9569,
+      "line_count": 175,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 175
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/migration_bridge.py",
+      "required": true,
+      "sha256_before": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259",
+      "sha256_after": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259",
+      "size_bytes": 5074,
+      "line_count": 148,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 148
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+      "required": true,
+      "sha256_before": "sha256:99bd54a70ec8b9abf12d9c897e8b35f1ad6de1a287cda17ed7de527ae2b7d906",
+      "sha256_after": "sha256:99bd54a70ec8b9abf12d9c897e8b35f1ad6de1a287cda17ed7de527ae2b7d906",
+      "size_bytes": 22799,
+      "line_count": 456,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:99bd54a70ec8b9abf12d9c897e8b35f1ad6de1a287cda17ed7de527ae2b7d906",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 456
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/tests/test_completion_handoff_integrity.py",
+      "required": true,
+      "sha256_before": "sha256:6305a55044a3e69f2c25c100644f6744da17f9626bfbfcbdbc67d68e56eb2517",
+      "sha256_after": "sha256:6305a55044a3e69f2c25c100644f6744da17f9626bfbfcbdbc67d68e56eb2517",
+      "size_bytes": 1600,
+      "line_count": 33,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:6305a55044a3e69f2c25c100644f6744da17f9626bfbfcbdbc67d68e56eb2517",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 33
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py",
+      "required": true,
+      "sha256_before": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7",
+      "sha256_after": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7",
+      "size_bytes": 2926,
+      "line_count": 59,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 59
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "o/semantic-decision.v1.json",
+    "sha256": "sha256:470eb56c735a2ba92e80cf8a6b0851c008983d5f3a11bd90dcc115992c9e85dc"
+  },
+  "context_artifact": {
+    "path": "o/skill-input-context.v1.json",
+    "sha256": "sha256:8cab641670d14a151ba8fb56ed3701ba3c1aad886775a2a4066eeeb54b1bb266"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:278c0ed7cd183503166c2bc4f083c84651301e8661fb64e4b6d66add3e7c09f9"
+}

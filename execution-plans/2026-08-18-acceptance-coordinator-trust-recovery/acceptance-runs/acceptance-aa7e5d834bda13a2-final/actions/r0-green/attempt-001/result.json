@@ -1,0 +1,83 @@
+{
+  "authorizes": [],
+  "commandId": "r0-green",
+  "commandRegistryHash": "sha256:0d03b47e8568e39dfeed1790e7f0ffc1a992e09e3f509d1f576f7b3234308a1f",
+  "environmentIdentity": {
+    "hash": "sha256:3d83924597c385d0a288d12c4263e250a6e330ac01419f4c241825cefb9a5fa7",
+    "names": [
+      "APPDATA",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "-m",
+      "pytest",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py",
+      "-q"
+    ],
+    "commandId": "r0-green",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 300
+  },
+  "invocationHash": "sha256:20963e4308a9acdd53ecc0d43c66d7b660d755cbf74a6871db77f86137c0aa9b",
+  "processResult": {
+    "commandId": "r0-green",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "...............                                                          [100%]\r\n15 passed in 0.27s\r\n",
+    "stdoutSha256": "sha256:d808e29f628a5201efa972255d5ac150bec8b59808ca92991b5a18403f0b7314"
+  },
+  "processResultHash": "sha256:7ea61317857dd235a3b4f7da69e5435908683b12b6a876af008386d8ac37b339",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

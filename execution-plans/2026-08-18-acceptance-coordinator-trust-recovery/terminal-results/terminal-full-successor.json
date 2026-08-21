@@ -1,0 +1,40 @@
+{
+  "authorizes": [],
+  "binding_hashes": {
+    "_bmad-output/q/8-18-round-2-closure/receipt.json": "sha256:a0181dea03219b6d551c22dcbf91eb2a6e50c543760be1fc4f25e1e5d0eee01e",
+    "authority-manifest.v1.json": "sha256:90a7c17f873834c25fb6f49e24f0a21860ff6c0178d53bc99d14e60f41f87a77",
+    "command-registry.v1.json": "sha256:0bfc0a76e616ed2a3b1507a16a2d2005b1fbc324ede6351ac7b121afd35fe22b",
+    "implementation-contract.v1.json": "sha256:b8603c1ab17c0a63c6852336050cb82d31bdd2f9679a5dd510b61e154b728117",
+    "knowledge-context.freeze.v1.json": "sha256:ddcb6527685a65e7db7df63bedc4d18a7f38fabe73c761edf913139def1ea471",
+    "knowledge-context.v1.json": "sha256:d5dda13e21f4c91011d821ccd040ecb5d0127b95db3f9b54cdfa87c2b73ec35e"
+  },
+  "candidate_binding_hash": "sha256:edb597964b49019c489203362d9f79c0d9c8d528eba1fea0cdd42492e580434d",
+  "command_registry_hash": "sha256:0bfc0a76e616ed2a3b1507a16a2d2005b1fbc324ede6351ac7b121afd35fe22b",
+  "contract_hash": "sha256:b8603c1ab17c0a63c6852336050cb82d31bdd2f9679a5dd510b61e154b728117",
+  "failures": [],
+  "lifecycle_transition": "none",
+  "plan_id": "acceptance-coordinator-trust-recovery",
+  "predicate": "implementation-complete",
+  "schema_version": "quick-dev-tdd-adapter.terminal-result.v1",
+  "status": "pass",
+  "terminal_command_id": "terminal-full",
+  "validated_command_ids": [
+    "r0-green",
+    "r1-green",
+    "r2-green",
+    "r3-green",
+    "r4-green",
+    "r5-green",
+    "quick-dev-suite",
+    "acceptance-suite"
+  ],
+  "validated_selectors": [
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_successor_crash_recovery.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_authorization_refresh_chain.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/tests/test_completion_handoff_integrity.py"
+  ]
+}

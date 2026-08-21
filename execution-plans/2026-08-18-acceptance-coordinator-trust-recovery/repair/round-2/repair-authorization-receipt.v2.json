@@ -1,0 +1,42 @@
+{
+  "schema_version": "jimuyun.quick-dev-implementation-authorization.v2",
+  "plan_id": "acceptance-coordinator-trust-recovery",
+  "repair_round": 2,
+  "decision": {
+    "owner": "maintainer",
+    "transition": "implementation-authorized"
+  },
+  "implementation_contract": {
+    "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json",
+    "sha256": "sha256:b8603c1ab17c0a63c6852336050cb82d31bdd2f9679a5dd510b61e154b728117"
+  },
+  "command_registry": {
+    "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json",
+    "sha256": "sha256:0bfc0a76e616ed2a3b1507a16a2d2005b1fbc324ede6351ac7b121afd35fe22b"
+  },
+  "test_identity_hash": "sha256:f65feb992301baad12df6ef7d7050609a2b991fe17386c091149f158c2daf7d9",
+  "authority_manifest": {
+    "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/authority-manifest.v1.json",
+    "sha256": "sha256:90a7c17f873834c25fb6f49e24f0a21860ff6c0178d53bc99d14e60f41f87a77"
+  },
+  "knowledge_context_freeze": {
+    "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/knowledge-context.freeze.v1.json",
+    "sha256": "sha256:ddcb6527685a65e7db7df63bedc4d18a7f38fabe73c761edf913139def1ea471"
+  },
+  "knowledge_selection_hash": "sha256:2f50f79ff63dda45e2d296be4a8fc4ab58e1bea1a6a7e1335b49eed49671c73f",
+  "authority_envelope_hash": "sha256:656f38db67aae633c492452bb0e26142e935374f7cb81be66a653d7bab5d6829",
+  "skill_input_contract": {
+    "path": ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json",
+    "sha256": "sha256:60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374"
+  },
+  "permitted_successor_kinds": [
+    "same-selection-source-refresh",
+    "execution-evidence-successor",
+    "quick-dev-terminal-successor"
+  ],
+  "supersedes": {
+    "completion_receipt": "repair/round-1/quick-dev-implementation-complete.v1.json",
+    "reason": "repair-round-2"
+  },
+  "authorizes": ["implementation-authorized"]
+}

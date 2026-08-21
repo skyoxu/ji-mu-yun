@@ -1,0 +1,20 @@
+{
+  "actionId": "r4-terminal",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "r4-terminal",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374",
+    "knowledgeContextHash": "sha256:5c84726fc5af1202aaaf03f37bd5b7e67dc9a9159d9fe28458b796e8d356f4b4",
+    "runInputHash": "sha256:b3baa1bd5009cef1308599c827425e676b26f26da11d794723fa820a8120432c"
+  },
+  "ownerToken": "owner-acceptance-aa7e5d834bda13a2-replay-final",
+  "processId": 8156,
+  "recordedUtc": "2026-08-21T17:35:55.067121Z",
+  "runId": "acceptance-aa7e5d834bda13a2-replay-final",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 40
+}

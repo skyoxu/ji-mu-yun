@@ -150,9 +150,18 @@ def refresh_successor_context(repository_root: Path, plan_dir: Path) -> dict[str
     return {"status": "refreshed", "authorizes": []}
 
 
-def refresh_context_read_set(repository_root: Path, plan_dir: Path) -> dict[str, Any]:
-    """Expose the controlled same-selection refresh through the Quick Dev boundary."""
-    return refresh_successor_context(repository_root, plan_dir)
+def refresh_context_read_set(context: dict[str, Any], repository_root: Path) -> dict[str, Any]:
+    """Use the repository shared primitive for a pure selected-read-set rehash.
+
+    Materializing a successor context remains VDD-owned through
+    ``refresh_successor_context``. This API only classifies/recomputes the
+    selected read set so Quick Dev and Acceptance cannot diverge.
+    """
+    validator = _validator(repository_root.resolve())
+    refreshed = validator.refresh_context_read_set(context, repository_root.resolve())
+    if not isinstance(refreshed, dict):
+        raise ValueError("knowledge read-set refresh is invalid")
+    return refreshed
 
 
 def verify_plan_context(repository_root: Path, plan_dir: Path) -> dict[str, Any]:

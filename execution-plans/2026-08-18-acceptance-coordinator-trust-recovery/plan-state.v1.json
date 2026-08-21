@@ -1,7 +1,10 @@
 {
-  "schema_version": "jimuyun.plan-state.v1",
+  "authorizes": [
+    "implementation-complete"
+  ],
+  "owner": "quick-dev-tdd-adapter",
   "plan_id": "acceptance-coordinator-trust-recovery",
-  "status": "implementation-complete",
-  "authorizes": ["implementation-complete"],
-  "owner": "quick-dev-tdd-adapter"
+  "repair_round": "repair/round-2",
+  "schema_version": "jimuyun.plan-state.v1",
+  "status": "implementation-complete"
 }

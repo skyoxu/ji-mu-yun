@@ -1,0 +1,7 @@
+{
+  "status": "complete",
+  "context_artifact": "C:/jimuyun/_bmad-output/q/8-18-round-2-closure/o/skill-input-context.v1.json",
+  "semantic_decision": "C:/jimuyun/_bmad-output/q/8-18-round-2-closure/o/semantic-decision.v1.json",
+  "source_manifest_hash": "sha256:d09176c2df6377b35c9309997f7e698b1b421a9fd67a38eff6969cedfe73f41a",
+  "snapshot_read_coverage": "C:/jimuyun/_bmad-output/q/8-18-round-2-closure/o/snapshot-read-coverage.v1.json"
+}

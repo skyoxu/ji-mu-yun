@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py",
+    "source_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2926,
+    "start_line": 1,
+    "end_line": 60,
+    "content_sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7"
+  },
+  "status": "accepted",
+  "summary": "src=execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py; purpose=plan-local validator identity for Quick Dev; PLAN=root two levels above file; R0-R4 map slice_id to candidate source paths; _identity(slice_id?) hashes plan_id+selected slice+registry+terminal into validator_hash; unknown slice -> ValueError; current_candidate_identity(slice_id) adds candidate_hash from concatenated labeled bytes of mapped sources; validation_snapshot adds candidate_hash from implementation-contract.v1.json plus predicate_input_root, authority_root, validator_root, validator_version, closure_definition_hash; slice_validation_snapshot combines validation_snapshot and current_candidate_identity; dependent files=implementation-contract.v1.json, command-registry.v1.json, repair/round-1/repair-closure.json; stable IDs=plan_id,slice_id,validator_version; ambiguity=validation_snapshot candidate_hash is implementation-contract digest, not source digest"
+}

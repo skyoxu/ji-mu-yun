@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "currentRun": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/acceptance-runs/acceptance-aa7e5d834bda13a2-finalized",
+  "finalResult": {
+    "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/acceptance-runs/acceptance-aa7e5d834bda13a2-finalized/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:85dbf2aa9c0699c13bfb6e0af08c48dd9881fa5bfd187b82736d5fd4a55e4e7b"
+  },
+  "finalWrapper": {
+    "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/acceptance-runs/acceptance-aa7e5d834bda13a2-finalized/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:1539b63ba15fce9dfb3991cb62448bb0039b0c67190c91434c598f9c66e7d9b7"
+  },
+  "schemaVersion": "acceptance-current.v1"
+}

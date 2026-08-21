@@ -87,7 +87,7 @@
       "requirement_ids": ["ACR-R4"],
       "acceptance_ids": ["ACR-R4-EXIT"],
       "source_refs": ["requirements-and-acceptance.md"],
-      "depends_on": ["R0", "R1", "R2", "R3"],
+      "depends_on": ["R0", "R1", "R2", "R3", "R5"],
       "allowed_changes": {"production": [], "tests": [], "documentation": ["execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/**"]},
       "execution_snapshot_paths": ["implementation-contract.v1.json", "command-registry.v1.json"],
       "forbidden_changes": ["PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**", "knowledge/**", "execution-plans/2026-08-17-acceptance-coordinator-efficiency/**"],
@@ -96,6 +96,24 @@
       "post_refactor_command_id": "r4-terminal",
       "exit_predicate": "slice-ready",
       "recovery": "Keep 8-17 historical evidence immutable; publish only a new current binding generation."
+    },
+    {
+      "slice_id": "R5",
+      "title": "completion handoff integrity",
+      "requirement_ids": ["ACR-R5"],
+      "acceptance_ids": ["ACR-R5-EXIT"],
+      "source_refs": ["requirements-and-acceptance.md"],
+      "depends_on": ["R0", "R1", "R2", "R3"],
+      "allowed_changes": {"production": ["execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/**", ".agents/skills/run-refactor-implementation-acceptance/scripts/**"], "tests": ["execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/tests/**", ".agents/skills/run-refactor-implementation-acceptance/tests/**"], "documentation": ["execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/**"]},
+      "planned_new_files": ["execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/tests/test_completion_handoff_integrity.py"],
+      "execution_snapshot_paths": ["implementation-contract.v1.json", "command-registry.v1.json", "authority-manifest.v1.json"],
+      "forbidden_changes": ["PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**", "knowledge/catalogs/**", "knowledge/projections/**", "knowledge/generations/**", "knowledge/contexts/**"],
+      "execution_read_set": ["requirements-and-acceptance.md", "tools/terminal_full.py", "tools/validate_all.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py"],
+      "dependency_closure": ["execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/**", ".agents/skills/run-refactor-implementation-acceptance/scripts/**"],
+      "tdd": {"red": {"test_selector": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/tests/test_completion_handoff_integrity.py", "expected_failure_ids": ["ACR-R5-HANDOFF-INTEGRITY"]}, "green": {"command_id": "r5-green", "expected_exit": "zero"}, "refactor": {"invocations": [{"command_id": "acceptance-suite", "expected_exit": "zero"}]}},
+      "post_refactor_command_id": "r5-terminal",
+      "exit_predicate": "slice-ready",
+      "recovery": "Publish append-only completion evidence only after an exact manifest, terminal, and resume-state binding is verified."
     }
   ],
   "terminal": {"command_id": "terminal-full", "runner": "tools/terminal_full.py", "predicate": "implementation-complete"}

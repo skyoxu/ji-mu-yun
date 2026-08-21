@@ -16,6 +16,17 @@ def _load():
     return module
 
 
-def test_degraded_knowledge_context_has_controlled_refresh_api():
+def test_acceptance_delegates_same_selection_refresh_to_shared_validator(monkeypatch, tmp_path):
     module = _load()
-    assert hasattr(module, "refresh_context_read_set")
+    observed = {}
+
+    class SharedValidator:
+        def refresh_context_read_set(self, context, root):
+            observed["context"] = context
+            observed["root"] = root
+            return {"context_status": "successor-refreshed", "publication_authorized": False}
+
+    monkeypatch.setattr(module, "_validator", lambda root: SharedValidator())
+    context = {"locator_result": {"candidates": ["fixed"]}}
+    assert module.refresh_context_read_set(context, tmp_path) == {"context_status": "successor-refreshed", "publication_authorized": False}
+    assert observed == {"context": context, "root": tmp_path.resolve()}

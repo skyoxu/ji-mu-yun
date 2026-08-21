@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+    "source_sha256": "sha256:8150f1872088b67e37efeefc2a85044c0c5da5d82316857193d81c04ecbfa6d6",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 20764,
+    "start_line": 1,
+    "end_line": 431,
+    "content_sha256": "sha256:8150f1872088b67e37efeefc2a85044c0c5da5d82316857193d81c04ecbfa6d6"
+  },
+  "status": "accepted",
+  "summary": "terminal_full.py: CLI validates Quick Dev plan terminal state; args repository-root, plan-dir, optional out/slice; slices R0-R5 map tests/selectors and registered green commands; full runs all slice green plus quick-dev-suite and acceptance-suite; command registry commands constrained to repo cwd; result is non-authorizing terminal receipt with hashes, candidate binding, selectors, failures; full success predicate implementation-complete and publishes immutable completion receipt authorizing implementation-complete; slice success predicate slice-ready; candidate manifest hashes fixed production/consumer/validator/contract sources and rejects generated paths/escaping/missing sources; authority accepts implementation-authorized with matching authorization or implementation-complete with sole completion authorization; freeze context hash required; maintainer authorization receipt required and binds plan, contract, authority manifest, freeze; v2 also binds command registry and skill-input contract; knowledge failures require review except catalog_stale, which requires source_refresh; full requires R0-R5 non-authorizing terminal receipts and valid non-authorizing resume state; skill-input receipt must validate ready with no authorizations and target plan; full binds contract, registry, authority, context, freeze, latest skill-input receipt; output failures drive exit 1, pass exits 0; ambiguities: contract/registry reads occur before graceful missing-file handling; latest receipt selection uses mtime."
+}

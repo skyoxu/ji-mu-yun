@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/migration_bridge.py",
+    "source_sha256": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5074,
+    "start_line": 1,
+    "end_line": 149,
+    "content_sha256": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259"
+  },
+  "status": "accepted",
+  "summary": "migration_bridge.py materializes Quick Dev RED test files for slices R0/R1/R2; CLI requires repository_root, plan_dir, slice_id, snapshot_path, and materialize_only; rejects when materialize_only absent or slice_id not declared; TEMPLATES maps R0 to acceptance coordinator trust test, R1 to successor crash recovery test, R2 to authorization refresh chain plus degraded knowledge context test; writes only if target missing or content identical, otherwise exits conflict; creates parent dirs and writes LF UTF-8; outputs JSON with test_paths and empty authorizes; R0 test expects v3 coordinator request accepted far enough to fail on missing coordinator bundle; R1 test expects reserve_successor_run idempotently reuses identical lineage and writes successor-lineage.v1.json; R2 tests require refresh_context_read_set API in quick-dev and acceptance knowledge_context modules; plan_dir and snapshot_path parsed but unused; ambiguity: bridge authorizes none despite materializing tests"
+}

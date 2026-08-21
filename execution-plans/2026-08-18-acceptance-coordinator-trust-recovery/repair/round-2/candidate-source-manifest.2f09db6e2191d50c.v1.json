@@ -1,0 +1,88 @@
+{
+  "candidate_source_root": "sha256:2f09db6e2191d50c73cfe763e71e36ab129128d73c12f7234ba5270747f947d1",
+  "entries": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "role": "production",
+      "sha256": "sha256:6a702ebaf2ea9c8109a4f2857c2ff8029908da8f9d921d3794baa6df6f46062f",
+      "slice_ids": [
+        "R2"
+      ]
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "role": "production",
+      "sha256": "sha256:1c9230c18940aa13c3cbc38ecf7553c3a8fe43d533e5e9244495808942f91805",
+      "slice_ids": [
+        "R1"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "role": "production",
+      "sha256": "sha256:f71ee319359962718784c9e0afe50fe785b30829846ca093da3a6d5c0a62c650",
+      "slice_ids": [
+        "R0"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "role": "contract-consumer",
+      "sha256": "sha256:8901db6164c4527c98bf789850d2533dbedf8c1af392b30d2630f6a1b60bde43",
+      "slice_ids": [
+        "R5"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      "role": "contract-consumer",
+      "sha256": "sha256:1750fab488f47b83c29a416cac889df12a3ca38382a4b0285c98208422aa66d8",
+      "slice_ids": [
+        "R2"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json",
+      "role": "contract-consumer",
+      "sha256": "sha256:0bfc0a76e616ed2a3b1507a16a2d2005b1fbc324ede6351ac7b121afd35fe22b",
+      "slice_ids": [
+        "R0",
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json",
+      "role": "contract-consumer",
+      "sha256": "sha256:b8603c1ab17c0a63c6852336050cb82d31bdd2f9679a5dd510b61e154b728117",
+      "slice_ids": [
+        "R0",
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py",
+      "role": "validator",
+      "sha256": "sha256:5b7feaeb98d821ab3850aae0f597d517bc6ee9056f963b2b257e67c69a57dc20",
+      "slice_ids": [
+        "R5"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py",
+      "role": "validator",
+      "sha256": "sha256:e8d1f86ea4924ac0ea13a9c5a675dbb064b42e5c5e606e8dbdfd07f31a3079b7",
+      "slice_ids": [
+        "R5"
+      ]
+    }
+  ],
+  "schema_version": "jimuyun.candidate-source-manifest.v1"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+    "source_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9569,
+    "start_line": 1,
+    "end_line": 176,
+    "content_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae"
+  },
+  "status": "accepted",
+  "summary": "Plan=Acceptance Coordinator Trust Recovery; baseline=3c285bcc; planCommit=868328c8; profile=self-hosted; preserve lifecycle: Maintainer authorization, Quick Dev completion, Acceptance pass; never auto-start Bootstrap; excluded: Knowledge publication, runtime/release/archive, multi-maintainer signing; R0=v3 request plus hash-bound prepared input and persisted DAG/registry/route evidence only; reject v2/current request-local assertions or unbound receipts; R1=reserve/reuse byte-identical successor identity and recover all creation boundaries without duplicates; R2=base authorization binds contract/manifest/Knowledge/allowed successors/Skill inputs; refresh only unchanged eligible selection, otherwise awaiting-implementation-authorization; ACR-R2-FRESHNESS requires Accepted ADR superseding ADR-0057 stale-stop while preserving ADR-0050 LKG rules before plan-ready; verified published/LKG frozen selection may continue degraded for catalog/read-set byte drift, never publish authority; authority-bearing source drift and selection/scope/resource/policy/contract/command/test changes block; self-changes to Knowledge system with failed query gate require semantic review; validator-produced successor receipt binds full chain and recomputed invariants; R3=legacy RED compatibility only with exact selector/test/fingerprint/failure IDs; R4=read-only 8-17 dogfood after R0-R3 using new bindings/auth, no writes under historical directory; R5=completion binds explicit candidate manifest, terminal result, current receipt; exclude generated evidence/git/lifecycle metadata; tampering/staleness rejected; key exits=ACR-R0 through ACR-R5 and ACR-R2-FRESHNESS-EXIT."
+}

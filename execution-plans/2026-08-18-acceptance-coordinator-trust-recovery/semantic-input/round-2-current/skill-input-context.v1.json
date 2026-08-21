@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The trust-recovery plan defines R0-R5 acceptance for a hash-bound coordinator lifecycle. It requires persisted run identity, successor reservation, controlled refresh rules, verified knowledge and LKG gates, legacy RED matching, read-only historical replay, and terminal completion bound to explicit candidate inputs.",
+      "title": "Acceptance requirements"
+    },
+    {
+      "content": "The migration bridge materializes declared RED-test templates for R0-R2 only. It validates invocation, writes only specified repository-relative test paths, reuses byte-identical files, rejects conflicts, and emits test paths with an empty capability list.",
+      "title": "Migration support"
+    },
+    {
+      "content": "The terminal validator binds candidate state, registered selectors, contracts, receipts, knowledge context, and lifecycle evidence. It rejects invalid paths, hashes, JSON, commands, slices, and lifecycle states. Full validation requires R0-R4 and emits a deterministic non-authorizing completion receipt; the helper derives validator and candidate identities.",
+      "title": "Validator behavior"
+    }
+  ],
+  "source_manifest_hash": "sha256:90574d9c38fe86c46b6a8e7ec39486f525e4f37284bd16418a36dc9d2153526f",
+  "truncated": false
+}

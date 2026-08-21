@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Defines acceptance coordinator trust recovery R0-R5. It requires hash-bound inputs, persisted evidence, successor identity recovery, authorization freshness checks, controlled degraded operation, legacy compatibility constraints, read-only dogfooding, and terminal completion bindings.",
+      "title": "Recovery Requirements"
+    },
+    {
+      "content": "Materializes only declared RED tests for R0-R2. It validates invocation and slice selection, prevents conflicting existing test content, writes deterministic UTF-8 LF templates, and reports created test paths without side effects beyond declared test files.",
+      "title": "Migration Bridge"
+    },
+    {
+      "content": "Terminal validation runs registered lifecycle, context, receipt, candidate-binding, and artifact checks for R0-R4 or full completion. Plan-local helpers derive canonical validator, candidate, contract, registry, closure, and slice snapshot hashes.",
+      "title": "Validation Tools"
+    }
+  ],
+  "source_manifest_hash": "sha256:2df2efadce27dc1b6d27f41fe8d2ea3ae2ba4b342c78641585cc4c9337f25177",
+  "truncated": false
+}

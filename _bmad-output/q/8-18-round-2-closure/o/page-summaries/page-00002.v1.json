@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/migration_bridge.py",
+    "source_sha256": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5074,
+    "start_line": 1,
+    "end_line": 149,
+    "content_sha256": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259"
+  },
+  "status": "accepted",
+  "summary": "file migration_bridge.py; purpose: materialize declared Quick Dev RED tests before invocation prep; defines RED templates for slices R0/R1/R2; CLI requires --repository-root --plan-dir --slice-id --snapshot-path and --materialize-only; rejects non-materialize mode or undeclared slice; writes only known test paths under repository root; conflict guard: existing differing target aborts; newline forced LF; outputs JSON with test_paths and empty authorizes; R0 targets acceptance coordinator trust test for schemaVersion acceptance-coordinator-request.v3 before bundle validation; R1 targets successor crash recovery test expecting identical lineage reservation reuse and successor-lineage.v1.json; R2 targets adapter authorization refresh API presence and acceptance degraded knowledge-context refresh API presence; ambiguity: --plan-dir and --snapshot-path are required but unused by implementation"
+}

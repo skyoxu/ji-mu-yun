@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/tests/test_completion_handoff_integrity.py",
+    "source_sha256": "sha256:6305a55044a3e69f2c25c100644f6744da17f9626bfbfcbdbc67d68e56eb2517",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1600,
+    "start_line": 1,
+    "end_line": 34,
+    "content_sha256": "sha256:6305a55044a3e69f2c25c100644f6744da17f9626bfbfcbdbc67d68e56eb2517"
+  },
+  "status": "accepted",
+  "summary": "test file validates terminal_full.py handoff integrity; imports target module from execution plan tools path; candidate_source_root must be sha256 content identity; repeated manifest build on unchanged source must be stable; source content mutation must change candidate_source_root; generated evidence paths under terminal-results and repair completion JSON must be excluded as candidate sources"
+}

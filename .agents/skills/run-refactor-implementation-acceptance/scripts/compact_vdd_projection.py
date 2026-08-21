@@ -178,19 +178,61 @@ def _implementation_handoff(root: Path, target: Path, request: dict[str, Any]) -
         runner_path.relative_to(target)
     except ValueError as exc:
         raise InputError("implementation handoff terminal runner escapes target") from exc
-    expected = {
-        "schema_version": "quick-dev-implementation-complete.v1",
-        "predicate": "implementation-complete",
-        "status": "pass",
-        "plan_id": contract.get("plan_id"),
-        "contract_hash": _hash_bytes(contract_path.read_bytes()),
-        "command_registry_hash": _hash_bytes(registry_path.read_bytes()),
-        "terminal_command_id": terminal.get("command_id"),
-    }
-    if any(receipt.get(key) != value for key, value in expected.items()):
-        raise InputError("implementation receipt does not match the current Quick Dev terminal contract")
-    if receipt.get("authorizes") != ["implementation-complete"]:
-        raise InputError("implementation receipt does not authorize implementation-complete")
+    if receipt.get("schema_version") == "quick-dev-implementation-complete.v2":
+        if receipt.get("plan_id") != contract.get("plan_id") or receipt.get("predicate") != "implementation-complete" or receipt.get("status") != "pass":
+            raise InputError("implementation receipt does not match the current Quick Dev terminal contract")
+        for label, current in (("implementation_contract", contract_path), ("command_registry", registry_path)):
+            descriptor = receipt.get(label)
+            if not isinstance(descriptor, dict) or descriptor.get("sha256") != _hash_bytes(current.read_bytes()):
+                raise InputError("implementation receipt does not match the current Quick Dev terminal contract")
+        terminal_result = receipt.get("terminal_result")
+        manifest_ref = receipt.get("candidate_source_manifest")
+        if not isinstance(terminal_result, dict) or not isinstance(manifest_ref, dict):
+            raise InputError("implementation receipt v2 binding is incomplete")
+        terminal_path = (target / str(terminal_result.get("path", ""))).resolve()
+        manifest_path = (target / str(manifest_ref.get("path", ""))).resolve()
+        try:
+            terminal_path.relative_to(target)
+            manifest_path.relative_to(target)
+        except ValueError as exc:
+            raise InputError("implementation receipt v2 binding escapes target") from exc
+        if not terminal_path.is_file() or _hash_bytes(terminal_path.read_bytes()) != terminal_result.get("sha256"):
+            raise InputError("implementation receipt terminal result is stale")
+        manifest = _load(manifest_path)
+        entries = manifest.get("entries")
+        if manifest.get("schema_version") != "jimuyun.candidate-source-manifest.v1" or not isinstance(entries, list):
+            raise InputError("implementation candidate source manifest is invalid")
+        canonical_entries: list[dict[str, Any]] = []
+        for entry in entries:
+            if not isinstance(entry, dict) or set(entry) != {"path", "role", "slice_ids", "sha256"}:
+                raise InputError("implementation candidate source manifest is invalid")
+            source = (root / str(entry["path"])).resolve()
+            try:
+                source.relative_to(root)
+            except ValueError as exc:
+                raise InputError("implementation candidate source manifest escapes repository") from exc
+            if not source.is_file() or _hash_bytes(source.read_bytes()) != entry["sha256"]:
+                raise InputError("implementation candidate source manifest is stale")
+            canonical_entries.append(entry)
+        root_hash = _hash_bytes(json.dumps(sorted(canonical_entries, key=lambda item: (item["path"], item["role"], item["slice_ids"])), sort_keys=True, separators=(",", ":")).encode("utf-8"))
+        if manifest.get("candidate_source_root") != root_hash or manifest_ref.get("candidate_source_root") != root_hash or manifest_ref.get("sha256") != _hash_bytes(manifest_path.read_bytes()):
+            raise InputError("implementation candidate source manifest binding is stale")
+        if receipt.get("authorizes") != ["acceptance-handoff"]:
+            raise InputError("implementation receipt does not authorize acceptance-handoff")
+    else:
+        expected = {
+            "schema_version": "quick-dev-implementation-complete.v1",
+            "predicate": "implementation-complete",
+            "status": "pass",
+            "plan_id": contract.get("plan_id"),
+            "contract_hash": _hash_bytes(contract_path.read_bytes()),
+            "command_registry_hash": _hash_bytes(registry_path.read_bytes()),
+            "terminal_command_id": terminal.get("command_id"),
+        }
+        if any(receipt.get(key) != value for key, value in expected.items()):
+            raise InputError("implementation receipt does not match the current Quick Dev terminal contract")
+        if receipt.get("authorizes") != ["implementation-complete"]:
+            raise InputError("implementation receipt does not authorize implementation-complete")
     if not isinstance(receipt.get("validated_command_ids"), list) or not receipt["validated_command_ids"]:
         raise InputError("implementation receipt has no validated commands")
     if not runner_path.is_file():
@@ -387,7 +429,9 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
                 # leaking the request's repository-relative transport path.
                 "path": receipt_path.relative_to(target).as_posix(),
                 "sha256": request["implementationReceiptHash"],
-                "terminalCommandId": receipt["terminal_command_id"],
+            "terminalCommandId": receipt.get("terminal_command_id")
+            or (receipt.get("terminal_result") or {}).get("command_id")
+            or "terminal-full",
             },
             "terminalRunner": {
                 "path": validator.relative_to(target).as_posix(),

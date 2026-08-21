@@ -77,7 +77,13 @@ def _completed_receipts(run_dir: Path, actions: Any, command_registry: Any) -> l
         raise InputError("persisted Acceptance run cannot be replayed") from exc
     if any(state not in {"completed", "not-applicable"} for state in inspection["actionStates"].values()):
         raise InputError("deterministic finalization requires a closed action DAG")
-    expected_registry_hash = canonical_hash(command_registry)
+    # Canonical registries publish a self-exclusion-safe registryHash; legacy
+    # registries remain bound by their canonical payload hash.
+    expected_registry_hash = (
+        command_registry.get("registryHash")
+        if isinstance(command_registry, dict) and command_registry.get("schemaVersion") == "acceptance-command-registry.v1"
+        else canonical_hash(command_registry)
+    )
     declared_commands: dict[str, str] = {}
     for action in actions:
         descriptor = resolve_registered_command(command_registry, action["commandId"])

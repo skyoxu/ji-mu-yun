@@ -1,0 +1,960 @@
+下面这套方案不是“补几份 receipt”，而是一次有边界的 Quick Dev 修复回合，目标是把 8-18 从“形式上 implementation-complete、实质上仍有信任缺口”修复到真正可进入 Acceptance。
+
+我检查时的基线是 84445b8e575d915c9c1b5678649318d3a3c95cbe。如果本地 HEAD 更新了，Codex 应以当前 HEAD 为准重新计算源码绑定，不要再绑定 Git HEAD 本身。
+
+一、最终目标
+
+修复完成后必须同时满足：
+
+领域	必须达到的状态
+R0 Coordinator	只接受最小请求，通过持久化 Acceptance run 推导证据，彻底拒绝 caller 自报 bundle/evidence/route/receipt
+R1 Successor	successor 预留、物化、lineage、closure 全流程可重入，任一阶段崩溃都能恢复
+R2 Knowledge	selection、authority、contract、command、test identity、policy、risk、Skill Input contract 连续性均可验证
+Completion handoff	completion receipt、terminal result、candidate source manifest、resume-state 指向同一当前候选
+哈希策略	不再绑定 HEAD；生成物或 evidence-only commit 不触发 successor
+Quick Dev	所有修复都有真实 RED → GREEN → REFACTOR 证据
+状态	implementation-complete，next_action=acceptance-handoff
+Acceptance	只达到“可以开始验收”，不能提前写成 acceptance-passed
+二、必须遵守的修复边界
+
+本轮禁止以下做法：
+
+不覆盖或删除 repair/round-1 历史证据。
+不手工伪造 RED/GREEN/terminal receipt。
+不用 git add -A。
+不因为现有 terminal 显示 pass，就跳过新测试。
+不把 HEAD、plan-state、resume-state、Skill Input receipt、terminal-results、repair receipt 纳入 candidate source root。
+不把 query quality failure 提升为普通执行硬门禁。
+不允许 coordinator 从请求中的布尔值推导 route。
+不允许直接修改旧 completion receipt 使哈希“看起来匹配”。
+不自动赋予 maintainer authorization。
+不进入正式 Acceptance，直到本方案末尾的 gate 全部通过。
+三、修复回合结构
+
+在下面目录新建一个追加式修复回合：
+
+execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/
+└── repair/
+    └── round-2/
+        ├── repair-disposition.v1.json
+        ├── repair-implementation-contract.v1.json
+        ├── repair-authorization-receipt.v2.json
+        ├── red/
+        ├── green/
+        ├── refactor/
+        ├── terminal/
+        └── quick-dev-implementation-complete.<binding>.v2.json
+
+repair-disposition.v1.json 应明确记录：
+
+round-1 completion 是历史记录，不删除；
+round-1 当前结论是 superseded-for-repair；
+原因不是业务代码完全失败，而是：
+coordinator 信任来源错误；
+successor reservation 没有接入实际路径；
+authorization continuity 测试和实现不完整；
+completion receipt 当前指针与 terminal 不一致；
+本轮修复完成前不授权 Acceptance；
+authorizes: []。
+
+不要把旧 receipt 改成 failed。它只能被新回合 supersede。
+
+四、第一阶段：修复计划合同，重新进入 Quick Dev
+4.1 本地预检
+
+Codex 首先执行：
+
+git status --short
+git rev-parse HEAD
+git log -1 --oneline
+
+如果存在与本需求无关的未提交修改，停止并报告，不得覆盖。
+
+如果当前在 main：
+
+git switch -c repair/8-18-acceptance-trust-round-2
+
+然后读取且只读取以下入口和相关引用：
+
+AGENTS.md
+README.md
+knowledge/toolchain-workflow-index.md
+.agents/skills/quick-dev-tdd-adapter/SKILL.md
+.agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md
+.agents/skills/quick-dev-tdd-adapter/references/tdd-run-protocol.md
+.agents/skills/quick-dev-tdd-adapter/references/evidence-and-freshness.md
+.agents/skills/quick-dev-tdd-adapter/references/repair-review-handoff.md
+execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/
+
+不要通读整个 workflow 文档树。
+
+4.2 扩展实施合同
+
+现有 R0–R4 之外，建议显式增加：
+
+R5 — Completion Handoff Integrity
+
+不要偷偷把 completion handoff 修复塞进只读 dogfood slice。R5 应覆盖：
+
+stable candidate source manifest；
+terminal result exact binding；
+append-only completion receipt；
+resume-state current pointer；
+Acceptance projection 的当前字节复验；
+evidence-only commit 不导致候选失效。
+
+更新以下计划材料：
+
+requirements 或 repair requirements；
+implementation contract；
+slice dependency graph；
+command/test registry；
+allowed changes；
+acceptance traceability；
+terminal selector；
+Quick Dev completion definition。
+
+建议依赖：
+
+R0 ─┐
+R1 ─┼──> R5 ──> R4 final replay
+R2 ─┤
+R3 ─┘
+
+R3 仍作为回归验证；R4 仍是最终 dogfood，不承担首次生产代码修复。
+
+4.3 测试身份与测试字节分离
+
+授权绑定的是 test identity，而不是测试文件字节。
+
+testIdentityHash 应从这些稳定字段计算：
+
+slice ID；
+test path；
+pytest selector；
+command registry ID；
+expected RED failure ID；
+expected capability；
+test role。
+
+测试文件字节属于 candidate source manifest。测试内容正常从 RED 演进到 GREEN 时：
+
+会使旧 terminal evidence 失效；
+不应使 maintainer authorization 失效。
+
+只有 selector、command ID、failure identity 或测试语义范围变化才要求重新授权。
+
+五、第二阶段：修复授权模型
+
+这一步在生产实现之前完成合同准备，然后暂停一次等待 maintainer 明确授权。
+
+5.1 新 authorization receipt
+
+新增 v2 receipt，至少包含：
+
+{
+  "schema_version": "jimuyun.quick-dev-implementation-authorization.v2",
+  "plan_id": "2026-08-18-acceptance-coordinator-trust-recovery",
+  "repair_round": 2,
+  "decision": {
+    "owner": "maintainer",
+    "transition": "implementation-authorized"
+  },
+  "implementation_contract": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "command_registry": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "test_identity_hash": "sha256:...",
+  "authority_manifest": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "knowledge_context_freeze": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "knowledge_selection_hash": "sha256:...",
+  "authority_envelope_hash": "sha256:...",
+  "skill_input_contract": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "permitted_successor_kinds": [
+    "same-selection-source-refresh",
+    "execution-evidence-successor",
+    "quick-dev-terminal-successor"
+  ],
+  "supersedes": {
+    "completion_receipt": "...",
+    "reason": "repair-round-2"
+  },
+  "authorizes": [
+    "implementation-authorized"
+  ]
+}
+5.2 必须触发重新授权的变化
+
+以下任一变化必须阻断并重新走 maintainer authorization：
+
+Knowledge selection hash 改变；
+required module、selected path、resource set 改变；
+authority scope 改变；
+authority-bearing source 字节改变；
+implementation contract 改变；
+command registry identity 改变；
+test identity 改变；
+policy 或 risk classification 改变；
+Skill Input contract 改变；
+permitted successor kind 改变。
+5.3 不需要重新授权的变化
+
+以下变化只让旧 terminal/candidate evidence 失效，不让 authorization 失效：
+
+已授权 allowed paths 内的实现代码修改；
+已声明测试文件内容变化；
+同一 selection 下非 authority 源码字节变化；
+plan-state、resume-state 更新；
+RED/GREEN/REFACTOR receipt 更新；
+terminal-results 更新；
+completion receipt 更新；
+commit 导致 HEAD 改变；
+evidence-only commit。
+5.4 唯一人工暂停点
+
+Codex 完成合同、registry、authority projection、Knowledge freeze 和 Skill Input 后，必须输出：
+
+contract hash；
+command registry hash；
+test identity hash；
+knowledge selection hash；
+authority envelope hash；
+Skill Input contract hash；
+repair scope；
+permitted successor kinds。
+
+然后停止，等待 maintainer 明确输入类似：
+
+确认授权 8-18 repair round-2 进入 Quick Dev implementation
+
+除此之外，后续修复可以自动执行。
+
+六、R0：Coordinator 必须改为 persisted-run trust
+
+主要目标文件：
+
+.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py
+.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py
+.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py
+.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py
+6.1 新 coordinator 请求必须最小化
+
+建议 v3 当前请求只允许：
+
+{
+  "schemaVersion": "jimuyun.acceptance-coordinator-request.v3",
+  "targetPlan": "execution-plans/...",
+  "preparedRunInput": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "skillInputReceipt": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "skillInputContract": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "authorizes": []
+}
+
+命令行增加：
+
+run-coordinator --repository-root <root> --request <request> --out <out>
+6.2 必须拒绝的 caller 字段
+
+只要请求中出现以下当前控制字段，就拒绝：
+
+candidateBindingHash
+bundle
+evidence
+deterministicSourceSufficient
+semanticReviewRequired
+route
+actionReceipts
+actionDag
+recovery
+successor
+telemetry
+publicationAuthorized
+
+历史 v2 请求只允许用于历史读取或审计，不能生成当前 run 或当前 route。
+
+6.3 Coordinator 的可信执行顺序
+
+实现顺序必须是：
+
+从 repository root 解析 target plan。
+校验 prepared run input 的路径、哈希和 repo-contained 属性。
+从 prepared run input 解析 prerequisite bundle。
+从 bundle 读取 contract、registry、candidate manifest、knowledge、policy。
+调用 Skill Input ready gate。
+调用 start_or_resume_target_run(...)。
+只读取该 persisted run 下的 action lifecycle 和 receipt。
+根据已完成 action 的真实结果推导 route。
+发布 run-owned route projection。
+输出 coordinator result。
+
+请求本身不得决定第 7–9 步。
+
+6.4 新 route projection
+
+建议在 Acceptance run 目录内生成：
+
+acceptance-route-projection.v1.json
+
+至少绑定：
+
+{
+  "schema_version": "jimuyun.acceptance-route-projection.v1",
+  "run_id": "...",
+  "run_input_hash": "sha256:...",
+  "contract_hash": "sha256:...",
+  "candidate_source_root": "sha256:...",
+  "knowledge_context_hash": "sha256:...",
+  "knowledge_selection_hash": "sha256:...",
+  "skill_input_binding_hash": "sha256:...",
+  "action_dag_hash": "sha256:...",
+  "command_registry_hash": "sha256:...",
+  "completion_action_receipt": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "route": "deterministic-only",
+  "reason_codes": [],
+  "publication_authorized": false,
+  "authorizes": []
+}
+
+route 只能来自持久化 action result。不得接受 caller 提供的 route 或布尔开关。
+
+6.5 R0 必须先出现的 RED
+
+至少增加这些测试：
+
+caller 提供 semanticReviewRequired=false 时被拒绝；
+caller 提供伪造 action receipt 时被拒绝；
+caller 提供伪造 bundle 时被拒绝；
+prepared run hash 错误时失败；
+persisted run 不存在时不能凭 caller evidence 继续；
+action 未完成时不能生成成功 route；
+persisted action 结果要求 semantic review 时必须进入 semantic review；
+同一请求重复执行恢复同一 run；
+不同 contract/candidate/knowledge/Skill Input 不能恢复同一 run；
+route projection 被篡改时失败；
+v2 只能历史读取，不能创建 current route。
+
+然后执行：
+
+py -3 -B -m pytest `
+  .agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py `
+  .agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py `
+  -q
+
+必须先得到预期 RED，再修改生产代码。
+
+七、R1：Successor crash recovery 必须真正接入执行路径
+
+主要目标文件：
+
+.agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py
+.agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py
+.agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_successor_crash_recovery.py
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_recovery.py
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py
+7.1 删除重复的 inline successor 逻辑
+
+目前 reserve_successor_run() 只是定义，terminal conflict 路径仍有独立逻辑。修复后必须只有一个 canonical successor state machine。
+
+建议阶段：
+
+reserved
+materialized
+lineage-published
+closure-published
+completed
+7.2 预留必须先于目录物化
+
+不要以“目录是否存在”作为 successor identity。
+
+建议 predecessor 同级持久化 reservation：
+
+<predecessor-run>/
+  successor-reservation.v1.json
+
+内容绑定：
+
+predecessor run ID；
+predecessor run input hash；
+predecessor execution fingerprint；
+candidate source root；
+contract hash；
+validator identity；
+expected next transition；
+fixed successor path；
+reservation identity hash；
+phase；
+authorizes: []。
+
+同一 identity 重试：
+
+返回同一 successor；
+从最后一个完成 phase 恢复。
+
+不同 identity 命中已有 reservation：
+
+typed conflict；
+不覆盖；
+不分配第二个隐式 successor。
+7.3 Lineage 约束
+
+successor lineage 只允许引用：
+
+predecessor observation path/hash；
+predecessor execution fingerprint；
+predecessor candidate identity；
+predecessor contract/validator；
+next transition。
+
+禁止：
+
+复制 predecessor observations 充当新 observations；
+继承 maintainer authorization；
+覆盖 predecessor closure；
+用“目录已经创建”推断 lineage 已完成。
+7.4 Crash injection 测试
+
+测试必须真实调用 terminal conflict 路径，并分别在以下位置注入失败：
+
+reservation 写入后；
+successor 目录物化后；
+lineage 写入后；
+closure 写入后、返回前。
+
+每次失败后用同一输入重跑，验证：
+
+只有一个 successor；
+reservation identity 不变；
+已完成 phase 不重写；
+缺失 phase 自动补齐；
+lineage/closure 哈希一致；
+不复制 predecessor observations；
+不继承 authorization；
+不产生 <run>-SUCCESSOR-SUCCESSOR；
+冲突 identity 硬失败。
+
+执行：
+
+py -3 -B -m pytest `
+  .agents/skills/quick-dev-tdd-adapter/tools/tests/test_successor_crash_recovery.py `
+  .agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_recovery.py `
+  .agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py `
+  -q
+八、R2：完整实现 Knowledge/Authorization continuity
+
+主要目标文件：
+
+scripts/python/knowledge_context_validation.py
+.agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py
+.agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py
+.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py
+.agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py
+对应 tests
+8.1 分离两个哈希
+
+必须显式使用：
+
+knowledgeSelectionHash
+knowledgeContextHash
+
+其中：
+
+knowledgeSelectionHash
+
+只从稳定 selection semantics 计算：
+
+consumer；
+policy revision；
+required module IDs；
+selected path；
+selected module ID；
+satisfies；
+primary domain；
+visibility；
+lifecycle；
+enforcement level；
+read-set path；
+read-set role；
+authority scope；
+resource set identity。
+
+不能包含：
+
+排名分数；
+-时间戳；
+-生成路径；
+-当前 HEAD；
+-上下文文件自身哈希；
+-查询日志。
+knowledgeContextHash
+
+绑定当前 selected read-set 的实际源码字节和 context projection。
+
+同一 selection 下源码变化：
+
+selection hash 不变；
+context hash 改变；
+可以生成 degraded successor；
+不自动获得 publication authorization。
+8.2 Authority envelope
+
+从 authority manifest 精确导出 authority-bearing sources，至少覆盖：
+
+repository policy/rules；
+relevant ADR；
+implementation contract；
+command registry；
+test identity projection；
+terminal validator identity；
+Quick Dev Skill contract；
+Acceptance Skill contract；
+VDD Skill Input contract；
+Knowledge policy；
+risk classification；
+protected validation rules。
+
+Authority validator 必须验证：
+
+exact cover；
+path 存在；
+bytes 可读；
+hash 匹配；
+不允许漏项；
+不允许用普通 source refresh 掩盖 authority byte drift。
+8.3 Knowledge successor receipt
+
+建议结构：
+
+{
+  "schema_version": "jimuyun.knowledge-context-successor.v1",
+  "predecessor_context": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "successor_context": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "knowledge_selection_hash": "sha256:...",
+  "authority_envelope_hash": "sha256:...",
+  "verified_lkg": {
+    "pointer": "...",
+    "manifest": "...",
+    "manifest_sha256": "sha256:..."
+  },
+  "read_set": [
+    {
+      "path": "...",
+      "role": "...",
+      "sha256": "sha256:..."
+    }
+  ],
+  "validator": {
+    "command_id": "...",
+    "command_hash": "sha256:..."
+  },
+  "chain": {
+    "predecessor_receipt": null,
+    "depth": 1
+  },
+  "selection_unchanged": true,
+  "authority_unchanged": true,
+  "knowledge_freshness": "degraded",
+  "context_status": "successor-refreshed",
+  "publication_authorized": false,
+  "authorizes": []
+}
+8.4 Quick Dev 和 Acceptance 必须使用同一验证器
+
+不要分别实现一套判断。共享函数建议为：
+
+compute_knowledge_selection_hash(...)
+compute_authority_envelope(...)
+classify_knowledge_transition(...)
+validate_successor_chain(...)
+
+输出 typed result：
+
+current_validated
+same_selection_successor
+query_quality_degraded
+selection_drift
+authority_drift
+source_missing
+source_unreadable
+chain_invalid
+
+路由规则：
+
+结果	执行	Publication
+current_validated	继续	可按正常流程
+same_selection_successor	继续，degraded	禁止
+query_quality_degraded	继续	禁止
+selection_drift	修复/重授权	禁止
+authority_drift	硬阻断/重授权	禁止
+source missing/unreadable	硬阻断	禁止
+chain invalid	硬阻断	禁止
+8.5 R2 测试矩阵
+
+必须包含：
+
+同 selection、非 authority 源码变化：继续，degraded；
+query fixture 失败：业务执行继续，publication blocked；
+selected path 改变：重授权；
+module ID 改变：重授权；
+resource set 改变：重授权；
+authority scope 改变：重授权；
+authority source byte 改变：重授权；
+implementation contract 改变：重授权；
+command identity 改变：重授权；
+test identity 改变：重授权；
+policy/risk 改变：重授权；
+Skill Input contract 改变：重授权；
+missing source：硬阻断；
+unreadable source：硬阻断；
+broken predecessor chain：硬阻断；
+successor 自引用：硬阻断；
+Quick Dev 与 Acceptance 对同 fixture 得到完全相同结论；
+publication_authorized=false 不能被 caller 覆盖。
+
+现有只检查 hasattr 的测试必须改成行为断言。
+
+九、R5：修复 completion receipt 和当前候选绑定
+
+这是当前另一个实质阻断点：resume-state 指向旧 completion receipt，而当前 terminal hash 对应的是另一个带后缀 receipt。
+
+主要目标文件：
+
+execution-plans/.../tools/validate_all.py
+execution-plans/.../tools/terminal_full.py
+.agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py
+对应 tests
+resume-state.v1.json
+9.1 不再绑定 HEAD
+
+实现一个稳定的 candidate source manifest：
+
+{
+  "schema_version": "jimuyun.candidate-source-manifest.v1",
+  "entries": [
+    {
+      "path": "...",
+      "role": "production|test|validator|contract-consumer",
+      "slice_ids": ["R0"],
+      "sha256": "sha256:..."
+    }
+  ],
+  "candidate_source_root": "sha256:..."
+}
+
+candidate_source_root 从排序后的：
+
+path + role + slice_ids + sha256
+
+计算。
+
+明确排除：
+
+.git/HEAD
+plan-state
+resume-state
+skill-input receipt
+knowledge context生成物
+terminal-results
+repair receipts
+completion receipts
+日志
+时间戳
+
+因此：
+
+仅提交 evidence 不改变 source root；
+修改生产源码或测试源码会改变 source root；
+HEAD 改变本身不造成 successor；
+同一源码 checkout 到不同 commit，只要候选字节相同，source root 相同。
+9.2 candidate manifest 必须覆盖真实闭包
+
+至少包含：
+
+R0 production、tests、persisted execution-control consumer；
+R1 loop、stage lifecycle、run lifecycle、tests；
+R2 shared validator、Quick Dev/Acceptance/VDD consumers、tests；
+R3 regression selectors；
+R4 dogfood validators；
+R5 terminal、validate、projection 和 tests；
+implementation contract；
+command registry；
+terminal validator identity。
+
+不能继续只为每个 slice 列一个浅层 production file。
+
+9.3 Completion receipt v2
+
+新增 append-only receipt：
+
+{
+  "schema_version": "quick-dev-implementation-complete.v2",
+  "plan_id": "...",
+  "repair_round": 2,
+  "implementation_contract": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "command_registry": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "candidate_source_manifest": {
+    "path": "...",
+    "sha256": "sha256:...",
+    "candidate_source_root": "sha256:..."
+  },
+  "terminal_result": {
+    "path": ".../terminal-results/terminal-full.json",
+    "sha256": "sha256:..."
+  },
+  "validated_command_ids": [],
+  "status": "implementation-complete",
+  "authorizes": [
+    "acceptance-handoff"
+  ]
+}
+
+v1 receipt 保留为 historical，只读。新的当前 handoff 必须使用 v2。
+
+9.4 发布顺序必须原子化
+
+terminal 全部通过后按顺序：
+
+写 terminal result 临时文件；
+验证完整 JSON；
+os.replace() 发布 terminal result；
+写 candidate source manifest；
+写带 binding 后缀的 append-only completion receipt；
+重新读取并复验 receipt；
+原子更新 resume-state.v1.json：
+implementation_receipt.path
+implementation_receipt.sha256
+candidate_source_root
+next_action=acceptance-handoff
+最后原子更新 plan-state 为 implementation-complete。
+
+任何一步失败：
+
+不覆盖旧 receipt；
+不把 plan-state 标记为 complete；
+下次重试可从已经发布且内容相同的 append-only artifact 恢复。
+9.5 Acceptance projection 必须重新验证当前字节
+
+compact_vdd_projection.py 必须校验：
+
+resume-state 指向的 receipt 文件存在；
+receipt 文件 hash 精确匹配；
+receipt schema 为当前 v2；
+terminal result path/hash 匹配；
+candidate manifest path/hash 匹配；
+manifest 内每个 source 当前字节匹配；
+source root 重算匹配；
+contract hash 匹配；
+command registry hash 匹配；
+terminal validator identity 匹配；
+authorizes 包含 acceptance-handoff。
+
+不得接受“用户显式传了某个旧 receipt 路径，所以继续”。
+
+9.6 必须增加的 R5 测试
+resume 指向旧 canonical receipt，但 terminal hash 已变化：拒绝；
+resume 指向当前 successor receipt：通过；
+receipt 内容被篡改：拒绝；
+terminal result 被篡改：拒绝；
+manifest 被篡改：拒绝；
+manifest 中任一源码变化：拒绝；
+只提交/修改 plan-state：source root 不变；
+只修改 terminal receipt：source root 不变；
+测试源码改变：source root 改变；
+production 源码改变：source root 改变；
+terminal 发布到 receipt 之间崩溃：重试恢复；
+receipt 发布到 resume 更新之间崩溃：重试选择同一 receipt；
+重复完全相同 terminal：不产生语义不同的 completion receipt。
+十、Quick Dev TDD 的强制执行顺序
+
+通过 maintainer authorization 后，Codex 必须按下列顺序执行：
+
+R0 RED → R0 GREEN → R0 REFACTOR
+R1 RED → R1 GREEN → R1 REFACTOR
+R2 RED → R2 GREEN → R2 REFACTOR
+R5 RED → R5 GREEN → R5 REFACTOR
+R3 regression replay
+R4 full dogfood replay
+terminal full
+completion handoff
+
+每个 RED 必须：
+
+在修改对应 production code 之前运行；
+失败原因与 requirement ID 对应；
+不是语法错误、fixture 丢失或 import error；
+记录真实命令、退出码、失败 selector 和输出摘要。
+
+GREEN 后必须立即跑该 slice 的回归集。REFACTOR 后再跑一次相同闭包。
+
+不能一次写完所有 production code 再补 RED receipt。
+
+十一、全量测试命令
+
+局部测试按前述各 slice 执行。最后至少执行：
+
+py -3 -B -m pytest `
+  .agents/skills/quick-dev-tdd-adapter/tools/tests `
+  -q
+py -3 -B -m pytest `
+  .agents/skills/run-refactor-implementation-acceptance/tests `
+  -q
+py -3 -B -m pytest `
+  .agents/skills/vdd-execution-plan/scripts/tests `
+  -q
+py -3 -B -m pytest `
+  scripts/python/tests `
+  -q
+
+再执行计划自己的 terminal：
+
+py -3 -B `
+  execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py `
+  --repository-root . `
+  --plan-dir execution-plans/2026-08-18-acceptance-coordinator-trust-recovery `
+  --out execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/terminal-full.json
+
+如果 command registry 中的 canonical 命令与上面不同，以 registry 为准，但必须记录 canonical command ID 和实际 argv。
+
+十二、提交建议
+
+每次只暂存明确文件：
+
+git add -- <明确文件路径>
+git diff --cached --check
+git diff --cached --stat
+
+建议提交拆分：
+
+plan: reopen 8-18 trust recovery repair round 2
+fix(acceptance): derive coordinator route from persisted run
+fix(quick-dev): make successor recovery reentrant
+fix(knowledge): enforce authorization continuity
+fix(quick-dev): publish stable current completion handoff
+test(workflow): replay 8-18 trust recovery dogfood
+chore(quick-dev): record round-2 completion evidence
+
+每个 production commit 前都必须已有相应真实 RED。
+
+十三、最终准入 Gate
+
+本地 Codex 只有在下表全部通过后，才能报告“可以进入 Acceptance”：
+
+Gate	合格条件
+R0	请求不再携带可信 bundle/evidence/route；route 来自 persisted run
+R1	四个 crash boundary 全部可重入，只生成一个 successor
+R2	selection/authority/full chain 行为测试通过，Quick Dev 与 Acceptance 结果一致
+R3	repository-wide 回归通过
+R4	全链路 dogfood 重放通过，没有额外隐式 action/successor
+R5	resume、receipt、terminal、manifest、source root 完全一致
+Skill Input	当前 generation ready，输入图不包含自身生成物
+Knowledge	同 selection refresh 可 degraded 继续；publication 仍受阻
+Hash	evidence-only/HEAD change 不改变 candidate source root
+Plan state	implementation-complete
+Resume state	next_action=acceptance-handoff
+Current receipt	指向 round-2 v2 receipt，且自身 hash 匹配
+Acceptance	尚未写入 acceptance-passed
+
+最终报告必须使用下面这种结论，不要模糊表达：
+
+Quick Dev repair round-2: PASS
+Implementation status: implementation-complete
+Acceptance readiness: READY
+Formal Acceptance status: NOT STARTED
+Knowledge publication: NOT AUTHORIZED（如 query quality 仍失败）
+可直接交给本地 Codex 的总指令
+以当前 main HEAD 为基线，修复
+execution-plans/2026-08-18-acceptance-coordinator-trust-recovery。
+
+
+不要直接进入 Acceptance。先创建 append-only repair/round-2，并把现有
+round-1 completion 标记为 superseded-for-repair，不覆盖或删除任何旧证据。
+
+
+严格使用 quick-dev-tdd-adapter，执行真实 RED → GREEN → REFACTOR。
+
+
+修复范围仅包括：
+
+
+1. R0：Acceptance coordinator 不再信任 caller 提供的 bundle、evidence、
+route、boolean 或 action receipt；通过 prepared run、Skill Input ready gate、
+start_or_resume_target_run 和 persisted action lifecycle 推导 route。
+
+
+2. R1：把 successor reservation 接入真实 terminal conflict 路径，实现
+reservation、materialization、lineage、closure 四阶段可重入状态机，并对每个
+崩溃边界编写真实恢复测试。
+
+
+3. R2：实现 knowledgeSelectionHash 与 knowledgeContextHash 分离，建立完整
+authority envelope 和 successor chain validator。Quick Dev、Acceptance、VDD
+必须复用同一验证器。query quality failure 只阻止 Knowledge publication；
+selection、authority、contract、command、test identity、policy、risk 或 Skill
+Input contract 漂移必须重授权。
+
+
+4. 新增 R5 Completion Handoff Integrity：candidate identity 只绑定明确的
+production/test/validator/contract-consumer 源码字节，不绑定 HEAD 或任何生成物。
+发布 completion receipt v2，绑定 terminal result 和 candidate source manifest；
+原子更新 resume-state 当前 receipt 指针。Acceptance projector 必须重新校验
+receipt、terminal、manifest 和当前源码字节。
+
+
+在修改生产代码之前，先更新 repair contract、command registry、test identities、
+authority projection、Knowledge freeze 和 Skill Input。然后停止一次，输出所有
+授权哈希，等待 maintainer 明确确认进入 implementation-authorized。
+
+
+确认后按：
+R0 → R1 → R2 → R5 → R3 replay → R4 dogfood → terminal full
+执行。每个实现 slice 都必须先观察到真实 RED。
+
+
+禁止 git add -A；禁止修改旧 receipt；禁止手工生成 lifecycle receipt；禁止以
+HEAD 作为 freshness；禁止因 evidence-only commit 创建 successor。
+
+
+全部测试通过后，生成新的 append-only round-2 completion receipt v2，更新：
+plan-state.status=implementation-complete
+resume-state.next_action=acceptance-handoff
+resume-state.implementation_receipt=<新的当前 v2 receipt>
+
+
+最后只报告 Acceptance readiness=READY，不得提前报告 acceptance-passed。

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T17:04:20.986983Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The acceptance CLI provides deterministic preparation, validation, evidence, coordinator, routing, bootstrap integration, persistence, replay, and finalization commands. Inputs and outputs are hash-bound, append-only, repository-contained, and non-authorizing.",
+      "title": "Acceptance CLI"
+    },
+    {
+      "content": "The plan requires persisted coordinator evidence, reentrant successor handling, continuity of maintainer-controlled bindings, controlled Knowledge freshness recovery, legacy RED compatibility checks, read-only historical verification, and completion handoff integrity.",
+      "title": "Trust Recovery Requirements"
+    },
+    {
+      "content": "Bootstrap must not start automatically. Acceptance, Quick Dev, and related validators preserve lifecycle ownership, reject stale or conflicting evidence, maintain immutable historical records, and publish only recomputed non-authorizing results.",
+      "title": "Execution Constraints"
+    }
+  ],
+  "source_manifest_hash": "sha256:33b0a99ce8e5cb31875afbed46c8b2169fa81dc3a3914828a18edcc0f1a23770",
+  "truncated": false
+}

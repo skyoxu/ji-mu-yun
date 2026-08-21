@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+    "source_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 9569,
+    "start_line": 1,
+    "end_line": 176,
+    "content_sha256": "sha256:08117bd5a315fce7bac12b341fd5c9ff7c97d104676de9f4f5ecb6b528826aae"
+  },
+  "status": "accepted",
+  "summary": "Plan repairs Acceptance/Quick Dev trust gaps against baseline 3c285bcc; creation commit 868328c8; self-hosted required; preserve lifecycle ownership and never auto-start Bootstrap; R0 accepts only v3 hash-bound requests and persisted DAG/registry/route evidence, rejecting temporary or unbound receipts and v2 current completion; R1 reserves reusable byte-identical successors and fail-closed retries; R2 requires maintainer-bound contract, authority, Knowledge, successor-kind, and Skill-input continuity; R2-FRESHNESS permits verified same-selection degraded replay for catalog/source drift, but blocks authority, scope, policy, contract, required-source, LKG, integrity, and Knowledge-system query-gate changes; no Knowledge publication or authorization rewrite; R3 permits legacy RED only with matching selector, test bytes, fingerprint, and failure IDs; R4 read-only replay of 8-17 evidence with fresh bindings and immutable history; R5 binds candidate manifest, terminal result, and resume pointer, excluding evidence artifacts but detecting production/test changes; completion requires append-only receipt reuse and full-chain verification."
+}

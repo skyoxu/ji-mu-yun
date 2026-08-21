@@ -1,0 +1,9 @@
+{
+  "schema_version": "jimuyun.quick-dev-repair-contract.v1",
+  "plan_id": "acceptance-coordinator-trust-recovery",
+  "repair_round": 2,
+  "active_contract": "../../implementation-contract.v1.json",
+  "ordered_slices": ["R0", "R1", "R2", "R5", "R3", "R4"],
+  "completion_definition": "quick-dev-implementation-complete.v2",
+  "authorizes": []
+}

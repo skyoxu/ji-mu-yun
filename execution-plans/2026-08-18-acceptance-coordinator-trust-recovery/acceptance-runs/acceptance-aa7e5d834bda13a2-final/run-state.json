@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "contractHash": "sha256:60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374",
+  "createdUtc": "2026-08-21T17:21:46.969388Z",
+  "knowledgeContextHash": "sha256:5c84726fc5af1202aaaf03f37bd5b7e67dc9a9159d9fe28458b796e8d356f4b4",
+  "runId": "acceptance-aa7e5d834bda13a2-final",
+  "runInputHash": "sha256:b3baa1bd5009cef1308599c827425e676b26f26da11d794723fa820a8120432c",
+  "schemaVersion": "acceptance-execution-run.v1",
+  "skillInputBindingHash": "sha256:8365030e06a351f20832f3ea6ac3ad7970995dca5832a4ae86bf2c1d1de60112",
+  "skillInputContextHash": "sha256:8c1bdb162609d8b7216582290942a0bfd5441d6e77f1734c623464eb76fd9254",
+  "skillInputContextPath": "skill-input/skill-input-context.v1.json",
+  "skillInputContextSourcePath": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/skill-input/acceptance-round-2/o/skill-input-context.v1.json"
+}

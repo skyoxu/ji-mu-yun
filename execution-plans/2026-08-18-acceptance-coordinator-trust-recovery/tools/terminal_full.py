@@ -12,15 +12,33 @@ def _sha256(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
-def publish_canonical_receipt(plan: Path, result: dict[str, object]) -> Path:
+def publish_canonical_receipt(root: Path, plan: Path, result: dict[str, object]) -> Path:
     """Publish the immutable Quick Dev completion handoff for a passed terminal."""
-    repair = plan / "repair" / "round-1"
+    repair = plan / "repair" / "round-2"
     repair.mkdir(parents=True, exist_ok=True)
-    destination = repair / "quick-dev-implementation-complete.v1.json"
-    encoded = json.dumps(result, indent=2, sort_keys=True) + "\n"
-    if destination.is_file() and destination.read_text(encoding="utf-8") != encoded:
-        suffix = hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:16]
-        destination = repair / f"quick-dev-implementation-complete.{suffix}.v1.json"
+    manifest = build_candidate_source_manifest(root, _candidate_source_entries())
+    binding = str(manifest["candidate_source_root"]).split(":", 1)[1][:16]
+    manifest_path = repair / f"candidate-source-manifest.{binding}.v1.json"
+    manifest_encoded = json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+    if manifest_path.exists() and manifest_path.read_text(encoding="utf-8") != manifest_encoded:
+        raise RuntimeError("candidate source manifest successor conflicts")
+    if not manifest_path.exists():
+        manifest_path.write_text(manifest_encoded, encoding="utf-8", newline="\n")
+    receipt = {
+        "schema_version": "quick-dev-implementation-complete.v2",
+        "plan_id": result["plan_id"],
+        "repair_round": 2,
+        "predicate": "implementation-complete",
+        "status": "pass",
+        "implementation_contract": {"path": "implementation-contract.v1.json", "sha256": result["contract_hash"]},
+        "command_registry": {"path": "command-registry.v1.json", "sha256": result["command_registry_hash"]},
+        "candidate_source_manifest": {"path": manifest_path.relative_to(plan).as_posix(), "sha256": _sha256(manifest_path.read_bytes()), "candidate_source_root": manifest["candidate_source_root"]},
+        "terminal_result": {"path": "terminal-results/terminal-full.json", "sha256": result["terminal_result_hash"]},
+        "validated_command_ids": result["validated_command_ids"],
+        "authorizes": ["acceptance-handoff"],
+    }
+    destination = repair / f"quick-dev-implementation-complete.{binding}.v2.json"
+    encoded = json.dumps(receipt, indent=2, sort_keys=True) + "\n"
     if destination.is_file() and destination.read_text(encoding="utf-8") != encoded:
         raise RuntimeError("canonical implementation receipt successor conflicts")
     if not destination.is_file():
@@ -46,7 +64,7 @@ def _is_generated_candidate_path(relative: str) -> bool:
         return True
     if name.startswith("95-") or name.startswith(("skill-input", "semantic-input", "knowledge-context")):
         return True
-    if name in {"plan-state.v1.json", "resume-state.v1.json", "repair-closure.json"}:
+    if name in {"plan-state.v1.json", "resume-state.v1.json", "repair-closure.json"} or name.startswith("quick-dev-implementation-complete"):
         return True
     if name.startswith(("changed-set", "root-cause", "sibling-disposition", "composition", "producer-consumer-composition")):
         return True
@@ -54,35 +72,48 @@ def _is_generated_candidate_path(relative: str) -> bool:
     return any(part in generated_dirs for part in parts)
 
 
+def build_candidate_source_manifest(root: Path, entries: list[dict[str, object]]) -> dict[str, object]:
+    """Build the portable candidate identity from declared source bytes only."""
+    normalized: list[dict[str, object]] = []
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != {"path", "role", "slice_ids"}:
+            raise ValueError("candidate source manifest entry is invalid")
+        relative, role, slice_ids = entry["path"], entry["role"], entry["slice_ids"]
+        if (not isinstance(relative, str) or not relative or _is_generated_candidate_path(relative)
+                or not isinstance(role, str) or not role
+                or not isinstance(slice_ids, list) or not slice_ids or any(not isinstance(value, str) or not value for value in slice_ids)):
+            raise ValueError("candidate source manifest entry is invalid")
+        source = (root / relative).resolve()
+        try:
+            source.relative_to(root.resolve())
+        except ValueError as exc:
+            raise ValueError("candidate source manifest path escapes root") from exc
+        if not source.is_file():
+            raise ValueError("candidate source manifest source is missing")
+        normalized.append({"path": relative.replace("\\", "/"), "role": role, "slice_ids": sorted(slice_ids), "sha256": _sha256(source.read_bytes())})
+    normalized.sort(key=lambda item: (str(item["path"]), str(item["role"]), tuple(item["slice_ids"])))
+    payload = json.dumps(normalized, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return {"schema_version": "jimuyun.candidate-source-manifest.v1", "entries": normalized, "candidate_source_root": _sha256(payload)}
+
+
+def _candidate_source_entries() -> list[dict[str, object]]:
+    return [
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", "role": "production", "slice_ids": ["R0"]},
+        {"path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py", "role": "production", "slice_ids": ["R1"]},
+        {"path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py", "role": "production", "slice_ids": ["R2"]},
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py", "role": "contract-consumer", "slice_ids": ["R2"]},
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py", "role": "contract-consumer", "slice_ids": ["R5"]},
+        {"path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/terminal_full.py", "role": "validator", "slice_ids": ["R5"]},
+        {"path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/validate_all.py", "role": "validator", "slice_ids": ["R5"]},
+        {"path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/implementation-contract.v1.json", "role": "contract-consumer", "slice_ids": ["R0", "R1", "R2", "R3", "R4", "R5"]},
+        {"path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/command-registry.v1.json", "role": "contract-consumer", "slice_ids": ["R0", "R1", "R2", "R3", "R4", "R5"]},
+    ]
+
+
 def _candidate_binding(root: Path, plan: Path | None = None) -> str:
-    head = _git(root, "rev-parse", "HEAD")
-    diff = subprocess.run(
-        ["git", "diff", "--binary", "HEAD"],
-        cwd=root,
-        check=False,
-        capture_output=True,
-    )
-    if diff.returncode:
-        raise RuntimeError("candidate diff command failed")
-    untracked = subprocess.run(
-        ["git", "ls-files", "--others", "--exclude-standard", "-z"],
-        cwd=root,
-        check=False,
-        capture_output=True,
-    )
-    if untracked.returncode:
-        raise RuntimeError("candidate untracked-file command failed")
-    payload = bytearray((head + "\n").encode("utf-8"))
-    payload.extend(diff.stdout)
-    for raw_path in sorted(filter(None, untracked.stdout.split(b"\0"))):
-        relative = raw_path.decode("utf-8").replace("\\", "/")
-        if _is_generated_candidate_path(relative):
-            continue
-        path = root / relative
-        if path.is_file():
-            payload.extend(b"\0untracked\0" + raw_path + b"\0")
-            payload.extend(hashlib.sha256(path.read_bytes()).hexdigest().encode("ascii"))
-    return _sha256(bytes(payload))
+    if plan is None:
+        raise ValueError("candidate source manifest requires the target plan")
+    return str(build_candidate_source_manifest(root, _candidate_source_entries())["candidate_source_root"])
 
 
 def _run_registered_command(root: Path, registry: dict, command_id: str) -> int:
@@ -117,6 +148,7 @@ _SLICE_TESTS = {
     ],
     "R3": [".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"],
     "R4": [".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py"],
+    "R5": ["execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/tests/test_completion_handoff_integrity.py"],
 }
 
 
@@ -145,11 +177,11 @@ def _final_bindings(root: Path, plan: Path) -> tuple[dict[str, str], list[str]]:
             missing.append(name)
         else:
             hashes[name] = _sha256(path.read_bytes())
-    receipt = _find_skill_input_receipt(plan)
+    receipt = _find_skill_input_receipt(plan, root)
     if receipt is None:
         missing.append("skill-input-receipt(.successor).v1.json")
     else:
-        hashes[str(receipt.relative_to(plan)).replace("\\", "/")] = _sha256(receipt.read_bytes())
+        hashes[str(receipt.relative_to(root)).replace("\\", "/")] = _sha256(receipt.read_bytes())
         try:
             payload = json.loads(receipt.read_text(encoding="utf-8"))
             if payload.get("ready") is not True or payload.get("authorizes") != []:
@@ -162,7 +194,18 @@ def _final_bindings(root: Path, plan: Path) -> tuple[dict[str, str], list[str]]:
     return hashes, missing
 
 
-def _find_skill_input_receipt(plan: Path) -> Path | None:
+def _find_skill_input_receipt(plan: Path, root: Path | None = None) -> Path | None:
+    resume = plan / "resume-state.v1.json"
+    if root is not None and resume.is_file():
+        try:
+            pointer = json.loads(resume.read_text(encoding="utf-8")).get("skill_input_receipt")
+            if isinstance(pointer, dict) and set(pointer) == {"path", "sha256"} and isinstance(pointer["path"], str):
+                candidate = (root / pointer["path"]).resolve()
+                candidate.relative_to(root.resolve())
+                if candidate.is_file() and _sha256(candidate.read_bytes()) == pointer["sha256"]:
+                    return candidate
+        except (OSError, ValueError, json.JSONDecodeError):
+            return None
     candidates: list[Path] = []
     for path in sorted(plan.rglob("*.json")):
         try:
@@ -177,7 +220,7 @@ def _find_skill_input_receipt(plan: Path) -> Path | None:
 
 
 def _skill_input_validation_failures(root: Path, plan: Path) -> list[str]:
-    receipt = _find_skill_input_receipt(plan)
+    receipt = _find_skill_input_receipt(plan, root)
     if receipt is None:
         return ["skill-input-receipt-not-found"]
     try:
@@ -211,10 +254,10 @@ def _skill_input_validation_failures(root: Path, plan: Path) -> list[str]:
 
 
 def _authorization_failures(root: Path, plan: Path) -> list[str]:
-    candidates = sorted(plan.glob("implementation-authorization-receipt*.json"))
+    candidates = sorted(plan.rglob("*authorization-receipt*.json"))
     if not candidates:
         return ["maintainer-authorization-receipt-required"]
-    receipt = candidates[-1]
+    receipt = next((path for path in reversed(candidates) if "/repair/round-2/" in path.as_posix() and path.name.endswith(".v2.json")), candidates[-1])
     try:
         payload = json.loads(receipt.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -235,6 +278,14 @@ def _authorization_failures(root: Path, plan: Path) -> list[str]:
             failures.append(f"maintainer-authorization-{field}-path-mismatch")
         elif not path.is_file() or descriptor.get("sha256") != _sha256(path.read_bytes()):
             failures.append(f"maintainer-authorization-{field}-hash-mismatch")
+    if payload.get("schema_version") == "jimuyun.quick-dev-implementation-authorization.v2":
+        for field, path in {
+            "command_registry": plan / "command-registry.v1.json",
+            "skill_input_contract": root / ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json",
+        }.items():
+            descriptor = payload.get(field)
+            if not isinstance(descriptor, dict) or not path.is_file() or descriptor.get("sha256") != _sha256(path.read_bytes()):
+                failures.append(f"maintainer-authorization-{field}-hash-mismatch")
     return failures
 
 
@@ -389,21 +440,20 @@ def main() -> int:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(encoded, encoding="utf-8", newline="\n")
     if passed and args.slice is None:
-        receipt = {
-            "schema_version": "quick-dev-implementation-complete.v1",
-            "plan_id": contract["plan_id"],
-            "predicate": "implementation-complete",
-            "status": "pass",
-            "failures": [],
-            "contract_hash": result["contract_hash"],
-            "command_registry_hash": result["command_registry_hash"],
-            "terminal_command_id": "terminal-full",
-            "terminal_result_hash": _sha256(encoded.encode("utf-8")),
-            "validated_command_ids": result["validated_command_ids"],
-            "authorizes": ["implementation-complete"],
-            "lifecycle_transition": "none",
-        }
-        publish_canonical_receipt(plan, receipt)
+        result["terminal_result_hash"] = _sha256(encoded.encode("utf-8"))
+        receipt_path = publish_canonical_receipt(root, plan, result)
+        resume_path = plan / "resume-state.v1.json"
+        resume = json.loads(resume_path.read_text(encoding="utf-8"))
+        resume["status"] = "implementation-complete"
+        resume["next_action"] = "acceptance-handoff"
+        resume["current_slice"] = None
+        resume["implementation_receipt"] = {"path": receipt_path.relative_to(plan).as_posix(), "sha256": _sha256(receipt_path.read_bytes()), "candidate_source_root": result["candidate_binding_hash"]}
+        resume["slice_status"] = {slice_id: "slice-ready" for slice_id in _SLICE_TESTS}
+        resume_path.write_text(json.dumps(resume, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+        plan_state_path = plan / "plan-state.v1.json"
+        plan_state = json.loads(plan_state_path.read_text(encoding="utf-8"))
+        plan_state.update({"status": "implementation-complete", "owner": "quick-dev-tdd-adapter", "authorizes": ["implementation-complete"], "repair_round": "repair/round-2"})
+        plan_state_path.write_text(json.dumps(plan_state, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     print(encoded, end="")
     return 0 if passed else 1
 

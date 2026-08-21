@@ -1,0 +1,97 @@
+{
+  "authorizes": [],
+  "candidate": {
+    "actionReceipts": [
+      {
+        "path": "actions/acceptance-suite/attempt-001/result.json",
+        "sha256": "sha256:e7fb8f133570f9c15679b7d114c15c135c7dcda66dad03f323bc8989b43926ef"
+      },
+      {
+        "path": "actions/quick-dev-suite/attempt-001/result.json",
+        "sha256": "sha256:05bbc38391f20f1a73eace2788ed1e37744d464dcc4204edb43f2911b221263a"
+      },
+      {
+        "path": "actions/r0-green/attempt-001/result.json",
+        "sha256": "sha256:68386b9bbdd20d5644d985343c8f93cad9094d230bba1264e07930a3b6d2b0f3"
+      },
+      {
+        "path": "actions/r0-terminal/attempt-001/result.json",
+        "sha256": "sha256:7e9f840e8f1eb27fb34772fe492804bc366aa776320541cfa98aee6139e3f557"
+      },
+      {
+        "path": "actions/r1-green/attempt-001/result.json",
+        "sha256": "sha256:907094bebe8312cf01cdbcfa3bd7d5f251c4a5a6c25cfaf1f42cf45742fdf964"
+      },
+      {
+        "path": "actions/r1-terminal/attempt-001/result.json",
+        "sha256": "sha256:7bce2f3ef6f28437db404aa11e507cf52a3e7a867fd84f95979cd5139389dd46"
+      },
+      {
+        "path": "actions/r2-green/attempt-001/result.json",
+        "sha256": "sha256:16eef5601179fba2204ae9d2245e5c9c2a077e55b46a26eaaf5a73c627c168f0"
+      },
+      {
+        "path": "actions/r2-terminal/attempt-001/result.json",
+        "sha256": "sha256:f219d2bb33a26a6ada9c9ae9665318399d61a2af284b67f0ddd750b9b1d5f2c0"
+      },
+      {
+        "path": "actions/r3-green/attempt-001/result.json",
+        "sha256": "sha256:021a817a3e008965d47a2f1f8886649b3d14860bda2d8252dacf4b8e106a6e59"
+      },
+      {
+        "path": "actions/r3-terminal/attempt-001/result.json",
+        "sha256": "sha256:edaa9bf7bb3a4f5a68260b6cd0b53abaa8a5290b33146b7f1f38434137f21175"
+      },
+      {
+        "path": "actions/r4-green/attempt-001/result.json",
+        "sha256": "sha256:a08adb632c128533c85e69b0f06433b2947ec6a599016b4b61569c8f1adb679a"
+      },
+      {
+        "path": "actions/r4-terminal/attempt-001/result.json",
+        "sha256": "sha256:c571ee0bab2fca18d38589ba3cd0951528fea344ed3e4085b351eb8c0dcbed53"
+      },
+      {
+        "path": "actions/r5-green/attempt-001/result.json",
+        "sha256": "sha256:fd68387e4d0b072c89784e0b8ef638e5537590e9b08fedf19eed7f22c67a15f2"
+      },
+      {
+        "path": "actions/r5-terminal/attempt-001/result.json",
+        "sha256": "sha256:e60e07740820bcaae07bce466065e60ec7531c6de5b59ed99c7693f95816381f"
+      },
+      {
+        "path": "actions/terminal-full/attempt-001/result.json",
+        "sha256": "sha256:85e0d7f1af5baac9670ff87950b6c054e31c3a590a598ecd0bbb8527b961ceea"
+      }
+    ],
+    "authorizes": [],
+    "candidateCustodyHash": "sha256:3ce52f17424b73a74630db106d68852ba9c7131ed76f17af9ce920f3187c8669",
+    "inputBindings": {
+      "candidateCustodyHash": "sha256:3ce52f17424b73a74630db106d68852ba9c7131ed76f17af9ce920f3187c8669",
+      "contractHash": "sha256:60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374",
+      "knowledgeContextHash": "sha256:5c84726fc5af1202aaaf03f37bd5b7e67dc9a9159d9fe28458b796e8d356f4b4",
+      "runInputHash": "sha256:b3baa1bd5009cef1308599c827425e676b26f26da11d794723fa820a8120432c"
+    },
+    "prerequisiteBundle": {
+      "bundleHash": "sha256:2c9396c39b1fb413294faa190abc232012e26acd3692ab1eaaa5ea46b31f01ea",
+      "implementationReceipt": {
+        "path": "repair/round-2/quick-dev-implementation-complete.2f09db6e2191d50c.v1.json",
+        "sha256": "sha256:57d8271145d4c929c3a1dc5ef894b9f468ebbb8d5f055e0af27b417f2b7ac8c2",
+        "terminalCommandId": "terminal-full"
+      },
+      "path": "acceptance-inputs/acceptance-round-2-final/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+      "sha256": "sha256:48d24fae3ede1e951ed26529c1cbc93073bef9fa94b43d64502f79cd4c8adff9"
+    },
+    "quickDevImplementationReceipt": {
+      "path": "repair/round-2/quick-dev-implementation-complete.2f09db6e2191d50c.v1.json",
+      "sha256": "sha256:57d8271145d4c929c3a1dc5ef894b9f468ebbb8d5f055e0af27b417f2b7ac8c2",
+      "terminalCommandId": "terminal-full"
+    },
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-deterministic-evaluation.v1",
+    "status": "passed",
+    "terminalResultHash": "sha256:a363ac21087a332c2e1b6c32be20644fc4f72ed47f0df049da90a66782a85b59"
+  },
+  "candidateHash": "sha256:a3f6940fe654f1f6cf671b03c295ecba88eeeaa5d2191c6a2c1f64a4ed74ca94",
+  "candidateInputHash": "sha256:a9a7c230427eea3a565aaa14bfd991e80a0a6a75a3d6c1425a57cc2be44b939f",
+  "schemaVersion": "acceptance-result-candidate.v1"
+}

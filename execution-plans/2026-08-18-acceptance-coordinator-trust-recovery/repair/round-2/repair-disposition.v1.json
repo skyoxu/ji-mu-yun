@@ -1,0 +1,16 @@
+{
+  "schema_version": "jimuyun.quick-dev-repair-disposition.v1",
+  "plan_id": "acceptance-coordinator-trust-recovery",
+  "repair_round": 2,
+  "predecessor": "repair/round-1",
+  "predecessor_completion": "repair/round-1/quick-dev-implementation-complete.v1.json",
+  "predecessor_status": "superseded-for-repair",
+  "reason_codes": [
+    "coordinator-request-local-trust",
+    "successor-reservation-not-on-terminal-path",
+    "authorization-continuity-incomplete",
+    "completion-pointer-terminal-mismatch"
+  ],
+  "acceptance_authorization": "withheld-until-round-2-terminal",
+  "authorizes": []
+}
