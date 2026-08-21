@@ -1,0 +1,9 @@
+[
+  {
+    "actionId": "terminal-receipt-replay",
+    "activation": true,
+    "commandId": "terminal-full",
+    "dependsOn": [],
+    "order": 1
+  }
+]

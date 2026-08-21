@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
+  "targetPlan": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery",
+  "runId": "acceptance-8-17-closure2",
+  "changeId": "quick-dev-tdd-stage-recovery-closure",
+  "baselineRevision": "366e7d7b592f75774d0e6d51bff2afc3646c1be9",
+  "changedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_migration_cutover.py",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.freeze.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.refactor-acceptance.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/quick-dev-route-facts.current-head.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/quick-dev-route.current-head.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/repair/round-1/quick-dev-implementation-complete.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/dogfood_runner.py",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py"
+  ],
+  "affectedConsumerRefs": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py"
+  ],
+  "targetPlanPaths": ["00-index.md"],
+  "knowledgeContextPath": "knowledge-context.refactor-acceptance.v1.json",
+  "codeReviewDomain": "toolchain",
+  "codeReviewPolicyPath": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+  "implementationReceiptPath": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/repair/round-1/quick-dev-implementation-complete.v1.json",
+  "implementationReceiptHash": "sha256:771ef2ce6dbaf1b6312fe1d1902b8e70d4f635054041af31ca7e14ef9148007b",
+  "commands": [{"id": "terminal-full", "executable": "py", "argv": ["-3", "-B", "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py", "--repository-root", ".", "--plan-dir", "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery"], "cwd": ".", "timeout_seconds": 1800, "shell": false}],
+  "actions": [{"actionId": "terminal-full", "dependsOn": [], "order": 1, "commandId": "terminal-full", "activation": true}],
+  "authorizes": []
+}

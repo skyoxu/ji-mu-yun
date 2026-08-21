@@ -1,0 +1,7 @@
+{
+  "authorizes": [],
+  "bundle": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/acceptance-inputs/acceptance-8-17-closure3/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+  "bundleHash": "sha256:0232e30a3df9805ad2dc6826b79bd3c728b95d3837fe82167ab0c0860dbfc6bb",
+  "runRequest": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/acceptance-run-request.acceptance-8-17-closure3.v1.json",
+  "status": "ready"
+}

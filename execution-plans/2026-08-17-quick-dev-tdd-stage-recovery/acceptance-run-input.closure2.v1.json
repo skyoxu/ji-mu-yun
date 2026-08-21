@@ -1,0 +1,83 @@
+{
+  "authorizes": [],
+  "candidateCustody": {
+    "authorizes": [],
+    "baselineResolvedCommit": "366e7d7b592f75774d0e6d51bff2afc3646c1be9",
+    "candidateMode": "dirty_worktree",
+    "candidateResolvedCommit": "",
+    "schemaVersion": "acceptance-candidate-custody.v1",
+    "snapshotManifestHash": "sha256:66d26d929d92ba49c0affaf35bd4ff6333f970ed70a1390c0445bcdbacca45e5",
+    "snapshotPath": ".acceptance-snapshots/acceptance-8-17-closure2"
+  },
+  "input": {
+    "adapter_hash": "sha256:05cc1a005c9cc0b0b44111bb454a598e9a1ad575821b959a882b420155f8f805",
+    "adapter_id": "run-refactor-implementation-acceptance",
+    "adapter_version": "compact-vdd-projection.v1",
+    "affected_consumer_refs": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py"
+    ],
+    "allowed_write_roots": [],
+    "baseline_content_manifest_hash": "sha256:26be0bbc4102aedce7ae6a5aa5a1f2a22272b017c34bda82cf1c919690c250d3",
+    "baseline_content_manifest_path": "acceptance-inputs/acceptance-8-17-closure2/baseline-content-manifest.v1.json",
+    "baseline_revision": "366e7d7b592f75774d0e6d51bff2afc3646c1be9",
+    "candidate_content_manifest_hash": "sha256:8e418f96b60c7c97476e7251c0ed3da26607434cd35d68a69bed031ac50ec60c",
+    "candidate_content_manifest_path": "acceptance-inputs/acceptance-8-17-closure2/candidate-content-manifest.v1.json",
+    "candidate_frozen_snapshot_path": ".acceptance-snapshots/acceptance-8-17-closure2",
+    "candidate_mode": "dirty_worktree",
+    "candidate_revision": "dirty-worktree:8e418f96b60c7c97476e7251c0ed3da26607434cd35d68a69bed031ac50ec60c",
+    "change_id": "quick-dev-tdd-stage-recovery-closure",
+    "changed_paths": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_migration_cutover.py",
+      "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.freeze.v1.json",
+      "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.refactor-acceptance.v1.json",
+      "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.v1.json",
+      "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/quick-dev-route-facts.current-head.v1.json",
+      "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/quick-dev-route.current-head.v1.json",
+      "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/repair/round-1/quick-dev-implementation-complete.v1.json",
+      "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/dogfood_runner.py",
+      "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py"
+    ],
+    "code_review_domain": "toolchain",
+    "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+    "code_review_policy_path": "acceptance-inputs/acceptance-8-17-closure2/toolchain-code-review.v1.json",
+    "created_utc": "2026-08-01T00:00:00Z",
+    "execution_mode": "evidence_only",
+    "forbidden_write_roots": [
+      "logs/phase-a-innernet/",
+      "runtime/phase-a/"
+    ],
+    "run_id": "acceptance-8-17-closure2",
+    "target": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery",
+    "target_plan_hash": "sha256:91a182444b736e0684d01b84730b6d79ee02c4788c4b5f5bab769c65d716f8f1",
+    "target_plan_paths": [
+      "00-index.md"
+    ],
+    "validator_hash": "sha256:15c826c514155fc496565c2c8ab5e17917abf5b2b9522ad36541b23caa40268c"
+  },
+  "inputHash": "sha256:c18748e885d50ce29a57e7b35c74d6b80614fcdabc06350949b19560d2e36614",
+  "knowledgeContext": {
+    "acceptedDecisions": [
+      {
+        "candidate": {
+          "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/00-index.md",
+          "source_sha256": "91a182444b736e0684d01b84730b6d79ee02c4788c4b5f5bab769c65d716f8f1"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      }
+    ],
+    "authorizes": [],
+    "contextHash": "sha256:9120c5e656b11c499278ab5137d6d8fb4cd12499068001310885a55adf922ff7",
+    "path": "knowledge-context.refactor-acceptance.v1.json",
+    "requestHash": "sha256:77ce927f5077f59c6d247909a894faf17d3c174e35f2df782324566163d0b5e3",
+    "resultHash": "sha256:6f52ea21aa23579442753a174440770a932261aafc7b248c1384ce119d28235f",
+    "sha256": "sha256:b3dfd12e40113e940f59fc22cad2226950c7fab9ffab02a18a3c2c071647b030",
+    "sourceSnapshotId": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4"
+  },
+  "schemaVersion": "acceptance-run-input.v1"
+}

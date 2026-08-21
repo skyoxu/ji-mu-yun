@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T05:26:15.793225Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The staged adapter records immutable hash-bound RED, implementation, GREEN, and refactor evidence. RED stops at implementation, and later stages consume matching predecessor lineage.",
+      "title": "Lifecycle behavior"
+    },
+    {
+      "content": "Routing derives the next stage from persisted evidence, supports recovery without stage state, and treats implementation as a successor. Legacy evidence is read-only after staged cutover.",
+      "title": "Recovery and migration"
+    },
+    {
+      "content": "Three slices cover stage evidence, recovery routing, and migration dogfood. Registered commands run focused tests, adapter tests, staged dogfood, and terminal validation.",
+      "title": "Validation contract"
+    }
+  ],
+  "source_manifest_hash": "sha256:015b72205bbcdbfcca70ac6d5894805ba34bab8eea8644420091157876756ea2",
+  "truncated": false
+}

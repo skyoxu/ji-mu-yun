@@ -1,0 +1,47 @@
+{
+  "adapter_hash": "sha256:05cc1a005c9cc0b0b44111bb454a598e9a1ad575821b959a882b420155f8f805",
+  "adapter_id": "run-refactor-implementation-acceptance",
+  "adapter_version": "compact-vdd-projection.v1",
+  "affected_consumer_refs": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py"
+  ],
+  "allowed_write_roots": [],
+  "baseline_content_manifest_hash": "sha256:26be0bbc4102aedce7ae6a5aa5a1f2a22272b017c34bda82cf1c919690c250d3",
+  "baseline_content_manifest_path": "acceptance-inputs/acceptance-8-17-closure4/baseline-content-manifest.v1.json",
+  "baseline_revision": "366e7d7b592f75774d0e6d51bff2afc3646c1be9",
+  "candidate_content_manifest_hash": "sha256:6f0e92cf1f7eb18e99f1433230b836e9fc484c5bbd78f405c9111c67e4217a7d",
+  "candidate_content_manifest_path": "acceptance-inputs/acceptance-8-17-closure4/candidate-content-manifest.v1.json",
+  "candidate_frozen_snapshot_path": ".acceptance-snapshots/acceptance-8-17-closure4",
+  "candidate_mode": "dirty_worktree",
+  "candidate_revision": "dirty-worktree:6f0e92cf1f7eb18e99f1433230b836e9fc484c5bbd78f405c9111c67e4217a7d",
+  "change_id": "quick-dev-tdd-stage-recovery-closure",
+  "changed_paths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_migration_cutover.py",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.freeze.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.refactor-acceptance.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/quick-dev-route-facts.current-head.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/quick-dev-route.current-head.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/repair/round-1/quick-dev-implementation-complete.50d3b80466431950.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/repair/round-1/quick-dev-implementation-complete.v1.json",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/dogfood_runner.py",
+    "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py"
+  ],
+  "code_review_domain": "toolchain",
+  "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+  "code_review_policy_path": "acceptance-inputs/acceptance-8-17-closure4/toolchain-code-review.v1.json",
+  "created_utc": "2026-08-01T00:00:00Z",
+  "execution_mode": "evidence_only",
+  "forbidden_write_roots": [
+    "logs/phase-a-innernet/",
+    "runtime/phase-a/"
+  ],
+  "run_id": "acceptance-8-17-closure4",
+  "target": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery",
+  "target_plan_hash": "sha256:91a182444b736e0684d01b84730b6d79ee02c4788c4b5f5bab769c65d716f8f1",
+  "target_plan_paths": [
+    "00-index.md"
+  ],
+  "validator_hash": "sha256:823d23d097b506b107673b95549ebaafa46742c218cbc987fa5a907faac9c294"
+}

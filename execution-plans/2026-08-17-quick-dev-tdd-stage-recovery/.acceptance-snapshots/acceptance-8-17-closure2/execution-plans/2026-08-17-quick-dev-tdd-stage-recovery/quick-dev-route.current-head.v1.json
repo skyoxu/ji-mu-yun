@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "jimuyun.quick-dev-input-route.v1",
+  "lane": "strict_tdd_plan",
+  "backend": "quick-dev-tdd-adapter",
+  "planId": "quick-dev-tdd-stage-recovery",
+  "input": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery",
+  "modelDecision": {
+    "schemaVersion": "jimuyun.workflow-model-route-decision.v1",
+    "consumer": "quick_dev",
+    "consumerState": "enabled",
+    "routeId": "quick_dev.architectural",
+    "classification": "architectural",
+    "typedInputs": {
+      "changes_adr_or_invariant": false,
+      "changes_auth_security": false,
+      "changes_database_schema": false,
+      "changes_public_api": false,
+      "changes_runtime_deployment": false,
+      "changes_shared_llm_entrypoint": false,
+      "changes_workflow_control_plane_ownership": true,
+      "touches_protected_path": false,
+      "changes_concurrency_or_idempotency": true,
+      "changes_state_or_recovery_semantics": true,
+      "has_cross_module_consumers": true,
+      "has_unresolved_behavioral_boundary": false,
+      "production_write_roots": 1,
+      "matching_test_roots": 1,
+      "deterministic_transform": false,
+      "behavior_fully_specified": true,
+      "introduces_contract": false,
+      "introduces_dependency": false,
+      "unknown_facts": [],
+      "contradictory_facts": []
+    },
+    "triggers": [
+      "changes_workflow_control_plane_ownership"
+    ],
+    "blockingReasons": [],
+    "policyRevision": "workflow-model-routing.v2",
+    "policyHash": "sha256:6492475796f8ea4a81c2a6a7e419fa1604a2ee933b362ef48600411df82c6fa7",
+    "rolloutMode": "observe_only",
+    "requestedExecution": {
+      "launchMode": "child",
+      "backend": "codex-cli",
+      "model": "gpt-5.6-sol",
+      "effort": "high",
+      "sandbox": "workspace-write"
+    },
+    "actualExecution": null,
+    "override": {
+      "requestedClass": null,
+      "disposition": "none",
+      "reasonCode": null
+    },
+    "capability": {
+      "required": false,
+      "state": "not_required",
+      "proofHash": null,
+      "shadowPredicateState": "not_required"
+    },
+    "status": "observe_only",
+    "authorizes": [],
+    "decisionId": "sha256:f0c6a5fca3e2b9c50edf4671238763c57f6e3adb6457f0d4cc5227f08b2777a8"
+  },
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "implementation-acceptance",
+    "protected-handoff",
+    "release",
+    "commit",
+    "done"
+  ]
+}

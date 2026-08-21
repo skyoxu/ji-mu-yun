@@ -1,0 +1,71 @@
+# Implementation Evolution And Completion Report
+
+This append-only report is non-authorizing continuity evidence.
+
+## 2026-08-17 - Plan Finalization
+
+- Defined RED basis identity separately from the implementation successor.
+- Declared the old one-shot adapter a migration bridge only.
+- Reserved 8-17 as the first staged dogfood consumer after cutover.
+
+## 2026-08-17 - Implementation Complete
+
+- S0, S1, and S2 completed through separate RED, GREEN, REFACTOR, and slice
+  terminal predicates; historical harness failures remain preserved.
+- S2 refactor executed the registered `dogfood-8-17` command after the staged
+  adapter regression suite.
+- Full terminal evidence: `logs/tdd-adapter/quick-dev-tdd-stage-recovery/terminal/`
+  with current contract hash `sha256:0962f50ac29d53baa542f58f7b7dc14ec8186094af61a0a4d68b07a40d1b9923`.
+- Adapter regression: `92` tests passed. This report authorizes nothing;
+  acceptance remains owned by the Acceptance Skill.
+
+## 2026-08-17 - Stage-Action Closure Repair
+
+- Replaced one-shot continuation with independent RED, GREEN, REFACTOR, and
+  slice-terminal actions. Each stage persists evidence and exits before the
+  next route decision.
+- Current RED evidence binds failure intent, test selector, contract hash,
+  validator hash, and pre-implementation candidate identity.
+- The full terminal reran `adapter-tests` and `dogfood-8-17`, binding dogfood
+  output `sha256:55cccd28df5c1a813dc9f57abb6902ca480fac6f85ee42d4f1d36cec269cd530`.
+- Current route is `implementation-complete`; this report remains
+  non-authorizing continuity evidence.
+
+## 2026-08-17 - Staged Dogfood And Protocol Closure Repair
+
+- `dogfood-8-17` now runs the acceptance-coordinator S3 consumer through the
+  staged adapter's independent RED, GREEN, and REFACTOR actions before its
+  slice terminal predicate.
+- `slice-terminal` now closes the canonical Capsule/attempt/ledger bundle from
+  the same three immutable observations before running the terminal command.
+- The dogfood run verified `attempt-ledger-manifest.v1.json` and the S3
+  `slice-ready` predicate; the refreshed terminal dogfood binding is
+  `sha256:546dffd7f6a178a75ca877618e385c85ad8aac364968eb5da5b6fece36e014ae`.
+  The VDD-owned knowledge context was refreshed through successor `r18` after
+  the controlled source/read-set validation. This report remains
+  non-authorizing evidence.
+
+## 2026-08-17 - Route-First Dogfood Repair
+
+- The dogfood runner now stops after RED, runs an independent implementation
+  action, and re-reads persisted stage state before GREEN, REFACTOR, and
+  slice-terminal.
+- The probe write is no longer coupled to GREEN validation. The routed terminal
+  records `slice-ready-result.json` only after canonical protocol closure.
+
+## 2026-08-17 - Implementation Successor Route Repair
+
+- RED now routes to `implement`, not directly to GREEN. GREEN rejects a run
+  without a valid, run-local, RED-basis-bound implementation successor.
+- The implementation successor binds contract and validator identities, the
+  pre- and post-implementation candidates, and changed paths before routing
+  to GREEN.
+
+## 2026-08-17 - Top-Level Implementation Handoff Route Repair
+
+- The generic route now exposes `implement` as a non-authorizing action after
+  RED and only exposes `run-slice` for GREEN after a valid successor.
+- The generic loop refuses to invoke the lifecycle CLI with the unsupported
+  `--stage implement` value; implementation is an explicit caller boundary.
+- Integration coverage verifies the top-level active route and the refreshed
+  terminal evidence includes the route-first dogfood.

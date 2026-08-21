@@ -1,0 +1,20 @@
+{
+  "actionId": "adapter-regression",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "adapter-tests",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:0962f50ac29d53baa542f58f7b7dc14ec8186094af61a0a4d68b07a40d1b9923",
+    "knowledgeContextHash": "sha256:b3dfd12e40113e940f59fc22cad2226950c7fab9ffab02a18a3c2c071647b030",
+    "runInputHash": "sha256:49aa354cd42820a92461a0bdaa5d60b135b44f3d034e0c1076371c14d877dfac"
+  },
+  "ownerToken": "owner-acceptance-fb6e5872923d089b",
+  "processId": 6368,
+  "recordedUtc": "2026-08-21T05:42:02.400667Z",
+  "runId": "acceptance-fb6e5872923d089b",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 1
+}

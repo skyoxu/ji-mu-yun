@@ -1,0 +1,86 @@
+{
+  "authorizes": [],
+  "commandId": "adapter-tests",
+  "commandRegistryHash": "sha256:a10cdca9fefa46a2172891385795349e4827bc9d268376d125d2b760df139de0",
+  "environmentIdentity": {
+    "hash": "sha256:3d83924597c385d0a288d12c4263e250a6e330ac01419f4c241825cefb9a5fa7",
+    "names": [
+      "APPDATA",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests",
+      "-p",
+      "test_*.py"
+    ],
+    "commandId": "adapter-tests",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 900
+  },
+  "invocationHash": "sha256:f8086d034fb5f19d168fc06b78ddbe2241fe723b9990c39e57fc5bc1c847137c",
+  "processResult": {
+    "commandId": "adapter-tests",
+    "exitCode": 0,
+    "stderr": "........warning: in the working copy of '.skill-input-composition/budget-basis.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition/skill-input-contract.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'execution-plans/feature-a/implementation-contract.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition/budget-basis.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition/skill-input-contract.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'execution-plans/feature-a/implementation-contract.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition-wrong/budget-basis.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition-wrong/skill-input-contract.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition/candidate-receipt.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition/output/semantic-decision.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition/output/skill-input-context.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition/receipt.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition/skill-input-child-request.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition/snapshot/source-manifest.v1.json', LF will be replaced by CRLF the next time Git touches it\n.warning: in the working copy of '.skill-input-composition/budget-basis.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.skill-input-composition/skill-input-contract.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'execution-plans/feature-a/implementation-contract.v1.json', LF will be replaced by CRLF the next time Git touches it\n.......................................................................................\r\n----------------------------------------------------------------------\r\nRan 96 tests in 4.390s\r\n\r\nOK\r\n",
+    "stderrSha256": "sha256:d15bd0e61d114d61defa5dd7389f7bd3cfaa28a071116d876dce823074b58bee",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:1af2ac5342d2ca1f0fd447e91feeca55b3b5aefe3458ead7cb1d39326ff7a436",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

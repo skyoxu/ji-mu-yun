@@ -1,0 +1,26 @@
+{
+  "schema_version": "skill-input-contract.v1",
+  "consumer": "quick-dev-tdd-adapter",
+  "mode": "strict",
+  "trigger": "after minimum target discovery, before action selection, prepare, or RED",
+  "source_roles": {
+    "plan_directory": {"selector": "plan_directory", "required": true, "root": "repository", "payload": false, "allowed_kinds": ["directory"], "reference_kinds": ["markdown-link", "json-path-field"], "opaque_reference_paths": ["knowledge-context.v1.json", "knowledge-context.freeze.v1.json", "knowledge-context.history", "knowledge-context.freeze.history", "repair", "skill-input", "semantic-input", "skill-input-receipt.v1.json", "skill-input-request.v1.json", "skill-input-semantic-result.v1.json"]},
+    "target_files": {"selector": "target_files", "required": true, "root": "repository", "allowed_kinds": ["file", "directory"], "reference_kinds": ["markdown-link", "json-path-field"]},
+    "requirements": {"selector": "requirements", "required": false, "root": "repository", "allowed_kinds": ["file"], "reference_kinds": ["markdown-link", "json-path-field"]}
+  },
+  "operations": {
+    "execute": {"required_inputs": ["plan_directory", "target_files"]}
+  },
+  "reference_policy": "declared-in-root-and-contained",
+  "max_reference_depth": 8,
+  "max_sources": 128,
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 1048576,
+  "semantic_input_mode": "paged-frozen-snapshot-stdin",
+  "max_snapshot_chunk_bytes": 32768,
+  "budget_basis": {"path": ".agents/skills/quick-dev-tdd-adapter/references/skill-input-budget.paged-v1.json", "sha256": "sha256:da452a9a1ff6ad9686251e582562b8e0ef0c13b6298e1ae7514d6d775e721118"},
+  "sensitivity_policy": "deny-credential-values",
+  "redaction_profile": "credential-values-v1",
+  "forbidden_sources": ["logs-as-recovery-source"],
+  "semantic_acceptance": "all-required-inputs-are-sufficient"
+}

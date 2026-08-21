@@ -70,31 +70,5 @@ def test_8_17_terminal_publishes_an_immutable_receipt_successor(tmp_path):
     successor = module.publish_canonical_receipt(tmp_path, {"contract_hash": "sha256:next", "status": "pass"})
 
     assert first.name == "quick-dev-implementation-complete.v1.json"
-    assert successor.name.startswith("quick-dev-implementation-complete.")
-    assert successor.name.endswith(".v1.json")
+    assert successor.name == "quick-dev-implementation-complete.next.v1.json"
     assert json.loads(first.read_text(encoding="utf-8"))["contract_hash"] == "sha256:current"
-
-
-def test_8_17_terminal_supports_read_only_receipt_replay(tmp_path, monkeypatch, capsys):
-    plan = Path.cwd() / "execution-plans" / "2026-08-17-quick-dev-tdd-stage-recovery"
-    spec = importlib.util.spec_from_file_location("stage_recovery_terminal_replay", plan / "tools" / "terminal_full.py")
-    module = importlib.util.module_from_spec(spec)
-    assert spec.loader is not None
-    spec.loader.exec_module(module)
-    contract_hash = "sha256:" + __import__("hashlib").sha256((plan / "implementation-contract.v1.json").read_bytes()).hexdigest()
-    registry_hash = "sha256:" + __import__("hashlib").sha256((plan / "command-registry.v1.json").read_bytes()).hexdigest()
-    receipt = tmp_path / "receipt.json"
-    receipt.write_text(json.dumps({
-        "schema_version": "quick-dev-implementation-complete.v1",
-        "plan_id": "quick-dev-tdd-stage-recovery",
-        "predicate": "implementation-complete",
-        "status": "pass",
-        "contract_hash": contract_hash,
-        "command_registry_hash": registry_hash,
-        "terminal_command_id": "terminal-full",
-        "authorizes": ["implementation-complete"],
-    }), encoding="utf-8")
-    monkeypatch.setattr(sys, "argv", ["terminal_full.py", "--repository-root", str(Path.cwd()), "--verify-receipt", str(receipt)])
-
-    assert module.main() == 0
-    assert json.loads(capsys.readouterr().out)["predicate"] == "implementation-complete"

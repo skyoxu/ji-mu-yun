@@ -1,0 +1,9 @@
+[
+  {
+    "actionId": "adapter-regression",
+    "activation": true,
+    "commandId": "adapter-tests",
+    "dependsOn": [],
+    "order": 1
+  }
+]

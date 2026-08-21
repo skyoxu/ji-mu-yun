@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T05:26:15.793225Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Tests require immutable hash-bound RED evidence, execution fingerprints that ignore reporting metadata, and terminal closure that references predecessor RED evidence without copying it.",
+      "title": "Stage evidence"
+    },
+    {
+      "content": "Tests require persisted and derived stage routing through implement, green, refactor, and terminal states; successor runs may reuse only hash-bound prior RED evidence. Cutover guards require the staged runner and immutable receipt successors.",
+      "title": "Recovery and cutover"
+    },
+    {
+      "content": "The three slices establish stage summaries, lineage-aware recovery, and staged migration with dogfood. Commands run focused tests, the full adapter suite, dogfood, and terminal checks; legacy evidence is read-only after cutover.",
+      "title": "Plan contract"
+    }
+  ],
+  "source_manifest_hash": "sha256:015b72205bbcdbfcca70ac6d5894805ba34bab8eea8644420091157876756ea2",
+  "truncated": false
+}

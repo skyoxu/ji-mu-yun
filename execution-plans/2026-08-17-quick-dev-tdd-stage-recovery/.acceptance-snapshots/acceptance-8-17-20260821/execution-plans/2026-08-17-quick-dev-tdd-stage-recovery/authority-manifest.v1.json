@@ -1,0 +1,1 @@
+{"schema_version":"quick-dev-tdd-stage-recovery.authority-manifest.v1","plan_id":"quick-dev-tdd-stage-recovery","authority_order":["requirements-and-acceptance.md","implementation-contract.v1.json","command-registry.v1.json","plan-state.v1.json"],"authorizes":[]}

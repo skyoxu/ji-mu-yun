@@ -1,0 +1,22 @@
+{
+  "changes_adr_or_invariant": false,
+  "changes_auth_security": false,
+  "changes_database_schema": false,
+  "changes_public_api": false,
+  "changes_runtime_deployment": false,
+  "changes_shared_llm_entrypoint": false,
+  "changes_workflow_control_plane_ownership": true,
+  "touches_protected_path": false,
+  "changes_concurrency_or_idempotency": true,
+  "changes_state_or_recovery_semantics": true,
+  "has_cross_module_consumers": true,
+  "has_unresolved_behavioral_boundary": false,
+  "production_write_roots": 1,
+  "matching_test_roots": 1,
+  "deterministic_transform": false,
+  "behavior_fully_specified": true,
+  "introduces_contract": false,
+  "introduces_dependency": false,
+  "unknown_facts": [],
+  "contradictory_facts": []
+}

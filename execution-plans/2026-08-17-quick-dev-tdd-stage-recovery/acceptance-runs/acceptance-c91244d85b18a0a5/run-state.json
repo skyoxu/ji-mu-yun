@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "contractHash": "sha256:0962f50ac29d53baa542f58f7b7dc14ec8186094af61a0a4d68b07a40d1b9923",
+  "createdUtc": "2026-08-21T05:36:48.167793Z",
+  "knowledgeContextHash": "sha256:b3dfd12e40113e940f59fc22cad2226950c7fab9ffab02a18a3c2c071647b030",
+  "runId": "acceptance-c91244d85b18a0a5",
+  "runInputHash": "sha256:c18748e885d50ce29a57e7b35c74d6b80614fcdabc06350949b19560d2e36614",
+  "schemaVersion": "acceptance-execution-run.v1",
+  "skillInputBindingHash": "sha256:9978bcc03f10cdbb89fb197dd435a26e1865c79bf5063760216191e00af7e82e",
+  "skillInputContextHash": "sha256:535bb6df08e0c81c0a643a3596138a8280aea674ea294ff949d91d538d75ef4a",
+  "skillInputContextPath": "skill-input/skill-input-context.v1.json",
+  "skillInputContextSourcePath": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/si-8-17/output-r3/skill-input-context.v1.json"
+}

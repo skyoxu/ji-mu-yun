@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "currentRun": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/acceptance-runs/acceptance-b1a413d8a654337a",
+  "finalResult": {
+    "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/acceptance-runs/acceptance-b1a413d8a654337a/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:39907613c4d9b059939051a3e489425df9d0d7182d3374eb8c2ac89d892fb7e6"
+  },
+  "finalWrapper": {
+    "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/acceptance-runs/acceptance-b1a413d8a654337a/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:ab17081b2e9a7cc9f8348760b63fb56ba4706b51271b425787bfbcf1ebc57ab2"
+  },
+  "schemaVersion": "acceptance-current.v1"
+}

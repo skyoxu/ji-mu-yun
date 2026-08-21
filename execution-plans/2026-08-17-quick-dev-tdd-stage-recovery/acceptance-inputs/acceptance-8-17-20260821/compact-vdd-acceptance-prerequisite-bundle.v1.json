@@ -1,0 +1,45 @@
+{
+  "actionDag": {
+    "path": "acceptance-inputs/acceptance-8-17-20260821/action-dag.v1.json",
+    "sha256": "sha256:aabb6f01712d40ae4b86e0cf2604240b4e163635e4600ccdbc24c195fec089a3"
+  },
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "acceptance-inputs/acceptance-8-17-20260821/baseline-content-manifest.v1.json",
+    "sha256": "sha256:baf6379e32a606046a4862e161ecf6b7a2423d5a726dca2ad71a6e28edb6e89b"
+  },
+  "bundleHash": "sha256:eb92eae58509adc227938735873b025708e2e761e557d86bb81d8cc0ed7201d5",
+  "candidateManifest": {
+    "path": "acceptance-inputs/acceptance-8-17-20260821/candidate-content-manifest.v1.json",
+    "sha256": "sha256:7fea2887391261057af2796c0e3ff02e6aebfbb8536af11f9b6e52269fc46def"
+  },
+  "candidateSnapshotPath": ".acceptance-snapshots/acceptance-8-17-20260821",
+  "commandRegistry": {
+    "path": "acceptance-inputs/acceptance-8-17-20260821/command-registry.v1.json",
+    "sha256": "sha256:b39d8ac5140a0ddb9cc8a24b824e3c46599a7cfb068e3981abac77072d6c715c"
+  },
+  "implementationReceipt": {
+    "path": "repair/round-1/quick-dev-implementation-complete.v1.json",
+    "sha256": "sha256:771ef2ce6dbaf1b6312fe1d1902b8e70d4f635054041af31ca7e14ef9148007b",
+    "terminalCommandId": "terminal-full"
+  },
+  "knowledgeContext": {
+    "path": "knowledge-context.refactor-acceptance.v1.json",
+    "sha256": "sha256:b3dfd12e40113e940f59fc22cad2226950c7fab9ffab02a18a3c2c071647b030"
+  },
+  "policy": {
+    "path": "acceptance-inputs/acceptance-8-17-20260821/toolchain-code-review.v1.json",
+    "sha256": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4"
+  },
+  "runId": "acceptance-8-17-20260821",
+  "runRequest": {
+    "path": "acceptance-run-request.acceptance-8-17-20260821.v1.json",
+    "sha256": "sha256:89760fff96f3602a8903fc19dde3c80e5be8af478236fdb8c318b00ea6474976"
+  },
+  "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+  "targetPlan": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery",
+  "terminalRunner": {
+    "path": "tools/terminal_full.py",
+    "sha256": "sha256:15c826c514155fc496565c2c8ab5e17917abf5b2b9522ad36541b23caa40268c"
+  }
+}

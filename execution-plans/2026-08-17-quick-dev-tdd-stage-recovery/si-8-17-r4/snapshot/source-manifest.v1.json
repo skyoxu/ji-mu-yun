@@ -1,0 +1,51 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "sources": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_migration_cutover.py",
+      "sha256": "sha256:18c73ac2a5f650f8e020440aea4160251610b67e6a27d20e5523a22872101b1e",
+      "semantic_snapshot_sha256": "sha256:18c73ac2a5f650f8e020440aea4160251610b67e6a27d20e5523a22872101b1e",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py",
+      "sha256": "sha256:a0ea653eaf60efaf7bd561d03af454f124bad0de28ad91f24304c95eaa98a777",
+      "semantic_snapshot_sha256": "sha256:a0ea653eaf60efaf7bd561d03af454f124bad0de28ad91f24304c95eaa98a777",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_recovery.py",
+      "sha256": "sha256:854afe2f87d423dd38bcf5156224ff45fa935e1cc4dc0647c2bdab8ae5adb114",
+      "semantic_snapshot_sha256": "sha256:854afe2f87d423dd38bcf5156224ff45fa935e1cc4dc0647c2bdab8ae5adb114",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/command-registry.v1.json",
+      "sha256": "sha256:a2c8212fe518967e73ca09df69bc259179dcbe1549a22f6db80ad41d06d36bbc",
+      "semantic_snapshot_sha256": "sha256:8b36eb0b6ece9f2b40690a81c6bd9702d56daa29c1eedf87d24748f3bb4fd435",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/implementation-contract.v1.json",
+      "sha256": "sha256:0962f50ac29d53baa542f58f7b7dc14ec8186094af61a0a4d68b07a40d1b9923",
+      "semantic_snapshot_sha256": "sha256:e13786c9d8d3852c9ffff411775ec3f5f33a845b9d0463c279f84224db544e59",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/requirements-and-acceptance.md",
+      "sha256": "sha256:bb742257498cdfac233f2f1c69f6e8581a82ab44e8e530cf43b531cf1156ffe5",
+      "semantic_snapshot_sha256": "sha256:bb742257498cdfac233f2f1c69f6e8581a82ab44e8e530cf43b531cf1156ffe5",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-21T05:47:46.290246Z"
+}

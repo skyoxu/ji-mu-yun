@@ -1,0 +1,8 @@
+{
+  "schema_version": "quick-dev-tdd-stage-recovery.plan-state.v1",
+  "plan_id": "quick-dev-tdd-stage-recovery",
+  "status": "implementation-authorized",
+  "lifecycle_state": "implementation-authorized",
+  "owner": "maintainer",
+  "authorizes": ["plan-ready", "implementation-authorized"]
+}

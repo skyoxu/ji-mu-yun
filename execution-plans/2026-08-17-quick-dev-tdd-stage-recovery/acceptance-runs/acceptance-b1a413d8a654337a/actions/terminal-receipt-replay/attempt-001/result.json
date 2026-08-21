@@ -1,0 +1,84 @@
+{
+  "authorizes": [],
+  "commandId": "terminal-full",
+  "commandRegistryHash": "sha256:1d0b0f2bcd7271730bc7cff1a81048cdc968fdacaec274193059b509e6c6d64f",
+  "environmentIdentity": {
+    "hash": "sha256:3d83924597c385d0a288d12c4263e250a6e330ac01419f4c241825cefb9a5fa7",
+    "names": [
+      "APPDATA",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py",
+      "--repository-root",
+      ".",
+      "--verify-receipt",
+      "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/repair/round-1/quick-dev-implementation-complete.50d3b80466431950.v1.json"
+    ],
+    "commandId": "terminal-full",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 300
+  },
+  "invocationHash": "sha256:cc4feb0d547e9ea996909684268bab62a006ababc3d2e15a5b8b5ee7772f01ba",
+  "processResult": {
+    "commandId": "terminal-full",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"adapter_output_sha256\": \"sha256:6ce329d659748f06334ad3830b43510b64e85c0db6697fb113cb9f4c2a6ce4b7\", \"authorizes\": [\"implementation-complete\"], \"command_registry_hash\": \"sha256:a2c8212fe518967e73ca09df69bc259179dcbe1549a22f6db80ad41d06d36bbc\", \"contract_hash\": \"sha256:0962f50ac29d53baa542f58f7b7dc14ec8186094af61a0a4d68b07a40d1b9923\", \"dogfood_output_sha256\": \"sha256:f91cab5ff530a51c30e1e5fa1729468aa9b2d3ee495e723e4febf13018b3949a\", \"failures\": [], \"lifecycle_transition\": \"none\", \"plan_id\": \"quick-dev-tdd-stage-recovery\", \"predicate\": \"implementation-complete\", \"schema_version\": \"quick-dev-implementation-complete.v1\", \"status\": \"pass\", \"terminal_command_id\": \"terminal-full\", \"validated_command_ids\": [\"adapter-tests\", \"dogfood-8-17\"]}\r\n",
+    "stdoutSha256": "sha256:c458e00a44a464437984472106b491ca8998a87812edb43be61f7cc8b8c37841"
+  },
+  "processResultHash": "sha256:0007d70ad86c87f459725fd972233fbc1eb3374c7913e0f63ce91c85efc7ee21",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

@@ -1,0 +1,448 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "baseline_sha256": "sha256:49f78480565d95f0d39167e687a3d515e979d21f954c1e6d88294b326dbd08bf",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "candidate_sha256": "sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/references/evidence-and-freshness.md",
+      "baseline_sha256": "sha256:e0bb3d9b716fafaedc1c689889ede28634e8dcf9fed7eee571aee7191790a34f",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/references/evidence-and-freshness.md",
+      "candidate_sha256": "sha256:4f50e6e5779b76b3d559c51745192dd466519bc80eeb0d1bf34d48783090f215",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json",
+      "baseline_sha256": "sha256:86595a84186fc8a844e73b98adef7ae7489de5c17b28074a6e09dc2d18144d7e",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json",
+      "candidate_sha256": "sha256:60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/references/tdd-run-protocol.md",
+      "baseline_sha256": "sha256:18486bff8834c6b4a00413e7f0303c46353a7b5971aa505e1aa118d00f4ec632",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/references/tdd-run-protocol.md",
+      "candidate_sha256": "sha256:7dcb21bb43dcf01426405ca773cd17a48ee8d35b558df2dbdba9664fc448b672",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+      "baseline_sha256": "sha256:ccfec1ef08b37097b67cf425ac85013c02558cafc513b7d2f3e430923a38fe42",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+      "candidate_sha256": "sha256:de66349827489afa64e90cbda24a49c4345f396863216f4faca6a92a29d26b4a",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v2.schema.json",
+      "candidate_sha256": "sha256:1d47d5029c7e5d9fcf5779f3e678651694676bc21e4f8a7fa2598c1287eb38b7",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "baseline_sha256": "sha256:0d4b8ad763ad4d5b9d6ca5f70df01c87ce374572a5f9b4a52d13708f0fd77625",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "candidate_sha256": "sha256:94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+      "baseline_sha256": "sha256:b8ba2fcacb3a8316579e588e831567538d92b6c2851eb744cbcc4e7bad151814",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+      "candidate_sha256": "sha256:720666b4315616cceaa0040eb3969144ca055729462c8d2010e34f8f91b4443d",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "baseline_sha256": "sha256:cdac510df53bf40fe36dd27d56e10598dc8fda35d8b928c2fd7830d114d1e969",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "candidate_sha256": "sha256:a7ba1c59ad1f72aa14273aca3d219c6572c9609324cd9af794df01b42f19bcb0",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "baseline_sha256": "sha256:591d30cf78631dc1ed53cf658d149c1c9df818e911ab31f4ec47f8f97d5471d1",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "candidate_sha256": "sha256:dda18e2b02e5bf74c4d0ebe781cc45f4c6b61944b5d24d7de1cfbbe3f023391d",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+      "baseline_sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+      "candidate_sha256": "sha256:8acb2752e3db52cae59712c11b57367a71ea43a8673d47a9743516781476baf4",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "baseline_sha256": "sha256:530b0347da4565fba4b5ca66646786791455b5fa39c2a653c8111590d621f524",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "candidate_sha256": "sha256:adaef1c067e229ca5e1f7d5c7a01ab87e7d9c85793e13ff921bbc5e0fb145880",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      "baseline_sha256": "sha256:f160e4fca8d56cf376e06a595e12094379a1e0a7f556c9c4cef9e8cb11a07d19",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      "candidate_sha256": "sha256:0117b355ae5b5d8260d2d4f2924b11b329a990b5c5747d1751bbbe629d891a99",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
+      "baseline_sha256": "sha256:9e00196e7ca92dc3a03d47eea6b0e7512379cb4e2bc6e9db44db0039419869c8",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
+      "candidate_sha256": "sha256:91fc5194c0ae4babbcdbc0d826d7bd1e5b1976a8dd143dfd141c41a3c8ff0592",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter.py",
+      "baseline_sha256": "sha256:6babfa40d46766198712aabb19931e57ebd497814a67f8d20b5f0bfca348eb56",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter.py",
+      "candidate_sha256": "sha256:3f3938e6c6b34f08d95d94cc5af96a5b0ccf62e6bbce5b39e324d86dfbab7cb6",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py",
+      "baseline_sha256": "sha256:747b11bbf9147dee93b567a93f65ac653c2fd802323aac6a77dffbe27565f417",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py",
+      "candidate_sha256": "sha256:d17b3fa38c0ac6c41015d560978e311b4d411ebab6933ce344b2158fc7a9766b",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_knowledge_successor.py",
+      "candidate_sha256": "sha256:ecb2095dcbb3d9e61ff94e64028acb4e14c064a2c4f8c9122a7bef42a09357b0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_migration_cutover.py",
+      "candidate_sha256": "sha256:c16a4e11d39f059ccf6d6bdb73cdac0c4a0e33fd6664ec8f2294c33557335f2e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "baseline_sha256": "sha256:7e62680a95a9ce8e1864fe8042547299a647be1f2f06ff124c2efbc1d43f5ba3",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "candidate_sha256": "sha256:38412e974264d5ae8423e3e7a35bbf5ce8c072f58feb70610931bb7637c116bb",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py",
+      "candidate_sha256": "sha256:a0ea653eaf60efaf7bd561d03af454f124bad0de28ad91f24304c95eaa98a777",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_recovery.py",
+      "candidate_sha256": "sha256:854afe2f87d423dd38bcf5156224ff45fa935e1cc4dc0647c2bdab8ae5adb114",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/00-index.md",
+      "candidate_sha256": "sha256:91a182444b736e0684d01b84730b6d79ee02c4788c4b5f5bab769c65d716f8f1",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/95-implementation-evolution-and-completion-report.md",
+      "candidate_sha256": "sha256:89dbcf1b457a2f36719f206ac6e8912350039434df1eb0595ef2f928dfe30421",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/authority-manifest.v1.json",
+      "candidate_sha256": "sha256:038ff3a7b41eb482bbee568dafe86e3ca228d9a777f87a9f01a7f4de760274bc",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/command-registry.v1.json",
+      "candidate_sha256": "sha256:a2c8212fe518967e73ca09df69bc259179dcbe1549a22f6db80ad41d06d36bbc",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:0962f50ac29d53baa542f58f7b7dc14ec8186094af61a0a4d68b07a40d1b9923",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.freeze.v1.json",
+      "candidate_sha256": "sha256:ccd56092b5e05aa03c2cf8a5e0f4b22df702e38d7f204131cc59e5b2ef07e2b6",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.refactor-acceptance.v1.json",
+      "candidate_sha256": "sha256:b3dfd12e40113e940f59fc22cad2226950c7fab9ffab02a18a3c2c071647b030",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.v1.json",
+      "candidate_sha256": "sha256:30608c5478975b5cd739bd30b90dcdc24d6801812c0f3e742f5f5dae15d25b0c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/plan-state.v1.json",
+      "candidate_sha256": "sha256:05a0c1181b21f05077c7a46d72830358b1a0c335452e84468f1266eee82e1ba2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/quick-dev-route-facts.current-head.v1.json",
+      "candidate_sha256": "sha256:2ab654ad65c5e8655a6e454a6162496e6bbb06d2e3a935bc2eabb873ec8934ce",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/quick-dev-route.current-head.v1.json",
+      "candidate_sha256": "sha256:15fc85f1f6ac92836d9314f7659ad66f4d83df2f394f871346bcbf35d14685d4",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/repair/round-1/quick-dev-implementation-complete.v1.json",
+      "candidate_sha256": "sha256:771ef2ce6dbaf1b6312fe1d1902b8e70d4f635054041af31ca7e14ef9148007b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/requirements-and-acceptance.md",
+      "candidate_sha256": "sha256:bb742257498cdfac233f2f1c69f6e8581a82ab44e8e530cf43b531cf1156ffe5",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/resume-state.v1.json",
+      "candidate_sha256": "sha256:0f59888f52dc494f36fc2112871cddd48e50d907fc53e76dd68b977c76bc1316",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/dogfood_runner.py",
+      "candidate_sha256": "sha256:e75e9d2b60d5d9a59d88d58576ae8cf4eaa4406cd71b4cfaeedddff2660fd38c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/migration_bridge.py",
+      "candidate_sha256": "sha256:931bf2db8cfe5e774028110cf923dff380eaa080ecdfc6098fc00492846d0496",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/stage_projection_builder.py",
+      "candidate_sha256": "sha256:c85b5e25e59831b874e42cd922755b895c9cefd243b8f2b04988b62951cb25b4",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py",
+      "candidate_sha256": "sha256:15c826c514155fc496565c2c8ab5e17917abf5b2b9522ad36541b23caa40268c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/validate_all.py",
+      "candidate_sha256": "sha256:cf88be62fa301ddc70547abb9dac9333afcece923a78e61145d559a746bf3ec2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete"
+}

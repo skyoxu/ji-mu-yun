@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T05:47:46.290246Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The lifecycle tests cover immutable RED basis creation, execution fingerprints, hash-bound recovery, successor handling, and terminal close behavior. RED routes to implementation, GREEN and refactor require matching evidence, and predecessor RED evidence remains read-only.",
+      "title": "Stage lifecycle coverage"
+    },
+    {
+      "content": "Recovery tests cover staged routing boundaries, derived stage state, successor terminal routing, and legacy-run handling. Migration tests cover staged cutover guards, staged dogfood command binding, lifecycle identity fields, immutable receipt successors, and read-only receipt replay.",
+      "title": "Recovery and migration coverage"
+    },
+    {
+      "content": "The command registry defines shell-free staged tests, dogfood, slice terminals, and terminal verification. The implementation contract defines S0 stage summaries, S1 route and recovery rules, S2 migration and dogfood behavior, allowed paths, drift handling, and the implementation-complete terminal predicate.",
+      "title": "Contract and acceptance coverage"
+    }
+  ],
+  "source_manifest_hash": "sha256:874ff11104d19219af2fff0759a32c26b8adaedb94d27f4b726a80f35924d40c",
+  "truncated": false
+}

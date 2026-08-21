@@ -1,0 +1,23 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": ".",
+      "executable": "py",
+      "id": "adapter-tests",
+      "shell": false,
+      "timeout_seconds": 900
+    }
+  ],
+  "schema_version": "ria.command-registry.v1"
+}

@@ -19,7 +19,7 @@ def publish_canonical_receipt(plan: Path, result: dict[str, object]) -> Path:
     base = repair / "quick-dev-implementation-complete.v1.json"
     encoded = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if base.is_file() and base.read_text(encoding="utf-8") != encoded:
-        suffix = hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:16]
+        suffix = str(result["contract_hash"]).split(":", 1)[-1][:16]
         base = repair / f"quick-dev-implementation-complete.{suffix}.v1.json"
     if base.is_file() and base.read_text(encoding="utf-8") != encoded:
         raise RuntimeError("canonical implementation receipt successor conflicts")
@@ -34,31 +34,10 @@ def main() -> int:
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
     parser.add_argument("--plan-dir", type=Path)
     parser.add_argument("--out", type=Path)
-    parser.add_argument("--verify-receipt", type=Path)
     args = parser.parse_args()
     contract_path = args.repository_root / "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/implementation-contract.v1.json"
     registry_path = args.repository_root / "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/command-registry.v1.json"
     contract_hash = _sha(contract_path.read_bytes())
-    registry_hash = _sha(registry_path.read_bytes())
-    if args.verify_receipt is not None:
-        try:
-            receipt = json.loads(args.verify_receipt.read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-            raise RuntimeError("implementation receipt is unreadable") from exc
-        expected = {
-            "schema_version": "quick-dev-implementation-complete.v1",
-            "plan_id": "quick-dev-tdd-stage-recovery",
-            "predicate": "implementation-complete",
-            "status": "pass",
-            "contract_hash": contract_hash,
-            "command_registry_hash": registry_hash,
-            "terminal_command_id": "terminal-full",
-            "authorizes": ["implementation-complete"],
-        }
-        if any(receipt.get(key) != value for key, value in expected.items()):
-            raise RuntimeError("implementation receipt does not bind the current terminal contract")
-        print(json.dumps(receipt, sort_keys=True))
-        return 0
     target = ".agents/skills/quick-dev-tdd-adapter/tools/tests" if args.slice is None else {
         "S0": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py",
         "S1": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_recovery.py",
@@ -80,7 +59,7 @@ def main() -> int:
         cwd=args.repository_root,
     )
     status = "pass" if result.returncode == 0 and (dogfood is None or dogfood.returncode == 0) else "fail"
-    payload = {"schema_version": "quick-dev-tdd-stage-recovery.terminal-result.v1", "orchestration_version": "stage-actions.v2", "status": status, "predicate": "slice-ready" if args.slice else "implementation-complete", "plan_id": "quick-dev-tdd-stage-recovery", "contract_hash": contract_hash, "command_registry_hash": registry_hash, "terminal_command_id": "s0-terminal" if args.slice == "S0" else "s1-terminal" if args.slice == "S1" else "s2-terminal" if args.slice == "S2" else "terminal-full", "validated_command_ids": [] if args.slice else ["adapter-tests", "dogfood-8-17"], "adapter_output_sha256": _sha((result.stdout + result.stderr).encode("utf-8")), "dogfood_output_sha256": None if dogfood is None else _sha(dogfood.stdout + dogfood.stderr), "authorizes": ["implementation-complete"] if status == "pass" and args.slice is None else []}
+    payload = {"schema_version": "quick-dev-tdd-stage-recovery.terminal-result.v1", "orchestration_version": "stage-actions.v2", "status": status, "predicate": "slice-ready" if args.slice else "implementation-complete", "plan_id": "quick-dev-tdd-stage-recovery", "contract_hash": contract_hash, "command_registry_hash": _sha(registry_path.read_bytes()), "terminal_command_id": "s0-terminal" if args.slice == "S0" else "s1-terminal" if args.slice == "S1" else "s2-terminal" if args.slice == "S2" else "terminal-full", "validated_command_ids": [] if args.slice else ["adapter-tests", "dogfood-8-17"], "adapter_output_sha256": _sha((result.stdout + result.stderr).encode("utf-8")), "dogfood_output_sha256": None if dogfood is None else _sha(dogfood.stdout + dogfood.stderr), "authorizes": ["implementation-complete"] if status == "pass" and args.slice is None else []}
     if status == "pass" and args.slice is None:
         receipt = {
             "schema_version": "quick-dev-implementation-complete.v1",

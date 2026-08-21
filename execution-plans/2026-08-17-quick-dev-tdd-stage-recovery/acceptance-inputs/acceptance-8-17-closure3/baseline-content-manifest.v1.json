@@ -1,0 +1,48 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_migration_cutover.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:f97ffa74f1f543b917f408b334288927eb8bfceb2fab409979a24335ad4d436f"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.freeze.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7fc8b95ab692d5c355d5fa87bee932b138aa2d315ec0d6d9d7a0b4ec25e18f81"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/knowledge-context.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:abf5c71f0af2dc80c41c32d8289128603733605ca80cb3f70c4210d2788beb32"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/dogfood_runner.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:82d96b6c3d1b981f9c99d89d63f1fe3d152d21f7f5dbba415ef6f02934140bdc"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/tools/terminal_full.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:57af30363cd300ba135777b06fa099bbd591e918b411d280c83745cca377a6ff"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}
