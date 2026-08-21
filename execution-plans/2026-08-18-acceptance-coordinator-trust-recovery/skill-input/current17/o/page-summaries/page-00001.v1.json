@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/requirements-and-acceptance.md",
+    "source_sha256": "sha256:b44e35896c0a9059d888aa96553ce0268c576df9274c9c3d93e6131b3f5da930",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 8723,
+    "start_line": 1,
+    "end_line": 161,
+    "content_sha256": "sha256:b44e35896c0a9059d888aa96553ce0268c576df9274c9c3d93e6131b3f5da930"
+  },
+  "status": "accepted",
+  "summary": "Plan: Acceptance Coordinator Trust Recovery; baseline=3c285bcc; plan commit=868328c8; self-hosted required; preserve 2026-08-17 historical evidence immutable; lifecycle: Maintainer implementation-authorized, Quick Dev implementation-complete, Acceptance acceptance-passed; no automatic Bootstrap; excluded: Knowledge publication, Phase runtime, release/archive, multi-maintainer signing; R0: accept only acceptance-coordinator-request.v3 with target+hash-bound prepared input; derive run via start_or_resume_target_run and persisted DAG/registry/route projection; reject request-local assertions; v2 historical only; R1: reserve successor identity pre-materialization; byte-identical reuse only; retry boundaries resume or fail closed; one recoverable GREEN/prior-RED transition; R2: authorization binds contract/manifest/Knowledge selection/successor kinds/Skill input; refresh only unchanged eligible selection and source bytes; semantic changes require reauthorization; full refresh chain validation; ACR-R2-FRESHNESS: ADR decision superseding ADR-0057 stale-stop required before plan-ready while preserving ADR-0050; verified published/LKG only; same selection byte drift yields controlled degraded successor; authority-bearing source drift and required-source failures block; self-change with query-gate failure requires semantic review; validator-produced successor receipt required; R3: legacy RED reusable only exact selector/test/fingerprint/failure-ID match; R4: read-only 8-17 replay with fresh bindings/authorization; no writes under old directory; identical replay creates no extra action/successor"
+}

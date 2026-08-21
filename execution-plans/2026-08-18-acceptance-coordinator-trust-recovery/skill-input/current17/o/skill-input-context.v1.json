@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T00:00:00+08:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The plan defines R0-R4 acceptance recovery requirements, hash-bound prepared inputs, persisted run state, constrained refresh behavior, historical replay, and immutable evidence.",
+      "title": "Acceptance requirements"
+    },
+    {
+      "content": "The migration utility materializes declared RED test templates only for R0-R2, rejects conflicting files, and emits non-authorizing JSON test paths.",
+      "title": "Migration bridge"
+    },
+    {
+      "content": "Terminal and validator tooling map slices to tests and source inputs, bind candidate identities to repository content, validate lifecycle and knowledge context, and publish completion evidence only after a full successful run.",
+      "title": "Validation tooling"
+    }
+  ],
+  "source_manifest_hash": "sha256:713d5e9fd57f3f1f7cd6ac3496e18221baea0e732856f85b3ccc3a56f36aa2fd",
+  "truncated": false
+}

@@ -6,9 +6,9 @@
     "implementation-contract.v1.json": "sha256:0140bb0cd5db1e5fb783a941544209a5728fff759aba60f25b0b5c23f3665f37",
     "knowledge-context.freeze.v1.json": "sha256:334ce5bf42cbbbda46945f726d28488019f6e1d78de80ddf14143d7829bf1cac",
     "knowledge-context.v1.json": "sha256:6beb74c4f211872e408ff017ab91cac6bc7d6756f10cf6a98491c37c3cbd2d53",
-    "skill-input/current16/receipt.json": "sha256:86f1f0bfbf7a1cdebabcedeb2bea03bc569463b6c7fbc6673b9b4306e1fdd176"
+    "skill-input/current17/receipt.json": "sha256:519f74172b8b6c602c022ad7f6a9396ae40ee0191dca6663b5195ab741cb20c1"
   },
-  "candidate_binding_hash": "sha256:7becd8dec3875cce80ed6394aa8e16bc6ae73dfb5f2926ec9accc88c335abffd",
+  "candidate_binding_hash": "sha256:f6d8a2c9f59f3e7818ce23b5fd55eba87a6bccf35d1857744496d591f07aaddf",
   "command_registry_hash": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
   "contract_hash": "sha256:0140bb0cd5db1e5fb783a941544209a5728fff759aba60f25b0b5c23f3665f37",
   "failures": [],

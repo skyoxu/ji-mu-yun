@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/tools/migration_bridge.py",
+    "source_sha256": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5074,
+    "start_line": 1,
+    "end_line": 149,
+    "content_sha256": "sha256:3ec36391c23dc1335dc5e56ed800b897758472e3e1f52848a70b7f3b6f735259"
+  },
+  "status": "accepted",
+  "summary": "migration_bridge.py; purpose materialize declared Quick Dev RED tests; CLI requires repository-root, plan-dir, slice-id, snapshot-path+, materialize-only; accepts only R0/R1/R2 with materialize-only else exits; writes exact templates and rejects conflicting existing content; outputs JSON test_paths with empty authorizes; R0 tests coordinator v3 reaches bundle validation; R1 tests identical successor lineage reuses reservation; R2 tests refresh_context_read_set exists in Quick Dev and acceptance knowledge-context modules; creates parent directories; plan-dir and snapshot-path parsed but unused."
+}

@@ -1,0 +1,24 @@
+{
+  "authorizes": [
+    "implementation-complete"
+  ],
+  "command_registry_hash": "sha256:15222bdeb8b085ef05089401fc8ae4694e3f283f8838686df9c888a0a3ea2d93",
+  "contract_hash": "sha256:0140bb0cd5db1e5fb783a941544209a5728fff759aba60f25b0b5c23f3665f37",
+  "failures": [],
+  "lifecycle_transition": "none",
+  "plan_id": "acceptance-coordinator-trust-recovery",
+  "predicate": "implementation-complete",
+  "schema_version": "quick-dev-implementation-complete.v1",
+  "status": "pass",
+  "terminal_command_id": "terminal-full",
+  "terminal_result_hash": "sha256:147dba893db577f4a052ecb8748be59194338e504074f0ab6e597a5eb80c423e",
+  "validated_command_ids": [
+    "r0-green",
+    "r1-green",
+    "r2-green",
+    "r3-green",
+    "r4-green",
+    "quick-dev-suite",
+    "acceptance-suite"
+  ]
+}
