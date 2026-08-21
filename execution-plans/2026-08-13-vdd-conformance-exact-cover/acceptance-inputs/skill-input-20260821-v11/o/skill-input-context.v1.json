@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-21T04:11:01.954344Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The implementation contract defines an authorized lifecycle with nine ordered slices from typed package hardening through terminal dogfood replay. Each slice declares scoped production and test paths, dependencies, requirements, acceptance IDs, red and green commands, and recovery guidance. Terminal validation uses the registered terminal-full runner.",
+      "title": "Implementation Contract"
+    },
+    {
+      "content": "The plan requires deterministic exact-cover behavior, source-freeze manifest production, semantic handoff, retry taxonomy, fingerprint shard reuse, bounded recovery context, and receipt preflight. Protected areas include PhaseA.Platform, runtime phase-a, phase-a logs, and user sandbox data. Plan artifacts use empty authorizes arrays.",
+      "title": "Core Boundaries"
+    },
+    {
+      "content": "The normative source is the typed Canonical Spec Package graph with its companions, adopted Architecture Spine, and content-addressed selection record. Requirements are VCEC-001 through VCEC-036 and acceptance IDs are VCEC-A01 through VCEC-A43. The authoritative complete mapping is the round-5 requirements acceptance slice command record.",
+      "title": "Requirements Coverage"
+    }
+  ],
+  "source_manifest_hash": "sha256:bd4c51d67c4eeabe0aba22957f8ca1c122610cde96405319a7c4ccc404036869",
+  "truncated": false
+}

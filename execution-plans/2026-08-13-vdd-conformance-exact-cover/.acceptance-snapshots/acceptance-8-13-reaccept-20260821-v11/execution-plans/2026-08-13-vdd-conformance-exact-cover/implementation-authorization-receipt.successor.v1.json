@@ -1,0 +1,93 @@
+{
+  "authority_manifest": {
+    "identity_kind": "canonical-json-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/authority-manifest.v1.json",
+    "sha256": "sha256:7d08ea7afa1ed040e6404b4b81c9927171d74804c9569261b6faa531e9fc9bc4"
+  },
+  "authorizes": [
+    "implementation-authorized"
+  ],
+  "bootstrap_preexisting_delta": {
+    "identity_kind": "canonical-json-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-1/adapter-compatibility-preexisting-delta.v1.json",
+    "sha256": "sha256:9cbc6f5aa0d9cfce674d78d3149ff5298f76fc6c4541fa7e164814a2ede8b7ec"
+  },
+  "candidate_manifest": {
+    "identity_kind": "canonical-json-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-1/adapter-compatibility-candidate-manifest.v1.json",
+    "sha256": "sha256:259b3f19ca79de1af0dbcca5e97669137924f96c5f242d09715d6394c5fe52c2"
+  },
+  "command_registry": {
+    "identity_kind": "canonical-json-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json",
+    "sha256": "sha256:5e96e3ae826db703ec39bc30936330837ddad44c384b730158c250fe5d3e9479"
+  },
+  "decision": {
+    "owner": "maintainer",
+    "reason": "explicit-maintainer-authorization-legacy-adapter-compatibility",
+    "transition": "implementation-authorized"
+  },
+  "does_not_authorize": [
+    "implementation-complete",
+    "acceptance-passed",
+    "knowledge-publication",
+    "bootstrap-review",
+    "release"
+  ],
+  "immutable_predecessor": {
+    "identity_kind": "canonical-json-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-1/legacy-maintainer-authorization-predecessor.v1.json",
+    "sha256": "sha256:d6bbc5c6f44366c054e509c9c1131b3cf22f023de735a81990b4580721557e4b"
+  },
+  "implementation_contract": {
+    "identity_kind": "canonical-json-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+    "sha256": "sha256:d17aca29b755e072b2badb42664dfca11097da3e96fdbc50e53d21d984e520dc"
+  },
+  "knowledge_context": {
+    "identity_kind": "canonical-json-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/knowledge-context.v1.json",
+    "sha256": "sha256:2c8d26a787a6d39c774f060fb507837f304a3ce8958df2467ad6fe44863061d6"
+  },
+  "knowledge_context_freeze": {
+    "identity_kind": "canonical-json-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/knowledge-context.freeze.v1.json",
+    "sha256": "sha256:b6b2e3c2a07fa1b0e5cf6fc80662b31b83ad04e73bfaa5d4994470d18ba11a04"
+  },
+  "plan_id": "vdd-conformance-exact-cover",
+  "plan_validation": {
+    "identity_kind": "canonical-json-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-1/adapter-compatibility-plan-validation.v1.json",
+    "sha256": "sha256:58449843ea07059ea4f5260a235bda058e8d4e99a20bd1f3988edd3345f29d72"
+  },
+  "repair_closure": {
+    "identity_kind": "canonical-json-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-8/repair-closure.json",
+    "sha256": "sha256:fdcf5efae5e5537730b174f05e2d7b9237b608b02bf7a71ecfc20361d5327062"
+  },
+  "schema_version": "vdd-conformance-exact-cover.implementation-authorization-receipt.v1",
+  "skill_input_generation": {
+    "child_request_hash": "sha256:8c74f47b58928c04450273e2ff02fa73e3e72e03bbabde6b2a142690011883ec",
+    "context_hash": "sha256:a66a99e355aa3dd91342dfa5d264cfacd14d6480549a07868926c471720bbcb7",
+    "generation_root": "sha256:79c6b6d7451a7a748950af00c09e7aa0cb69e43bc175d6478f120181f3368bbe",
+    "receipt": {
+      "identity_kind": "canonical-json-v1",
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/skill-input/adapter-compatibility-v8/receipt.json",
+      "sha256": "sha256:f7988c6e428bc514fc663dc58ac2c8ec95dbf039ff41c1ce8ba6880fac6a5453"
+    },
+    "schema_version": "skill-input-generation.v1",
+    "selected_source_content_root": "sha256:eb9df8d5938c92aeabee61b2c93710abdcb59ce199593bd2b9a72bcc87011a63",
+    "semantic_decision_hash": "sha256:580eb639edcc4a20ca1ca50eca5886b747650b560910169cc1b4f044ddcba4f4",
+    "source_selection_hash": "sha256:50d446bad79ab9379e78f73534050d3bd792df7f50308672e338c8d8030bb69d"
+  },
+  "terminal_validator": {
+    "identity_kind": "raw-bytes-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_full.py",
+    "sha256": "sha256:81673e8702efe4d90a5a4b036ae4bd40ed1a8a6098b51c191e635dbd9822bd7e"
+  },
+  "validate_all": {
+    "identity_kind": "raw-bytes-v1",
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/validate_all.py",
+    "sha256": "sha256:9ce178060b71f40972af16c2ec44625d026c5be8ab586788d68ca68c6d395498"
+  }
+}
