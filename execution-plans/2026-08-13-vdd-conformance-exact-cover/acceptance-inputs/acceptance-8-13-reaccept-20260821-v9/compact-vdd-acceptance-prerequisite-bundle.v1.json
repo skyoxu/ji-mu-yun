@@ -1,0 +1,45 @@
+{
+  "actionDag": {
+    "path": "acceptance-inputs/acceptance-8-13-reaccept-20260821-v9/action-dag.v1.json",
+    "sha256": "sha256:aabb6f01712d40ae4b86e0cf2604240b4e163635e4600ccdbc24c195fec089a3"
+  },
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "acceptance-inputs/acceptance-8-13-reaccept-20260821-v9/baseline-content-manifest.v1.json",
+    "sha256": "sha256:a1750075e99c81aa64a09bd65cfb87553d6b96bd2730adf071da6301cf6cc917"
+  },
+  "bundleHash": "sha256:9a88c79fefdb88e41fbfe6d138859f6fecafd5c048051979d2411b4715128386",
+  "candidateManifest": {
+    "path": "acceptance-inputs/acceptance-8-13-reaccept-20260821-v9/candidate-content-manifest.v1.json",
+    "sha256": "sha256:4360455592f79c843e77d89fcfbbd1933931ff5f9b9d3a24389c3bd09acaeaff"
+  },
+  "candidateSnapshotPath": ".acceptance-snapshots/acceptance-8-13-reaccept-20260821-v9",
+  "commandRegistry": {
+    "path": "acceptance-inputs/acceptance-8-13-reaccept-20260821-v9/command-registry.v1.json",
+    "sha256": "sha256:f5a4624c47c818c16eece83756323900cbaaded8ce240ac310828321d86d7e13"
+  },
+  "implementationReceipt": {
+    "path": "repair/round-1/quick-dev-implementation-complete.6ea21487f24268b9.v1.json",
+    "sha256": "sha256:bd4a2b6687534568620543ba6c5959594d3c7783582f8adbb0fe70aad490e7fb",
+    "terminalCommandId": "terminal-full"
+  },
+  "knowledgeContext": {
+    "path": "knowledge-context.refactor-acceptance-reaccept-20260821-v3.v1.json",
+    "sha256": "sha256:29026c87f93b9b0dad0de47836930fdab72331bf5946d91b7308067a940c94db"
+  },
+  "policy": {
+    "path": "acceptance-inputs/acceptance-8-13-reaccept-20260821-v9/toolchain-code-review.v1.json",
+    "sha256": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4"
+  },
+  "runId": "acceptance-8-13-reaccept-20260821-v9",
+  "runRequest": {
+    "path": "acceptance-run-request.acceptance-8-13-reaccept-20260821-v9.v1.json",
+    "sha256": "sha256:4d81273c76885b9e2ae03372f163c43d6a12015e8ee40149d56b32b363f7e100"
+  },
+  "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+  "targetPlan": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+  "terminalRunner": {
+    "path": "tools/terminal_full.py",
+    "sha256": "sha256:a88cf2c298bd65995400696a4d7566b69eeaead74c760af8e32934da280b1437"
+  }
+}
