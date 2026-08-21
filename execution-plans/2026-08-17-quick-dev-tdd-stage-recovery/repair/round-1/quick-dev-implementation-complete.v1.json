@@ -1,0 +1,20 @@
+{
+  "adapter_output_sha256": "sha256:810e854b018ac92c4cda1a932919759eac4d77134226f707b667daad8489a6a0",
+  "authorizes": [
+    "implementation-complete"
+  ],
+  "command_registry_hash": "sha256:a2c8212fe518967e73ca09df69bc259179dcbe1549a22f6db80ad41d06d36bbc",
+  "contract_hash": "sha256:0962f50ac29d53baa542f58f7b7dc14ec8186094af61a0a4d68b07a40d1b9923",
+  "dogfood_output_sha256": "sha256:90b53234ee0c8df87b822273e025ca2bae3aee7a2ceb522a94aee62ad7c02176",
+  "failures": [],
+  "lifecycle_transition": "none",
+  "plan_id": "quick-dev-tdd-stage-recovery",
+  "predicate": "implementation-complete",
+  "schema_version": "quick-dev-implementation-complete.v1",
+  "status": "pass",
+  "terminal_command_id": "terminal-full",
+  "validated_command_ids": [
+    "adapter-tests",
+    "dogfood-8-17"
+  ]
+}

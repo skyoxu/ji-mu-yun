@@ -38,6 +38,16 @@ def _context(run_id: str, red: dict[str, object], green: dict[str, object], refa
     authority_bytes = authority_path.read_bytes()
     validator_path = TOOLS / "route_plan_directory.py"
     command_ids = [red["id"], green["id"], *[item["id"] for item in refactor], terminal["id"]]
+    test_sha256 = _sha(red_test.read_bytes())
+    execution_fingerprint = _sha(json.dumps({
+        "plan_id": contract["plan_id"],
+        "slice_id": "S3",
+        "commands": command_ids,
+        "test_selector": red_test.relative_to(ROOT).as_posix(),
+        "test_sha256": test_sha256,
+        "contract_hash": _sha(contract_bytes),
+        "validator_hash": _sha(validator_path.read_bytes()),
+    }, sort_keys=True, separators=(",", ":")).encode("utf-8"))
     return {
         "plan_id": contract["plan_id"],
         "slice_id": "S3",
@@ -50,7 +60,7 @@ def _context(run_id: str, red: dict[str, object], green: dict[str, object], refa
         "boundaries": {"allowed_write_set": [path for group in selected["allowed_changes"].values() for path in group] + [red_test.relative_to(ROOT).as_posix()], "forbidden_write_set": selected["forbidden_changes"], "execution_read_set": [*selected["execution_read_set"], red_test.relative_to(ROOT).as_posix()], "dependency_closure": selected["dependency_closure"]},
         "target_command_ids": command_ids,
         "stage_results": {
-            "red": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": "S3", "run_id": run_id, "status": "red-observed", "mode": "red", "legacy_predecessor": None, "prior_red": None, "command_id": red["id"], "test_selector": red["argv"][3], "expected_failure_ids": ["DOGFOOD-RED"], "contract_hash": _sha(contract_bytes), "validator_hash": _sha(validator_path.read_bytes()), "pre_implementation_candidate": {"candidate_binding_hash": _sha(contract_bytes), "validator_hash": _sha(validator_path.read_bytes())}},
+            "red": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": "S3", "run_id": run_id, "status": "red-observed", "mode": "red", "legacy_predecessor": None, "prior_red": None, "command_id": red["id"], "test_selector": red_test.relative_to(ROOT).as_posix(), "test_sha256": test_sha256, "expected_failure_ids": ["DOGFOOD-RED"], "execution_fingerprint": execution_fingerprint, "contract_hash": _sha(contract_bytes), "validator_hash": _sha(validator_path.read_bytes()), "pre_implementation_candidate": {"candidate_binding_hash": _sha(contract_bytes), "validator_hash": _sha(validator_path.read_bytes())}},
             "green": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": "S3", "run_id": run_id, "status": "green-observed", "command_id": green["id"], "contract_hash": _sha(contract_bytes), "validator_hash": _sha(validator_path.read_bytes())},
             "refactor": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": "S3", "run_id": run_id, "status": "refactor-verified", "command_id": refactor[0]["id"], "command_ids": [item["id"] for item in refactor], "contract_hash": _sha(contract_bytes), "validator_hash": _sha(validator_path.read_bytes())},
         },

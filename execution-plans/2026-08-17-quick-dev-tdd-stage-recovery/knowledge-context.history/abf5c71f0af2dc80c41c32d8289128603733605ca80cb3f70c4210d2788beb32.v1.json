@@ -2,77 +2,18 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r18-successor-20260821T050940Z",
+    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r18",
     "consumer": "vdd",
     "query": "Quick Dev TDD stage recovery RED basis implementation successor route resume migration dogfood",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
+      "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb"
     },
     "policy_revision": "knowledge-consumer-policies.v2",
     "allow_stale_catalog": true
   },
   "locator_result": {
     "candidates": [
-      {
-        "anchor": "Quick Dev TDD Stage Recovery",
-        "consumer_ids": [
-          "bootstrap",
-          "refactor-acceptance",
-          "vdd"
-        ],
-        "enforcement_level": "E1",
-        "kind": "execution-plan",
-        "lifecycle": "repository-source",
-        "line_end": 1,
-        "line_start": 1,
-        "module_id": "plan.2026-08-17-quick-dev-tdd-stage-recovery",
-        "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/00-index.md",
-        "primary_domain": "phase",
-        "provenance": [
-          "catalog-v2",
-          "refs/heads/main"
-        ],
-        "rank_evidence": {
-          "confidence": "high",
-          "score": 320,
-          "strategy": "hybrid-token",
-          "token_matches": 10
-        },
-        "read_set": [
-          {
-            "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/00-index.md",
-            "role": "primary",
-            "source_sha256": "91a182444b736e0684d01b84730b6d79ee02c4788c4b5f5bab769c65d716f8f1"
-          },
-          {
-            "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/command-registry.v1.json",
-            "role": "command-registry",
-            "source_sha256": "a2c8212fe518967e73ca09df69bc259179dcbe1549a22f6db80ad41d06d36bbc"
-          },
-          {
-            "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/implementation-contract.v1.json",
-            "role": "implementation-contract",
-            "source_sha256": "0962f50ac29d53baa542f58f7b7dc14ec8186094af61a0a4d68b07a40d1b9923"
-          },
-          {
-            "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/plan-state.v1.json",
-            "role": "plan-state",
-            "source_sha256": "05a0c1181b21f05077c7a46d72830358b1a0c335452e84468f1266eee82e1ba2"
-          }
-        ],
-        "relations": [],
-        "semantic_eligible": true,
-        "source_role": "plan-index",
-        "source_sha256": "91a182444b736e0684d01b84730b6d79ee02c4788c4b5f5bab769c65d716f8f1",
-        "status": "conditional",
-        "visibility": {
-          "marketplace": "excluded",
-          "phase": "active",
-          "toolchain": "dependency",
-          "workspace": "dependency"
-        }
-      },
       {
         "anchor": "Repository Maintenance TDD Adapter",
         "consumer_ids": [
@@ -102,12 +43,12 @@
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
             "role": "primary",
-            "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+            "source_sha256": "ccda1fed815b953b9f0eed9f616b94bcd0778c5a99e582dfa87fed2c69b08ce7"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
             "role": "cli",
-            "source_sha256": "94f1f805ad69af7bcc8421be98abd360f896b439f06b3c728718475449282fd8"
+            "source_sha256": "2ac7e8601b6f19e76c0aebe2c631ca2eaa630c6e5786fb083da8e96a0fcfd283"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md",
@@ -122,12 +63,12 @@
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
             "role": "orchestrator",
-            "source_sha256": "adaef1c067e229ca5e1f7d5c7a01ab87e7d9c85793e13ff921bbc5e0fb145880"
+            "source_sha256": "1f6a3e35d3b1350c3c4b949f4012e3b32503f20f8e1eb04ee57f53317c334297"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
             "role": "validator",
-            "source_sha256": "a7ba1c59ad1f72aa14273aca3d219c6572c9609324cd9af794df01b42f19bcb0"
+            "source_sha256": "cdac510df53bf40fe36dd27d56e10598dc8fda35d8b928c2fd7830d114d1e969"
           }
         ],
         "relations": [
@@ -142,7 +83,7 @@
         ],
         "semantic_eligible": true,
         "source_role": "skill-entrypoint",
-        "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5",
+        "source_sha256": "ccda1fed815b953b9f0eed9f616b94bcd0778c5a99e582dfa87fed2c69b08ce7",
         "status": "active",
         "visibility": {
           "marketplace": "excluded",
@@ -152,7 +93,84 @@
         }
       },
       {
-        "anchor": "Default Orchestration",
+        "anchor": "Intent",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "execution-plan",
+        "lifecycle": "repository-source",
+        "line_end": 15,
+        "line_start": 15,
+        "module_id": "plan.2026-08-06-quick-dev-phase-regression-repair-mode",
+        "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/00-index.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 128,
+          "strategy": "hybrid-token",
+          "token_matches": 8
+        },
+        "read_set": [
+          {
+            "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/00-index.md",
+            "role": "primary",
+            "source_sha256": "dee6815303ea2a14925d147a62aa9ec91f88f4876576df19907fcf774e7628a1"
+          },
+          {
+            "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/command-registry.v1.json",
+            "role": "command-registry",
+            "source_sha256": "5d7a59cbd2f5a730b4d8a9149c072ef0efc8dc071f0283c20a6333aab8d68a18"
+          },
+          {
+            "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/implementation-contract.v1.json",
+            "role": "implementation-contract",
+            "source_sha256": "1cb1fbe7e5234f4c75992c6e96f882ecd4dea9f744fa28304bf5bb7dc910dc2e"
+          },
+          {
+            "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/plan-state.v1.json",
+            "role": "plan-state",
+            "source_sha256": "1bf9c99f344c96bc29365cf4349bcfc5cbcf5822101dfe8ef44741af4bef5cb4"
+          },
+          {
+            "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/requirements.v1.json",
+            "role": "requirements-ledger",
+            "source_sha256": "f8859746e57b023c22a056b5f710eb2e7a8de9b30efc028691977a61159227b6"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0041",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0051",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0060",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "plan-index",
+        "source_sha256": "dee6815303ea2a14925d147a62aa9ec91f88f4876576df19907fcf774e7628a1",
+        "status": "conditional",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Refactor Implementation Acceptance",
         "consumer_ids": [
           "bootstrap",
           "refactor-acceptance",
@@ -161,8 +179,8 @@
         "enforcement_level": "E1",
         "kind": "governance-component",
         "lifecycle": "repository-source",
-        "line_end": 57,
-        "line_start": 57,
+        "line_end": 3,
+        "line_start": 3,
         "module_id": "governance.refactor-implementation-acceptance",
         "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
         "primary_domain": "toolchain",
@@ -172,9 +190,9 @@
         ],
         "rank_evidence": {
           "confidence": "medium",
-          "score": 124,
+          "score": 114,
           "strategy": "hybrid-token",
-          "token_matches": 10
+          "token_matches": 9
         },
         "read_set": [
           {
@@ -190,7 +208,7 @@
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
             "role": "cli",
-            "source_sha256": "a43c5ddfb49238c204d85494060d134cee4c9ca56cce2c965a7e3f0f95f99879"
+            "source_sha256": "affbadeca931feac17305b387f2c4abccc0d62a7c60c607dd16941ce7086e341"
           },
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
@@ -210,7 +228,7 @@
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
             "role": "orchestrator",
-            "source_sha256": "5e9744f6dc7ce4211af2929beda63c44f607ef3016af081b1241b1f1b03f7662"
+            "source_sha256": "3013eaf3a085449f35cec85e7a5bc51571ed682e1a30e961295347623f80a862"
           },
           {
             "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json",
@@ -602,74 +620,6 @@
         }
       },
       {
-        "anchor": "skill_input_consumption.py",
-        "consumer_ids": [
-          "bootstrap",
-          "refactor-acceptance",
-          "vdd"
-        ],
-        "enforcement_level": "E1",
-        "kind": "governance-component",
-        "lifecycle": "repository-source",
-        "line_end": 282,
-        "line_start": 282,
-        "module_id": "skill-input-execution",
-        "path": "scripts/python/skill_input_consumption.py",
-        "primary_domain": "toolchain",
-        "provenance": [
-          "catalog-v2",
-          "refs/heads/main"
-        ],
-        "rank_evidence": {
-          "confidence": "medium",
-          "score": 90,
-          "strategy": "hybrid-token",
-          "token_matches": 9
-        },
-        "read_set": [
-          {
-            "path": "scripts/python/skill_input_consumption.py",
-            "role": "primary",
-            "source_sha256": "b88a133785a17be452dfe616f8e2864f211e68f7755d871d6558e2f0aaa2d503"
-          },
-          {
-            "path": ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json",
-            "role": "contract",
-            "source_sha256": "60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374"
-          },
-          {
-            "path": "scripts/python/launch_skill_input_consumer.py",
-            "role": "launcher",
-            "source_sha256": "3cecca7c7709ce853c65d3fdc04789bc9df41b8e0488f59423a7bea17da44975"
-          },
-          {
-            "path": "scripts/python/validate_skill_input_consumption.py",
-            "role": "validator",
-            "source_sha256": "fb20964bd1005a0005df54530504a7c22e05c3c252bb4be534d9f27e62c2df2a"
-          }
-        ],
-        "relations": [
-          {
-            "target": "adr.ADR-0044",
-            "type": "governed_by"
-          },
-          {
-            "target": "adr.ADR-0048",
-            "type": "governed_by"
-          }
-        ],
-        "semantic_eligible": true,
-        "source_role": "cli-entrypoint",
-        "source_sha256": "b88a133785a17be452dfe616f8e2864f211e68f7755d871d6558e2f0aaa2d503",
-        "status": "active",
-        "visibility": {
-          "marketplace": "excluded",
-          "phase": "dependency",
-          "toolchain": "active",
-          "workspace": "dependency"
-        }
-      },
-      {
         "anchor": "References",
         "consumer_ids": [
           "bootstrap",
@@ -843,16 +793,101 @@
           "toolchain": "active",
           "workspace": "dependency"
         }
+      },
+      {
+        "anchor": "Authority",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "execution-plan",
+        "lifecycle": "repository-source",
+        "line_end": 44,
+        "line_start": 44,
+        "module_id": "plan.2026-08-06-skill-authoring-standard",
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 80,
+          "strategy": "hybrid-token",
+          "token_matches": 8
+        },
+        "read_set": [
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+            "role": "primary",
+            "source_sha256": "4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
+            "role": "command-registry",
+            "source_sha256": "5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+            "role": "implementation-contract",
+            "source_sha256": "b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/plan-state.v1.json",
+            "role": "plan-state",
+            "source_sha256": "5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+            "role": "requirements-ledger",
+            "source_sha256": "af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0041",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0043",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0048",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0057",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0060",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "plan-index",
+        "source_sha256": "4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110",
+        "status": "conditional",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r18-successor-20260821T050940Z",
+    "request_id": "vdd-quick-dev-tdd-stage-recovery-20260817-r18",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc",
+      "commit": "82b770561c97a23775716fe1de1a9595e69ae5bb",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4",
+    "source_snapshot_id": "sha256:73439257113cd841332d7289e45f8bf3297be2c38652ecf4b97ed074f6f0e740",
     "status": "matched"
   },
   "required_modules": [
@@ -862,24 +897,24 @@
     {
       "owner": "adapter",
       "candidate": {
-        "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/00-index.md",
-        "source_sha256": "91a182444b736e0684d01b84730b6d79ee02c4788c4b5f5bab769c65d716f8f1"
-      },
-      "decision": "rejected",
-      "satisfies": [],
-      "rejection_reason": "insufficient_specificity"
-    },
-    {
-      "owner": "adapter",
-      "candidate": {
         "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
-        "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+        "source_sha256": "ccda1fed815b953b9f0eed9f616b94bcd0778c5a99e582dfa87fed2c69b08ce7"
       },
       "decision": "accepted",
       "satisfies": [
         "governance.quick-dev-tdd-adapter"
       ],
       "rejection_reason": null
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/00-index.md",
+        "source_sha256": "dee6815303ea2a14925d147a62aa9ec91f88f4876576df19907fcf774e7628a1"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
     },
     {
       "owner": "adapter",
@@ -944,16 +979,6 @@
     {
       "owner": "adapter",
       "candidate": {
-        "path": "scripts/python/skill_input_consumption.py",
-        "source_sha256": "b88a133785a17be452dfe616f8e2864f211e68f7755d871d6558e2f0aaa2d503"
-      },
-      "decision": "rejected",
-      "satisfies": [],
-      "rejection_reason": "insufficient_specificity"
-    },
-    {
-      "owner": "adapter",
-      "candidate": {
         "path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
         "source_sha256": "e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc"
       },
@@ -980,14 +1005,24 @@
       "decision": "rejected",
       "satisfies": [],
       "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+        "source_sha256": "4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:a344255621d710365c91ae766dfd34378234e849576485523a57c07f9c5adc9b",
-  "result_sha256": "sha256:47a829983286ffd3a49fd42c7c7a10ca21bf5a4b0a433d65002a753c9ef4f86b",
+  "request_sha256": "sha256:b1a45258b5be918074f542c88c5c0ec69a45fc9ad06d9be7775dc909501fbab9",
+  "result_sha256": "sha256:8d3826bd2cbe1943f5b30df98a89d1b323c97db4a0efad3f35862c22a8b548fb",
   "source_refresh": {
     "schema_version": "jimuyun.knowledge-source-refresh.v1",
     "mode": "current_worktree_read_set",
-    "base_locator_result_sha256": "sha256:78bbc8afceb1f5e6d13a6c2229bbd3da58e56fc56f3e7d727f1fc26ee58dcf32"
+    "base_locator_result_sha256": "sha256:99458b7ecf55f7f704273a575e77c4dc68ae88948c3a4e4d066b8b8def88dba9"
   },
   "preflight": {
     "status": "ready",
@@ -995,6 +1030,6 @@
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "refreshed",
-    "context_sha256": "sha256:7c429f5cf3c90c9182311f6494b0b91452780a0766d5b76ec97e15660b7e4a29"
+    "context_sha256": "sha256:c0c647cdb5dc08f5fbd937788af7e089aad00c665eb04ffc3507e592b56dcac8"
   }
 }
