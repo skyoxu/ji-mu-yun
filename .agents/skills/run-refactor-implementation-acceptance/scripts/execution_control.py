@@ -291,32 +291,21 @@ def start_or_resume_target_run(
             root, supplied_context.as_posix()
         )
 
-    binding_parts = [run_input_hash, contract_hash, knowledge_context_hash]
-    if skill_input_binding_hash is not None:
-        binding_parts.append(skill_input_binding_hash)
-    if skill_input_context_hash is not None:
-        binding_parts.append(skill_input_context_hash)
-    if normalized_context_path is not None:
-        binding_parts.append(normalized_context_path)
-    binding_id = hashlib.sha256("\0".join(binding_parts).encode("utf-8")).hexdigest()[:16]
-    selected_run_id = run_id or "acceptance-" + binding_id
-    if _RUN_ID.fullmatch(selected_run_id) is None:
-        raise ControlError("run identity is invalid")
-    run_root = target / "acceptance-runs"
-    try:
-        run_root.mkdir(exist_ok=True)
-    except OSError as exc:
-        raise ControlError("acceptance run root cannot be created") from exc
-    if run_root.is_symlink() or not run_root.is_dir():
-        raise ControlError("acceptance run root is invalid")
-    resolved_run_root = run_root.resolve()
-    try:
-        resolved_run_root.relative_to(target)
-    except ValueError as exc:
-        raise ControlError("acceptance run root escapes target plan") from exc
-    run_root = resolved_run_root
+    identity = derive_target_run_identity(
+        repository_root,
+        target_plan,
+        run_input_hash,
+        contract_hash,
+        knowledge_context_hash,
+        run_id=run_id,
+        skill_input_binding_hash=skill_input_binding_hash,
+        skill_input_context_hash=skill_input_context_hash,
+        skill_input_context_path=normalized_context_path,
+    )
+    selected_run_id = identity["runId"]
+    run_root = identity["runRoot"]
+    run_dir = identity["runDirectoryPath"]
 
-    run_dir = run_root / selected_run_id
     if run_dir.exists():
         if run_dir.is_symlink():
             raise ControlError("persisted run directory is invalid")
@@ -340,6 +329,7 @@ def start_or_resume_target_run(
         disposition = "resumed"
     else:
         # ADR-0041/ADR-0052: reuse the existing append-only run state; this entry is not authority.
+        run_root.mkdir(parents=True, exist_ok=True)
         run_dir = create_persisted_run(
             run_root,
             selected_run_id,
@@ -373,6 +363,58 @@ def start_or_resume_target_run(
         result["skillInputContextPath"] = custody.relative_to(root).as_posix()
         result["skillInputContextSourcePath"] = normalized_context_path
     return result
+
+
+def derive_target_run_identity(
+    repository_root: Path,
+    target_plan: str,
+    run_input_hash: str,
+    contract_hash: str,
+    knowledge_context_hash: str,
+    *,
+    run_id: str | None = None,
+    skill_input_binding_hash: str | None = None,
+    skill_input_context_hash: str | None = None,
+    skill_input_context_path: str | None = None,
+) -> dict[str, Any]:
+    """Derive a target run identity without creating or resuming a run."""
+    root = repository_root.resolve()
+    supplied_target = Path(target_plan)
+    if supplied_target.is_absolute():
+        raise ControlError("target plan must be repository-relative")
+    target = (root / supplied_target).resolve()
+    try:
+        relative_target = target.relative_to(root)
+    except ValueError as exc:
+        raise ControlError("target plan escapes repository") from exc
+    if len(relative_target.parts) < 2 or relative_target.parts[0].lower() != "execution-plans" or not target.is_dir():
+        raise ControlError("target plan must be an execution-plans directory")
+    binding_parts = [run_input_hash, contract_hash, knowledge_context_hash]
+    if skill_input_binding_hash is not None:
+        binding_parts.append(skill_input_binding_hash)
+    if skill_input_context_hash is not None:
+        binding_parts.append(skill_input_context_hash)
+    if skill_input_context_path is not None:
+        binding_parts.append(skill_input_context_path)
+    binding_id = hashlib.sha256("\0".join(binding_parts).encode("utf-8")).hexdigest()[:16]
+    selected_run_id = run_id or "acceptance-" + binding_id
+    if _RUN_ID.fullmatch(selected_run_id) is None:
+        raise ControlError("run identity is invalid")
+    run_root = target / "acceptance-runs"
+    if run_root.exists() and (run_root.is_symlink() or not run_root.is_dir()):
+        raise ControlError("acceptance run root is invalid")
+    try:
+        run_root.resolve().relative_to(target)
+    except ValueError as exc:
+        raise ControlError("acceptance run root escapes target plan") from exc
+
+    return {
+        "runId": selected_run_id,
+        "runRoot": run_root,
+        "runDirectoryPath": run_root / selected_run_id,
+        "runDirectory": (run_root / selected_run_id).relative_to(root).as_posix(),
+        "bindingId": binding_id,
+    }
 
 
 def create_stale_linked_successor(

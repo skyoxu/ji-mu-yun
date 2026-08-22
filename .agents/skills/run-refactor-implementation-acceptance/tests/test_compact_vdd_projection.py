@@ -52,16 +52,22 @@ class CompactVddProjectionTests(unittest.TestCase):
         self.receipt_path.parent.mkdir(parents=True)
         contract_hash = "sha256:" + hashlib.sha256((self.target / "implementation-contract.v1.json").read_bytes()).hexdigest()
         registry_hash = "sha256:" + hashlib.sha256((self.target / "command-registry.v1.json").read_bytes()).hexdigest()
+        terminal_result = self.target / "terminal-results/terminal-full.json"
+        terminal_result.parent.mkdir(parents=True)
+        terminal_result.write_text(json.dumps({"schema_version":"acceptance-coordinator-efficiency.terminal-result.v2","predicate":"implementation-complete","status":"pass","terminal_command_id":"validate","authorizes":[]}), encoding="utf-8")
+        source = self.root / "source.py"
+        source.write_text("pass\n", encoding="utf-8")
+        manifest = {"schema_version":"jimuyun.candidate-source-manifest.v1","entries":[{"path":"source.py","role":"production","slice_ids":["S0"],"sha256":"sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()}]}
+        manifest["candidate_source_root"] = "sha256:" + hashlib.sha256(json.dumps(manifest["entries"], sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        manifest_path = self.target / "repair/candidate-source-manifest.v1.json"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
         self.receipt_path.write_text(json.dumps({
-            "schema_version": "quick-dev-implementation-complete.v1",
-            "predicate": "implementation-complete",
-            "status": "pass",
-            "plan_id": "target",
-            "contract_hash": contract_hash,
-            "command_registry_hash": registry_hash,
-            "terminal_command_id": "validate",
-            "validated_command_ids": ["validate"],
-            "authorizes": ["implementation-complete"],
+            "schema_version": "quick-dev-implementation-complete.v2", "predicate": "implementation-complete", "status": "pass", "plan_id": "target",
+            "implementation_contract": {"path":"implementation-contract.v1.json","sha256":contract_hash}, "command_registry": {"path":"command-registry.v1.json","sha256":registry_hash},
+            "terminal_runner": {"path":"tools/terminal_runner.py","sha256":"sha256:" + hashlib.sha256((self.target / "tools/terminal_runner.py").read_bytes()).hexdigest()},
+            "terminal_result": {"path":"terminal-results/terminal-full.json","sha256":"sha256:" + hashlib.sha256(terminal_result.read_bytes()).hexdigest(),"command_id":"validate"},
+            "candidate_custody": {"mode":"commit","candidate_revision":self.head}, "candidate_source_manifest": {"path":"repair/candidate-source-manifest.v1.json","sha256":"sha256:" + hashlib.sha256(manifest_path.read_bytes()).hexdigest(),"candidate_source_root":manifest["candidate_source_root"]},
+            "validated_command_ids": ["validate"], "authorizes": ["acceptance-handoff"],
         }), encoding="utf-8")
         self.request_path = self.root / "request.json"
         self.request = {
@@ -146,7 +152,7 @@ class CompactVddProjectionTests(unittest.TestCase):
 
     def test_projection_rejects_handoff_that_no_longer_matches_the_terminal_contract(self) -> None:
         receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
-        receipt["terminal_command_id"] = "other"
+        receipt["terminal_result"]["command_id"] = "other"
         self.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
         self.request["implementationReceiptHash"] = "sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest()
         self.write_request()
@@ -156,7 +162,7 @@ class CompactVddProjectionTests(unittest.TestCase):
     def test_projection_rejects_legacy_or_unbound_implementation_receipts(self) -> None:
         receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
         receipt["schema_version"] = "toolchain-workflow-repair.terminal-result.v2"
-        receipt.pop("command_registry_hash")
+        receipt.pop("command_registry")
         self.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
         self.request["implementationReceiptHash"] = "sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest()
         self.write_request()

@@ -50,7 +50,7 @@ def test_coordinator_executes_dag_and_finalizes(tmp_path: Path, monkeypatch: pyt
         "actionId": "one", "dependsOn": [], "order": 1, "commandId": "one", "activation": True,
     }]}), encoding="utf-8")
     (target / "command-registry.v1.json").write_text(json.dumps({"schema_version": "ria.command-registry.v1", "commands": []}), encoding="utf-8")
-    run_dir = root / "execution-plans" / "target" / "runs" / "run-1"
+    run_dir = root / "execution-plans" / "target" / "acceptance-runs" / "run-1"
     run_dir.mkdir(parents=True)
     (root / "request.json").write_text("{}\n", encoding="utf-8")
     monkeypatch.setattr(acceptance_cli, "REPOSITORY_ROOT", root)
@@ -59,7 +59,8 @@ def test_coordinator_executes_dag_and_finalizes(tmp_path: Path, monkeypatch: pyt
         "prepared_ref": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64},
         "receipt_ref": {}, "contract_ref": {}, "target_plan": "execution-plans/target",
     })
-    monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args: {"runId": "run-1", "runDirectory": "execution-plans/target/runs/run-1"})
+    monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args: {"runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1"})
+    monkeypatch.setattr(acceptance_cli, "derive_target_run_identity", lambda *args, **kwargs: {"runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1", "runDirectoryPath": run_dir})
     states = iter([
         {"actionStates": {"one": "ready"}, "nextAction": {"actionId": "one"}, "readyActionIds": ["one"]},
         {"actionStates": {"one": "completed"}, "nextAction": None, "readyActionIds": []},
@@ -72,7 +73,10 @@ def test_coordinator_executes_dag_and_finalizes(tmp_path: Path, monkeypatch: pyt
     assert result["status"] == "completed"
     assert result["executedActionCount"] == 1
     assert result["finalization"]["status"] == "acceptance-passed"
-    assert result["telemetry"]["executedActionCount"] == 1
+    assert result["telemetry"]["path"] == "coordinator-telemetry.jsonl"
+    telemetry = json.loads((run_dir / "coordinator-telemetry.jsonl").read_text(encoding="utf-8").splitlines()[-1])
+    assert telemetry["executedActionCount"] == 1
+    assert {"waitMs", "interventionCount", "elapsedMs"}.issubset(telemetry)
     assert len(calls) == 1
 
 
@@ -105,7 +109,7 @@ def test_coordinator_emits_typed_handoff_without_bootstrap(tmp_path: Path, monke
     assert calls == {"inspect": 0, "resume": 0, "finalize": 0}
 
 
-def test_v3_coordinator_replay_is_idempotent_for_same_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_v4_coordinator_replay_is_idempotent_for_same_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
     import acceptance_cli
@@ -122,7 +126,10 @@ def test_v3_coordinator_replay_is_idempotent_for_same_output(tmp_path: Path, mon
             "prepared": {"input": {"execution_mode": "evidence_only", "semantic_review_required": False, "actions": [{"actionId": "one", "dependsOn": [], "order": 1, "commandId": "one", "activation": True}]}, "inputHash": "sha256:" + "a" * 64, "knowledgeContext": {"sha256": "sha256:" + "b" * 64}},
         "prepared_ref": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64}, "receipt_ref": {}, "contract_ref": {}, "target_plan": "execution-plans/target",
     })
-    monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args: {"runId": "run-1", "runDirectory": "execution-plans/target/runs/run-1"})
+    run_dir = tmp_path / "execution-plans" / "target" / "acceptance-runs" / "run-1"
+    run_dir.mkdir(parents=True)
+    monkeypatch.setattr(acceptance_cli, "derive_target_run_identity", lambda *args, **kwargs: {"runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1", "runDirectoryPath": run_dir})
+    monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args: {"runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1"})
     states = iter([
         {"actionStates": {"one": "ready"}, "nextAction": {"actionId": "one"}, "readyActionIds": ["one"]},
         {"actionStates": {"one": "completed"}, "nextAction": None, "readyActionIds": []},
@@ -130,6 +137,8 @@ def test_v3_coordinator_replay_is_idempotent_for_same_output(tmp_path: Path, mon
     monkeypatch.setattr(acceptance_cli, "inspect_persisted_run", lambda *args: next(states))
     monkeypatch.setattr(acceptance_cli, "resume_persisted_run", lambda *args: None)
     monkeypatch.setattr(acceptance_cli, "finalize_deterministic_run", lambda *args: {"status": "acceptance-passed", "authorizes": ["acceptance-passed"]})
+    contract_hash = acceptance_cli.canonical_hash({"preparedRunInput": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64}, "skillInputContract": {}})
+    (run_dir / "run-state.json").write_text(json.dumps({"runId": "run-1", "runInputHash": "sha256:" + "a" * 64, "contractHash": contract_hash, "knowledgeContextHash": "sha256:" + "b" * 64}), encoding="utf-8")
     first = acceptance_cli.run_coordinator(str(tmp_path / "request.json"), str(tmp_path / "result.json"))
     second = acceptance_cli.run_coordinator(str(tmp_path / "request.json"), str(tmp_path / "result.json"))
     assert first == second

@@ -39,6 +39,7 @@ from execution_control import (
     resume_run,
     run_controlled_command,
     start_or_resume_target_run,
+    derive_target_run_identity,
 )
 from evidence_analysis import analyze_diff_coverage
 from phase_scan import run_phase_scan
@@ -1125,6 +1126,11 @@ def _append_coordinator_telemetry(run_dir: Path, value: dict) -> None:
         handle.write(json.dumps({"schemaVersion": "acceptance-coordinator-telemetry.v1", **value}, sort_keys=True) + "\n")
 
 
+def _coordinator_binding(entry: dict, run_input_hash: str, contract_hash: str, knowledge_hash: str, action_hash: str) -> dict:
+    binding = {"runId": entry["runId"], "runDirectory": entry["runDirectory"], "runInputHash": run_input_hash, "contractHash": contract_hash, "knowledgeContextHash": knowledge_hash, "actionDagHash": action_hash}
+    return {"runBinding": binding, "runBindingHash": canonical_hash(binding)}
+
+
 def run_coordinator(request_path: str, output_path: str) -> dict:
     """Execute or resume the target-owned action DAG and project its route."""
     source = Path(request_path).resolve()
@@ -1142,7 +1148,6 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
     if not isinstance(run_input_hash, str) or not isinstance(knowledge_hash, str):
         raise InputError("coordinator prepared run input binding is invalid")
     contract_hash = canonical_hash({"preparedRunInput": loaded["prepared_ref"], "skillInputContract": loaded["contract_ref"]})
-    entry = start_or_resume_target_run(REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash)
     target_root = (REPOSITORY_ROOT / loaded["target_plan"]).resolve()
     action_path = target_root / "action-dag.v1.json"
     registry_path = target_root / "command-registry.v1.json"
@@ -1157,19 +1162,30 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
     if not registry_path.is_file():
         raise InputError("coordinator command registry is unavailable")
     command_registry = _read_json(str(registry_path))
-    run_dir = (REPOSITORY_ROOT / entry["runDirectory"]).resolve()
     output = Path(output_path)
+    expected_action_hash = canonical_hash({"actions": actions})
+    identity = derive_target_run_identity(REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash)
+    expected_binding = _coordinator_binding({"runId": identity["runId"], "runDirectory": identity["runDirectory"]}, run_input_hash, contract_hash, knowledge_hash, expected_action_hash)
     if output.exists():
         existing = _read_json(str(output))
-        expected_action_hash = canonical_hash({"actions": actions})
         if (
             not isinstance(existing, dict)
-            or existing.get("schemaVersion") != "acceptance-coordinator-result.v3"
-            or existing.get("runInputHash") != run_input_hash
-            or existing.get("actionDagHash") != expected_action_hash
+            or existing.get("schemaVersion") != "acceptance-coordinator-result.v4"
+            or existing.get("runBinding") != expected_binding["runBinding"]
+            or existing.get("runBindingHash") != expected_binding["runBindingHash"]
         ):
             raise InputError("coordinator replay binding does not match existing result")
+        run_dir = identity["runDirectoryPath"]
+        if not (run_dir / "run-state.json").is_file():
+            raise InputError("coordinator replay run state is missing")
+        state = _read_json(str(run_dir / "run-state.json"))
+        required_state = (("runId", identity["runId"]), ("runInputHash", run_input_hash), ("contractHash", contract_hash), ("knowledgeContextHash", knowledge_hash))
+        if any(state.get(key) != value for key, value in required_state):
+            raise InputError("coordinator replay run state binding does not match")
+        _append_coordinator_telemetry(run_dir, {"route": existing.get("route"), "replayed": True, "elapsedMs": 0, "waitMs": 0, "interventionCount": 0, "executedActionCount": 0})
         return existing
+    entry = start_or_resume_target_run(REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash)
+    run_dir = (REPOSITORY_ROOT / entry["runDirectory"]).resolve()
     semantic = bool(run_input.get("semantic_review_required", False))
     if semantic:
         # Semantic routes are a typed handoff boundary. They must not inspect,
@@ -1182,19 +1198,20 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
             "authorizes": [],
         }
         result = {
-            "schemaVersion": "acceptance-coordinator-result.v3", "runId": entry["runId"],
+            "schemaVersion": "acceptance-coordinator-result.v4", "runId": entry["runId"],
             "runDirectory": entry["runDirectory"], "runInputHash": run_input_hash,
             "requestAuthority": "none", "route": "semantic_review_required",
             "status": "semantic_handoff_required",
             "persistedActionState": {"status": "not-started"},
             "actionDag": {"actions": actions},
-            "actionDagHash": canonical_hash({"actions": actions}), "executedActionCount": 0,
+            "actionDagHash": expected_action_hash, "executedActionCount": 0,
             "finalization": None, "typedHandoff": typed_handoff,
             "bootstrapInvoked": False,
             "telemetry": {"schemaVersion": "acceptance-coordinator-telemetry.v1", "path": "coordinator-telemetry.jsonl"},
             "authorizes": [],
         }
-        _append_coordinator_telemetry(run_dir, {"route": "semantic_review_required", "replayed": output_path and Path(output_path).exists(), "executedActionCount": 0})
+        result.update(expected_binding)
+        _append_coordinator_telemetry(run_dir, {"route": "semantic_review_required", "replayed": False, "elapsedMs": 0, "waitMs": 0, "interventionCount": 1, "executedActionCount": 0})
         return _publish_new_json(str(output), result)
     started = time.monotonic()
     initial = inspect_persisted_run(run_dir, actions, run_input_hash, contract_hash, knowledge_hash)
@@ -1223,18 +1240,19 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
         route, status = "waiting_for_persisted_action", "waiting"
     elapsed_ms = int((time.monotonic() - started) * 1000)
     completed_count = sum(state in {"completed", "not-applicable"} for state in inspection.get("actionStates", {}).values())
-    _append_coordinator_telemetry(run_dir, {"route": route, "replayed": replayed, "executedActionCount": executed, "elapsedMs": elapsed_ms})
+    _append_coordinator_telemetry(run_dir, {"route": route, "replayed": replayed, "elapsedMs": elapsed_ms, "waitMs": 0, "interventionCount": 0, "executedActionCount": executed})
     result = {
-        "schemaVersion": "acceptance-coordinator-result.v3", "runId": entry["runId"],
+        "schemaVersion": "acceptance-coordinator-result.v4", "runId": entry["runId"],
         "runDirectory": entry["runDirectory"], "runInputHash": run_input_hash,
         "requestAuthority": "none", "route": route, "status": status,
         "persistedActionState": inspection, "actionDag": {"actions": actions},
-        "actionDagHash": canonical_hash({"actions": actions}), "executedActionCount": completed_count,
+        "actionDagHash": expected_action_hash, "executedActionCount": completed_count,
         "finalization": finalization, "typedHandoff": None,
         "bootstrapInvoked": False,
-        "telemetry": {"schemaVersion": "acceptance-coordinator-telemetry.v1", "path": "coordinator-telemetry.jsonl", "executedActionCount": completed_count},
+        "telemetry": {"schemaVersion": "acceptance-coordinator-telemetry.v1", "path": "coordinator-telemetry.jsonl"},
         "authorizes": [],
     }
+    result.update(expected_binding)
     return _publish_new_json(str(output), result)
 
 

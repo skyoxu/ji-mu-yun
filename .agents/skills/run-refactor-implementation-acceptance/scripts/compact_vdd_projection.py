@@ -181,10 +181,13 @@ def _implementation_handoff(root: Path, target: Path, request: dict[str, Any]) -
     if receipt.get("schema_version") == "quick-dev-implementation-complete.v2":
         if receipt.get("plan_id") != contract.get("plan_id") or receipt.get("predicate") != "implementation-complete" or receipt.get("status") != "pass":
             raise InputError("implementation receipt does not match the current Quick Dev terminal contract")
-        for label, current in (("implementation_contract", contract_path), ("command_registry", registry_path)):
+        for label, current, expected_path in (("implementation_contract", contract_path, "implementation-contract.v1.json"), ("command_registry", registry_path, "command-registry.v1.json")):
             descriptor = receipt.get(label)
-            if not isinstance(descriptor, dict) or descriptor.get("sha256") != _hash_bytes(current.read_bytes()):
+            if not isinstance(descriptor, dict) or descriptor.get("path") != expected_path or descriptor.get("sha256") != _hash_bytes(current.read_bytes()):
                 raise InputError("implementation receipt does not match the current Quick Dev terminal contract")
+        runner = receipt.get("terminal_runner")
+        if not isinstance(runner, dict) or runner.get("path") != runner_value or runner.get("sha256") != _hash_bytes(runner_path.read_bytes()):
+            raise InputError("implementation receipt terminal runner is stale")
         terminal_result = receipt.get("terminal_result")
         manifest_ref = receipt.get("candidate_source_manifest")
         if not isinstance(terminal_result, dict) or not isinstance(manifest_ref, dict):
@@ -198,6 +201,12 @@ def _implementation_handoff(root: Path, target: Path, request: dict[str, Any]) -
             raise InputError("implementation receipt v2 binding escapes target") from exc
         if not terminal_path.is_file() or _hash_bytes(terminal_path.read_bytes()) != terminal_result.get("sha256"):
             raise InputError("implementation receipt terminal result is stale")
+        terminal_document = _load(terminal_path)
+        if terminal_result.get("command_id") != terminal.get("command_id") or terminal_document.get("terminal_command_id") != terminal.get("command_id") or terminal_document.get("status") != "pass":
+            raise InputError("implementation receipt does not match terminal result")
+        custody = receipt.get("candidate_custody")
+        if not isinstance(custody, dict) or custody.get("mode") != "commit" or not isinstance(custody.get("candidate_revision"), str) or not re.fullmatch(r"[0-9a-f]{40}", custody["candidate_revision"]):
+            raise InputError("implementation receipt candidate custody is invalid")
         manifest = _load(manifest_path)
         entries = manifest.get("entries")
         if manifest.get("schema_version") != "jimuyun.candidate-source-manifest.v1" or not isinstance(entries, list):
@@ -220,19 +229,7 @@ def _implementation_handoff(root: Path, target: Path, request: dict[str, Any]) -
         if receipt.get("authorizes") != ["acceptance-handoff"]:
             raise InputError("implementation receipt does not authorize acceptance-handoff")
     else:
-        expected = {
-            "schema_version": "quick-dev-implementation-complete.v1",
-            "predicate": "implementation-complete",
-            "status": "pass",
-            "plan_id": contract.get("plan_id"),
-            "contract_hash": _hash_bytes(contract_path.read_bytes()),
-            "command_registry_hash": _hash_bytes(registry_path.read_bytes()),
-            "terminal_command_id": terminal.get("command_id"),
-        }
-        if any(receipt.get(key) != value for key, value in expected.items()):
-            raise InputError("implementation receipt does not match the current Quick Dev terminal contract")
-        if receipt.get("authorizes") != ["implementation-complete"]:
-            raise InputError("implementation receipt does not authorize implementation-complete")
+        raise InputError("implementation receipt does not match current Quick Dev completion v2 contract")
     if not isinstance(receipt.get("validated_command_ids"), list) or not receipt["validated_command_ids"]:
         raise InputError("implementation receipt has no validated commands")
     if not runner_path.is_file():
@@ -477,7 +474,13 @@ def project_or_quick_dev_recovery(repository_root: Path, request_path: Path) -> 
         handoff_errors = {
             "implementation receipt is missing or stale",
             "implementation receipt does not match the current Quick Dev terminal contract",
+            "implementation receipt does not match current Quick Dev completion v2 contract",
             "implementation receipt does not authorize implementation-complete",
+            "current Acceptance requires a Quick Dev completion receipt v2",
+            "implementation receipt terminal runner is stale",
+            "implementation receipt terminal result is stale",
+            "implementation receipt terminal result is invalid",
+            "implementation receipt candidate custody is invalid",
             "implementation receipt has no validated commands",
             "implementation handoff terminal runner is missing",
         }

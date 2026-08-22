@@ -133,10 +133,10 @@ def _terminal_machine_result(stdout: Any) -> dict[str, Any]:
             continue
         if (
             isinstance(value, dict)
-            and value.get("schema_version") == "quick-dev-implementation-complete.v1"
+            and value.get("schema_version") == "acceptance-coordinator-efficiency.terminal-result.v2"
             and value.get("predicate") == "implementation-complete"
             and value.get("status") == "pass"
-            and value.get("authorizes") == ["implementation-complete"]
+            and value.get("authorizes") == []
         ):
             return value
     raise InputError("terminal-full receipt has no machine-readable result")
@@ -174,13 +174,13 @@ def _verified_quick_dev_receipt(root: Path, target: Path, prepared: dict[str, An
         raise InputError("Quick Dev terminal runner is stale")
     if (
         not isinstance(receipt, dict)
-        or receipt.get("schema_version") != "quick-dev-implementation-complete.v1"
+        or receipt.get("schema_version") != "quick-dev-implementation-complete.v2"
         or receipt.get("predicate") != "implementation-complete"
         or receipt.get("status") != "pass"
-        or receipt.get("authorizes") != ["implementation-complete"]
-        or receipt.get("contract_hash") != _sha(contract_path)
-        or receipt.get("command_registry_hash") != _sha(registry_path)
-        or receipt.get("terminal_command_id") != receipt_ref["terminalCommandId"]
+        or receipt.get("authorizes") != ["acceptance-handoff"]
+        or (receipt.get("implementation_contract") or {}).get("sha256") != _sha(contract_path)
+        or (receipt.get("command_registry") or {}).get("sha256") != _sha(registry_path)
+        or (receipt.get("terminal_result") or {}).get("command_id") != receipt_ref["terminalCommandId"]
         or receipt_ref["terminalCommandId"] != "terminal-full"
     ):
         raise InputError("Quick Dev implementation receipt does not prove the current terminal contract")
@@ -280,14 +280,14 @@ def finalize_deterministic_run(
         except (KeyError, IndexError, TypeError) as exc:
             raise InputError("terminal-full receipt has no machine-readable result") from exc
     expected_schema = (
-        "acceptance-coordinator-efficiency.terminal-result.v1"
-        if native_mode else "quick-dev-implementation-complete.v1"
+        "acceptance-coordinator-efficiency.terminal-result.v2"
+            if native_mode else "acceptance-coordinator-efficiency.terminal-result.v2"
     )
     if (
         terminal_result.get("schema_version") != expected_schema
         or terminal_result.get("predicate") != "implementation-complete"
         or terminal_result.get("status") != "pass"
-        or terminal_result.get("authorizes") != ["implementation-complete"]
+            or terminal_result.get("authorizes") != []
     ):
         raise InputError("terminal-full did not prove implementation-complete")
 

@@ -70,7 +70,7 @@ def test_deterministic_finalization_requires_and_publishes_hash_bound_receipts(t
     }
     registry = {"schema_version": "ria.command-registry.v1", "commands": [{
         "id": "terminal-full", "executable": sys.executable,
-        "argv": ["-c", "import json; print(json.dumps({'schema_version':'quick-dev-implementation-complete.v1','predicate':'implementation-complete','status':'pass','authorizes':['implementation-complete']}))"],
+        "argv": ["-c", "import json; print(json.dumps({'schema_version':'acceptance-coordinator-efficiency.terminal-result.v2','predicate':'implementation-complete','status':'pass','authorizes':[]}))"],
         "cwd": ".", "timeout_seconds": 30, "shell": False,
     }]}
     contract = target / "implementation-contract.v1.json"
@@ -81,16 +81,18 @@ def test_deterministic_finalization_requires_and_publishes_hash_bound_receipts(t
     terminal_runner.parent.mkdir()
     terminal_runner.write_text("# terminal runner\n", encoding="utf-8")
     implementation_receipt = {
-        "schema_version": "quick-dev-implementation-complete.v1", "predicate": "implementation-complete",
-        "status": "pass", "authorizes": ["implementation-complete"],
-        "contract_hash": _sha(contract.read_bytes()), "command_registry_hash": _sha(registry_path.read_bytes()),
-        "terminal_command_id": "terminal-full",
+        "schema_version": "quick-dev-implementation-complete.v2", "predicate": "implementation-complete",
+        "status": "pass", "authorizes": ["acceptance-handoff"],
+        "implementation_contract": {"path": "implementation-contract.v1.json", "sha256": _sha(contract.read_bytes())},
+        "command_registry": {"path": "command-registry.v1.json", "sha256": _sha(registry_path.read_bytes())},
+        "terminal_runner": {"path": "tools/terminal_full.py", "sha256": _sha(terminal_runner.read_bytes())},
+        "terminal_result": {"path": "terminal-results/terminal-full.json", "sha256": "sha256:" + "0" * 64, "command_id": "terminal-full"},
     }
-    implementation_receipt_path = target / "quick-dev-implementation-complete.v1.json"
+    implementation_receipt_path = target / "acceptance-coordinator-efficiency.terminal-result.v2.json"
     implementation_receipt_path.write_text(json.dumps(implementation_receipt), encoding="utf-8")
     bundle = {
         "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
-        "implementationReceipt": {"path": "quick-dev-implementation-complete.v1.json", "sha256": _sha(implementation_receipt_path.read_bytes()), "terminalCommandId": "terminal-full"},
+        "implementationReceipt": {"path": "acceptance-coordinator-efficiency.terminal-result.v2.json", "sha256": _sha(implementation_receipt_path.read_bytes()), "terminalCommandId": "terminal-full"},
         "terminalRunner": {"path": "tools/terminal_full.py", "sha256": _sha(terminal_runner.read_bytes())},
     }
     bundle["bundleHash"] = acceptance_core.canonical_hash(bundle)
@@ -126,7 +128,7 @@ def test_terminal_machine_result_accepts_json_before_non_json_tail() -> None:
 
     result = deterministic_finalization._terminal_machine_result(
         "pytest output\n"
-        "{\"schema_version\": \"quick-dev-implementation-complete.v1\", \"predicate\": \"implementation-complete\", \"status\": \"pass\", \"authorizes\": [\"implementation-complete\"]}\n"
+        "{\"schema_version\": \"acceptance-coordinator-efficiency.terminal-result.v2\", \"predicate\": \"implementation-complete\", \"status\": \"pass\", \"authorizes\": []}\n"
         "trailing diagnostic\n"
     )
 
@@ -137,7 +139,7 @@ def test_terminal_machine_result_skips_unrelated_json_after_completion() -> None
     import deterministic_finalization
 
     result = deterministic_finalization._terminal_machine_result(
-        "{\"schema_version\": \"quick-dev-implementation-complete.v1\", \"predicate\": \"implementation-complete\", \"status\": \"pass\", \"authorizes\": [\"implementation-complete\"]}\n"
+        "{\"schema_version\": \"acceptance-coordinator-efficiency.terminal-result.v2\", \"predicate\": \"implementation-complete\", \"status\": \"pass\", \"authorizes\": []}\n"
         "{\"status\": \"source_frozen\"}\n"
     )
 
