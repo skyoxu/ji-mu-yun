@@ -1,0 +1,126 @@
+{
+  "candidate_source_root": "sha256:eca2221674f871f87742240e2c57270d9b6a1ef415bf6a6fb7843a7fc83bf4b5",
+  "entries": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "role": "production",
+      "sha256": "sha256:b64a766120d73d136292243401b2395c45c0834914a43403d8c2cf18eddbb001",
+      "slice_ids": [
+        "S3"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "role": "contract-consumer",
+      "sha256": "sha256:063d89c83696ac1343f4bc7aae88ed3d354afd1147e310e561a9282d857954c6",
+      "slice_ids": [
+        "S0"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "role": "contract-consumer",
+      "sha256": "sha256:192b49e9abf849226af2d62565e149d03607c3595e5982eddd0c527f0c1c722a",
+      "slice_ids": [
+        "S0",
+        "S3"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "role": "production",
+      "sha256": "sha256:fd466c7b3b82ddb180302515d46fdc36aff914bf1e0ff5f9e53861b0146ca769",
+      "slice_ids": [
+        "S0",
+        "S2",
+        "S3"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "role": "test",
+      "sha256": "sha256:a150bd35d6923522d20fee605ac3cd6e3edbe19d5f68e8c507316877db0a31dd",
+      "slice_ids": [
+        "S0"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+      "role": "test",
+      "sha256": "sha256:e078593c5b802b2c9ea32caf027f0a82297b3978d1721ae757794b0065b394e3",
+      "slice_ids": [
+        "S0",
+        "S2",
+        "S3"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+      "role": "test",
+      "sha256": "sha256:bbe9b84f7188aff4630daa8320af1870e41076e28a667b2fc78c8182e034014c",
+      "slice_ids": [
+        "S3"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py",
+      "role": "test",
+      "sha256": "sha256:188d62c9491fdb6eb1a7843e9fc9aaa2198162745e1bdedd14bd5f736ceafdc5",
+      "slice_ids": [
+        "S0",
+        "S2"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      "role": "test",
+      "sha256": "sha256:e39e4c33fcb2f52572e2ed3943625311855aa40c93f162a298a5c32ffbc92661",
+      "slice_ids": [
+        "S0",
+        "S3"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_terminal_full_isolation.py",
+      "role": "test",
+      "sha256": "sha256:72b42f62af066f85f473e5481e3d89cc93332d6111b484ec76943d852a9090b6",
+      "slice_ids": [
+        "S3"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/command-registry.v1.json",
+      "role": "contract",
+      "sha256": "sha256:2590533d10ab70a922d596e8080e385781bf602c6221d8d5cfdf75c21945de47",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/implementation-contract.v1.json",
+      "role": "contract",
+      "sha256": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py",
+      "role": "validator",
+      "sha256": "sha256:37e96ded6e4821fda4ec13f2a20b7a8828d6f6153e2d7f497c80fe2af03a3cf6",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3"
+      ]
+    }
+  ],
+  "schema_version": "jimuyun.candidate-source-manifest.v1"
+}
