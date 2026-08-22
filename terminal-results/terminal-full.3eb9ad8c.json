@@ -1,0 +1,26 @@
+{
+  "authorizes": [],
+  "command_registry": {
+    "path": "command-registry.v1.json",
+    "sha256": "sha256:2590533d10ab70a922d596e8080e385781bf602c6221d8d5cfdf75c21945de47"
+  },
+  "implementation_contract": {
+    "path": "implementation-contract.v1.json",
+    "sha256": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b"
+  },
+  "plan_id": "acceptance-coordinator-efficiency",
+  "predicate": "implementation-complete",
+  "schema_version": "acceptance-coordinator-efficiency.terminal-result.v2",
+  "status": "pass",
+  "terminal_command_id": "terminal-full",
+  "terminal_runner": {
+    "path": "tools/terminal_full.py",
+    "sha256": "sha256:f0115f44d3f988f250cb5f34c5367819099462e9fa4829160643835ebe8c57a4"
+  },
+  "validated_command_ids": [
+    "unittest:.agents/skills/quick-dev-tdd-adapter/tools/tests:test_candidate_identity.py",
+    "unittest:.agents/skills/quick-dev-tdd-adapter/tools/tests:test_plan_directory_loop.py",
+    "unittest:.agents/skills/quick-dev-tdd-adapter/tools/tests:test_adapter.py",
+    "pytest:.agents/skills/run-refactor-implementation-acceptance/tests"
+  ]
+}

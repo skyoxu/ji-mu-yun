@@ -1,0 +1,38 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        ".agents/skills/run-refactor-implementation-acceptance/tests",
+        "-q"
+      ],
+      "cwd": ".",
+      "executable": "py",
+      "id": "acceptance-pytest-suite",
+      "shell": false,
+      "timeout_seconds": 900
+    },
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py",
+        "--repository-root",
+        ".",
+        "--plan-dir",
+        "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+        "--out",
+        "terminal-results/terminal-full.3eb9ad8c.json"
+      ],
+      "cwd": ".",
+      "executable": "py",
+      "id": "terminal-full",
+      "shell": false,
+      "timeout_seconds": 1800
+    }
+  ],
+  "schema_version": "ria.command-registry.v1"
+}

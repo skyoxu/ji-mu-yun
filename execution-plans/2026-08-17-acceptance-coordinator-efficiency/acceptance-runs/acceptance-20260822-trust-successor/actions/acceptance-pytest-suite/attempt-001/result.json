@@ -1,0 +1,83 @@
+{
+  "authorizes": [],
+  "commandId": "acceptance-pytest-suite",
+  "commandRegistryHash": "sha256:1cc61130f57a65e7923bd4c3acf30a6e00ef5ad67a1254f18c0c402f56f1ac07",
+  "environmentIdentity": {
+    "hash": "sha256:3d83924597c385d0a288d12c4263e250a6e330ac01419f4c241825cefb9a5fa7",
+    "names": [
+      "APPDATA",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "-m",
+      "pytest",
+      ".agents/skills/run-refactor-implementation-acceptance/tests",
+      "-q"
+    ],
+    "commandId": "acceptance-pytest-suite",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 900
+  },
+  "invocationHash": "sha256:282abb68a272cb7167a4ac2035e67b520c65af3d4bf492b63dbaa4c026018146",
+  "processResult": {
+    "commandId": "acceptance-pytest-suite",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "................................................................. [ 21%]\r\n........................................................................ [ 44%]\r\n................................................................. [ 65%]\r\n........................................................................ [ 88%]\r\n...................................                                    [100%]\r\n309 passed, 16 subtests passed in 15.54s\r\n",
+    "stdoutSha256": "sha256:6d966defcbc200f907767019f0c5d80727bae792d2d56b348070ace817cbd303"
+  },
+  "processResultHash": "sha256:0363ab1b39367ead7943343aafedbd79010f846cf59f271746df5cd148667912",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}
