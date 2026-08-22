@@ -4,7 +4,7 @@
   "runId": "acceptance-20260822-know74-successor",
   "changeId": "acceptance-coordinator-efficiency-know74-successor",
   "baselineRevision": "79f49551087a35be0632b320d222e8f8b0db1f5f",
-  "candidateRevision": "c6085656d5ea8ec1383c0064a7f7d015d74e57b8",
+  "candidateRevision": "c6085656487bf023da469bb79c0fd7e67e97d23c",
   "changedPaths": [
     ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
     ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
