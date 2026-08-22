@@ -1,33 +1,49 @@
 {
   "schema_version": "acceptance-coordinator-efficiency.trust-recovery-closure.v2",
   "plan_directory": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
-  "status": "coverage-repair-required",
+  "status": "closed-by-current-positive-behavior-evidence",
   "supersedes": "governance/trust-recovery-closure.v1.json",
   "authorizes": [],
   "coverage": [
     {
       "slice_id": "S0",
       "requirements": ["ACE-S0"],
-      "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s0.py"],
-      "positive_behavior_tests": [],
-      "coverage_status": "partial",
-      "uncovered_behavior": ["matching candidate/context identity admission"]
+      "tests": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s0.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"
+      ],
+      "positive_behavior_tests": [
+        "test_prepare_commit_reads_candidate_bytes_from_immutable_git_blob"
+      ],
+      "coverage_status": "covered",
+      "uncovered_behavior": []
     },
     {
       "slice_id": "S1",
       "requirements": ["ACE-S1"],
-      "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s1.py"],
-      "positive_behavior_tests": [],
-      "coverage_status": "partial",
-      "uncovered_behavior": ["machine-selected deterministic route completion"]
+      "tests": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s1.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py"
+      ],
+      "positive_behavior_tests": [
+        "test_deterministic_finalization_requires_and_publishes_hash_bound_receipts"
+      ],
+      "coverage_status": "covered",
+      "uncovered_behavior": []
     },
     {
       "slice_id": "S2",
       "requirements": ["ACE-S2"],
-      "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s2.py"],
-      "positive_behavior_tests": [],
-      "coverage_status": "partial",
-      "uncovered_behavior": ["identical replay and stale-action successor recovery"]
+      "tests": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s2.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py"
+      ],
+      "positive_behavior_tests": [
+        "test_stale_action_recovery_preserves_attempt_evidence_and_releases_claim",
+        "test_stale_recovery_creates_successor_without_overwriting_predecessor"
+      ],
+      "coverage_status": "covered",
+      "uncovered_behavior": []
     },
     {
       "slice_id": "S3",
@@ -41,7 +57,11 @@
       "uncovered_behavior": []
     }
   ],
-  "validated_by": null,
+  "validated_by": {
+    "command": "pytest .agents/skills/run-refactor-implementation-acceptance/tests -q",
+    "result": "307 passed, 16 subtests passed",
+    "mode": "current deterministic behavior suite"
+  },
   "successor_terminal": {
     "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/terminal-full.s3-successor.json",
     "sha256": "sha256:8763ae4dd028ea2d90ebc6666b8e1a4007d0fd9f8d823b8f8fa2c33c2b050039",
@@ -49,5 +69,5 @@
     "predicate": "implementation-complete",
     "authorizes": ["implementation-complete"]
   },
-  "notes": "This successor deliberately blocks governance closure until S0-S2 have positive behavior evidence. Historical v1 remains immutable and is not current authority."
+  "notes": "Historical v1 remains immutable and is not current authority. This successor replaces rejection-only test attribution with the current positive behavior tests for each slice."
 }
