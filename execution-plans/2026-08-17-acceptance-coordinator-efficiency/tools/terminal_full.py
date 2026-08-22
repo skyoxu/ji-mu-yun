@@ -33,6 +33,7 @@ def _entries():
         {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py", "role": "test", "slice_ids": ["S0", "S2"]},
         {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py", "role": "test", "slice_ids": ["S0"]},
         {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py", "role": "test", "slice_ids": ["S0", "S2", "S3"]},
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_terminal_full_isolation.py", "role": "test", "slice_ids": ["S3"]},
         {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py", "role": "test", "slice_ids": ["S0", "S3"]},
         {"path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py", "role": "validator", "slice_ids": ["S0", "S1", "S2", "S3"]},
         {"path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/implementation-contract.v1.json", "role": "contract", "slice_ids": ["S0", "S1", "S2", "S3"]},
@@ -70,7 +71,7 @@ def publish_completion_handoff(root: Path, plan: Path, terminal_path: Path):
     return receipt_path
 
 def main():
-    parser = argparse.ArgumentParser(); parser.add_argument("--slice", choices=("S0", "S1", "S2", "S3")); parser.add_argument("--quick-dev-regression", action="store_true"); parser.add_argument("--repository-root", type=Path, default=ROOT); parser.add_argument("--plan-dir", type=Path, default=PLAN); parser.add_argument("--out", type=Path); parser.add_argument("--publish-completion", action="store_true"); parser.add_argument("--terminal-result", type=Path)
+    parser = argparse.ArgumentParser(); parser.add_argument("--slice", choices=("S0", "S1", "S2", "S3")); parser.add_argument("--quick-dev-regression", action="store_true"); parser.add_argument("--repository-root", type=Path, default=ROOT); parser.add_argument("--plan-dir", type=Path, default=PLAN); parser.add_argument("--publish-completion", action="store_true"); parser.add_argument("--terminal-result", type=Path)
     args = parser.parse_args()
     suites = {"S0": (("pytest", ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s0.py"),), "S1": (("pytest", ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s1.py"),), "S2": (("pytest", ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s2.py"),), "S3": (("pytest", ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py"),)}
     regression = ((".agents/skills/quick-dev-tdd-adapter/tools/tests", "test_candidate_identity.py"), (".agents/skills/quick-dev-tdd-adapter/tools/tests", "test_plan_directory_loop.py"), (".agents/skills/quick-dev-tdd-adapter/tools/tests", "test_adapter.py"))
@@ -81,7 +82,6 @@ def main():
     elif args.quick_dev_regression: result = terminal_result("slice-ready", "quick-dev-suite", regression)
     else:
         result = terminal_result("implementation-complete", "terminal-full", (*regression, ("pytest", ".agents/skills/run-refactor-implementation-acceptance/tests")))
-        if args.out is not None: args.out.parent.mkdir(parents=True, exist_ok=True); args.out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps(result, separators=(",", ":"))); return 0 if result["status"] == "pass" else 1
 
 if __name__ == "__main__": raise SystemExit(main())

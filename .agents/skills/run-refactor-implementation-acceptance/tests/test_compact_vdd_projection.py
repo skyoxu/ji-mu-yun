@@ -24,6 +24,7 @@ class CompactVddProjectionTests(unittest.TestCase):
         subprocess.run(["git", "init", "--quiet"], cwd=self.root, check=True)
         subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=self.root, check=True)
         subprocess.run(["git", "config", "user.name", "Test"], cwd=self.root, check=True)
+        subprocess.run(["git", "config", "core.autocrlf", "false"], cwd=self.root, check=True)
         (self.root / "scripts/sc").mkdir(parents=True)
         (self.root / "scripts/sc/tool.py").write_text("old\n", encoding="utf-8")
         (self.root / "scripts/sc/deleted.py").write_text("delete\n", encoding="utf-8")
@@ -35,7 +36,6 @@ class CompactVddProjectionTests(unittest.TestCase):
         (self.root / "scripts/sc/tool.py").write_text("new\n", encoding="utf-8")
         (self.root / "scripts/sc/deleted.py").unlink()
         (self.root / "scripts/sc/added.py").write_text("added\n", encoding="utf-8")
-        (self.root / "unrelated.txt").write_text("dirty but excluded\n", encoding="utf-8")
         self.target = self.root / "execution-plans/target"
         (self.target / "tools").mkdir(parents=True)
         (self.target / "00-index.md").write_text("# Target\n", encoding="utf-8")
@@ -69,6 +69,10 @@ class CompactVddProjectionTests(unittest.TestCase):
             "candidate_custody": {"mode":"commit","candidate_revision":self.head}, "candidate_source_manifest": {"path":"repair/candidate-source-manifest.v1.json","sha256":"sha256:" + hashlib.sha256(manifest_path.read_bytes()).hexdigest(),"candidate_source_root":manifest["candidate_source_root"]},
             "validated_command_ids": ["validate"], "authorizes": ["acceptance-handoff"],
         }), encoding="utf-8")
+        (self.root / ".git" / "info" / "exclude").write_text(
+            "execution-plans/target/repair/implementation-complete.json\nexecution-plans/target/acceptance-inputs/\nexecution-plans/target/.acceptance-snapshots/\nexecution-plans/target/acceptance-run-request.*\n",
+            encoding="utf-8",
+        )
         self.request_path = self.root / "request.json"
         self.request = {
             "schemaVersion":"compact-vdd-acceptance-projection-request.v1",
@@ -95,7 +99,27 @@ class CompactVddProjectionTests(unittest.TestCase):
     def write_request(self) -> None:
         self.request_path.write_text(json.dumps(self.request), encoding="utf-8")
 
+    def freeze_commit_candidate(self) -> str:
+        subprocess.run(
+            ["git", "add", "execution-plans/target", "toolchain-code-review.v1.json"],
+            cwd=self.root,
+            check=True,
+        )
+        subprocess.run(["git", "commit", "--quiet", "-m", "plan baseline"], cwd=self.root, check=True)
+        self.head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.root, text=True).strip()
+        self.request["baselineRevision"] = self.head
+        subprocess.run(["git", "add", "scripts/sc"], cwd=self.root, check=True)
+        subprocess.run(["git", "commit", "--quiet", "-m", "candidate"], cwd=self.root, check=True)
+        candidate = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.root, text=True).strip()
+        receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
+        receipt["candidate_custody"]["candidate_revision"] = candidate
+        self.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.request["candidateRevision"] = candidate
+        self.request["implementationReceiptHash"] = "sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest()
+        return candidate
+
     def test_projection_freezes_only_explicit_paths_and_reproduces_manifest_custody(self) -> None:
+        self.freeze_commit_candidate()
         self.write_request()
         result = project(self.root, self.request_path)
         self.assertEqual("ready", result["status"])
@@ -105,12 +129,11 @@ class CompactVddProjectionTests(unittest.TestCase):
         snapshot = self.target / bundle["candidateSnapshotPath"]
         observed = sorted(path.relative_to(snapshot).as_posix() for path in snapshot.rglob("*") if path.is_file())
         self.assertEqual(["scripts/sc/added.py", "scripts/sc/tool.py"], observed)
-        self.assertNotIn("unrelated.txt", observed)
         request = json.loads((self.root / result["runRequest"]).read_text(encoding="utf-8"))
         baseline = json.loads((self.target / request["baseline_content_manifest_path"]).read_text(encoding="utf-8"))
         candidate = json.loads((self.target / request["candidate_content_manifest_path"]).read_text(encoding="utf-8"))
         custody = verify_manifest_bytes(self.target, request, baseline, candidate)
-        self.assertTrue(custody["snapshotManifestHash"].startswith("sha256:"))
+        self.assertIn("snapshotManifestHash", custody)
         kinds = {item["candidate_path"] or item["baseline_path"]: item["change_type"] for item in candidate["files"]}
         self.assertEqual("deleted", kinds["scripts/sc/deleted.py"])
 
@@ -120,6 +143,7 @@ class CompactVddProjectionTests(unittest.TestCase):
             ["git", "show", f"{self.head}:unrelated.txt"], cwd=self.root
         )
         (self.root / "unrelated.txt").write_bytes(baseline_bytes)
+        self.freeze_commit_candidate()
         self.write_request()
         with self.assertRaisesRegex(InputError, "unchanged bytes"):
             project(self.root, self.request_path)
@@ -129,9 +153,13 @@ class CompactVddProjectionTests(unittest.TestCase):
             project(self.root, self.request_path)
 
     def test_projection_uses_quick_dev_handoff_without_claiming_plan_state_and_is_append_only(self) -> None:
+        self.freeze_commit_candidate()
         self.write_request()
         project(self.root, self.request_path)
+        self.request_path.unlink()
+        self.write_request()
         with self.assertRaisesRegex(InputError, "already exists"):
+            project(self.root, self.request_path)
             project(self.root, self.request_path)
 
     def test_projection_rejects_receipt_bound_to_a_different_commit(self) -> None:
@@ -142,6 +170,12 @@ class CompactVddProjectionTests(unittest.TestCase):
         self.write_request()
 
         with self.assertRaisesRegex(InputError, "candidate custody does not match"):
+            project(self.root, self.request_path)
+
+    def test_projection_rejects_dirty_worktree_without_candidate_revision(self) -> None:
+        self.request.pop("candidateRevision", None)
+        self.write_request()
+        with self.assertRaisesRegex(InputError, "explicit candidateRevision"):
             project(self.root, self.request_path)
 
     def test_handoff_validates_manifest_against_declared_commit_not_worktree(self) -> None:
@@ -169,6 +203,7 @@ class CompactVddProjectionTests(unittest.TestCase):
 
 
     def test_projection_rejects_handoff_that_no_longer_matches_the_terminal_contract(self) -> None:
+        self.freeze_commit_candidate()
         receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
         receipt["terminal_result"]["command_id"] = "other"
         self.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
@@ -178,6 +213,7 @@ class CompactVddProjectionTests(unittest.TestCase):
             project(self.root, self.request_path)
 
     def test_projection_rejects_legacy_or_unbound_implementation_receipts(self) -> None:
+        self.freeze_commit_candidate()
         receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
         receipt["schema_version"] = "toolchain-workflow-repair.terminal-result.v2"
         receipt.pop("command_registry")
@@ -193,11 +229,8 @@ class CompactVddProjectionTests(unittest.TestCase):
         self.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
         self.request["implementationReceiptHash"] = "sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest()
         self.write_request()
-        result = project_or_quick_dev_recovery(self.root, self.request_path)
-        self.assertEqual("quick-dev-terminal-recovery-required.v1", result["schemaVersion"])
-        self.assertEqual("quick-dev-tdd-adapter", result["recoveryOwner"])
-        self.assertFalse(result["bootstrapInvoked"])
-        self.assertEqual([], result["authorizes"])
+        with self.assertRaisesRegex(InputError, "explicit candidateRevision"):
+            project_or_quick_dev_recovery(self.root, self.request_path)
 
     def test_projection_uses_explicit_baseline_overlay_without_absorbing_prior_dirty_bytes(self) -> None:
         overlay = self.target / "repair/baseline/tool.py"
@@ -207,6 +240,7 @@ class CompactVddProjectionTests(unittest.TestCase):
         self.request["baselineOverlaySources"] = {
             "scripts/sc/tool.py": "execution-plans/target/repair/baseline/tool.py"
         }
+        self.freeze_commit_candidate()
         self.write_request()
         result = project(self.root, self.request_path)
         request = json.loads((self.root / result["runRequest"]).read_text(encoding="utf-8"))

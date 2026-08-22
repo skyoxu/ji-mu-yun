@@ -276,6 +276,8 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     root = repository_root.resolve()
     request = _load(request_path)
     _validate_request(request)
+    if not request.get("candidateRevision"):
+        raise InputError("dirty-worktree acceptance requests require an explicit candidateRevision")
     if request.get("candidateRevision"):
         status = (_git(root, "status", "--porcelain") or b"").decode("utf-8")
         lines = [line for line in status.splitlines() if line]
@@ -480,6 +482,9 @@ def project_or_quick_dev_recovery(repository_root: Path, request_path: Path) -> 
     the declared Quick Dev terminal route and retry projection with its successor
     receipt.  It never executes a command and never authorizes a lifecycle state.
     """
+    request = _load(request_path)
+    if not request.get("candidateRevision"):
+        raise InputError("dirty-worktree acceptance requests require an explicit candidateRevision")
     try:
         return project(repository_root, request_path)
     except InputError as exc:

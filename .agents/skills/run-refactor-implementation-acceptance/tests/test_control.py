@@ -13,6 +13,17 @@ sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 
 class ExecutionControlTests(unittest.TestCase):
+    def test_polluted_run_is_rejected_by_inspection(self) -> None:
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            run = execution_control.create_persisted_run(root, "run-polluted-inspect", "sha256:" + "a" * 64, "sha256:" + "b" * 64)
+            (run / "run-polluted.v1.json").write_text(json.dumps({"schemaVersion": "acceptance-run-polluted.v1", "authorizes": []}), encoding="utf-8")
+            with self.assertRaisesRegex(execution_control.ControlError, "polluted"):
+                execution_control.inspect_persisted_run(run, [], "sha256:" + "a" * 64, "sha256:" + "b" * 64)
+
     def test_next_action_uses_declared_topology_then_order_then_command_id(self) -> None:
         import execution_control
 
@@ -250,7 +261,7 @@ class ExecutionControlTests(unittest.TestCase):
             with self.assertRaisesRegex(execution_control.ControlError, "already claimed"):
                 execution_control.claim_persisted_action(run, "scan", "scan-command")
 
-    def test_persisted_resume_releases_claim_and_retries_after_controlled_failure(self) -> None:
+    def test_persisted_resume_marks_run_polluted_after_controlled_failure(self) -> None:
         import tempfile
         import execution_control
 
@@ -263,11 +274,11 @@ class ExecutionControlTests(unittest.TestCase):
             with self.assertRaisesRegex(execution_control.ControlError, "write set violates"):
                 execution_control.resume_persisted_run(root, run, actions, failing, "sha256:" + "a" * 64, "sha256:" + "b" * 64)
             self.assertFalse((run / "action-claims" / "run.json").exists())
-            retried = execution_control.resume_persisted_run(root, run, actions, succeeding, "sha256:" + "a" * 64, "sha256:" + "b" * 64)
-            self.assertEqual("run", retried["actionId"])
-            self.assertEqual({"run"}, execution_control.reconstruct_completed_actions(run))
+            self.assertTrue((run / "run-polluted.v1.json").is_file())
+            with self.assertRaisesRegex(execution_control.ControlError, "polluted"):
+                execution_control.resume_persisted_run(root, run, actions, succeeding, "sha256:" + "a" * 64, "sha256:" + "b" * 64)
             events = [json.loads(line) for line in (run / "acceptance-events.jsonl").read_text(encoding="utf-8").splitlines()]
-            self.assertEqual(["attempt-001", "attempt-001", "attempt-001", "attempt-002", "attempt-002", "attempt-002"], [event["attemptId"] for event in events])
+            self.assertEqual(["attempt-001", "attempt-001", "attempt-001"], [event["attemptId"] for event in events])
 
     def test_plan_owned_legacy_registry_resolves_to_hash_bound_descriptor(self) -> None:
         import execution_control

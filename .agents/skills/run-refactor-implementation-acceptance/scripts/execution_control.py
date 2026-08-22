@@ -487,6 +487,8 @@ def _load_persisted_run(run_dir: Path) -> tuple[dict[str, Any], Path]:
         raise ControlError("persisted run state is unreadable") from exc
     if not isinstance(state, dict) or state.get("schemaVersion") != "acceptance-execution-run.v1" or state.get("authorizes") != []:
         raise ControlError("persisted run state is invalid")
+    if (run_dir / "run-polluted.v1.json").is_file():
+        raise ControlError("persisted run is polluted and requires a clean successor")
     return state, events_path
 
 
@@ -864,8 +866,12 @@ def resume_persisted_run(
             **lifecycle_args,
         )
         event = append_action_event(run_dir, {"actionId": result["actionId"], "status": "completed", "commandId": result["commandId"]})
-    except Exception:
+    except Exception as exc:
         record_lifecycle_event(run_dir, event_type="action-failed", **lifecycle_args)
+        (run_dir / "run-polluted.v1.json").write_text(
+            json.dumps({"schemaVersion": "acceptance-run-polluted.v1", "reason": str(exc), "authorizes": []}, sort_keys=True, indent=2) + "\n",
+            encoding="utf-8", newline="\n",
+        )
         raise
     finally:
         release_persisted_action(claim_path)
