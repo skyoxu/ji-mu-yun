@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-22T07:40:17.982339Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Defines deterministic Python test and terminal validation commands for slices S0 through S3, the acceptance suite, Quick Dev regression, and final terminal validation. All commands run from the repository path without shell execution.",
+      "title": "Command registry"
+    },
+    {
+      "content": "Defines four ordered slices covering receipt identity, deterministic routing, immutable replay with successor recovery, and a one-shot coordinator. Changes are limited to the two named skills and their tests, while Phase, runtime, logs, and knowledge paths are forbidden.",
+      "title": "Implementation contract"
+    },
+    {
+      "content": "Acceptance binds candidate and environment evidence, uses machine-selected deterministic routes without semantic or Bootstrap execution, preserves immutable replay history, and makes the coordinator reentrant with telemetry and a typed semantic handoff boundary.",
+      "title": "Requirements and acceptance"
+    }
+  ],
+  "source_manifest_hash": "sha256:87db64fa8d02f7ca7e4e328b00d2a0ddf963b576048be9ce3cb7d27a5db0b75c",
+  "truncated": false
+}

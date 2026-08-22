@@ -1,0 +1,26 @@
+{
+  "actionReceipts": [
+    {
+      "path": "actions/acceptance-pytest-suite/attempt-001/result.json",
+      "sha256": "sha256:937b0f6ed910fd6d35b84fd29ebf99b7284ec3cabb68a99d590757984f8618fe"
+    }
+  ],
+  "authorizes": [],
+  "candidateCustodyHash": "sha256:237e3ac7f8f1b9778b28b1a1fc140fdbc7316047087f2519ff1e79328389884a",
+  "implementationReceiptBinding": {
+    "path": "terminal-full.coverage-successor.json",
+    "sha256": "sha256:8763ae4dd028ea2d90ebc6666b8e1a4007d0fd9f8d823b8f8fa2c33c2b050039",
+    "terminalCommandId": "terminal-full"
+  },
+  "inputBindings": {
+    "candidateCustodyHash": "sha256:237e3ac7f8f1b9778b28b1a1fc140fdbc7316047087f2519ff1e79328389884a",
+    "contractHash": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+    "knowledgeContextHash": "sha256:d5242486c5d2e4308f6e42e49cc1ea1a208588dcbaa753573381199de8210d82",
+    "runInputHash": "sha256:bdb12a81938450701c6fad347e50f4c2fba17b9fa39271c2d0db59b661440900"
+  },
+  "prerequisiteBundle": null,
+  "route": "deterministic_only",
+  "schemaVersion": "acceptance-deterministic-evaluation.v1",
+  "status": "passed",
+  "terminalResultHash": "sha256:12b434e86622135cd9b0f78827263433e516f81aa7d1059c075406c49e6b2f40"
+}

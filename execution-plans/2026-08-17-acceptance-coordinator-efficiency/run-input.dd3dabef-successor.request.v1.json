@@ -1,0 +1,44 @@
+{
+  "adapter_hash": "sha256:bead4d2ead8afe66f746146d1cdd95c4ea0e5758c155fff87d8449bcbbac7427",
+  "adapter_id": "run-refactor-implementation-acceptance",
+  "adapter_version": "acceptance-coordinator-efficiency.terminal.v1",
+  "affected_consumer_refs": [
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py"
+  ],
+  "allowed_write_roots": [],
+  "baseline_content_manifest_hash": "sha256:32ce5b56de7b7d5948e6beab1b42f840d7ab8666cca7757164df868bfcd39378",
+  "baseline_content_manifest_path": "acceptance-inputs/acceptance-20260822-dd3dabef-successor/baseline-content-manifest.v1.json",
+  "baseline_revision": "84f1a69ee1fd1fd9eba2ef0e3c47c9a8270d1523",
+  "candidate_content_manifest_hash": "sha256:61208730bbcf7fce2a92b1f7f1d49b9c7cebfa272820f948216330ca9b896346",
+  "candidate_content_manifest_path": "acceptance-inputs/acceptance-20260822-dd3dabef-successor/candidate-content-manifest.v1.json",
+  "candidate_mode": "commit",
+  "candidate_revision": "dd3dabef6d6dfb8ecfc39148d70306f47c958673",
+  "change_id": "acceptance-coordinator-efficiency-positive-closure-dd3dabef",
+  "changed_paths": [
+    "execution-plans/2026-08-17-acceptance-coordinator-efficiency/governance/trust-recovery-closure.successor.v2.json",
+    "execution-plans/2026-08-17-acceptance-coordinator-efficiency/terminal-full.coverage-successor.json"
+  ],
+  "code_review_domain": "toolchain",
+  "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+  "code_review_policy_path": "acceptance-inputs/acceptance-20260822/toolchain-code-review.v1.json",
+  "created_utc": "2026-08-22T07:51:29Z",
+  "execution_mode": "evidence_only",
+  "nativeImplementationReceipt": {
+    "path": "terminal-full.coverage-successor.json",
+    "sha256": "sha256:8763ae4dd028ea2d90ebc6666b8e1a4007d0fd9f8d823b8f8fa2c33c2b050039",
+    "terminalCommandId": "terminal-full"
+  },
+  "forbidden_write_roots": [
+    "logs/phase-a-innernet/",
+    "runtime/phase-a/"
+  ],
+  "run_id": "acceptance-dd3dabef-positive-closure",
+  "target": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+  "target_plan_hash": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+  "target_plan_paths": [
+    "implementation-contract.v1.json"
+  ],
+  "validator_hash": "sha256:8e4e975fa0d22363cb7e20ff932b670eff842c5bbf27a1c739730abe97d2b195"
+}

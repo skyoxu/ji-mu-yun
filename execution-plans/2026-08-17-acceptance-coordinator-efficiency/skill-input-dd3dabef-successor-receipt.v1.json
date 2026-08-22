@@ -1,0 +1,126 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "request_binding": {
+    "request": {
+      "source_roles": {
+        "implementation_target": [
+          "execution-plans/2026-08-17-acceptance-coordinator-efficiency/implementation-contract.v1.json"
+        ],
+        "acceptance_requirements": [
+          "execution-plans/2026-08-17-acceptance-coordinator-efficiency/requirements-and-acceptance.md"
+        ]
+      }
+    },
+    "consumer": "run-refactor-implementation-acceptance",
+    "operation": "acceptance",
+    "target": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+    "route_identity": "acceptance.dd3dabef.positive-closure",
+    "source_roles": {
+      "implementation_target": [
+        "execution-plans/2026-08-17-acceptance-coordinator-efficiency/implementation-contract.v1.json"
+      ],
+      "acceptance_requirements": [
+        "execution-plans/2026-08-17-acceptance-coordinator-efficiency/requirements-and-acceptance.md"
+      ]
+    }
+  },
+  "request_hash": "sha256:326dcf22a6cd1cd563de1d7c07e60a966428409e767175a9acfb06327fa2ede2",
+  "target": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+  "route_identity": "acceptance.dd3dabef.positive-closure",
+  "repository_identity": {
+    "head": "dd3dabef6d6dfb8ecfc39148d70306f47c958673",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_selection_hash": "sha256:ed07fc8d2b611a35030a39daaa693a1828fd66d9e15ca2b17d46a5912dfe6338",
+    "selected_source_content_root": "sha256:a8a58db97c5dc0efabed2bd74d7d201f5c4a18d1c362300543af1c5b8bdd6402"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-22T07:40:18.044929Z",
+  "contract_hash": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0",
+  "source_manifest": {
+    "path": "si-dd3/source-manifest.v1.json",
+    "sha256": "sha256:87db64fa8d02f7ca7e4e328b00d2a0ddf963b576048be9ce3cb7d27a5db0b75c"
+  },
+  "child_request": {
+    "path": "skill-input-dd3-request-v3.v1.json",
+    "sha256": "sha256:54aef1189be507966589d3a9fa46a4a459b537a8faf4124709faf76d73552dfc"
+  },
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/command-registry.v1.json",
+      "required": false,
+      "sha256_before": "sha256:2590533d10ab70a922d596e8080e385781bf602c6221d8d5cfdf75c21945de47",
+      "sha256_after": "sha256:2590533d10ab70a922d596e8080e385781bf602c6221d8d5cfdf75c21945de47",
+      "size_bytes": 2897,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:2a08ba2d882d9ba3644ccc566a47f6235b8eaee73172c8d4a742670930a7c9c8",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/implementation-contract.v1.json",
+      "required": true,
+      "sha256_before": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+      "sha256_after": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+      "size_bytes": 7232,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:9f92731af5496e3333d2cf27a6e03e16cad833a5b4df2bcbf395fa47e7783f90",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/requirements-and-acceptance.md",
+      "required": true,
+      "sha256_before": "sha256:7c02a8aff6028ec233091480d07d071f5392e0cbfbc7f287d23f7682ea497128",
+      "sha256_after": "sha256:7c02a8aff6028ec233091480d07d071f5392e0cbfbc7f287d23f7682ea497128",
+      "size_bytes": 2661,
+      "line_count": 60,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:7c02a8aff6028ec233091480d07d071f5392e0cbfbc7f287d23f7682ea497128",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 60
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "semantic-dd3-v3/semantic-decision.v1.json",
+    "sha256": "sha256:001a3c2cdaca3c536958c0ec04b5ed1ffa61b8b335be5529e31168fbc2b038cd"
+  },
+  "context_artifact": {
+    "path": "semantic-dd3-v3/skill-input-context.v1.json",
+    "sha256": "sha256:a734d13cd468f549299fec5038e80f133e400c8875d66ebc589417d759aa20e0"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:19cc22e2ff3dd70d1e90829c171b030f101154d3529eaca4c1241aa55cf34792"
+}

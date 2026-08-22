@@ -1,0 +1,9 @@
+[
+  {
+    "actionId": "acceptance-pytest-suite",
+    "dependsOn": [],
+    "order": 1,
+    "commandId": "acceptance-pytest-suite",
+    "activation": true
+  }
+]

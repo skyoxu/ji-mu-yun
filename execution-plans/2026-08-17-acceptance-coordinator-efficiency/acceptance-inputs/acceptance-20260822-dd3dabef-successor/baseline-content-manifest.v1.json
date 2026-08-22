@@ -1,0 +1,16 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "modified path baseline closure",
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/governance/trust-recovery-closure.successor.v2.json",
+      "roles": [
+        "evidence"
+      ],
+      "sha256": "sha256:2de5bebc5d14b0b71f566987ff44a2142f582616d515737209a2451798c162d0"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

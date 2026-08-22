@@ -1,0 +1,10 @@
+{
+  "source_roles": {
+    "implementation_target": [
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/implementation-contract.v1.json"
+    ],
+    "acceptance_requirements": [
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/requirements-and-acceptance.md"
+    ]
+  }
+}

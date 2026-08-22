@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "candidateHash": "sha256:f6fe02ff961f8c91c88d0ac49d6420ba1e72d55addb430b0841111ee181b413c",
+  "candidatePath": "finalization/acceptance-result-candidate.v1.json",
+  "final": {
+    "acceptanceMode": "unattended",
+    "authorizes": [
+      "acceptance-passed"
+    ],
+    "identityHash": "sha256:c46add94424c02de782f2fe39fbdcc163204d1739aa39c012f8b73fa293267ce",
+    "lifecycleTransition": "acceptance-passed",
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-passed.v1",
+    "triggerIds": []
+  },
+  "impactProjectionHash": "sha256:9fddefd227b94dd3a45e5bd8a40565b6e614f65c309605b0e6bb709bc6e8e57c",
+  "schemaVersion": "acceptance-result-final.v1"
+}
