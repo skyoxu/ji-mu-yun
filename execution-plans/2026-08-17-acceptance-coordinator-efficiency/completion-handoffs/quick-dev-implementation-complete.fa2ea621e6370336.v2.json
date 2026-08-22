@@ -1,0 +1,41 @@
+{
+  "authorizes": [
+    "acceptance-handoff"
+  ],
+  "candidate_custody": {
+    "candidate_revision": "c6085656487bf023da469bb79c0fd7e67e97d23c",
+    "mode": "commit"
+  },
+  "candidate_source_manifest": {
+    "candidate_source_root": "sha256:870eccecfb30a57f4e92edd2dbd53130b1f6c166aebc35b217a36ae3ca8e7868",
+    "path": "completion-handoffs/candidate-source-manifest.fa2ea621e6370336.v1.json",
+    "sha256": "sha256:8f1396404fa38907918430f2254c1969a5f540ac37e27ae962d29c84d6f0a374"
+  },
+  "command_registry": {
+    "path": "command-registry.v1.json",
+    "sha256": "sha256:2590533d10ab70a922d596e8080e385781bf602c6221d8d5cfdf75c21945de47"
+  },
+  "implementation_contract": {
+    "path": "implementation-contract.v1.json",
+    "sha256": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b"
+  },
+  "plan_id": "acceptance-coordinator-efficiency",
+  "predicate": "implementation-complete",
+  "schema_version": "quick-dev-implementation-complete.v2",
+  "status": "pass",
+  "terminal_result": {
+    "command_id": "terminal-full",
+    "path": "terminal-results/terminal-full.c6085656.json",
+    "sha256": "sha256:9955bbf9cda692cbf850765a97fc621d650462b203ed7eab20dd96c7408b812b"
+  },
+  "terminal_runner": {
+    "path": "tools/terminal_full.py",
+    "sha256": "sha256:b1e0abdc49873b76c35d21c3f391e9d6d18793f79575b8a9725b1f7e14c223a4"
+  },
+  "validated_command_ids": [
+    "unittest:.agents/skills/quick-dev-tdd-adapter/tools/tests:test_candidate_identity.py",
+    "unittest:.agents/skills/quick-dev-tdd-adapter/tools/tests:test_plan_directory_loop.py",
+    "unittest:.agents/skills/quick-dev-tdd-adapter/tools/tests:test_adapter.py",
+    "pytest:.agents/skills/run-refactor-implementation-acceptance/tests"
+  ]
+}
