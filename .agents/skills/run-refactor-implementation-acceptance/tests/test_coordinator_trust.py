@@ -63,6 +63,13 @@ def test_coordinator_rejects_caller_control_fields_before_consumption(tmp_path: 
 def test_coordinator_derives_route_only_from_persisted_action_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     module = _load()
     request_path, _request_value = _request(tmp_path)
+    target = tmp_path / "execution-plans" / "fixture-plan"
+    target.mkdir(parents=True)
+    (target / "action-dag.v1.json").write_text(json.dumps({"actions": [{
+        "actionId": "one", "dependsOn": [], "order": 1, "commandId": "one", "activation": True,
+    }]}), encoding="utf-8")
+    (target / "command-registry.v1.json").write_text(json.dumps({"schema_version": "ria.command-registry.v1", "commands": []}), encoding="utf-8")
+    monkeypatch.setattr(module, "REPOSITORY_ROOT", tmp_path)
     prepared = {"schemaVersion": "acceptance-run-input.v1", "input": {"target": "execution-plans/fixture-plan"}, "inputHash": "sha256:" + "a" * 64, "candidateCustody": {}, "knowledgeContext": {"sha256": "sha256:" + "b" * 64}}
     monkeypatch.setattr(module, "_load_current_coordinator_inputs", lambda *_args: {
         "prepared": prepared,

@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import sys
+import time
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -1118,7 +1119,7 @@ def _load_current_coordinator_inputs(request_path: Path, request: object) -> dic
 
 
 def run_coordinator(request_path: str, output_path: str) -> dict:
-    """Derive a route from a persisted Acceptance run, never caller assertions."""
+    """Execute or resume the target-owned action DAG and project its route."""
     source = Path(request_path).resolve()
     request = _read_json(str(source))
     if isinstance(request, dict) and set(request) == _LEGACY_COORDINATOR_FIELDS:
@@ -1135,15 +1136,69 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
         raise InputError("coordinator prepared run input binding is invalid")
     contract_hash = canonical_hash({"preparedRunInput": loaded["prepared_ref"], "skillInputContract": loaded["contract_ref"]})
     entry = start_or_resume_target_run(REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash)
-    inspection = inspect_persisted_run((REPOSITORY_ROOT / entry["runDirectory"]).resolve(), run_input.get("actions", []), run_input_hash, contract_hash, knowledge_hash)
-    state = inspection.get("state")
-    if state == "complete":
-        route, status = "deterministic_only", "completed"
-    elif state in {"waiting", "ready", "blocked"}:
-        route, status = "waiting_for_persisted_action", "waiting"
+    target_root = (REPOSITORY_ROOT / loaded["target_plan"]).resolve()
+    action_path = target_root / "action-dag.v1.json"
+    registry_path = target_root / "command-registry.v1.json"
+    actions = run_input.get("actions")
+    if not isinstance(actions, list) or not actions:
+        if not action_path.is_file():
+            raise InputError("coordinator action DAG is unavailable")
+        action_doc = _read_json(str(action_path))
+        actions = action_doc.get("actions") if isinstance(action_doc, dict) else action_doc
+    if not isinstance(actions, list) or not actions:
+        raise InputError("coordinator action DAG is invalid")
+    if not registry_path.is_file():
+        raise InputError("coordinator command registry is unavailable")
+    command_registry = _read_json(str(registry_path))
+    run_dir = (REPOSITORY_ROOT / entry["runDirectory"]).resolve()
+    started = time.monotonic()
+    initial = inspect_persisted_run(run_dir, actions, run_input_hash, contract_hash, knowledge_hash)
+    replayed = not bool(initial.get("readyActionIds")) and initial.get("nextAction") is None
+    executed = 0
+    inspection = initial
+    while inspection.get("nextAction") is not None:
+        resume_persisted_run(
+            REPOSITORY_ROOT, run_dir, actions, command_registry,
+            run_input_hash, contract_hash, knowledge_hash,
+        )
+        executed += 1
+        inspection = inspect_persisted_run(run_dir, actions, run_input_hash, contract_hash, knowledge_hash)
+    if inspection.get("actionStates") and all(state in {"completed", "not-applicable"} for state in inspection["actionStates"].values()):
+        finalization = None
+        if run_input.get("execution_mode", "evidence_only") == "evidence_only":
+            try:
+                finalization = finalize_deterministic_run(
+                    REPOSITORY_ROOT, run_dir, run_dir / "prepare-run.v1.json", actions, command_registry,
+                )
+            except (InputError, ControlError, FileNotFoundError):
+                finalization = {"status": "not-ready", "authorizes": []}
+        route, status = "deterministic_only", "completed" if finalization and finalization.get("status") == "acceptance-passed" else "waiting"
     else:
+        finalization = None
+        route, status = "waiting_for_persisted_action", "waiting"
+    semantic = bool(run_input.get("semantic_review_required", False))
+    typed_handoff = None
+    if semantic:
         route, status = "semantic_review_required", "semantic_handoff_required"
-    result = {"schemaVersion": "acceptance-coordinator-result.v3", "runId": entry["runId"], "runDirectory": entry["runDirectory"], "runInputHash": run_input_hash, "requestAuthority": "none", "route": route, "status": status, "persistedActionState": inspection, "bootstrapInvoked": False, "authorizes": []}
+        typed_handoff = {
+            "schemaVersion": "acceptance-semantic-handoff.v2",
+            "runId": entry["runId"],
+            "runInputHash": run_input_hash,
+            "reason": "semantic-review-required",
+            "authorizes": [],
+        }
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    result = {
+        "schemaVersion": "acceptance-coordinator-result.v3", "runId": entry["runId"],
+        "runDirectory": entry["runDirectory"], "runInputHash": run_input_hash,
+        "requestAuthority": "none", "route": route, "status": status,
+        "persistedActionState": inspection, "actionDag": {"actions": actions},
+        "actionDagHash": canonical_hash({"actions": actions}), "executedActionCount": executed,
+        "finalization": finalization, "typedHandoff": typed_handoff,
+        "bootstrapInvoked": False,
+        "telemetry": {"elapsedMs": elapsed_ms, "waitMs": 0, "interventionCount": 0, "executedActionCount": executed, "replayed": replayed},
+        "authorizes": [],
+    }
     output = Path(output_path)
     if output.exists():
         existing = _read_json(str(output))

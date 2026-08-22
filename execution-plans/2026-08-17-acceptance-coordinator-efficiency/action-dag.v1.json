@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "acceptance-coordinator-action-dag.v1",
+  "actions": [
+    {
+      "actionId": "acceptance-pytest-suite",
+      "dependsOn": [],
+      "order": 1,
+      "commandId": "acceptance-pytest-suite",
+      "activation": true
+    }
+  ],
+  "authorizes": []
+}
