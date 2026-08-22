@@ -25,7 +25,7 @@
     ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py"
   ],
   "targetPlanPaths": ["command-registry.v1.json", "implementation-contract.v1.json"],
-  "knowledgeContextPath": "knowledge-context.refactor-acceptance.successor.v3.json",
+  "knowledgeContextPath": "knowledge-context.refactor-acceptance.know74-successor.v4.json",
   "codeReviewDomain": "toolchain",
   "codeReviewPolicyPath": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-inputs/acceptance-20260822/toolchain-code-review.v1.json",
   "implementationReceiptPath": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/completion-handoffs/quick-dev-implementation-complete.fa2ea621e6370336.v2.json",
