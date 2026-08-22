@@ -563,6 +563,33 @@ flowchart TD
 
 Architecture 应借鉴但不复制 Rakazo/OpenHands/Dify/E2B 的适用模式：API/Worker 分离、durable job/event、runtime/sandbox provider、portable checkpoint、租约和隔离边界。Codex/Pi 是可替换 runtime；Phase 的账户、项目、Run、Workspace 和恢复合同才是产品权威。
 
+### 11.1 参考项目能力采纳矩阵
+
+本矩阵只解释现有 `PIWR-*` 的设计来源和采用边界，不新增需求、功能模块或外部依赖。`采用` 表示本轮必须通过现有需求和验收体现；`仅预留` 表示当前合同不得阻断未来演进，但本轮不实现；`不纳入` 表示下游 BMAD 不得把该能力提升为当前范围。
+
+| 参考来源 | 可借鉴的优点 | 本需求处置 | 现有需求绑定 | 本轮边界 |
+| --- | --- | --- | --- | --- |
+| Rakazo | API 与 Worker 职责分离，长操作使用 durable Job/Event | `采用` | `PIWR-015`, `PIWR-018`, `PIWR-025`, `PIWR-033`, `PIWR-040` | 只要求身份、Runner、Snapshot/Restore 的职责与持久状态分离；不要求本轮拆成独立部署服务 |
+| Rakazo | Runtime/Sandbox provider 边界与 portable Workspace checkpoint | `采用` | `PIWR-021`-`PIWR-032`, `PIWR-039`, `PIWR-040` | 只实现本地 storage backend 和当前 Runner；不接入 Rakazo/Pi runtime，也不建立通用插件市场 |
+| Rakazo | 数据库 lease/fencing 防止旧 Worker 发布结果 | `仅预留` | `PIWR-018`, `PIWR-038` | 当前保持单节点/单项目重型写入；只要求合同可升级，不实现分布式 lease service |
+| OpenHands | Agent Runtime 与 Workspace 分离，持久文件不依赖单次 Agent 会话 | `采用为边界原则` | `PIWR-015`-`PIWR-020`, `PIWR-029` | 用于确定 Runner 隔离和恢复权威；不实现 OpenHands Agent Server 或其运行时 |
+| OpenHands | 多 server session、事件流、resume/fork/cancel | `不纳入` | 由 `PIWR-029` 明确排除其作为恢复权威 | 属于后续 Agent Runtime/长会话需求，不得进入本轮 PRD、Spec 或 Architecture 交付 |
+| Dify | SaaS 账户作用域、资源归属、凭据和可观测审计 | `采用` | `PIWR-001`-`PIWR-014`, `PIWR-035` | 只覆盖身份、账户/项目隔离和安全审计，并复用当前 Phase B 的 LLM binding/usage 基线 |
+| Dify | 模型供应商治理、配额/计费、Prompt 应用编排和运营 Dashboard | `不纳入` | 无新增绑定 | 属于 Phase 服务能力增强，不得借本需求扩展 |
+| E2B | 低权限、短生命周期 Sandbox 的隔离、销毁和恢复边界 | `采用为边界原则` | `PIWR-015`-`PIWR-020`, `PIWR-027` | 用于约束 OS 身份、ACL、清理和环境状态重建；当前仍使用本仓库 Windows Runner |
+| E2B | Sandbox fleet、模板镜像、warm pool、网络策略和多节点 placement | `不纳入` | `PIWR-037`-`PIWR-039` 仅保留兼容字段 | 属于未来多服务器/强沙箱阶段，不实现 fleet 或 E2B 集成 |
+| Pi / Codex | Agent Runtime 可替换，业务权威保持在 Phase、Workspace、Run 和持久文件 | `采用为边界原则` | `PIWR-029`, `PIWR-040` | 当前 bounded 工作可继续使用 Codex `exec`；不在此处决定 Pi、SDK 或 App Server 集成 |
+| Pi / Codex App Server | 长会话 registry、thread resume、持续事件和 GDD/模块会话 | `不纳入` | 无新增绑定 | 另立 Agent Runtime Session 需求；Workspace Restore 不能以其为必要条件 |
+| Daytona | 运行环境抽象和开发 Workspace 产品经验 | `不作为本轮基准` | 无新增绑定 | 不引入 Daytona 集成或专属合同；本需求只遵循仓库自身 ADR、Runner 和 Workspace 权威 |
+
+### 11.2 参考项目范围护栏
+
+- 上述项目只是设计参照，不是 runtime dependency、规范权威或版本选择依据；仓库 Accepted ADR、适用 `AGENTS.md` 和当前实现兼容性继续优先。
+- 下游 `bmad-prd`、`bmad-spec` 和 `bmad-architecture` 只能展开标记为 `采用` 或 `采用为边界原则` 且已绑定 `PIWR-*` 的内容。
+- 标记为 `仅预留` 的项目只能形成 nullable seed、接口演进约束或 Deferred 条目，不能转化为本轮分布式组件。
+- 标记为 `不纳入` 或 `不作为本轮基准` 的能力必须继续留在 Non-goals/Deferred；若未来需要，应创建独立需求输入，而不是修改本需求的 Phase B/C 边界。
+- 任何由参考项目引出的新增能力，如果不能映射到现有 `PIWR-001` 至 `PIWR-040`，应被判定为范围扩展并停止纳入。
+- 本矩阵不改变既有决定：不迁移旧前端、不以重构 `Program.cs` 为前置、不新增 Tasks/`prepare-task`、不实现多节点、对象存储、App Server 或 Agent Asset 治理。
 ## 12. BMAD 产物要求
 
 ### 12.1 `bmad-prd`
