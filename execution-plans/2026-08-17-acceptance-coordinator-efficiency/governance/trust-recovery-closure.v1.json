@@ -1,0 +1,53 @@
+{
+  "schema_version": "acceptance-coordinator-efficiency.trust-recovery-closure.v1",
+  "plan_directory": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+  "status": "closed-by-validated-by",
+  "authorizes": [],
+  "coverage": [
+    {
+      "slice_id": "S0",
+      "requirements": ["ACE-S0"],
+      "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s0.py"],
+      "validated_by": "2026-08-18-acceptance-coordinator-trust-recovery:R4"
+    },
+    {
+      "slice_id": "S1",
+      "requirements": ["ACE-S1"],
+      "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s1.py"],
+      "validated_by": "2026-08-18-acceptance-coordinator-trust-recovery:R4"
+    },
+    {
+      "slice_id": "S2",
+      "requirements": ["ACE-S2"],
+      "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s2.py"],
+      "validated_by": "2026-08-18-acceptance-coordinator-trust-recovery:R4"
+    },
+    {
+      "slice_id": "S3",
+      "requirements": ["ACE-S3"],
+      "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py"],
+      "validated_by": "2026-08-18-acceptance-coordinator-trust-recovery:R4"
+    }
+  ],
+  "validated_by": {
+    "plan_directory": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery",
+    "slice_id": "R4",
+    "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/R4.json",
+    "sha256": "sha256:71695252fffd01576041661b2a1138d8d2d9521e8cd562902d6bc4ac1eaf747e",
+    "mode": "read-only-dogfood-replay"
+  },
+  "successor_terminal": {
+    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/terminal-result.successor.v1.json",
+    "sha256": "sha256:8763ae4dd028ea2d90ebc6666b8e1a4007d0fd9f8d823b8f8fa2c33c2b050039",
+    "status": "pass",
+    "predicate": "implementation-complete",
+    "authorizes": ["implementation-complete"]
+  },
+  "superseded_evidence": [
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/terminal-result.v1.json",
+      "reason": "Historical terminal evidence is bound to the predecessor implementation contract and is not current candidate evidence."
+    }
+  ],
+  "notes": "Governance closure only. It does not publish acceptance-passed, alter lifecycle ownership, or rewrite historical evidence."
+}

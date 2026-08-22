@@ -49,6 +49,21 @@
         }
       },
       "notes": "The authoritative successor acceptance-passed receipt remains final. This governance annotation does not reopen Acceptance or change lifecycle state."
+    },
+    {
+      "plan_directory": "2026-08-17-acceptance-coordinator-efficiency",
+      "validated_by": {
+        "plan_directory": "2026-08-18-acceptance-coordinator-trust-recovery",
+        "slice_id": "R4",
+        "path": "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/terminal-results/R4.json",
+        "identity_hash": "sha256:71695252fffd01576041661b2a1138d8d2d9521e8cd562902d6bc4ac1eaf747e"
+      },
+      "successor_evidence": {
+        "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/terminal-result.successor.v1.json",
+        "sha256": "sha256:8763ae4dd028ea2d90ebc6666b8e1a4007d0fd9f8d823b8f8fa2c33c2b050039"
+      },
+      "baseline_status": "trusted-governance-closure",
+      "notes": "S0-S3 are covered by the current successor terminal and Trust Recovery R4 read-only dogfood. This entry does not publish acceptance-passed or reopen the plan."
     }
   ]
 }
