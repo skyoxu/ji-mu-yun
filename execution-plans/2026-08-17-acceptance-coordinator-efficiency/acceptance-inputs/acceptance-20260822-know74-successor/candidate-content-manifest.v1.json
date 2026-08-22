@@ -1,0 +1,140 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "baseline_sha256": "sha256:07854d98701ba90d2fa468987545cb8764182466dfb3e07f04e47f6c638c137e",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "candidate_sha256": "sha256:65dea5af9ca3406a6aefdcd3e131b7c56b71cd97973de8b8c9696b9356aac18f",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "baseline_sha256": "sha256:8901db6164c4527c98bf789850d2533dbedf8c1af392b30d2630f6a1b60bde43",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "candidate_sha256": "sha256:10cf0315b2d33a1f159a48d501e73a5a67a5a22e1a12346f66f23f15f8fc45de",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "baseline_sha256": "sha256:5b79d18090932561b64bec1ab7a1bdf8886a67f3ac702b91c8ecdedfd3285cc7",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "candidate_sha256": "sha256:90e5b2dfe2b42030ee69e1ae9a81ee27d46e2c5db9db51abea5dc99dbf102f82",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "baseline_sha256": "sha256:46fa580206c2b41cda0e98d503084a28e7a743dfb71ac88f09bf41ac7dcc7489",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "candidate_sha256": "sha256:408a7f2b058109ae6af2dbc4135cfde8fb4668e65e9e79d85ed3e3cf9fd47365",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "baseline_sha256": "sha256:b295ed0b49db52afb1161ec54d0d86a287e8f8eeff972c81c18ae6d4f4806e93",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "candidate_sha256": "sha256:98f3d6c9b663441eceb0ed75c6728dee9f935199a7ff200791e7f5ea644b1b27",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+      "baseline_sha256": "sha256:2d625cf445542e1b3911882cad44de309abccd32d5019856d84f6501524776cf",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+      "candidate_sha256": "sha256:3c07fae4abe37f22203c9e7b93613a5a4351e3fa5efe5f6fe7ba3955c7faaaf0",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      "baseline_sha256": "sha256:9a26ccebbad8ae3691b806e0e2848d058953f5fabc2df6db8726a26e1dd73f60",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      "candidate_sha256": "sha256:978bb4282cb2db7f75a31bce481ada63d8707f3a1eb394db584c39f61accea06",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/compact-vdd-know74-successor.request.v1.json",
+      "candidate_sha256": "sha256:b3fb73297b2ed5133f8e05de313dea2fabbce938d056446bbf4da15699bdf82b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/completion-handoffs/candidate-source-manifest.bffeb6f1be3dcf6c.v1.json",
+      "candidate_sha256": "sha256:0a1aa4eeca8837fd312d7806f5af30ecf15ad0a47126722e811a90312d523471",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/completion-handoffs/quick-dev-implementation-complete.bffeb6f1be3dcf6c.v2.json",
+      "candidate_sha256": "sha256:dceefd7974c923fde06b4351b232acb3817264f5a3d2ee69fc96476eb18e0a8b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/terminal-results/terminal-full.json",
+      "candidate_sha256": "sha256:54f2c4fbc1e2a91bb92ec9ad008b011ccc059bde3b7c8020ea7f827bf4c6bc76",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py",
+      "baseline_sha256": "sha256:bfb0f2874c640f504b3c9405c3826b15d74ce981d21cb008e027e6ea03f33754",
+      "candidate_path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py",
+      "candidate_sha256": "sha256:b1e0abdc49873b76c35d21c3f391e9d6d18793f79575b8a9725b1f7e14c223a4",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete"
+}

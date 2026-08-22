@@ -1,0 +1,20 @@
+{
+  "actionId": "acceptance-pytest-suite",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "acceptance-pytest-suite",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+    "knowledgeContextHash": "sha256:04313ce41bdd25a9bac84576dbfe4b56611f92cf36e3676a74d689bc4c014ef1",
+    "runInputHash": "sha256:b8f433a6300c77556fc9d3473d310555eadf39bcd34be336c2bf476c2d8e2ff0"
+  },
+  "ownerToken": "owner-acceptance-20260822-know74-successor",
+  "processId": 4512,
+  "recordedUtc": "2026-08-22T14:45:06.279531Z",
+  "runId": "acceptance-20260822-know74-successor",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 1
+}

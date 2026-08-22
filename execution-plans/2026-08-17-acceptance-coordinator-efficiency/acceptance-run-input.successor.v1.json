@@ -1,0 +1,229 @@
+{
+  "authorizes": [],
+  "candidateCustody": {
+    "authorizes": [],
+    "baselineResolvedCommit": "79f49551087a35be0632b320d222e8f8b0db1f5f",
+    "candidateMode": "commit",
+    "candidateResolvedCommit": "c6085656487bf023da469bb79c0fd7e67e97d23c",
+    "schemaVersion": "acceptance-candidate-custody.v1",
+    "snapshotManifestHash": "",
+    "snapshotPath": ""
+  },
+  "input": {
+    "adapter_hash": "sha256:10cf0315b2d33a1f159a48d501e73a5a67a5a22e1a12346f66f23f15f8fc45de",
+    "adapter_id": "run-refactor-implementation-acceptance",
+    "adapter_version": "compact-vdd-projection.v1",
+    "affected_consumer_refs": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py"
+    ],
+    "allowed_write_roots": [],
+    "baseline_content_manifest_hash": "sha256:4935423117d353c1048db50771179af8cdf7b20782c11e7a99197bfdd8a65f7b",
+    "baseline_content_manifest_path": "acceptance-inputs/acceptance-20260822-know74-successor/baseline-content-manifest.v1.json",
+    "baseline_revision": "79f49551087a35be0632b320d222e8f8b0db1f5f",
+    "candidate_content_manifest_hash": "sha256:c463add5af508104e33a8380388a6d20e6529648ef733f91fba3dad9d03439ac",
+    "candidate_content_manifest_path": "acceptance-inputs/acceptance-20260822-know74-successor/candidate-content-manifest.v1.json",
+    "candidate_mode": "commit",
+    "candidate_revision": "c6085656487bf023da469bb79c0fd7e67e97d23c",
+    "change_id": "acceptance-coordinator-efficiency-know74-successor",
+    "changed_paths": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/compact-vdd-know74-successor.request.v1.json",
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/completion-handoffs/candidate-source-manifest.bffeb6f1be3dcf6c.v1.json",
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/completion-handoffs/quick-dev-implementation-complete.bffeb6f1be3dcf6c.v2.json",
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/terminal-results/terminal-full.json",
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py"
+    ],
+    "code_review_domain": "toolchain",
+    "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+    "code_review_policy_path": "acceptance-inputs/acceptance-20260822-know74-successor/toolchain-code-review.v1.json",
+    "created_utc": "2026-08-01T00:00:00Z",
+    "execution_mode": "evidence_only",
+    "forbidden_write_roots": [
+      "logs/phase-a-innernet/",
+      "runtime/phase-a/"
+    ],
+    "run_id": "acceptance-20260822-know74-successor",
+    "target": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+    "target_plan_hash": "sha256:2590533d10ab70a922d596e8080e385781bf602c6221d8d5cfdf75c21945de47",
+    "target_plan_paths": [
+      "command-registry.v1.json",
+      "implementation-contract.v1.json"
+    ],
+    "validator_hash": "sha256:b1e0abdc49873b76c35d21c3f391e9d6d18793f79575b8a9725b1f7e14c223a4"
+  },
+  "inputHash": "sha256:b8f433a6300c77556fc9d3473d310555eadf39bcd34be336c2bf476c2d8e2ff0",
+  "knowledgeContext": {
+    "acceptedDecisions": [
+      {
+        "candidate": {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          "source_sha256": "87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/00-index.md",
+          "source_sha256": "80caf7f36f247b268cdb284f7a82139e5154dcb041f53605c139f612991d2749"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/00-index.md",
+          "source_sha256": "ccd50c498ff160c29372c476ae2bcc632f3df04e6522391cc5d227b5b720eb51"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md",
+          "source_sha256": "25d18279176a6a43a7c8b66ca14f516876ae4a15fba20b36f77c022f53d702fe"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+          "source_sha256": "5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/architecture/ADR_INDEX_PHASE.md",
+          "source_sha256": "6251a73901bc95a55642d78c8df2426b61ecae7b801d0d2f8c6bee9d83d1e567"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-inputs/skill-input-repair-20260820/execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+          "source_sha256": "ad82fd74c4520084454d9a8f0f2172512f7fd91630b7199ac94d08873f2bd58d"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+          "source_sha256": "3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+          "source_sha256": "e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+          "source_sha256": "fd45958417226ba0041b2bcbe7e3d997e6d30cb91632e43eada91df80f2b8186"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/adr/ADR-0055-focused-repair-verification-and-lightweight-closure.md",
+          "source_sha256": "4b0c0eb1c24b45e445d672757631acc8f57f0dd8034e234d9608bf7fafea6476"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      }
+    ],
+    "authorizes": [],
+    "contextHash": "sha256:1095d961eeac4c6b1d2e841f7cb85be85ab106eb2864ef6a18a23509945414a9",
+    "path": "knowledge-context.refactor-acceptance.know74-successor.v4.json",
+    "requestHash": "sha256:4e8a265fcb6c4ca0467b5a42d66620fc16ac5eb7877055ee7645236035b0e94d",
+    "resultHash": "sha256:454ab23ec89835410c406f053ac93681ce05652ce2a86680447807d4c2e41350",
+    "sha256": "sha256:04313ce41bdd25a9bac84576dbfe4b56611f92cf36e3676a74d689bc4c014ef1",
+    "sourceSnapshotId": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4"
+  },
+  "prerequisiteBundle": {
+    "bundleHash": "sha256:78511ee0b6463b6cb0d9452581bb1a941f243d4e2cac34c85c14a6558324e8fd",
+    "implementationReceipt": {
+      "path": "completion-handoffs/quick-dev-implementation-complete.fa2ea621e6370336.v2.json",
+      "sha256": "sha256:289c5b372b0126b0f0d160a0ebee59a65dab009cf50b353115a022b4a74bce4e",
+      "terminalCommandId": "terminal-full"
+    },
+    "path": "acceptance-inputs/acceptance-20260822-know74-successor/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+    "sha256": "sha256:4cc57e012d5cd6efa8008436e7f3b492b7a4c2859a62cd189cc66c440bec63fc"
+  },
+  "schemaVersion": "acceptance-run-input.v1"
+}

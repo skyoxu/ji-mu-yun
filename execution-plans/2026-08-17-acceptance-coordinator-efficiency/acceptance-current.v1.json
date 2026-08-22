@@ -1,13 +1,13 @@
 {
   "authorizes": [],
-  "currentRun": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-runs/acceptance-20260822-s3-successor-terminal4",
+  "currentRun": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-runs/acceptance-20260822-know74-successor",
   "finalResult": {
-    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-runs/acceptance-20260822-s3-successor-terminal4/finalization/acceptance-passed.v1.json",
-    "sha256": "sha256:ebbef9d5d6648ec750c13ea3e8d781205561ba8d4dcbc96af9ba0bae97fc100c"
+    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-runs/acceptance-20260822-know74-successor/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:7edd25a0b1331c1a685bb7f8e36a630bc21d9b93f7dfb3fc2315d4beab286d73"
   },
   "finalWrapper": {
-    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-runs/acceptance-20260822-s3-successor-terminal4/finalization/acceptance-result-final.v1.json",
-    "sha256": "sha256:f321dd6884b96232463ba4212abb60f238f14c97f6a321d00b242410dfb2ceb4"
+    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-runs/acceptance-20260822-know74-successor/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:fffcd4dc07b758c5f2dbda92c89385bcdb64af15a3ef9e2366c44fc7ca74f3ab"
   },
   "schemaVersion": "acceptance-current.v1"
 }

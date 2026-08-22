@@ -1,0 +1,18 @@
+[
+  {
+    "actionId": "acceptance-pytest-suite",
+    "activation": true,
+    "commandId": "acceptance-pytest-suite",
+    "dependsOn": [],
+    "order": 1
+  },
+  {
+    "actionId": "terminal-full",
+    "activation": true,
+    "commandId": "terminal-full",
+    "dependsOn": [
+      "acceptance-pytest-suite"
+    ],
+    "order": 2
+  }
+]
