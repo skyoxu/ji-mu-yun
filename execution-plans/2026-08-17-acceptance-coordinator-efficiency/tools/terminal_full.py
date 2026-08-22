@@ -57,11 +57,12 @@ def publish_completion_handoff(root: Path, plan: Path, terminal_path: Path):
     if terminal.get("schema_version") != "acceptance-coordinator-efficiency.terminal-result.v2" or terminal.get("status") != "pass" or terminal.get("predicate") != "implementation-complete" or terminal.get("terminal_command_id") != "terminal-full" or terminal.get("authorizes") != []:
         raise RuntimeError("terminal result does not prove implementation-complete")
     manifest = build_candidate_source_manifest(root)
-    binding = manifest["candidate_source_root"].split(":", 1)[1][:16]
+    candidate_revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+    binding = hashlib.sha256((manifest["candidate_source_root"] + ":" + candidate_revision).encode("ascii")).hexdigest()[:16]
     out = plan / "completion-handoffs"; out.mkdir(parents=True, exist_ok=True)
     manifest_path = out / f"candidate-source-manifest.{binding}.v1.json"
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
-    head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+    head = candidate_revision
     receipt = {"schema_version": "quick-dev-implementation-complete.v2", "plan_id": "acceptance-coordinator-efficiency", "predicate": "implementation-complete", "status": "pass", "implementation_contract": {"path": "implementation-contract.v1.json", "sha256": _fh(plan / "implementation-contract.v1.json")}, "command_registry": {"path": "command-registry.v1.json", "sha256": _fh(plan / "command-registry.v1.json")}, "terminal_runner": {"path": "tools/terminal_full.py", "sha256": _fh(plan / "tools/terminal_full.py")}, "candidate_custody": {"mode": "commit", "candidate_revision": head}, "candidate_source_manifest": {"path": manifest_path.relative_to(plan).as_posix(), "sha256": _fh(manifest_path), "candidate_source_root": manifest["candidate_source_root"]}, "terminal_result": {"path": terminal_path.relative_to(plan).as_posix(), "sha256": _fh(terminal_path), "command_id": "terminal-full"}, "validated_command_ids": terminal["validated_command_ids"], "authorizes": ["acceptance-handoff"]}
     receipt_path = out / f"quick-dev-implementation-complete.{binding}.v2.json"
     receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
