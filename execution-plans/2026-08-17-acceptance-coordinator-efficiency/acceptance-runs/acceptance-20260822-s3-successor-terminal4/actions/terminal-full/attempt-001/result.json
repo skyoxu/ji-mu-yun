@@ -1,0 +1,86 @@
+{
+  "authorizes": [],
+  "commandId": "terminal-full",
+  "commandRegistryHash": "sha256:d5eac4633e26ebe026a579370b3583870ceb165a010c8f37e1cf97210ac5caec",
+  "environmentIdentity": {
+    "hash": "sha256:3d83924597c385d0a288d12c4263e250a6e330ac01419f4c241825cefb9a5fa7",
+    "names": [
+      "APPDATA",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py",
+      "--repository-root",
+      ".",
+      "--plan-dir",
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+      "--out",
+      "C:/tmp/jimuyun-acceptance/terminal-full-s3-successor-terminal4.json"
+    ],
+    "commandId": "terminal-full",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 1800
+  },
+  "invocationHash": "sha256:89ae939dab19988e1ca33924f0c71feed3215fb0f82f8df834a78aad8bef116e",
+  "processResult": {
+    "commandId": "terminal-full",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"schema_version\":\"quick-dev-implementation-complete.v1\",\"status\":\"pass\",\"predicate\":\"implementation-complete\",\"plan_id\":\"acceptance-coordinator-efficiency\",\"contract_hash\":\"sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b\",\"command_registry_hash\":\"sha256:2590533d10ab70a922d596e8080e385781bf602c6221d8d5cfdf75c21945de47\",\"terminal_command_id\":\"terminal-full\",\"validated_command_ids\":[\"unittest:.agents/skills/quick-dev-tdd-adapter/tools/tests:test_candidate_identity.py\",\"unittest:.agents/skills/quick-dev-tdd-adapter/tools/tests:test_plan_directory_loop.py\",\"unittest:.agents/skills/quick-dev-tdd-adapter/tools/tests:test_adapter.py\",\"pytest:.agents/skills/run-refactor-implementation-acceptance/tests\"],\"authorizes\":[\"implementation-complete\"]}\r\n",
+    "stdoutSha256": "sha256:4a1b6daaaa150bf89680ba91e33d8d9e65acb944c7b49a44a097e9ba12367f40"
+  },
+  "processResultHash": "sha256:1bef5d3581be8e99903660243fa424f2140e1a640027303e1cac0277febe153a",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

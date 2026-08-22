@@ -1,0 +1,7 @@
+{
+  "authorizes": [],
+  "bundle": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-inputs/acceptance-20260822-s3-successor-terminal4/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+  "bundleHash": "sha256:caa20808710b73146c17b819daaaa4cbb20dece051b9e32fbf723e46b9ffc8ad",
+  "runRequest": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-run-request.acceptance-20260822-s3-successor-terminal4.v1.json",
+  "status": "ready"
+}

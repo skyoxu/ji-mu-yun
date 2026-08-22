@@ -1,0 +1,45 @@
+{
+  "authorizes": [],
+  "candidate": {
+    "actionReceipts": [
+      {
+        "path": "actions/acceptance-pytest-suite/attempt-001/result.json",
+        "sha256": "sha256:7fd03633384478ed5fe028f9ea2a67a5e81ff1c01d32d120bc4fb44c6beffe98"
+      },
+      {
+        "path": "actions/terminal-full/attempt-001/result.json",
+        "sha256": "sha256:9142bde62ff0a884d437d8c1e0d93cdba29eaaa18d5a1e425343ad883088dae1"
+      }
+    ],
+    "authorizes": [],
+    "candidateCustodyHash": "sha256:7b21bb4eb21c640d3acdce27ea1b30c8d5d34edc0e5efdc53d72e5e9d79e20c6",
+    "implementationReceiptBinding": {
+      "path": "terminal-full.s3-successor-v3.json",
+      "sha256": "sha256:b548f533ce8fe9b0d9dcef1802da33bee07b1faa99e4f313cd960390e836a3e9",
+      "terminalCommandId": "terminal-full"
+    },
+    "inputBindings": {
+      "candidateCustodyHash": "sha256:7b21bb4eb21c640d3acdce27ea1b30c8d5d34edc0e5efdc53d72e5e9d79e20c6",
+      "contractHash": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+      "knowledgeContextHash": "sha256:72628254ab775dab28e92263f625070b173f91027702781599eba88073b8e6b2",
+      "runInputHash": "sha256:e90357cecd535d005d766fd5b54c9a3da9d6633319d2e8baaca99145f19321f3"
+    },
+    "prerequisiteBundle": {
+      "bundleHash": "sha256:caa20808710b73146c17b819daaaa4cbb20dece051b9e32fbf723e46b9ffc8ad",
+      "implementationReceipt": {
+        "path": "terminal-full.s3-successor-v3.json",
+        "sha256": "sha256:b548f533ce8fe9b0d9dcef1802da33bee07b1faa99e4f313cd960390e836a3e9",
+        "terminalCommandId": "terminal-full"
+      },
+      "path": "acceptance-inputs/acceptance-20260822-s3-successor-terminal4/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+      "sha256": "sha256:61ba5b114bdbc9b297a2d9960a1ba20b37804387082b19793b621ed14c4c4ea4"
+    },
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-deterministic-evaluation.v1",
+    "status": "passed",
+    "terminalResultHash": "sha256:6908cbb2c470246317634d63b21136c40106fefae4bc395144a49d9e36f1fb91"
+  },
+  "candidateHash": "sha256:f822c1da4358761c570b1f4e10617d780e6abf935c7ea047bb4c0e04c3955168",
+  "candidateInputHash": "sha256:b4f205cfc8fea446d808567ff1f09964864285917ceffc358f8dcf96ef41223f",
+  "schemaVersion": "acceptance-result-candidate.v1"
+}

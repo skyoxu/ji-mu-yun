@@ -1,0 +1,24 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/python/knowledge_context_validation.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:056b0b11ae7541f2e9cb04ebb043b3931de775d7d2ae4a55ff480a2ca5170ab8"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/python/tests/test_knowledge_context_validation.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:1c83e0399a2ccd227a3e8a61f996e587dce47d74f81ef028c0fbf184f49e099f"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

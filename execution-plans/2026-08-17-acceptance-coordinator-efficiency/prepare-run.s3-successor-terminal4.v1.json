@@ -1,0 +1,222 @@
+{
+  "authorizes": [],
+  "candidateCustody": {
+    "authorizes": [],
+    "baselineResolvedCommit": "c9606fff40e59445820db356947207a25d729bde",
+    "candidateMode": "commit",
+    "candidateResolvedCommit": "457e3d89ef107105173767f840aa413a2a818a29",
+    "schemaVersion": "acceptance-candidate-custody.v1",
+    "snapshotManifestHash": "",
+    "snapshotPath": ""
+  },
+  "input": {
+    "adapter_hash": "sha256:8901db6164c4527c98bf789850d2533dbedf8c1af392b30d2630f6a1b60bde43",
+    "adapter_id": "run-refactor-implementation-acceptance",
+    "adapter_version": "compact-vdd-projection.v1",
+    "affected_consumer_refs": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py"
+    ],
+    "allowed_write_roots": [],
+    "baseline_content_manifest_hash": "sha256:0e658122efe43697bf02bf10745b1d6dfe226f0faa460ed743129ed24a1d4099",
+    "baseline_content_manifest_path": "acceptance-inputs/acceptance-20260822-s3-successor-terminal4/baseline-content-manifest.v1.json",
+    "baseline_revision": "c9606fff40e59445820db356947207a25d729bde",
+    "candidate_content_manifest_hash": "sha256:532aebd886545a4390a75b528834fa3c5f3909bc317f80bdfca034cac00b89fb",
+    "candidate_content_manifest_path": "acceptance-inputs/acceptance-20260822-s3-successor-terminal4/candidate-content-manifest.v1.json",
+    "candidate_mode": "commit",
+    "candidate_revision": "457e3d89ef107105173767f840aa413a2a818a29",
+    "change_id": "acceptance-coordinator-efficiency-s3-successor-f5e97230",
+    "changed_paths": [
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/compact-vdd-s3-successor-v3.request.v1.json",
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/compact-vdd-s3-successor-v5.request.v1.json",
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/knowledge-context.refactor-acceptance.s3-successor-v5.json",
+      "execution-plans/2026-08-17-acceptance-coordinator-efficiency/knowledge-context.refactor-acceptance.s3-successor-v6.json",
+      "scripts/python/knowledge_context_validation.py",
+      "scripts/python/tests/test_knowledge_context_validation.py"
+    ],
+    "code_review_domain": "toolchain",
+    "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+    "code_review_policy_path": "acceptance-inputs/acceptance-20260822-s3-successor-terminal4/toolchain-code-review.v1.json",
+    "created_utc": "2026-08-01T00:00:00Z",
+    "execution_mode": "evidence_only",
+    "forbidden_write_roots": [
+      "logs/phase-a-innernet/",
+      "runtime/phase-a/"
+    ],
+    "run_id": "acceptance-20260822-s3-successor-terminal4",
+    "target": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+    "target_plan_hash": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+    "target_plan_paths": [
+      "implementation-contract.v1.json"
+    ],
+    "validator_hash": "sha256:bfb0f2874c640f504b3c9405c3826b15d74ce981d21cb008e027e6ea03f33754"
+  },
+  "inputHash": "sha256:e90357cecd535d005d766fd5b54c9a3da9d6633319d2e8baaca99145f19321f3",
+  "knowledgeContext": {
+    "acceptedDecisions": [
+      {
+        "candidate": {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          "source_sha256": "87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/00-index.md",
+          "source_sha256": "80caf7f36f247b268cdb284f7a82139e5154dcb041f53605c139f612991d2749"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/00-index.md",
+          "source_sha256": "ccd50c498ff160c29372c476ae2bcc632f3df04e6522391cc5d227b5b720eb51"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md",
+          "source_sha256": "25d18279176a6a43a7c8b66ca14f516876ae4a15fba20b36f77c022f53d702fe"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+          "source_sha256": "5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/architecture/ADR_INDEX_PHASE.md",
+          "source_sha256": "6251a73901bc95a55642d78c8df2426b61ecae7b801d0d2f8c6bee9d83d1e567"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-inputs/skill-input-repair-20260820/execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+          "source_sha256": "ad82fd74c4520084454d9a8f0f2172512f7fd91630b7199ac94d08873f2bd58d"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          "source_sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+          "source_sha256": "3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+          "source_sha256": "e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+          "source_sha256": "fd45958417226ba0041b2bcbe7e3d997e6d30cb91632e43eada91df80f2b8186"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/adr/ADR-0055-focused-repair-verification-and-lightweight-closure.md",
+          "source_sha256": "4b0c0eb1c24b45e445d672757631acc8f57f0dd8034e234d9608bf7fafea6476"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      }
+    ],
+    "authorizes": [],
+    "contextHash": "sha256:846f42376f45201067110fb8ac750255e906b506bc0f890548cd2c1fcc3fb3c9",
+    "path": "knowledge-context.refactor-acceptance.s3-successor-v6.json",
+    "requestHash": "sha256:4e8a265fcb6c4ca0467b5a42d66620fc16ac5eb7877055ee7645236035b0e94d",
+    "resultHash": "sha256:67957a47380599c596591d74542a93793afba85f9429b4ad6292b66727ec8d20",
+    "sha256": "sha256:72628254ab775dab28e92263f625070b173f91027702781599eba88073b8e6b2",
+    "sourceSnapshotId": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4"
+  },
+  "prerequisiteBundle": {
+    "bundleHash": "sha256:caa20808710b73146c17b819daaaa4cbb20dece051b9e32fbf723e46b9ffc8ad",
+    "implementationReceipt": {
+      "path": "terminal-full.s3-successor-v3.json",
+      "sha256": "sha256:b548f533ce8fe9b0d9dcef1802da33bee07b1faa99e4f313cd960390e836a3e9",
+      "terminalCommandId": "terminal-full"
+    },
+    "path": "acceptance-inputs/acceptance-20260822-s3-successor-terminal4/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+    "sha256": "sha256:61ba5b114bdbc9b297a2d9960a1ba20b37804387082b19793b621ed14c4c4ea4"
+  },
+  "schemaVersion": "acceptance-run-input.v1"
+}

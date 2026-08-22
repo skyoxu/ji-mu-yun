@@ -1,0 +1,74 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/compact-vdd-s3-successor-v3.request.v1.json",
+      "candidate_sha256": "sha256:3b602a25e3dbf8ede3925eb24d6a21f38e890e568235376f15a2e8abc0ff2fac",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/compact-vdd-s3-successor-v5.request.v1.json",
+      "candidate_sha256": "sha256:fc9289617ed52fa52719af2654f9413c62158da3f4cb68f5a14360d86f862200",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/knowledge-context.refactor-acceptance.s3-successor-v5.json",
+      "candidate_sha256": "sha256:f265bbacc240e03883d5f05b14b650d685c4f8345c6e4b48a5569f1d1cd11856",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/knowledge-context.refactor-acceptance.s3-successor-v6.json",
+      "candidate_sha256": "sha256:72628254ab775dab28e92263f625070b173f91027702781599eba88073b8e6b2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "scripts/python/knowledge_context_validation.py",
+      "baseline_sha256": "sha256:056b0b11ae7541f2e9cb04ebb043b3931de775d7d2ae4a55ff480a2ca5170ab8",
+      "candidate_path": "scripts/python/knowledge_context_validation.py",
+      "candidate_sha256": "sha256:7129a1a2edffc3dbbc0401c23ee15c7cc57cb46a864aade1a038734e79183e3c",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "scripts/python/tests/test_knowledge_context_validation.py",
+      "baseline_sha256": "sha256:1c83e0399a2ccd227a3e8a61f996e587dce47d74f81ef028c0fbf184f49e099f",
+      "candidate_path": "scripts/python/tests/test_knowledge_context_validation.py",
+      "candidate_sha256": "sha256:9aa27b0df1cb388a5b43879f4cf9750b17421d6a73bd6fd40da55ce6a07c7320",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete"
+}
