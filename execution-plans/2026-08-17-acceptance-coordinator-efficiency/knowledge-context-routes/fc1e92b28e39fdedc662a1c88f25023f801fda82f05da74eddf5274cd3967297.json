@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "automatic_publication_allowed": false,
+  "failure_code": "candidate_worktree_source_hash_mismatch",
+  "next_action": "knowledge-context-repair-required",
+  "request_sha256": "sha256:2d8e8b93ef7bce27115b3a5ba5a5767d10d5d22aa856ad52758838b1f406855b",
+  "requires_explicit_maintainer_confirmation": false,
+  "result_sha256": "sha256:69953fb4658c4e31d1f4b2875e3958fe6fa04effca3334978f80b13ff0a4cecb",
+  "route_output": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/knowledge-context-routes/fc1e92b28e39fdedc662a1c88f25023f801fda82f05da74eddf5274cd3967297.json",
+  "route_sha256": "sha256:ce9ac1c07b4de4652f39a5ce8bb9189a0806d48bfd8ea8e05205660b0aeef10c",
+  "schema_version": "jimuyun.acceptance-knowledge-maintenance-route.v1",
+  "snapshot": {
+    "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc",
+    "ref": "refs/heads/main"
+  },
+  "status": "blocked",
+  "target_plan": "execution-plans/2026-08-17-acceptance-coordinator-efficiency"
+}

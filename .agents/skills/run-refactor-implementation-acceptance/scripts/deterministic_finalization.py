@@ -187,6 +187,32 @@ def _verified_quick_dev_receipt(root: Path, target: Path, prepared: dict[str, An
     return {"path": receipt_ref["path"], "sha256": receipt_ref["sha256"], "terminalCommandId": receipt_ref["terminalCommandId"]}
 
 
+def _verified_native_receipt(target: Path, prepared: dict[str, Any]) -> dict[str, Any]:
+    """Validate a plan-owned terminal receipt without imposing a Quick Dev bundle."""
+    binding = prepared.get("nativeImplementationReceipt")
+    if not isinstance(binding, dict) or set(binding) != {"path", "sha256", "terminalCommandId"}:
+        raise InputError("prepared Acceptance run does not bind a supported implementation receipt")
+    receipt_path = _inside(target, binding["path"], "plan-native implementation receipt")
+    if not receipt_path.is_file() or _sha(receipt_path) != binding["sha256"]:
+        raise InputError("plan-native implementation receipt is stale")
+    receipt = _load(receipt_path)
+    contract_path = target / "implementation-contract.v1.json"
+    if not contract_path.is_file():
+        raise InputError("plan-native receipt validation contract is unavailable")
+    if (
+        not isinstance(receipt, dict)
+        or receipt.get("schema_version") != "acceptance-coordinator-efficiency.terminal-result.v1"
+        or receipt.get("status") != "pass"
+        or receipt.get("predicate") != "implementation-complete"
+        or receipt.get("authorizes") != ["implementation-complete"]
+        or receipt.get("contract_hash") != _sha(contract_path)
+        or receipt.get("terminal_command_id") != binding["terminalCommandId"]
+        or binding["terminalCommandId"] != "terminal-full"
+    ):
+        raise InputError("plan-native implementation receipt does not prove the current terminal contract")
+    return {"path": binding["path"], "sha256": binding["sha256"], "terminalCommandId": binding["terminalCommandId"]}
+
+
 def finalize_deterministic_run(
     repository_root: Path,
     run_dir: Path,
@@ -235,19 +261,30 @@ def finalize_deterministic_run(
     validate_candidate_manifest(candidate, baseline)
     if verify_manifest_bytes(target, input_value, baseline, candidate) != prepared.get("candidateCustody"):
         raise InputError("candidate custody is stale")
-    quick_dev_receipt = _verified_quick_dev_receipt(root, target, prepared)
+    native_mode = "prerequisiteBundle" not in prepared
+    if not native_mode:
+        implementation_receipt = _verified_quick_dev_receipt(root, target, prepared)
+    else:
+        implementation_receipt = _verified_native_receipt(target, prepared)
     receipts = _completed_receipts(run_dir, actions, command_registry)
     terminal = [item for item in receipts if item["commandId"] == "terminal-full"]
-    if len(terminal) != 1:
+    if not native_mode and len(terminal) != 1:
         raise InputError("deterministic finalization requires exactly one terminal-full receipt")
-    try:
-        terminal_result = _terminal_machine_result(
-            terminal[0]["receiptValue"]["processResult"]["stdout"]
-        )
-    except (KeyError, IndexError, TypeError) as exc:
-        raise InputError("terminal-full receipt has no machine-readable result") from exc
+    if native_mode and not terminal:
+        terminal_result = _load(_inside(target, implementation_receipt["path"], "plan-native implementation receipt"))
+    else:
+        try:
+            terminal_result = _terminal_machine_result(
+                terminal[0]["receiptValue"]["processResult"]["stdout"]
+            )
+        except (KeyError, IndexError, TypeError) as exc:
+            raise InputError("terminal-full receipt has no machine-readable result") from exc
+    expected_schema = (
+        "acceptance-coordinator-efficiency.terminal-result.v1"
+        if native_mode else "quick-dev-implementation-complete.v1"
+    )
     if (
-        terminal_result.get("schema_version") != "quick-dev-implementation-complete.v1"
+        terminal_result.get("schema_version") != expected_schema
         or terminal_result.get("predicate") != "implementation-complete"
         or terminal_result.get("status") != "pass"
         or terminal_result.get("authorizes") != ["implementation-complete"]
@@ -267,8 +304,8 @@ def finalize_deterministic_run(
         "route": "deterministic_only",
         "candidateCustodyHash": state_hashes["candidateCustodyHash"],
         "terminalResultHash": canonical_hash(terminal_result),
-        "prerequisiteBundle": prepared["prerequisiteBundle"],
-        "quickDevImplementationReceipt": quick_dev_receipt,
+        "prerequisiteBundle": prepared.get("prerequisiteBundle"),
+        "implementationReceiptBinding": implementation_receipt,
         "actionReceipts": [item["receipt"] for item in receipts],
         "inputBindings": state_hashes,
         "authorizes": [],

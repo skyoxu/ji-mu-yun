@@ -151,3 +151,30 @@ def test_terminal_machine_result_rejects_authority_free_text_marker() -> None:
         deterministic_finalization._terminal_machine_result(
             "validator output\nterminal-validation=implementation-complete authorizes=[]\n"
         )
+
+
+def test_plan_native_receipt_is_validated_without_compact_bundle(tmp_path: Path) -> None:
+    import deterministic_finalization
+
+    target = tmp_path / "execution-plans" / "target"
+    target.mkdir(parents=True)
+    contract = target / "implementation-contract.v1.json"
+    contract.write_text("{}\n", encoding="utf-8")
+    receipt = target / "terminal-full.json"
+    receipt.write_text(json.dumps({
+        "schema_version": "acceptance-coordinator-efficiency.terminal-result.v1",
+        "status": "pass",
+        "predicate": "implementation-complete",
+        "contract_hash": _sha(contract.read_bytes()),
+        "terminal_command_id": "terminal-full",
+        "authorizes": ["implementation-complete"],
+    }), encoding="utf-8")
+    prepared = {"nativeImplementationReceipt": {
+        "path": "terminal-full.json", "sha256": _sha(receipt.read_bytes()), "terminalCommandId": "terminal-full",
+    }}
+    result = deterministic_finalization._verified_native_receipt(target, prepared)
+    assert result["terminalCommandId"] == "terminal-full"
+
+    receipt.write_text(receipt.read_text(encoding="utf-8").replace('"status": "pass"', '"status": "fail"'), encoding="utf-8")
+    with pytest.raises(Exception, match="stale"):
+        deterministic_finalization._verified_native_receipt(target, prepared)

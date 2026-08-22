@@ -1,0 +1,6 @@
+{
+  "schema_version": "ria.command-registry.v1",
+  "commands": [
+    {"id": "acceptance-pytest-suite", "executable": "py", "argv": ["-3", "-B", "-m", "pytest", ".agents/skills/run-refactor-implementation-acceptance/tests", "-q"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 900, "shell": false}
+  ]
+}

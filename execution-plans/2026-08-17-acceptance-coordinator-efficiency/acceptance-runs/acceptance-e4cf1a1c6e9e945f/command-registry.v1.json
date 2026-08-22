@@ -1,0 +1,6 @@
+{
+  "schema_version": "ria.command-registry.v1",
+  "commands": [
+    {"id": "terminal-full", "executable": "py", "argv": ["-3", "-B", "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 1800, "shell": false}
+  ]
+}

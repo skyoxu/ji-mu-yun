@@ -1,0 +1,12 @@
+{
+  "actionReceiptHashes": [
+    "sha256:d887e6cc5e7909d6dac97b4b3d640efe643a684dc97c48585d384b5a883c7059"
+  ],
+  "authorizes": [],
+  "candidateResultHash": "sha256:ecc193af5afdb8b60735142817aefb45be237cc30996e7ed05baffdda062356b",
+  "evaluationHash": "sha256:ecc193af5afdb8b60735142817aefb45be237cc30996e7ed05baffdda062356b",
+  "requiredCheckStatus": "passed",
+  "route": "deterministic_only",
+  "schemaVersion": "acceptance-deterministic-impact-projection.v1",
+  "status": "current"
+}

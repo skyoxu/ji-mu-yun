@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-22T04:20:59.604853Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Defines the acceptance command registry for slices S0 through S3 and terminal execution. Commands run pytest and terminal_full.py with repository-relative paths, bounded timeouts, and no authorization entries.",
+      "title": "command-registry.v1.json"
+    },
+    {
+      "content": "Specifies the plan-ready acceptance coordinator contract. Four slices cover identity and authority, deterministic routing, idempotency and recovery, and the one-shot coordinator. Changes are limited to designated skill scripts, documentation, and tests; protected platform, runtime, logs, and knowledge paths are forbidden.",
+      "title": "implementation-contract.v1.json"
+    },
+    {
+      "content": "Defines acceptance behavior for S0-S3: bind receipts to candidate and runner identity, machine-select deterministic routes, replay immutable results with successor recovery, and run a reentrant coordinator that follows the action DAG, records telemetry, and stops semantic routes at the explicit handoff boundary. Non-goals exclude daemons, deterministic Bootstrap invocation, knowledge publication, lifecycle changes, and historical evidence rewrites.",
+      "title": "requirements-and-acceptance.md"
+    }
+  ],
+  "source_manifest_hash": "sha256:6e77337af66dfd882955198eb93c6a7d4e021bc04793c9e1d9447d4b9c009a76",
+  "truncated": false
+}

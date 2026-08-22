@@ -1,0 +1,1560 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/authorization/tests/conformance_preflight_runner.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:cb1e0dbbe8fcac46fad07ccea68bbcbfc28f7b6e85885531406fb6d173cfade8"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:9cccbf6555502b7355a9632efda0fe88e8df066e620238f2eedbf610494f8f62"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:84922533581bf2d5c933bdd17122272d3338c0aa6f38d24d6abc39b21a43d278"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/bmad-spec/scripts/canonical_package.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:64be3610a12a868229fd8cf80ca4d559f8e0652eb4384598f8314d7d244ff516"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:49f78480565d95f0d39167e687a3d515e979d21f954c1e6d88294b326dbd08bf"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/evidence-and-freshness.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:e0bb3d9b716fafaedc1c689889ede28634e8dcf9fed7eee571aee7191790a34f"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/skill-input-contract.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:86595a84186fc8a844e73b98adef7ae7489de5c17b28074a6e09dc2d18144d7e"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/tdd-run-protocol.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:18486bff8834c6b4a00413e7f0303c46353a7b5971aa505e1aa118d00f4ec632"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ccfec1ef08b37097b67cf425ac85013c02558cafc513b7d2f3e430923a38fe42"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:0d4b8ad763ad4d5b9d6ca5f70df01c87ce374572a5f9b4a52d13708f0fd77625"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:b8ba2fcacb3a8316579e588e831567538d92b6c2851eb744cbcc4e7bad151814"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:cdac510df53bf40fe36dd27d56e10598dc8fda35d8b928c2fd7830d114d1e969"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:591d30cf78631dc1ed53cf658d149c1c9df818e911ab31f4ec47f8f97d5471d1"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:530b0347da4565fba4b5ca66646786791455b5fa39c2a653c8111590d621f524"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:f160e4fca8d56cf376e06a595e12094379a1e0a7f556c9c4cef9e8cb11a07d19"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:9e00196e7ca92dc3a03d47eea6b0e7512379cb4e2bc6e9db44db0039419869c8"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:6babfa40d46766198712aabb19931e57ebd497814a67f8d20b5f0bfca348eb56"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:747b11bbf9147dee93b567a93f65ac653c2fd802323aac6a77dffbe27565f417"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:7e62680a95a9ce8e1864fe8042547299a647be1f2f06ff124c2efbc1d43f5ba3"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:225abd05da6d411176d879551d3103853edc99b68dddd111df2f4dd9b9cfe983"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:3013eaf3a085449f35cec85e7a5bc51571ed682e1a30e961295347623f80a862"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:b7a293e625eb39caad5a90f93dd05f03c61039ed763098c7d155eb93edfaa66c"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:78b3c6586e85ef3b6ba7c10527854f5b829a810847c136a52bd09be1e3be89c5"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:bb293dcfa1dff49f8ae28d2001eea6f7b788e6b08acc3bd91cc5e8cfbb717042"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:94dc1c7e7cb7a8f7e530ba944fd6c11eba28bec8841eb034fc132f13332dd088"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:30d5bfdafed4104b203d86eae700cef818b39f11196c953c8efc3bebc09beeb4"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:014f9b4714a557692c63fd3e8ca8d8c224c96eaebf7b9946f5a8e6f63e793b38"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:c54460057151d9f477dc32757a821f6cd085cdf7e92c6da54c78b7300848e830"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:08a81beb3f26e9ca264f98b75f96437d7f932b20f17abf229d69eb2933dcd14b"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-conformance-exact-cover/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:b6fd14c10cbad842c943228f26871b8c8b6cd7bc1028cccf36c0dce396395c8c"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:c792b5367dcdf9c877fd39d36012354cb12bfa7501ce88246905a858fd7aceac"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ed7ba5dc4d19b3ff0849371b47f9216987d1bb4f17a921aa2fc49af520faf431"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-source-freeze-manifest.v1.schema.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:8e3240bd55ed24f5f7a505c9857e669e6a2a3142c39b3a5c74414cd5152a77d9"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-execution-plan/references/solo-maintainer-vdd-standard.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:09de28c142b4957bac6f2c3495fe3716f1686687167a528775d152db97d2cbd7"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-execution-plan/scripts/fixtures/profile-cases.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:a5e028956eca83f9c5bc4d0248b5c9164c02ba2d6f947d6b8d14c6c628a07f3c"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7cb798eb34121928759573a3446b80d403e42fbdbe61b48bf9176eafd8ba769e"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:48b6f5f68e2ae5ec1895050209ac3c0ec7483c855cbaae7fd19249f93c455c0c"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:98d29dc34a6fba2c2806abe9f7cb47f1a76d1fb704dbb725b365a8078dde11d3"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:3dc2d68531e425ceb799560fc715bec2cb33d4d9a64387548cc7588d493eeeef"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:f13ce7f33c5103ce522d58fe6e1405e56c2cc2833cbf879bf2c93c6bd6d902b6"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:950342b08adef2848cc00c2073c43ffeb32d0f29a50ad5b8162e46d49a5d874c"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:bca7b4ca3e1f154fed64181658499e9f2e0f6fbd2f01b5c33201e24567f78031"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "AGENTS.md",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/architecture/ADR_INDEX_PHASE.md",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:a5ad263d3b281d03bd034364a392515d6d91235f0d7819cc4a3309430f2b0b6e"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know17.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:fddec4f002656c6c660de9cf4fbd14d03dee7c43744396cbd75b74ca4c6d4914"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know18.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:c1669eec3ecb3a3013b619783ef62fc1e304a5909bbf98bb8074e593ea49f32e"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know19.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:fb0257af4ff1d2e727a1dc5e080b38cac0bbaaa2854e81fd066056dc85867c61"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know20.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:eff9b2b1bfdb18117f31afd742ae1a1353ca9fcc302d58f075fd0665e0ad57c2"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know21.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:bae740bbde98235bc97cb192f672d37829ebade801519b301c94cdc839a0b3c3"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know22.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:79aa41a1b59fee8542ca0aab96f03ee9e0f0aadbd04c55fabdc83b6a4c36fda4"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know23.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:28a48cdc90beac6c040bd959a078be8edf41caaa4d91ee1eb6a9828f5a8cf914"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know24.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:5981ca295915e57d66208efba514d097c9beb19bdc253044fd037a621c91a623"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know25.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:b10bdefdf6567164802efafea70965c8bf53f554141903c0bf7adea59d4c7d81"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know26.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:b999fa49840d45f061e50026702c6619ce79f1472b60221c32b31be270d3d1d9"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know27.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:0b07c893e6e4a54dbf10d2abb66c2c27fd6d52b1108e01be6a173489e6c41c86"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know28.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:0653acf1bcad67f440d43dcaaf63cbb7376df77e7ec2f53a692028c01d509e0d"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know29.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:178d83587253dff6f09c8fd1118169ddb037971f9f2893dc6238d38fa8d2c318"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know30.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:07fdf04852731dd1b26be0f0880e2465ed204f27fea462e7116146ce5d3d0cc9"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know31.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:34c14b0a897a69dbdb07bf501b59e592fe59cbfc3b4f087a2275e60627fbaf7d"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know32.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:31d6c81c0ec1309c60c737035c7b11584c6e2565a8731232bfa6838f078320d8"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know33.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:7141f647560a1e58c422841b05d92f7dbf5642a12575fb4af934a5222e634bf2"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know34.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:92dff683aa2aab59bafe8a83bc606f67666a92d4068d42bc1437cdeaba08d485"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know35.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:231e9dd0c5a83fd9a87e634ead91e01c0e345cf4c5844d4ac66d15e6d4deff53"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know36.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:ea6ad2ed51b6104a2eda4973bcdb90b175397d675b21448c05670be4edcb9133"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know37.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:305d94f588a0c2edd4835423cf2e233cf681c5b2491c926df8d32a64514d0d7b"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know38.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:f7aebd7aa5544017e4feca375f7f2fb198fddfda5f50c2baab53dee0d21bd097"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/know39.txt",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:2355b42526e4cdb5348f9a8379590ca4607c3201cc79c4e818478040f9940ca6"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "docs/workflows/skill-control-plane-evolution-requirements.md",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:3051ed7504ffe1956123ccd682daf01d9e3c318d6b0c4abed8925a459686bb20"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/00-index.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:ec170170c5e859f8180f12ae24242db1ea87ae08986c85ca8d180a8bde12587d"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/95-implementation-evolution-and-completion-report.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:82912401b4a73114550e6ec907a2b517a95b8e9c62c1d61a30c244e8131b4e7d"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/authority-manifest.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:462699e25ad3d2c3d5f1163c57d129de0d0d1675626787371e3b8570e83f7adc"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/baseline-and-scope.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:7d342c3ba128cc427ef3402255d8ef10ade54e475b324315f2c30bbdc73bc73e"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/command-registry.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:0a21f7f2324b305db088d74e16c4ea2a4e64bc65fae7a5c35a40b12cd2f28d67"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/implementation-contract.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:edad836baf2a26424bbb47badecaf177294afbe23f58b941fcf092995a28dd19"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/knowledge-context.freeze.history/2276778dde410329b3159299c45ab98a532736f638ef548338b660f6cdcc7bb5.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:f6e9e61d4103782d7956afc8c652ee56ccc1f2f1f3fbaf992ced3c8abd4e5410"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/knowledge-context.freeze.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:9edde2c3108aa748349d74beae38dbbd7debd085ad65f7f103f5bea3d6cd1bcf"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/knowledge-context.history/2276778dde410329b3159299c45ab98a532736f638ef548338b660f6cdcc7bb5.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:2276778dde410329b3159299c45ab98a532736f638ef548338b660f6cdcc7bb5"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/knowledge-context.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:02b8ef3204d76dcb806efebafdab20ba733537711577e10c4cad0b2a08650b04"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/model-route-decision.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:fd727d2702cf286c6314af263c8a40e6d2b0c2431efb9a78e9576ded59a18852"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/plan-state.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:e7e7ec2238f1f2058aded596a5abcaf1e93f9e3e698aa2a86919a14ae8370c12"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/repair/hard-limit-v9/deterministic-repair-closure.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:6b64165209e75c838b3938ffc59f8b41a4aafd740296b83f14b4a8132b4ed0ef"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/repair/hard-limit-v9/recovery-authorization.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:c626b6b1c5ed9d4f0917a78fb2020f5181f6fe374e6b7bbf3066571a2daee049"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/repair/round-2-v9/finding-reentry-authorization.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:4d5a0e0be8cd96074ea75c081d900276123c8e91ce6e6d3dd3c8f31cd14ba35d"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/repair/round-2-v9/repair-closure.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:9a76d96cb89ec28e054645a9d1f448f3ca461cbb681c8a56e3c485cf342f8da0"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/repair/round-2/finding-reentry-authorization.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:11bda8bf48986556b0e17d9e854c2a4d7c7bfd583c39d4983880c4793a1ec463"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/repair/round-2/repair-closure.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:2f83e69a3041901acfd0d00f6f522a665f74c2d266c6174f0f259db30a188dd4"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/repair/round-3-v9/finding-reentry-authorization.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:db255ffe8f79fb12089e6684692ed591e501ceb05018b40eb0f6189add2389c1"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/repair/round-3-v9/repair-closure.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:141be0e9ee5b9c061fe16120f3334248b824d3054af16754c99952dbe4099b10"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/requirements.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:eabcea026ab97c3e5ac159766585aa33aad6088830966d0f384b09a11ba29f48"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/resume-state.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:d56889db768e1bc8f7ba07f1beb5d819cc1f625413078f5b439d05739567bdef"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/tools/tests/test_validate_control_plane_repair.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:eac7c3ecbcb749b60bdf796e139b946ffcb167d7d9b43658691f1d58ae9537f0"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/tools/tests/test_validate_implementation.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:b49c2a77631f77379c3e2c9f6517f4b5990da81df1a9e5dab95c450077eaf4f2"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/tools/tests/test_validate_plan.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:af75310ee9d4cee1ae03c594da0cb5576ac3d61ea443a89acbe1e93d78bb15cd"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/tools/validate_control_plane_repair.py",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:7bf302ec1c564b1f01269b99f49a568993d45bf3056fd4d26e479aca1d38a550"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/tools/validate_implementation.py",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:eb9fbe878509693afd2ae1711caaf193c100bd88a614a4828d4ce158c03703a4"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/tools/validate_plan.py",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:bffa609cab1d71e2da52c8f58f879b434cf95c4acdab1726d301f620b07b89f3"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/00-index.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:dee6815303ea2a14925d147a62aa9ec91f88f4876576df19907fcf774e7628a1"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/95-implementation-evolution-and-completion-report.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:cd3841f595a6a18534b967afc98670ecde62db92be8d7b61e17fb2654ca3f5f3"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/authority-manifest.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:d9e6c272f0c814b44ac37cee4e1384d34bbf3198aece6e4d1df45e7a863ed9c3"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/baseline-and-scope.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:bff67d4bd6b6e74b7f68b30046de9885c7b2be02735487429dd175eef26cd08e"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/command-registry.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:5d7a59cbd2f5a730b4d8a9149c072ef0efc8dc071f0283c20a6333aab8d68a18"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/fixtures/regression-repair-contract-cases.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:46a1b561c55acdc06ef53f807d67047ea01bf87ab3e8a85cf41115be477587b3"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/implementation-contract.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:1cb1fbe7e5234f4c75992c6e96f882ecd4dea9f744fa28304bf5bb7dc910dc2e"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/knowledge-context.freeze.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:8a6c0fa7ad4b6e1a3de6d6ff4302c33a64005551b83da2f05739e7bf6efd593a"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/knowledge-context.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:df795e73d9f2b4466c78a917870c9c58c5176869c61d1245e456579a29c4533c"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/model-route-decision.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:52f93591af571fcca96ed7a6b69517a5b9dfca39eaa790f81aa0c3d9be576668"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/plan-state.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:1bf9c99f344c96bc29365cf4349bcfc5cbcf5822101dfe8ef44741af4bef5cb4"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/requirements.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:f8859746e57b023c22a056b5f710eb2e7a8de9b30efc028691977a61159227b6"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/resume-state.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:355d00381eb90bad523683b34fec9dcc8902c59de044fe60329ebc6fb74f94ed"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/tools/tests/test_validate_implementation.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:297117d551592d5b7eb6b5625fea324a60f05ed13260d033dc39a448d8b750a3"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/tools/tests/test_validate_plan.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:f7521bb5a39a13f055555dfe425deeadf0a0da9875294d981a2bd06aad2029de"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/tools/validate_implementation.py",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:bd2e0b38f8e0ec32b27923bdb0328f858fbbc930c376e5d0dfde4eb274d065ad"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/tools/validate_plan.py",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:a1b31d5ad942bd8670bf10b6727438a42c666c6e6f129ff4ee8f4e1d7059f8b3"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/authority-manifest.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:ae1b5163b29e67f6490f391771f45e9ac82d55ead7ce64d63295be5cd8de9bf2"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/baseline-and-scope.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:cfa5a424369179994d8e29b11d17e754e381758028fac7e929c882728509ffd7"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/knowledge-context.freeze.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:623d749c4d2bca9f263fcc5a087636251c786bfb4317bda628a1ba14c6367745"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/knowledge-context.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:97a3a78763b11d9f969022eaab4a2b89e337665fad3774f49221ed42415112ad"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/tests/test_validate_plan.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:3a7d6cbc91f39aa5c82eb8c36fc39566cdb22522a3bcb0f48b3ddc64092fcde2"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/validate_plan.py",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:92d14b9f7bf98ce273131bb5cfc0cda10b0776be51621248434d35daa313caa2"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/00-index.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:83b2c82fb6a0bc9ed9e3a01c56ce4eb920baa26bdb3be0db63714f59fe8efc46"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/95-implementation-evolution-and-completion-report.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:1971cb8e9dfd28e0891c791592ef63bb8e4cba6a3405e9296a7599e5c26ee7a9"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/authority-manifest.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:4730997985aa935b717751bdc0bfec9deeaab0d1ad98ffe84b9a39972288d9e1"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/baseline-and-scope.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:e323e5b460f894218492d29afcd07bf3f83885b88141fd0ef920f2ca5bfbb378"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/command-registry.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:4b8b91ed79531266ebfcecba7a1e868dcade5c4d5ab548f0472e922895b0d0a0"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/implementation-contract.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:5a786ddb321105fd7a9e95e4809c6a4fb412c48f4aec3054e00e6cb0bec1f7ee"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/knowledge-context.freeze.history/a05c8d0da1a8718be245dae24a1fd99f72fd55a80586ccb054e1e6988db7df5a.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:5d8166b95227788a51e941bb474506613714eceaad94845e4fb5cf5f3e945cf0"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/knowledge-context.freeze.history/bb2a6310f99aa862dc5d328fb1e6752c367ec09b43c34966c13884fba6787796.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:0ad0f853e7206520720899953005d8d562460cfe88f9655c589789e5d2f49a06"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/knowledge-context.freeze.history/e04f6f9a473b42a586798e2a2a3b0e85e9490bbbac62b4a010db9bf6f04bf4d1.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:08c04157574ef5910d64c8350f41eb19031f693e090b505c43aeaa1b95acbdf7"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/knowledge-context.freeze.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:f6e9e61d4103782d7956afc8c652ee56ccc1f2f1f3fbaf992ced3c8abd4e5410"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/knowledge-context.history/a05c8d0da1a8718be245dae24a1fd99f72fd55a80586ccb054e1e6988db7df5a.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:a05c8d0da1a8718be245dae24a1fd99f72fd55a80586ccb054e1e6988db7df5a"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/knowledge-context.history/bb2a6310f99aa862dc5d328fb1e6752c367ec09b43c34966c13884fba6787796.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:bb2a6310f99aa862dc5d328fb1e6752c367ec09b43c34966c13884fba6787796"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/knowledge-context.history/e04f6f9a473b42a586798e2a2a3b0e85e9490bbbac62b4a010db9bf6f04bf4d1.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:e04f6f9a473b42a586798e2a2a3b0e85e9490bbbac62b4a010db9bf6f04bf4d1"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/knowledge-context.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:2276778dde410329b3159299c45ab98a532736f638ef548338b660f6cdcc7bb5"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/model-route-decision.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:ed6a621355acaff65f8a02705f55262cb0a28aa4ea7cfb57256c4c07bbef0212"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/plan-state.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:efc945118340b888943472c80d2508ba9f93c9a243afce019771f108978be209"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/hard-limit-v3/deterministic-repair-closure.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:c5b005dfe3d7be5a2308c5e7425fdc3835f008ab10492114ba6bd94db018bd8c"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/hard-limit-v3/recovery-authorization.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:2ba98b6eac8be885d78657f1b1ab7f02a51e0e42f3a2c1452072d027a0785bfb"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/hard-limit-v4/deterministic-repair-closure.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:5c82c2670781a66f90e4a9539759f26f382bbca623ffacde3d05aeb9b70c38f9"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/hard-limit-v4/deterministic-validation.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:9b2c8f973156ae91132f00a76db656116a39abad62751138246fc3e8084d12ff"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/hard-limit-v4/recovery-authorization.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:c013c5b43097af861210e5657bca777c69ee9fe37b7deef591b4e9f085f57988"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-1/composition-command-registry.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:b109d9caf7ef219118e573033ad294715d65b6dfb9ac6bc84b053501cb9d941f"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-1/composition-receipt.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:0e44cc4b7a0d0fdcbb7fb4699b97d74c27e3cba06f6cdae69f3354cd700b6374"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-1/green-result.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:75878e72fe380b3bbcbe72db31865c24359d8fe30017ebf0c27d03da9d78b2cd"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-1/red-result.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:e086ef7e1714f0a7648698429f117c5af064c95d97d06f9073289151a27262a2"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-1/repair-closure.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:fec30a6c10ef1c5ccd4380d1e7565572ee778a6963c5441081ff987bfe0b7373"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-1/repair-plan.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:47b034238a2466a01ba1339a695b9f6c5f37762664e539b6cb8870dce3570dac"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-1/root-cause-callsite-inventory.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:a26ebc01d0fe4bd08e835be794be57437370ddaa654ac84a566562394977fb3f"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-2/bootstrap-repair-closure.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:471b139a17352b8ca9f2fe946275339ebe512155bf082fd3992500bf29153f9b"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-2/composition-command-registry.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:ad0c8053a12c2439fd391539b381b48c40ffb57b300790b80f0b4189f24a7dc3"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-2/composition-receipt.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:744aee07c76476de76fe6d23de35811ba3f9404546609d350055ed5aea25be9a"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-2/green-result.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:5833a25579f6db62ca6999e78d68e7252eb2ecace1ebeea01aad9e6560f6c030"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-2/red-result.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:5f3f3697cc8736be698cde3e4d4b51a45b92378e56481a8ce587b6225a33009c"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-2/repair-closure.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:eca635472ca3189e3c90d53814e1c0baf42d61f0fe26d00b4f9f6efa26bbbbf2"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-2/repair-plan.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:b1fe4f5c658a496a8eb80bfc6752da572d53c44c7efb1410c50c93dcdd0c126d"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-2/root-cause-callsite-inventory.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:6494d20d1687886414406c0b3583d561eed93e21cbac8bc3eeda43a2e067f6a8"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-3/bootstrap-repair-closure.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:3cb7a146d2e8bcf6dfc635ab198440a19cafee2f3fbb8402bad7106356abcefe"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-3/green-result.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:f155efc4f92f9fc522e2cd7d6915f7efef44dc0a80e40e2922ac906056c04952"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-3/repair-plan.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:76cb94370ad564933db6266936eb3a502e83e5062618f0c2fd164ab667fd40f5"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/round-3/root-cause-callsite-inventory.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:56427b7a45b36bf4cd050aaaa91acb9e0b07256c3fb095ffb4560e9aad10e3ee"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/requirements.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:477a488e1cf83d5edf0c96f8ee0f74798e63d384985ac3b556d246f7683108f9"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/resume-state.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:163476ec49b4367f2e058447cb80472a8bf5d97960546862cc1ace03cd8ba937"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/tests/test_validate_implementation.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:64017b838392fbfb6b0c84a88c2e916938d60f7d309fab8521ad69e27fe4502a"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/tests/test_validate_plan.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:31ad7d02b166aa8cad0bab0ac8e17b11f672f51be0e1846638da9bbb8186c07c"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/validate_implementation.py",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:8feba343ee7ad2a71625a0b83f9b4802dfd496f7b69b88ab67c3d930a1fa4b98"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/validate_plan.py",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:ad6dbc7d47c9f1884353aac04ccc25b298f4e5066edb65bd233d9678122a65ee"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:7b1af6a7a57ce20c7cb35286f3ca4a0c19806dad59266c98b624dc9f9761e04a"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:7238e23f14642eae24f6d80aa40ec2c32ab7bb3764ef69c992e9cb041c538408"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/knowledge-context.freeze.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:8c14d41f452ea6cb03043777df4edc44179c28ce0cb5b484d6e4203a1f4c802c"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/knowledge-context.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:cfcc2f9271075b6f18d95bbbeac2fa34700707a4ad34a0420992306cff582f5c"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/tdd_bridge.py",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:1ff26173c97a9b75d762b0cb46fa71cb20e54d36db5f8fae42c7956f23a2a0c9"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/validate_all.py",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:c5fc78f608231de1a1e4867f9b736fdd42911e34d0ee5620f90262a11f6c7ed1"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/acceptance-workflow-optimization.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:31f4a18e38126d5ed6b695d8993f25f382f96d1b9a59cc6184ab73802996d2e9"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "execution-plans/95-implementation-report-index.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:f7a56714a870903a4528f4f0da2cf9f112435a646e2c7de0db27e861d5184db0"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:3e361cf10f3ee16aef05cd981fc59173c829401680e6b7b62fc8acdc10b17c68"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:388957a2b231be5fab9d4e3273d83c232974ce698e1b9d19ffb862e06b37149b"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "knowledge/evaluation/repository-knowledge-query-suite.v1.json",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:5d1b44a3da527ac39eb966099c6100daae7ae509651ae54bf10bec9d953437a0"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "knowledge/indexes/current.json",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:866c67dec716a0eff7d23116100a5616b896b211f101962332b6d6c9f2b2209d"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "knowledge/indexes/derived-index.v1.json",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:9aba32ae1b99e602f9a73aa0acf7746c890dbbcf35b08f755df69f6db6919149"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "knowledge/indexes/last-known-good.json",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:866c67dec716a0eff7d23116100a5616b896b211f101962332b6d6c9f2b2209d"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "knowledge/projections/consumer-projections.v1.json",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:abfc27c0ef35fc3dacf0d1477d72dcd55463ddaa24b35342e360cfaef9e1390a"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "roles": [
+        "source"
+      ],
+      "sha256": "sha256:8747ddb3c3999e7c4e6ded11dfd3b8bcd728b87007f3131089d395784cafcb04"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "scripts/python/_knowledge_catalog_builder.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:98287e3a63fe9933a941ff4029acec7b3b18c327706fd9225fb308cdb8efec8f"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "scripts/python/knowledge_context_validation.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:63f6bc643dde62be0efc3a345931e2b6a682ed6c10463321ec816d0c330860d5"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "scripts/python/launch_skill_input_consumer.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:14f724cecd32ac20aeed22d41ca53a248d094b052d37cccd59e5b47205de9184"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "scripts/python/prepare_skill_input_consumption.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5627c1112843303af82453592cdf2066604d14079d71e27bfa69b04d32afafb1"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "scripts/python/skill_input_consumption.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:44a4171ec303d52f08208655b1f8274523734e3539024ac90f2ef533360fee32"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "scripts/python/tests/test_knowledge_context_validation.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:47e8555398576bd7960d4c4f1ae03409d98f4ab9c65f86a1adf6e40fa25f8f5a"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "scripts/python/tests/test_skill_input_consumption.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:9b50d74f50515bca248fad8225c83d49bf8834443642be340d26038647074049"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "scripts/python/validate_skill_input_consumption.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ede8a0a77126349d95f1eb90e1976b6b3bf2aef6035b782c056856975a759992"
+    },
+    {
+      "inclusion_reason": "baseline candidate custody",
+      "path": "scripts/sc/schemas/skill-input-contract.v1.schema.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:fecbf8487970d792e1bae1856a499703167d95544771f5e79e510cf45a987b3c"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

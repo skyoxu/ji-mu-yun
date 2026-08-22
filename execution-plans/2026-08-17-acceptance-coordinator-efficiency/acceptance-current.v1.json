@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "currentRun": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-runs/acceptance-9c8f4e2a1d6b7c30",
+  "finalResult": {
+    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-runs/acceptance-9c8f4e2a1d6b7c30/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:9049bc7537cb2cb8e77cc2433dce5613033ad3b212535ce1c27555c9587c16a4"
+  },
+  "finalWrapper": {
+    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-runs/acceptance-9c8f4e2a1d6b7c30/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:109d5f0b88ae0c22da822ac9604454b6d06142a0139e5a17234002319aabb738"
+  },
+  "schemaVersion": "acceptance-current.v1"
+}

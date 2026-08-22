@@ -1,0 +1,9 @@
+[
+  {
+    "actionId": "terminal-full",
+    "dependsOn": [],
+    "order": 1,
+    "commandId": "terminal-full",
+    "activation": true
+  }
+]
