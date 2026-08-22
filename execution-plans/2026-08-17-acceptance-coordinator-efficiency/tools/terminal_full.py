@@ -54,11 +54,12 @@ def _run(suites: tuple[tuple[str, str], ...]) -> tuple[bool, list[str]]:
 def _result(predicate: str, command_id: str, suites: tuple[tuple[str, str], ...]) -> dict[str, object]:
     passed, validated = _run(suites)
     document: dict[str, object] = {
-        "schema_version": "acceptance-coordinator-efficiency.terminal-result.v1",
+        "schema_version": "quick-dev-implementation-complete.v1",
         "status": "pass" if passed else "fail",
         "predicate": predicate,
         "plan_id": "acceptance-coordinator-efficiency",
         "contract_hash": _hash(PLAN / "implementation-contract.v1.json"),
+        "command_registry_hash": _hash(PLAN / "command-registry.v1.json"),
         "terminal_command_id": command_id,
         "validated_command_ids": validated,
         "authorizes": ["implementation-complete"] if predicate == "implementation-complete" and passed else [],
