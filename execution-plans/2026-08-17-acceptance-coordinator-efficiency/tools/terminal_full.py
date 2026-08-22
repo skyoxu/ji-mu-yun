@@ -32,6 +32,7 @@ def _entries():
         {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py", "role": "test", "slice_ids": ["S3"]},
         {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py", "role": "test", "slice_ids": ["S0", "S2"]},
         {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py", "role": "test", "slice_ids": ["S0"]},
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py", "role": "test", "slice_ids": ["S0", "S2", "S3"]},
         {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py", "role": "test", "slice_ids": ["S0", "S3"]},
         {"path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py", "role": "validator", "slice_ids": ["S0", "S1", "S2", "S3"]},
         {"path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/implementation-contract.v1.json", "role": "contract", "slice_ids": ["S0", "S1", "S2", "S3"]},
