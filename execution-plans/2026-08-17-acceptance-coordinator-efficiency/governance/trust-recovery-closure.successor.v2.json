@@ -51,10 +51,12 @@
       "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py"],
       "positive_behavior_tests": [
         "test_coordinator_executes_dag_and_finalizes",
-        "test_coordinator_emits_typed_handoff_without_bootstrap"
+        "test_coordinator_emits_typed_handoff_without_bootstrap",
+        "test_v3_coordinator_replay_is_idempotent_for_same_output"
       ],
       "coverage_status": "covered",
-      "uncovered_behavior": []
+      "uncovered_behavior": [],
+      "coverage_notes": "S3 semantic routes stop before inspect/resume/finalize; deterministic v3 replay returns the existing stable result for the same binding/output. Dynamic telemetry is append-only and excluded from the stable result identity."
     }
   ],
   "validated_by": {
