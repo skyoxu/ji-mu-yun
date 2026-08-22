@@ -1,0 +1,48 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:bd4834c57edf540aea6c4fc1a05d30283b17843577abe4436ecefe320516d3de"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:f1568e39abe2bbd29f066b28ee488d175d85f06ac0a0cbe10314efc4e17ee27a"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7b71b0ea51b37853486959d14c92506e29cd8920fbecc6ab17c9a104659db6be"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:f5d16e47f2efa6d3d978f6a872955f06e48e364ed08bd62b96f17ff73a6e683b"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:f0115f44d3f988f250cb5f34c5367819099462e9fa4829160643835ebe8c57a4"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

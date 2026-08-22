@@ -1,0 +1,2 @@
+{"actionId": "acceptance-pytest-suite", "authorizes": [], "commandId": "acceptance-pytest-suite", "recordedUtc": "2026-08-22T17:24:28.965080Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 1, "status": "completed"}
+{"actionId": "terminal-full", "authorizes": [], "commandId": "terminal-full", "recordedUtc": "2026-08-22T17:25:14.371700Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 2, "status": "completed"}

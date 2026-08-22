@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-22T17:12:32.336765Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Defines the acceptance coordinator command set for slice checks, terminal evidence, regression suites, and the full terminal run. Commands are repository-scoped, non-shell invocations with bounded timeouts and no requested authorizations.",
+      "title": "Command registry"
+    },
+    {
+      "content": "Specifies the plan-ready acceptance coordinator contract. Four slices cover identity and authority, deterministic routing, idempotency and stale recovery, and the one-shot coordinator. Changes are limited to the named skill scripts, documentation, and tests; protected platform, runtime, logs, and knowledge paths are forbidden.",
+      "title": "Implementation contract"
+    },
+    {
+      "content": "Requires candidate and runner binding, bundle-owned context, machine-selected deterministic routing, immutable replay, successor recovery, reentrant coordinator execution, telemetry, and typed semantic handoff termination. Non-goals exclude background supervision, deterministic Bootstrap invocation, knowledge publication, lifecycle changes, and historical evidence rewrites.",
+      "title": "Requirements and acceptance"
+    }
+  ],
+  "source_manifest_hash": "sha256:40f4190c0afb4c7cac0773bb07fc82c242c2d16328376fde1adff1441a3d5ef9",
+  "truncated": false
+}

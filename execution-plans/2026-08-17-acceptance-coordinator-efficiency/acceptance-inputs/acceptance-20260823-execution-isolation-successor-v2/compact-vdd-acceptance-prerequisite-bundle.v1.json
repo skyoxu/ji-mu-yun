@@ -1,0 +1,45 @@
+{
+  "actionDag": {
+    "path": "acceptance-inputs/acceptance-20260823-execution-isolation-successor-v2/action-dag.v1.json",
+    "sha256": "sha256:28ff7604065e8f2a3a7f60195f5e56527062d421f5919367ca3e2920ebb96ec3"
+  },
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "acceptance-inputs/acceptance-20260823-execution-isolation-successor-v2/baseline-content-manifest.v1.json",
+    "sha256": "sha256:0b70c5d0a77fcf385bb48e57ee472b953dff1da41945dc85815cda98bfe2163e"
+  },
+  "bundleHash": "sha256:0de705224bed7e95f77132c47859261a92e7512180a38d87a2dbbc921c2c1825",
+  "candidateManifest": {
+    "path": "acceptance-inputs/acceptance-20260823-execution-isolation-successor-v2/candidate-content-manifest.v1.json",
+    "sha256": "sha256:402a655cf801e9463a02e6f3713a470de3833fa8d8c50a418b854574a7868fda"
+  },
+  "candidateSnapshotPath": ".acceptance-snapshots/acceptance-20260823-execution-isolation-successor-v2",
+  "commandRegistry": {
+    "path": "acceptance-inputs/acceptance-20260823-execution-isolation-successor-v2/command-registry.v1.json",
+    "sha256": "sha256:cdc30340d59c25e86441d4a7c13e921db00e7c4acaf2384ea5bf8dee56e714f6"
+  },
+  "implementationReceipt": {
+    "path": "completion-handoffs/quick-dev-implementation-complete.ddcd5b7f3476187f.v2.json",
+    "sha256": "sha256:10f77987e86601672a40493b4ea88f4afa52f852fe1d55a43bbcb319afc5508c",
+    "terminalCommandId": "terminal-full"
+  },
+  "knowledgeContext": {
+    "path": "knowledge-context.refactor-acceptance.execution-isolation-successor.v1.json",
+    "sha256": "sha256:c5418b0b02520f197b3fcbdfe08ef52b77d26aabeb307721d8459a083f3c43c4"
+  },
+  "policy": {
+    "path": "acceptance-inputs/acceptance-20260823-execution-isolation-successor-v2/toolchain-code-review.v1.json",
+    "sha256": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4"
+  },
+  "runId": "acceptance-20260823-execution-isolation-successor-v2",
+  "runRequest": {
+    "path": "acceptance-run-request.acceptance-20260823-execution-isolation-successor-v2.v1.json",
+    "sha256": "sha256:0dd55ab4351de9092be4d56e0b6573486e4a01be5ca52f47c8037876315265ac"
+  },
+  "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+  "targetPlan": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+  "terminalRunner": {
+    "path": "tools/terminal_full.py",
+    "sha256": "sha256:37e96ded6e4821fda4ec13f2a20b7a8828d6f6153e2d7f497c80fe2af03a3cf6"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "contractHash": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+  "createdUtc": "2026-08-22T17:23:14.417966Z",
+  "knowledgeContextHash": "sha256:c5418b0b02520f197b3fcbdfe08ef52b77d26aabeb307721d8459a083f3c43c4",
+  "runId": "acceptance-20260823-execution-isolation-successor-v2",
+  "runInputHash": "sha256:c66e8dbb37a7b25d18e06ef19e990e30ea5e131cc285152d6305bfeac02dd523",
+  "schemaVersion": "acceptance-execution-run.v1",
+  "skillInputBindingHash": "sha256:1b451b221115ebdbea27ca62591d6ad3efbb62f29ac1a84ec18e0cb745e2c277",
+  "skillInputContextHash": "sha256:5a651cfc667701f834b45d0d904eb8fab71c6d96050fd14d8c7dff586876cb3b",
+  "skillInputContextPath": "skill-input/skill-input-context.v1.json",
+  "skillInputContextSourcePath": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/skill-input-semantic.execution-isolation-successor.terra/skill-input-context.v1.json"
+}

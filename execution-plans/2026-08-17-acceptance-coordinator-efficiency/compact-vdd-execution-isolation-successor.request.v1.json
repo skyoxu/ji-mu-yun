@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
+  "targetPlan": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+  "runId": "acceptance-20260823-execution-isolation-successor-v2",
+  "changeId": "acceptance-coordinator-execution-isolation-successor",
+  "baselineRevision": "00bbc23e9009986e23732191a1140451c83576f0",
+  "candidateRevision": "e0366051d7bfd16cb0c23adb5146151020812303",
+  "changedPaths": [
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_terminal_full_isolation.py",
+    "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py"
+  ],
+  "affectedConsumerRefs": [
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+    "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py"
+  ],
+  "targetPlanPaths": ["command-registry.v1.json", "implementation-contract.v1.json"],
+  "knowledgeContextPath": "knowledge-context.refactor-acceptance.execution-isolation-successor.v1.json",
+  "codeReviewDomain": "toolchain",
+  "codeReviewPolicyPath": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-inputs/acceptance-20260822/toolchain-code-review.v1.json",
+  "implementationReceiptPath": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/completion-handoffs/quick-dev-implementation-complete.ddcd5b7f3476187f.v2.json",
+  "implementationReceiptHash": "sha256:10f77987e86601672a40493b4ea88f4afa52f852fe1d55a43bbcb319afc5508c",
+  "commands": [
+    {"id": "acceptance-pytest-suite", "executable": "py", "argv": ["-3", "-B", "-m", "pytest", ".agents/skills/run-refactor-implementation-acceptance/tests", "-q"], "cwd": ".", "timeout_seconds": 900, "shell": false},
+    {"id": "terminal-full", "executable": "py", "argv": ["-3", "-B", "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py", "--repository-root", ".", "--plan-dir", "execution-plans/2026-08-17-acceptance-coordinator-efficiency"], "cwd": ".", "timeout_seconds": 1800, "shell": false}
+  ],
+  "actions": [
+    {"actionId": "acceptance-pytest-suite", "dependsOn": [], "order": 1, "commandId": "acceptance-pytest-suite", "activation": true},
+    {"actionId": "terminal-full", "dependsOn": ["acceptance-pytest-suite"], "order": 2, "commandId": "terminal-full", "activation": true}
+  ],
+  "authorizes": []
+}

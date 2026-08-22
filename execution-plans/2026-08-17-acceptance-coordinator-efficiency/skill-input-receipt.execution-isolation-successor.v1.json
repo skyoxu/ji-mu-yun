@@ -1,0 +1,198 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "request_binding": {
+    "request": {
+      "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
+      "targetPlan": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+      "runId": "acceptance-20260823-execution-isolation-successor-v2",
+      "changeId": "acceptance-coordinator-execution-isolation-successor",
+      "baselineRevision": "00bbc23e9009986e23732191a1140451c83576f0",
+      "candidateRevision": "e0366051d7bfd16cb0c23adb5146151020812303",
+      "changedPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_terminal_full_isolation.py",
+        "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py"
+      ],
+      "affectedConsumerRefs": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+        "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py"
+      ],
+      "targetPlanPaths": [
+        "command-registry.v1.json",
+        "implementation-contract.v1.json"
+      ],
+      "knowledgeContextPath": "knowledge-context.refactor-acceptance.execution-isolation-successor.v1.json",
+      "codeReviewDomain": "toolchain",
+      "codeReviewPolicyPath": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/acceptance-inputs/acceptance-20260822/toolchain-code-review.v1.json",
+      "implementationReceiptPath": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/completion-handoffs/quick-dev-implementation-complete.ddcd5b7f3476187f.v2.json",
+      "implementationReceiptHash": "sha256:10f77987e86601672a40493b4ea88f4afa52f852fe1d55a43bbcb319afc5508c",
+      "commands": [
+        {
+          "id": "acceptance-pytest-suite",
+          "executable": "py",
+          "argv": [
+            "-3",
+            "-B",
+            "-m",
+            "pytest",
+            ".agents/skills/run-refactor-implementation-acceptance/tests",
+            "-q"
+          ],
+          "cwd": ".",
+          "timeout_seconds": 900,
+          "shell": false
+        },
+        {
+          "id": "terminal-full",
+          "executable": "py",
+          "argv": [
+            "-3",
+            "-B",
+            "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py",
+            "--repository-root",
+            ".",
+            "--plan-dir",
+            "execution-plans/2026-08-17-acceptance-coordinator-efficiency"
+          ],
+          "cwd": ".",
+          "timeout_seconds": 1800,
+          "shell": false
+        }
+      ],
+      "actions": [
+        {
+          "actionId": "acceptance-pytest-suite",
+          "dependsOn": [],
+          "order": 1,
+          "commandId": "acceptance-pytest-suite",
+          "activation": true
+        },
+        {
+          "actionId": "terminal-full",
+          "dependsOn": [
+            "acceptance-pytest-suite"
+          ],
+          "order": 2,
+          "commandId": "terminal-full",
+          "activation": true
+        }
+      ],
+      "authorizes": []
+    },
+    "consumer": "run-refactor-implementation-acceptance",
+    "operation": "acceptance",
+    "target": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+    "route_identity": "acceptance.execution-isolation.successor",
+    "source_roles": {
+      "implementation_target": [
+        "execution-plans/2026-08-17-acceptance-coordinator-efficiency/implementation-contract.v1.json"
+      ],
+      "acceptance_requirements": [
+        "execution-plans/2026-08-17-acceptance-coordinator-efficiency/requirements-and-acceptance.md"
+      ]
+    }
+  },
+  "request_hash": "sha256:28ae76c26be10db209f4fa3e980c0a9b4d0121e67a9feb4e77822c39b56c9ef9",
+  "target": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+  "route_identity": "acceptance.execution-isolation.successor",
+  "repository_identity": {
+    "head": "af6f2fc250ca503269fb4ea5e0f9a0979c22f36c",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_selection_hash": "sha256:ed07fc8d2b611a35030a39daaa693a1828fd66d9e15ca2b17d46a5912dfe6338",
+    "selected_source_content_root": "sha256:a8a58db97c5dc0efabed2bd74d7d201f5c4a18d1c362300543af1c5b8bdd6402"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-22T17:12:32.415010Z",
+  "contract_hash": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0",
+  "source_manifest": {
+    "path": "skill-input.execution-isolation-successor/source-manifest.v1.json",
+    "sha256": "sha256:40f4190c0afb4c7cac0773bb07fc82c242c2d16328376fde1adff1441a3d5ef9"
+  },
+  "child_request": {
+    "path": "skill-input-child-request.execution-isolation-successor.terra.v1.json",
+    "sha256": "sha256:55dcb8c6a5fbc71bd9f6af7f547f066f543d407da43427fd62cdf83ad7f3cd5f"
+  },
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/command-registry.v1.json",
+      "required": false,
+      "sha256_before": "sha256:2590533d10ab70a922d596e8080e385781bf602c6221d8d5cfdf75c21945de47",
+      "sha256_after": "sha256:2590533d10ab70a922d596e8080e385781bf602c6221d8d5cfdf75c21945de47",
+      "size_bytes": 2897,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:2a08ba2d882d9ba3644ccc566a47f6235b8eaee73172c8d4a742670930a7c9c8",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/implementation-contract.v1.json",
+      "required": true,
+      "sha256_before": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+      "sha256_after": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+      "size_bytes": 7232,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:9f92731af5496e3333d2cf27a6e03e16cad833a5b4df2bcbf395fa47e7783f90",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/requirements-and-acceptance.md",
+      "required": true,
+      "sha256_before": "sha256:7c02a8aff6028ec233091480d07d071f5392e0cbfbc7f287d23f7682ea497128",
+      "sha256_after": "sha256:7c02a8aff6028ec233091480d07d071f5392e0cbfbc7f287d23f7682ea497128",
+      "size_bytes": 2661,
+      "line_count": 60,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:7c02a8aff6028ec233091480d07d071f5392e0cbfbc7f287d23f7682ea497128",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 60
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "skill-input-semantic.execution-isolation-successor.terra/semantic-decision.v1.json",
+    "sha256": "sha256:63699f978137319d9817860a4d73191d4dbbf183b95c0ac97e9e240ea0d4fa3d"
+  },
+  "context_artifact": {
+    "path": "skill-input-semantic.execution-isolation-successor.terra/skill-input-context.v1.json",
+    "sha256": "sha256:5a651cfc667701f834b45d0d904eb8fab71c6d96050fd14d8c7dff586876cb3b"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:1b451b221115ebdbea27ca62591d6ad3efbb62f29ac1a84ec18e0cb745e2c277"
+}

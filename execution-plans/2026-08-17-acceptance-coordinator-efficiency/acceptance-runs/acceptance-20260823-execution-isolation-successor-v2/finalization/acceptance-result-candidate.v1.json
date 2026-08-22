@@ -1,0 +1,47 @@
+{
+  "authorizes": [],
+  "candidate": {
+    "actionReceipts": [
+      {
+        "path": "actions/acceptance-pytest-suite/attempt-001/result.json",
+        "sha256": "sha256:faf9a7ad898ca6d38853c2d10bccc55c03580cd6d5941205a9789b2be6047bfd"
+      },
+      {
+        "path": "actions/terminal-full/attempt-001/result.json",
+        "sha256": "sha256:c21591ef0b93e9822cabc935013f7dcc16e4b194a4b99a9794d05804afe72feb"
+      }
+    ],
+    "authorizes": [],
+    "candidateCustodyHash": "sha256:b2a6ffb2533761049dce799d3f972962838ae24a6b2d1f01fa262804f9fcc317",
+    "implementationReceiptBinding": {
+      "path": "completion-handoffs/quick-dev-implementation-complete.ddcd5b7f3476187f.v2.json",
+      "sha256": "sha256:10f77987e86601672a40493b4ea88f4afa52f852fe1d55a43bbcb319afc5508c",
+      "terminalCommandId": "terminal-full"
+    },
+    "inputBindings": {
+      "candidateCustodyHash": "sha256:b2a6ffb2533761049dce799d3f972962838ae24a6b2d1f01fa262804f9fcc317",
+      "contractHash": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+      "knowledgeContextHash": "sha256:c5418b0b02520f197b3fcbdfe08ef52b77d26aabeb307721d8459a083f3c43c4",
+      "runInputHash": "sha256:c66e8dbb37a7b25d18e06ef19e990e30ea5e131cc285152d6305bfeac02dd523",
+      "skillInputBindingHash": "sha256:1b451b221115ebdbea27ca62591d6ad3efbb62f29ac1a84ec18e0cb745e2c277",
+      "skillInputContextHash": "sha256:5a651cfc667701f834b45d0d904eb8fab71c6d96050fd14d8c7dff586876cb3b"
+    },
+    "prerequisiteBundle": {
+      "bundleHash": "sha256:0de705224bed7e95f77132c47859261a92e7512180a38d87a2dbbc921c2c1825",
+      "implementationReceipt": {
+        "path": "completion-handoffs/quick-dev-implementation-complete.ddcd5b7f3476187f.v2.json",
+        "sha256": "sha256:10f77987e86601672a40493b4ea88f4afa52f852fe1d55a43bbcb319afc5508c",
+        "terminalCommandId": "terminal-full"
+      },
+      "path": "acceptance-inputs/acceptance-20260823-execution-isolation-successor-v2/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+      "sha256": "sha256:16f783bc87abe9128ab74c5592d9b4182a78186544a275542cc318da90b39625"
+    },
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-deterministic-evaluation.v1",
+    "status": "passed",
+    "terminalResultHash": "sha256:7021a0fb85dd2d9523fa39c0bb60a090d1be9c9bb8f323842b2947902ef1e9ed"
+  },
+  "candidateHash": "sha256:8a361c8ef039297f50beb846a3384045e9cd83fb521f1bbff852c5f82926b477",
+  "candidateInputHash": "sha256:e974ff6dcccc5c8d8e642b36335e568375b0fba806888b80bb1a44eeb40eb75d",
+  "schemaVersion": "acceptance-result-candidate.v1"
+}

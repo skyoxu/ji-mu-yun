@@ -1,0 +1,22 @@
+{
+  "actionId": "terminal-full",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "terminal-full",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+    "knowledgeContextHash": "sha256:c5418b0b02520f197b3fcbdfe08ef52b77d26aabeb307721d8459a083f3c43c4",
+    "runInputHash": "sha256:c66e8dbb37a7b25d18e06ef19e990e30ea5e131cc285152d6305bfeac02dd523",
+    "skillInputBindingHash": "sha256:1b451b221115ebdbea27ca62591d6ad3efbb62f29ac1a84ec18e0cb745e2c277",
+    "skillInputContextHash": "sha256:5a651cfc667701f834b45d0d904eb8fab71c6d96050fd14d8c7dff586876cb3b"
+  },
+  "ownerToken": "owner-acceptance-20260823-execution-isolation-successor-v2",
+  "processId": 9052,
+  "recordedUtc": "2026-08-22T17:24:43.168045Z",
+  "runId": "acceptance-20260823-execution-isolation-successor-v2",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 4
+}
