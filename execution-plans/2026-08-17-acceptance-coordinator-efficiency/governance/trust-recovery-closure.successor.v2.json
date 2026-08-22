@@ -1,0 +1,53 @@
+{
+  "schema_version": "acceptance-coordinator-efficiency.trust-recovery-closure.v2",
+  "plan_directory": "execution-plans/2026-08-17-acceptance-coordinator-efficiency",
+  "status": "coverage-repair-required",
+  "supersedes": "governance/trust-recovery-closure.v1.json",
+  "authorizes": [],
+  "coverage": [
+    {
+      "slice_id": "S0",
+      "requirements": ["ACE-S0"],
+      "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s0.py"],
+      "positive_behavior_tests": [],
+      "coverage_status": "partial",
+      "uncovered_behavior": ["matching candidate/context identity admission"]
+    },
+    {
+      "slice_id": "S1",
+      "requirements": ["ACE-S1"],
+      "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s1.py"],
+      "positive_behavior_tests": [],
+      "coverage_status": "partial",
+      "uncovered_behavior": ["machine-selected deterministic route completion"]
+    },
+    {
+      "slice_id": "S2",
+      "requirements": ["ACE-S2"],
+      "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s2.py"],
+      "positive_behavior_tests": [],
+      "coverage_status": "partial",
+      "uncovered_behavior": ["identical replay and stale-action successor recovery"]
+    },
+    {
+      "slice_id": "S3",
+      "requirements": ["ACE-S3"],
+      "tests": [".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py"],
+      "positive_behavior_tests": [
+        "test_coordinator_executes_dag_and_finalizes",
+        "test_coordinator_emits_typed_handoff_without_bootstrap"
+      ],
+      "coverage_status": "covered",
+      "uncovered_behavior": []
+    }
+  ],
+  "validated_by": null,
+  "successor_terminal": {
+    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/terminal-full.s3-successor.json",
+    "sha256": "sha256:8763ae4dd028ea2d90ebc6666b8e1a4007d0fd9f8d823b8f8fa2c33c2b050039",
+    "status": "pass",
+    "predicate": "implementation-complete",
+    "authorizes": ["implementation-complete"]
+  },
+  "notes": "This successor deliberately blocks governance closure until S0-S2 have positive behavior evidence. Historical v1 remains immutable and is not current authority."
+}
