@@ -259,6 +259,12 @@ def refresh_context_read_set(payload: dict[str, Any], repository_root: Path) -> 
             "mode": "current_worktree_read_set",
             "base_locator_result_sha256": base_result_hash,
         }
+    preflight = refreshed.get("preflight")
+    if isinstance(preflight, dict):
+        without_preflight = {
+            key: value for key, value in refreshed.items() if key != "preflight"
+        }
+        preflight["context_sha256"] = canonical_hash(without_preflight)
     return refreshed
 
 

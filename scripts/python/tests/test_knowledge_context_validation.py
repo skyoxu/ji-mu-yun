@@ -63,8 +63,9 @@ class KnowledgeContextValidationTests(unittest.TestCase):
             original["decisions"].append({"owner": "adapter", "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity", "candidate": {"path": "retired.md", "source_sha256": "1" * 64}})
             original["request_sha256"] = canonical_hash(original["locator_request"])
             original["result_sha256"] = canonical_hash(original["locator_result"])
+            original["preflight"] = {"status": "ready", "failure_code": None, "knowledge_freshness": "degraded", "catalog_failure_code": "catalog_stale", "source_freshness": "refreshed", "context_sha256": canonical_hash({key: value for key, value in original.items() if key != "preflight"})}
             refreshed = payload(original, root)
-            refreshed["preflight"] = {"status": "ready", "failure_code": None, "knowledge_freshness": "degraded", "catalog_failure_code": "catalog_stale", "source_freshness": "refreshed", "context_sha256": canonical_hash({key: value for key, value in refreshed.items() if key != "preflight"})}
+            self.assertEqual(canonical_hash({key: value for key, value in refreshed.items() if key != "preflight"}), refreshed["preflight"]["context_sha256"])
             with mock.patch.object(validation, "validate_catalog_freshness", return_value="catalog_stale"):
                 self.assertIsNone(validate_context(refreshed, repository_root=root, verify_catalog=True, verify_sources=True, expected_consumer="vdd", require_preflight=True))
     def test_refresh_ignores_rejected_missing_candidates(self) -> None:
