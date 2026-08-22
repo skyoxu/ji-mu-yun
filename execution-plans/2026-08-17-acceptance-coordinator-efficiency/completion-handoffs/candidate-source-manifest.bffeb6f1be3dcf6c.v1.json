@@ -1,0 +1,108 @@
+{
+  "candidate_source_root": "sha256:bffeb6f1be3dcf6c0562a0ee2b860919e82d8d8dc9eeaeb33ad7e95d568dac95",
+  "entries": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "role": "production",
+      "sha256": "sha256:65dea5af9ca3406a6aefdcd3e131b7c56b71cd97973de8b8c9696b9356aac18f",
+      "slice_ids": [
+        "S3"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "role": "contract-consumer",
+      "sha256": "sha256:10cf0315b2d33a1f159a48d501e73a5a67a5a22e1a12346f66f23f15f8fc45de",
+      "slice_ids": [
+        "S0"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "role": "contract-consumer",
+      "sha256": "sha256:90e5b2dfe2b42030ee69e1ae9a81ee27d46e2c5db9db51abea5dc99dbf102f82",
+      "slice_ids": [
+        "S0",
+        "S3"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "role": "production",
+      "sha256": "sha256:408a7f2b058109ae6af2dbc4135cfde8fb4668e65e9e79d85ed3e3cf9fd47365",
+      "slice_ids": [
+        "S0",
+        "S2",
+        "S3"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "role": "test",
+      "sha256": "sha256:98f3d6c9b663441eceb0ed75c6728dee9f935199a7ff200791e7f5ea644b1b27",
+      "slice_ids": [
+        "S0"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+      "role": "test",
+      "sha256": "sha256:3c07fae4abe37f22203c9e7b93613a5a4351e3fa5efe5f6fe7ba3955c7faaaf0",
+      "slice_ids": [
+        "S3"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py",
+      "role": "test",
+      "sha256": "sha256:188d62c9491fdb6eb1a7843e9fc9aaa2198162745e1bdedd14bd5f736ceafdc5",
+      "slice_ids": [
+        "S0",
+        "S2"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      "role": "test",
+      "sha256": "sha256:978bb4282cb2db7f75a31bce481ada63d8707f3a1eb394db584c39f61accea06",
+      "slice_ids": [
+        "S0",
+        "S3"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/command-registry.v1.json",
+      "role": "contract",
+      "sha256": "sha256:2590533d10ab70a922d596e8080e385781bf602c6221d8d5cfdf75c21945de47",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/implementation-contract.v1.json",
+      "role": "contract",
+      "sha256": "sha256:357020157539a216995a18b5802aa2d7699774e31d924f07ff83a18d8ef9021b",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/tools/terminal_full.py",
+      "role": "validator",
+      "sha256": "sha256:eb848867c44f666e1b0efca8ab5b40dd5360cc93b6dce96948768649615ce0e1",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3"
+      ]
+    }
+  ],
+  "schema_version": "jimuyun.candidate-source-manifest.v1"
+}
