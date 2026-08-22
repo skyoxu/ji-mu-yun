@@ -818,6 +818,19 @@ class ExecutionControlTests(unittest.TestCase):
             )
             state = json.loads((run / "run-state.json").read_text(encoding="utf-8"))
             self.assertEqual(source.read_bytes(), (run / state["skillInputContextPath"]).read_bytes())
+            actions = [{"actionId": "validate", "dependsOn": [], "order": 1, "commandId": "validate", "activation": True}]
+            registry = {"validate": {
+                "id": "validate", "executable": sys.executable, "argv": ["-c", "print('ok')"],
+                "cwd": ".", "timeout_seconds": 10, "shell": False, "allowed_write_roots": [],
+                "forbidden_write_roots": [], "registry_hash": "sha256:" + "a" * 64,
+                "environment_allowlist": [], "typed_placeholders": {}, "placeholder_values": {},
+            }}
+            execution_control.resume_persisted_run(
+                repository, run, actions, registry, "sha256:" + "a" * 64, "sha256:" + "b" * 64
+            )
+            lifecycle = [json.loads(line) for line in (run / "acceptance-events.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertEqual("sha256:" + "c" * 64, lifecycle[-1]["inputHashes"]["skillInputBindingHash"])
+            self.assertEqual(context_hash, lifecycle[-1]["inputHashes"]["skillInputContextHash"])
             with self.assertRaisesRegex(execution_control.ControlError, "repository root is required"):
                 execution_control.create_persisted_run(
                     run_root,

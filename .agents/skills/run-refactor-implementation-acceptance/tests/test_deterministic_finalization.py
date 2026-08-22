@@ -108,7 +108,17 @@ def test_deterministic_finalization_requires_and_publishes_hash_bound_receipts(t
     actions = [{"actionId": "terminal-full", "dependsOn": [], "order": 1, "commandId": "terminal-full", "activation": True}]
     runs_root = target / "runs"
     runs_root.mkdir()
-    run = execution_control.create_persisted_run(runs_root, "acceptance-test", prepared["inputHash"], "sha256:" + "a" * 64)
+    skill_context = target / "skill-input-context.v1.json"
+    skill_context.write_text('{"selected":"input"}\n', encoding="utf-8")
+    skill_context_hash = execution_control.artifact_identity_hash(skill_context)
+    skill_binding_hash = "sha256:" + "d" * 64
+    run = execution_control.create_persisted_run(
+        runs_root, "acceptance-test", prepared["inputHash"], "sha256:" + "a" * 64,
+        skill_input_binding_hash=skill_binding_hash,
+        skill_input_context_hash=skill_context_hash,
+        skill_input_context_path=skill_context.relative_to(root).as_posix(),
+        repository_root=root,
+    )
     prepared_path = run / "prepare-run.v1.json"
     prepared_path.write_text(json.dumps(prepared), encoding="utf-8")
     execution_control.resume_persisted_run(root, run, actions, registry, prepared["inputHash"], "sha256:" + "a" * 64)
@@ -121,6 +131,12 @@ def test_deterministic_finalization_requires_and_publishes_hash_bound_receipts(t
     pointer = json.loads((target / "acceptance-current.v1.json").read_text(encoding="utf-8"))
     assert pointer["currentRun"] == "execution-plans/target/runs/acceptance-test"
     assert pointer["authorizes"] == []
+    evaluation = json.loads((run / "finalization/candidate-evaluation.v1.json").read_text(encoding="utf-8"))
+    assert evaluation["inputBindings"]["skillInputBindingHash"] == skill_binding_hash
+    assert evaluation["inputBindings"]["skillInputContextHash"] == skill_context_hash
+    lifecycle = [json.loads(line) for line in (run / "acceptance-events.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert lifecycle[-2]["inputHashes"]["skillInputBindingHash"] == skill_binding_hash
+    assert lifecycle[-2]["inputHashes"]["skillInputContextHash"] == skill_context_hash
 
 
 def test_terminal_machine_result_accepts_json_before_non_json_tail() -> None:

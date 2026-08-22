@@ -28,6 +28,7 @@ class CompactVddProjectionTests(unittest.TestCase):
         (self.root / "scripts/sc/tool.py").write_text("old\n", encoding="utf-8")
         (self.root / "scripts/sc/deleted.py").write_text("delete\n", encoding="utf-8")
         (self.root / "unrelated.txt").write_text("baseline\n", encoding="utf-8")
+        (self.root / "source.py").write_text("pass\n", encoding="utf-8")
         subprocess.run(["git", "add", "."], cwd=self.root, check=True)
         subprocess.run(["git", "commit", "--quiet", "-m", "baseline"], cwd=self.root, check=True)
         self.head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.root, text=True).strip()
@@ -56,7 +57,6 @@ class CompactVddProjectionTests(unittest.TestCase):
         terminal_result.parent.mkdir(parents=True)
         terminal_result.write_text(json.dumps({"schema_version":"acceptance-coordinator-efficiency.terminal-result.v2","predicate":"implementation-complete","status":"pass","terminal_command_id":"validate","authorizes":[]}), encoding="utf-8")
         source = self.root / "source.py"
-        source.write_text("pass\n", encoding="utf-8")
         manifest = {"schema_version":"jimuyun.candidate-source-manifest.v1","entries":[{"path":"source.py","role":"production","slice_ids":["S0"],"sha256":"sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()}]}
         manifest["candidate_source_root"] = "sha256:" + hashlib.sha256(json.dumps(manifest["entries"], sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         manifest_path = self.target / "repair/candidate-source-manifest.v1.json"
@@ -134,21 +134,39 @@ class CompactVddProjectionTests(unittest.TestCase):
         with self.assertRaisesRegex(InputError, "already exists"):
             project(self.root, self.request_path)
 
-    def test_projection_accepts_a_clean_explicit_commit_candidate(self) -> None:
+    def test_projection_rejects_receipt_bound_to_a_different_commit(self) -> None:
         subprocess.run(["git", "add", "."], cwd=self.root, check=True)
         subprocess.run(["git", "commit", "--quiet", "-m", "candidate"], cwd=self.root, check=True)
         candidate = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.root, text=True).strip()
         self.request["candidateRevision"] = candidate
         self.write_request()
 
-        result = project(self.root, self.request_path)
-        request = json.loads((self.root / result["runRequest"]).read_text(encoding="utf-8"))
+        with self.assertRaisesRegex(InputError, "candidate custody does not match"):
+            project(self.root, self.request_path)
 
-        self.assertEqual("commit", request["candidate_mode"])
-        self.assertEqual(candidate, request["candidate_revision"])
-        self.assertNotIn("candidate_frozen_snapshot_path", request)
-        self.assertEqual("execution-plans/target", request["target"])
-        self.assertFalse(Path(request["target"]).is_absolute())
+    def test_handoff_validates_manifest_against_declared_commit_not_worktree(self) -> None:
+        self.request["candidateRevision"] = self.head
+        receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
+        receipt["candidate_custody"]["candidate_revision"] = self.head
+        source = self.root / "source.py"
+        source.write_text("tampered worktree\n", encoding="utf-8")
+        manifest_path = self.target / receipt["candidate_source_manifest"]["path"]
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["entries"][0]["sha256"] = "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()
+        manifest["candidate_source_root"] = "sha256:" + hashlib.sha256(
+            json.dumps(manifest["entries"], sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        receipt["candidate_source_manifest"]["sha256"] = "sha256:" + hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+        receipt["candidate_source_manifest"]["candidate_source_root"] = manifest["candidate_source_root"]
+        self.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.request["implementationReceiptHash"] = "sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest()
+        subprocess.run(["git", "add", "."], cwd=self.root, check=True)
+        subprocess.run(["git", "commit", "--quiet", "-m", "tampered evidence"], cwd=self.root, check=True)
+        self.write_request()
+        with self.assertRaisesRegex(InputError, "candidate source manifest is stale"):
+            project(self.root, self.request_path)
+
 
     def test_projection_rejects_handoff_that_no_longer_matches_the_terminal_contract(self) -> None:
         receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))

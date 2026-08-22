@@ -57,9 +57,9 @@ def test_coordinator_executes_dag_and_finalizes(tmp_path: Path, monkeypatch: pyt
     monkeypatch.setattr(acceptance_cli, "_load_current_coordinator_inputs", lambda *_: {
         "prepared": {"input": {"execution_mode": "evidence_only"}, "inputHash": "sha256:" + "a" * 64, "knowledgeContext": {"sha256": "sha256:" + "b" * 64}},
         "prepared_ref": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64},
-        "receipt_ref": {}, "contract_ref": {}, "target_plan": "execution-plans/target",
+            "receipt_ref": {"sha256": "sha256:" + "d" * 64}, "contract_ref": {"path": "contract.json", "sha256": "sha256:" + "e" * 64}, "target_plan": "execution-plans/target",
     })
-    monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args: {"runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1"})
+    monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args, **kwargs: {"runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1"})
     monkeypatch.setattr(acceptance_cli, "derive_target_run_identity", lambda *args, **kwargs: {"runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1", "runDirectoryPath": run_dir})
     states = iter([
         {"actionStates": {"one": "ready"}, "nextAction": {"actionId": "one"}, "readyActionIds": ["one"]},
@@ -95,9 +95,9 @@ def test_coordinator_emits_typed_handoff_without_bootstrap(tmp_path: Path, monke
     monkeypatch.setattr(acceptance_cli, "REPOSITORY_ROOT", tmp_path)
     monkeypatch.setattr(acceptance_cli, "_load_current_coordinator_inputs", lambda *_: {
         "prepared": {"input": {"execution_mode": "evidence_only", "semantic_review_required": True, "actions": [{"actionId": "one", "dependsOn": [], "order": 1, "commandId": "one", "activation": True}]}, "inputHash": "sha256:" + "a" * 64, "knowledgeContext": {"sha256": "sha256:" + "b" * 64}},
-        "prepared_ref": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64}, "receipt_ref": {}, "contract_ref": {}, "target_plan": "execution-plans/target",
+        "prepared_ref": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64}, "receipt_ref": {"sha256": "sha256:" + "d" * 64}, "contract_ref": {"path": "contract.json", "sha256": "sha256:" + "e" * 64}, "target_plan": "execution-plans/target",
     })
-    monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args: {"runId": "run-1", "runDirectory": "execution-plans/target/runs/run-1"})
+    monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args, **kwargs: {"runId": "run-1", "runDirectory": "execution-plans/target/runs/run-1"})
     calls = {"inspect": 0, "resume": 0, "finalize": 0}
     monkeypatch.setattr(acceptance_cli, "inspect_persisted_run", lambda *args: calls.__setitem__("inspect", calls["inspect"] + 1))
     monkeypatch.setattr(acceptance_cli, "resume_persisted_run", lambda *args: calls.__setitem__("resume", calls["resume"] + 1))
@@ -124,12 +124,12 @@ def test_v4_coordinator_replay_is_idempotent_for_same_output(tmp_path: Path, mon
     monkeypatch.setattr(acceptance_cli, "REPOSITORY_ROOT", tmp_path)
     monkeypatch.setattr(acceptance_cli, "_load_current_coordinator_inputs", lambda *_: {
             "prepared": {"input": {"execution_mode": "evidence_only", "semantic_review_required": False, "actions": [{"actionId": "one", "dependsOn": [], "order": 1, "commandId": "one", "activation": True}]}, "inputHash": "sha256:" + "a" * 64, "knowledgeContext": {"sha256": "sha256:" + "b" * 64}},
-        "prepared_ref": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64}, "receipt_ref": {}, "contract_ref": {}, "target_plan": "execution-plans/target",
+        "prepared_ref": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64}, "receipt_ref": {"sha256": "sha256:" + "d" * 64}, "contract_ref": {"path": "contract.json", "sha256": "sha256:" + "e" * 64}, "target_plan": "execution-plans/target",
     })
     run_dir = tmp_path / "execution-plans" / "target" / "acceptance-runs" / "run-1"
     run_dir.mkdir(parents=True)
     monkeypatch.setattr(acceptance_cli, "derive_target_run_identity", lambda *args, **kwargs: {"runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1", "runDirectoryPath": run_dir})
-    monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args: {"runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1"})
+    monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args, **kwargs: {"runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1"})
     states = iter([
         {"actionStates": {"one": "ready"}, "nextAction": {"actionId": "one"}, "readyActionIds": ["one"]},
         {"actionStates": {"one": "completed"}, "nextAction": None, "readyActionIds": []},
@@ -137,8 +137,8 @@ def test_v4_coordinator_replay_is_idempotent_for_same_output(tmp_path: Path, mon
     monkeypatch.setattr(acceptance_cli, "inspect_persisted_run", lambda *args: next(states))
     monkeypatch.setattr(acceptance_cli, "resume_persisted_run", lambda *args: None)
     monkeypatch.setattr(acceptance_cli, "finalize_deterministic_run", lambda *args: {"status": "acceptance-passed", "authorizes": ["acceptance-passed"]})
-    contract_hash = acceptance_cli.canonical_hash({"preparedRunInput": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64}, "skillInputContract": {}})
-    (run_dir / "run-state.json").write_text(json.dumps({"runId": "run-1", "runInputHash": "sha256:" + "a" * 64, "contractHash": contract_hash, "knowledgeContextHash": "sha256:" + "b" * 64}), encoding="utf-8")
+    contract_hash = acceptance_cli.canonical_hash({"preparedRunInput": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64}, "skillInputContract": {"path": "contract.json", "sha256": "sha256:" + "e" * 64}})
+    (run_dir / "run-state.json").write_text(json.dumps({"runId": "run-1", "runInputHash": "sha256:" + "a" * 64, "contractHash": contract_hash, "knowledgeContextHash": "sha256:" + "b" * 64, "skillInputBindingHash": "sha256:" + "d" * 64, "skillInputContextHash": "sha256:" + "e" * 64}), encoding="utf-8")
     first = acceptance_cli.run_coordinator(str(tmp_path / "request.json"), str(tmp_path / "result.json"))
     second = acceptance_cli.run_coordinator(str(tmp_path / "request.json"), str(tmp_path / "result.json"))
     assert first == second

@@ -295,6 +295,8 @@ def finalize_deterministic_run(
         "runInputHash": prepared["inputHash"],
         "contractHash": state["contractHash"],
         "knowledgeContextHash": state.get("knowledgeContextHash"),
+        "skillInputBindingHash": state.get("skillInputBindingHash"),
+        "skillInputContextHash": state.get("skillInputContextHash"),
         "candidateCustodyHash": canonical_hash(prepared["candidateCustody"]),
     }
     state_hashes = {key: value for key, value in state_hashes.items() if value is not None}

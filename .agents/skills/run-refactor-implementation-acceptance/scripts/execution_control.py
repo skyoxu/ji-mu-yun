@@ -824,6 +824,10 @@ def resume_persisted_run(
     lifecycle_inputs = {"runInputHash": state["runInputHash"], "contractHash": state["contractHash"]}
     if "knowledgeContextHash" in state:
         lifecycle_inputs["knowledgeContextHash"] = state["knowledgeContextHash"]
+    if "skillInputBindingHash" in state:
+        lifecycle_inputs["skillInputBindingHash"] = state["skillInputBindingHash"]
+    if "skillInputContextHash" in state:
+        lifecycle_inputs["skillInputContextHash"] = state["skillInputContextHash"]
     lifecycle_args = {
         "action_id": action["actionId"], "attempt_id": attempt_id, "action_type": "run-command",
         "input_hashes": lifecycle_inputs, "owner_token": "owner-" + state["runId"],

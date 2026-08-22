@@ -62,6 +62,14 @@ def _git_blob(root: Path, revision: str, path: str) -> bytes | None:
     return _git(root, "show", f"{revision}:{path}", allow_missing=True)
 
 
+def _is_within(path: Path, root: Path) -> bool:
+    """Containment check that tolerates Windows short/long path aliases."""
+    try:
+        return os.path.commonpath((os.path.abspath(path), os.path.abspath(root))) == os.path.abspath(root)
+    except ValueError:
+        return False
+
+
 def _validate_request(value: dict[str, Any]) -> None:
     required = {
         "schemaVersion", "targetPlan", "runId", "changeId", "baselineRevision",
@@ -155,10 +163,8 @@ def _project_baseline_overlays(
 
 def _implementation_handoff(root: Path, target: Path, request: dict[str, Any]) -> tuple[Path, dict[str, Any], Path]:
     receipt_path = (root / request["implementationReceiptPath"]).resolve()
-    try:
-        receipt_path.relative_to(root)
-    except ValueError as exc:
-        raise InputError("implementation receipt escapes repository root") from exc
+    if not _is_within(receipt_path, root):
+        raise InputError("implementation receipt escapes repository root")
     if not receipt_path.is_file() or _hash_bytes(receipt_path.read_bytes()) != request["implementationReceiptHash"]:
         raise InputError("implementation receipt is missing or stale")
     receipt = _load(receipt_path)
@@ -207,6 +213,13 @@ def _implementation_handoff(root: Path, target: Path, request: dict[str, Any]) -
         custody = receipt.get("candidate_custody")
         if not isinstance(custody, dict) or custody.get("mode") != "commit" or not isinstance(custody.get("candidate_revision"), str) or not re.fullmatch(r"[0-9a-f]{40}", custody["candidate_revision"]):
             raise InputError("implementation receipt candidate custody is invalid")
+        requested_revision = request.get("candidateRevision")
+        if requested_revision is not None:
+            if custody["candidate_revision"] != requested_revision:
+                raise InputError("implementation receipt candidate custody does not match request candidateRevision")
+            resolved_candidate = _git(root, "rev-parse", "--verify", f"{requested_revision}^{{commit}}")
+            if resolved_candidate is None or resolved_candidate.decode("ascii").strip() != requested_revision:
+                raise InputError("implementation request candidateRevision is not an immutable commit")
         manifest = _load(manifest_path)
         entries = manifest.get("entries")
         if manifest.get("schema_version") != "jimuyun.candidate-source-manifest.v1" or not isinstance(entries, list):
@@ -215,12 +228,12 @@ def _implementation_handoff(root: Path, target: Path, request: dict[str, Any]) -
         for entry in entries:
             if not isinstance(entry, dict) or set(entry) != {"path", "role", "slice_ids", "sha256"}:
                 raise InputError("implementation candidate source manifest is invalid")
-            source = (root / str(entry["path"])).resolve()
-            try:
-                source.relative_to(root)
-            except ValueError as exc:
-                raise InputError("implementation candidate source manifest escapes repository") from exc
-            if not source.is_file() or _hash_bytes(source.read_bytes()) != entry["sha256"]:
+            source_path = str(entry["path"])
+            source = (root / source_path).resolve()
+            if not _is_within(source, root):
+                raise InputError("implementation candidate source manifest escapes repository")
+            candidate_bytes = _git_blob(root, requested_revision, source_path) if requested_revision else source.read_bytes() if source.is_file() else None
+            if candidate_bytes is None or _hash_bytes(candidate_bytes) != entry["sha256"]:
                 raise InputError("implementation candidate source manifest is stale")
             canonical_entries.append(entry)
         root_hash = _hash_bytes(json.dumps(sorted(canonical_entries, key=lambda item: (item["path"], item["role"], item["slice_ids"])), sort_keys=True, separators=(",", ":")).encode("utf-8"))

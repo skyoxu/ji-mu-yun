@@ -1116,7 +1116,13 @@ def _load_current_coordinator_inputs(request_path: Path, request: object) -> dic
         raise InputError("coordinator Skill input receipt is not ready")
     if contract.get("schema_version") != "skill-input-contract.v1":
         raise InputError("coordinator Skill input contract is invalid")
-    return {"prepared": prepared, "prepared_ref": prepared_ref, "receipt_ref": receipt_ref, "contract_ref": contract_ref, "target_plan": request["targetPlan"]}
+    context_ref = receipt.get("context_artifact")
+    if not isinstance(context_ref, dict) or set(context_ref) != {"path", "sha256"}:
+        raise InputError("coordinator Skill input context reference is invalid")
+    context_path = (source.parent / str(context_ref["path"])).resolve()
+    if not context_path.is_file() or _file_hash(context_path) != context_ref["sha256"]:
+        raise InputError("coordinator Skill input context is stale")
+    return {"prepared": prepared, "prepared_ref": prepared_ref, "receipt_ref": receipt_ref, "receipt": receipt, "contract_ref": contract_ref, "skill_context_ref": {"path": context_path, "sha256": context_ref["sha256"]}, "target_plan": request["targetPlan"]}
 
 
 def _append_coordinator_telemetry(run_dir: Path, value: dict) -> None:
@@ -1148,6 +1154,9 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
     if not isinstance(run_input_hash, str) or not isinstance(knowledge_hash, str):
         raise InputError("coordinator prepared run input binding is invalid")
     contract_hash = canonical_hash({"preparedRunInput": loaded["prepared_ref"], "skillInputContract": loaded["contract_ref"]})
+    skill_binding_hash = loaded.get("receipt_ref", {}).get("sha256")
+    skill_context_ref = loaded.get("skill_context_ref")
+    skill_context_hash = skill_context_ref.get("sha256") if isinstance(skill_context_ref, dict) else None
     target_root = (REPOSITORY_ROOT / loaded["target_plan"]).resolve()
     action_path = target_root / "action-dag.v1.json"
     registry_path = target_root / "command-registry.v1.json"
@@ -1184,7 +1193,15 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
             raise InputError("coordinator replay run state binding does not match")
         _append_coordinator_telemetry(run_dir, {"route": existing.get("route"), "replayed": True, "elapsedMs": 0, "waitMs": 0, "interventionCount": 0, "executedActionCount": 0})
         return existing
-    entry = start_or_resume_target_run(REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash)
+    if isinstance(skill_binding_hash, str) and isinstance(skill_context_ref, dict) and isinstance(skill_context_hash, str):
+        entry = start_or_resume_target_run(
+            REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash,
+            skill_input_binding_hash=skill_binding_hash,
+            skill_input_context_hash=skill_context_hash,
+            skill_input_context_path=skill_context_ref["path"],
+        )
+    else:
+        entry = start_or_resume_target_run(REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash)
     run_dir = (REPOSITORY_ROOT / entry["runDirectory"]).resolve()
     semantic = bool(run_input.get("semantic_review_required", False))
     if semantic:
