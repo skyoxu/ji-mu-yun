@@ -1,0 +1,2221 @@
+{
+  "schema_version": "hash-bound-semantic-review-receipt.v1",
+  "receipt_id": "phase-b-c-identity-isolation-workspace-recovery-e4011d0e-round-3-round-2",
+  "candidate": {
+    "repository": "skyoxu/ji-mu-yun",
+    "commit": "e4011d0ea3e019912b9762dfdbf3c0fd24fc9ac0",
+    "commit_url": "https://github.com/skyoxu/ji-mu-yun/commit/e4011d0ea3e019912b9762dfdbf3c0fd24fc9ac0"
+  },
+  "bindings": {
+    "round_3_source_freeze": {
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/repair/round-3/source-freeze.v1.json",
+      "file_sha256": "sha256:1520d09686d6b48f25975fdba1c9cf35b947be381b1907ec8bab1c783431c7f1",
+      "git_blob_sha1": "dea0f342e60d4eed3cdb3cbe6cb9503fbda1a4e9",
+      "declared_canonical_hash": "sha256:b9e8853f993b14dd48907704fc94670cd84f34ee19849ea7f8feb64e07f574b5",
+      "declared_requirements_mapping_sha256": "sha256:4d2b094dd2d13461bfb277793ceb4e47045e0b566e22feca50aa3b35ac2ab9c4",
+      "selection_hash": "sha256:1badf8703f9d81fdcac527e19d727a936c54fe340eaf3de633bd59439b921439"
+    },
+    "round_2_requirements_mapping": {
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/repair/round-2/requirements-acceptance.v1.json",
+      "file_sha256": "sha256:6606314ae23e8a8d6717da29efdd523149ada9e292f9748100ef69d1a8e13612",
+      "git_blob_sha1": "7292b6851d81faef8f133efa530cad29b77a10ab",
+      "round": 2,
+      "requirement_count": 40,
+      "acceptance_count": 18,
+      "requirement_acceptance_edge_count": 105,
+      "deferred_obligation_count": 59
+    },
+    "canonical_spec": {
+      "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+      "file_sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+      "git_blob_sha1": "d1cc1726aed8a5cf9c53c08d942268e3ff448452"
+    },
+    "canonical_architecture": {
+      "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+      "file_sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+      "git_blob_sha1": "5bbdb88e8610535ba64bc7cabbfba61864039d96"
+    }
+  },
+  "reviewer": {
+    "identity": "openai-codex-work-mode",
+    "role": "external_semantic_reviewer",
+    "attestation_type": "model_generated_hash_bound_review",
+    "review_timestamp": "2026-08-23T18:53:40Z",
+    "review_scope": {
+      "included": [
+        "All 59 Round-2 obligations whose status is deferred",
+        "Semantic comparison against the frozen canonical SPEC, five normative companions, adopted Architecture Spine, and applicable AGENTS.md rules",
+        "Per-obligation typed standalone-identity disposition and PIWR/acceptance coverage references",
+        "Hash-binding consistency required before VDD repair-closure import"
+      ],
+      "excluded": [
+        "Changing requirements identity or requirements mapping",
+        "Regenerating source-freeze or repair artifacts",
+        "Changing plan-state",
+        "Publishing implementation authorization",
+        "Implementing Phase B/C product code"
+      ]
+    }
+  },
+  "review_outcome": {
+    "semantic_disposition_status": "complete",
+    "binding_validation_status": "failed",
+    "receipt_importability": "blocked",
+    "overall_decision": "withhold_vdd_review_run_projection",
+    "blocking_findings": [
+      {
+        "finding_id": "SEM-RECEIPT-BIND-001",
+        "type": "requirements_identity_mismatch",
+        "severity": "blocking",
+        "source_freeze_declared_requirements_mapping_sha256": "sha256:4d2b094dd2d13461bfb277793ceb4e47045e0b566e22feca50aa3b35ac2ab9c4",
+        "observed_round_2_requirements_mapping_file_sha256": "sha256:6606314ae23e8a8d6717da29efdd523149ada9e292f9748100ef69d1a8e13612",
+        "rationale": "The current VDD exact-cover validator compares requirements_manifest.sha256 with the actual mapping file hash. Candidate e4011d0e therefore blocks before it can emit a vdd-requirement-semantic-handoff.v1.",
+        "required_owner_action": "VDD must regenerate the Round-3 source-freeze against the current Round-2 mapping, or restore the exact mapping bytes whose hash is declared by the freeze, then rerun full exact-cover."
+      }
+    ],
+    "deterministic_mapping_core_check": {
+      "status": "conformant",
+      "errors": [],
+      "requirement_count": 40,
+      "acceptance_count": 18,
+      "requirement_acceptance_edge_count": 105,
+      "note": "This is the pure requirements/acceptance exact-cover core only; full frozen-authority conformance is blocked by SEM-RECEIPT-BIND-001."
+    }
+  },
+  "deferred_obligation_ids": [
+    "OBL-07bf5879a69fb9d71c8835ce62e3b7c3486926f51e855366185c097c7e6d7534",
+    "OBL-0ed86eb0fd36e8a50c27d75a552bfc564ee77bd327a301f1560cf39d2fdf6a04",
+    "OBL-129329f1195149e9a1c4edd8a07e8e1ebd538aca28e5d8ec89cdc4a0e538f370",
+    "OBL-14f53ef7ed968f0faf0a89d6294a2fe87f516b669cc6c63bfa5a03067d54840a",
+    "OBL-16694d63a24d17c8df5e6987290969c2f11c6b8db542f652f6f56c6b351d8512",
+    "OBL-166e917a34558557db469206fe388fb3d7cfa97e10053600a6cad28b93ce6fc8",
+    "OBL-184878b2abbe163811fdf68eb8563a6de217b6a7d83833b898a6a4d0424074a9",
+    "OBL-1a3be937aa0603663f7a3ffe81c6a000c668413e22e24dc4ecf20dfb10303e82",
+    "OBL-22316e25b62b97aaa3c8ed26bfbd796d77bffe5fb4a6705fe19bd455ebe67b96",
+    "OBL-24fcf96fee7cf558ad68d323193aa714fed785c954b6a737727abda92ef4ddaa",
+    "OBL-26331e5f05259d460565cb5bc3a37f8645f3d1f82d6e7a19ad35282c3e6ca7cb",
+    "OBL-35982132794a39cfcb9d894ec322f02080d0e7b23593a69094e4002e00be2f1f",
+    "OBL-363ba7fd3105b918f7e53e9d33d6e3c635bdce4ab1821724886d330b9ea8700a",
+    "OBL-36437eae93c84e111b1e697dabefb03e24a6f85fe5f0d264bdbe0b857abeaae1",
+    "OBL-36d288cbb48633e593768a3709603c9f03e6ce85c5760531614ec20b4317c675",
+    "OBL-3c976d54d9ea4482579f256a12413cce9068aae48a5278becda7acbd49b01165",
+    "OBL-3cbf4cf5b5e65004be6150aab454d192cd91a1e8cfc37e5682e66c7d9a5e1961",
+    "OBL-4612b127d2d0d86f897899eab0fbae4d0ecadc0de9d9127de9b04be00d6857db",
+    "OBL-4a56b2f310191e4ab8530bbe3cb2d4177a3c2178b556d0468e414836062f1b03",
+    "OBL-54e86ddfdcbee6f2a8a249cce746dc0c6ce923edd2d41a975947a33a6ef31eb4",
+    "OBL-54f6058e4c77588b0afcbe2233ef679e6c255ddeafe6e32bb84ecb0faa10ede9",
+    "OBL-57d4fe36d77c99a047461bfb5487446112c25eef003eaf491cd71d6be5cb629f",
+    "OBL-60185d9509d352f3a279a9c4fb044414a7ad170551575b7d2a97d5744b334c48",
+    "OBL-648e423d07d31041e9d80338e1b3daffc5640dc069df547a0625cbd4ec0ede03",
+    "OBL-66b60223e534eb115a62c9e40fdc58305ed63df8f497e949d483e05780e2c0e3",
+    "OBL-6b74fa39f6553d3bfc5abef5d665a341e5ec770331c33f20b76667d0bb6a2663",
+    "OBL-6d3309b220459c6b7ba85b4af159fae1f781366b662a6182470c8af6a20c806d",
+    "OBL-6d34708f6542973fb9b02b512f631a923c1adb85704520219f2a29e1858d58e0",
+    "OBL-6d798a3677bc30a6cef976d94806a375e2fca6ae2aec6089569a4854abe6a058",
+    "OBL-81f53c8ce653c8d1d5781e4525ecf8e3d1c553a82aca00948beffaccd719affb",
+    "OBL-82731a2b2686d75ae0fa2e5f3a070a5fd62437de48e391b182e81ca108a92f55",
+    "OBL-83c3527b69667af199ba9888786868069f52ddcb957b4d8a3a95edeaa5046371",
+    "OBL-859c8704161da3f6023a774922cf7f7c20770c82433be52ffae5716cd966241d",
+    "OBL-8800f971aecfa51841baa6f05cd70f559977ee8735ede2265708823eccdc2162",
+    "OBL-889dbbdb2e2c3fa2b4ca04fa7d2029144f276c196c0175820863e13d78ae216f",
+    "OBL-8b761d9b5972a487db5cfa12ab9a45fc57ee4e40381c58482f34fd5ef167e4a7",
+    "OBL-8dbffc400477aa8ce7499975be4745bf98c1ff648f3b472e1faffe728c9c9265",
+    "OBL-96199b17145b889713af588c5d78cda92a272d0c0d502e259c7bc373ce2bdae6",
+    "OBL-9a2015922de226a1603f62f8bf381a71951c5858e00387767701ff3b95b67813",
+    "OBL-9b16cf6ed760825665d1d1034cf4d3529f496ebffdf5984ce2927c76a75f64c6",
+    "OBL-a8c1aa5617c55209e1da1c98a1abd6f44c036ece49b8f926f2a90be090514377",
+    "OBL-aea2a655788e57675b33863b0811900ae6fe3032facdbaabf98b1008053a53fd",
+    "OBL-b1ebe55d30ca02183da3827beea94320e4e422a82f237664e58f95c1e4df5797",
+    "OBL-b25a7a53e580869efd79daec0cc4ae0d3ba0522964274dea3b59abdf9b9fe4e5",
+    "OBL-b773a6ddab63bdff84f731db165cac0238c2384c5ed247bd4643de9e71041b8e",
+    "OBL-ca2e534bbb37edd9f442237a99f9ee99080198daf512f660b62bba3bcbb3caf9",
+    "OBL-d3ea9fd43caedc88d1fce4b0d7588fb804b6706e36d98b4b295f2e6f20f7fad4",
+    "OBL-d530bddab3eed49afe55bf4fb033305965df8f84e7b933b9df52b7b7594e7b29",
+    "OBL-d96dc7d70190ce86402b8019b4337f6f46ec3f447e45921cfd432669ffb14937",
+    "OBL-df0add5c6c99f9220bde6b44b00fa5dd5b8e8ce47ba0f90da31b26d7459dbc97",
+    "OBL-e44901763c51ddbb6256a06935a1cbfc91128559b4e295b342f8c64f20261991",
+    "OBL-e749b92e298e3fd7171b10001f2ca7df0e2d57227a2b4f8ebdd03210fc797fc1",
+    "OBL-e824b8be1789c50bc8ae952d5f712a2575559f2403d25b2f1f60d04b72eed01e",
+    "OBL-e862459595cf9f290968f2cae50f8e8c77ebcfc94e8c1b7cc61595dc9986b2c8",
+    "OBL-e994e0e73b8c8b3cd4d4290d5d4dc3f4288c8811527ffea928a86b3760e20c6d",
+    "OBL-f0b926dd269d59cc5f395d2a3d14a798c68357284875bfab028379380df86efd",
+    "OBL-fa08f903cf62fe4308377f1f80cd9f69a37a2109a9aec73619b81b8eef2ca8ca",
+    "OBL-fb11fc1318bb3da725683cdba5e4b10ce92abcd3abf3aa143d66429d1e873966",
+    "OBL-ffaf05ab69350056e366cbf781d18bbc6575d93bed21e12b5c3a0a5c4b0ce3c2"
+  ],
+  "dispositions": [
+    {
+      "obligation_id": "OBL-9a2015922de226a1603f62f8bf381a71951c5858e00387767701ff3b95b67813",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 4,
+        "line_end": 4,
+        "quote": "This always-loaded file keeps only routing, authorization, and cross-tree"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_rule",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is a repository execution/routing rule, not a Phase B/C product requirement identity. It remains binding through AGENTS.md and receives no duplicate PIWR identity. It only defines the routing scope of the always-loaded repository contract.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-54f6058e4c77588b0afcbe2233ef679e6c255ddeafe6e32bb84ecb0faa10ede9",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 19,
+        "line_end": 19,
+        "quote": "These layers never share snapshot, current, cache, or LKG authority. Knowledge"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_rule",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is a repository execution/routing rule, not a Phase B/C product requirement identity. It remains binding through AGENTS.md and receives no duplicate PIWR identity. The snapshot/current/cache/LKG statement governs repository knowledge-layer authority, not Phase B/C product behavior.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-24fcf96fee7cf558ad68d323193aa714fed785c954b6a737727abda92ef4ddaa",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 24,
+        "line_end": 24,
+        "quote": "Read only the row that matches the task, then follow its local links."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_rule",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is a repository execution/routing rule, not a Phase B/C product requirement identity. It remains binding through AGENTS.md and receives no duplicate PIWR identity. It is a repository reading instruction.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-184878b2abbe163811fdf68eb8563a6de217b6a7d83833b898a6a4d0424074a9",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 61,
+        "line_end": 61,
+        "quote": "guidance for that workspace only; it must not widen the server route or tool"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_rule",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is a repository execution/routing rule, not a Phase B/C product requirement identity. It remains binding through AGENTS.md and receives no duplicate PIWR identity. It constrains repository-local sandbox guidance and MCP/tool routing.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-fa08f903cf62fe4308377f1f80cd9f69a37a2109a9aec73619b81b8eef2ca8ca",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 72,
+        "line_end": 72,
+        "quote": "- Prefer small, deterministic, testable changes; never disable tests to pass."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_rule",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is a repository execution/routing rule, not a Phase B/C product requirement identity. It remains binding through AGENTS.md and receives no duplicate PIWR identity. It is change and test discipline for contributors.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-a8c1aa5617c55209e1da1c98a1abd6f44c036ece49b8f926f2a90be090514377",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 86,
+        "line_end": 86,
+        "quote": "- If a command script needs Chinese literals, use a Python file or ASCII-only"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_rule",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is a repository execution/routing rule, not a Phase B/C product requirement identity. It remains binding through AGENTS.md and receives no duplicate PIWR identity. It is an encoding instruction for command scripts.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-166e917a34558557db469206fe388fb3d7cfa97e10053600a6cad28b93ce6fc8",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 107,
+        "line_end": 107,
+        "quote": "user-sandbox layer must not leak user tokens or secrets into Phase service or"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_boundary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This repository boundary restates canonical product requirements; treating it as a second standalone requirement would duplicate the same acceptance surface. The user-token and secret non-leakage boundary is already owned by PIWR-014.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-014"
+        ],
+        "acceptance_ids": [
+          "PIWR-A08",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-d530bddab3eed49afe55bf4fb033305965df8f84e7b933b9df52b7b7594e7b29",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 110,
+        "line_end": 110,
+        "quote": "must still not be returned to the model, published, or committed."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_boundary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This repository boundary restates canonical product requirements; treating it as a second standalone requirement would duplicate the same acceptance surface. Credential-value redaction and non-publication are already owned by PIWR-013 and PIWR-014.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-013",
+          "PIWR-014"
+        ],
+        "acceptance_ids": [
+          "PIWR-A02",
+          "PIWR-A08",
+          "PIWR-A15",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-6d3309b220459c6b7ba85b4af159fae1f781366b662a6182470c8af6a20c806d",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 128,
+        "line_end": 128,
+        "quote": "- A run is never complete based only on assistant text. Validators, diagnostics,"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_boundary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This repository boundary restates canonical product requirements; treating it as a second standalone requirement would duplicate the same acceptance surface. Machine-closed completion is already expressed through durable operation state, bounded outcomes, and acceptance evidence.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-033",
+          "PIWR-035"
+        ],
+        "acceptance_ids": [
+          "PIWR-A10",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-129329f1195149e9a1c4edd8a07e8e1ebd538aca28e5d8ec89cdc4a0e538f370",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 130,
+        "line_end": 130,
+        "quote": "  evidence must establish completion."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_boundary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This repository boundary restates canonical product requirements; treating it as a second standalone requirement would duplicate the same acceptance surface. This is the continuation of the same machine-evidence completion rule.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-033",
+          "PIWR-035"
+        ],
+        "acceptance_ids": [
+          "PIWR-A10",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-889dbbdb2e2c3fa2b4ca04fa7d2029144f276c196c0175820863e13d78ae216f",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 151,
+        "line_end": 151,
+        "quote": "Read-only decisions are schema/JSON parsed; writes require an executable route,"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_boundary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This repository boundary restates canonical product requirements; treating it as a second standalone requirement would duplicate the same acceptance surface. The shared LLM/Codex write boundary composes server authorization, restricted execution, hosted-route authority, asynchronous state, and server-decided browser behavior.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-010",
+          "PIWR-015",
+          "PIWR-030",
+          "PIWR-033",
+          "PIWR-036"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A03",
+          "PIWR-A05",
+          "PIWR-A09",
+          "PIWR-A12",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-b25a7a53e580869efd79daec0cc4ae0d3ba0522964274dea3b59abdf9b9fe4e5",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 175,
+        "line_end": 175,
+        "quote": "must not create a VDD directory unless the user explicitly requests creation"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_rule",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is a repository execution/routing rule, not a Phase B/C product requirement identity. It remains binding through AGENTS.md and receives no duplicate PIWR identity. It controls when repository VDD directories may be created.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-96199b17145b889713af588c5d78cda92a272d0c0d502e259c7bc373ce2bdae6",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 177,
+        "line_end": 177,
+        "quote": "must not enter Taskmaster triplets, Chapter 3-7 orchestration, overlay-generator"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_rule",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is a repository execution/routing rule, not a Phase B/C product requirement identity. It remains binding through AGENTS.md and receives no duplicate PIWR identity. It excludes legacy repository workflow families from ordinary Phase work.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-8dbffc400477aa8ce7499975be4745bf98c1ff648f3b472e1faffe728c9c9265",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 182,
+        "line_end": 182,
+        "quote": "- Targeted validation passed, or the exact validation gap and required"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_boundary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This repository boundary restates canonical product requirements; treating it as a second standalone requirement would duplicate the same acceptance surface. Targeted validation or an explicit evidence gap is already part of typed operation and failure closure.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-033",
+          "PIWR-035"
+        ],
+        "acceptance_ids": [
+          "PIWR-A10",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-e824b8be1789c50bc8ae952d5f712a2575559f2403d25b2f1f60d04b72eed01e",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 187,
+        "line_end": 187,
+        "quote": "- Documentation is updated only where public behavior or ownership changed."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_rule",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is a repository execution/routing rule, not a Phase B/C product requirement identity. It remains binding through AGENTS.md and receives no duplicate PIWR identity. It is documentation maintenance discipline.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-8800f971aecfa51841baa6f05cd70f559977ee8735ede2265708823eccdc2162",
+      "source_binding": {
+        "path": "AGENTS.md",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+        "line_start": 190,
+        "line_end": 190,
+        "quote": "  compatibility break, or assistant-only completion claim was introduced."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "repository_boundary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This repository boundary restates canonical product requirements; treating it as a second standalone requirement would duplicate the same acceptance surface. This Definition-of-Done line aggregates existing confidentiality, evidence, compatibility, and bounded-failure requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-013",
+          "PIWR-014",
+          "PIWR-033",
+          "PIWR-034",
+          "PIWR-035"
+        ],
+        "acceptance_ids": [
+          "PIWR-A02",
+          "PIWR-A04",
+          "PIWR-A08",
+          "PIWR-A10",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A16",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-fb11fc1318bb3da725683cdba5e4b10ce92abcd3abf3aa143d66429d1e873966",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 26,
+        "line_end": 26,
+        "quote": "**Layered control-plane with durable intent/outcome and staged fail-safe publication.** The Phase service is the policy and orchestration layer; SQLite is durable control-plane metadata; local Workspace storage and Runner are restricted execution layers; evidence/readback is a derived, account-scoped projection. Mutations cross boundaries as authenticated intents, durable state transitions, and verified outcomes. Workspace content is published only after staging validation."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. The design paradigm summarizes the control-plane, restricted-execution, durable-attempt, staged-publication, and evidence boundaries already partitioned across the listed requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-002",
+          "PIWR-009",
+          "PIWR-010",
+          "PIWR-015",
+          "PIWR-021",
+          "PIWR-023",
+          "PIWR-025",
+          "PIWR-026",
+          "PIWR-029",
+          "PIWR-033",
+          "PIWR-035"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A03",
+          "PIWR-A04",
+          "PIWR-A05",
+          "PIWR-A06",
+          "PIWR-A07",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A13",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A16",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-14f53ef7ed968f0faf0a89d6294a2fe87f516b669cc6c63bfa5a03067d54840a",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 35,
+        "line_end": 35,
+        "quote": "| ADR-0036 [ADOPTED] | Prototype Route Recovery Authority | Hosted route recovery order and machine-closed acceptance remain the only route/readback authority. |"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. ADR-0036 is inherited route/readback authority already represented by the recovery-truth and hosted-route requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-029",
+          "PIWR-030"
+        ],
+        "acceptance_ids": [
+          "PIWR-A09",
+          "PIWR-A11",
+          "PIWR-A12",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-60185d9509d352f3a279a9c4fb044414a7ad170551575b7d2a97d5744b334c48",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 37,
+        "line_end": 37,
+        "quote": "| ADR-0038 [ADOPTED] | Evidence Sidecars And Account-Scoped Readback | Evidence is generated, redacted, account-scoped, hash-aware, and never replaced by assistant prose. |"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. ADR-0038 restates redacted, account-scoped, machine-closed evidence and readback behavior.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-013",
+          "PIWR-014",
+          "PIWR-033",
+          "PIWR-035",
+          "PIWR-036"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A02",
+          "PIWR-A08",
+          "PIWR-A10",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-9b16cf6ed760825665d1d1034cf4d3529f496ebffdf5984ce2927c76a75f64c6",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 47,
+        "line_end": 47,
+        "quote": "- **Rule:** `Principal`, `Account/Tenant`, `Member`, `Role`, and `Credential/Session` are distinct domain records. The server resolves `RequestContext { principalId, accountId, roleSet, credentialId, correlationId }` from verified credentials and server relations. Every Project, Run, Artifact, Package, Asset, Chat, Workflow, LLM usage, Workspace, Snapshot, Restore Attempt, and Preview carries server-owned Account/Project ownership. Client account fields are target selectors only. Unknown or conflicting ownership fails closed."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-1 is the architecture realization of the identity, credential, ownership, authorization, response, and secret requirements it explicitly binds.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-001",
+          "PIWR-002",
+          "PIWR-003",
+          "PIWR-004",
+          "PIWR-005",
+          "PIWR-006",
+          "PIWR-007",
+          "PIWR-008",
+          "PIWR-009",
+          "PIWR-010",
+          "PIWR-011",
+          "PIWR-012",
+          "PIWR-013",
+          "PIWR-014"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A02",
+          "PIWR-A03",
+          "PIWR-A04",
+          "PIWR-A08",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-648e423d07d31041e9d80338e1b3daffc5640dc069df547a0625cbd4ec0ede03",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 53,
+        "line_end": 53,
+        "quote": "- **Rule:** HTTP handlers create the authenticated `RequestContext`; background jobs persist and revalidate its immutable identity binding before execution; Runner launch receives a server-created `RunContext` containing only account/project/workspace/run IDs, allowed root, policy hash, and lease/fencing version. No layer accepts caller-provided account scope as authority, and no context is widened after dispatch."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-2 refines verified RequestContext/RunContext propagation for the exact requirements named by its Binds clause.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-002",
+          "PIWR-005",
+          "PIWR-006",
+          "PIWR-007",
+          "PIWR-008",
+          "PIWR-009",
+          "PIWR-010",
+          "PIWR-011",
+          "PIWR-025",
+          "PIWR-033",
+          "PIWR-035"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A02",
+          "PIWR-A03",
+          "PIWR-A04",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A13",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-66b60223e534eb115a62c9e40fdc58305ed63df8f497e949d483e05780e2c0e3",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 59,
+        "line_end": 59,
+        "quote": "- **Rule:** Control-plane authorization checks credential/account status synchronously. The deployment profile permits a maximum five-second cache lifetime and requires status revalidation before every new Run, Restore, Preview, and private read. Disablement drains only the current atomic operation; after its boundary no new write lease or publication is granted, and queued work is cancelled. Every transition is audited without token material."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-3 refines credential revocation, disablement, role, administration, and retention behavior for the accepted five-second/drain boundary.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-004",
+          "PIWR-005",
+          "PIWR-006",
+          "PIWR-007",
+          "PIWR-008"
+        ],
+        "acceptance_ids": [
+          "PIWR-A02",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-6d798a3677bc30a6cef976d94806a375e2fca6ae2aec6089569a4854abe6a058",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 65,
+        "line_end": 65,
+        "quote": "- **Rule:** Platform processes own platform assets. Each Project's heavy-write/restore Runner uses a distinct low-privilege Windows identity, Job Object containment, deny-by-default NTFS ACLs, and an explicit authorized Workspace/staging root set containing only that Project's roots. The identity cannot enumerate the Account root or access sibling Project roots, even within the same Account. Secret injection is scoped to the Run and never inherited from the platform process. ACL/owner/reparse-point checks occur before launch and before publication; drift blocks the Runner. A stale lease/fencing version cannot publish."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-4 refines OS identity, containment, ACL, lifecycle, evidence tier, and stale-fencing enforcement.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-015",
+          "PIWR-016",
+          "PIWR-017",
+          "PIWR-018",
+          "PIWR-019",
+          "PIWR-020",
+          "PIWR-038"
+        ],
+        "acceptance_ids": [
+          "PIWR-A05",
+          "PIWR-A06",
+          "PIWR-A07",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A16",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-57d4fe36d77c99a047461bfb5487446112c25eef003eaf491cd71d6be5cb629f",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 71,
+        "line_end": 71,
+        "quote": "- **Rule:** Workspace identity is `(workspaceId, accountId, projectId)`. Physical root, `nodeId`, `runnerId`, `sandboxId`, `attemptId`, port, process ID, lease version, and path are placement/runtime metadata. A move or restore changes placement only; it cannot create a new owner or revive old environment capabilities."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-5 refines logical Workspace identity and makes placement/runtime fields explicitly non-authoritative.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-021",
+          "PIWR-037",
+          "PIWR-038",
+          "PIWR-039"
+        ],
+        "acceptance_ids": [
+          "PIWR-A09",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A16",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-e749b92e298e3fd7171b10001f2ca7df0e2d57227a2b4f8ebdd03210fc797fc1",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 77,
+        "line_end": 77,
+        "quote": "- **Rule:** A Snapshot is created only by an explicit user or protected admin request; no file watcher, Run completion hook, migration, or periodic job may create one. Its Manifest includes schema/compatibility versions; stable Snapshot/Workspace/Account/Project IDs; creator/action/time provenance; normalized content entries with size/hash; explicit exclusions; immutable admin extension-blacklist policy version; ownership/ACL policy reference; recovery prerequisites/rebuild instructions; retention state; and optional non-authoritative runtime refs. Each create publishes a new immutable Snapshot; history is never updated or overwritten. Snapshot content includes persistent project/GDD/module/source/test/approved artifact files and excludes cache/build/temp/process/ticket/secret/absolute-path/unsafe-link content plus active blacklisted extensions. The operations profile fixture is ≤100 MiB and ≤10,000 files; empty fixtures are invalid evidence."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-6 refines the versioned immutable Snapshot manifest and deterministic content boundary.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-023",
+          "PIWR-024"
+        ],
+        "acceptance_ids": [
+          "PIWR-A06",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-0ed86eb0fd36e8a50c27d75a552bfc564ee77bd327a301f1560cf39d2fdf6a04",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 83,
+        "line_end": 83,
+        "quote": "- **Rule:** Restore begins only from an explicit user or protected admin request and creates an immutable `RestoreAttempt` with requester, source Snapshot, target Workspace, idempotency key, stage, bounded status/failure family, timestamps, correlation, and evidence refs. No ordinary file change or background lifecycle event may invoke it. The flow is: authorize and ownership-check; validate manifest/schema/hash/quota/path; write isolated staging; recompute content identity; apply owner/ACL; revalidate route/readback prerequisites; atomically publish; append cleanup evidence. Failure rolls back or quarantines staging and never exposes it as ready. Same idempotency key maps to one publication."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-7 refines the RestoreAttempt state machine, validation, staged publication, environment rebuild, route re-entry, retention, and drill requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-025",
+          "PIWR-026",
+          "PIWR-027",
+          "PIWR-028",
+          "PIWR-029",
+          "PIWR-030",
+          "PIWR-031",
+          "PIWR-032"
+        ],
+        "acceptance_ids": [
+          "PIWR-A06",
+          "PIWR-A07",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A14",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-e862459595cf9f290968f2cae50f8e8c77ebcfc94e8c1b7cc61595dc9986b2c8",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 89,
+        "line_end": 89,
+        "quote": "- **Rule:** Every DB/filesystem operation records a durable intent and an outcome/compensation state. SQLite transaction commits ownership and Attempt intent before external mutation; filesystem staging and verification produce a content-bound outcome; final metadata publication and cleanup are committed only after verification. Startup reconciliation classifies incomplete intents as continue, rollback, quarantine, or repair. It never silently chooses one side or mutates the live DB to hide inconsistency."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-8 refines durable intent/outcome reconciliation and typed recovery across DB/filesystem boundaries.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-025",
+          "PIWR-028",
+          "PIWR-029",
+          "PIWR-030",
+          "PIWR-031",
+          "PIWR-032",
+          "PIWR-033",
+          "PIWR-035"
+        ],
+        "acceptance_ids": [
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-1a3be937aa0603663f7a3ffe81c6a000c668413e22e24dc4ecf20dfb10303e82",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 95,
+        "line_end": 95,
+        "quote": "- **Rule:** After content publication, Phase re-resolves the existing eight-source hosted route recovery order and validates current contract/readback. Old preview tickets, ports, PIDs, Runner credentials, leases, and secrets are invalid; current-node capabilities are newly issued. Browser readback exposes only sanitized logical IDs/relative paths/tickets with expiry/revocation and current Account scope."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-9 refines invalidation/rebuild of environment capabilities and sanitized current-account readback after restore.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-027",
+          "PIWR-028",
+          "PIWR-029",
+          "PIWR-030",
+          "PIWR-036"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A11",
+          "PIWR-A12",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-859c8704161da3f6023a774922cf7f7c20770c82433be52ffae5716cd966241d",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 101,
+        "line_end": 101,
+        "quote": "- **Rule:** Current single-node heavy-write exclusivity persists a monotonically increasing lease/fencing version in SQLite and binds it to Run/Restore publication. A new worker/attempt must supersede the version; old holders fail publication. Scale-out, remote restore, or object-backed storage requires an Accepted ADR plus evidence of multi-host writes, sustained SQLite contention, or remote-recovery need; migration preserves manifest, ownership, audit, and fail-safe publication semantics."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-10 refines the single-node durable lease/fencing seed and the evidence-gated scale-out boundary.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-018",
+          "PIWR-037",
+          "PIWR-038",
+          "PIWR-039",
+          "PIWR-040"
+        ],
+        "acceptance_ids": [
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A16",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-36437eae93c84e111b1e697dabefb03e24a6f85fe5f0d264bdbe0b857abeaae1",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 107,
+        "line_end": 107,
+        "quote": "- **Rule:** SQLite migrations are additive and preserve valid records. Project deletion writes a server-owned soft-delete marker; ordinary lists and new operations exclude it, logical user quota is released, and retained bytes are reclaimed only by protected cleanup. Existing Workspace adoption requires an explicit server-owned mapping to `(workspaceId, accountId, projectId)`, verified root containment, manifest/ACL scan, and append-only lineage; ambiguous/orphan ownership is quarantined for operator repair. Nullable topology fields cannot authorize adoption. No destructive rewrite or live DB mutation occurs without an Accepted ADR and recovery plan."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-11 refines additive migration, soft deletion, quota release, containment/ACL scanning, orphan quarantine, and compatibility.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-009",
+          "PIWR-012",
+          "PIWR-017",
+          "PIWR-019",
+          "PIWR-021",
+          "PIWR-023",
+          "PIWR-031",
+          "PIWR-034"
+        ],
+        "acceptance_ids": [
+          "PIWR-A03",
+          "PIWR-A04",
+          "PIWR-A06",
+          "PIWR-A07",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A16",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-81f53c8ce653c8d1d5781e4525ecf8e3d1c553a82aca00948beffaccd719affb",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 113,
+        "line_end": 113,
+        "quote": "- **Rule:** Authoritative state is server metadata, verified Workspace/Snapshot content, Attempt outcomes, and validator-backed evidence. Sidecars/readback are account-scoped projections that carry source hashes, bounded status, correlation, and sanitized paths. Secrets/raw prompts/tokens/raw host paths are redacted or excluded. Acceptance is machine-closed and only current evidence can publish status."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-12 refines the rule that evidence/readback are redacted projections and never authority.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-013",
+          "PIWR-014",
+          "PIWR-029",
+          "PIWR-033",
+          "PIWR-034",
+          "PIWR-035",
+          "PIWR-036"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A02",
+          "PIWR-A04",
+          "PIWR-A08",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A16",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-4a56b2f310191e4ab8530bbe3cb2d4177a3c2178b556d0468e414836062f1b03",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 119,
+        "line_end": 119,
+        "quote": "- **Rule:** The current claim is cross-Account OS isolation with per-Project Runner identity. Upgrade to per-execution identity, container, microVM, or remote Runner requires: accepted ADR; threat-model delta; real unauthorized-access negative tests; lease/fencing proof; Snapshot/Restore round-trip and rollback proof; redaction/readback proof; and compatibility evidence on the current fixture. Until all pass, the stronger tier is not selectable or advertised."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This adopted Architecture rule remains normative as a realization constraint, but its product obligation identity is already carried by canonical PIWR requirements. AD-13 refines the evidence gate for stronger isolation or remote/runtime-provider tiers.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-020",
+          "PIWR-038",
+          "PIWR-039",
+          "PIWR-040"
+        ],
+        "acceptance_ids": [
+          "PIWR-A05",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A16",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-22316e25b62b97aaa3c8ed26bfbd796d77bffe5fb4a6705fe19bd455ebe67b96",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 125,
+        "line_end": 125,
+        "quote": "  Browser[Browser / React] -->|intent + display only| Phase[Phase Service]"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_projection_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This Architecture diagram/structural projection does not create an additional product obligation identity. The Browser-to-Phase diagram edge is a structural projection of server-derived identity, server authorization, and browser consumption of server decisions.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-002",
+          "PIWR-010",
+          "PIWR-036"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A03",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-6d34708f6542973fb9b02b512f631a923c1adb85704520219f2a29e1858d58e0",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 137,
+        "line_end": 137,
+        "quote": "  Agent -. never owns .-> Auth"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_projection_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This Architecture diagram/structural projection does not create an additional product obligation identity. The Agent-never-owns-Auth edge projects the canonical authority boundary; it does not introduce a new behavior identity.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-002",
+          "PIWR-010",
+          "PIWR-036",
+          "PIWR-040"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A03",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-83c3527b69667af199ba9888786868069f52ddcb957b4d8a3a95edeaa5046371",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 138,
+        "line_end": 138,
+        "quote": "  Agent -. never owns .-> Manifest"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_projection_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This Architecture diagram/structural projection does not create an additional product obligation identity. The Agent-never-owns-Manifest edge projects Snapshot/Restore and product-authority requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-023",
+          "PIWR-026",
+          "PIWR-029",
+          "PIWR-040"
+        ],
+        "acceptance_ids": [
+          "PIWR-A06",
+          "PIWR-A07",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-6b74fa39f6553d3bfc5abef5d665a341e5ec770331c33f20b76667d0bb6a2663",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 145,
+        "line_end": 145,
+        "quote": "| IDs and ownership | Stable opaque IDs; `accountId`, `projectId`, `workspaceId`, `runId`, `attemptId`; placement fields never infer ownership. |"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_convention_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This Architecture convention refines representation and lifecycle semantics already carried by canonical PIWR requirements. The ID/ownership convention refines stable logical identity and non-authoritative placement fields.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-009",
+          "PIWR-021",
+          "PIWR-037"
+        ],
+        "acceptance_ids": [
+          "PIWR-A03",
+          "PIWR-A04",
+          "PIWR-A09",
+          "PIWR-A12",
+          "PIWR-A16",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-36d288cbb48633e593768a3709603c9f03e6ce85c5760531614ec20b4317c675",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 148,
+        "line_end": 148,
+        "quote": "| State | Bounded enums; append-only Attempt/audit/evidence history; no Boolean-only lifecycle authority. |"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_convention_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This Architecture convention refines representation and lifecycle semantics already carried by canonical PIWR requirements. The bounded-state and append-only-history convention refines RestoreAttempt and asynchronous typed-state requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-025",
+          "PIWR-033",
+          "PIWR-035"
+        ],
+        "acceptance_ids": [
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A13",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-4612b127d2d0d86f897899eab0fbae4d0ecadc0de9d9127de9b04be00d6857db",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 176,
+        "line_end": 176,
+        "quote": "logs/phase-a-innernet/       # runtime/evidence output; never user authority"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "architecture_projection_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This Architecture diagram/structural projection does not create an additional product obligation identity. The structural-seed comment says logs are evidence output rather than user authority, already covered by redaction and machine-closed state requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-013",
+          "PIWR-014",
+          "PIWR-033",
+          "PIWR-035"
+        ],
+        "acceptance_ids": [
+          "PIWR-A02",
+          "PIWR-A08",
+          "PIWR-A10",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-aea2a655788e57675b33863b0811900ae6fe3032facdbaabf98b1008053a53fd",
+      "source_binding": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba",
+        "line_start": 204,
+        "line_end": 204,
+        "quote": "- OQ-1 and OQ-2 are decided for this deployment profile as five-second maximum control-plane cache and drain-current-atomic-operation-then-cancel; a different product SLA requires an ADR/profile revision."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "resolved_decision_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This records an accepted Architecture decision already carried by canonical PIWR requirements. The OQ-1/OQ-2 sentence records the already accepted credential-cache and disablement/drain decisions.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-004",
+          "PIWR-005",
+          "PIWR-006",
+          "PIWR-007"
+        ],
+        "acceptance_ids": [
+          "PIWR-A02",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-16694d63a24d17c8df5e6987290969c2f11c6b8db542f652f6f56c6b351d8512",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 24,
+        "line_end": 24,
+        "quote": "> **Canonical contract.** This SPEC and its `companions:` are the complete, preservation-validated contract for downstream design, implementation planning, testing, and validation. `sources:` are traceability-only provenance; they are not a parallel obligation authority."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "authority_metadata",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is source-authority metadata rather than a testable product obligation. The canonical-contract notice establishes source precedence and preservation authority, not product behavior.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-b773a6ddab63bdff84f731db165cac0238c2384c5ed247bd4643de9e71041b8e",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 30,
+        "line_end": 30,
+        "quote": "Phase must safely evolve from a single-node prototype into an AI Native SaaS foundation without binding tenant identity, local paths, Runner processes, or hidden model sessions into one irrecoverable unit. Authenticated account ownership, OS-level execution isolation, and versioned Workspace recovery must become independently verifiable contracts before Phase can claim strong multi-user isolation or expand toward Workers, portable sandboxes, and longer-lived Agent runtimes."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "capability_summary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is an aggregate capability or success statement whose falsifiable parts are already partitioned into canonical PIWR requirements. The Why paragraph is an aggregate product rationale; its falsifiable content is decomposed into the listed identity, isolation, recovery, evidence, and evolution requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-001",
+          "PIWR-002",
+          "PIWR-009",
+          "PIWR-010",
+          "PIWR-015",
+          "PIWR-016",
+          "PIWR-021",
+          "PIWR-023",
+          "PIWR-025",
+          "PIWR-028",
+          "PIWR-033",
+          "PIWR-037",
+          "PIWR-040"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A03",
+          "PIWR-A04",
+          "PIWR-A05",
+          "PIWR-A06",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A16",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-26331e5f05259d460565cb5bc3a37f8645f3d1f82d6e7a19ad35282c3e6ca7cb",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 42,
+        "line_end": 42,
+        "quote": "  - **success:** A real low-privilege Runner can use only its authorized Workspace and cannot access platform assets, secrets, staging, or another Account's Workspace; containment and ACL drift fail closed."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "capability_summary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is an aggregate capability or success statement whose falsifiable parts are already partitioned into canonical PIWR requirements. CAP-3 success aggregates the Runner isolation, safe path, ACL, lifecycle, and claim-evidence requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-015",
+          "PIWR-016",
+          "PIWR-017",
+          "PIWR-018",
+          "PIWR-019",
+          "PIWR-020"
+        ],
+        "acceptance_ids": [
+          "PIWR-A05",
+          "PIWR-A06",
+          "PIWR-A07",
+          "PIWR-A13",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-07bf5879a69fb9d71c8835ce62e3b7c3486926f51e855366185c097c7e6d7534",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 45,
+        "line_end": 45,
+        "quote": "  - **success:** A user- or admin-requested Snapshot restores through controlled staging to a substitute root, preserves verified content and ownership, rebuilds environment-specific state, and supports hosted route/readback plus a later controlled Run; ordinary file changes never trigger either operation."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "capability_summary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is an aggregate capability or success statement whose falsifiable parts are already partitioned into canonical PIWR requirements. CAP-4 success aggregates logical Workspace identity, Snapshot, Restore, staged publication, environment rebuild, route/readback, and substitute-root drill behavior.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-021",
+          "PIWR-022",
+          "PIWR-023",
+          "PIWR-024",
+          "PIWR-025",
+          "PIWR-026",
+          "PIWR-027",
+          "PIWR-028",
+          "PIWR-029",
+          "PIWR-030",
+          "PIWR-032"
+        ],
+        "acceptance_ids": [
+          "PIWR-A06",
+          "PIWR-A07",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A16",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-b1ebe55d30ca02183da3827beea94320e4e422a82f237664e58f95c1e4df5797",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 48,
+        "line_end": 48,
+        "quote": "  - **success:** Failures, cancellation, restart, corruption, ownership mismatch, incompatibility, quota exhaustion, and stale execution all yield bounded typed outcomes and never expose a partially restored Workspace."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "capability_summary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is an aggregate capability or success statement whose falsifiable parts are already partitioned into canonical PIWR requirements. CAP-5 success aggregates durable attempts, pre-publication validation, interruption recovery, cleanup/quota, asynchronous typed state, bounded failures, and stale fencing.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-025",
+          "PIWR-026",
+          "PIWR-028",
+          "PIWR-031",
+          "PIWR-033",
+          "PIWR-035",
+          "PIWR-038"
+        ],
+        "acceptance_ids": [
+          "PIWR-A06",
+          "PIWR-A07",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A16",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-363ba7fd3105b918f7e53e9d33d6e3c635bdce4ab1821724886d330b9ea8700a",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 54,
+        "line_end": 54,
+        "quote": "  - **success:** A new process can validate the required cross-account, OS-permission, database migration, snapshot round-trip, fault-injection, redaction, and recovery evidence package."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "capability_summary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is an aggregate capability or success statement whose falsifiable parts are already partitioned into canonical PIWR requirements. CAP-7 success aggregates the DB upgrade, cross-account OS permission, snapshot fixture, redaction, fault, recovery, and new-process evidence surface.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-012",
+          "PIWR-013",
+          "PIWR-014",
+          "PIWR-016",
+          "PIWR-019",
+          "PIWR-024",
+          "PIWR-032",
+          "PIWR-033",
+          "PIWR-034",
+          "PIWR-035",
+          "PIWR-036",
+          "PIWR-040"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A02",
+          "PIWR-A04",
+          "PIWR-A05",
+          "PIWR-A07",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A16",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-f0b926dd269d59cc5f395d2a3d14a798c68357284875bfab028379380df86efd",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 58,
+        "line_end": 58,
+        "quote": "- The Phase service owns authentication, authorization, ownership, scheduling, metadata, audit, restore orchestration, and stable API; Browser is a client only; Sandbox/Runner owns restricted execution only; Agent Runtime is replaceable and cannot become a business or recovery authority."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "canonical_composition_covered_by_numbered_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This canonical SPEC sentence composes existing numbered requirements; it remains normative context without a second exact-cover identity. The layer-authority constraint composes existing server identity/ownership, restricted execution, recovery truth, evidence, browser, and evolution-authority requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-002",
+          "PIWR-009",
+          "PIWR-010",
+          "PIWR-015",
+          "PIWR-021",
+          "PIWR-025",
+          "PIWR-029",
+          "PIWR-033",
+          "PIWR-036",
+          "PIWR-040"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A03",
+          "PIWR-A04",
+          "PIWR-A05",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A13",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A16",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-ca2e534bbb37edd9f442237a99f9ee99080198daf512f660b62bba3bcbb3caf9",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 62,
+        "line_end": 62,
+        "quote": "- Snapshot and Restore are disabled by default per Project and occur only through explicit user or protected admin entry points. Every Snapshot is a new immutable version; no historical Snapshot is updated or overwritten."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "canonical_composition_covered_by_numbered_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This canonical SPEC sentence composes existing numbered requirements; it remains normative context without a second exact-cover identity. Explicit entry points and immutable Snapshot versions are already owned by the Snapshot, RestoreAttempt, and asynchronous-operation requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-023",
+          "PIWR-025",
+          "PIWR-033"
+        ],
+        "acceptance_ids": [
+          "PIWR-A06",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A13",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-ffaf05ab69350056e366cbf781d18bbc6575d93bed21e12b5c3a0a5c4b0ce3c2",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 63,
+        "line_end": 63,
+        "quote": "- Current deployment remains single-node, SQLite, and local-filesystem-first. All new contracts must be path-independent and allow future optional placement, lease, and fencing fields without implementing a Worker fleet."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "canonical_composition_covered_by_numbered_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This canonical SPEC sentence composes existing numbered requirements; it remains normative context without a second exact-cover identity. The single-node/path-independent evolution constraint is already decomposed into storage, compatibility, topology, fencing, migration, and authority requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-021",
+          "PIWR-022",
+          "PIWR-034",
+          "PIWR-037",
+          "PIWR-038",
+          "PIWR-039",
+          "PIWR-040"
+        ],
+        "acceptance_ids": [
+          "PIWR-A04",
+          "PIWR-A09",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A15",
+          "PIWR-A16",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-3cbf4cf5b5e65004be6150aab454d192cd91a1e8cfc37e5682e66c7d9a5e1961",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 64,
+        "line_end": 64,
+        "quote": "- Snapshot content includes only explicitly supported persistent project content and artifacts; cache, build/temp output, secrets, processes, temporary capability tickets, absolute paths, unsafe links, and admin-blacklisted extensions are excluded. The representative fixture is normative and must be specified before implementation. The active extension policy is version-bound to each new Snapshot."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "canonical_composition_covered_by_numbered_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This canonical SPEC sentence composes existing numbered requirements; it remains normative context without a second exact-cover identity. The supported/excluded content and version-bound blacklist constraint is the Snapshot manifest and deterministic boundary contract.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-023",
+          "PIWR-024"
+        ],
+        "acceptance_ids": [
+          "PIWR-A06",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-d3ea9fd43caedc88d1fce4b0d7588fb804b6706e36d98b4b295f2e6f20f7fad4",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 65,
+        "line_end": 65,
+        "quote": "- Project deletion is a soft-delete marker. It releases the project's logical share of the user-level actual-space quota while retained bytes are reclaimed only by protected cleanup; no per-Project hard-disk partition is preallocated."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "canonical_composition_covered_by_numbered_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This canonical SPEC sentence composes existing numbered requirements; it remains normative context without a second exact-cover identity. Soft deletion, logical quota release, and protected physical cleanup are already owned by resource ownership and retention/quota requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-009",
+          "PIWR-031"
+        ],
+        "acceptance_ids": [
+          "PIWR-A03",
+          "PIWR-A04",
+          "PIWR-A14",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-e994e0e73b8c8b3cd4d4290d5d4dc3f4288c8811527ffea928a86b3760e20c6d",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 68,
+        "line_end": 68,
+        "quote": "- The details in the five normative companions are required together; `sources:` are not normative inputs. The adopted Architecture Spine resolves OQ-1..OQ-4 through the decisions below."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "authority_metadata",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is source-authority metadata rather than a testable product obligation. This sentence establishes companion authority and provenance exclusion; it does not add a separately testable product requirement.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-d96dc7d70190ce86402b8019b4337f6f46ec3f447e45921cfd432669ffb14937",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+        "line_start": 79,
+        "line_end": 79,
+        "quote": "An authenticated Account can run only within a real OS-restricted Workspace; its versioned Snapshot can be recovered on a clean substitute root through a durable Attempt without leaking secrets or another Account's resources; and the entire result can be revalidated by a new process from typed evidence. Existing SQLite/local filesystem behavior remains usable while no contract assumes an absolute path, a single process lock, or a hidden Agent conversation."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "capability_summary_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is an aggregate capability or success statement whose falsifiable parts are already partitioned into canonical PIWR requirements. The success signal is an end-to-end aggregate; the listed PIWR identities and their acceptance cases own its independently falsifiable parts.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-001",
+          "PIWR-002",
+          "PIWR-009",
+          "PIWR-010",
+          "PIWR-014",
+          "PIWR-015",
+          "PIWR-016",
+          "PIWR-021",
+          "PIWR-023",
+          "PIWR-025",
+          "PIWR-026",
+          "PIWR-027",
+          "PIWR-028",
+          "PIWR-029",
+          "PIWR-030",
+          "PIWR-032",
+          "PIWR-033",
+          "PIWR-034",
+          "PIWR-035",
+          "PIWR-037",
+          "PIWR-038",
+          "PIWR-039",
+          "PIWR-040"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A03",
+          "PIWR-A04",
+          "PIWR-A05",
+          "PIWR-A06",
+          "PIWR-A07",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A11",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A16",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-3c976d54d9ea4482579f256a12413cce9068aae48a5278becda7acbd49b01165",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/api-evolution-and-operations.md",
+        "sha256": "sha256:da118e84d7cd50b813feac63ff765eb9e18a662808c271416daf9547a64e7fe3",
+        "line_start": 20,
+        "line_end": 20,
+        "quote": "- **NFR-002:** Secrets are on-demand in authorized Runner lifetime only; threat coverage includes enumeration, traversal, reparse points, cross-Account Runner, stale credentials/leases, malicious snapshots, and restore bomb/quota exhaustion."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "cross_cutting_nfr_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This cross-cutting NFR is verified through existing canonical requirements and acceptance cases rather than a new standalone FR identity. NFR-002 is a cross-cutting threat and data-minimization envelope verified through the listed credential, authorization, OS-isolation, path/ACL, manifest, publication, failure, and fencing requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-004",
+          "PIWR-005",
+          "PIWR-010",
+          "PIWR-011",
+          "PIWR-014",
+          "PIWR-016",
+          "PIWR-017",
+          "PIWR-019",
+          "PIWR-023",
+          "PIWR-024",
+          "PIWR-026",
+          "PIWR-035",
+          "PIWR-038"
+        ],
+        "acceptance_ids": [
+          "PIWR-A01",
+          "PIWR-A02",
+          "PIWR-A03",
+          "PIWR-A05",
+          "PIWR-A06",
+          "PIWR-A07",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A16",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-82731a2b2686d75ae0fa2e5f3a070a5fd62437de48e391b182e81ca108a92f55",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/api-evolution-and-operations.md",
+        "sha256": "sha256:da118e84d7cd50b813feac63ff765eb9e18a662808c271416daf9547a64e7fe3",
+        "line_start": 32,
+        "line_end": 32,
+        "quote": "- Admin policy evidence proves extension-blacklist changes affect only newly created Snapshot manifests."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "normative_companion_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This normative companion sentence refines requirements already owned by canonical PIWR identities. Admin blacklist evidence refines manifest policy versioning, content exclusion, audited lifecycle, evidence pointers, and bounded outcomes.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-023",
+          "PIWR-024",
+          "PIWR-031",
+          "PIWR-033",
+          "PIWR-035"
+        ],
+        "acceptance_ids": [
+          "PIWR-A06",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A14",
+          "PIWR-A15",
+          "PIWR-A17",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-e44901763c51ddbb6256a06935a1cbfc91128559b4e295b342f8c64f20261991",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/requirements-and-acceptance.md",
+        "sha256": "sha256:660064e89b5bd27b275cc56cb3d7484b110ccc11a6f1acccc244bbb87d7cdc83",
+        "line_start": 76,
+        "line_end": 76,
+        "quote": "| PIWR-Q04 OS identity granularity | Resolved by Architecture: baseline is one restricted Runner identity per Project; stronger per-execution/container/microVM isolation requires a future evidence gate. |"
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "resolved_product_choice_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This resolved product choice is already realized by canonical PIWR requirements and their evidence gates. PIWR-Q04 records the resolved per-Project Runner baseline and evidence-gated future isolation options.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-015",
+          "PIWR-018",
+          "PIWR-020",
+          "PIWR-038",
+          "PIWR-040"
+        ],
+        "acceptance_ids": [
+          "PIWR-A05",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A16",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-54e86ddfdcbee6f2a8a249cce746dc0c6ce923edd2d41a975947a33a6ef31eb4",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/requirements-and-acceptance.md",
+        "sha256": "sha256:660064e89b5bd27b275cc56cb3d7484b110ccc11a6f1acccc244bbb87d7cdc83",
+        "line_start": 84,
+        "line_end": 84,
+        "quote": "- The requirements document's suggested BMAD sequencing and external-reference narrative are absorbed only insofar as they impose scope, non-goals, or current-contract constraints; they do not authorize implementation or introduce external runtime dependencies."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "process_metadata",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This is delivery/process metadata, not a Phase B/C product behavior obligation. This wrapper note limits how upstream sequencing/provenance may be consumed and explicitly withholds implementation authority.",
+      "coverage_references": {
+        "piwr_ids": [],
+        "acceptance_ids": [],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-df0add5c6c99f9220bde6b44b00fa5dd5b8e8ce47ba0f90da31b26d7459dbc97",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/runner-isolation.md",
+        "sha256": "sha256:353bb90b540dede17c9955e46872da8a8b6b91820e677055de2bbfd6abe307c4",
+        "line_start": 14,
+        "line_end": 14,
+        "quote": "The baseline Windows profile uses one restricted Runner identity per Project, with local accounts or restricted tokens, Job Objects, and NTFS ACLs composed as appropriate. Per-execution temporary identities, containers, or microVMs are future escalation options only; each requires an explicit evidence gate and does not alter current Account/Project authority."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "normative_companion_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This normative companion sentence refines requirements already owned by canonical PIWR identities. The Windows implementation seed refines the current Runner identity/containment profile and the evidence-gated evolution boundary.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-015",
+          "PIWR-016",
+          "PIWR-018",
+          "PIWR-019",
+          "PIWR-020",
+          "PIWR-038",
+          "PIWR-040"
+        ],
+        "acceptance_ids": [
+          "PIWR-A05",
+          "PIWR-A07",
+          "PIWR-A12",
+          "PIWR-A13",
+          "PIWR-A16",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-8b761d9b5972a487db5cfa12ab9a45fc57ee4e40381c58482f34fd5ef167e4a7",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/workspace-recovery-contract.md",
+        "sha256": "sha256:ff55f33f49df813d7ec4e6d0c21d0a857060fd82703bf727cb9c9672a421fc8e",
+        "line_start": 12,
+        "line_end": 12,
+        "quote": "- Every Snapshot creation publishes a new immutable version and manifest. Historical Snapshot bytes, hashes, and policy binding are never updated or overwritten; lifecycle deletion/expiry only changes availability state."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "normative_companion_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This normative companion sentence refines requirements already owned by canonical PIWR identities. Snapshot immutability and lifecycle availability are already owned by the manifest and retention/deletion requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-023",
+          "PIWR-031"
+        ],
+        "acceptance_ids": [
+          "PIWR-A06",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A14",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    },
+    {
+      "obligation_id": "OBL-35982132794a39cfcb9d894ec322f02080d0e7b23593a69094e4002e00be2f1f",
+      "source_binding": {
+        "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/workspace-recovery-contract.md",
+        "sha256": "sha256:ff55f33f49df813d7ec4e6d0c21d0a857060fd82703bf727cb9c9672a421fc8e",
+        "line_start": 14,
+        "line_end": 14,
+        "quote": "- Admin maintains the extension blacklist as a versioned policy. New Snapshots bind the active policy; changing the policy never mutates historical Snapshots."
+      },
+      "typed_disposition": {
+        "decision": "not_applicable",
+        "scope": "standalone_requirement_identity",
+        "type": "normative_companion_refinement_covered_by_canonical_requirements",
+        "content_effect": "retained_via_frozen_source_and_coverage_references"
+      },
+      "rationale": "This normative companion sentence refines requirements already owned by canonical PIWR identities. Versioned extension-blacklist policy binding is already owned by manifest, content-boundary, and audited lifecycle requirements.",
+      "coverage_references": {
+        "piwr_ids": [
+          "PIWR-023",
+          "PIWR-024",
+          "PIWR-031"
+        ],
+        "acceptance_ids": [
+          "PIWR-A06",
+          "PIWR-A08",
+          "PIWR-A09",
+          "PIWR-A10",
+          "PIWR-A14",
+          "PIWR-A18"
+        ],
+        "reference_semantics": "coverage_reference_only_not_a_new_identity_mapping"
+      }
+    }
+  ],
+  "import_contract": {
+    "current_candidate": {
+      "vdd_review_run_projection": null,
+      "reason": "No valid vdd-review-run.v1 projection may be issued because the current full validator cannot emit a semantic handoff for the mismatched frozen requirements identity."
+    },
+    "after_binding_repair": {
+      "mode": "verify_rich_receipt_then_materialize_exact_vdd_review_run_v1_projection",
+      "note": "The current importer enforces an exact ten-key vdd-review-run.v1 envelope. A future positive rich receipt must be validated first and its exact projection materialized; the rich receipt itself must not be passed directly to the existing exact-key validator.",
+      "exact_projection_keys": [
+        "schema_version",
+        "status",
+        "semantic_handoff_hash",
+        "source_manifest_hash",
+        "requirements_manifest_hash",
+        "profile",
+        "ambiguity_ids",
+        "affected_requirement_ids",
+        "decision",
+        "authorizes"
+      ]
+    },
+    "authority_boundaries": {
+      "may_supply": [
+        "semantic_dispositions"
+      ],
+      "may_not_supply": [
+        "requirements_identity",
+        "requirements_mapping",
+        "plan_state_change",
+        "implementation_authorization"
+      ],
+      "requirements_identity_owner": "VDD",
+      "lifecycle_authorization_owner": "maintainer"
+    }
+  },
+  "integrity": {
+    "canonicalization": "UTF-8 JSON; keys sorted recursively; separators comma/colon; no extra whitespace",
+    "disposition_set_hash": "sha256:56ae84604e545dc748fba7ac682f56f6d1ceeeaaf90d3c1a9b2ab5d8014f6ed2",
+    "receipt_body_hash": "sha256:ae57da74e921d8675108803125a9fba3e96dfdc4395a806a26a346b217287353",
+    "receipt_body_hash_domain": "jimuyun.hash-bound-semantic-review-receipt.v1"
+  },
+  "authorizes": []
+}
