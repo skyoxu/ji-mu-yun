@@ -2,6 +2,8 @@
 id: SPEC-phase-b-c-identity-isolation-workspace-recovery
 package_schema: canonical-spec-package.v1
 companions:
+  - path: _bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md
+    role: adopted_companion
   - path: _bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/identity-and-ownership.md
     role: normative_companion
   - path: _bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/runner-isolation.md
