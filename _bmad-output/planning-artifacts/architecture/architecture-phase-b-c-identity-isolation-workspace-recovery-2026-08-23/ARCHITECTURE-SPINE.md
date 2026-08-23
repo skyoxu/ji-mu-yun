@@ -33,7 +33,10 @@ companions: []
 | ADR-0034 [ADOPTED] | Account-Scoped Token Auth | Existing hashed account/admin token behavior and account-scoped readback remain compatible while OIDC direction is prepared. |
 | ADR-0035 [ADOPTED] | Controlled Runner And Workspace Execution | Server-controlled Workspace roots, allowlisted commands, queued heavy work, and per-Project serialization. |
 | ADR-0036 [ADOPTED] | Prototype Route Recovery Authority | Hosted route recovery order and machine-closed acceptance remain the only route/readback authority. |
+| ADR-0037 [ADOPTED] | Shared LLM And Codex Execution Entrypoints | Agent/LLM work remains behind shared entrypoints and cannot become identity or recovery authority. |
 | ADR-0038 [ADOPTED] | Evidence Sidecars And Account-Scoped Readback | Evidence is generated, redacted, account-scoped, hash-aware, and never replaced by assistant prose. |
+| ADR-0039 [ADOPTED] | Phase Runtime, Caddy, And Recovery Order | Runtime health and recovery remain local-first and use canonical scripts/proxy boundaries. |
+| ADR-0061 [ADOPTED] | Phase B/C Identity Isolation And Workspace Recovery Spine | AD-1..AD-13 are the accepted narrow architecture contract for this capability slice. |
 
 ## Invariants & Rules
 
@@ -67,17 +70,17 @@ companions: []
 - **Prevents:** Absolute paths, node IDs, PIDs, ports, or Runner IDs becoming ownership or recovery identity.
 - **Rule:** Workspace identity is `(workspaceId, accountId, projectId)`. Physical root, `nodeId`, `runnerId`, `sandboxId`, `attemptId`, port, process ID, lease version, and path are placement/runtime metadata. A move or restore changes placement only; it cannot create a new owner or revive old environment capabilities.
 
-### AD-6 — Versioned Snapshot Manifest is the content contract
+### AD-6 — Explicit immutable Snapshot Manifest is the content contract
 
 - **Binds:** CAP-4, CAP-7; PIWR-023..024, PIWR-A08..A10, PIWR-A18
-- **Prevents:** Ad hoc directory copies, hidden secrets, path-dependent restores, and content identity drift.
-- **Rule:** A Snapshot Manifest includes schema/compatibility versions; stable Snapshot/Workspace/Account/Project IDs; creator/action/time provenance; normalized content entries with size/hash; explicit exclusions; ownership/ACL policy reference; recovery prerequisites/rebuild instructions; retention state; and optional non-authoritative runtime refs. Snapshot content includes persistent project/GDD/module/source/test/approved artifact files and excludes cache/build/temp/process/ticket/secret/absolute-path/unsafe-link content. The operations profile fixture is ≤100 MiB and ≤10,000 files; empty fixtures are invalid evidence.
+- **Prevents:** Ad hoc directory copies, hidden secrets, path-dependent restores, content identity drift, and policy changes rewriting history.
+- **Rule:** A Snapshot is created only by an explicit user or protected admin request; no file watcher, Run completion hook, migration, or periodic job may create one. Its Manifest includes schema/compatibility versions; stable Snapshot/Workspace/Account/Project IDs; creator/action/time provenance; normalized content entries with size/hash; explicit exclusions; immutable admin extension-blacklist policy version; ownership/ACL policy reference; recovery prerequisites/rebuild instructions; retention state; and optional non-authoritative runtime refs. Each create publishes a new immutable Snapshot; history is never updated or overwritten. Snapshot content includes persistent project/GDD/module/source/test/approved artifact files and excludes cache/build/temp/process/ticket/secret/absolute-path/unsafe-link content plus active blacklisted extensions. The operations profile fixture is ≤100 MiB and ≤10,000 files; empty fixtures are invalid evidence.
 
 ### AD-7 — Restore is an append-only Attempt with staged publication
 
 - **Binds:** CAP-4, CAP-5; PIWR-025..032, PIWR-A09..A14
 - **Prevents:** Partial overwrite, duplicate publication, lost recovery intent, and manual log-dependent recovery.
-- **Rule:** Each restore creates an immutable `RestoreAttempt` with requester, source Snapshot, target Workspace, idempotency key, stage, bounded status/failure family, timestamps, correlation, and evidence refs. The flow is: authorize and ownership-check; validate manifest/schema/hash/quota/path; write isolated staging; recompute content identity; apply owner/ACL; revalidate route/readback prerequisites; atomically publish; append cleanup evidence. Failure rolls back or quarantines staging and never exposes it as ready. Same idempotency key maps to one publication.
+- **Rule:** Restore begins only from an explicit user or protected admin request and creates an immutable `RestoreAttempt` with requester, source Snapshot, target Workspace, idempotency key, stage, bounded status/failure family, timestamps, correlation, and evidence refs. No ordinary file change or background lifecycle event may invoke it. The flow is: authorize and ownership-check; validate manifest/schema/hash/quota/path; write isolated staging; recompute content identity; apply owner/ACL; revalidate route/readback prerequisites; atomically publish; append cleanup evidence. Failure rolls back or quarantines staging and never exposes it as ready. Same idempotency key maps to one publication.
 
 ### AD-8 — Durable cross-boundary intent/outcome reconciliation
 
@@ -101,7 +104,7 @@ companions: []
 
 - **Binds:** CAP-1, CAP-2, CAP-4, CAP-6; PIWR-009, 012, 021, 034, PIWR-A04, A09, A16
 - **Prevents:** Legacy Workspace or orphan rows being assigned to a caller, destructive migration, or topology fields changing authority.
-- **Rule:** SQLite migrations are additive and preserve valid records. Existing Workspace adoption requires an explicit server-owned mapping to `(workspaceId, accountId, projectId)`, verified root containment, manifest/ACL scan, and append-only lineage; ambiguous/orphan ownership is quarantined for operator repair. Nullable topology fields cannot authorize adoption. No destructive rewrite or live DB mutation occurs without an Accepted ADR and recovery plan.
+- **Rule:** SQLite migrations are additive and preserve valid records. Project deletion writes a server-owned soft-delete marker; ordinary lists and new operations exclude it, logical user quota is released, and retained bytes are reclaimed only by protected cleanup. Existing Workspace adoption requires an explicit server-owned mapping to `(workspaceId, accountId, projectId)`, verified root containment, manifest/ACL scan, and append-only lineage; ambiguous/orphan ownership is quarantined for operator repair. Nullable topology fields cannot authorize adoption. No destructive rewrite or live DB mutation occurs without an Accepted ADR and recovery plan.
 
 ### AD-12 — Evidence and readback are projections, not authority
 
@@ -200,6 +203,6 @@ single Windows host
 
 - OQ-1 and OQ-2 are decided for this deployment profile as five-second maximum control-plane cache and drain-current-atomic-operation-then-cancel; a different product SLA requires an ADR/profile revision.
 - OQ-3 is decided for the current baseline as per-Project Runner identity for heavy write/restore; per-execution identities remain an upgrade option under AD-13.
-- OQ-4 is fixed for the initial single-node profile: 30-day retention; 10 GiB live Workspace and 20 GiB Snapshot quota per Project; encryption-at-rest key reference with plaintext keys excluded; fixture ≤100 MiB/10,000 files; P95 RTO 30 minutes. Operations may version this profile after evidence and ADR review.
+- OQ-4 is fixed in principle for the initial single-node profile: retention, a user-level actual-space quota covering live Workspace plus Snapshots, encryption-at-rest key reference with plaintext keys excluded, fixture ≤100 MiB/10,000 files, P95 RTO 30 minutes, and initial admin extension-blacklist defaults. No per-Project disk partition is reserved; quota values and physical cleanup lag are deployment-profile parameters that Operations may version after evidence and ADR review.
 - OIDC provider, session/token exchange, exact Windows token/Job Object/ACL implementation, manifest serialization, storage API, and migration table layout remain implementation-owned seeds constrained by the ADs.
 - React UI, Program.cs restructuring, multi-node fleet, object storage, App Server, Agent Session, Tasks/Taskmaster, and Agent Asset governance are outside this slice and require separate inputs.

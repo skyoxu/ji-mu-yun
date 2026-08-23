@@ -4,11 +4,14 @@
 
 - **PIWR-021 / FR-015:** Workspace identity is exactly `workspaceId + accountId + projectId`. Absolute path, node, Runner identity, port, and process ID are Placement, never business identity or authorization.
 - **PIWR-022 / FR-015:** Snapshot, read, restore, deletion/retention, and validation use a stable storage contract. The only current backend is local filesystem; no upper-layer state depends on a Windows drive or current directory layout.
+- Snapshot and Restore are explicit user or protected-admin operations. No watcher, Run completion hook, migration, or periodic job may create a Snapshot or begin Restore automatically for a Project.
 
 ## Snapshot contract
 
-- **PIWR-023 / FR-016:** Every recoverable Snapshot has a versioned manifest containing schema/compatible platform-storage versions; Snapshot/Workspace/Account/Project IDs; provenance; content inventory/index, size, hashes, exclusions; ownership and ACL-policy reference; recovery conditions/compatibility/rebuild/retention; optional non-authoritative runtime refs; and security/key reference when applicable. It never contains plaintext secrets.
-- **PIWR-024 / FR-017:** Snapshot boundary is deterministic. Include explicitly supported persistent project files, GDD/module contracts, source, tests, execution-plan/project work files, approved user assets, and persistent Phase artifacts. Exclude cache, transient build output, temporary files, provider secrets, processes, tickets, absolute paths, and unsafe links. The Spec/Architecture operations profile fixes the representative fixture and equivalent content identity proof.
+- **PIWR-023 / FR-016:** Every recoverable Snapshot has a versioned manifest containing schema/compatible platform-storage versions; Snapshot/Workspace/Account/Project IDs; provenance; content inventory/index, size, hashes, exclusions; ownership and ACL-policy reference; recovery conditions/compatibility/rebuild/retention; active extension-blacklist policy version; optional non-authoritative runtime refs; and security/key reference when applicable. It never contains plaintext secrets.
+- Every Snapshot creation publishes a new immutable version and manifest. Historical Snapshot bytes, hashes, and policy binding are never updated or overwritten; lifecycle deletion/expiry only changes availability state.
+- **PIWR-024 / FR-017:** Snapshot boundary is deterministic. Include explicitly supported persistent project files, GDD/module contracts, source, tests, execution-plan/project work files, approved user assets, and persistent Phase artifacts. Exclude cache, transient build output, temporary files, provider secrets, processes, tickets, absolute paths, unsafe links, and extensions in the active admin blacklist (initial examples: `.jpg`, `.mp3`). The Spec/Architecture operations profile fixes the representative fixture and equivalent content identity proof.
+- Admin maintains the extension blacklist as a versioned policy. New Snapshots bind the active policy; changing the policy never mutates historical Snapshots.
 
 ## Restore Attempt and publication
 
@@ -19,14 +22,15 @@
 - **PIWR-029 / FR-021:** GDD, module contracts, source, tests, execution-plan/project files, and persistent artifacts are recovery truth. Agent thread/session IDs are optional references only.
 - **PIWR-030 / FR-021:** Restore re-enters the existing hosted route recovery authority, rejects stale/missing routes, and exposes readback only to the current Account.
 - **PIWR-031 / FR-022:** Snapshot retention, pin, expiry, deletion, quota, and failed-staging cleanup are auditable; cleanup respects active Attempts and audit retention and never uses an unchecked broad path prefix/glob.
-- **PIWR-032 / FR-022 and NFR-005:** A standard fixture completes Snapshot to a fresh temporary root or substitute Worker and validates content, ACL, route/readback, controlled Run, and cleanup. RPO preserves the last successfully published integrity-verified Snapshot; unfinished un-published writes may be redone. The first RTO profile targets P95 30 minutes to a controlled runnable state, subject to OQ-4 fixed fixture and measurement boundary.
+- Workspace and Snapshot bytes are accounted against one user-level actual-space quota. A soft-deleted Project releases logical quota immediately; physical retained bytes are reclaimed asynchronously or by protected admin cleanup and are not treated as a new Snapshot mutation.
+- **PIWR-032 / FR-022 and NFR-005:** A standard fixture of at most 100 MiB and 10,000 files completes Snapshot to a fresh temporary root or substitute Worker and validates content, ACL, route/readback, controlled Run, and cleanup. RPO preserves the last successfully published integrity-verified Snapshot; unfinished un-published writes may be redone. The accepted single-node profile targets P95 30 minutes to a controlled runnable state, measured on the bounded fixture and excluding operator approval time.
 
 ## Required evidence
 
 - **PIWR-A08:** Snapshot/log/artifact secret scan proves prohibited secrets, temporary tickets, and absolute paths are absent.
-- **PIWR-A09:** Substitute-root recovery proves content, ownership/ACL, route/readback, and subsequent controlled Run.
+- **PIWR-A09:** A user-explicit Snapshot restores at a substitute root with content, ownership/ACL, route/readback, and subsequent controlled Run; no automatic trigger path exists.
 - **PIWR-A10:** Wrong Account, corrupt hash, unknown schema, quota failure, and incompatible version fail before publication without partial overwrite.
 - **PIWR-A11:** Failure injection across restore stages produces resumable, rollback, or isolation outcomes from Attempt/staging state.
 - **PIWR-A12:** Old preview ticket, port, PID, secret, and lease are unusable after restore; current allocation functions.
 - **PIWR-A13:** Duplicate restore key cannot publish two Workspaces and stale fencing cannot overwrite current publication.
-- **PIWR-A14:** Retention, pin, quota, deletion, and staging cleanup are audited and protect active restore inputs.
+- **PIWR-A14:** Retention, pin, immutable versions, user-level quota, soft-deleted Projects, admin extension blacklist, and staging cleanup are audited and protect active restore inputs.

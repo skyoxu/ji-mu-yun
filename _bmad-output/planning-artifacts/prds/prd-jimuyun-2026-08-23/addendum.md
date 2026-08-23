@@ -8,7 +8,9 @@
 
 ## 技术决策留给 Architecture
 
-以下方向是约束或候选，不是本 PRD 对实现的指定：OIDC provider 和 session 模型；Windows 本地账户、restricted token、Job Object、NTFS ACL 的具体组合；Runner 身份粒度；storage API、manifest 编码和打包格式；SQLite schema 与 migration；staging 的原子发布机制；lease/fencing 的当前 seed；snapshot 加密与 key reference；恢复的详细状态机。
+以下方向是约束或候选，不是本 PRD 对实现的指定：OIDC provider 和 session 模型；Windows 本地账户、restricted token、Job Object、NTFS ACL 的具体组合；Runner 身份粒度；storage API、manifest 编码和打包格式；SQLite schema 与 migration；staging 的原子发布机制；lease/fencing 的当前 seed；snapshot 加密与 key reference；恢复的详细状态机；用户级空间上限的具体数值与物理回收调度。
+
+快照产品语义已经固定：每个项目默认不自动创建 Snapshot 或自动 Restore；用户/受保护 admin 入口显式触发；每次创建为不可变新版本。项目删除是软删除，逻辑配额释放与实际磁盘回收分离。Admin 可维护扩展名黑名单，策略版本绑定到新 Snapshot，历史 Snapshot 不回写。
 
 ## 已有基线，不重复建设
 

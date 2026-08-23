@@ -28,6 +28,7 @@ This index tracks Phase service ADRs for the hosted Phase A/B platform and Phase
 - ADR-0058: Acceptance Coordinator Persisted Evidence Ownership - `docs/adr/ADR-0058-acceptance-coordinator-persisted-evidence-ownership.md`
 - ADR-0059: Knowledge Execution Degraded Successor And Publication Separation - `docs/adr/ADR-0059-knowledge-execution-degraded-successor-and-publication-separation.md`
 - ADR-0060: Skill-Input Typed Selection, Immutable Generations, And Retention - `docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md`
+- ADR-0061: Phase B/C Identity Isolation And Workspace Recovery Spine - `docs/adr/ADR-0061-phase-b-c-identity-isolation-workspace-recovery-spine.md`
 
 ## Proposed
 

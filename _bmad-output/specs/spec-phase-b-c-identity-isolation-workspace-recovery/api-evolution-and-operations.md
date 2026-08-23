@@ -2,7 +2,7 @@
 
 ## API and state
 
-- **PIWR-033 / FR-023:** Snapshot, Restore, ACL repair, and future purge are asynchronous operations exposing stable Run/Attempt ID, bounded status, and evidence/readback pointer. Browser connection lifetime is not execution lifetime.
+- **PIWR-033 / FR-023:** Explicit Snapshot, Restore, ACL repair, and future purge are asynchronous operations exposing stable Run/Attempt ID, bounded status, and evidence/readback pointer. Browser connection lifetime is not execution lifetime; no background timer or ordinary Run completion may invoke Snapshot/Restore.
 - **PIWR-034 / FR-024 and NFR-004:** Public/browser API changes are additive by default. Breaking schema or auth changes require versioning or a migration window; older clients tolerate absent future topology fields.
 - **PIWR-035 / FR-024 and NFR-001:** Identity, Runner, Snapshot, and Restore states are bounded enums. Stable failure families include `unauthenticated`, `forbidden`, `account_disabled`, `credential_revoked`, `ownership_mismatch`, `path_escape`, `acl_invalid`, `snapshot_corrupt`, `schema_unsupported`, `quota_exceeded`, `restore_conflict`, `restore_interrupted`, `stale_lease`, and `internal_failure`. Raw exceptions are diagnostics only.
 - **PIWR-036 / FR-025:** Browser consumes server-returned Principal, Account, capabilities, and state; hidden controls, client route guards, and local cache cannot substitute server authorization.
@@ -20,7 +20,8 @@
 - **NFR-002:** Secrets are on-demand in authorized Runner lifetime only; threat coverage includes enumeration, traversal, reparse points, cross-Account Runner, stale credentials/leases, malicious snapshots, and restore bomb/quota exhaustion.
 - **NFR-003:** Critical state transitions use transactional, idempotent, or compensating semantics; pre/post-publication state is distinguishable and manifests are recomputed before publication.
 - **NFR-004:** SQLite migration validates fresh, upgrade, and reuse; local filesystem remains first backend; existing records and token clients receive deterministic compatibility behavior.
-- **NFR-005:** The first RPO/RTO profile uses OQ-4 measurements and cannot use an empty fixture as evidence.
+- **NFR-005:** The accepted single-node RPO/RTO profile uses a fixture of at most 100 MiB and 10,000 files, targets P95 restore-to-controlled-run within 30 minutes, and cannot use an empty fixture as evidence.
+- **NFR-007:** Quota is measured at user scope from actual Workspace and Snapshot usage. It is a logical capacity limit, not a preallocated disk partition; project deletion releases logical quota while physical reclamation may lag.
 - **NFR-006:** Identity, authorization, Run, Runner, Snapshot, and Restore events correlate timestamp, status, action, actor/principal, Account, Project, Workspace, Run/Attempt, node/Runner when applicable, and correlation ID. High-cardinality payloads reside in controlled evidence rather than browser or model summaries.
 
 ## Required evidence
@@ -28,3 +29,4 @@
 - **PIWR-A15:** Private API cache, bounded state/error, and response redaction pass.
 - **PIWR-A16:** Nullable topology fields preserve current one-node behavior and Restore has no absolute-path/node dependency.
 - **PIWR-A18:** A new process validates the final isolation, OS permission, snapshot round-trip, failure-injection, DB upgrade, and secret-redaction evidence package.
+- Admin policy evidence proves extension-blacklist changes affect only newly created Snapshot manifests.

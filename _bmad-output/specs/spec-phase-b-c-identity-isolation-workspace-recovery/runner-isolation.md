@@ -9,9 +9,9 @@
 - **PIWR-019 / FR-012:** Creation, restore, movement, and platform upgrade validate owner/ACL. Unexpected subjects, broadened access, or inherited permissions isolate the target and block Runner activity until an audited repair succeeds.
 - **PIWR-020 / FR-014:** Product isolation claims match evidence. Cross-Account OS isolation is the minimum current claim; same-Project or per-execution stronger isolation is not claimed until supported by its selected profile and evidence.
 
-## Deferred architecture choice
+## Architecture decision and implementation seed
 
-Windows may use local accounts, restricted tokens, Job Objects, NTFS ACLs, or a compatible composition, but this package does not prescribe the mechanism. Architecture must choose OQ-3 identity granularity and document evidence-driven triggers for per-project temporary identity, container, or microVM escalation.
+The baseline Windows profile uses one restricted Runner identity per Project, with local accounts or restricted tokens, Job Objects, and NTFS ACLs composed as appropriate. Per-execution temporary identities, containers, or microVMs are future escalation options only; each requires an explicit evidence gate and does not alter current Account/Project authority.
 
 ## Required evidence
 

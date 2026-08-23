@@ -111,11 +111,14 @@ Ji Mu Yun 必须能够可靠地回答三个基础问题：谁在操作哪个账�
 - **FR-015 逻辑 Workspace 身份与 storage contract。** Workspace 必须由 `workspaceId + accountId + projectId` 唯一标识，绝对路径、节点和 Runner 身份仅是 Placement；所有快照、读取、恢复、删除、保留和校验通过稳定 storage contract 访问。本轮提供本地文件系统 backend。`[PIWR-021]` `[PIWR-022]`
 - **FR-016 版本化 Snapshot。** 每个可恢复点必须发布版本化 manifest，涵盖 schema/兼容性、稳定身份、provenance、内容和排除项、ownership/ACL policy、恢复前置与保留状态，必要时含非权威 runtime refs；manifest 不得含明文秘密。`[PIWR-023]`
 - **FR-017 确定 Snapshot 边界。** 产品必须定义受支持的持久项目内容和受控 artifact，明确排除 cache、临时构建产物、provider secret、进程、临时 ticket、绝对路径和不安全链接；相同输入与策略应可重算内容身份或等价完整性证明。`[PIWR-024]`
-- **FR-018 独立且幂等的 Restore Attempt。** 每次恢复必须创建独立 Attempt，记录 requester、source snapshot、target workspace、状态、阶段、failure family、时间与 correlation；重试不得覆盖旧 Attempt，同一 idempotency key 不得并行发布多个目标。`[PIWR-025]`
+- **FR-018 用户控制的 Snapshot/Restore。** 每个项目默认不自动创建 Snapshot，也不自动触发 Restore。用户通过前端或受保护管理入口显式创建 Snapshot、选择 Snapshot 并发起 Restore；系统不得因普通文件变化、Run 完成、迁移或后台定时器自行触发这两类操作。每次操作仍必须创建独立、幂等、可审计的 Attempt。`[PIWR-025]`
+- **FR-018a Snapshot 不可变。** 每次创建 Snapshot 都产生新的版本和 manifest；已发布 Snapshot 不得被更新、覆盖或原地修改。删除/过期只能改变其生命周期状态，不得改变历史内容身份。`[PIWR-023]` `[PIWR-031]`
 - **FR-019 校验后发布。** Restore 必须在 staging 中完成身份/归属、schema/兼容性、hash/配额、路径安全、完整性、owner/ACL 和 route/readback 校验后，使用原子切换或等价 fail-safe 发布；失败必须回滚或隔离，绝不暴露半恢复 Workspace。`[PIWR-026]`
 - **FR-020 环境状态重建与重入。** 恢复不得原样复用绝对路径、preview ticket、端口、PID、lease、Runner credential 或 secret；当前节点重新分配。崩溃、重启或取消后，系统必须从持久 Attempt 与 staging 决定继续、回滚、隔离或重启。`[PIWR-027]` `[PIWR-028]`
 - **FR-021 文件化业务真相与 hosted route 兼容。** GDD、模块合同、源码、测试、execution-plan/项目内文件与持久 artifact 是恢复权威；Agent thread/session 仅为辅助引用。恢复后必须遵循现有 hosted route recovery 权威顺序，并只让当前账户读取当前结果。`[PIWR-029]` `[PIWR-030]`
-- **FR-022 保留、清理和替代根目录演练。** Snapshot 的保留、pin、过期、删除、配额和失败 staging 清理必须受审计，不能误删正在恢复使用的 snapshot；标准 fixture 必须可恢复到全新根目录或替代 Worker 环境，并验证内容、ACL、route/readback、后续受控 Run 与清理。`[PIWR-031]` `[PIWR-032]`
+- **FR-022 项目软删除与用户级空间配额。** 项目删除必须写入 `deleted` 标记并保留可审计元数据，不得立即物理删除。删除后的项目不再出现在普通用户工作区和新操作列表中；其逻辑配额立即释放给该用户，但保留数据的实际磁盘回收由受保护清理流程处理。Workspace 与全部 Snapshot 的空间统一计入用户级可用空间上限，而不是按项目预分配硬盘分区。`[PIWR-009]` `[PIWR-031]`
+- **FR-022a 管理员 Snapshot 范围策略。** admin 后台必须能维护 Snapshot 内容范围策略；本阶段至少支持按文件扩展名黑名单排除内容（例如 `.jpg`、`.mp3` 等大型素材）。创建 Snapshot 时使用当时生效的策略并把策略版本写入 manifest；策略变化不修改历史 Snapshot。`[PIWR-023]` `[PIWR-024]`
+- **FR-022b 替代根目录演练。** Snapshot 的保留、pin、过期、删除和失败 staging 清理必须受审计，不能误删正在恢复使用的 Snapshot；标准 fixture 必须可恢复到全新根目录或替代 Worker 环境，并验证内容、ACL、route/readback、后续受控 Run 与清理。`[PIWR-031]` `[PIWR-032]`
 
 ### 5.5 API、状态和未来拓扑兼容
 
@@ -130,17 +133,18 @@ Ji Mu Yun 必须能够可靠地回答三个基础问题：谁在操作哪个账�
 - **NFR-002 安全与数据最小化。** 秘密只在授权 Run/Runner 生命周期内按需注入；清理失败可检测并阻断复用。威胁模型至少覆盖 ID 枚举、traversal、reparse point、跨账户 Runner、stale credential/lease、恶意 snapshot 与配额耗尽。`[PIWR-014]`
 - **NFR-003 一致性与幂等性。** 关键状态变更具备事务、幂等或补偿语义；发布前重新计算 manifest/content 完整性，半完成状态永不视为 ready。`[PIWR-025]` `[PIWR-026]` `[PIWR-028]`
 - **NFR-004 兼容性。** SQLite migration 必须覆盖 fresh、upgrade 与 reuse；既有项目、Run、Artifact、route/readback 和 token 客户端默认继续可用；新 topology 字段允许为空并有确定解释。`[PIWR-012]` `[PIWR-034]`
-- **NFR-005 可恢复性。** RPO 至少保证最后一个成功发布且完整性验证通过的 Snapshot；未发布写入可重做。标准 Workspace fixture 的恢复 RTO 目标为 P95 30 分钟内可启动受控 Run，fixture 规模与计时边界必须由 Spec 固定。`[PIWR-032]`
+- **NFR-005 可恢复性。** RPO 只承诺用户显式创建且成功发布、通过完整性验证的 Snapshot；系统不承诺每次文件变化都有恢复点。未发布写入可重做。标准 Workspace fixture 的恢复 RTO 目标为 P95 30 分钟内可启动受控 Run，fixture 规模与计时边界必须由 Spec 固定。`[PIWR-032]`
+- **NFR-007 用户级空间控制。** 系统按用户统计活动项目 Workspace 与 Snapshot 的实际占用，拒绝超过用户级可用空间上限的新写入或新 Snapshot；删除项目释放其逻辑配额，但物理回收可异步完成。系统不得为每个项目预切硬盘分区，也不得仅因单个项目未用满配额而拒绝创建新项目。`[PIWR-031]`
 - **NFR-006 可观测性。** 身份、授权、Run、Runner、Snapshot 与 Restore 事件关联 timestamp、status、action、actor/principal、account、project、workspace、run/attempt、node/runner（适用时）与 correlation ID；高基数内容进入受控 evidence。`[PIWR-033]`
 
 ## 7. 成功指标与反指标
 
 ### 7.1 成功指标
 
-1. 跨账户 API、数据库、文件、Runner、Preview 和 Restore 的负例可重复通过。
+1. 跨账户 API、数据库、文件、Runner、Preview 和显式 Restore 的负例可重复通过。
 2. 撤销 Credential 或停用 Account 后，约定传播窗口内不能启动新 Run、Restore、Preview 或读取私有资源。
 3. 真实低权限 Runner 只能访问自身授权 Workspace，无法写平台二进制、SQLite、代理配置及其他账户 Workspace。
-4. 标准 fixture 可由受校验 Snapshot 恢复到替代根目录，随后通过内容、ownership/ACL、route/readback 和受控 Run 验证。
+4. 用户显式创建的标准 fixture Snapshot 可恢复到替代根目录，随后通过内容、ownership/ACL、route/readback 和受控 Run 验证；普通文件变化不会隐式创建 Snapshot 或触发 Restore。
 5. 损坏、错租户、版本不兼容、超配额或中断 Restore 不发布半成品。
 6. 最终 evidence package 可由新进程从文件化证据复核，且不暴露秘密。
 
@@ -165,12 +169,12 @@ Ji Mu Yun 必须能够可靠地回答三个基础问题：谁在操作哪个账�
 | PIWR-A06 | traversal、绝对/UNC/device path、symlink/reparse point 和 manifest escape 均不能越出授权根。 |
 | PIWR-A07 | 创建、恢复、移动后 ACL 被验证；漂移进入隔离/修复并阻止 Runner。 |
 | PIWR-A08 | Snapshot、日志与 artifact 不含 secret、临时 ticket 或绝对路径等禁止内容。 |
-| PIWR-A09 | 标准 Workspace 在新根目录恢复后通过内容、ACL、route/readback 与受控 Run。 |
+| PIWR-A09 | 用户显式创建的标准 Workspace Snapshot 可恢复到新根目录并通过内容、ACL、route/readback 与受控 Run；不存在自动触发路径。 |
 | PIWR-A10 | 错账户、损坏 hash、未知 schema、超配额和不兼容版本在发布前失败。 |
 | PIWR-A11 | 阶段性进程退出后可依据 Attempt/staging 继续、回滚或隔离。 |
 | PIWR-A12 | Restore 后旧 preview ticket、端口、PID、secret、lease 失效，当前节点状态重建可用。 |
 | PIWR-A13 | 同一幂等键不发布两个 Workspace；stale fencing token 不能覆盖 current。 |
-| PIWR-A14 | Snapshot 保留、pin、配额、删除与 staging 清理受审计且不误删在用 Snapshot。 |
+| PIWR-A14 | Snapshot 保留、pin、不可变版本、用户级配额、软删除项目、admin 扩展名黑名单和 staging 清理均受审计；在用 Snapshot 不被误删。 |
 | PIWR-A15 | 私有 API 无缓存，错误/状态有界，原始异常和秘密不进入浏览器。 |
 | PIWR-A16 | nullable topology 字段加入后单节点行为不变，Restore 不依赖 nodeId 或绝对路径。 |
 | PIWR-A17 | API 层具备授权正负例；React 完成后补 E2E，旧前端迁移不是当前门槛。 |
