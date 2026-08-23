@@ -30,3 +30,10 @@ It is non-authorizing and excluded from candidate source identity.
 - Published the append-only repair source freeze at `repair/round-1/source-freeze.v1.json` and bound it in `plan-state.v1.json`.
 - Deterministic exact-cover result: `requirement_semantic_review_required`, with no validator errors and no lifecycle authorization.
 - Deferred normative prose remains a typed semantic-review handoff; it is not silently promoted to an active implementation obligation.
+
+## 2026-08-24 - Exact-cover repair round 2
+
+- Rebuilt the mapping from the Canonical `requirements-and-acceptance.md` table; the direct PIWR coverage contains 40 requirements, 18 acceptance IDs, and 105 edges.
+- Added the PIWR mapping regression at `.agents/skills/vdd-conformance-exact-cover/tests/validators/piwr_mapping.py`.
+- Published the round-2 source freeze and switched the plan input pointers to its hash-bound mapping.
+- Exact-cover remains `requirement_semantic_review_required` with no deterministic errors; deferred prose still requires an explicit semantic disposition before authorization.

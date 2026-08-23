@@ -17,9 +17,9 @@
     "knowledge_context":"knowledge-context.v1.json",
     "knowledge_freeze":"knowledge-context.freeze.v1.json",
     "knowledge_preflight":"knowledge-preflight.v1.json",
-    "source_freeze":"repair/round-1/source-freeze.v1.json",
-    "source_freeze_hash":"sha256:84377cb23505101b45249f6d08f6e0783ec376ff1f1b914a6167c673be31f8c5",
-    "requirements_mapping":"repair/round-1/requirements-acceptance.v1.json",
-    "requirements_mapping_hash":"sha256:4d891943781ceae5f06fdd6eddc9719ac8c80acfffb7a461920947ba2001b642"
+    "source_freeze":"repair/round-2/source-freeze.v1.json",
+    "source_freeze_hash":"sha256:8cd79e6e27d37276ca50f48403847d974713475d1996922bfe5c16f34814d08b",
+    "requirements_mapping":"repair/round-2/requirements-acceptance.v1.json",
+    "requirements_mapping_hash":"sha256:4d2b094dd2d13461bfb277793cebe4e47045e0b566e22feca50aa3b35ac2ab9c"
   }
 }

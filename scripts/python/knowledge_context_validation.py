@@ -187,9 +187,18 @@ def validate_worktree_sources(payload: dict[str, Any], repository_root: Path) ->
     candidates = result.get("candidates") if isinstance(result, dict) else None
     if not isinstance(candidates, list):
         return "locator_candidates_invalid"
+    accepted_keys = {
+        (decision.get("candidate", {}).get("path"), decision.get("candidate", {}).get("source_sha256"))
+        for decision in payload.get("decisions", [])
+        if isinstance(decision, dict)
+        and decision.get("decision") == "accepted"
+        and isinstance(decision.get("candidate"), dict)
+    }
     for candidate in candidates:
         if not isinstance(candidate, dict):
             return "locator_candidates_invalid"
+        if accepted_keys and (candidate.get("path"), candidate.get("source_sha256")) not in accepted_keys:
+            continue
         try:
             for raw_path, digest in _candidate_read_set(candidate):
                 source = _contained_source(repository_root, raw_path)

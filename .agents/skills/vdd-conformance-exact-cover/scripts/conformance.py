@@ -176,7 +176,7 @@ def _expanded_ids(text: str, prefix: str) -> list[str]:
     if prefix not in text:
         return []
     for part in re.split(r"[,;]", text):
-        if prefix not in part and not re.search(r"\.\.\d{3}", part):
+        if prefix not in part and not re.search(r"\.\.\d{3}", part) and not re.fullmatch(r"\s*\d{3}\s*", part):
             continue
         numbers = [int(value) for value in re.findall(r"\d{3}", part)]
         if not numbers:
@@ -396,6 +396,21 @@ def acceptance_obligations(root: Path, manifest: dict[str, Any]) -> set[str]:
     return values
 
 
+def canonical_requirement_acceptance(root: Path, manifest: dict[str, Any]) -> dict[str, set[str]]:
+    source = next((item for item in manifest["sources"] if item["path"].endswith("/requirements-and-acceptance.md") and item["role"] == "normative_companion"), None)
+    if source is None:
+        return {}
+    result: dict[str, set[str]] = {}
+    for line in (root / source["path"]).read_text(encoding="utf-8").splitlines():
+        match = re.match(r"\|\s*(PIWR-A\d{2})\s*\|.*\|\s*([^|]+)\|", line)
+        if not match:
+            continue
+        acceptance_id = match.group(1)
+        for requirement_id in _expanded_ids(match.group(2), "PIWR"):
+            result.setdefault(requirement_id, set()).add(acceptance_id)
+    return result
+
+
 def _mapping_obligation_errors(
     root: Path, mapping: dict[str, Any], inventory: list[dict[str, Any]], manifest: dict[str, Any], manifest_path: Path
 ) -> tuple[list[dict[str, str]], dict[str, dict[str, Any]], set[str]]:
@@ -419,6 +434,7 @@ def _mapping_obligation_errors(
         identifier: set() for identifier, item in expected.items() if item["status"] == "active"
     }
     errors: list[dict[str, str]] = []
+    canonical_acceptance = canonical_requirement_acceptance(root, manifest)
     try:
         approved = _approved_semantic_dispositions(root, mapping, inventory, manifest, manifest_path)
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
@@ -427,6 +443,9 @@ def _mapping_obligation_errors(
         item = actual[identifier]
         projection = {key: value for key, value in item.items() if key not in {"requirement_ids", "mapping_kind", "merge_reason"}}
         expected_projection = {**expected_item, "status": "not_applicable"} if identifier in approved else expected_item
+        if expected_item["status"] == "active" and canonical_acceptance:
+            direct_requirements = _expanded_ids(expected_item["anchor"]["quote"], "PIWR") + _expanded_ids(expected_item["anchor"]["quote"], "VCEC")
+            expected_projection["acceptance_ids"] = sorted({aid for rid in direct_requirements for aid in canonical_acceptance.get(rid, set())})
         if projection != expected_projection:
             errors.append({"family": "deterministic_coverage_gap", "code": "obligation_source_binding_mismatch"})
             continue
@@ -447,7 +466,7 @@ def _mapping_obligation_errors(
         if mapping_kind not in {"identity", "semantic_equivalence"} or not isinstance(merge_reason, str) or not merge_reason:
             errors.append({"family": "deterministic_coverage_gap", "code": "obligation_mapping_kind_invalid"})
             continue
-        expected_acceptance = sorted({acceptance_id for requirement_id in requirement_ids for acceptance_id in requirement_index.get(requirement_id, {}).get("acceptance_ids", [])})
+        expected_acceptance = sorted({aid for requirement_id in requirement_ids for aid in (canonical_acceptance.get(requirement_id, set()) if canonical_acceptance else set(requirement_index.get(requirement_id, {}).get("acceptance_ids", [])))})
         if not isinstance(acceptance_ids, list) or len(acceptance_ids) != len(set(acceptance_ids)) or not acceptance_ids or not set(acceptance_ids).issubset(expected_acceptance):
             errors.append({"family": "deterministic_coverage_gap", "code": "obligation_acceptance_binding_invalid"})
             continue

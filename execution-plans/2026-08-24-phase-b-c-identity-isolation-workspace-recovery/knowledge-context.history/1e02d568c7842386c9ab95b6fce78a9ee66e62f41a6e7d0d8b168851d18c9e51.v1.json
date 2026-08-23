@@ -2,7 +2,7 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-20260824-phase-b-c-identity-isolation-workspace-recovery-refresh-all",
+    "request_id": "vdd-20260824-phase-b-c-identity-isolation-workspace-recovery-successor-r4",
     "consumer": "vdd",
     "query": "Repository Agent Contract",
     "snapshot": {
@@ -785,11 +785,11 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-20260824-phase-b-c-identity-isolation-workspace-recovery-refresh-all",
+    "request_id": "vdd-20260824-phase-b-c-identity-isolation-workspace-recovery-successor-r4",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "ref": "refs/heads/main",
-      "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
+      "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc",
+      "ref": "refs/heads/main"
     },
     "source_snapshot_id": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4",
     "status": "matched"
@@ -921,14 +921,14 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:0e3d6cc3259e55e79805001c84a95cafe21820111d34ddb6f40d9d5811e7116e",
-  "result_sha256": "sha256:22f2ee2e752e12b7300f25aed8a8859190dca1e5ff573cf3c99830833868ab4e",
+  "request_sha256": "sha256:2a5dea33808eed98048bfe366460153384027b70ebda27dd0a5e7e154c2a5d54",
+  "result_sha256": "sha256:ebf26476dc7dc520021f5b5ba95b64d7e14a3020c639382b5fbf5f4672256383",
   "preflight": {
     "status": "ready",
     "failure_code": null,
     "knowledge_freshness": "degraded",
     "catalog_failure_code": "catalog_stale",
     "source_freshness": "catalog_bound",
-    "context_sha256": "sha256:ce04ef39ac69e5f490e67299d3d5481f5930eb2f4c74f9fe877989e25b09eb3e"
+    "context_sha256": "sha256:52a7720eb7eb23aecbcc7c7f9c2ddd682b2161e1bb96b40e8ca3692d63f330f0"
   }
 }
