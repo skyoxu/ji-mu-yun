@@ -1,0 +1,15 @@
+{
+  "authorizes": [],
+  "context_artifact_hash": "sha256:925a93165cc754cbb4577a3ce2e03841f45a6c78cdff75a51c2560f74e92d4f9",
+  "execution_identity": "sha256:4bf63385a853dad89396f00693b2e84214fe4dea5111bb0d6cfdd4fd89a3cfef",
+  "producer_role": "semantic-child",
+  "rationale": "Frozen inputs were reviewed.",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "redaction_status": "complete",
+  "schema_version": "skill-semantic-decision.v1",
+  "source_manifest_hash": "sha256:7c9e12e6058195d8851765e303552b02a063b343bd42d9db4fd917e9c87dc255",
+  "source_statuses": {
+    "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md": "accepted"
+  },
+  "status": "accepted"
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": "plan-state.v1",
+  "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "profile": "resumable",
+  "lifecycle_state": "plan-ready",
+  "owner": "vdd-execution-plan",
+  "current_slice": "S0",
+  "completed_slices": [],
+  "next_action": "bootstrap-upstream-semantic-review",
+  "baseline": {"mode":"commit","branch":"main","commit":"dcd3cc04051cdb57bde3d40313ba88100ba63b47"},
+  "authority": {"canonical_spec":"_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md","architecture":"_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md"},
+  "authorization": {"implementation_authorized": false,"published_by": null},
+  "acceptance": {"status":"not-started","owner":"run-refactor-implementation-acceptance"},
+  "inputs": {
+    "skill_input_receipt":"skill-input-r3/receipt.json",
+    "skill_input_binding_hash":"sha256:29f89fece72887eef0f0485bc3fecd667c06b116be228fd904207b2f4e21e757",
+    "knowledge_context":"knowledge-context.v1.json",
+    "knowledge_freeze":"knowledge-context.freeze.v1.json",
+    "knowledge_preflight":"knowledge-preflight.v1.json",
+    "source_freeze":"repair/round-1/source-freeze.v1.json",
+    "source_freeze_hash":"sha256:84377cb23505101b45249f6d08f6e0783ec376ff1f1b914a6167c673be31f8c5",
+    "requirements_mapping":"repair/round-1/requirements-acceptance.v1.json",
+    "requirements_mapping_hash":"sha256:4d891943781ceae5f06fdd6eddc9719ac8c80acfffb7a461920947ba2001b642"
+  }
+}

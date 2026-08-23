@@ -1,0 +1,10 @@
+{
+  "schema_version": "resume-state.v1",
+  "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "status": "plan-ready",
+  "next_action": "bootstrap-upstream-semantic-review",
+  "current_slice": "S0",
+  "completed_slices": [],
+  "recovery": {"action":"read current slice selector and rerun targeted validation","do_not":"import RED or mutate live metadata"},
+  "last_transition": {"from":"draft","to":"plan-ready","reason":"exact-cover mapping and source-freeze repair passed deterministic checks; deferred normative prose requires semantic review"}
+}

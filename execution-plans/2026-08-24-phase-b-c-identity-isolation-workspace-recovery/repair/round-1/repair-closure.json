@@ -1,0 +1,23 @@
+{
+  "schema_version": "vdd-repair-closure.v1",
+  "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "round": 1,
+  "finding": "requirements ledger was not consumable by exact-cover validator",
+  "mapping": {
+    "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/repair/round-1/requirements-acceptance.v1.json",
+    "sha256": "sha256:4d891943781ceae5f06fdd6eddc9719ac8c80acfffb7a461920947ba2001b642"
+  },
+  "source_freeze": {
+    "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/repair/round-1/source-freeze.v1.json",
+    "sha256": "sha256:84377cb23505101b45249f6d08f6e0783ec376ff1f1b914a6167c673be31f8c5"
+  },
+  "validator_result": {
+    "status": "requirement_semantic_review_required",
+    "errors": [],
+    "requirements_manifest_hash": "sha256:4d891943781ceae5f06fdd6eddc9719ac8c80acfffb7a461920947ba2001b642",
+    "source_manifest_hash": "sha256:84377cb23505101b45249f6d08f6e0783ec376ff1f1b914a6167c673be31f8c5",
+    "validator_identity": "sha256:3dd328f4b1af37e2207d38cc70ea7b54d83aaa8fc8b124ce440eb0db895d1882"
+  },
+  "semantic_review_required": true,
+  "authorizes": []
+}

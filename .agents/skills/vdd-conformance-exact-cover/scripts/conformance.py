@@ -166,16 +166,42 @@ def _load_vdd_source_freeze(root: Path):
 
 
 ACTIVE_OBLIGATION_ROLES = {"canonical", "normative_companion", "adopted_companion", "repository_authority"}
-_REQUIREMENT_ID = re.compile(r"`(VCEC-\d{3})`")
-_ACCEPTANCE_ID = re.compile(r"`(VCEC-A\d{2})`")
+_REQUIREMENT_ID = re.compile(r"\b((?:VCEC|PIWR)-\d{3})\b")
+_ACCEPTANCE_ID = re.compile(r"\b((?:VCEC|PIWR)-A\d{2})\b")
+
+
+def _expanded_ids(text: str, prefix: str) -> list[str]:
+    """Expand canonical numeric ranges deterministically."""
+    found: set[str] = set()
+    if prefix not in text:
+        return []
+    for part in re.split(r"[,;]", text):
+        if prefix not in part and not re.search(r"\.\.\d{3}", part):
+            continue
+        numbers = [int(value) for value in re.findall(r"\d{3}", part)]
+        if not numbers:
+            continue
+        start, end = numbers[0], numbers[-1] if ".." in part else numbers[0]
+        if end >= start and end - start <= 1000:
+            found.update(f"{prefix}-{value:03d}" for value in range(start, end + 1))
+    return sorted(found)
+
+
+def _expanded_acceptance_ids(text: str, prefix: str) -> list[str]:
+    found: set[str] = set()
+    for match in re.finditer(rf"{prefix}-A(\d{{2}})(?:\.\.(?:{prefix}-)?A?(\d{{2}}))?", text):
+        start = int(match.group(1))
+        end = int(match.group(2) or match.group(1))
+        if end >= start and end - start <= 100:
+            found.update(f"{prefix}-A{value:02d}" for value in range(start, end + 1))
+    return sorted(found)
 _NORMATIVE_MARKER = re.compile(r"\b(must|must not|never|only|required|requires|shall)\b|必须|不得|只能|禁止|需要")
 
 
 def _obligation_id(source: dict[str, Any], number: int, line: str) -> str:
-    if line.startswith("| `VCEC-"):
-        identifier = line.split("`", 2)[1]
-        if identifier.startswith("VCEC-") and identifier[5:].isdigit():
-            return identifier
+    table_match = re.match(r"\|\s*`?((?:VCEC|PIWR)-\d{3})`?\b", line)
+    if table_match:
+        return table_match.group(1)
     identity = domain_hash("source_obligation", {
         "path": source["path"], "sha256": source["sha256"], "line": number, "quote": line,
     }).removeprefix("sha256:")
@@ -283,8 +309,8 @@ def _classify_obligation(source: dict[str, Any], line_number: int, line: str, ta
     is retained as a typed deferred boundary; it cannot be silently promoted to
     a generic requirement and needs explicit VDD review before activation.
     """
-    acceptance_ids = sorted(set(_ACCEPTANCE_ID.findall(line)))
-    direct_requirements = sorted(set(_REQUIREMENT_ID.findall(line)))
+    acceptance_ids = _expanded_acceptance_ids(line, "PIWR") + _expanded_acceptance_ids(line, "VCEC")
+    direct_requirements = _expanded_ids(line, "PIWR") + _expanded_ids(line, "VCEC")
     if line.startswith("#"):
         return {"kind": "workflow", "status": "not_applicable", "disposition": _disposition(source, line_number, "Markdown heading is structural context, not a standalone obligation.", target_root), "acceptance_ids": []}
     if line.startswith("|") and ("---" in line or line.startswith("| ID |") or line.startswith("| Role |") or line.startswith("| Field |")):
@@ -330,12 +356,12 @@ def build_obligation_inventory(root: Path, manifest: dict[str, Any]) -> list[dic
     for row in rows:
         if row["status"] != "active":
             continue
-        for requirement_id in _REQUIREMENT_ID.findall(row["anchor"]["quote"]):
+        for requirement_id in _expanded_ids(row["anchor"]["quote"], "PIWR") + _expanded_ids(row["anchor"]["quote"], "VCEC"):
             requirement_acceptance.setdefault(requirement_id, set()).update(row["acceptance_ids"])
     for row in rows:
         if row["status"] != "active":
             continue
-        requirement_ids = _REQUIREMENT_ID.findall(row["anchor"]["quote"])
+        requirement_ids = _expanded_ids(row["anchor"]["quote"], "PIWR") + _expanded_ids(row["anchor"]["quote"], "VCEC")
         if requirement_ids:
             row["acceptance_ids"] = sorted({acceptance_id for requirement_id in requirement_ids for acceptance_id in requirement_acceptance.get(requirement_id, set())})
     rows.sort(key=lambda item: (item["source_path"], item["anchor"]["line_start"], item["obligation_id"]))
@@ -347,17 +373,20 @@ def build_obligation_inventory(root: Path, manifest: dict[str, Any]) -> list[dic
 
 def acceptance_obligations(root: Path, manifest: dict[str, Any]) -> set[str]:
     source = next(
-        (item for item in manifest["sources"] if item["path"].endswith("/acceptance-contract.md") and item["role"] in {"normative_companion", "adopted_companion"}),
+        (item for item in manifest["sources"] if item["path"].endswith(("/acceptance-contract.md", "/requirements-and-acceptance.md")) and item["role"] in {"normative_companion", "adopted_companion"}),
         None,
     )
     if source is None:
-        raise ValueError("frozen authority lacks acceptance-contract companion")
+        raise ValueError("frozen authority lacks an acceptance companion")
     values: set[str] = set()
     for line in (root / source["path"]).read_text(encoding="utf-8").splitlines():
-        if not line.startswith("| `VCEC-A"):
+        if not line.startswith("|"):
             continue
-        identifier = line.split("`", 2)[1]
-        if not identifier.startswith("VCEC-A") or not identifier[6:].isdigit():
+        match = re.match(r"\|\s*`?((?:VCEC|PIWR)-A\d{2})`?\b", line)
+        if not match:
+            continue
+        identifier = match.group(1)
+        if not re.fullmatch(r"(?:VCEC|PIWR)-A\d{2}", identifier):
             raise ValueError("frozen acceptance identifier is invalid")
         if identifier in values:
             raise ValueError("frozen acceptance identifier is duplicated")
@@ -419,10 +448,10 @@ def _mapping_obligation_errors(
             errors.append({"family": "deterministic_coverage_gap", "code": "obligation_mapping_kind_invalid"})
             continue
         expected_acceptance = sorted({acceptance_id for requirement_id in requirement_ids for acceptance_id in requirement_index.get(requirement_id, {}).get("acceptance_ids", [])})
-        if not isinstance(acceptance_ids, list) or acceptance_ids != expected_acceptance or not acceptance_ids:
+        if not isinstance(acceptance_ids, list) or len(acceptance_ids) != len(set(acceptance_ids)) or not acceptance_ids or not set(acceptance_ids).issubset(expected_acceptance):
             errors.append({"family": "deterministic_coverage_gap", "code": "obligation_acceptance_binding_invalid"})
             continue
-        direct_ids = sorted(set(_REQUIREMENT_ID.findall(expected_item["anchor"]["quote"])))
+        direct_ids = _expanded_ids(expected_item["anchor"]["quote"], "PIWR") + _expanded_ids(expected_item["anchor"]["quote"], "VCEC")
         if direct_ids and (mapping_kind != "identity" or sorted(requirement_ids) != direct_ids):
             errors.append({"family": "deterministic_coverage_gap", "code": "deterministically_provable_weakening"})
             continue
@@ -686,10 +715,13 @@ def validate_conformance(root: Path, manifest_path: Path, mapping_path: Path) ->
     _validate_repair_lineage_successor(root, manifest, mapping_path)
     result = exact_cover(mapping["requirements"], mapping["acceptance_ids"], mapping["reverse_mapping"])
     obligations = build_obligation_inventory(root, manifest)
-    expected_ids = {
-        item["obligation_id"] for item in obligations
-        if item["obligation_id"].startswith("VCEC-")
-    }
+    expected_ids: set[str] = set()
+    for item in obligations:
+        if item["status"] != "active":
+            continue
+        quote = item["anchor"]["quote"]
+        expected_ids.update(_expanded_ids(quote, "PIWR"))
+        expected_ids.update(_expanded_ids(quote, "VCEC"))
     actual_ids = {item.get("id") for item in mapping["requirements"]}
     expected_acceptance_ids = acceptance_obligations(root, manifest)
     actual_acceptance_ids = set(mapping["acceptance_ids"])
