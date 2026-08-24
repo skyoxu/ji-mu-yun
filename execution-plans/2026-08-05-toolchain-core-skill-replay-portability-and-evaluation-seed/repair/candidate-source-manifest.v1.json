@@ -1,0 +1,2902 @@
+{
+  "schema_version": "jimuyun.candidate-source-manifest.v1",
+  "entries": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:21ba1ff0665ef8c8768d5d05150472de8152e282ac78e5c20dfc0242c0722ce3"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:27d2066707afd6c6d7361245b15556755fceea538cb77bbcd6ff9ab8c0cf1cdf"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:6d7cab8b4fb016e5d3b341a0403eb3994e25831f1f83c3ba62213218ed0c5714"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:20ff72a17dbab016520c17fb93f04ce0f9ad5295b2cc4f734c3545286920c8be"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_workspace.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3af475cc9b55f65a7bf2abc98da145df47c763ca7c458bbc28262896d9a3e179"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:7a8455552c07f14b6c5dd49989ef70d356565378253e5baec2657c42dede0011"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:13acb5575cca59135afbafc47a6c0b5541b368ea4b0898b1f8b192e9b6f9698c"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_direct_script_startup.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ce47e2319817a6afb5e0c859320dce220907e37fe10e64753f1054b3e7ea3237"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:05959c19148b0108c5fad9edcbfcf0bc83169d5fea94b7a7c70e326057864c0b"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba"
+    },
+    {
+      "path": "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/95-implementation-evolution-and-completion-report.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:738fbc87ceaa675990f4995e253355e986e97f0c94fce8f8e392ac7ab45694e1"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/authority-manifest.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:116db89ee5df8c9284f8f02721663d56faf83a593fca111a186f45608c3cce33"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:530e8dbf6435df53eec59aeff7c34dc9e94eda27d3c40be1546bf183f0a4a8cf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:59a72db30c814f86871590ad1febd1f05e8933b9c7e1fbb9fbf4cfc961fe9e85"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/historical-compatibility-replay.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2e3ddd5f2506d5cf8a1759c54b6db3acfd4308581d6d6da7191506ccf17a6dfe"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-authorization-receipt.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:928bffa85bc44165a09d6ad88e698bf5102507bef118c59a8d82e19f292a3df8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:cb51ea94536ac26fc671b9a7a75036a1de24f1d054f7aa51ae4e2625b407a867"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/knowledge-context.freeze.history/8210857f73729229066bb8e1f1ca29993886860225ef591fb051e211780a682f.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:9176e9459739460a8e1d390086dc9821fe68fce4ad3fa990b143f93cc5116323"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/knowledge-context.freeze.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:530011025c62cb856cdcd179174f63d0c730ab85aad5f29a52fb5ebe478b091a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/knowledge-context.history/8210857f73729229066bb8e1f1ca29993886860225ef591fb051e211780a682f.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:8210857f73729229066bb8e1f1ca29993886860225ef591fb051e211780a682f"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/knowledge-context.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:b00659b74d4ece1c76cd1c9e5e10ae1656ecfa9f7a1d60a6f0d6d893b452ae8e"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/plan-state.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:47b96256cddaf83eda8ccd125fbbb2df2d17560df0934d5760802591e7c2718a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:b14e0538dc39fc2c48d20bd25b8ff8390f099acb5c18f101654813ccadb9b49b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/stable-candidate-replay-matrix.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0a92264de0adbfa4b06e1507c14405ba18465d7b5020ca5836bcc1cb89b9372b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-4/implementation-authorization.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e285acac569cebbe762b01ae3548b7b413396d64d5a67240731f276a6b5f2faf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-2/semantic-decision.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:16f3b8e290249fb4ed0816df97db512a4f33c793da5d3fa1e78156294010cc68"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-2/skill-input-context.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:45611c764a5233f264878848bb79ad755b692fed398db1d46b4ecc68a9e30790"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-3/semantic-decision.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:5e2366e912fba8c358f1dbd2bd6324c4785c2412322dc631e70e92c77c2eee97"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-3/skill-input-context.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d6661e9c6cd9384a07ba924e8667912f18377abfd8036949e14c60fcef13fcf7"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00001.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:50ab886983f43605cfc45383872f0739ad069d135d4960f538a1a1b734116c4d"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00002.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:1e9e3d0f2f223fe060e5f721e503df3d63a9f1e9b62a907dd488b40525dd1cf1"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00003.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0ce59d55eefd02b6e2481a50834e0fa295fa7ad758e1a07d096b5205c21cbfdd"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00004.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d5aa7ec3e1e1998978c8ef6d986c5dfe52e128d38d8c553a766b25eb351f14fe"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00005.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:4ad7d5104890eb0ed12cecadcccfbd757a464bec6f49ff1901c8b317f1779320"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00006.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ec1fc00ffd69ccdf46fb64d00d01d95ce6055cebc1a9eec01ec97607e3ac2eb0"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00007.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:cfd89903950d00e72f3c008a019f99275a1a6aab0aaec28f67e57575628d7cce"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00008.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:cdb9c98783000ebf33129f644b11acef80df5fdbbed94f56a2ac7a0af880b3ed"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00009.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f244323a1f90328a1431d13508e8543c18e13e06d2d5f871667de8bd7b5d0607"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00010.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e707d8ea9ddaa7c14bee18d83d93d9c0a8c92e85daf7c74ce25b39ab1b106789"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00011.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:972293e15cfc3b679c36d142f05a8fe787845f1670a788420a0b97fdc0f9995f"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00012.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c2bc3b8790405a44d418d417b0ec7bd19410aef1640dd0915dca86000c7a51fa"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00013.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:1fbec74aba1e165f862cc6e8d69789ef2bbc62b009ae2d61df816372b91c67a3"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00014.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:46ebad2af737067ec035fca09247fca3aedc41af3097a6aee77f384f1d79b45a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00015.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d27afc80675a31360b202429a216b8349f1e23998f51aa7ef89d8299214d3e7d"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00016.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:091d8b2420c1bbd2a438e153a97d44f3f91e75e5e6aedcda92dabeb6edbe3608"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00017.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c306ea66743ced0e187ab9230ff69b8042e25c5a2ea74b6761a655a2c76c358f"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/page-summaries/page-00018.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e00fae21dc5ff8d138822d9f930486407c0efc4cbefa1a9d66095cc09f051fc8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/semantic-decision.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:daad7798af5011177a792b3353e2743234ecd0081b159d0011e7f04adca18f53"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/skill-input-context.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:7d97184448d79c82d883a6f323074a6a375ee5ab29c25ed3849ad72647fb0fbf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-11/snapshot-read-coverage.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c1ecd11a2090ca67b1d8b1588df6c4c6157b91c75a621aca9b7ef49a8308d2cb"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-5/page-summaries/page-00001.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:4358b045c537702f1069deaa80966d4cbc1ce6b1ac5390f3551be458ae0622d2"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-5/page-summaries/page-00002.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:1fe622f918541d4052e87256b8f1820cdedbf2cb7a35289c7214fba096be1cef"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-5/page-summaries/page-00003.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:82aa0a26c73bb4629e26f54ec752ddf908ceaeb90f247c53282664138afcc282"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-5/page-summaries/page-00004.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:b533f732cb809cab4f7a72e259bf7775e93280bf988caf55259c27b037c12fd5"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-5/page-summaries/page-00005.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:8aec07263cd2265e1b7641c9cdaafbaf3bd5c83da54d4fc3bcd16216137c45bc"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-5/page-summaries/page-00006.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:70d84c2d1f6a1887c267abd34e5e6a74c9933b7eaf46024ae190409600ef2458"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-5/semantic-decision.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:6f4e5961c99723a2dcab5a049354b028d3ebe4509a6d3d9f7e5a5920991e08ed"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-5/skill-input-context.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f71fd93195aaf3b0442f4691d63597e594aad6b35b873bcec517155eabe5ea67"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-5/snapshot-read-coverage.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c6d78106cf81ae049af4a6561c513ac51ac06769e100dc8ba57916386b7b2462"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-6/page-summaries/page-00001.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:149fdc9c42ab56de1f5a960f19f060ae55cc9c2a92651eafc97a29aab5e04caf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-6/page-summaries/page-00002.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:192d60db90456a7dd9c81fa5ed2bc80ed1915f89af32ca9b07e77abe0c7b8be4"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-6/page-summaries/page-00003.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:5ba4e8673cdccdda16604b2f5011395ec07e2b873e822305faa8dc968eab5939"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-6/page-summaries/page-00004.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a2e77f609202341e4d8b8e23efb3141984023a28c006e6ae6c23a1b352e8610a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-6/page-summaries/page-00005.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:924184c429941ceff6129e4477711bfb0b31e59226dd1b4c39e580b1a60568b4"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-6/page-summaries/page-00006.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0913586e8e5d3299ed0d98a5a6dcab77f159b268773bba7ab860e6c6455902c9"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-6/semantic-decision.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:216c140e17147bf4d05120c08d63601f063602d3151ae4f21de10c7ec70bcd7d"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-6/skill-input-context.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:4d2fb51c145b8551522fe6c415a591f0deadaffbfafc05d6486ca7ee61a73e47"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-6/snapshot-read-coverage.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c6d78106cf81ae049af4a6561c513ac51ac06769e100dc8ba57916386b7b2462"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-8/page-summaries/page-00001.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e1fb3e7e81cd9f2fde0713aabe965267721e25acf48345d1159573bb8f94c554"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-8/page-summaries/page-00002.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:66ffb0533ec0a8440a247b4a7cfeec0289d1e746acb517b0e41f5b69977e3d2a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-8/page-summaries/page-00003.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:6c98f97235fe511a141e63507fed7eed2b04bfa4cafad48ae85bd896312bbb8f"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-8/page-summaries/page-00004.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:94dc1a2bf7b3e8354733eb4fa12fe16ecbad24f450b27f3b98cb231e35d0ff9f"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-8/page-summaries/page-00005.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:20f9cd0b53732d30bf182578154636577c0193ec367ac194b6edc38d22f6182b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-8/page-summaries/page-00006.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:b4f43ec3d4999e0b6a09b69210dec4fa6269d52cab03287615ec9ef3cf1813a0"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-8/semantic-decision.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:898a3c6595a6ad198a994b3238e75e4230591d5f7ea8e8c19be54fbd7b274405"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-8/skill-input-context.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:524d9142138906f53086a771769f0c1ea6ce940264658c00088d9c67a62c9537"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-quickdev-8/snapshot-read-coverage.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c6d78106cf81ae049af4a6561c513ac51ac06769e100dc8ba57916386b7b2462"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-receipt-2.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:238698542e71504be6dc728c082d7ef781b6a987ec7e6af83260c3c7b7562349"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-receipt-quickdev-10.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:dcc94316c012a090173f562c23e6da2ac4fdf1e1fdf601df434691e11981cbe8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-receipt-quickdev-11.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:34de0658268ffdabb89d89e2e6f010b20d14bfaee9e5b56897c92bd39a71de2b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-receipt-quickdev-5.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:4d82e48ef91357bf5f3bc0d1ba8708d6265c5cef3c0846aafb1424ad7b182a00"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-receipt-quickdev-9.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d315d71e718f35847a336ba64b6e02ad210a1bce431596f05e62d2c6a15a0d5e"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-request-2.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:fae7c5bbc11a264b07cb92a222a59ddbb79ed52cfb9a52c5cc66a5db9a39e307"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-request-3.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ff441a4106b6aebaa14ef97adcb9364851ae70de6bf1f9c983d932960f238789"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-request-quickdev-10.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0fe9e16d474841857dec696601525526ec54333460283e3f5c622c63c98645a5"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-request-quickdev-11.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c3628056399c00efd30e7c1bab579eca0f4c0a27db21c06fce20b4d21124c54a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-request-quickdev-5.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:266a2649f7ed83115925c29bb2ac88a01d4b435d585d04f21afe98b21ea4e734"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-request-quickdev-6.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3983abf3731a083ed7afc21898b3ab23d5cb5b9d8492246a2d6006b35af2cd54"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-request-quickdev-8.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:6c91e9b0e51ccef7b46e81cff5db0667862f16003bccd2e09ee0ef16e4688350"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-2/source-manifest.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e6b2be2752cf6ec03dc5c6df6261e6c91c1eb19454415a97b51caecb9bdbafff"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:6346b5e52d7a0a63f7bf6f6bd663f092a007f0b856b68c369f55af8b57f9105e"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:9f7d5477dc442bfc7720764279bb23e5c2bdaf2a4cdfa8be53e71e8b08a8a6a4"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/policies/semantic-review-trigger-policy.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f95e27054ef4b7f95cd6c7ee2d7843a423ce0c33988ee61423c275bc613cbabf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:00a61838e719c76fa47ffc971304b64457d866977c8e5e04c3a29eefa2f0c570"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:86604a83d9ef9e90b94154744848cb9149687c0e71c2dfc5ea5096620452bb4b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-baseline-content-manifest.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ddc4cf40b0845197637bfa3aa6f8789c0f12b5cf35fbb853f663ab6763e8d1ba"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-candidate-content-manifest.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:22fc2964973b1f8f2300077a3913dbf37d16b05c254fd4b6876bcb1d47b1d689"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-impact-projection.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:8b8dbfec71500fe4729f9ac57fa969ebf431540666e778ee0b7588b8d52f88fb"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-knowledge-maintenance-route.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a94824a41b68188db5125bda96028f9904cf48f3db6ed33fc4435e38e25d41b8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure-challenge.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:fbfe826ae72369d442623c9a5db9dc17bd1ee5ebe53078bf0e59641003ccb12b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure-request.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e5adb9e2454ec8e14b0bd42b3643d0c5cbfd846f173aabaea98990c41c00a099"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e8df350065eb82963d58b7803f1da585f979941788363823e69c4797dc1743a3"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-repair-completeness.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e2cc2199d580f8c4434fc5101946a9302e912f4b22300cb169d1786351e5735e"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-review-reentry-decline-closure.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2a6491fe24195667bd827389d739d0955d461b937622bbe80a915dbc7dc54416"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-run-input.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:799ee8e3652213b2c429ad06f2e4e82f742f0855b67e83477007f60da6aac1b3"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-semantic-review-requirement-decision.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3f8b8dca2758ece87e83c35ca36005d9818c407f3400c5e5364f7e7caa58b3af"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-source-clauses.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a088e43b315d33c567dcc19c3388df2107d6872b9d82fb8699d16e6ed2e49a26"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-source-inventory.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:dc2bf4ca9f6ab90ac4e5efb35ee6aca169dcecc24b6e0165c63b46d365a756dc"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/bootstrap-import-envelope.v2.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:b02aaadeb697d4f537597fa7b76188b0c29808f0aa41be932a1c6d059f580a8a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/bootstrap-import-envelope.v3.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:817dbf024bb5918430acd2c382c2d669a35d621347460a424d091f355e829acd"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/check-id-lineage.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ef05b1d8fa117c367c656a0e0db6460aa76b4a3c407193e23cfb297a7d325fe7"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-binding.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e7851a074c6ffa3284b318b6ffcd84f6cdd02c4ecbd4264e25d5046bd5864348"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-pack.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:9828174cfea66584a4df37ac15f7ef75f5768e801c338ebfd0171f364b7b35f2"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/compact-vdd-acceptance-prerequisite-bundle.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:db3c4dbadd369e1ef5e1f0590a396bf5e4b5513da3a79586de40ebc1d9625cea"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/focused-repair-import.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d05b01753452c390b23dd753a66844645a5d37ded2957c0bc422eeedb79ef24f"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:7a93e331bfdafca31bca4e47cf90207d5e41b9d094ac45756af4a4ae041cbc56"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/phase-acceptance-candidate.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0d40b39975034d5087ea73572c857d1e9ef07c740bc3b41d568c1c187ebe4b1f"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/phase-diff-coverage-result.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:bb6bc99e2cff42380712dfa17d9a57c85f49c03939863b2790c41763eecac37d"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:38a8f0a15ed688c1521e08fe3352b9562a9534fa9a842e51a3761b71c14b1c9b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/phase-scan-bundle-result.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d0c5cd34f04c079651f2a223f76752426581c992cb1a65f56f95072019bc9cf4"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/program-dod-candidate.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a0ed75041a69843b352bdbe530fdcf6824ed1d849b39601fd6f6845bcf277438"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/task-checklist-closure.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:5802b8cc49f7386f452a01590e85563fda4126aadb79e7e0b9ea171a834a7217"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/schemas/typed-gate-result.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:18ea85d187f771a79501b87d4e314c20560a9ece95bcc97ecb9de4c2565e03ba"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f06a0bd5161bef09352751f1b008dd32cdebf1ca132cbb152eb6ab8a474dcc62"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:5e9744f6dc7ce4211af2929beda63c44f607ef3016af081b1241b1f1b03f7662"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0689c095fb843087545ade3592adeaef1521352639b5fc865705cdb6aa2f15a3"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/check_lineage.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:bedc1fc1006b30b4e277097a0061e4e5a393b35ba1c7ce81de91cf4fa2438172"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:063d89c83696ac1343f4bc7aae88ed3d354afd1147e310e561a9282d857954c6"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:192b49e9abf849226af2d62565e149d03607c3595e5982eddd0c527f0c1c722a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/evidence_analysis.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:71126775f586db3b19836d730cb2ac30262749837ead052739aa0a477cc578cf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:27735225b77c81eb62cbce04ba81f4ffca322dae2f7b444db7c96b34ad5ce6ed"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:1750fab488f47b83c29a416cac889df12a3ca38382a4b0285c98208422aa66d8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e46f097fd5607abf5b84af12e9e9f3689adc583f22ce7d5ed0ab05918a226a4c"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/matrix_phase.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0a07047465a8411559a132704dc6e3024c6f2b525b711f2d1433b3315a52c1c1"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:419ecbd6bc571607d77bfbbd3a5b722986682fc7ea740a2c0aafefe019e20aec"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:90200ae030188cc3acac8d929c0048761d6d9d4aeee3700af01a7c3bc1427dd9"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:91a0f38b2b61282a27de445e9f831869cb226c7fdf3de1a96e38979fe114455f"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c26bcad023bc96812a50111c30ca420038f1926be721a9c215fa0052d3a260ce"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3823ac6312b8f68bb9768ac34a5d7a24008abf09dfdc42a13ac2586dcae75e96"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/requirement_inventory.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:cc948059a5e72c979ec82e96cee69d1e3b774fdfaea3a10deb30c684f4e8884a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/review_cycle_policy.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:19f4d62c1c3eed645c1c7bc5309f6a20b9200ff50b3d29c1c7274fb0907d20b6"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/review_reentry_decline.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:58b7011e4ff6dd0d2d6ad91096453ce9e78d8a195558fd190c8e6752b70839ff"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/review_requirement.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2542239a0e7a69198204470326df110fa20c5cd809e1efe72d7710bac8feec03"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/semantic_import.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:37cdd1ce7c7a7d652e6491ad3a977dc2a9c83d6221285dfb8c9956496319d36c"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/source_clauses.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:fe62c533b8e6a6dfa57c94789024329e33ed8c1501136112078b4ab9afb81a8e"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a9c1699b9e955d556a451ffbabe6f4515498defe87a17808cbe11c7f8e404b27"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_import.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3f8428744574228880b9f2521bb0661755d698f2ff7089f7ebd6b9c1f319302a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d33d87dddae6fbae71df349796215d4ee9c80ee507e1147438b88c2a648601b8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_check_lineage.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e7dc7d04056f437e47644414b91c67cfb7f537c88bfc2806e68e6f3e25a10eed"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a150bd35d6923522d20fee605ac3cd6e3edbe19d5f68e8c507316877db0a31dd"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2eef9aa774daa2503cd69550d5fe86c8fe78e50130c3a9e53055a754fc4b6af2"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:bbe9b84f7188aff4630daa8320af1870e41076e28a667b2fc78c8182e034014c"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s0.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:330fbf94069efe25d989ccf82dd2c6b21b1e428917c093f344c47e56a9bd8273"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s1.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e5ef38baf7585d08951424b1ed5e663001ffebe209a07e8861ece21e04853d99"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s2.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:677af3d9c35c22f66c2a881007804c9c32c2dd2ff94d133159fb14bfcd580c16"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:188d62c9491fdb6eb1a7843e9fc9aaa2198162745e1bdedd14bd5f736ceafdc5"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e39e4c33fcb2f52572e2ed3943625311855aa40c93f162a298a5c32ffbc92661"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_analysis.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:7f9669253f135bcfffce88583518088b15b21b1229008cf8484cc8b468c0bb35"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_pipeline.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:af80c0ccac1f2ab9c088b8832fe0f120655e9f426c492ea9e53a34cad132c648"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:6a52ca8da897dc8713a172b091389278068d162b4dab5552ccb7c7aefd16b95c"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:de49d9ca0c503b49640c26cbdd6315d7608e9fca6fa74baf4bd9ef11ab62400c"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_manual_pause_closure.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:8ea46032c9da9bf025471e28016c1bd9fa276af2c0a9b52da0ad0db3736e6890"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_matrix_phase.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d8665637fa2aabfede9047de53ab490ccfa2a4a5867455acda7b16647afb6e9a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:5f5d15dc5137fa0d426d89df5adfc746231acce27995b3ef87151c1253ad2b3d"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_package.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f695b815ce7e8d18962f61b3a610315d9fd104020f06c29685ad16512e8f88c5"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_phase_scan.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:057d5aad07fcb7397488e94c75b92eba27866da1322de972f10e46f227cb3970"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3320fd5ce11c8663846ce68100d280f4aec4920d9e6019434e1d50c770683da9"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_requirement_inventory.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c274ee9eeb1dfa2dbaea005f77d0c806fa60faa7af10b63afc3ebf371e6cf8bf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_review_reentry_decline.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:8e4cad8105b9611dded2f3dbf55899ba76f95dfbba27d4f180978600b0e98ce8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:fb634eb319d802eb763b81cd402cc1d6c95a881be3b4e37405ee12537b6155c5"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0536f99e41ffbc8bca9dc2985b5ead90bd2d987d05332f8db3e284a73f6d366b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_schemas.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2611c2f89360835c0b9ec100ae11a44b5810a08d84b2ff7c12f5b9f3e789138d"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c9fcc70238c6638e01ec4ca3b170184fca434915f7b0d59ef122fba62f799d16"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_source_clauses.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:8f0ede7c8cb2c1f7cdfb17793cf8cc0caa79b07b96b9c33575a8795e12fff787"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_task_checklist.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ae866c67b58e8743ad6cca2cfb8f7af193c97ae41d0c0457322922ce91939bea"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_terminal_full_isolation.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:72b42f62af066f85f473e5481e3d89cc93332d6111b484ec76943d852a9090b6"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:dadb87012356a400b85976d6bf768b484cffe6bc932fb5be342a7b706040b292"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/.agents/skills/vdd-execution-plan/SKILL.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:32765f6b2742eb5f7ff3abbc70c39fde88bbfdf95cc63cd73fa1d62dc0d0fefb"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:626c5fb62a240a5ee2dd23ccaa066fb6f0ef60c93486c06487f7a3fd221fde80"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/historical-compatibility-replay.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2837dc0009bc208dcc63813b5252e6b920fd9b9cfd59fc61ef3ea71788ceaf73"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:84966a42fcb7fb14b8da161abc757513d6b1c9fdb083004e60ac9a4c112f6ed4"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:72afe3b11a41471808b6c25dea6358c5d8700b9e613e8084fb2b509a83316f2e"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/stable-candidate-replay-matrix.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:68126856c567edcb8225dbbba551f6a9b62a55930f5bfc7a11c08285360f32a8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3f3c288aced8a2a52d8fb5bde17759f220f966e3f4e6fc0571ba941778221b2b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/scripts/sc/config/skill-package-validator-capability.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0432dc6ae3c8b9e50b5006df2bf46cc0409df71f1c995118400efa3fe86f83f6"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a1df844c281711277b637c5a470b6a15d60d0e24c44e2ad3c7b6cc23041116ab"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0ffe7f3d6b15d31b4a32f7f4708fbf35e3596e4dc55efeb49cd3d5e7b53e7c98"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/scripts/sc/skill_package_replay.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/scripts/sc/tests/test_skill_package_replay.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-10/source-manifest.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:26b3f697c0071fe39eb9215a96897191c6c2081bb22048990d8591d7a94be2ec"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-11/source-manifest.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:9ecd61e21a41e096c161c005140d3c9d6e66539892d0af65008c6f222706255b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-5/.agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-5/.agents/skills/vdd-execution-plan/SKILL.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-5/execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-5/execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-5/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-5/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:56db579f2e19608f3cabac64d081236dd14a0eeaf704bfebc435e80c3d51e2f3"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-5/source-manifest.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:db943406d7634edd35442b2bb610ef09aa7a166261193cf592cb3d606cb84e57"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:6346b5e52d7a0a63f7bf6f6bd663f092a007f0b856b68c369f55af8b57f9105e"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:9f7d5477dc442bfc7720764279bb23e5c2bdaf2a4cdfa8be53e71e8b08a8a6a4"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/policies/semantic-review-trigger-policy.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f95e27054ef4b7f95cd6c7ee2d7843a423ce0c33988ee61423c275bc613cbabf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:00a61838e719c76fa47ffc971304b64457d866977c8e5e04c3a29eefa2f0c570"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:86604a83d9ef9e90b94154744848cb9149687c0e71c2dfc5ea5096620452bb4b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-baseline-content-manifest.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ddc4cf40b0845197637bfa3aa6f8789c0f12b5cf35fbb853f663ab6763e8d1ba"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-candidate-content-manifest.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:22fc2964973b1f8f2300077a3913dbf37d16b05c254fd4b6876bcb1d47b1d689"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-impact-projection.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:8b8dbfec71500fe4729f9ac57fa969ebf431540666e778ee0b7588b8d52f88fb"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-knowledge-maintenance-route.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a94824a41b68188db5125bda96028f9904cf48f3db6ed33fc4435e38e25d41b8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure-challenge.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:fbfe826ae72369d442623c9a5db9dc17bd1ee5ebe53078bf0e59641003ccb12b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure-request.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e5adb9e2454ec8e14b0bd42b3643d0c5cbfd846f173aabaea98990c41c00a099"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e8df350065eb82963d58b7803f1da585f979941788363823e69c4797dc1743a3"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-repair-completeness.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e2cc2199d580f8c4434fc5101946a9302e912f4b22300cb169d1786351e5735e"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-review-reentry-decline-closure.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2a6491fe24195667bd827389d739d0955d461b937622bbe80a915dbc7dc54416"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-run-input.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:799ee8e3652213b2c429ad06f2e4e82f742f0855b67e83477007f60da6aac1b3"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-semantic-review-requirement-decision.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3f8b8dca2758ece87e83c35ca36005d9818c407f3400c5e5364f7e7caa58b3af"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-source-clauses.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a088e43b315d33c567dcc19c3388df2107d6872b9d82fb8699d16e6ed2e49a26"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-source-inventory.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:dc2bf4ca9f6ab90ac4e5efb35ee6aca169dcecc24b6e0165c63b46d365a756dc"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/bootstrap-import-envelope.v2.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:b02aaadeb697d4f537597fa7b76188b0c29808f0aa41be932a1c6d059f580a8a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/bootstrap-import-envelope.v3.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:817dbf024bb5918430acd2c382c2d669a35d621347460a424d091f355e829acd"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/check-id-lineage.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ef05b1d8fa117c367c656a0e0db6460aa76b4a3c407193e23cfb297a7d325fe7"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-binding.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e7851a074c6ffa3284b318b6ffcd84f6cdd02c4ecbd4264e25d5046bd5864348"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-pack.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:9828174cfea66584a4df37ac15f7ef75f5768e801c338ebfd0171f364b7b35f2"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/compact-vdd-acceptance-prerequisite-bundle.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:db3c4dbadd369e1ef5e1f0590a396bf5e4b5513da3a79586de40ebc1d9625cea"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/focused-repair-import.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d05b01753452c390b23dd753a66844645a5d37ded2957c0bc422eeedb79ef24f"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:7a93e331bfdafca31bca4e47cf90207d5e41b9d094ac45756af4a4ae041cbc56"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/phase-acceptance-candidate.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0d40b39975034d5087ea73572c857d1e9ef07c740bc3b41d568c1c187ebe4b1f"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/phase-diff-coverage-result.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:bb6bc99e2cff42380712dfa17d9a57c85f49c03939863b2790c41763eecac37d"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:38a8f0a15ed688c1521e08fe3352b9562a9534fa9a842e51a3761b71c14b1c9b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/phase-scan-bundle-result.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d0c5cd34f04c079651f2a223f76752426581c992cb1a65f56f95072019bc9cf4"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/program-dod-candidate.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a0ed75041a69843b352bdbe530fdcf6824ed1d849b39601fd6f6845bcf277438"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/task-checklist-closure.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:5802b8cc49f7386f452a01590e85563fda4126aadb79e7e0b9ea171a834a7217"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/schemas/typed-gate-result.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:18ea85d187f771a79501b87d4e314c20560a9ece95bcc97ecb9de4c2565e03ba"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f06a0bd5161bef09352751f1b008dd32cdebf1ca132cbb152eb6ab8a474dcc62"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:5e9744f6dc7ce4211af2929beda63c44f607ef3016af081b1241b1f1b03f7662"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0689c095fb843087545ade3592adeaef1521352639b5fc865705cdb6aa2f15a3"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/check_lineage.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:bedc1fc1006b30b4e277097a0061e4e5a393b35ba1c7ce81de91cf4fa2438172"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:063d89c83696ac1343f4bc7aae88ed3d354afd1147e310e561a9282d857954c6"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:192b49e9abf849226af2d62565e149d03607c3595e5982eddd0c527f0c1c722a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/evidence_analysis.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:71126775f586db3b19836d730cb2ac30262749837ead052739aa0a477cc578cf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:27735225b77c81eb62cbce04ba81f4ffca322dae2f7b444db7c96b34ad5ce6ed"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:1750fab488f47b83c29a416cac889df12a3ca38382a4b0285c98208422aa66d8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e46f097fd5607abf5b84af12e9e9f3689adc583f22ce7d5ed0ab05918a226a4c"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/matrix_phase.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0a07047465a8411559a132704dc6e3024c6f2b525b711f2d1433b3315a52c1c1"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:419ecbd6bc571607d77bfbbd3a5b722986682fc7ea740a2c0aafefe019e20aec"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:90200ae030188cc3acac8d929c0048761d6d9d4aeee3700af01a7c3bc1427dd9"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:91a0f38b2b61282a27de445e9f831869cb226c7fdf3de1a96e38979fe114455f"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c26bcad023bc96812a50111c30ca420038f1926be721a9c215fa0052d3a260ce"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3823ac6312b8f68bb9768ac34a5d7a24008abf09dfdc42a13ac2586dcae75e96"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/requirement_inventory.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:cc948059a5e72c979ec82e96cee69d1e3b774fdfaea3a10deb30c684f4e8884a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/review_cycle_policy.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:19f4d62c1c3eed645c1c7bc5309f6a20b9200ff50b3d29c1c7274fb0907d20b6"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/review_reentry_decline.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:58b7011e4ff6dd0d2d6ad91096453ce9e78d8a195558fd190c8e6752b70839ff"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/review_requirement.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2542239a0e7a69198204470326df110fa20c5cd809e1efe72d7710bac8feec03"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/semantic_import.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:37cdd1ce7c7a7d652e6491ad3a977dc2a9c83d6221285dfb8c9956496319d36c"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/source_clauses.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:fe62c533b8e6a6dfa57c94789024329e33ed8c1501136112078b4ab9afb81a8e"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a9c1699b9e955d556a451ffbabe6f4515498defe87a17808cbe11c7f8e404b27"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_import.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3f8428744574228880b9f2521bb0661755d698f2ff7089f7ebd6b9c1f319302a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d33d87dddae6fbae71df349796215d4ee9c80ee507e1147438b88c2a648601b8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_check_lineage.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e7dc7d04056f437e47644414b91c67cfb7f537c88bfc2806e68e6f3e25a10eed"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a150bd35d6923522d20fee605ac3cd6e3edbe19d5f68e8c507316877db0a31dd"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2eef9aa774daa2503cd69550d5fe86c8fe78e50130c3a9e53055a754fc4b6af2"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:bbe9b84f7188aff4630daa8320af1870e41076e28a667b2fc78c8182e034014c"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s0.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:330fbf94069efe25d989ccf82dd2c6b21b1e428917c093f344c47e56a9bd8273"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s1.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e5ef38baf7585d08951424b1ed5e663001ffebe209a07e8861ece21e04853d99"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s2.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:677af3d9c35c22f66c2a881007804c9c32c2dd2ff94d133159fb14bfcd580c16"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:188d62c9491fdb6eb1a7843e9fc9aaa2198162745e1bdedd14bd5f736ceafdc5"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e39e4c33fcb2f52572e2ed3943625311855aa40c93f162a298a5c32ffbc92661"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_analysis.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:7f9669253f135bcfffce88583518088b15b21b1229008cf8484cc8b468c0bb35"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_pipeline.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:af80c0ccac1f2ab9c088b8832fe0f120655e9f426c492ea9e53a34cad132c648"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:6a52ca8da897dc8713a172b091389278068d162b4dab5552ccb7c7aefd16b95c"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:de49d9ca0c503b49640c26cbdd6315d7608e9fca6fa74baf4bd9ef11ab62400c"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_manual_pause_closure.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:8ea46032c9da9bf025471e28016c1bd9fa276af2c0a9b52da0ad0db3736e6890"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_matrix_phase.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:d8665637fa2aabfede9047de53ab490ccfa2a4a5867455acda7b16647afb6e9a"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:5f5d15dc5137fa0d426d89df5adfc746231acce27995b3ef87151c1253ad2b3d"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_package.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f695b815ce7e8d18962f61b3a610315d9fd104020f06c29685ad16512e8f88c5"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_phase_scan.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:057d5aad07fcb7397488e94c75b92eba27866da1322de972f10e46f227cb3970"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3320fd5ce11c8663846ce68100d280f4aec4920d9e6019434e1d50c770683da9"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_requirement_inventory.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c274ee9eeb1dfa2dbaea005f77d0c806fa60faa7af10b63afc3ebf371e6cf8bf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_review_reentry_decline.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:8e4cad8105b9611dded2f3dbf55899ba76f95dfbba27d4f180978600b0e98ce8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:fb634eb319d802eb763b81cd402cc1d6c95a881be3b4e37405ee12537b6155c5"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0536f99e41ffbc8bca9dc2985b5ead90bd2d987d05332f8db3e284a73f6d366b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_schemas.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2611c2f89360835c0b9ec100ae11a44b5810a08d84b2ff7c12f5b9f3e789138d"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c9fcc70238c6638e01ec4ca3b170184fca434915f7b0d59ef122fba62f799d16"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_source_clauses.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:8f0ede7c8cb2c1f7cdfb17793cf8cc0caa79b07b96b9c33575a8795e12fff787"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_task_checklist.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ae866c67b58e8743ad6cca2cfb8f7af193c97ae41d0c0457322922ce91939bea"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_terminal_full_isolation.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:72b42f62af066f85f473e5481e3d89cc93332d6111b484ec76943d852a9090b6"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:dadb87012356a400b85976d6bf768b484cffe6bc932fb5be342a7b706040b292"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/.agents/skills/vdd-execution-plan/SKILL.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:32765f6b2742eb5f7ff3abbc70c39fde88bbfdf95cc63cd73fa1d62dc0d0fefb"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:626c5fb62a240a5ee2dd23ccaa066fb6f0ef60c93486c06487f7a3fd221fde80"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/historical-compatibility-replay.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2837dc0009bc208dcc63813b5252e6b920fd9b9cfd59fc61ef3ea71788ceaf73"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:84966a42fcb7fb14b8da161abc757513d6b1c9fdb083004e60ac9a4c112f6ed4"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:72afe3b11a41471808b6c25dea6358c5d8700b9e613e8084fb2b509a83316f2e"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/stable-candidate-replay-matrix.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:68126856c567edcb8225dbbba551f6a9b62a55930f5bfc7a11c08285360f32a8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3f3c288aced8a2a52d8fb5bde17759f220f966e3f4e6fc0571ba941778221b2b"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/scripts/sc/config/skill-package-validator-capability.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0432dc6ae3c8b9e50b5006df2bf46cc0409df71f1c995118400efa3fe86f83f6"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a1df844c281711277b637c5a470b6a15d60d0e24c44e2ad3c7b6cc23041116ab"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0ffe7f3d6b15d31b4a32f7f4708fbf35e3596e4dc55efeb49cd3d5e7b53e7c98"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/scripts/sc/skill_package_replay.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/scripts/sc/tests/test_skill_package_replay.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-quickdev-9/source-manifest.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:490fc2819358afa9bcf7bd99bcbd026fbbb4addfb07f4d27f334ebaaa231c785"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a8bfac1c66a2bf93d82f445e8268f8c45bfe8141a13ab4081f3540329b72f2a2"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot/source-manifest.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3795f5ee1ed653e0310d3db988f2cb96ec9824af08a516e8f3f591905f03d1f7"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/child-request.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:639b102004b65539aaa0185c695126cea192c9cba510ace1afe23847f1b33dff"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/output/page-summaries/page-00001.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:6f3878a395710111c229229ddb754bbba6ecfc10bca9981e2fcb18a9d10a8ef2"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/output/page-summaries/page-00002.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:40448804a864f03666cc768327b95daa64d8b92847ca6b31191fb0f051c765d4"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/output/page-summaries/page-00003.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2657097818820246229706bbc97f6de4cdcfa9ad15b9fa3088a127ec62c84bd4"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/output/page-summaries/page-00004.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:43b1bec34c168477f50ac4860d1a1d94d93632087854d839ee4a8f3d704f08c2"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/output/page-summaries/page-00005.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:bdac31a2f6fe89c72780f4b0139599ae2686ec825c19106af50354b62052c897"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/output/page-summaries/page-00006.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:acfc9367797d1f1a012f9105ca299508b4da9c4a89a1cacab50bd8aca03c70d8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/output/semantic-decision.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3cb56e19f09f55411840619fab3162c1668da9a22dc3bb7a3fdafd2138e52fbf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/output/skill-input-context.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ab64bc49a903c7e307cff567114bfba2f7ec921d886a64719eb5c80a7c2f7443"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/output/snapshot-read-coverage.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:93a12efa9965da1798b0e1a58aa2937939780e7c5b66ec594c5befa32ffdb7a8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/skill-input-receipt.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:6ea770ca23f7e33566d0049f3bcee36d98cca472a65856206e79cd84ca0e0762"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/snapshot/.agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/snapshot/.agents/skills/vdd-execution-plan/SKILL.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/snapshot/execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/snapshot/execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/snapshot/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/snapshot/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:56db579f2e19608f3cabac64d081236dd14a0eeaf704bfebc435e80c3d51e2f3"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001410Z/snapshot/source-manifest.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:9c490eb0910fccc0d9ed16058fadaf205dc16fead0d36f035e3943d304f084b3"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/child-request.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f1da3b37a018ba47658cf6ef0a773d4f4bedf510c0a03a25d9de2b89c90eb938"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/output/page-summaries/page-00001.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:7b250e051bacb99d701000c18fbc8dfafdfe7a63494573c6f890b85ff1c6b968"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/output/page-summaries/page-00002.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:dc9722b3820df0d435c1c560a7eb4c462f3755b0673257f4f59fbf42f1860257"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/output/page-summaries/page-00003.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0108005683505284b845ecdb426c9705dcb67f366c2b78061aa1a215082cd8b4"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/output/page-summaries/page-00004.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:222936e80a422c6ee78adc4e829b1847b8d8883186d24c4f31a32846fe89c2a2"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/output/page-summaries/page-00005.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a45ac0aee8802356ced6943f4ec409d5b81d99d8f25ac8eed09b879a9c36c479"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/output/page-summaries/page-00006.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f679b9fbd10168f04add79518b5896af9b142a074ba296e3c4b6a07c228f1fa6"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/output/semantic-decision.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3e0e6911d927c68b39ab29fa768c1b9735694e9286dd41c3e4598b4712560467"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/output/skill-input-context.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:3270de214822bd33940bf2f6455f86608ec6afb6595be454ef1ca72b9e25f264"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/output/snapshot-read-coverage.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:03a77ab394af2b3dec6615fb4014a03255060254e54a743e27156c54e721dc84"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/skill-input-receipt.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:422e5e6b1126adffbccfe2d2acac802d95f23bf5cd16875aeb9893e4960c912e"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/attempt-20260824T001627Z/snapshot/source-manifest.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ed20f5b03aa7b15785de5f44e1c9aa59c151f25d25c2754588d52251f3bb39d0"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:a8bfac1c66a2bf93d82f445e8268f8c45bfe8141a13ab4081f3540329b72f2a2"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/skill-input-receipt.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:5bad4f250e83e2fbf16c5aaa2b32954afc7bb2af02ad7251df41e7a138209533"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input/source-manifest.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:bf5f479b080ecefc86ffb060bb63b696591823e85c221f8faac2d04ca1e25b60"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2b180f425e088c32dae8a902b1d51cf64ea07016bc5a98b3f25a1069d0fb62c5"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/tests/test_validate_implementation.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:2722729fa15018cc4e664518647fd43ea841542a5f23b0299cbe8f79aabd9169"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_all.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e87c8dbded37251d03f02656e089ee5360641fafc2d28b334f7a3756eba69ccd"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ab1c91a14034a531b7ae514d37abb2d778965e56c41c3a7436b23bdcfae9cadf"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_plan.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:ad0a1b639c030616ff5cc7b8edd0f6f7325a11ed8bdc7b4be6ca2c87c8ef16ba"
+    },
+    {
+      "path": "scripts/__init__.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:0243b011e7691813d9ddc745b1e1ceb530dc513038ea21ccac24391d9588453c"
+    },
+    {
+      "path": "scripts/python/launch_skill_input_consumer.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:88bef04ea63819b2b6a9c297fd97ac5874676310fd72b23572ba5ac8c3a0aade"
+    },
+    {
+      "path": "scripts/python/skill_input_consumption.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:16a64c7818067ec0c465e9a26c5d537832464629caa7eee802dd104d2a4e9da8"
+    },
+    {
+      "path": "scripts/python/tests/test_skill_input_consumption.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:28667032cee88cedbc7a42b50a7a7022349de020fc5e29cf4f934d3c7f21225e"
+    },
+    {
+      "path": "scripts/sc/config/skill-package-validator-capability.v1.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:bd728dc93eb4fa871f0dd9a61fa3490adaa1d88cf781e61d61719445bb985cb0"
+    },
+    {
+      "path": "scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:e66c0673805ab7d3100ec0ffc83ecd61710207932ffd44f38dfde513315af20f"
+    },
+    {
+      "path": "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+      "role": "documentation",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4"
+    },
+    {
+      "path": "scripts/sc/skill_package_replay.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582"
+    },
+    {
+      "path": "scripts/sc/tests/test_skill_package_replay.py",
+      "role": "test",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6"
+    },
+    {
+      "path": "scripts/toolchain/__init__.py",
+      "role": "production",
+      "slice_ids": [
+        "RMAP-S3"
+      ],
+      "sha256": "sha256:efb5c53c550d01e1d8e1d65f743ab8c7cffd47f6929f10cbc2453cbf55c7ec97"
+    }
+  ],
+  "candidate_source_root": "sha256:4842c0da056a4462a988086d51e8f4c597c8410dbf669fb063816ea50b296d55"
+}

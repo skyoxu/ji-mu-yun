@@ -1,0 +1,38 @@
+{
+  "schema_version": "quick-dev-implementation-complete.v2",
+  "predicate": "implementation-complete",
+  "status": "pass",
+  "plan_id": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "implementation_contract": {
+    "path": "implementation-contract.v1.json",
+    "sha256": "sha256:cb51ea94536ac26fc671b9a7a75036a1de24f1d054f7aa51ae4e2625b407a867"
+  },
+  "command_registry": {
+    "path": "command-registry.v1.json",
+    "sha256": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939"
+  },
+  "terminal_runner": {
+    "path": "tools/validate_implementation.py",
+    "sha256": "sha256:ab1c91a14034a531b7ae514d37abb2d778965e56c41c3a7436b23bdcfae9cadf"
+  },
+  "terminal_result": {
+    "path": "terminal-results/terminal-implementation-validation.json",
+    "sha256": "sha256:ac798dddc8315c0a5259385492cb61c3b4f11972b73deeab12b2aec7ed9a49a0",
+    "command_id": "terminal-implementation-validation"
+  },
+  "candidate_custody": {
+    "mode": "commit",
+    "candidate_revision": "519b99ca44e4d1f884adb18e3c90723b2d35c933"
+  },
+  "candidate_source_manifest": {
+    "path": "repair/candidate-source-manifest.v1.json",
+    "sha256": "sha256:9cade94cd88407663bdad4d780e9d4736ac1454adfcb0c3102515b6a8a4922f7",
+    "candidate_source_root": "sha256:4842c0da056a4462a988086d51e8f4c597c8410dbf669fb063816ea50b296d55"
+  },
+  "validated_command_ids": [
+    "terminal-implementation-validation"
+  ],
+  "authorizes": [
+    "acceptance-handoff"
+  ]
+}
