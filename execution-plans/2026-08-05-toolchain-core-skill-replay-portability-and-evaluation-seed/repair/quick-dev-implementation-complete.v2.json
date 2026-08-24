@@ -17,7 +17,7 @@
   },
   "terminal_result": {
     "path": "terminal-results/terminal-implementation-validation.json",
-    "sha256": "sha256:ac798dddc8315c0a5259385492cb61c3b4f11972b73deeab12b2aec7ed9a49a0",
+    "sha256": "sha256:e036fb710d700b6844898f89f95f835295ad25bab8da440e7ee940bb6e5080d6",
     "command_id": "terminal-implementation-validation"
   },
   "candidate_custody": {
@@ -26,7 +26,7 @@
   },
   "candidate_source_manifest": {
     "path": "repair/candidate-source-manifest.v1.json",
-    "sha256": "sha256:9cade94cd88407663bdad4d780e9d4736ac1454adfcb0c3102515b6a8a4922f7",
+    "sha256": "sha256:eb4d8af288d9f63b92b12331ee6f8c3dcd4acd5c7fec5349bef179e5ac103031",
     "candidate_source_root": "sha256:4842c0da056a4462a988086d51e8f4c597c8410dbf669fb063816ea50b296d55"
   },
   "validated_command_ids": [
