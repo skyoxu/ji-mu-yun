@@ -1,0 +1,16 @@
+{
+  "schema_version": "phase-b-c-identity-isolation-workspace-recovery.command-registry.v1",
+  "authorizes": [],
+  "commands": [
+    {"id":"s0-green","executable":"dotnet","argv":["test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--no-restore","--filter","FullyQualifiedName~PhaseB.IdentityContextTests"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s1-green","executable":"dotnet","argv":["test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--no-restore","--filter","FullyQualifiedName~PhaseB.RunnerIsolationTests"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s2-green","executable":"dotnet","argv":["test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--no-restore","--filter","FullyQualifiedName~PhaseB.SnapshotTests"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s3-green","executable":"dotnet","argv":["test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--no-restore","--filter","FullyQualifiedName~PhaseB.RestoreRecoveryTests"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s4-green","executable":"dotnet","argv":["test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--no-restore","--filter","FullyQualifiedName~PhaseB.MigrationEvidenceTests"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s0-terminal","executable":"dotnet","argv":["test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--no-restore","--filter","FullyQualifiedName~PhaseB.IdentityContextTests"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s1-terminal","executable":"dotnet","argv":["test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--no-restore","--filter","FullyQualifiedName~PhaseB.RunnerIsolationTests"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s2-terminal","executable":"dotnet","argv":["test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--no-restore","--filter","FullyQualifiedName~PhaseB.SnapshotTests"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s3-terminal","executable":"dotnet","argv":["test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--no-restore","--filter","FullyQualifiedName~PhaseB.RestoreRecoveryTests"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s4-terminal","executable":"dotnet","argv":["test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--no-restore","--filter","FullyQualifiedName~PhaseB.MigrationEvidenceTests"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false}
+  ]
+}

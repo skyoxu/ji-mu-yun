@@ -1,0 +1,8 @@
+{
+  "schema_version": "phase-b-c-identity-isolation-workspace-recovery.authority-manifest.v1",
+  "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "owner": "vdd-execution-plan",
+  "authorizes": [],
+  "source_freeze": "repair/round-3/source-freeze-successor.v1.json",
+  "requirements_mapping": "repair/round-3/requirements-acceptance-reviewed.v3.json"
+}

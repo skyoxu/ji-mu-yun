@@ -3,6 +3,8 @@
   "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
   "profile": "resumable",
   "lifecycle_state": "implementation-authorized",
+  "status": "implementation-authorized",
+  "authorizes": ["implementation-authorized"],
   "owner": "vdd-execution-plan",
   "current_slice": "S0",
   "completed_slices": [],

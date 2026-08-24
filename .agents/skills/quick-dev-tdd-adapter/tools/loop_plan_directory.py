@@ -14,7 +14,7 @@ TOOLS = Path(__file__).resolve().parent
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-from route_plan_directory import route
+from route_plan_directory import route, _validation_snapshot
 from stage_lifecycle_runner import (
     LifecycleRunner,
     derive_run_state,
@@ -300,10 +300,19 @@ def _current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object],
 def _active_slice_run(root: Path, plan_id: str, slice_id: str) -> tuple[Path, str] | None:
     evidence_root = root / "logs" / "tdd-adapter" / plan_id / slice_id
     candidates = sorted((path for path in evidence_root.glob("RUN-*") if path.is_dir()), key=lambda path: path.name, reverse=True)
+    # A recovery retry may leave a newer GREEN-only successor beside an older
+    # successor that already has a complete REFACTOR. Prefer the furthest
+    # verified lifecycle evidence so retries do not regress the route.
+    ranked: list[tuple[Path, str]] = []
     for run_dir in candidates:
         action = route_staged_run(run_dir)
+        if action is None and (run_dir / "slice-ready-result.json").is_file() and validate_implementation_successor(run_dir):
+            action = "slice-terminal"
         if action is not None:
-            return run_dir, action
+            ranked.append((run_dir, action))
+    if ranked:
+        priority = {"slice-terminal": 0, "refactor": 1, "green": 2, "implement": 3}
+        return sorted(ranked, key=lambda item: (priority.get(item[1], 9), item[0].name))[0]
     return None
 
 
@@ -321,11 +330,22 @@ def reserve_successor_run(predecessor: Path, lineage: dict[str, object]) -> Path
     lineage_path = successor / "successor-lineage.v1.json"
     encoded = json.dumps(lineage, indent=2, sort_keys=True) + "\n"
     if successor.exists():
-        if not successor.is_dir() or successor.is_symlink():
-            raise RuntimeError("successor reservation identity is invalid")
-        if not lineage_path.is_file() or lineage_path.read_text(encoding="utf-8") != encoded:
-            raise RuntimeError("successor reservation identity conflicts")
-        return successor
+        if successor.is_dir() and not successor.is_symlink() and lineage_path.is_file() and lineage_path.read_text(encoding="utf-8") == encoded:
+            # A matching reservation is reusable only after a complete
+            # protocol bundle exists. Incomplete historical reservations are
+            # immutable evidence and must receive a fresh successor.
+            if (successor / "protocol-bundle.v1.json").is_file():
+                return successor
+        # Keep an incomplete/conflicting historical successor immutable and
+        # reserve the next deterministic append-only identity.
+        index = 1
+        while True:
+            candidate = predecessor.parent / f"{predecessor.name}-SUCCESSOR-{index:03d}"
+            if not candidate.exists():
+                successor = candidate
+                lineage_path = successor / "successor-lineage.v1.json"
+                break
+            index += 1
     successor.mkdir(parents=True)
     try:
         with lineage_path.open("x", encoding="utf-8", newline="\n") as stream:
@@ -467,42 +487,32 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
             core["command_ids"] = [item["id"] for item in refactor_commands]
             core["command_id"] = refactor_commands[0]["id"]
     snapshots = _workspace_snapshot_paths(root, plan, snapshots)
+    observation_refs = []
+    for stage in ("red", "green", "refactor"):
+        source = observation_sources[stage] / "observations" / f"{stage}-observed.json"
+        if not source.is_file():
+            raise RuntimeError("terminal successor requires complete lifecycle observations")
+        observation_refs.append({"stage": stage, "path": source.relative_to(root).as_posix(), "sha256": _sha(source)})
+    lineage = {
+        "schema_version": "quick-dev-tdd-adapter.successor-lineage.v1",
+        "predecessor_run": run_dir.relative_to(root).as_posix(),
+        "predecessor_observations": observation_refs,
+        "next_transition": "slice-terminal",
+        "authorizes": [],
+    }
+    # Always close a fresh terminal successor. Historical runs may contain
+    # immutable protocol artifacts from an older contract or partial retry.
+    run_dir = reserve_successor_run(run_dir, lineage)
+    context["run_id"] = run_dir.name
+    for core in context["stage_results"].values():
+        core["run_id"] = run_dir.name
     lifecycle = LifecycleRunner(root, run_dir, snapshots)
-    lifecycle.resume_observations(run_dir, ["red", "green", "refactor"], observation_sources=observation_sources)
-    try:
-        lifecycle.close(context, {}, observation_sources=observation_sources)
-    except (ValueError, FileNotFoundError) as exc:
-        # A partially closed run is immutable. Reconcile it by creating an
-        # append-only successor carrying only stage observations, never by
-        # overwriting protocol attempts from the predecessor.
-        if "protocol artifact conflicts" not in str(exc):
-            raise
-        observation_refs = []
-        for stage in ("red", "green", "refactor"):
-            source = observation_sources[stage] / "observations" / f"{stage}-observed.json"
-            if not source.is_file():
-                raise RuntimeError("terminal successor requires complete lifecycle observations")
-            observation_refs.append({"stage": stage, "path": source.relative_to(root).as_posix(), "sha256": _sha(source)})
-        lineage = {
-            "schema_version": "quick-dev-tdd-adapter.successor-lineage.v1",
-            "predecessor_run": run_dir.relative_to(root).as_posix(),
-            "predecessor_observations": observation_refs,
-            "next_transition": "slice-terminal",
-            "authorizes": [],
-        }
-        # Reservation is the single identity gate for real terminal recovery.
-        # It is reused on retry before successor observations are materialized.
-        run_dir = reserve_successor_run(run_dir, lineage)
-        context["run_id"] = run_dir.name
-        for core in context["stage_results"].values():
-            core["run_id"] = run_dir.name
-        lifecycle = LifecycleRunner(root, run_dir, snapshots)
-        lifecycle.resume_observations(
-            run_dir.parent / run_dir.name.removesuffix("-SUCCESSOR"),
-            ["red", "green", "refactor"],
-            observation_sources=observation_sources,
-        )
-        lifecycle.close(context, {}, observation_sources=observation_sources)
+    lifecycle.resume_observations(
+        run_dir,
+        ["red", "green", "refactor"],
+        observation_sources=observation_sources,
+    )
+    lifecycle.close(context, {}, observation_sources=observation_sources)
     command = json.loads((invocation / "terminal-command.json").read_text(encoding="utf-8"))
     completed = subprocess.run([command["executable"], *command["argv"]], cwd=root, shell=False, check=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=command["timeout_seconds"])
     if completed.returncode != 0:
@@ -520,7 +530,28 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
     if result.get("status") != "pass" or result.get("predicate") != "slice-ready":
         raise RuntimeError("slice terminal predicate did not pass")
     result["execution_fingerprint"] = context["stage_results"]["red"]["execution_fingerprint"]
-    (run_dir / "slice-ready-result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
+    # Terminal slice evidence must carry the complete current candidate
+    # identity so route validation cannot accept an old successor after a
+    # contract, authority, or validator change.
+    identity = _validation_snapshot(plan, slice_id)
+    if identity is None:
+        raise RuntimeError("slice terminal candidate identity is unavailable")
+    result.update(identity)
+    exit_predicate = selected.get("exit_predicate", "slice-ready")
+    if exit_predicate == "implementation-candidate":
+        result["predicate"] = "implementation-candidate"
+        result["status"] = "pass"
+        candidate = {
+            "schema_version": "quick-dev-tdd-adapter.candidate-evidence.v1",
+            "plan_id": contract["plan_id"],
+            "slice_id": slice_id,
+            "status": "pass",
+            "candidate": identity,
+            "lifecycle": {"red": True, "green": True, "refactor": True},
+            "authorizes": [],
+        }
+        (run_dir / "candidate-evidence.json").write_text(json.dumps(candidate, indent=2) + "\n", encoding="utf-8", newline="\n")
+    (run_dir / f"{exit_predicate}-result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def main() -> int:
