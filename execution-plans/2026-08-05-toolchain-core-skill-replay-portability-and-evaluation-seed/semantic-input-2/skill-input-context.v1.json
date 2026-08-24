@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-23T15:55:11.984660Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The requirements source defines the toolchain-core-skill-replay-portability-and-evaluation-seed plan and its terminal validation command.",
+      "title": "Source Overview"
+    },
+    {
+      "content": "Acceptance covers byte preservation, repository-owned validator portability, bounded capability resolution, fail-closed detached tests, compatibility replay, evaluation seeds, replay matrices, workflow compatibility, rollback, and non-authorizing evidence.",
+      "title": "Acceptance Summary"
+    },
+    {
+      "content": "All derived artifacts remain non-authorizing. The plan excludes hosted runtimes, live workspaces, browser or API access, account changes, sandbox changes, installed BMAD or GDS writes, autonomous Skill modification, learned ranking, and reinforcement learning.",
+      "title": "Scope Constraints"
+    }
+  ],
+  "source_manifest_hash": "sha256:253880680f58d66400fb0fcebd3379ae5121f5d7738d2e9ae41787695c319bbb",
+  "truncated": false
+}

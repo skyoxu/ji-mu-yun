@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-24T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The refactor acceptance skill requires frozen baselines, complete manifests, typed requests, action DAGs, command registries, custody, receipts, and hash-verified knowledge context. It supports evidence-only and controlled-validation modes, deterministic replay, controlled recovery, bounded semantic rounds, and fail-closed handling of unsafe or unsupported inputs. Acceptance does not imply release, archive, deploy, or commit.",
+      "title": "Acceptance Skills"
+    },
+    {
+      "content": "The VDD skill creates or repairs explicit execution-plan directories using standard, resumable, or self-hosted profiles. It requires authority references, integrity preflight, observable acceptance targets, recovery data, immutable repair history, and terminal validation. The cited completion report records implementation-complete status, closed toolchain policy work, three repair rounds, accepted ADR-0053, passing validator checks, and no release or acceptance outcome.",
+      "title": "Execution Plan And Report"
+    },
+    {
+      "content": "The implementation validator checks required artifacts and six registered commands, returning implementation-complete only when all checks pass. The command registry defines sixteen non-shell Python checks covering plan validation, skill replay, historical compatibility, acceptance package validation, downstream routing replay, and terminal validation. The implementation contract defines a self-hosted replay plan with detached positive and negative probes, stable-candidate matrices, sorted hashed manifests, constrained edits, preserved failure history, and no hidden backend state.",
+      "title": "Validation And Contract"
+    }
+  ],
+  "source_manifest_hash": "sha256:3bd57a60c6593314cb342aa5cdc4d5b88622dd4c28991ed54567d9d1aec1f8b3",
+  "truncated": false
+}

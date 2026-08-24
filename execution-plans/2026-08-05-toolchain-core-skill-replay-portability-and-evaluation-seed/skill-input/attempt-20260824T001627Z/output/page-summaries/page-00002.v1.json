@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "Read VDD execution-plan skill; mandatory authority/reference reads precede action; standalone requirements file routes to direct implementation, while explicit complete-directory requests select create or repair; choose standard/resumable/self-hosted before model routing; route uses Sol/high except narrowly typed, capability-probed recovery; clarify only material scope, compatibility, destructive, protected-path, or acceptance boundaries; lifecycle is draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived; Quick Dev owns RED execution and implementation-complete, while VDD does not manufacture RED evidence; each slice needs behavior, failure intent, GREEN target, dependents, and recovery; repair is in-place, immutable history, bounded rounds, lineage and typed Round-3 triggers; repair requires root-cause callsite inventory, changed-set hashes, composition receipts, and complete generated review scope; mandatory knowledge preflight and skill-input consumption gates block plan-ready on invalid or unmatched required inputs; use explicit target paths and generated typed child requests; bind Git baseline and complete scoped identity; Bootstrap review is optional, minimal-complete-closure only, and historical evidence is non-authorizing; resumable/self-hosted require append-only 95 report/index; targeted checks cannot authorize completion; terminal current full validation is required before implementation-complete; package must remain generic and avoid live plan or machine-specific data."
+}

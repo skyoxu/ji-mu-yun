@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+    "source_sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 3837,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65"
+  },
+  "status": "accepted",
+  "summary": "schema jimuyun.tc-d1-command-registry.v1; no authorizations; 15 root-relative Python commands, shell disabled; plan-validator (120s) and plan-validator-tests (120s); implementation predicates RMAP-S0/RMAP-S1/RMAP-S2 (180s) and RMAP-S3 (1200s); skill-replay-tests (300s); historical-skill-package-replay targets run-refactor-implementation-acceptance with validator capability and detached positive/negative probes (300s); stable-candidate-matrix-replay uses stable-candidate-replay-matrix.v1.json (300s); vdd-skill-contract (180s) and vdd-skill-tests (300s); acceptance-package-validation and acceptance-targeted-tests (300s); downstream workflow-model-routing replay (1200s); terminal implementation validation (1800s); all commands run from repository root; executable py with -3 -B; ambiguity: no command outcomes or pass/fail dispositions provided"
+}

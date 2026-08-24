@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "Purpose: create/repair complete VDD execution-plan directories only when explicitly requested; standalone requirements Markdown routes to direct implementation with no VDD artifacts. Read mandatory authority references before action. Select least-complex profile first: standard, resumable, or self-hosted; record rationale. Route selected profile through model_routing; ordinary profiles use Sol/high, Sol/max only for typed closed recovery with capability probes. Clarify only material scope, compatibility, destructive, protected-path, or acceptance boundaries. Lifecycle: draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived; VDD owns early states, Quick Dev only implementation-complete. Each slice requires behavior, failure selector/expected pre-change observation, acceptance target, dependents, and recovery; VDD must not publish RED evidence. Existing behavior removes implementation scope. Repair is in-place under repair/round-n, with immutable history, hash-bound findings/evidence, scoped invalidation, callsite inventory, composition receipts, changed-set manifests, and lineage budget rules. Mandatory knowledge preflight and skill-input consumption gates block plan-ready on missing/invalid integrity. Resumable/self-hosted require append-only 95 report/index; standard generally does not. Review is optional unless requested/protected; P2-only findings do not trigger semantic rounds. Completion requires required artifacts, observable acceptance for every requirement, recorded negative/legacy path, stable repairs, and terminal full validation."
+}

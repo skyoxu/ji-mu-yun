@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Own one execution-plans/<target> acceptance run; no implementation, review approval, commit, release, or deploy; resolve candidate and explicit frozen baseline, never infer candidate^; require contract or compact bundle, manifests, typed request, DAG, registry; compact projection consumes current Quick Dev receipt and explicit scope, never dirty-worktree inference; stale candidate/terminal receipt returns to Quick Dev; hash-bind evidence transaction, Skill-input receipt, contract, context, and run; Locator context is exact-target, catalog_stale=degraded, other failures stop; start-or-resume is append-only and binding-derived; deterministic actions replay receipts then finalize acceptance; semantic routes require inspect-lineage, typed Bootstrap decision, acknowledgements, and explicit reentry confirmation; route kinds deterministic/focused/full/manual_pause, maximum three rounds, no Round 4; P2 uses deterministic closure; P0/P1 require Quick Dev handoff and repair audit; exact reuse requires current finalized v3 clean lineage/profile/policy/authority; manual-pause closure requires protocol review and challenge acknowledgement; single-maintainer policy alters finding severity; model routing is no-launch except policy recovery triggers; missing, stale, drifted, unsafe, or unbound artifacts fail closed; evidence_only default, controlled_validation requires typed isolated commands and cannot write production; matrix/import/recovery/final authorization are incomplete unless their plan predicates exist; pure Godot unsupported"
+}

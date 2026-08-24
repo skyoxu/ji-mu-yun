@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16436,
+    "start_line": 1,
+    "end_line": 213,
+    "content_sha256": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba"
+  },
+  "status": "accepted",
+  "summary": "Purpose: create/repair complete VDD execution-plan directories only on explicit request; standalone requirements Markdown routes to direct implementation; mandatory authority reads: solo-maintainer standard, clarification gate, lifecycle contract; profiles: standard, resumable, self-hosted, choose before model routing; route uses Sol/high, Sol/max only closed typed recovery trigger with capability probes; lifecycle: draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived; VDD owns draft/plan-ready, maintainer may authorize, Quick Dev only implementation-complete; each slice needs behavior, failure intent, GREEN target, dependents, recovery; VDD must not publish RED artifacts; current behavior removes implementation scope; repair is in-place under repair/round-n, immutable history, hash-bound closure; repairs invalidate affected slice/dependents, shared contracts require terminal full replay; Bootstrap lineage family/budget rules apply when opted in; repair requires root-cause callsite inventory, changed-set manifests, producer/consumer composition receipts, complete review scope; knowledge preflight is mandatory before plan-ready and blocks on missing required verified sources; skill-input adapter/typed semantic child and require-ready validation precede knowledge freeze/artifacts; baseline/current scope must be hash-bound; reports required for resumable/self-hosted, append-only/non-authorizing; completion requires artifacts, acceptance paths, RED/legacy record, stable repairs, terminal full validation; package validation command: skill_package_replay.py validate-package"
+}

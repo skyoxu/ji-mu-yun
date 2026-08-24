@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 31239,
+    "start_line": 1,
+    "end_line": 484,
+    "content_sha256": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86"
+  },
+  "status": "accepted",
+  "summary": "Deterministic implementation-acceptance for exactly one explicit execution-plans/<target>; non-authorizing: no code approval, commit, release, deploy, or model launch; prefer commit candidate, otherwise require frozen dirty/proposed snapshot; require explicit frozen baseline, never infer candidate^; require implementation contract or compact-vdd-acceptance-prerequisite-bundle.v1 plus complete manifests, typed request, action DAG, command registry; compact projection consumes current quick-dev-implementation-complete.v1 receipt and explicit sorted scope, never dirty-worktree enumeration; create/validate typed acceptance Skill-input receipt via launch_skill_input_consumer and require-ready validator; create Locator-bound knowledge context, catalog_stale=>degraded only, other failures=>knowledge-context-repair-required; refresh only hashes, never widen selection; prepare/start append-only hash-bound run, derive successor on drift, preserve artifact-only legacy runs; deterministic actions replay controlled receipts and finalize-deterministic-run may publish acceptance-passed; semantic routes require repository-owned inspect-lineage and prepare-bootstrap, with typed routes deterministic_only/focused_repair_verification/full_implementation_conformance/manual_pause; Bootstrap high-cost acknowledgement and later reentry confirmation are mandatory, Round 1 automatic, maximum three rounds then manual_pause; P2 findings close deterministically, P0/P1 require Quick Dev handoff and audit-repair-completeness; ADR-0054 manual-pause closure requires protocol review, exact mappings, maintainer acknowledgement, and finalize-manual-pause-closure, never Round 4; exact reuse only bootstrap-import-envelope.v3 with current bindings, clean finalized v3 run, valid profile/authority and immediate lineage predecessor; maintenanceMode ai-native-single-maintainer changes finding severities; evidence_only default, controlled_validation requires typed commands/isolated roots; model routing is no-launch except policy-owned complex recovery; Phase policy policies/phase-service-code-review.v1.json, toolchain policy policies/toolchain-code-review.v1.json, pure Godot unsupported; validate package with scripts/sc/skill_package_replay.py validate-package and capability config."
+}

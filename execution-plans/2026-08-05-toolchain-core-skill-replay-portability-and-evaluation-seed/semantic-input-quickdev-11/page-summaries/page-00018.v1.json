@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/sc/tests/test_skill_package_replay.py",
+    "source_sha256": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1539,
+    "start_line": 1,
+    "end_line": 27,
+    "content_sha256": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6"
+  },
+  "status": "accepted",
+  "summary": "Test module: scripts/sc/tests/test_skill_package_replay.py; entrypoint scripts/sc/skill_package_replay.py; capability fixture scripts/sc/config/skill-package-validator-capability.v1.json; test validate-package targeting .agents/skills/vdd-execution-plan with capability, requires exit 0 and empty authorizes receipt; escape test mutates validator_entrypoint to parent-directory path, requires nonzero exit; temporary bad-capability.json is created under scripts/sc/tests/fixtures and always removed; tests use unittest/subprocess and repository root as cwd."
+}

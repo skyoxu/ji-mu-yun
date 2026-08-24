@@ -1,13 +1,13 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:8210857f73729229066bb8e1f1ca29993886860225ef591fb051e211780a682f",
-  "canonical_context_sha256": "sha256:49bab6f03f1ab6efabdda47673e16ac67a4b44c3fb2ca7abbf75a337d6d830e6",
-  "request_sha256": "sha256:b6d30f9ef44e8bc0310132f9344ca35d3c51c417d64f098377b63aadb20d53a8",
-  "result_sha256": "sha256:039ce199eb469a980400cf1cdba23407ca02d0d2d57e92d78a657d25a81ee4b2",
+  "context_sha256": "sha256:b00659b74d4ece1c76cd1c9e5e10ae1656ecfa9f7a1d60a6f0d6d893b452ae8e",
+  "canonical_context_sha256": "sha256:34988ada37ad073d64e01f2741b4848e7e649b90db2e2c5b98599a58dca4e8d5",
+  "request_sha256": "sha256:ac5c60044a2ae220bdb33b4176c036d93e4c8775cd011cec55e4b043efc938f8",
+  "result_sha256": "sha256:07cc11f03954b50eefaccfc91e586cb1ebe4936b902c1c0b5730b3ba00aeca50",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "fda1b959c205bc202528919d5b2496de52ecbf57"
+    "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
   },
   "source_snapshot_id": "sha256:eafe3789c2e9e6e4189dc2911e58b9654ceb77a37c7e04054657c5b992ca8362",
   "policy_revision": "knowledge-consumer-policies.v2",
@@ -28,7 +28,7 @@
     },
     {
       "path": "AGENTS.md",
-      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "source_sha256": "59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
       "satisfies": [
         "repository-rules"
       ]
@@ -36,8 +36,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:949eb98cfae5097d12ea919f0a42d3c421e82d68abaaa3184d943f7229ef2153",
-    "freeze_receipt_path": "knowledge-context.freeze.history/949eb98cfae5097d12ea919f0a42d3c421e82d68abaaa3184d943f7229ef2153.v1.json",
-    "reason": "avoid-self-hosted-knowledge-read-set-collision-with-declared-skill-write-set"
+    "context_sha256": "sha256:8210857f73729229066bb8e1f1ca29993886860225ef591fb051e211780a682f",
+    "freeze_receipt_path": "knowledge-context.freeze.history/8210857f73729229066bb8e1f1ca29993886860225ef591fb051e211780a682f.v1.json",
+    "reason": "quick-dev-controlled-source-refresh"
   }
 }

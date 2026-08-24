@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-24T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "All 18 frozen sources have complete single-page coverage and accepted bounded summaries.",
+      "title": "Coverage"
+    },
+    {
+      "content": "The materials define deterministic implementation acceptance, VDD planning, replay portability, validation commands, repair lineage, and lifecycle boundaries.",
+      "title": "Execution"
+    },
+    {
+      "content": "Reports, contracts, registries, receipts, schemas, replay utilities, capability configuration, and tests consistently describe non-authorizing validation with implementation-complete as the terminal implementation predicate.",
+      "title": "Evidence"
+    }
+  ],
+  "source_manifest_hash": "sha256:0c443e377b11d84b091daec6a75cf9858b5968e97c7d51934f368ca79705c0c0",
+  "truncated": false
+}

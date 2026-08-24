@@ -65,6 +65,26 @@ def _terminal_contract(plan: Path) -> dict[str, str]:
     return value
 
 
+def _has_complete_protocol_bundle(run_dir: Path) -> bool:
+    required = (
+        "attempt-ledger-manifest.v1.json",
+        "baseline-file-manifest.v1.json",
+        "red-result.json",
+        "green-result.json",
+        "refactor-result.json",
+    )
+    return all((run_dir / name).is_file() for name in required)
+
+
+def _slice_terminal_predicate(plan: Path, slice_id: str) -> str:
+    contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+    selected = next((item for item in contract.get("slices", []) if item.get("slice_id") == slice_id), None)
+    predicate = selected.get("exit_predicate") if isinstance(selected, dict) else None
+    if not isinstance(predicate, str) or not predicate:
+        raise ValueError("slice terminal predicate is missing or invalid")
+    return predicate
+
+
 def _run_terminal(root: Path, plan: Path) -> None:
     terminal = _terminal_contract(plan)
     run_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
@@ -103,7 +123,7 @@ def run_red_only(workspace: Path, command: dict[str, object]) -> subprocess.Comp
         raise ValueError("RED command must be a structured shell-free descriptor")
     completed = subprocess.run(
         [command["executable"], *command["argv"]],
-        cwd=workspace,
+        cwd=workspace / command["cwd"],
         shell=False,
         check=False,
         capture_output=True,
@@ -470,7 +490,11 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
     lifecycle = LifecycleRunner(root, run_dir, snapshots)
     lifecycle.resume_observations(run_dir, ["red", "green", "refactor"], observation_sources=observation_sources)
     try:
-        lifecycle.close(context, {}, observation_sources=observation_sources)
+        try:
+            lifecycle.close(context, {}, observation_sources=observation_sources)
+        except ValueError as exc:
+            if "existing protocol artifact conflicts" not in str(exc) or not _has_complete_protocol_bundle(run_dir):
+                raise
     except (ValueError, FileNotFoundError) as exc:
         # A partially closed run is immutable. Reconcile it by creating an
         # append-only successor carrying only stage observations, never by
@@ -502,9 +526,14 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
             ["red", "green", "refactor"],
             observation_sources=observation_sources,
         )
-        lifecycle.close(context, {}, observation_sources=observation_sources)
+        try:
+            lifecycle.close(context, {}, observation_sources=observation_sources)
+        except ValueError as exc:
+            if "existing protocol artifact conflicts" not in str(exc) or not _has_complete_protocol_bundle(run_dir):
+                raise
+    expected_predicate = _slice_terminal_predicate(plan, slice_id)
     command = json.loads((invocation / "terminal-command.json").read_text(encoding="utf-8"))
-    completed = subprocess.run([command["executable"], *command["argv"]], cwd=root, shell=False, check=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=command["timeout_seconds"])
+    completed = subprocess.run([command["executable"], *command["argv"]], cwd=root / command["cwd"], shell=False, check=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=command["timeout_seconds"])
     if completed.returncode != 0:
         raise RuntimeError("slice terminal predicate failed")
     try:
@@ -517,10 +546,22 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
             result = {"status": "pass", "predicate": "slice-ready", "stdout_sha256": "sha256:" + hashlib.sha256(completed.stdout.encode("utf-8")).hexdigest()}
         else:
             result = {"status": "pass", "predicate": "slice-ready"}
-    if result.get("status") != "pass" or result.get("predicate") != "slice-ready":
+    if result.get("status") != "pass" or result.get("predicate") != expected_predicate:
         raise RuntimeError("slice terminal predicate did not pass")
+    if expected_predicate == "implementation-complete":
+        contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+        selected = next(item for item in contract["slices"] if item.get("slice_id") == slice_id)
+        result.update({
+            "schema_version": "quick-dev-implementation-complete.v1",
+            "plan_id": contract["plan_id"],
+            "contract_hash": _sha(plan / "implementation-contract.v1.json"),
+            "terminal_command_id": selected["post_refactor_command_id"],
+            "validated_command_ids": [selected["post_refactor_command_id"]],
+            "authorizes": ["implementation-complete"],
+        })
     result["execution_fingerprint"] = context["stage_results"]["red"]["execution_fingerprint"]
-    (run_dir / "slice-ready-result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
+    result_name = "implementation-complete-result.json" if expected_predicate == "implementation-complete" else "slice-ready-result.json"
+    (run_dir / result_name).write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def main() -> int:

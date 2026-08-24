@@ -3,18 +3,18 @@
   "plan_id": "toolchain-core-skill-replay-portability-and-evaluation-seed",
   "git": {
     "ref": "refs/heads/main",
-    "commit": "8c47a52fc8f241f76da9ccb5d936b0fafe807f0f",
-    "tree": "6963a7c3ef477ddabd0acd9459d268a8f2ceb982"
+    "commit": "f662e9d542aea826b1d37a7dbde09196edd0bcf6",
+    "tree": "693ea56eb960da0a822cc9f3d2c0c6696952fa70"
   },
   "source_files": [
-    {"path":"AGENTS.md","sha256":"sha256:06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"},
-    {"path":"README.md","sha256":"sha256:56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6"},
-    {"path":"docs/know.md","sha256":"sha256:5722a6e5f7d1521dcf3d67dcf7a9930b136cfd3a9433c6806464dacbc84f8f19"},
+    {"path":"AGENTS.md","sha256":"sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"},
+    {"path":"README.md","sha256":"sha256:501cf216cde569513ea4598b32eef49141ecacea863c68222df0e9a428a172b0"},
+    {"path":"docs/know.md","sha256":"sha256:9623065588c7134156ab0262e0ec1c4c9877938f291053b8a0609708f9ad179c"},
     {"path":".agents/skills/vdd-execution-plan/SKILL.md","sha256":"sha256:26bf8bf7cc09f3a35f40271175de0651c2e4c3fe5f8ab21a5f34ebf84bfe56ef"},
     {"path":".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.json","sha256":"sha256:1acc483d886b8a15da829d825022541448277f72fee7eb8e0280a436b4889291"},
-    {"path":".agents/skills/quick-dev-tdd-adapter/SKILL.md","sha256":"sha256:f61e3d7f930989e3671713c2696658266e14ba0823bf81b297fbcabd105be167"},
-    {"path":".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json","sha256":"sha256:ff22e3f57868ea4cb208cee4d2ab2b3ae30fc96b464dd2a791f78d361a78ea93"},
-    {"path":".agents/skills/run-phase-bootstrap-review/SKILL.md","sha256":"sha256:4fe1d7e28a1c9cb71f463f18d62c8ce9bbf0eb4363160857bfc2618da4269817"},
+    {"path":".agents/skills/quick-dev-tdd-adapter/SKILL.md","sha256":"sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"},
+    {"path":".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json","sha256":"sha256:de66349827489afa64e90cbda24a49c4345f396863216f4faca6a92a29d26b4a"},
+    {"path":".agents/skills/run-phase-bootstrap-review/SKILL.md","sha256":"sha256:b1b983b50424986265c795da821f76add3ea97446c5e69dea095990a322c94b4"},
     {"path":".agents/skills/run-refactor-implementation-acceptance/SKILL.md","sha256":"sha256:5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68"},
     {"path":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/00-index.md","sha256":"sha256:764c37e240d5e415ed687f7e4ceab4edb3eac53f6ff6652d12230d8917a46af4"},
     {"path":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/requirements.v1.json","sha256":"sha256:afc0f8079edd596eebf6bbfb7f93a666d29d7cb0445dc9405d563446bde31e3f"},

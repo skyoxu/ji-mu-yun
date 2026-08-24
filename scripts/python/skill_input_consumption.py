@@ -861,6 +861,8 @@ def expand_source_graph(
             if is_reparse_point(candidate):
                 raise SkillInputError(f"symlink source is not allowed: {candidate}")
             relative = candidate.resolve().relative_to(repository_root.resolve()).as_posix()
+            if "__pycache__" in Path(relative).parts or relative.endswith(".pyc"):
+                continue
             if relative in excluded_paths or any(
                 relative.startswith(prefix + "/") for prefix in excluded_paths
             ):
@@ -918,7 +920,12 @@ def expand_source_graph(
                     continue
                 inside_reference_root = resolved_path == reference_root or reference_root in resolved_path.parents
                 next_reference_kinds = set(reference_kinds) if inside_reference_root else set()
-                queue.append((resolved_path, depth + 1, next_ancestors, next_reference_kinds, reference_root, relative, opaque_paths, True))
+                # External directory references are boundary metadata, not an
+                # instruction to ingest an entire dependency package. Keep
+                # direct file references, while expanding directories only
+                # when they remain inside the declared reference root.
+                expand_directory = resolved_path.is_file() or inside_reference_root
+                queue.append((resolved_path, depth + 1, next_ancestors, next_reference_kinds, reference_root, relative, opaque_paths, expand_directory))
     if not expanded:
         raise SkillInputError("no source files were discovered")
     return sorted(expanded, key=lambda item: item[1])

@@ -128,7 +128,7 @@ Authority: append-only continuity report; `authorizes=[]`
 ## Maintainer Manual Disposition And Implementation Authorization - 2026-08-05
 
 - Decision: the maintainer accepted
-  `logs/r/tcd1r3-manual-pause-repair-evidence.json` after the three-round
+  historical predecessor repair evidence after the three-round
   `bootstrap-upstream-plan` lineage entered manual pause.
 - Binding: `plan-state.v1.json` records the accepted evidence path and SHA-256;
   the blocked Round 3 review and its validation envelope remain unchanged.

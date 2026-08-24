@@ -1,0 +1,9 @@
+{
+  "schema_version": "jimuyun.tc-d1-implementation-authorization-projection.v1",
+  "plan_id": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "predecessor_evidence": {"sha256": "sha256:300cb35a94e935dcf0e25ecf05c1924765d1efa780090bbbf642de89e974eac6"},
+  "decision": "accepted-deterministic-round3-repair-evidence",
+  "next_slice": "RMAP-S0",
+  "authorizes": ["implementation-authorized"],
+  "does_not_authorize": ["implementation-complete", "acceptance-passed", "commit", "release", "archived"]
+}

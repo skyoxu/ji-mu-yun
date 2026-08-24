@@ -179,6 +179,38 @@ class SkillInputConsumptionTests(unittest.TestCase):
             {path for path in excluded if path.endswith(("plan-state.v1.json", "resume-state.v1.json"))},
         )
 
+    def test_external_dependency_pycache_is_excluded_from_source_graph(self):
+        temporary, root, contract_path, _receipt, _args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        plan = root / "plan"
+        dependency = root / "deps"
+        plan.mkdir()
+        dependency.mkdir()
+        (plan / "requirements.json").write_text('{"path":"../deps"}\n', encoding="utf-8")
+        (dependency / "README.md").write_text("dependency\n", encoding="utf-8")
+        cache = dependency / "__pycache__"
+        cache.mkdir()
+        (cache / "module.cpython-313.pyc").write_bytes(b"compiled")
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        contract["source_roles"] = {
+            "requirements": {
+                "selector": "requirements",
+                "required": True,
+                "root": "repository",
+                "allowed_kinds": ["directory"],
+                "reference_kinds": ["json-path-field"],
+            }
+        }
+        contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+        expanded = expand_source_graph(root, contract, "create", {"requirements": ["plan"]})
+
+        self.assertNotIn(
+            "deps/__pycache__/module.cpython-313.pyc",
+            [relative for _path, relative in expanded],
+        )
+        self.assertNotIn("deps/README.md", [relative for _path, relative in expanded])
+
     def test_derived_reports_and_evidence_directories_are_excluded(self):
         temporary, root, _contract_path, _receipt, _args = self._fixture()
         self.addCleanup(temporary.cleanup)
@@ -1084,7 +1116,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
         def fake_runner(**kwargs):
             self.assertEqual("read-only", kwargs["codex_sandbox"])
             self.assertTrue(kwargs["codex_skip_git_repo_check"])
-            self.assertEqual(["--ephemeral", "--ignore-user-config"], kwargs["codex_extra_args"])
+            self.assertEqual(["--ephemeral", "--ignore-rules"], kwargs["codex_extra_args"])
             self.assertIn("features.shell_tool=false", kwargs["codex_configs"])
             self.assertIn("features.view_image=false", kwargs["codex_configs"])
             self.assertIn('web_search="disabled"', kwargs["codex_configs"])
@@ -1215,6 +1247,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
         calls = []
 
         def fake_runner(**kwargs):
+            self.assertLessEqual(kwargs["timeout_sec"], 7)
             calls.append(kwargs["prompt"])
             if "PAGE_DESCRIPTOR_BEGIN" in kwargs["prompt"]:
                 self.assertIn("PAGE_CONTENT_BEGIN", kwargs["prompt"])
@@ -1231,7 +1264,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
 
         result = run_semantic_child(
             request, root, backend="codex-cli", model="test-model", runner=fake_runner,
-            backend_inspector=self._backend_inspector,
+            backend_inspector=self._backend_inspector, timeout_sec=7,
         )
         self.assertGreater(len(calls), 2)
         coverage = Path(result["snapshot_read_coverage"])

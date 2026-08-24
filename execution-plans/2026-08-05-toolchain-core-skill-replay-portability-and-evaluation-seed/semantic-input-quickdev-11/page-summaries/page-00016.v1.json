@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+    "source_sha256": "sha256:0ffe7f3d6b15d31b4a32f7f4708fbf35e3596e4dc55efeb49cd3d5e7b53e7c98",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 370,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:0ffe7f3d6b15d31b4a32f7f4708fbf35e3596e4dc55efeb49cd3d5e7b53e7c98"
+  },
+  "status": "accepted",
+  "summary": "Schema ID jimuyun.toolchain-evaluation-seed-manifest.v1; JSON Schema draft 2020-12; object allows extra properties; required fields: schema_version, seeds, baseline_status, authorizes; schema_version fixed to manifest ID; seeds must be an array; baseline_status fixed to non-authorizing-candidates; authorizes fixed to an empty array"
+}

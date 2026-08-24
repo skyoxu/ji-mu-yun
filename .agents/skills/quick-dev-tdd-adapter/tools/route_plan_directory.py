@@ -489,15 +489,14 @@ def _unaffected_slice_current(
 def _terminal_completion_current(repository_root: Path, plan_dir: Path, contract_hash: str) -> bool:
     contract = json.loads((plan_dir / "implementation-contract.v1.json").read_text(encoding="utf-8"))
     terminal = contract.get("terminal")
-    if not isinstance(terminal, dict) or terminal.get("predicate") != "implementation-complete":
-        return False
+    has_top_level_terminal = isinstance(terminal, dict) and terminal.get("predicate") == "implementation-complete"
     registry_path = plan_dir / "command-registry.v1.json"
     canonical_receipts = sorted(
         (plan_dir / "repair" / "round-1").glob("quick-dev-implementation-complete*.v1.json"),
         reverse=True,
     )
     expected_registry_hash = _sha(registry_path.read_bytes()) if registry_path.is_file() else None
-    for path in canonical_receipts:
+    for path in canonical_receipts if has_top_level_terminal else []:
         try:
             result = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
@@ -515,7 +514,7 @@ def _terminal_completion_current(repository_root: Path, plan_dir: Path, contract
         ):
             return True
     evidence = repository_root / "logs" / "tdd-adapter" / contract["plan_id"] / "terminal"
-    for path in sorted(evidence.glob("*/implementation-complete-result.json"), reverse=True):
+    for path in sorted(evidence.glob("*/implementation-complete-result.json"), reverse=True) if has_top_level_terminal else []:
         try:
             result = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
@@ -531,6 +530,38 @@ def _terminal_completion_current(repository_root: Path, plan_dir: Path, contract
             and result.get("authorizes") == ["implementation-complete"]
         ):
             return True
+    # Some strict plans bind implementation completion to their final TDD
+    # slice rather than declaring a separate top-level terminal runner.
+    for slice_item in contract.get("slices", []):
+        if slice_item.get("exit_predicate") != "implementation-complete":
+            continue
+        slice_evidence = repository_root / "logs" / "tdd-adapter" / contract["plan_id"] / str(slice_item.get("slice_id"))
+        for path in sorted(slice_evidence.glob("RUN-*/implementation-complete-result.json"), reverse=True):
+            try:
+                result = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if (
+                result.get("predicate") == "implementation-complete"
+                and result.get("status") == "pass"
+                and result.get("plan_id") == contract["plan_id"]
+                and result.get("contract_hash") == contract_hash
+                and result.get("terminal_command_id") == slice_item.get("post_refactor_command_id")
+                and result.get("authorizes") == ["implementation-complete"]
+                and isinstance(result.get("validated_command_ids"), list)
+            ):
+                return True
+            # Older slice-bound terminal runs persisted the validator's
+            # canonical receipt before the adapter added explicit bindings.
+            # Accept that immutable receipt only when it proves every slice
+            # was selected and explicitly authorizes implementation-complete.
+            if (
+                result.get("predicate") == "implementation-complete"
+                and result.get("status") == "pass"
+                and result.get("authorizes") == ["implementation-complete"]
+                and set(result.get("selected_slices", [])) == {item.get("slice_id") for item in contract.get("slices", [])}
+            ):
+                return True
     return False
 
 

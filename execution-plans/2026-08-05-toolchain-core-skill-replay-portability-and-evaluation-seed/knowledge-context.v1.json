@@ -2,14 +2,15 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "tc-d1-vdd-knowledge-20260805-r2",
+    "request_id": "tc-d1-vdd-knowledge-20260805-r2-successor-20260823T152725Z",
     "consumer": "vdd",
     "query": "Toolchain Control Plane Core Skill Evolution VDD Source Brief Refactor Acceptance Toolchain And Compact VDD Execution Plan repository rules",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "fda1b959c205bc202528919d5b2496de52ecbf57"
+      "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
     },
-    "policy_revision": "knowledge-consumer-policies.v2"
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "allow_stale_catalog": true
   },
   "locator_result": {
     "candidates": [
@@ -761,13 +762,13 @@
           {
             "path": "AGENTS.md",
             "role": "primary",
-            "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"
+            "source_sha256": "59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
           }
         ],
         "relations": [],
         "semantic_eligible": true,
         "source_role": "repository-authority",
-        "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+        "source_sha256": "59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
         "status": "active",
         "visibility": {
           "marketplace": "excluded",
@@ -778,11 +779,11 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "tc-d1-vdd-knowledge-20260805-r2",
+    "request_id": "tc-d1-vdd-knowledge-20260805-r2-successor-20260823T152725Z",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "fda1b959c205bc202528919d5b2496de52ecbf57",
-      "ref": "refs/heads/main"
+      "ref": "refs/heads/main",
+      "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
     },
     "source_snapshot_id": "sha256:eafe3789c2e9e6e4189dc2911e58b9654ceb77a37c7e04054657c5b992ca8362",
     "status": "matched"
@@ -911,7 +912,7 @@
       "owner": "adapter",
       "candidate": {
         "path": "AGENTS.md",
-        "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"
+        "source_sha256": "59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
       },
       "decision": "accepted",
       "satisfies": [
@@ -920,11 +921,19 @@
       "rejection_reason": null
     }
   ],
-  "request_sha256": "sha256:b6d30f9ef44e8bc0310132f9344ca35d3c51c417d64f098377b63aadb20d53a8",
-  "result_sha256": "sha256:039ce199eb469a980400cf1cdba23407ca02d0d2d57e92d78a657d25a81ee4b2",
+  "request_sha256": "sha256:ac5c60044a2ae220bdb33b4176c036d93e4c8775cd011cec55e4b043efc938f8",
+  "result_sha256": "sha256:07cc11f03954b50eefaccfc91e586cb1ebe4936b902c1c0b5730b3ba00aeca50",
+  "source_refresh": {
+    "schema_version": "jimuyun.knowledge-source-refresh.v1",
+    "mode": "current_worktree_read_set",
+    "base_locator_result_sha256": "sha256:c32b04394ab10c75be0bafd6cade540a0b6c59e01947cf0be6365d499778fc02"
+  },
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:aed3c6828fa396523340dc1f8dc7ff9f6a9cd8168822ce6397c36adf360dc84d"
+    "knowledge_freshness": "degraded",
+    "catalog_failure_code": "catalog_stale",
+    "source_freshness": "refreshed",
+    "context_sha256": "sha256:eb372d469d03a259fefbeeacbe31bf256c71247babc42ab49a9f45b633f0cf66"
   }
 }

@@ -1,0 +1,891 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "sources": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "sha256": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86",
+      "semantic_snapshot_sha256": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json",
+      "sha256": "sha256:19f6f4fa0f07608440ece3bd418834fd03da379a152ffddf7e0eae241f669a61",
+      "semantic_snapshot_sha256": "sha256:6346b5e52d7a0a63f7bf6f6bd663f092a007f0b856b68c369f55af8b57f9105e",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+      "sha256": "sha256:e8a0c40424eb491d5831db5b84136be1bb1ca41d9dae2ae3861b61aa7237af80",
+      "semantic_snapshot_sha256": "sha256:9f7d5477dc442bfc7720764279bb23e5c2bdaf2a4cdfa8be53e71e8b08a8a6a4",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/policies/semantic-review-trigger-policy.v1.json",
+      "sha256": "sha256:ebb40373b67e645376555e51ebeb29d56ef8e15f6164c03294ac29dc43389927",
+      "semantic_snapshot_sha256": "sha256:f95e27054ef4b7f95cd6c7ee2d7843a423ce0c33988ee61423c275bc613cbabf",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "sha256": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+      "semantic_snapshot_sha256": "sha256:00a61838e719c76fa47ffc971304b64457d866977c8e5e04c3a29eefa2f0c570",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json",
+      "sha256": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0",
+      "semantic_snapshot_sha256": "sha256:86604a83d9ef9e90b94154744848cb9149687c0e71c2dfc5ea5096620452bb4b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-baseline-content-manifest.v1.schema.json",
+      "sha256": "sha256:aa5b6bf8eb9fc7ab407ad4a9b39111dffcdb51854f0f7b99becc124ed286fa80",
+      "semantic_snapshot_sha256": "sha256:ddc4cf40b0845197637bfa3aa6f8789c0f12b5cf35fbb853f663ab6763e8d1ba",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-candidate-content-manifest.v1.schema.json",
+      "sha256": "sha256:1352cd005181836bfd442d869475eaeeb606b166c4dfa7dae68a9d3ce03e8206",
+      "semantic_snapshot_sha256": "sha256:22fc2964973b1f8f2300077a3913dbf37d16b05c254fd4b6876bcb1d47b1d689",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-impact-projection.v1.schema.json",
+      "sha256": "sha256:c9c44607c397be2c1592e137052177ac7563e0ab6f30d8a920945be1e6e9ba4f",
+      "semantic_snapshot_sha256": "sha256:8b8dbfec71500fe4729f9ac57fa969ebf431540666e778ee0b7588b8d52f88fb",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-knowledge-maintenance-route.v1.schema.json",
+      "sha256": "sha256:475d322f4ca92e91445fcea5277c3ad7f2000ee1d9bed92802dacf7db6efc45c",
+      "semantic_snapshot_sha256": "sha256:a94824a41b68188db5125bda96028f9904cf48f3db6ed33fc4435e38e25d41b8",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure-challenge.v1.schema.json",
+      "sha256": "sha256:db25cfb859d3af1b31d302fbe1b2b5eec26693958f3a38bb04d44bb8a03050c0",
+      "semantic_snapshot_sha256": "sha256:fbfe826ae72369d442623c9a5db9dc17bd1ee5ebe53078bf0e59641003ccb12b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure-request.v1.schema.json",
+      "sha256": "sha256:35c5ae1612d2633fe4344737630f4362253cfab94797d8f39e6b978cd20d2ab0",
+      "semantic_snapshot_sha256": "sha256:e5adb9e2454ec8e14b0bd42b3643d0c5cbfd846f173aabaea98990c41c00a099",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure.v1.schema.json",
+      "sha256": "sha256:78bf1168bb08bc52fc43e63647c02cd6cdda6f59798796b7329d8623c884ef0e",
+      "semantic_snapshot_sha256": "sha256:e8df350065eb82963d58b7803f1da585f979941788363823e69c4797dc1743a3",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-repair-completeness.v1.schema.json",
+      "sha256": "sha256:9093f15fb3dcd101ffb839ded1f7b01cbdc8b01bc6675cf68c2e03153b91115c",
+      "semantic_snapshot_sha256": "sha256:e2cc2199d580f8c4434fc5101946a9302e912f4b22300cb169d1786351e5735e",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-review-reentry-decline-closure.v1.schema.json",
+      "sha256": "sha256:02acdb5ab8a663827e1d08b2a8b9f17d216881ddb2da174981d93b0c8b9484fd",
+      "semantic_snapshot_sha256": "sha256:2a6491fe24195667bd827389d739d0955d461b937622bbe80a915dbc7dc54416",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-run-input.v1.schema.json",
+      "sha256": "sha256:35923059f71dbf663d5de897e44bd480d41b05d406df052576cfade7cb071b84",
+      "semantic_snapshot_sha256": "sha256:799ee8e3652213b2c429ad06f2e4e82f742f0855b67e83477007f60da6aac1b3",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-semantic-review-requirement-decision.v1.schema.json",
+      "sha256": "sha256:5b04205d6ae2ec789b7ae03db69b1bf6dcaf9a0475a9ac9e71743c5161a50a04",
+      "semantic_snapshot_sha256": "sha256:3f8b8dca2758ece87e83c35ca36005d9818c407f3400c5e5364f7e7caa58b3af",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-source-clauses.v1.schema.json",
+      "sha256": "sha256:7e50ff8fb164d68d9b04bed733b4e8d85c835c06ce550c9640daf1f5ec2cd09a",
+      "semantic_snapshot_sha256": "sha256:a088e43b315d33c567dcc19c3388df2107d6872b9d82fb8699d16e6ed2e49a26",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-source-inventory.v1.schema.json",
+      "sha256": "sha256:12475404d1267af3da09acb12e621d0ec158cfa02b10b06d30cf85d43adf6661",
+      "semantic_snapshot_sha256": "sha256:dc2bf4ca9f6ab90ac4e5efb35ee6aca169dcecc24b6e0165c63b46d365a756dc",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/bootstrap-import-envelope.v2.schema.json",
+      "sha256": "sha256:5cd4258b476864cac9f5a88edadf16b4bb2b52c098c190bfb6213d9445f60dd8",
+      "semantic_snapshot_sha256": "sha256:b02aaadeb697d4f537597fa7b76188b0c29808f0aa41be932a1c6d059f580a8a",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/bootstrap-import-envelope.v3.schema.json",
+      "sha256": "sha256:84b71f5911761548295bde018a5950cba1c1d29719b9830f503b17fa1eefd23a",
+      "semantic_snapshot_sha256": "sha256:817dbf024bb5918430acd2c382c2d669a35d621347460a424d091f355e829acd",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/check-id-lineage.v1.schema.json",
+      "sha256": "sha256:5b5a4e1a2560aefce2f5a956b1b9caad4e3a4348dfc8a08016717e6b0e7f3523",
+      "semantic_snapshot_sha256": "sha256:ef05b1d8fa117c367c656a0e0db6460aa76b4a3c407193e23cfb297a7d325fe7",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-binding.v1.schema.json",
+      "sha256": "sha256:5cf5d11be975203fa6ea904a7be86797f99a111b20dad858b2776c0705ebd605",
+      "semantic_snapshot_sha256": "sha256:e7851a074c6ffa3284b318b6ffcd84f6cdd02c4ecbd4264e25d5046bd5864348",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-pack.v1.schema.json",
+      "sha256": "sha256:5dc717290a99845c2fd584192d9db2d7e7831fa053aa90eb01f060a0608f30b6",
+      "semantic_snapshot_sha256": "sha256:9828174cfea66584a4df37ac15f7ef75f5768e801c338ebfd0171f364b7b35f2",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/compact-vdd-acceptance-prerequisite-bundle.v1.schema.json",
+      "sha256": "sha256:36dc65d2e3261e63e49bcda480d9fa6ce5f715fc585c5a2090972b2e76405217",
+      "semantic_snapshot_sha256": "sha256:db3c4dbadd369e1ef5e1f0590a396bf5e4b5513da3a79586de40ebc1d9625cea",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/focused-repair-import.v1.schema.json",
+      "sha256": "sha256:aa4978076c3d75c511cef3b32c204229569fc6185c22e37a3d4f1c1c2201344a",
+      "semantic_snapshot_sha256": "sha256:d05b01753452c390b23dd753a66844645a5d37ded2957c0bc422eeedb79ef24f",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json",
+      "sha256": "sha256:775c6b865e93f62c610149a536d360437493b5439605b10fb85eb88852c08b68",
+      "semantic_snapshot_sha256": "sha256:7a93e331bfdafca31bca4e47cf90207d5e41b9d094ac45756af4a4ae041cbc56",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-acceptance-candidate.v1.schema.json",
+      "sha256": "sha256:4d4fd1b06de8f7a861c0eac53a22acbf10a5432c152abe41869d49261304b22f",
+      "semantic_snapshot_sha256": "sha256:0d40b39975034d5087ea73572c857d1e9ef07c740bc3b41d568c1c187ebe4b1f",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-diff-coverage-result.v1.schema.json",
+      "sha256": "sha256:1c33a1df78ec34c2afd408f087327515cbaccadaee3d71307c92ab419dcc8f7b",
+      "semantic_snapshot_sha256": "sha256:bb6bc99e2cff42380712dfa17d9a57c85f49c03939863b2790c41763eecac37d",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json",
+      "sha256": "sha256:9f88fc03dda0c90bd96fb09f2441e06f1d849ad76ac64d99674af5fd9c2f212b",
+      "semantic_snapshot_sha256": "sha256:38a8f0a15ed688c1521e08fe3352b9562a9534fa9a842e51a3761b71c14b1c9b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-scan-bundle-result.v1.schema.json",
+      "sha256": "sha256:e918fa130bc5032d247f500edc67ce599d2966a8a8efffaae3a1c215e8721726",
+      "semantic_snapshot_sha256": "sha256:d0c5cd34f04c079651f2a223f76752426581c992cb1a65f56f95072019bc9cf4",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/program-dod-candidate.v1.schema.json",
+      "sha256": "sha256:d75508b509b4002cf624b79a8b72d579cf1dbe56bf59218d03af12e6e9d77a6a",
+      "semantic_snapshot_sha256": "sha256:a0ed75041a69843b352bdbe530fdcf6824ed1d849b39601fd6f6845bcf277438",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/task-checklist-closure.v1.schema.json",
+      "sha256": "sha256:67fd82529625a555de4693c8e9a9859139cb10adfac2793118d06d02676acab6",
+      "semantic_snapshot_sha256": "sha256:5802b8cc49f7386f452a01590e85563fda4126aadb79e7e0b9ea171a834a7217",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/typed-gate-result.v1.schema.json",
+      "sha256": "sha256:369fd038977b9aee8bdb79921e9f486b153db3d2bc1ddb6f9328a31c46c17b98",
+      "semantic_snapshot_sha256": "sha256:18ea85d187f771a79501b87d4e314c20560a9ece95bcc97ecb9de4c2565e03ba",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/acceptance_core.cpython-313.pyc",
+      "sha256": "sha256:a223ae3c3a619faf70761b7ce883115474f29ccd960fb9ba837b0e610255c8ae",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/bootstrap_integration.cpython-313.pyc",
+      "sha256": "sha256:93cb2fa2f82406e1aa0caaaf9ed5327e3a64804becdc33785ec4d6bb8280410b",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/compact_vdd_projection.cpython-313.pyc",
+      "sha256": "sha256:24b8b007f142228db0ec1552fda75392604cd4afcb35da206578b19c8797c999",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/deterministic_finalization.cpython-313.pyc",
+      "sha256": "sha256:25277eb02ed55deba83f1d0fbdfad0d287260e0168c2b7b42549e55b3d6ea554",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/evidence_analysis.cpython-313.pyc",
+      "sha256": "sha256:fa4f32b62fdf6afc4b71f7564dbc576d873ba8c90d48d1966464b61c816ff8d9",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/execution_control.cpython-313.pyc",
+      "sha256": "sha256:148d6314b885d67198d9a1d16c23a4d6497218e94108050714fd2abd753690c8",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/knowledge_context.cpython-313.pyc",
+      "sha256": "sha256:b4950f7349f04a19c0a8f1542afb8e6a625338025d92287e9c7a13e5547e62ef",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/manual_pause_closure.cpython-313.pyc",
+      "sha256": "sha256:b1eedbee637011d9fb1451f269cb2e48b8426f78a8a41e7bb0367b81ad43c0e9",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/matrix_phase.cpython-313.pyc",
+      "sha256": "sha256:bf8fa89896b4f75aec50f92f77a1450df2aaa87fd3d88bbfe10b86b9a6de3105",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/model_routing.cpython-313.pyc",
+      "sha256": "sha256:5bc2e8eeffb2ce2834cb278a9e90eb128ee423d6aa6c254c430cd4099b57bf08",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/package_validation.cpython-313.pyc",
+      "sha256": "sha256:b123ff4aed1286bab712700cb625ce845ed7974d6cd5b1331e2347bdc9211fa6",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/phase_scan.cpython-313.pyc",
+      "sha256": "sha256:84d90eb497d25f8cc98819316930ca7f7684fad93d139bc985934f6218cc7abe",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/prepare_knowledge_context.cpython-313.pyc",
+      "sha256": "sha256:be27819027cc3ec434d5be3d6c8e731b970e1f2434317d172dee60960f5e1728",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/repair_completeness.cpython-313.pyc",
+      "sha256": "sha256:66bc4f69a32f2e95dc6e2f9d83f2888a93c091cdfe2f2ec2f076329c32822023",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/requirement_inventory.cpython-313.pyc",
+      "sha256": "sha256:0bcf6d0fcee0a989813ba1791a1887165167852a27d66456169046582a9b6d73",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/review_cycle_policy.cpython-313.pyc",
+      "sha256": "sha256:4c323eb8ce28a5bb7b9f0315461567c0ae7414024b1ffbf26d982d20bcc660d2",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/review_reentry_decline.cpython-313.pyc",
+      "sha256": "sha256:8de2b2cbe562b9ecb0aa24d91ca9601102797f680da605c96c6b959f1d51851e",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/review_requirement.cpython-313.pyc",
+      "sha256": "sha256:55911916b70283d64051915a57601597d2c2e89efedc7ed3773df1dacb51a78c",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/semantic_import.cpython-313.pyc",
+      "sha256": "sha256:6ec343cb64009fd347d48fb29378d7b8a23425b03e490cb48ec88201ed3e1e05",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/source_clauses.cpython-313.pyc",
+      "sha256": "sha256:d2d7c287c317b4ebf5232870d2bdb3bf19ad1d3cdb471b04f24bd72fdbebc8b6",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/__pycache__/task_checklist.cpython-313.pyc",
+      "sha256": "sha256:f71b4d19240803ac58de0b14d7cb4d0fbe910d604d0bb98fcc3200b0ba5497a7",
+      "semantic_snapshot_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sensitivity": "restricted",
+      "redaction_status": "failed"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "sha256": "sha256:b64a766120d73d136292243401b2395c45c0834914a43403d8c2cf18eddbb001",
+      "semantic_snapshot_sha256": "sha256:f06a0bd5161bef09352751f1b008dd32cdebf1ca132cbb152eb6ab8a474dcc62",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "sha256": "sha256:5e9744f6dc7ce4211af2929beda63c44f607ef3016af081b1241b1f1b03f7662",
+      "semantic_snapshot_sha256": "sha256:5e9744f6dc7ce4211af2929beda63c44f607ef3016af081b1241b1f1b03f7662",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+      "sha256": "sha256:5cc924b79cf06a55aca1976634b9bebd818d0e51949a26007f3192aa07ff4fa6",
+      "semantic_snapshot_sha256": "sha256:0689c095fb843087545ade3592adeaef1521352639b5fc865705cdb6aa2f15a3",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/check_lineage.py",
+      "sha256": "sha256:bedc1fc1006b30b4e277097a0061e4e5a393b35ba1c7ce81de91cf4fa2438172",
+      "semantic_snapshot_sha256": "sha256:bedc1fc1006b30b4e277097a0061e4e5a393b35ba1c7ce81de91cf4fa2438172",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "sha256": "sha256:063d89c83696ac1343f4bc7aae88ed3d354afd1147e310e561a9282d857954c6",
+      "semantic_snapshot_sha256": "sha256:063d89c83696ac1343f4bc7aae88ed3d354afd1147e310e561a9282d857954c6",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "sha256": "sha256:192b49e9abf849226af2d62565e149d03607c3595e5982eddd0c527f0c1c722a",
+      "semantic_snapshot_sha256": "sha256:192b49e9abf849226af2d62565e149d03607c3595e5982eddd0c527f0c1c722a",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/evidence_analysis.py",
+      "sha256": "sha256:71126775f586db3b19836d730cb2ac30262749837ead052739aa0a477cc578cf",
+      "semantic_snapshot_sha256": "sha256:71126775f586db3b19836d730cb2ac30262749837ead052739aa0a477cc578cf",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "sha256": "sha256:fd466c7b3b82ddb180302515d46fdc36aff914bf1e0ff5f9e53861b0146ca769",
+      "semantic_snapshot_sha256": "sha256:27735225b77c81eb62cbce04ba81f4ffca322dae2f7b444db7c96b34ad5ce6ed",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      "sha256": "sha256:1750fab488f47b83c29a416cac889df12a3ca38382a4b0285c98208422aa66d8",
+      "semantic_snapshot_sha256": "sha256:1750fab488f47b83c29a416cac889df12a3ca38382a4b0285c98208422aa66d8",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py",
+      "sha256": "sha256:03b88f3102a3c4eccbf3825034487c477a10da42cb52bbbb8e37a65a4116da99",
+      "semantic_snapshot_sha256": "sha256:e46f097fd5607abf5b84af12e9e9f3689adc583f22ce7d5ed0ab05918a226a4c",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/matrix_phase.py",
+      "sha256": "sha256:0a07047465a8411559a132704dc6e3024c6f2b525b711f2d1433b3315a52c1c1",
+      "semantic_snapshot_sha256": "sha256:0a07047465a8411559a132704dc6e3024c6f2b525b711f2d1433b3315a52c1c1",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py",
+      "sha256": "sha256:419ecbd6bc571607d77bfbbd3a5b722986682fc7ea740a2c0aafefe019e20aec",
+      "semantic_snapshot_sha256": "sha256:419ecbd6bc571607d77bfbbd3a5b722986682fc7ea740a2c0aafefe019e20aec",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
+      "sha256": "sha256:90200ae030188cc3acac8d929c0048761d6d9d4aeee3700af01a7c3bc1427dd9",
+      "semantic_snapshot_sha256": "sha256:90200ae030188cc3acac8d929c0048761d6d9d4aeee3700af01a7c3bc1427dd9",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py",
+      "sha256": "sha256:91a0f38b2b61282a27de445e9f831869cb226c7fdf3de1a96e38979fe114455f",
+      "semantic_snapshot_sha256": "sha256:91a0f38b2b61282a27de445e9f831869cb226c7fdf3de1a96e38979fe114455f",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+      "sha256": "sha256:c26bcad023bc96812a50111c30ca420038f1926be721a9c215fa0052d3a260ce",
+      "semantic_snapshot_sha256": "sha256:c26bcad023bc96812a50111c30ca420038f1926be721a9c215fa0052d3a260ce",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "sha256": "sha256:3823ac6312b8f68bb9768ac34a5d7a24008abf09dfdc42a13ac2586dcae75e96",
+      "semantic_snapshot_sha256": "sha256:3823ac6312b8f68bb9768ac34a5d7a24008abf09dfdc42a13ac2586dcae75e96",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/requirement_inventory.py",
+      "sha256": "sha256:cc948059a5e72c979ec82e96cee69d1e3b774fdfaea3a10deb30c684f4e8884a",
+      "semantic_snapshot_sha256": "sha256:cc948059a5e72c979ec82e96cee69d1e3b774fdfaea3a10deb30c684f4e8884a",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/review_cycle_policy.py",
+      "sha256": "sha256:19f4d62c1c3eed645c1c7bc5309f6a20b9200ff50b3d29c1c7274fb0907d20b6",
+      "semantic_snapshot_sha256": "sha256:19f4d62c1c3eed645c1c7bc5309f6a20b9200ff50b3d29c1c7274fb0907d20b6",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/review_reentry_decline.py",
+      "sha256": "sha256:58b7011e4ff6dd0d2d6ad91096453ce9e78d8a195558fd190c8e6752b70839ff",
+      "semantic_snapshot_sha256": "sha256:58b7011e4ff6dd0d2d6ad91096453ce9e78d8a195558fd190c8e6752b70839ff",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/review_requirement.py",
+      "sha256": "sha256:2542239a0e7a69198204470326df110fa20c5cd809e1efe72d7710bac8feec03",
+      "semantic_snapshot_sha256": "sha256:2542239a0e7a69198204470326df110fa20c5cd809e1efe72d7710bac8feec03",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/semantic_import.py",
+      "sha256": "sha256:37cdd1ce7c7a7d652e6491ad3a977dc2a9c83d6221285dfb8c9956496319d36c",
+      "semantic_snapshot_sha256": "sha256:37cdd1ce7c7a7d652e6491ad3a977dc2a9c83d6221285dfb8c9956496319d36c",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/source_clauses.py",
+      "sha256": "sha256:fe62c533b8e6a6dfa57c94789024329e33ed8c1501136112078b4ab9afb81a8e",
+      "semantic_snapshot_sha256": "sha256:fe62c533b8e6a6dfa57c94789024329e33ed8c1501136112078b4ab9afb81a8e",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py",
+      "sha256": "sha256:a9c1699b9e955d556a451ffbabe6f4515498defe87a17808cbe11c7f8e404b27",
+      "semantic_snapshot_sha256": "sha256:a9c1699b9e955d556a451ffbabe6f4515498defe87a17808cbe11c7f8e404b27",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_import.py",
+      "sha256": "sha256:3f8428744574228880b9f2521bb0661755d698f2ff7089f7ebd6b9c1f319302a",
+      "semantic_snapshot_sha256": "sha256:3f8428744574228880b9f2521bb0661755d698f2ff7089f7ebd6b9c1f319302a",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+      "sha256": "sha256:61735ba25079ea4a673cf86777257e1abc2f3f257d9053901dd6060ca349168b",
+      "semantic_snapshot_sha256": "sha256:d33d87dddae6fbae71df349796215d4ee9c80ee507e1147438b88c2a648601b8",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_check_lineage.py",
+      "sha256": "sha256:e7dc7d04056f437e47644414b91c67cfb7f537c88bfc2806e68e6f3e25a10eed",
+      "semantic_snapshot_sha256": "sha256:e7dc7d04056f437e47644414b91c67cfb7f537c88bfc2806e68e6f3e25a10eed",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "sha256": "sha256:a150bd35d6923522d20fee605ac3cd6e3edbe19d5f68e8c507316877db0a31dd",
+      "semantic_snapshot_sha256": "sha256:a150bd35d6923522d20fee605ac3cd6e3edbe19d5f68e8c507316877db0a31dd",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+      "sha256": "sha256:e078593c5b802b2c9ea32caf027f0a82297b3978d1721ae757794b0065b394e3",
+      "semantic_snapshot_sha256": "sha256:2eef9aa774daa2503cd69550d5fe86c8fe78e50130c3a9e53055a754fc4b6af2",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+      "sha256": "sha256:bbe9b84f7188aff4630daa8320af1870e41076e28a667b2fc78c8182e034014c",
+      "semantic_snapshot_sha256": "sha256:bbe9b84f7188aff4630daa8320af1870e41076e28a667b2fc78c8182e034014c",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s0.py",
+      "sha256": "sha256:330fbf94069efe25d989ccf82dd2c6b21b1e428917c093f344c47e56a9bd8273",
+      "semantic_snapshot_sha256": "sha256:330fbf94069efe25d989ccf82dd2c6b21b1e428917c093f344c47e56a9bd8273",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s1.py",
+      "sha256": "sha256:e5ef38baf7585d08951424b1ed5e663001ffebe209a07e8861ece21e04853d99",
+      "semantic_snapshot_sha256": "sha256:e5ef38baf7585d08951424b1ed5e663001ffebe209a07e8861ece21e04853d99",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s2.py",
+      "sha256": "sha256:677af3d9c35c22f66c2a881007804c9c32c2dd2ff94d133159fb14bfcd580c16",
+      "semantic_snapshot_sha256": "sha256:677af3d9c35c22f66c2a881007804c9c32c2dd2ff94d133159fb14bfcd580c16",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_trust.py",
+      "sha256": "sha256:188d62c9491fdb6eb1a7843e9fc9aaa2198162745e1bdedd14bd5f736ceafdc5",
+      "semantic_snapshot_sha256": "sha256:188d62c9491fdb6eb1a7843e9fc9aaa2198162745e1bdedd14bd5f736ceafdc5",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      "sha256": "sha256:e39e4c33fcb2f52572e2ed3943625311855aa40c93f162a298a5c32ffbc92661",
+      "semantic_snapshot_sha256": "sha256:e39e4c33fcb2f52572e2ed3943625311855aa40c93f162a298a5c32ffbc92661",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_analysis.py",
+      "sha256": "sha256:7f9669253f135bcfffce88583518088b15b21b1229008cf8484cc8b468c0bb35",
+      "semantic_snapshot_sha256": "sha256:7f9669253f135bcfffce88583518088b15b21b1229008cf8484cc8b468c0bb35",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_pipeline.py",
+      "sha256": "sha256:af80c0ccac1f2ab9c088b8832fe0f120655e9f426c492ea9e53a34cad132c648",
+      "semantic_snapshot_sha256": "sha256:af80c0ccac1f2ab9c088b8832fe0f120655e9f426c492ea9e53a34cad132c648",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+      "sha256": "sha256:6a52ca8da897dc8713a172b091389278068d162b4dab5552ccb7c7aefd16b95c",
+      "semantic_snapshot_sha256": "sha256:6a52ca8da897dc8713a172b091389278068d162b4dab5552ccb7c7aefd16b95c",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py",
+      "sha256": "sha256:de49d9ca0c503b49640c26cbdd6315d7608e9fca6fa74baf4bd9ef11ab62400c",
+      "semantic_snapshot_sha256": "sha256:de49d9ca0c503b49640c26cbdd6315d7608e9fca6fa74baf4bd9ef11ab62400c",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_manual_pause_closure.py",
+      "sha256": "sha256:891e17f14709521efae72ebdd10532811f6ff289ee3e3f8e5d764323b5e3aa67",
+      "semantic_snapshot_sha256": "sha256:8ea46032c9da9bf025471e28016c1bd9fa276af2c0a9b52da0ad0db3736e6890",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_matrix_phase.py",
+      "sha256": "sha256:d8665637fa2aabfede9047de53ab490ccfa2a4a5867455acda7b16647afb6e9a",
+      "semantic_snapshot_sha256": "sha256:d8665637fa2aabfede9047de53ab490ccfa2a4a5867455acda7b16647afb6e9a",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+      "sha256": "sha256:5f5d15dc5137fa0d426d89df5adfc746231acce27995b3ef87151c1253ad2b3d",
+      "semantic_snapshot_sha256": "sha256:5f5d15dc5137fa0d426d89df5adfc746231acce27995b3ef87151c1253ad2b3d",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py",
+      "sha256": "sha256:d6ec8665e93fcf6cbdb11bb693062fb33b4ce4536574220a9ac20afc91c84d31",
+      "semantic_snapshot_sha256": "sha256:f695b815ce7e8d18962f61b3a610315d9fd104020f06c29685ad16512e8f88c5",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_phase_scan.py",
+      "sha256": "sha256:057d5aad07fcb7397488e94c75b92eba27866da1322de972f10e46f227cb3970",
+      "semantic_snapshot_sha256": "sha256:057d5aad07fcb7397488e94c75b92eba27866da1322de972f10e46f227cb3970",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      "sha256": "sha256:3320fd5ce11c8663846ce68100d280f4aec4920d9e6019434e1d50c770683da9",
+      "semantic_snapshot_sha256": "sha256:3320fd5ce11c8663846ce68100d280f4aec4920d9e6019434e1d50c770683da9",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_requirement_inventory.py",
+      "sha256": "sha256:c274ee9eeb1dfa2dbaea005f77d0c806fa60faa7af10b63afc3ebf371e6cf8bf",
+      "semantic_snapshot_sha256": "sha256:c274ee9eeb1dfa2dbaea005f77d0c806fa60faa7af10b63afc3ebf371e6cf8bf",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_reentry_decline.py",
+      "sha256": "sha256:8e4cad8105b9611dded2f3dbf55899ba76f95dfbba27d4f180978600b0e98ce8",
+      "semantic_snapshot_sha256": "sha256:8e4cad8105b9611dded2f3dbf55899ba76f95dfbba27d4f180978600b0e98ce8",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py",
+      "sha256": "sha256:c4db9b226766670fdb0dd7f7f8c3c7eea798d4d978be7e9a7a2f11a53294a565",
+      "semantic_snapshot_sha256": "sha256:fb634eb319d802eb763b81cd402cc1d6c95a881be3b4e37405ee12537b6155c5",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "sha256": "sha256:0536f99e41ffbc8bca9dc2985b5ead90bd2d987d05332f8db3e284a73f6d366b",
+      "semantic_snapshot_sha256": "sha256:0536f99e41ffbc8bca9dc2985b5ead90bd2d987d05332f8db3e284a73f6d366b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_schemas.py",
+      "sha256": "sha256:2611c2f89360835c0b9ec100ae11a44b5810a08d84b2ff7c12f5b9f3e789138d",
+      "semantic_snapshot_sha256": "sha256:2611c2f89360835c0b9ec100ae11a44b5810a08d84b2ff7c12f5b9f3e789138d",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py",
+      "sha256": "sha256:c9fcc70238c6638e01ec4ca3b170184fca434915f7b0d59ef122fba62f799d16",
+      "semantic_snapshot_sha256": "sha256:c9fcc70238c6638e01ec4ca3b170184fca434915f7b0d59ef122fba62f799d16",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_source_clauses.py",
+      "sha256": "sha256:8f0ede7c8cb2c1f7cdfb17793cf8cc0caa79b07b96b9c33575a8795e12fff787",
+      "semantic_snapshot_sha256": "sha256:8f0ede7c8cb2c1f7cdfb17793cf8cc0caa79b07b96b9c33575a8795e12fff787",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_task_checklist.py",
+      "sha256": "sha256:ae866c67b58e8743ad6cca2cfb8f7af193c97ae41d0c0457322922ce91939bea",
+      "semantic_snapshot_sha256": "sha256:ae866c67b58e8743ad6cca2cfb8f7af193c97ae41d0c0457322922ce91939bea",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_terminal_full_isolation.py",
+      "sha256": "sha256:72b42f62af066f85f473e5481e3d89cc93332d6111b484ec76943d852a9090b6",
+      "semantic_snapshot_sha256": "sha256:72b42f62af066f85f473e5481e3d89cc93332d6111b484ec76943d852a9090b6",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      "sha256": "sha256:dadb87012356a400b85976d6bf768b484cffe6bc932fb5be342a7b706040b292",
+      "semantic_snapshot_sha256": "sha256:dadb87012356a400b85976d6bf768b484cffe6bc932fb5be342a7b706040b292",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "sha256": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba",
+      "semantic_snapshot_sha256": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+      "sha256": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503",
+      "semantic_snapshot_sha256": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md",
+      "sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63",
+      "semantic_snapshot_sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+      "semantic_snapshot_sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "sha256": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "semantic_snapshot_sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json",
+      "sha256": "sha256:530e8dbf6435df53eec59aeff7c34dc9e94eda27d3c40be1546bf183f0a4a8cf",
+      "semantic_snapshot_sha256": "sha256:32765f6b2742eb5f7ff3abbc70c39fde88bbfdf95cc63cd73fa1d62dc0d0fefb",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json",
+      "sha256": "sha256:940e1c029dfcfaeaa786aa0961b496445cbfc70f9a52dcf9c0af1a69b5d9f432",
+      "semantic_snapshot_sha256": "sha256:626c5fb62a240a5ee2dd23ccaa066fb6f0ef60c93486c06487f7a3fd221fde80",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/historical-compatibility-replay.v1.json",
+      "sha256": "sha256:cf192dcda9722dede8e453c218307e044ba18eaeca37bc2024e44ae3e3aa4946",
+      "semantic_snapshot_sha256": "sha256:2837dc0009bc208dcc63813b5252e6b920fd9b9cfd59fc61ef3ea71788ceaf73",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "sha256": "sha256:0f9cb835d4a6e34936ade1c4f0f6e62e94417c8d3e8ac7ab5d827a9cfcfe168f",
+      "semantic_snapshot_sha256": "sha256:84966a42fcb7fb14b8da161abc757513d6b1c9fdb083004e60ac9a4c112f6ed4",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
+      "sha256": "sha256:4fab1cbfc442a459de5a107af692d82961239f50e0f83520fc090e6ef0133409",
+      "semantic_snapshot_sha256": "sha256:72afe3b11a41471808b6c25dea6358c5d8700b9e613e8084fb2b509a83316f2e",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/stable-candidate-replay-matrix.v1.json",
+      "sha256": "sha256:7f5d4dafebc0cd89aa03e4ab71b5e37496961128765fd2501ca0e9ecf365fa53",
+      "semantic_snapshot_sha256": "sha256:68126856c567edcb8225dbbba551f6a9b62a55930f5bfc7a11c08285360f32a8",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+      "sha256": "sha256:2b180f425e088c32dae8a902b1d51cf64ea07016bc5a98b3f25a1069d0fb62c5",
+      "semantic_snapshot_sha256": "sha256:3f3c288aced8a2a52d8fb5bde17759f220f966e3f4e6fc0571ba941778221b2b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/sc/config/skill-package-validator-capability.v1.json",
+      "sha256": "sha256:bd728dc93eb4fa871f0dd9a61fa3490adaa1d88cf781e61d61719445bb985cb0",
+      "semantic_snapshot_sha256": "sha256:0432dc6ae3c8b9e50b5006df2bf46cc0409df71f1c995118400efa3fe86f83f6",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json",
+      "sha256": "sha256:e66c0673805ab7d3100ec0ffc83ecd61710207932ffd44f38dfde513315af20f",
+      "semantic_snapshot_sha256": "sha256:a1df844c281711277b637c5a470b6a15d60d0e24c44e2ad3c7b6cc23041116ab",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+      "sha256": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+      "semantic_snapshot_sha256": "sha256:0ffe7f3d6b15d31b4a32f7f4708fbf35e3596e4dc55efeb49cd3d5e7b53e7c98",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/sc/skill_package_replay.py",
+      "sha256": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582",
+      "semantic_snapshot_sha256": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/sc/tests/test_skill_package_replay.py",
+      "sha256": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6",
+      "semantic_snapshot_sha256": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-23T18:33:22.244953Z"
+}

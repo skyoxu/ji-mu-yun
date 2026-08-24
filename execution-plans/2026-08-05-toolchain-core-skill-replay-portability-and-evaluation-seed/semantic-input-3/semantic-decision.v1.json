@@ -1,0 +1,15 @@
+{
+  "authorizes": [],
+  "context_artifact_hash": "sha256:3f08192b1bb07c50c0f84dedff97f7b0874309a0d6d6562f21a3162093395dfc",
+  "execution_identity": "sha256:3c67c862886ad3838b970c2d8c9b9948cebe2017f0b92113c7d3cbfefdf492ea",
+  "producer_role": "semantic-child",
+  "rationale": "Frozen inputs were reviewed.",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "redaction_status": "not-required",
+  "schema_version": "skill-semantic-decision.v1",
+  "source_manifest_hash": "sha256:253880680f58d66400fb0fcebd3379ae5121f5d7738d2e9ae41787695c319bbb",
+  "source_statuses": {
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json": "accepted"
+  },
+  "status": "accepted"
+}

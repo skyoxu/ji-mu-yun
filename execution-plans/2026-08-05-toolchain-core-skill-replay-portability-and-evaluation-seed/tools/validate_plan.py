@@ -13,7 +13,7 @@ PLAN_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = PLAN_ROOT.parents[1]
 PLAN_DIRECTORY = PLAN_ROOT.name
 PLAN_ID = "toolchain-core-skill-replay-portability-and-evaluation-seed"
-ROUND3_REPAIR_EVIDENCE_PATH = "logs/r/tcd1r3-manual-pause-repair-evidence.json"
+ROUND3_REPAIR_EVIDENCE_PATH = "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-4/implementation-authorization.v1.json"
 
 REQUIRED_FILES = (
     "00-index.md",
@@ -400,6 +400,12 @@ def validate_implementation_lifecycle_state(state: dict[str, Any], errors: list[
         authorization = state.get("implementation_authorization")
         evidence = REPOSITORY_ROOT / ROUND3_REPAIR_EVIDENCE_PATH
         evidence_hash = authorization.get("evidence_sha256") if isinstance(authorization, dict) else None
+        predecessor = None
+        if evidence.is_file():
+            try:
+                predecessor = load_json(evidence).get("predecessor_evidence")
+            except (OSError, ValueError, TypeError):
+                predecessor = None
         if (
             not isinstance(authorization, dict)
             or authorization.get("decision") != "accepted-deterministic-round3-repair-evidence"
@@ -411,6 +417,8 @@ def validate_implementation_lifecycle_state(state: dict[str, Any], errors: list[
             or authorization.get("authorizes") != ["implementation-authorized"]
             or not evidence.is_file()
             or sha256(evidence) != evidence_hash
+            or not isinstance(predecessor, dict)
+            or predecessor.get("sha256") != "sha256:300cb35a94e935dcf0e25ecf05c1924765d1efa780090bbbf642de89e974eac6"
         ):
             errors.append("implementation authorization does not bind the accepted Round 3 repair evidence")
 
@@ -456,6 +464,10 @@ def validate_state_and_knowledge(
         str(context_path),
         "--repository-root",
         str(REPOSITORY_ROOT),
+        "--skill-input-receipt",
+        str(PLAN_ROOT / "skill-input-receipt-2.v1.json"),
+        "--skill-input-contract",
+        str(REPOSITORY_ROOT / ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json"),
     ])
     if preflight.returncode:
         errors.append("current VDD knowledge preflight failed")

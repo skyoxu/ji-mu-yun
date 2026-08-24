@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+    "source_sha256": "sha256:56db579f2e19608f3cabac64d081236dd14a0eeaf704bfebc435e80c3d51e2f3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 18089,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:56db579f2e19608f3cabac64d081236dd14a0eeaf704bfebc435e80c3d51e2f3"
+  },
+  "status": "accepted",
+  "summary": "Plan toolchain-core-skill-replay-portability-and-evaluation-seed; self-hosted profile, schema v1, authority manifest required, no authorizations; RMAP-S0 establishes repository validator capability and detached positive/negative probes; RMAP-S1 preserves byte-frozen historical compatibility replay; RMAP-S2 defines non-authorizing evaluation seeds and six-category stable-candidate matrix; RMAP-S3 integrates consumers, downstream replay, and terminal closure; required acceptance IDs TC-D1-A01..A17 as assigned by slice; validation uses repository replay wrapper and JSON receipt equality; detached negative must exit 1, positive and terminal replays exit 0; lifecycle states implementation-authorized and implementation-complete do not imply acceptance, release, or archival; manual evidence authorizes implementation only; seed and matrix outputs authorize nothing; required bindings include historical validator, historical evidence, and current replay; target manifest uses sorted relative paths plus SHA-256; allowed edits limited to listed scripts, schemas, skills, tests, docs, and plan receipts; forbidden legacy plans, runtime/platform, logs, and unrelated skill trees; recovery preserves failed receipts/history and disables new routes when needed; backend has no hidden state, provider scheduling, or subprocess ownership"
+}

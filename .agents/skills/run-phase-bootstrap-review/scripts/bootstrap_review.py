@@ -26,6 +26,9 @@ from typing import Any
 SCRIPT_ROOT = Path(__file__).resolve().parent
 if str(SCRIPT_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPT_ROOT))
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from _control_plane import (  # noqa: E402
     ControlPlaneError,
@@ -61,9 +64,6 @@ from runtime_policy import (  # noqa: E402
 
 CONTROL_PLANE_REVISION = "bootstrap-control-plane.v2"
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
-if str(REPOSITORY_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from scripts.toolchain.canonical_evidence import canonical_bytes  # noqa: E402
 if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
@@ -529,7 +529,13 @@ def repeated_failure_fingerprint_status(history: list[str], fingerprint: str) ->
 
 
 def value_hash(value: Any) -> str:
-    return HASH_PREFIX + hashlib.sha256(canonical_bytes(value)).hexdigest()
+    # Bootstrap's established schemas include finite confidence fractions.
+    # Keep their legacy hash projection separate from the shared integer-only
+    # canonical-evidence payload format.
+    payload = json.dumps(
+        value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    return HASH_PREFIX + hashlib.sha256(payload).hexdigest()
 
 
 def file_hash(path: Path) -> str:

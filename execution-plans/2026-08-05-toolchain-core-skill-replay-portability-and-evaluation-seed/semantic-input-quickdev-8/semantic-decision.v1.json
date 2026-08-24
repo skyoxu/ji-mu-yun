@@ -1,0 +1,24 @@
+{
+  "authorizes": [],
+  "context_artifact_hash": "sha256:99e78d770fe7d266b40bfb5a0d300618aa0096dc1ac427b0bf7fef19cf99c034",
+  "execution_identity": "sha256:3c67c862886ad3838b970c2d8c9b9948cebe2017f0b92113c7d3cbfefdf492ea",
+  "producer_role": "semantic-child",
+  "rationale": "Frozen inputs were reviewed.",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "redaction_status": "complete",
+  "schema_version": "skill-semantic-decision.v1",
+  "source_manifest_hash": "sha256:3bd57a60c6593314cb342aa5cdc4d5b88622dd4c28991ed54567d9d1aec1f8b3",
+  "source_statuses": {
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md": "accepted",
+    ".agents/skills/vdd-execution-plan/SKILL.md": "accepted",
+    "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md": "accepted",
+    "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py": "accepted",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json": "accepted",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json": "accepted"
+  },
+  "status": "accepted",
+  "snapshot_read_coverage": {
+    "path": "snapshot-read-coverage.v1.json",
+    "sha256": "sha256:07afb1b6e591db45dc34cddb69a5ddde090c6da43f7df36b6dcca8359fb3696d"
+  }
+}

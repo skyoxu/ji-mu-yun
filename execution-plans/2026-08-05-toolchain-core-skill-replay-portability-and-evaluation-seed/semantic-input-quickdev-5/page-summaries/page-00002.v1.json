@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "Purpose: create/repair complete VDD execution-plan directory; standalone requirements file routes direct implementation with no VDD artifacts; select least-complex profile first: standard, resumable, or self-hosted; route selected profile through model_routing.py; lifecycle: draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived; clarify only material scope/compatibility/destructive/protected-path/acceptance boundaries; each slice records behavior, failure intent, GREEN target, dependents, recovery; VDD does not own RED execution; repair is in-place under repair/round-<n>, preserves initial/history, uses hash-bound closure; Bootstrap lineageFamilyId budget default 2, hard limit 3, typed Round 3 triggers, exhaustion manual_pause; repaired review requires callsite inventory, changed/excluded siblings, producer/consumer composition receipt, hash-bound changed/deleted set and complete review scope; mandatory knowledge-consumption sequence and vdd_knowledge_preflight before plan-ready; skill-input contract adapter plus typed semantic child launch and --require-ready validation before knowledge freeze/artifacts; candidate/review binds Git baseline or complete dirty worktree identity; optional Bootstrap review uses minimal-complete-closure; resumable/self-hosted require append-only 95 report and index; terminal full validation required before implementation-complete; completion requires profile artifacts, observable acceptance for every requirement, RED/legacy path, stable repairs, and current terminal validation."
+}

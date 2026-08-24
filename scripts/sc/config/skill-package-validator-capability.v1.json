@@ -1,0 +1,9 @@
+{
+  "schema_version": "jimuyun.skill-package-validator-capability.v1",
+  "capability_id": "skill-package-validator",
+  "allowed_root": ".agents/skills/run-refactor-implementation-acceptance",
+  "validator_entrypoint": "scripts/acceptance_cli.py",
+  "probe_args": ["validate-package"],
+  "package_identity": "acceptance-package-v1",
+  "authorizes": []
+}

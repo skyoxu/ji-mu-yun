@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","additionalProperties":false,"properties":{"authorizes":{"const":[]},"clauses":{"minItems":1,"type":"array"},"schemaVersion":{"const":"acceptance-source-clauses.v1"},"sources":{"minItems":1,"type":"array"}},"required":["schemaVersion","sources","clauses","authorizes"],"title":"Acceptance Source Clauses","type":"object"}

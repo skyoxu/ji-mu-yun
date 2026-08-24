@@ -6,8 +6,8 @@
   "state_owner": "maintainer",
   "implementation_authorization": {
     "decision": "accepted-deterministic-round3-repair-evidence",
-    "evidence_path": "logs/r/tcd1r3-manual-pause-repair-evidence.json",
-      "evidence_sha256": "sha256:784e780eafa5b9e2da6847c25f60946370428cc347a3ce23ebcdb0bd2e9af020",
+    "evidence_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-4/implementation-authorization.v1.json",
+    "evidence_sha256": "sha256:e285acac569cebbe762b01ae3548b7b413396d64d5a67240731f276a6b5f2faf",
     "next_slice": "RMAP-S0",
     "authorizes": ["implementation-authorized"]
   },

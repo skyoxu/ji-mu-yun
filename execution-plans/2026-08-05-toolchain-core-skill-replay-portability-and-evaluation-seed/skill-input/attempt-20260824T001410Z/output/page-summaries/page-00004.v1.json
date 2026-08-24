@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+    "source_sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2560,
+    "start_line": 1,
+    "end_line": 44,
+    "content_sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8"
+  },
+  "status": "accepted",
+  "summary": "validate_implementation.py defines ROOT from the execution-plan location; EXPECTED requires five refactor-acceptance toolchain files (policy, projection script, prerequisite schema, and two tests); missing files yield failure family implementation-not-present and no authorizations; six registered Python commands must all exit zero, including targeted tests, unittest discovery, package validation, quick validation, and workflow-model routing validation; any nonzero command yields registered-command-failed with recent output and no authorizations; success emits schema version jimuyun.refactor-acceptance-toolchain-implementation-validation.v1 and predicate implementation-complete; success authorizes only implementation-complete; acceptance-passed, release, and archived remain explicitly unauthorized; ambiguity: subprocess command availability and repository contents are runtime-dependent."
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+    "source_sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2560,
+    "start_line": 1,
+    "end_line": 44,
+    "content_sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8"
+  },
+  "status": "accepted",
+  "summary": "validate_implementation.py; ROOT is repository ancestor; requires 5 specific toolchain files: review policy v1, compact_vdd_projection.py, prerequisite bundle schema v1, two test modules; executes 6 registered commands including targeted tests, unittest discovery, acceptance CLI validate-package, quick_validate, and workflow-model-routing validator; missing files yield fail implementation-not-present with missing list and no authorizations; nonzero command yields fail registered-command-failed with results/output tail and no authorizations; all commands passing yields schema jimuyun.refactor-acceptance-toolchain-implementation-validation.v1, status pass, predicate implementation-complete; authorizes implementation-complete only; explicitly does not authorize acceptance-passed, release, or archived"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json",
+    "source_sha256": "sha256:626c5fb62a240a5ee2dd23ccaa066fb6f0ef60c93486c06487f7a3fd221fde80",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1088,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:626c5fb62a240a5ee2dd23ccaa066fb6f0ef60c93486c06487f7a3fd221fde80"
+  },
+  "status": "accepted",
+  "summary": "schema_version jimuyun.toolchain-evaluation-seed-manifest.v1; baseline_status non-authorizing-candidates; authorizes empty; seed anchor_candidate failure_family candidate-baseline-contamination evidence execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-1/repair-closure.json sha256:e4cb1ec619109752804615cdefef1c9011c5f145791e58a7acc951c168d7e161; seed challenge_candidate failure_family self-hosted-knowledge-read-set-collision evidence execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-2/repair-closure.json sha256:330308af0b5f5f85a5b59fd396596e79de2c04b0051d82861386a894015daf50; seed challenge_candidate failure_family toolchain-policy-architecture-index-gap evidence execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-3/repair-closure.json sha256:4eb11ad472e2c799517db0e0214eab113d5bc952437b96820569c0ff743496b9"
+}

@@ -733,7 +733,7 @@ def run_semantic_child(
             # The provider needs a stable cold-start budget for a full frozen
             # page. Retries remain typed transport recovery rather than a
             # semantic decision.
-            per_page_timeout = max(30, timeout_sec // (len(paged_segments) + 1))
+            per_page_timeout = max(1, timeout_sec // (len(paged_segments) + 1))
             for page_index, segment in enumerate(paged_segments, start=1):
                 descriptor = {key: segment[key] for key in (
                     "source_path", "source_sha256", "ordinal", "total", "start_byte", "end_byte",
@@ -864,7 +864,10 @@ def run_semantic_child(
             codex_json=True,
             codex_sandbox=SEMANTIC_CHILD_SANDBOX,
             codex_skip_git_repo_check=True,
-            codex_extra_args=["--ephemeral", "--ignore-user-config"],
+            # Keep the authenticated provider configuration available to the
+            # child. Feature and rules isolation above still prevents tool use
+            # and project policy injection without discarding auth state.
+            codex_extra_args=["--ephemeral", "--ignore-rules"],
         )
         if exit_code != 0 or not output_path.is_file():
             raise ChildRequestError("semantic child failed without a typed output")

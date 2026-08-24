@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+    "source_sha256": "sha256:3f3c288aced8a2a52d8fb5bde17759f220f966e3f4e6fc0571ba941778221b2b",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 840,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:3f3c288aced8a2a52d8fb5bde17759f220f966e3f4e6fc0571ba941778221b2b"
+  },
+  "status": "accepted",
+  "summary": "No authorizations; schema jimuyun stable-candidate replay matrix v1; six required passing cases: case-positive positive replay; case-negative negative replay; case-historical historical compatibility replay; case-dirty dirty baseline; case-knowledge knowledge read set; case-policy closed policy; no ambiguities stated"
+}

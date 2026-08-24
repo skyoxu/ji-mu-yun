@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+    "source_sha256": "sha256:56db579f2e19608f3cabac64d081236dd14a0eeaf704bfebc435e80c3d51e2f3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 18089,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:56db579f2e19608f3cabac64d081236dd14a0eeaf704bfebc435e80c3d51e2f3"
+  },
+  "status": "accepted",
+  "summary": "plan toolchain-core-skill-replay-portability-and-evaluation-seed; schema jimuyun.tc-d1.implementation-contract.v1; self-hosted authority via authority-manifest.v1.json; authorizes nothing by default; acceptance coverage TC-D1-A01..A17; RMAP-S0 repository validator capability plus detached positive/negative probes; RMAP-S1 byte-preserving historical replay; RMAP-S2 non-authorizing evaluation seeds and stable-candidate matrix; RMAP-S3 consumer integration, downstream replay, terminal closure; historical replay binds validator, evidence, and current wrapper; detached negative exits 1 expected-failure, positive exits 0 pass; terminal receipts must equal CLI JSON; lifecycle states implementation-authorized and implementation-complete do not imply acceptance, release, or archive; seed and matrix evidence never authorizes promotion; required native repair closures cover baseline contamination, knowledge-set collision, policy/index gap; allowed changes limited to listed scripts, schemas, skills, tests, docs, and plan artifacts; forbidden areas include prior execution plans, PhaseA, runtime, logs, _bmad, bmad/gds skills; recovery preserves failed receipts/evidence and disables callers or restores prior route; required package validation uses repository-owned replay command; ambiguity: none stated"
+}

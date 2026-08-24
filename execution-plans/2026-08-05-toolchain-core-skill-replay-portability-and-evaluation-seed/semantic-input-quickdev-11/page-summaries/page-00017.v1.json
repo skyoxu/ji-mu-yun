@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/sc/skill_package_replay.py",
+    "source_sha256": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 5904,
+    "start_line": 1,
+    "end_line": 61,
+    "content_sha256": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582"
+  },
+  "status": "accepted",
+  "summary": "Bounded Skill package validator/replay utility rooted at repository; computes SHA-256 file and package manifests; capability JSON resolves allowed root, validator entrypoint, package identity, and performs compatibility probe; validate-package returns schema jimuyun.skill-package-validation-receipt.v1, pass/exit 0, target manifest, resolved validator metadata, authorizes empty; replay-package wraps validation with capability hash, fixed entrypoint/command, detached-positive pass and detached-negative expected-failure probes; emits tc-d1 historical replay receipt, machine-bound portability, historical validator/evidence hashes and recorded pass; replay-matrix loads cases and emits pass results using case IDs/categories/surfaces/expected observations plus evidence and matrix hash; path containment and Python validator/file checks enforced; ambiguity none"
+}

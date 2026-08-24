@@ -1,0 +1,75 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "create",
+  "request_binding": {
+    "request": {},
+    "consumer": "vdd-execution-plan",
+    "operation": "create",
+    "target": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+    "route_identity": "tc-d1-vdd-knowledge-preflight",
+    "source_roles": {
+      "requirements": [
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json"
+      ]
+    }
+  },
+  "request_hash": "sha256:c3217f54c3c389062c04e17fdeb99d02e8cc70cb73f9bba029bf29df27f5f3b9",
+  "target": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "route_identity": "tc-d1-vdd-knowledge-preflight",
+  "repository_identity": {
+    "head": "f662e9d542aea826b1d37a7dbde09196edd0bcf6",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_selection_hash": "sha256:a4dc5aaa52569d5a63e6153cd0f2d2a71bb3c79d4f9416a6963978f12fcb7d5a",
+    "selected_source_content_root": "sha256:394eb48f57630775c09df84d32d3c4ab58c24c5c5138ab73ed890aeed72002ad"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-23T15:53:38.634345Z",
+  "contract_hash": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+  "source_manifest": {
+    "path": "source-manifest.v1.json",
+    "sha256": "sha256:d46a41c710c0b5b52b51e7619b059f0371844496377ddf32ce5682ccf01211ec"
+  },
+  "child_request": {
+    "path": "pending/skill-input-child-request.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+      "required": true,
+      "sha256_before": "sha256:e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc",
+      "sha256_after": "sha256:e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc",
+      "size_bytes": 6850,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:a8bfac1c66a2bf93d82f445e8268f8c45bfe8141a13ab4081f3540329b72f2a2",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "pending/semantic-decision.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "status": "insufficient"
+  },
+  "context_artifact": {
+    "path": "pending/skill-input-context.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": false,
+  "binding_hash": "sha256:e96b05a4d7617270620c6f0f9c56ba8e3d69c5c81bab8e6a04e8e19adfa0e288"
+}

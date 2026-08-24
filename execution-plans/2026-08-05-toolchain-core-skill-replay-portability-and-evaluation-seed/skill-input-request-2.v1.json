@@ -1,0 +1,18 @@
+{
+  "schema_version": "skill-input-child-request.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "create",
+  "contract_hash": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+  "source_manifest_hash": "sha256:253880680f58d66400fb0fcebd3379ae5121f5d7738d2e9ae41787695c319bbb",
+  "snapshot_root": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/skill-input-snapshot-2",
+  "output_root": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-input-2",
+  "execution_identity": "sha256:3c67c862886ad3838b970c2d8c9b9948cebe2017f0b92113c7d3cbfefdf492ea",
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 262144,
+  "input_mode": "serialized-snapshot-stdin",
+  "allowed_capabilities": [
+    "read-frozen-snapshot",
+    "write-context-output"
+  ],
+  "authorizes": []
+}

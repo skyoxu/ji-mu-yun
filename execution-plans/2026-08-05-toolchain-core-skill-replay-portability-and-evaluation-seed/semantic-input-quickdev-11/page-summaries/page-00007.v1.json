@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json",
+    "source_sha256": "sha256:32765f6b2742eb5f7ff3abbc70c39fde88bbfdf95cc63cd73fa1d62dc0d0fefb",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 197,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:32765f6b2742eb5f7ff3abbc70c39fde88bbfdf95cc63cd73fa1d62dc0d0fefb"
+  },
+  "status": "accepted",
+  "summary": "schema jimuyun.tc-d1-downstream-replay-receipt.v1; consumer workflow-model-routing-control-plane; downstream validator replay passed; status pass; authorizes none"
+}

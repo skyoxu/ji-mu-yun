@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Skill handles one explicit execution-plans/<target> refactor acceptance plan; requires frozen baseline, candidate custody, complete manifests, contract, typed request, action DAG, command registry, and Skill-input receipt; prefer commit candidate, otherwise require frozen dirty/proposed snapshot; never infer baseline as candidate^ or scope from worktree; Quick Dev implementation-complete receipt is authoritative and stale candidate/terminal bindings trigger controlled Quick Dev rerun; build Locator-bound knowledge context and hash-verified read-set, with catalog_stale degraded only; missing or unsafe prerequisites yield prerequisite_blocked; derive run identity from input, contract, context, receipt, and context hashes, resume exact bindings, preserve stale predecessors; deterministic_only finalizes via receipt replay without Bootstrap; semantic routes require repository-owned inspect-lineage and typed prepare-bootstrap route; Bootstrap launch/high-cost acknowledgement remains external; later reentry requires typed trigger, recommendation, confidence, and user confirmation; P2 findings close deterministically; P0/P1 repair requires Quick Dev handoff and audit-repair-completeness; three semantic rounds lead manual_pause, never Round 4; ADR-0054 closure requires exact challenge, protocol review/composite authority, acknowledgement, and finalize-manual-pause-closure; exact reuse only bootstrap-import-envelope.v3 with current clean finalized run, matching lineage, bindings, profile, policy, and attestation; model routing is no-launch except policy-owned complex recovery; modes evidence_only default and controlled_validation; unsupported pure Godot inputs; acceptance pass never authorizes commit, release, archive, or deploy."
+}

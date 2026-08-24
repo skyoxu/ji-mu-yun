@@ -1561,6 +1561,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "validatorRef": "manual phase exit",
         }
 
+    def test_value_hash_preserves_finite_confidence_projection(self) -> None:
+        self.assertTrue(bootstrap.value_hash({"confidence": 0.95}).startswith("sha256:"))
+
     def authority_root_ref(self) -> dict[str, str]:
         profile = bootstrap.load_profile("bootstrap-upstream-plan")
         return bootstrap.authority_root_reference(profile)

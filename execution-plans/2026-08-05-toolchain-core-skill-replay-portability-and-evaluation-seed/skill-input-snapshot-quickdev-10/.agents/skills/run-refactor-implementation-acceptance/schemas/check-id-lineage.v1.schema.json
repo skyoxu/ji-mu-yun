@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","additionalProperties":false,"properties":{"authorizes":{"const":[]},"checks":{"type":"array"},"events":{"type":"array"},"schemaVersion":{"const":"check-id-lineage.v1"}},"required":["schemaVersion","checks","events","authorizes"],"title":"Check ID Lineage","type":"object"}

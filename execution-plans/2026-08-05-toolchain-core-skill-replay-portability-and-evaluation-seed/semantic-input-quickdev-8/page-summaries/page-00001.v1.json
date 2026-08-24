@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Purpose: deterministic implementation-acceptance evidence for one explicit refactor plan; never implement, approve review, commit, release, deploy, or authorize protected handoff; require repository-relative execution-plans/<target>, resolved candidate and explicit frozen baseline (never infer candidate^); missing/ambiguous prerequisites => prerequisite_blocked before start-or-resume; require implementation contract or current compact-vdd-acceptance-prerequisite-bundle, complete manifests, typed request, action DAG, command registry; compact projection consumes current Quick Dev implementation-complete receipt and explicit sorted scope; candidate assembly is one immutable evidence transaction; create Locator-bound Acceptance knowledge context and typed Skill-input receipt via canonical workflows; catalog_stale => degraded only, other knowledge failures => repair-required; validate read-set and refresh hashes without widening selection; derive run from canonical input, contract, context, Skill-input bindings and resume append-only, never overwrite stale artifacts; deterministic_only replays receipts and finalizes acceptance, semantic routes require repository-owned Bootstrap decision/projection and bounded route; high-cost model launch requires Bootstrap acknowledgement and typed re-entry confirmation; P2-only closes deterministically, P0/P1 requires Quick Dev handoff and repair-completeness audit; lineage family is target-root based, max three semantic rounds, Round 4 prohibited, three rounds => manual_pause; ADR-0054 closure requires exact blocked predecessor, protocol review/composite authority, maintainer acknowledgement, then deterministic finalize; exact reuse only finalized v3 clean full/focused route with current bindings and immediate lineage predecessor; maintenance mode ai-native-single-maintainer shifts concurrency/injection severities; model router launches only policy-owned complex recovery, never routine actions; controlled_validation commands are registry-bound and isolated; Phase policy covers Phase candidates, toolchain policy covers workflow control plane, pure Godot unsupported; coverage uses added/modified PhaseA.Platform/**/*.cs executable lines and reports exclusions; checklist verification requires stable identity plus current matrix/implementation/test/evidence refs; findings, routes, audits, receipts carry authorizes=[] and remain non-authorizing until plan-local predicate."
+}

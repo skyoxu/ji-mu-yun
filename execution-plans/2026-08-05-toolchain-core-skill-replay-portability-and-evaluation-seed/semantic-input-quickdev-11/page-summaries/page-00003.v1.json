@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+    "source_sha256": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 777,
+    "start_line": 1,
+    "end_line": 22,
+    "content_sha256": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503"
+  },
+  "status": "accepted",
+  "summary": "ADR-0058 accepted; replay entrypoint is scripts/sc/skill_package_replay.py; use checked-in capability descriptor; resolve only declared validator root; detached probes and bounded capability resolution; replay receipts non-authorizing with authorizes empty; historical evidence referenced by hash; do not rewrite or promote historical records to quality baseline; cross-checkout replay preserves 2026-08-01 bytes and lifecycle ownership"
+}

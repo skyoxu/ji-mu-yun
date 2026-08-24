@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "source_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 16141,
+    "start_line": 1,
+    "end_line": 206,
+    "content_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  "status": "accepted",
+  "summary": "Standalone requirements MD routes to direct implementation; VDD create/repair requires explicit complete-directory request. Select standard/resumable/self-hosted before routing; resumable adds resume/dependency recovery and append-only 95 report; self-hosted adds protocol fixtures/migration checks. Ordinary route Sol/high; Sol/max only typed trigger with capability/shadow proof. Lifecycle: draft→plan-ready→implementation-authorized→implementation-complete→acceptance-passed→archived; ownership is separated. Slices require behavior, pre-change failure selector, GREEN target, dependents, recovery; VDD does not own RED. Repairs stay in original directory, preserve immutable history, use bounded rounds and hash-bound closure. Repair requires callsite inventory, exclusions, composition receipts, and changed/deleted content manifests. Mandatory knowledge preflight requires hash-verified Locator matches; invalid selection/integrity blocks. Skill-input adapter, typed semantic child launch, and require-ready validation precede artifact generation. Baseline/scope identity and changed paths are hash-bound. Resumable/self-hosted reports are append-only and non-authorizing. Review is optional; P2-only findings and transport retries do not create new rounds. Completion requires required artifacts, acceptance paths, RED/legacy record, stable repairs, and terminal full validation."
+}

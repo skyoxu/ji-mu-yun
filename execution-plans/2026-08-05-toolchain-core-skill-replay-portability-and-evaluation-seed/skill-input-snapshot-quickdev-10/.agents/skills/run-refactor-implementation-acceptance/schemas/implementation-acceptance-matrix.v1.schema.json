@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","additionalProperties":false,"properties":{"authorizes":{"const":[]},"rows":{"minItems":1,"type":"array"},"schemaVersion":{"const":"implementation-acceptance-matrix.v1"}},"required":["schemaVersion","rows","authorizes"],"title":"Implementation Acceptance Matrix","type":"object"}

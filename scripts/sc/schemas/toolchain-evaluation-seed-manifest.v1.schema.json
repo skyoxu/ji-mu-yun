@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "seeds", "baseline_status", "authorizes"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.toolchain-evaluation-seed-manifest.v1"},
+    "seeds": {"type": "array"},
+    "baseline_status": {"const": "non-authorizing-candidates"},
+    "authorizes": {"const": []}
+  },
+  "additionalProperties": true
+}

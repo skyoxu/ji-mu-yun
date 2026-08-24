@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Scope: deterministic implementation-acceptance evidence for one execution-plans/<target>; no target-code changes, approvals, commit, release, deploy, or model launch. Require explicit plan, candidate (prefer clean HEAD commit), frozen Git baseline (never infer candidate^), complete manifests, contract/prerequisite bundle, typed request, action DAG, command registry. Compact-VDD projection requires explicit sorted scope/refs/commands/actions/policy/context and current Quick Dev implementation-complete receipt; no dirty-worktree enumeration. Candidate assembly is atomic; historical/in artifacts excluded. Create Locator-bound Acceptance knowledge context and Skill-input receipt via canonical scripts; validate readiness; stale reconstructible inputs regenerate, partial/unredacted block. Persist append-only run keyed by canonical input, contract, context, Skill-input hashes; drift creates successor, never overwrite. deterministic_only replays controlled receipts then finalizes acceptance; semantic routes require repository-owned inspect-lineage, immutable prepare-bootstrap route, bounded Bootstrap handoff, high-cost/user confirmation gates. Knowledge catalog staleness is degraded/non-authorizing; other context failures repair-required. Exact reuse only bootstrap-import-envelope.v3 with current bindings, clean finalized v3, eligible route, immediate lineage predecessor/head. P2 is disposed via deterministic closure; P0/P1 repair requires Quick Dev handoff and audit-repair-completeness. Round policy: R1 full conformance; repaired clean path focused verifier; typed triggers propose complete review with confirmation; 3 rounds manual_pause, never Round 4. ADR-0054 manual-pause closure requires exact challenge, protocol review/composite authority, maintainer acknowledgement, deterministic finalization; cannot change verifier, launch model, reopen lineage, or authorize release. Maintenance mode ai-native-single-maintainer shifts concurrency/external-injection severities. Commands use hash-bound registries/snapshots; receipts replay current bytes; producer/consumer paths disjoint; tombstones for deletions. Coverage uses Phase changed executable lines only; checklist authority is explicit; pure Godot unsupported."
+}

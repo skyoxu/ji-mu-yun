@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","additionalProperties":false,"properties":{"authorizes":{"const":[]},"phases":{"minItems":1,"type":"array"},"schemaVersion":{"const":"phase-graph.v1"}},"required":["schemaVersion","phases","authorizes"],"title":"Acceptance Phase Graph","type":"object"}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/sc/config/skill-package-validator-capability.v1.json",
+    "source_sha256": "sha256:0432dc6ae3c8b9e50b5006df2bf46cc0409df71f1c995118400efa3fe86f83f6",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 324,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:0432dc6ae3c8b9e50b5006df2bf46cc0409df71f1c995118400efa3fe86f83f6"
+  },
+  "status": "accepted",
+  "summary": "capability_id skill-package-validator; package identity acceptance-package-v1; schema version jimuyun.skill-package-validator-capability.v1; validator entrypoint scripts/acceptance_cli.py; allowed root .agents/skills/run-refactor-implementation-acceptance; probe operation validate-package; no authorizations declared; single-page snapshot integrity metadata supplied"
+}

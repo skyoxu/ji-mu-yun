@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/historical-compatibility-replay.v1.json",
+    "source_sha256": "sha256:2837dc0009bc208dcc63813b5252e6b920fd9b9cfd59fc61ef3ea71788ceaf73",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 1072,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:2837dc0009bc208dcc63813b5252e6b920fd9b9cfd59fc61ef3ea71788ceaf73"
+  },
+  "status": "accepted",
+  "summary": "schema jimuyun.tc-d1-historical-compatibility-replay.v1; authorizes none; replay entrypoint scripts/sc/skill_package_replay.py; receipt execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json; receipt SHA-256 4fab1cbfc442a459de5a107af692d82961239f50e0f83520fc090e6ef0133409; historical validator execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py; historical command uses py -3; recorded result pass; validator SHA-256 b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8; evidence report execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md; evidence SHA-256 51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63; portability machine-bound"
+}

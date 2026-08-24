@@ -1,0 +1,206 @@
+{
+  "schema_version": "skill-input-read-coverage.v1",
+  "source_manifest_hash": "sha256:0c443e377b11d84b091daec6a75cf9858b5968e97c7d51934f368ca79705c0c0",
+  "input_mode": "paged-frozen-snapshot-stdin",
+  "chunk_bytes": 32768,
+  "segments": [
+    {
+      "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "source_sha256": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 31239,
+      "start_line": 1,
+      "end_line": 484,
+      "content_sha256": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86"
+    },
+    {
+      "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "source_sha256": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 16436,
+      "start_line": 1,
+      "end_line": 213,
+      "content_sha256": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba"
+    },
+    {
+      "source_path": "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+      "source_sha256": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 777,
+      "start_line": 1,
+      "end_line": 22,
+      "content_sha256": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503"
+    },
+    {
+      "source_path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md",
+      "source_sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 5258,
+      "start_line": 1,
+      "end_line": 100,
+      "content_sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63"
+    },
+    {
+      "source_path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "source_sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 2560,
+      "start_line": 1,
+      "end_line": 44,
+      "content_sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8"
+    },
+    {
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "source_sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 3837,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65"
+    },
+    {
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json",
+      "source_sha256": "sha256:32765f6b2742eb5f7ff3abbc70c39fde88bbfdf95cc63cd73fa1d62dc0d0fefb",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 197,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:32765f6b2742eb5f7ff3abbc70c39fde88bbfdf95cc63cd73fa1d62dc0d0fefb"
+    },
+    {
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json",
+      "source_sha256": "sha256:626c5fb62a240a5ee2dd23ccaa066fb6f0ef60c93486c06487f7a3fd221fde80",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 1088,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:626c5fb62a240a5ee2dd23ccaa066fb6f0ef60c93486c06487f7a3fd221fde80"
+    },
+    {
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/historical-compatibility-replay.v1.json",
+      "source_sha256": "sha256:2837dc0009bc208dcc63813b5252e6b920fd9b9cfd59fc61ef3ea71788ceaf73",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 1072,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:2837dc0009bc208dcc63813b5252e6b920fd9b9cfd59fc61ef3ea71788ceaf73"
+    },
+    {
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "source_sha256": "sha256:84966a42fcb7fb14b8da161abc757513d6b1c9fdb083004e60ac9a4c112f6ed4",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 18200,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:84966a42fcb7fb14b8da161abc757513d6b1c9fdb083004e60ac9a4c112f6ed4"
+    },
+    {
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
+      "source_sha256": "sha256:72afe3b11a41471808b6c25dea6358c5d8700b9e613e8084fb2b509a83316f2e",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 2025,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:72afe3b11a41471808b6c25dea6358c5d8700b9e613e8084fb2b509a83316f2e"
+    },
+    {
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/stable-candidate-replay-matrix.v1.json",
+      "source_sha256": "sha256:68126856c567edcb8225dbbba551f6a9b62a55930f5bfc7a11c08285360f32a8",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 2872,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:68126856c567edcb8225dbbba551f6a9b62a55930f5bfc7a11c08285360f32a8"
+    },
+    {
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+      "source_sha256": "sha256:3f3c288aced8a2a52d8fb5bde17759f220f966e3f4e6fc0571ba941778221b2b",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 840,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:3f3c288aced8a2a52d8fb5bde17759f220f966e3f4e6fc0571ba941778221b2b"
+    },
+    {
+      "source_path": "scripts/sc/config/skill-package-validator-capability.v1.json",
+      "source_sha256": "sha256:0432dc6ae3c8b9e50b5006df2bf46cc0409df71f1c995118400efa3fe86f83f6",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 324,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:0432dc6ae3c8b9e50b5006df2bf46cc0409df71f1c995118400efa3fe86f83f6"
+    },
+    {
+      "source_path": "scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json",
+      "source_sha256": "sha256:a1df844c281711277b637c5a470b6a15d60d0e24c44e2ad3c7b6cc23041116ab",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 441,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:a1df844c281711277b637c5a470b6a15d60d0e24c44e2ad3c7b6cc23041116ab"
+    },
+    {
+      "source_path": "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+      "source_sha256": "sha256:0ffe7f3d6b15d31b4a32f7f4708fbf35e3596e4dc55efeb49cd3d5e7b53e7c98",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 370,
+      "start_line": 1,
+      "end_line": 2,
+      "content_sha256": "sha256:0ffe7f3d6b15d31b4a32f7f4708fbf35e3596e4dc55efeb49cd3d5e7b53e7c98"
+    },
+    {
+      "source_path": "scripts/sc/skill_package_replay.py",
+      "source_sha256": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 5904,
+      "start_line": 1,
+      "end_line": 61,
+      "content_sha256": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582"
+    },
+    {
+      "source_path": "scripts/sc/tests/test_skill_package_replay.py",
+      "source_sha256": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6",
+      "ordinal": 1,
+      "total": 1,
+      "start_byte": 0,
+      "end_byte": 1539,
+      "start_line": 1,
+      "end_line": 27,
+      "content_sha256": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6"
+    }
+  ]
+}

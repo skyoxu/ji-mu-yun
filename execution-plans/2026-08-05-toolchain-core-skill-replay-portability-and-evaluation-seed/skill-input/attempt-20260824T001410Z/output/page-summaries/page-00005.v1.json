@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+    "source_sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 3837,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65"
+  },
+  "status": "accepted",
+  "summary": "schema jimuyun.tc-d1-command-registry.v1; authorizations none; commands run from repo root with shell disabled; plan-validator; plan-validator-tests; RMAP-S0/S1/S2/S3 predicate validators; skill-replay-tests; historical replay for run-refactor-implementation-acceptance using configured capability and detached positive/negative probes; stable-candidate matrix replay; vdd-skill-contract; vdd-skill-tests; acceptance-package-validation; acceptance-targeted-tests; downstream-workflow-model-routing-replay; terminal-implementation-validation; timeouts 120-1800s, with S3/downstream 1200s and terminal 1800s; no execution outcomes or pass/fail decisions supplied"
+}

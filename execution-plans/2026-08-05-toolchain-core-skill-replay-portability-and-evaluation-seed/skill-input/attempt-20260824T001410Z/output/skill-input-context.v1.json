@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-24T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The acceptance skill coordinates deterministic evidence for one explicit execution plan. It requires frozen baselines, complete manifests, contracts, registries, typed requests, hash-bound candidate and knowledge context, validated inputs, and fail-closed prerequisite checks. It does not change code or perform release actions.",
+      "title": "Acceptance skill"
+    },
+    {
+      "content": "The VDD execution plan separates lifecycle ownership, requires complete-directory requests for VDD work, hash-bound scope and knowledge preflight, bounded repairs, immutable history, acceptance evidence, and terminal validation. The completion report records implementation-complete status after policy, projection, migration, replay, package, CLI, schema, and diff checks. The validator requires five files and six registered Python commands to pass.",
+      "title": "Execution plan and validation"
+    },
+    {
+      "content": "The command registry defines shell-free repository-root validators, replay probes, package and workflow checks, and bounded timeouts, without execution outcomes. The implementation contract covers RMAP slices, historical replay, negative and positive probes, stable-candidate evaluation, downstream replay, receipts, repair closures, lifecycle distinctions, and forbidden unrelated changes.",
+      "title": "Toolchain contract"
+    }
+  ],
+  "source_manifest_hash": "sha256:4fbafcca8bfd6545adc2f6dfd1d3d4ece40f0494197d8774e67a722256f00914",
+  "truncated": false
+}

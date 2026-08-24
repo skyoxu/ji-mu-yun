@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json",
+    "source_sha256": "sha256:a1df844c281711277b637c5a470b6a15d60d0e24c44e2ad3c7b6cc23041116ab",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 441,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:a1df844c281711277b637c5a470b6a15d60d0e24c44e2ad3c7b6cc23041116ab"
+  },
+  "status": "accepted",
+  "summary": "Schema ID jimuyun.skill-package-validation-receipt.v1; JSON Schema draft 2020-12; required fields: schema_version, status, target_package, resolved_validator, authorizes; schema_version fixed to package-validation-receipt.v1 identifier; status limited to pass or expected-failure; target_package nonempty string; resolved_validator object; authorizes fixed to empty array; additional properties allowed"
+}

@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "source_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 30924,
+    "start_line": 1,
+    "end_line": 477,
+    "content_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  "status": "accepted",
+  "summary": "Skill run-refactor-implementation-acceptance coordinates deterministic acceptance evidence for one explicit execution plan; it never changes target code, approves review, commits, releases, or deploys; requires repository-relative execution-plans target, explicit frozen baseline, resolved candidate custody, complete manifests, contracts, DAG, registry, and typed request; missing or ambiguous prerequisites yield prerequisite_blocked before start-or-resume; implementation-complete compact VDD projection must consume a current Quick Dev receipt and explicit scope; candidate assembly and knowledge context are hash-bound, append-only, Locator-derived, and cannot infer dirty scope; Skill-input requests must be typed, generated, validated ready, and passed to start-or-resume; derived runs reuse exact bindings, while drift creates successor runs and legacy artifact-only runs remain replay-only; deterministic_only replays receipts and finalizes without Bootstrap; semantic routes require repository-owned inspect-lineage, prepare-bootstrap, bounded review, explicit high-cost acknowledgement, and typed re-entry confirmation; Bootstrap routes are deterministic_only, focused_repair_verification, full_implementation_conformance, or manual_pause; P0/P1 repair requires Quick Dev handoff and audit-repair-completeness, with round budget capped at three and no Round 4; P2 findings close deterministically; manual-pause closure requires ADR-0054 protocol review, exact mappings, maintainer acknowledgement, and finalize-manual-pause-closure; exact reuse requires finalized v3 clean envelope, current bindings, eligible route, and lineage-head identity; review history and cost calibration are non-authorizing; controlled validation permits only registered shell-free commands in isolated roots; Phase/toolchain policies must cover changed paths, pure Godot inputs unsupported; model launch is external and only policy-defined recovery triggers may request Sol/high; incomplete plan predicates, stale receipts, unsafe paths, schema/read-set drift, or missing evidence fail closed."
+}

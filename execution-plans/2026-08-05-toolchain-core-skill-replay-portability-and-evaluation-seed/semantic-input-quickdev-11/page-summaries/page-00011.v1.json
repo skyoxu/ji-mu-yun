@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
+    "source_sha256": "sha256:72afe3b11a41471808b6c25dea6358c5d8700b9e613e8084fb2b509a83316f2e",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 2025,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:72afe3b11a41471808b6c25dea6358c5d8700b9e613e8084fb2b509a83316f2e"
+  },
+  "status": "accepted",
+  "summary": "Historical replay receipt pass; schema jimuyun.tc-d1-historical-replay-receipt.v1; no authorizations; wrapper replay entrypoint scripts/sc/skill_package_replay.py with replay-package target .agents/skills/run-refactor-implementation-acceptance and capability file; detached-positive-negative probes: positive pass, negative expected-failure; wrapper exit 0; capability sha256 bd728dc93eb4fa871f0dd9a61fa3490adaa1d88cf781e61d61719445bb985cb0; target identity acceptance-package-v1, manifest sha256 c24c1cff2cbf972a43cea78cfd292c2745b29237ce47ca8a8094d179c4877c4c; resolved validator acceptance_cli.py, sha256 b64a766120d73d136292243401b2395c45c0834914a43403d8c2cf18eddbb001, pass with no findings; validation schema jimuyun.skill-package-validation-receipt.v1; historical validator command recorded pass; historical portability machine-bound; no unresolved ambiguities"
+}

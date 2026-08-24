@@ -22,6 +22,17 @@ def load_validator():
 
 
 class ValidateImplementationTests(unittest.TestCase):
+    def test_s3_missing_downstream_receipt_has_terminal_failure_family(self) -> None:
+        module = load_validator()
+        self.assertEqual(
+            "terminal-consumer-replay-incomplete",
+            module.failure_family_for_errors(
+                [
+                    "required implementation artifact is missing: execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json"
+                ],
+                "RMAP-S3",
+            ),
+        )
     def test_historical_candidate_matches_the_frozen_baseline(self) -> None:
         module = load_validator()
         errors: list[str] = []

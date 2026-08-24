@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-24T00:00:00+09:00",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The acceptance skill defines a fail-closed workflow for execution-plan acceptance. It requires explicit candidates, baselines, contracts, manifests, typed requests, DAGs, registries, lineage, bound evidence, and deterministic replay. It permits no implementation, review, release, or deployment authorization and defaults to evidence-only validation.",
+      "title": "Acceptance Skill"
+    },
+    {
+      "content": "The VDD skill requires authority and reference preflight, explicit lifecycle states, bounded repair rounds, immutable history, complete validation, and typed knowledge-input gates. The completion report records policy and projection repairs, validator success, and preserved non-authorizing outcomes. The implementation validator checks required artifacts and registered commands and can establish implementation-complete only.",
+      "title": "VDD And Completion"
+    },
+    {
+      "content": "The command registry defines fifteen repository-local Python validation and replay commands with disabled shell execution and bounded timeouts. The implementation contract covers acceptance cases, repository validation, historical replay, evaluation seeds, stable-candidate matrices, downstream replay, terminal closure, allowed repair areas, and preservation of non-authorizing evidence.",
+      "title": "Toolchain Contract"
+    }
+  ],
+  "source_manifest_hash": "sha256:8b7389e9416450c936aefd44dc0963120368454eb6df5b2b9f2f4f6d0b96e012",
+  "truncated": false
+}

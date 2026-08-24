@@ -539,7 +539,18 @@ def check_json_artifacts(slice_id: str, errors: list[str]) -> None:
         receipt = load_json(PLAN_ROOT / "downstream-replay-receipt.v1.json")
         if receipt.get("authorizes") != [] or receipt.get("status") != "pass":
             errors.append("downstream replay receipt is absent, failed or authorizing")
-        check_skill_routes(errors)
+            check_skill_routes(errors)
+
+
+def failure_family_for_errors(errors: list[str], slice_id: str) -> str | None:
+    """Classify only the declared S3 missing-consumer-replay failure."""
+    if slice_id == "RMAP-S3" and any(
+        error.startswith("required implementation artifact is missing:")
+        and error.endswith("/downstream-replay-receipt.v1.json")
+        for error in errors
+    ):
+        return "terminal-consumer-replay-incomplete"
+    return None
 
 
 def current_mutable_authority_hashes() -> dict[str, str]:
@@ -588,6 +599,7 @@ def main() -> int:
         "predicate": "implementation-complete" if full else "slice-ready",
         "selected_slices": selected,
         "errors": errors,
+        "failure_family": failure_family_for_errors(errors, args.slice) if errors and args.slice else None,
         "results": results,
         "mutable_authority_source_hashes": current_mutable_authority_hashes(),
         "authorizes": ["implementation-complete"] if full and not errors else [],

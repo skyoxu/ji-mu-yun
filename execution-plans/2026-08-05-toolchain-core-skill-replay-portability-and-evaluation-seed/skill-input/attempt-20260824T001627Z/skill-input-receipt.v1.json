@@ -1,0 +1,178 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "request_binding": {
+    "request": {},
+    "consumer": "quick-dev-tdd-adapter",
+    "operation": "execute",
+    "target": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+    "route_identity": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+    "source_roles": {
+      "plan_directory": [
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed"
+      ],
+      "target_files": [
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json"
+      ]
+    }
+  },
+  "request_hash": "sha256:0b35ad09f3c21b57d6cfc0c6340ccda29eb1abca1f5e1a28451b4fe0f4393e89",
+  "target": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "route_identity": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "repository_identity": {
+    "head": "f662e9d542aea826b1d37a7dbde09196edd0bcf6",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:02879f9dc0ac80ed3d99814fb9747c9a3917a4907a10acd19e0c3b079648e81f",
+    "source_selection_hash": "sha256:c163ef63a09ad2b5c0cc6074539460efc2fb22bd331ac61df50437d00267861e",
+    "selected_source_content_root": "sha256:10501ab987893b2ebd6b9faa3d4481cd1437835c969d6680f58f1664c2b39787"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-23T16:16:44.368008Z",
+  "contract_hash": "sha256:60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374",
+  "source_manifest": {
+    "path": "snapshot/source-manifest.v1.json",
+    "sha256": "sha256:8b7389e9416450c936aefd44dc0963120368454eb6df5b2b9f2f4f6d0b96e012"
+  },
+  "child_request": {
+    "path": "child-request.v1.json",
+    "sha256": "sha256:3d938105190540a8daa8344cdd96ae5471409607258f31261c7dc6949cf6c7e7"
+  },
+  "sources": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "required": false,
+      "sha256_before": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+      "sha256_after": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+      "size_bytes": 30924,
+      "line_count": 476,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 476
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "required": false,
+      "sha256_before": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "sha256_after": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "size_bytes": 16141,
+      "line_count": 205,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 205
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md",
+      "required": false,
+      "sha256_before": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63",
+      "sha256_after": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63",
+      "size_bytes": 5258,
+      "line_count": 99,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 99
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "required": false,
+      "sha256_before": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+      "sha256_after": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+      "size_bytes": 2560,
+      "line_count": 43,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 43
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "required": true,
+      "sha256_before": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "sha256_after": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "size_bytes": 3928,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "required": true,
+      "sha256_before": "sha256:0be25ea06bec1845715c3f5951ef493e01dcb49903b196c7e108c36ccff82c7d",
+      "sha256_after": "sha256:0be25ea06bec1845715c3f5951ef493e01dcb49903b196c7e108c36ccff82c7d",
+      "size_bytes": 19232,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:56db579f2e19608f3cabac64d081236dd14a0eeaf704bfebc435e80c3d51e2f3",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "output/semantic-decision.v1.json",
+    "sha256": "sha256:aac792af7fcefa5697f87dbf66fc985e94150e22732280aa32c41723b6105c5e"
+  },
+  "context_artifact": {
+    "path": "output/skill-input-context.v1.json",
+    "sha256": "sha256:3b567cf813e11afc668ef9776254b589e071c530486f06b956e0d21c093f76d6"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:b8dba8c457fa09f153379f50e7a566d67d7febb62f92c908d966ff6fd2cdef3a"
+}

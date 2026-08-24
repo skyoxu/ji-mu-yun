@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+    "source_sha256": "sha256:84966a42fcb7fb14b8da161abc757513d6b1c9fdb083004e60ac9a4c112f6ed4",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 18200,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:84966a42fcb7fb14b8da161abc757513d6b1c9fdb083004e60ac9a4c112f6ed4"
+  },
+  "status": "accepted",
+  "summary": "Plan toolchain-core-skill-replay-portability-and-evaluation-seed; self-hosted, schema jimuyun.tc-d1.implementation-contract.v1; backend has no hidden state, provider scheduling, or subprocess ownership; S0 adds repository validator capability and detached positive/negative probes; S1 preserves byte-identical 8/01 historical validator replay with detached negative exit 1 and positive exit 0; S2 defines non-authorizing evaluation seeds and exactly-once stable-candidate replay matrix across positive, negative, historical, dirty-baseline, knowledge-read-set, and closed-policy cases; S3 binds skill consumers, downstream replay, receipts, and terminal implementation-complete validation; lifecycle authorization is state-specific and never implies acceptance, release, or archival; manual evidence authorizes implementation only; required bindings include path and sha256 plus three native repair closures; allowed edits are limited to listed scripts, schemas, skills, tests, docs, receipts, and plan state; forbidden trees include 8/01 and 7/31 execution plans, PhaseA, runtime, logs, _bmad, bmad skills, and gds skills; recovery preserves failed receipts/history and disables new callers when needed; no explicit ambiguities identified"
+}

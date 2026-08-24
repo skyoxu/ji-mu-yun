@@ -1,0 +1,15 @@
+{
+  "descriptor": {
+    "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+    "source_sha256": "sha256:56db579f2e19608f3cabac64d081236dd14a0eeaf704bfebc435e80c3d51e2f3",
+    "ordinal": 1,
+    "total": 1,
+    "start_byte": 0,
+    "end_byte": 18089,
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "sha256:56db579f2e19608f3cabac64d081236dd14a0eeaf704bfebc435e80c3d51e2f3"
+  },
+  "status": "accepted",
+  "summary": "Plan toolchain-core-skill-replay-portability-and-evaluation-seed; schema jimuyun.tc-d1.implementation-contract.v1; authority authority-manifest.v1.json; backend has no hidden state, scheduling, or subprocess ownership; slices RMAP-S0..S3 cover requirements TC-D1-001..013 and acceptance TC-D1-A01..A17; S0 adds repository validator capability, detached positive/negative probes, and package tests; S1 preserves frozen 8-01 bytes and records historical replay bindings; S2 adds non-authorizing evaluation seeds and exactly-once stable-candidate matrix; S3 integrates skill consumers, downstream replay, receipts, plan/resume closure; historical replay requires historical validator/evidence/current wrapper bindings, negative exit 1, positive exit 0, terminal receipt equality; seed evidence needs native item plus path/sha256 bindings and three named repair closures; lifecycle distinguishes implementation-authorized from implementation-complete, acceptance, release, archive; manual disposition authorizes implementation only; stable matrix authorizes nothing; forbidden changes include 8-01/7-31 plans, PhaseA/runtime/logs, BMAD/GDS skills; recovery preserves failed receipts/history and disables new routes when needed"
+}

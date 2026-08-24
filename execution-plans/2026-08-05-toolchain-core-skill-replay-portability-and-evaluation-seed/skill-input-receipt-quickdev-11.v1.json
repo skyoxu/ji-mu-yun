@@ -1,0 +1,418 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "request_binding": {
+    "request": {},
+    "consumer": "quick-dev-tdd-adapter",
+    "operation": "execute",
+    "target": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+    "route_identity": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+    "source_roles": {
+      "plan_directory": [
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed"
+      ],
+      "target_files": [
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json"
+      ]
+    }
+  },
+  "request_hash": "sha256:0b35ad09f3c21b57d6cfc0c6340ccda29eb1abca1f5e1a28451b4fe0f4393e89",
+  "target": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "route_identity": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "repository_identity": {
+    "head": "f662e9d542aea826b1d37a7dbde09196edd0bcf6",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:7348937f8a762e29276a2c49f6f7e2beaa24d542e3cb82d0f8b8306d985f3de9",
+    "source_selection_hash": "sha256:c163ef63a09ad2b5c0cc6074539460efc2fb22bd331ac61df50437d00267861e",
+    "selected_source_content_root": "sha256:2782eb6d910c056346768b46328f9143ced8885c7a732c1aa3d9e201103deea7"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-24T04:42:11.316001Z",
+  "contract_hash": "sha256:60461969a0e20b7240975f1d7deec9b1ba94a443a8390502e1faab452ab0b374",
+  "source_manifest": {
+    "path": "skill-input-snapshot-quickdev-11/source-manifest.v1.json",
+    "sha256": "sha256:0c443e377b11d84b091daec6a75cf9858b5968e97c7d51934f368ca79705c0c0"
+  },
+  "child_request": {
+    "path": "skill-input-request-quickdev-11.v1.json",
+    "sha256": "sha256:06dc48610c4a22c41ecfbee23ec9f972b508301029b0ce35c2ca863db671d3a9"
+  },
+  "sources": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "required": false,
+      "sha256_before": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86",
+      "sha256_after": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86",
+      "size_bytes": 31239,
+      "line_count": 483,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 483
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "required": false,
+      "sha256_before": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba",
+      "sha256_after": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba",
+      "size_bytes": 16436,
+      "line_count": 212,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 212
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+      "required": false,
+      "sha256_before": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503",
+      "sha256_after": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503",
+      "size_bytes": 777,
+      "line_count": 21,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 21
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md",
+      "required": false,
+      "sha256_before": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63",
+      "sha256_after": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63",
+      "size_bytes": 5258,
+      "line_count": 99,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 99
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "required": false,
+      "sha256_before": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+      "sha256_after": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+      "size_bytes": 2560,
+      "line_count": 43,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 43
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "required": true,
+      "sha256_before": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "sha256_after": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "size_bytes": 3928,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json",
+      "required": true,
+      "sha256_before": "sha256:530e8dbf6435df53eec59aeff7c34dc9e94eda27d3c40be1546bf183f0a4a8cf",
+      "sha256_after": "sha256:530e8dbf6435df53eec59aeff7c34dc9e94eda27d3c40be1546bf183f0a4a8cf",
+      "size_bytes": 213,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:32765f6b2742eb5f7ff3abbc70c39fde88bbfdf95cc63cd73fa1d62dc0d0fefb",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json",
+      "required": true,
+      "sha256_before": "sha256:940e1c029dfcfaeaa786aa0961b496445cbfc70f9a52dcf9c0af1a69b5d9f432",
+      "sha256_after": "sha256:940e1c029dfcfaeaa786aa0961b496445cbfc70f9a52dcf9c0af1a69b5d9f432",
+      "size_bytes": 1394,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:626c5fb62a240a5ee2dd23ccaa066fb6f0ef60c93486c06487f7a3fd221fde80",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/historical-compatibility-replay.v1.json",
+      "required": true,
+      "sha256_before": "sha256:cf192dcda9722dede8e453c218307e044ba18eaeca37bc2024e44ae3e3aa4946",
+      "sha256_after": "sha256:cf192dcda9722dede8e453c218307e044ba18eaeca37bc2024e44ae3e3aa4946",
+      "size_bytes": 1210,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:2837dc0009bc208dcc63813b5252e6b920fd9b9cfd59fc61ef3ea71788ceaf73",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "required": true,
+      "sha256_before": "sha256:0f9cb835d4a6e34936ade1c4f0f6e62e94417c8d3e8ac7ab5d827a9cfcfe168f",
+      "sha256_after": "sha256:0f9cb835d4a6e34936ade1c4f0f6e62e94417c8d3e8ac7ab5d827a9cfcfe168f",
+      "size_bytes": 19343,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:84966a42fcb7fb14b8da161abc757513d6b1c9fdb083004e60ac9a4c112f6ed4",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
+      "required": true,
+      "sha256_before": "sha256:4fab1cbfc442a459de5a107af692d82961239f50e0f83520fc090e6ef0133409",
+      "sha256_after": "sha256:4fab1cbfc442a459de5a107af692d82961239f50e0f83520fc090e6ef0133409",
+      "size_bytes": 2106,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:72afe3b11a41471808b6c25dea6358c5d8700b9e613e8084fb2b509a83316f2e",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/stable-candidate-replay-matrix.v1.json",
+      "required": true,
+      "sha256_before": "sha256:7f5d4dafebc0cd89aa03e4ab71b5e37496961128765fd2501ca0e9ecf365fa53",
+      "sha256_after": "sha256:7f5d4dafebc0cd89aa03e4ab71b5e37496961128765fd2501ca0e9ecf365fa53",
+      "size_bytes": 2983,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:68126856c567edcb8225dbbba551f6a9b62a55930f5bfc7a11c08285360f32a8",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+      "required": true,
+      "sha256_before": "sha256:2b180f425e088c32dae8a902b1d51cf64ea07016bc5a98b3f25a1069d0fb62c5",
+      "sha256_after": "sha256:2b180f425e088c32dae8a902b1d51cf64ea07016bc5a98b3f25a1069d0fb62c5",
+      "size_bytes": 884,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:3f3c288aced8a2a52d8fb5bde17759f220f966e3f4e6fc0571ba941778221b2b",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "scripts/sc/config/skill-package-validator-capability.v1.json",
+      "required": false,
+      "sha256_before": "sha256:bd728dc93eb4fa871f0dd9a61fa3490adaa1d88cf781e61d61719445bb985cb0",
+      "sha256_after": "sha256:bd728dc93eb4fa871f0dd9a61fa3490adaa1d88cf781e61d61719445bb985cb0",
+      "size_bytes": 353,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:0432dc6ae3c8b9e50b5006df2bf46cc0409df71f1c995118400efa3fe86f83f6",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json",
+      "required": false,
+      "sha256_before": "sha256:e66c0673805ab7d3100ec0ffc83ecd61710207932ffd44f38dfde513315af20f",
+      "sha256_after": "sha256:e66c0673805ab7d3100ec0ffc83ecd61710207932ffd44f38dfde513315af20f",
+      "size_bytes": 507,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:a1df844c281711277b637c5a470b6a15d60d0e24c44e2ad3c7b6cc23041116ab",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+      "required": false,
+      "sha256_before": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+      "sha256_after": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+      "size_bytes": 425,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:0ffe7f3d6b15d31b4a32f7f4708fbf35e3596e4dc55efeb49cd3d5e7b53e7c98",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "scripts/sc/skill_package_replay.py",
+      "required": false,
+      "sha256_before": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582",
+      "sha256_after": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582",
+      "size_bytes": 5904,
+      "line_count": 60,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:f862dff717a8b2c11f8fe4064a70ec6a67c0a46dfb2f0519f42bc6d8ea311582",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 60
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "scripts/sc/tests/test_skill_package_replay.py",
+      "required": false,
+      "sha256_before": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6",
+      "sha256_after": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6",
+      "size_bytes": 1539,
+      "line_count": 26,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 26
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "semantic-input-quickdev-11/semantic-decision.v1.json",
+    "sha256": "sha256:ba47cf295eef7f8d83d924712baf874846a857e7668ea601fd6ba864d12b02d2"
+  },
+  "context_artifact": {
+    "path": "semantic-input-quickdev-11/skill-input-context.v1.json",
+    "sha256": "sha256:d86c2266911072e5a632306409152602ea7cd121cd718f6a550c1437e0dec347"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:dbc485f69c1698a735dff5121a9c222067c33a2c57052def41667afdaed7dd8c"
+}

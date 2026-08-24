@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-23T15:55:11.984660Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Plan toolchain-core-skill-replay-portability-and-evaluation-seed preserves the historical 2026-08-01 plan while adding separately owned validation and replay evidence.",
+      "title": "Scope"
+    },
+    {
+      "content": "Provide a repository-relative Skill package validator, bounded capability resolution, fail-closed detached validation, compatibility replay records, append-only evaluation seeds, stable-versus-candidate matrices, workflow-model-routing replay, deterministic rollback, and non-authorizing receipts.",
+      "title": "Requirements"
+    },
+    {
+      "content": "Preserve historical bytes and lifecycle state. Exclude hosted runtimes, live workspaces, browser or API access, account changes, sandbox changes, installed BMAD or GDS files, active later-phase requirements, autonomous Skill modification, learned ranking, and reinforcement learning.",
+      "title": "Boundaries"
+    }
+  ],
+  "source_manifest_hash": "sha256:253880680f58d66400fb0fcebd3379ae5121f5d7738d2e9ae41787695c319bbb",
+  "truncated": false
+}

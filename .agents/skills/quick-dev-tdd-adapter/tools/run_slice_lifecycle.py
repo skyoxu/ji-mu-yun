@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import subprocess
 from typing import Any
+from pathlib import PurePosixPath
 
 
 TOOLS = Path(__file__).resolve().parent
@@ -27,7 +28,13 @@ def _command(path: str) -> dict[str, Any]:
     required = {"id", "executable", "argv", "cwd", "timeout_seconds", "shell"}
     if not isinstance(document, dict) or set(document) != required or document.get("shell") is not False:
         raise ValueError("command must be a structured shell-free descriptor")
-    if document.get("cwd") != "." or not isinstance(document.get("argv"), list) or any(not isinstance(item, str) for item in document["argv"]):
+    cwd = document.get("cwd")
+    if not isinstance(cwd, str) or "\\" in cwd:
+        raise ValueError("command descriptor has an unsafe working directory or arguments")
+    cwd_path = PurePosixPath(cwd)
+    if cwd_path.is_absolute() or ".." in cwd_path.parts or cwd != cwd_path.as_posix():
+        raise ValueError("command descriptor has an unsafe working directory or arguments")
+    if not isinstance(document.get("argv"), list) or any(not isinstance(item, str) for item in document["argv"]):
         raise ValueError("command descriptor has an unsafe working directory or arguments")
     return document
 

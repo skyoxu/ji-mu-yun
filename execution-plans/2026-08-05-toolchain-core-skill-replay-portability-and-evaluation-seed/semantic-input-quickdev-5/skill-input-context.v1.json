@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-24T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "Defines deterministic implementation-acceptance evidence for one execution plan. Requires frozen Git baseline, complete manifests, contract and prerequisite bundles, typed request, action DAG, command registry, bounded knowledge context, and canonical receipts. Candidate assembly is atomic; stale or partial inputs block. Deterministic replay and semantic routes have explicit lineage, repair, confirmation, and round limits. Acceptance, release, deployment, and model launch remain separate outcomes.",
+      "title": "Acceptance Skill"
+    },
+    {
+      "content": "VDD planning selects the least-complex profile, records behavior and recovery per slice, freezes knowledge through required preflight, and advances through implementation-complete to acceptance-passed only after terminal validation. Repairs preserve history and use hash-bound closures. The completion report records policy closure, manifests, overlays, validator and replay passes, while stating that target acceptance, release, and archive are not completed.",
+      "title": "VDD And Completion"
+    },
+    {
+      "content": "The validator checks required acceptance-toolchain files and runs six registered commands, reporting implementation-complete only. The command registry binds repository-root commands, plan paths, predicates, replay targets, and timeouts. The self-hosted contract requires repository-owned validation, byte-preserving historical replay with detached negative and positive probes, non-authorizing evaluation seeds, stable matrices, downstream replay, terminal closure, and preservation of failed evidence.",
+      "title": "Toolchain Contract"
+    }
+  ],
+  "source_manifest_hash": "sha256:3bd57a60c6593314cb342aa5cdc4d5b88622dd4c28991ed54567d9d1aec1f8b3",
+  "truncated": false
+}

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-24T00:00:00Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The acceptance workflow requires an explicit refactor plan, frozen baseline, complete manifests, typed requests, action DAG, command registry, and validated knowledge bindings. It supports deterministic replay, bounded semantic recovery, strict lineage, controlled validation, coverage reporting, and non-authorizing evidence artifacts.",
+      "title": "Acceptance Skill"
+    },
+    {
+      "content": "The VDD workflow creates or repairs complete execution-plan directories with explicit profiles, authority and lifecycle gates, slice behavior and recovery details, append-only repair history, knowledge verification, observable acceptance evidence, negative-path records, and terminal validation. The completion report records three repair rounds and confirms implementation completion without approving acceptance, release, or archive.",
+      "title": "VDD And Completion"
+    },
+    {
+      "content": "The implementation validator checks required toolchain files and six registered commands, returning implementation-complete only when all pass. The command registry defines repository-root Python commands and replay targets. The implementation contract defines self-hosted replay, historical compatibility probes, evaluation matrices, downstream integration, deterministic receipt comparison, and empty global authorization.",
+      "title": "Validation And Contracts"
+    }
+  ],
+  "source_manifest_hash": "sha256:3bd57a60c6593314cb342aa5cdc4d5b88622dd4c28991ed54567d9d1aec1f8b3",
+  "truncated": false
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "sources": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+      "semantic_snapshot_sha256": "sha256:87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "semantic_snapshot_sha256": "sha256:3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md",
+      "sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63",
+      "semantic_snapshot_sha256": "sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+      "semantic_snapshot_sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "sha256": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "semantic_snapshot_sha256": "sha256:2f1bb0c0457e989ae56d5185662d956af145939851d00212a2c89e596e402c65",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "sha256": "sha256:0be25ea06bec1845715c3f5951ef493e01dcb49903b196c7e108c36ccff82c7d",
+      "semantic_snapshot_sha256": "sha256:56db579f2e19608f3cabac64d081236dd14a0eeaf704bfebc435e80c3d51e2f3",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-23T16:16:44.211779Z"
+}
