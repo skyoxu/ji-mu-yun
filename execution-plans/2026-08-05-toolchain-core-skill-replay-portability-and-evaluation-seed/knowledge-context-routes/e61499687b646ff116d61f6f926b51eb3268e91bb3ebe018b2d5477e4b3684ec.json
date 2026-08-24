@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "automatic_publication_allowed": false,
+  "failure_code": "candidate_worktree_source_hash_mismatch",
+  "next_action": "knowledge-context-repair-required",
+  "request_sha256": "sha256:0885220fbad96d24c045aaa54eb8d6677774c5c424f7745467a4af39994706e0",
+  "requires_explicit_maintainer_confirmation": false,
+  "result_sha256": "sha256:6e320a3452e4e4f9635db9b0bce2f7372e5e9dbd7244f562b3de5ebc807f2ace",
+  "route_output": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/knowledge-context-routes/e61499687b646ff116d61f6f926b51eb3268e91bb3ebe018b2d5477e4b3684ec.json",
+  "route_sha256": "sha256:8f75c8365e6c91997207485e7726d965010496626ebebf3dbc42327f0b1bc662",
+  "schema_version": "jimuyun.acceptance-knowledge-maintenance-route.v1",
+  "snapshot": {
+    "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc",
+    "ref": "refs/heads/main"
+  },
+  "status": "blocked",
+  "target_plan": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed"
+}
