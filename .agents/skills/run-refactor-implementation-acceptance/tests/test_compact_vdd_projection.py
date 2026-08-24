@@ -34,7 +34,6 @@ class CompactVddProjectionTests(unittest.TestCase):
         subprocess.run(["git", "commit", "--quiet", "-m", "baseline"], cwd=self.root, check=True)
         self.head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.root, text=True).strip()
         (self.root / "scripts/sc/tool.py").write_text("new\n", encoding="utf-8")
-        (self.root / "scripts/sc/deleted.py").unlink()
         (self.root / "scripts/sc/added.py").write_text("added\n", encoding="utf-8")
         self.target = self.root / "execution-plans/target"
         (self.target / "tools").mkdir(parents=True)
@@ -56,8 +55,11 @@ class CompactVddProjectionTests(unittest.TestCase):
         terminal_result = self.target / "terminal-results/terminal-full.json"
         terminal_result.parent.mkdir(parents=True)
         terminal_result.write_text(json.dumps({"schema_version":"acceptance-coordinator-efficiency.terminal-result.v2","predicate":"implementation-complete","status":"pass","terminal_command_id":"validate","authorizes":[]}), encoding="utf-8")
-        source = self.root / "source.py"
-        manifest = {"schema_version":"jimuyun.candidate-source-manifest.v1","entries":[{"path":"source.py","role":"production","slice_ids":["S0"],"sha256":"sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()}]}
+        source_entries = []
+        for path in ("scripts/sc/added.py", "scripts/sc/tool.py"):
+            source = self.root / path
+            source_entries.append({"path":path,"role":"production","slice_ids":["S0"],"sha256":"sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()})
+        manifest = {"schema_version":"jimuyun.candidate-source-manifest.v1","entries":source_entries}
         manifest["candidate_source_root"] = "sha256:" + hashlib.sha256(json.dumps(manifest["entries"], sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         manifest_path = self.target / "repair/candidate-source-manifest.v1.json"
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -80,7 +82,7 @@ class CompactVddProjectionTests(unittest.TestCase):
             "runId":"acceptance-test",
             "changeId":"compact-target",
             "baselineRevision":self.head,
-            "changedPaths":["scripts/sc/added.py","scripts/sc/deleted.py","scripts/sc/tool.py"],
+            "changedPaths":["scripts/sc/added.py","scripts/sc/tool.py"],
             "affectedConsumerRefs":["scripts/sc/tool.py"],
             "targetPlanPaths":["00-index.md"],
             "knowledgeContextPath":"knowledge-context.refactor-acceptance.v1.json",
@@ -130,12 +132,17 @@ class CompactVddProjectionTests(unittest.TestCase):
         observed = sorted(path.relative_to(snapshot).as_posix() for path in snapshot.rglob("*") if path.is_file())
         self.assertEqual(["scripts/sc/added.py", "scripts/sc/tool.py"], observed)
         request = json.loads((self.root / result["runRequest"]).read_text(encoding="utf-8"))
+        receipt = json.loads((self.target / "repair/implementation-complete.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            receipt["candidate_source_manifest"]["sha256"],
+            request["candidate_scope_manifest"]["sha256"],
+        )
         baseline = json.loads((self.target / request["baseline_content_manifest_path"]).read_text(encoding="utf-8"))
         candidate = json.loads((self.target / request["candidate_content_manifest_path"]).read_text(encoding="utf-8"))
         custody = verify_manifest_bytes(self.target, request, baseline, candidate)
         self.assertIn("snapshotManifestHash", custody)
         kinds = {item["candidate_path"] or item["baseline_path"]: item["change_type"] for item in candidate["files"]}
-        self.assertEqual("deleted", kinds["scripts/sc/deleted.py"])
+        self.assertEqual("modified", kinds["scripts/sc/tool.py"])
 
     def test_projection_rejects_unchanged_or_ambiguous_paths(self) -> None:
         self.request["changedPaths"] = ["unrelated.txt"]
@@ -145,11 +152,18 @@ class CompactVddProjectionTests(unittest.TestCase):
         (self.root / "unrelated.txt").write_bytes(baseline_bytes)
         self.freeze_commit_candidate()
         self.write_request()
-        with self.assertRaisesRegex(InputError, "unchanged bytes"):
+        with self.assertRaisesRegex(InputError, "candidate source manifest"):
             project(self.root, self.request_path)
         self.request["changedPaths"] = ["scripts/sc/tool.py", "scripts/sc/tool.py"]
         self.write_request()
         with self.assertRaisesRegex(InputError, "sorted and unique"):
+            project(self.root, self.request_path)
+
+    def test_projection_rejects_paths_outside_the_handoff_candidate_content_manifest(self) -> None:
+        self.freeze_commit_candidate()
+        self.request["changedPaths"] = ["scripts/sc/tool.py"]
+        self.write_request()
+        with self.assertRaisesRegex(InputError, "candidate source manifest"):
             project(self.root, self.request_path)
 
     def test_projection_uses_quick_dev_handoff_without_claiming_plan_state_and_is_append_only(self) -> None:
@@ -237,6 +251,21 @@ class CompactVddProjectionTests(unittest.TestCase):
         overlay.parent.mkdir(parents=True)
         overlay.write_bytes(b"prior dirty baseline\n")
         self.request["changedPaths"] = ["scripts/sc/tool.py"]
+        manifest_path = self.target / "repair/candidate-source-manifest.v1.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["entries"] = [entry for entry in manifest["entries"] if entry["path"] == "scripts/sc/tool.py"]
+        manifest["candidate_source_root"] = "sha256:" + hashlib.sha256(
+            json.dumps(manifest["entries"], sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
+        receipt["candidate_source_manifest"] = {
+            "path":"repair/candidate-source-manifest.v1.json",
+            "sha256":"sha256:" + hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+            "candidate_source_root":manifest["candidate_source_root"],
+        }
+        self.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.request["implementationReceiptHash"] = "sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest()
         self.request["baselineOverlaySources"] = {
             "scripts/sc/tool.py": "execution-plans/target/repair/baseline/tool.py"
         }

@@ -15,6 +15,7 @@ from typing import Any
 
 from acceptance_core import InputError, canonical_hash, validate_run_input
 from execution_control import ControlError, inspect_run, resolve_registered_command
+from scripts.toolchain.candidate_content_paths import CANDIDATE_CONTENT, classify_path, require_candidate_content
 
 
 HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
@@ -258,20 +259,6 @@ def _candidate_payload(root: Path, request: dict[str, Any], path: str) -> bytes 
     return current.read_bytes() if current.is_file() else None
 
 
-def _historical_evidence_path(path: str) -> bool:
-    normalized = path.replace("\\", "/")
-    return (
-        normalized.startswith("execution-plans/")
-        and any(
-            marker in normalized
-            for marker in (
-                "/.acceptance-snapshots/", "/in/", "/s/", "/acceptance-inputs/", "/acceptance-runs/",
-                "/knowledge-context.history/", "/knowledge-context.freeze.history/",
-            )
-        )
-    ) or normalized.startswith("_bmad-output/q/")
-
-
 def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     root = repository_root.resolve()
     request = _load(request_path)
@@ -296,6 +283,14 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     if not target.is_dir():
         raise InputError("compact VDD target is missing")
     receipt_path, receipt, validator = _implementation_handoff(root, target, request)
+    manifest = _load(target / str(receipt["candidate_source_manifest"]["path"]))
+    manifest_paths = [entry["path"] for entry in manifest["entries"]]
+    try:
+        manifest_paths = require_candidate_content(manifest_paths)
+    except ValueError as exc:
+        raise InputError("candidate source manifest contains non-content evidence") from exc
+    if request["changedPaths"] != manifest_paths:
+        raise InputError("changedPaths must exactly match the candidate source manifest")
     knowledge = (target / request["knowledgeContextPath"]).resolve()
     policy_source = (root / request["codeReviewPolicyPath"]).resolve()
     if not knowledge.is_file() or not policy_source.is_file():
@@ -312,8 +307,6 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     for path in request["changedPaths"]:
         baseline_payload = _git_blob(root, resolved_revision, path)
         candidate_payload = _candidate_payload(root, request, path)
-        if _historical_evidence_path(path):
-            candidate_payload = None
         if baseline_payload is None and candidate_payload is None:
             raise InputError(f"changed path has neither baseline nor candidate bytes: {path}")
         if baseline_payload is not None:
@@ -339,7 +332,7 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
             "candidate_sha256": candidate_hash,
             "inclusion_reason": "explicit compact VDD candidate path",
         })
-        if candidate_payload is not None and not _historical_evidence_path(path):
+        if candidate_payload is not None:
             present_payloads[path] = candidate_payload
 
     baseline_manifest = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": baseline_files}
@@ -421,6 +414,11 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
             "forbidden_write_roots": ["logs/phase-a-innernet/", "runtime/phase-a/"],
             "changed_paths": request["changedPaths"],
             "affected_consumer_refs": request["affectedConsumerRefs"],
+            "candidate_scope_manifest": {
+                "path": receipt["candidate_source_manifest"]["path"],
+                "sha256": receipt["candidate_source_manifest"]["sha256"],
+                "candidate_source_root": receipt["candidate_source_manifest"]["candidate_source_root"],
+            },
         }
         if not request.get("candidateRevision"):
             run_request["candidate_frozen_snapshot_path"] = f".acceptance-snapshots/{run_id}"

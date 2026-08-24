@@ -3,8 +3,16 @@
 from __future__ import annotations
 
 import shutil
+import sys
 from pathlib import Path, PurePosixPath
 from typing import Iterable
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
+
+from scripts.toolchain.candidate_content_paths import CANDIDATE_CONTENT, classify_path
 
 
 def _relative_path(value: str) -> PurePosixPath:
@@ -32,6 +40,8 @@ def materialize(source_root: Path, candidate_root: Path, paths: Iterable[str], *
         raise FileExistsError(f"candidate workspace already exists: {candidate}")
     candidate.mkdir(parents=True)
     for relative in paths:
+        if classify_path(relative) != CANDIDATE_CONTENT:
+            raise ValueError("candidate content cannot include historical or generated evidence")
         source_path = _contained(source, relative)
         if not source_path.exists():
             raise FileNotFoundError(f"candidate source path is missing: {relative}")
