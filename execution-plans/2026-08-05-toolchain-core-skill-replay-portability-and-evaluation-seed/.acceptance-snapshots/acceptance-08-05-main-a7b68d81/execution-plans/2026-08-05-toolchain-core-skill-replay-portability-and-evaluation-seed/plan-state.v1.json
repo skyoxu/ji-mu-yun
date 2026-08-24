@@ -1,0 +1,28 @@
+{
+  "schema_version": "vdd.plan-state.v1",
+  "plan_id": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "profile": "self-hosted",
+  "state": "implementation-authorized",
+  "state_owner": "maintainer",
+  "implementation_authorization": {
+    "decision": "accepted-deterministic-round3-repair-evidence",
+    "evidence_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-4/implementation-authorization.v1.json",
+    "evidence_sha256": "sha256:e285acac569cebbe762b01ae3548b7b413396d64d5a67240731f276a6b5f2faf",
+    "next_slice": "RMAP-S0",
+    "authorizes": ["implementation-authorized"]
+  },
+  "resume": {
+    "next_action": "Start RMAP-S0 through the plan-owned Quick Dev TDD route. Before editing, rerun tools/validate_plan.py --implementation-state and preserve the frozen historical 8-01 directory.",
+    "last_completed_step": "maintainer-accepted-round3-deterministic-repair-evidence-and-authorized-implementation",
+    "recovery_instruction": "Preserve this directory, the frozen knowledge artifacts, the Round 3 blocked review and manual repair evidence, and unrelated dirty work. Rerun tools/validate_plan.py --implementation-state after source or main drift; return to maintainer disposition if the evidence binding changes."
+  },
+  "slices": [
+    {"id":"RMAP-S0","status":"pending","depends_on":[]},
+    {"id":"RMAP-S1","status":"pending","depends_on":["RMAP-S0"]},
+    {"id":"RMAP-S2","status":"pending","depends_on":["RMAP-S0","RMAP-S1"]},
+    {"id":"RMAP-S3","status":"pending","depends_on":["RMAP-S0","RMAP-S1","RMAP-S2"]}
+  ],
+  "blocking_conditions": [],
+  "authorizes": ["implementation-authorized"],
+  "does_not_authorize": ["implementation-complete","acceptance-passed","release","archived"]
+}

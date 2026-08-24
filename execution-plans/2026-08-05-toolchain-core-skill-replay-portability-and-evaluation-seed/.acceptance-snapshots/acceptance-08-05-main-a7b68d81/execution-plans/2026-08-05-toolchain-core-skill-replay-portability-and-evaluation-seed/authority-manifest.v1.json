@@ -1,0 +1,43 @@
+{
+  "schema_version": "jimuyun.tc-d1-authority-manifest.v1",
+  "plan_id": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "git": {
+    "ref": "refs/heads/main",
+    "commit": "f662e9d542aea826b1d37a7dbde09196edd0bcf6",
+    "tree": "693ea56eb960da0a822cc9f3d2c0c6696952fa70"
+  },
+  "source_files": [
+    {"path":"AGENTS.md","sha256":"sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"},
+    {"path":"README.md","sha256":"sha256:501cf216cde569513ea4598b32eef49141ecacea863c68222df0e9a428a172b0"},
+    {"path":"docs/know.md","sha256":"sha256:9623065588c7134156ab0262e0ec1c4c9877938f291053b8a0609708f9ad179c"},
+    {"path":".agents/skills/vdd-execution-plan/SKILL.md","sha256":"sha256:26bf8bf7cc09f3a35f40271175de0651c2e4c3fe5f8ab21a5f34ebf84bfe56ef"},
+    {"path":".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.json","sha256":"sha256:1acc483d886b8a15da829d825022541448277f72fee7eb8e0280a436b4889291"},
+    {"path":".agents/skills/quick-dev-tdd-adapter/SKILL.md","sha256":"sha256:5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"},
+    {"path":".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json","sha256":"sha256:de66349827489afa64e90cbda24a49c4345f396863216f4faca6a92a29d26b4a"},
+    {"path":".agents/skills/run-phase-bootstrap-review/SKILL.md","sha256":"sha256:b1b983b50424986265c795da821f76add3ea97446c5e69dea095990a322c94b4"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/SKILL.md","sha256":"sha256:5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68"},
+    {"path":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/00-index.md","sha256":"sha256:764c37e240d5e415ed687f7e4ceab4edb3eac53f6ff6652d12230d8917a46af4"},
+    {"path":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/requirements.v1.json","sha256":"sha256:afc0f8079edd596eebf6bbfb7f93a666d29d7cb0445dc9405d563446bde31e3f"},
+    {"path":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/plan-state.v1.json","sha256":"sha256:f0974f2a15fd28b9f56a2f6756f8a2a850594ad8f107fedd06806bb7cf0bf305"},
+    {"path":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md","sha256":"sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63"},
+    {"path":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py","sha256":"sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8"},
+    {"path":"execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py","sha256":"sha256:7fe6d98ad51f368a4e8eb4a3317c1ebd6bddcf1d3ace41e1b9b5ca2603f87dbf"},
+    {"path":"execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/00-index.md","sha256":"sha256:e11e0c2d75dbe7eef8434bb23f0f385b89dbf445c9f1842dc3ba947a0e1ea422"},
+    {"path":"execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/01-requirements-and-acceptance.md","sha256":"sha256:4990d198e2d39de2e0b2749d2754f4b6a0f665a57a27b60b037f5bef2828ffba"},
+    {"path":"docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md","sha256":"sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"},
+    {"path":"docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md","sha256":"sha256:3532ee1870b33f2a5cd17fb6967a695dd0fe1c8e1cad73c166d411798b34ba43"},
+    {"path":"docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md","sha256":"sha256:5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json","sha256":"sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4"}
+  ],
+  "mutable_source_paths": [
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md"
+  ],
+  "historical_trees": [
+    {"path":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd","git_tree_oid":"95a7e396db70ef425e30d553e1e96976e2be7c94","disposition":"immutable-source-evidence"}
+  ],
+  "downstream_trees": [
+    {"path":"execution-plans/2026-08-01-workflow-model-routing-control-plane","git_tree_oid":"0e8a4ff1abba2f04ab0ea91c91b04b5b785a07f5","disposition":"current-terminal-replay-consumer"}
+  ],
+  "authorizes": []
+}

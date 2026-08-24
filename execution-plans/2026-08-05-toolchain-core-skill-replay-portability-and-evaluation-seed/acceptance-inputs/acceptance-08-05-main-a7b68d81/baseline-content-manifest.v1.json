@@ -1,0 +1,64 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:4661d816c1da182db73c7b949ae5b49e349155224e90d47983d062a9ecbecf7e"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7e6a26c2323352057a0053c4b2da1d23cecb518601c7b50be6f9786d05cc39d9"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:67f65ede81be99568484f2ac7b0fad6a9a4d6f1bdd87ae750d9106be5b666376"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:26bf8bf7cc09f3a35f40271175de0651c2e4c3fe5f8ab21a5f34ebf84bfe56ef"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "status", "target_package", "resolved_validator", "authorizes"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.skill-package-validation-receipt.v1"},
+    "status": {"enum": ["pass", "expected-failure"]},
+    "target_package": {"type": "string", "minLength": 1},
+    "resolved_validator": {"type": "object"},
+    "authorizes": {"const": []}
+  },
+  "additionalProperties": true
+}
