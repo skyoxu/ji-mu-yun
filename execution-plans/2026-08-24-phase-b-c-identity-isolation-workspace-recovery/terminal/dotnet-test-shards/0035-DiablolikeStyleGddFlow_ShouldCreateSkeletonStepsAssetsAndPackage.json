@@ -1,0 +1,22 @@
+{
+  "command": [
+    "dotnet",
+    "test",
+    "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+    "--no-restore",
+    "--no-build",
+    "--nologo",
+    "--blame-hang-timeout",
+    "30s",
+    "--blame-hang-dump-type",
+    "none",
+    "--filter",
+    "FullyQualifiedName=PhaseA.Platform.Tests.Runs.DiablolikeGddWorkflowIntegrationTests.DiablolikeStyleGddFlow_ShouldCreateSkeletonStepsAssetsAndPackage"
+  ],
+  "exit_code": 1,
+  "started_at": "2026-08-24T13:35:04.244711+00:00",
+  "finished_at": "2026-08-24T13:35:06.613145+00:00",
+  "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n  \u5931\u8d25 PhaseA.Platform.Tests.Runs.DiablolikeGddWorkflowIntegrationTests.DiablolikeStyleGddFlow_ShouldCreateSkeletonStepsAssetsAndPackage [837 ms]\n  \u9519\u8bef\u6d88\u606f:\n   System.IO.IOException : The process cannot access the file 'C:\\Users\\Administrator\\AppData\\Local\\Temp\\3\\phase-a-workspaces-9c991faa53834bf3990691d27dbdf472\\c11f4abfd8384a9d9a8d33c8f2b7e120\\813d0a7a7b544c0283cacce809cbebd3\\repo\\docs\\prototype\\ASSETS.md' because it is being used by another process.\n  \u5806\u6808\u8ddf\u8e2a:\n     at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)\n   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)\n   at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)\n   at System.IO.File.WriteToFile(String path, FileMode mode, String contents, Encoding encoding)\n   at PhaseA.Platform.Runs.PrototypeEngineeringClosureService.EnsureText(ProjectSnapshot project, String relativePath, String defaultText) in C:\\jimuyun\\PhaseA.Platform\\Runs\\PrototypeEngineeringClosureService.cs:line 107\n   at PhaseA.Platform.Runs.PrototypeEngineeringClosureService.EnsureProjectFiles(ProjectSnapshot project) in C:\\jimuyun\\PhaseA.Platform\\Runs\\PrototypeEngineeringClosureService.cs:line 25\n   at PhaseA.Platform.Runs.GddMilestoneStepService.GetOrCreateLatestAsync(String accountId, String projectId, CancellationToken cancellationToken) in C:\\jimuyun\\PhaseA.Platform\\Runs\\GddMilestoneStepService.cs:line 76\n   at PhaseA.Platform.Tests.Runs.DiablolikeGddWorkflowIntegrationTests.DiablolikeStyleGddFlow_ShouldCreateSkeletonStepsAssetsAndPackage() in C:\\jimuyun\\PhaseA.Platform.Tests\\Runs\\DiablolikeGddWorkflowIntegrationTests.cs:line 74\n--- End of stack trace from previous location ---\n\n\u5931\u8d25!  - \u5931\u8d25:     1\uff0c\u901a\u8fc7:     0\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+  "stderr_tail": "[xUnit.net 00:00:01.09]     PhaseA.Platform.Tests.Runs.DiablolikeGddWorkflowIntegrationTests.DiablolikeStyleGddFlow_ShouldCreateSkeletonStepsAssetsAndPackage [FAIL]\n",
+  "test": "PhaseA.Platform.Tests.Runs.DiablolikeGddWorkflowIntegrationTests.DiablolikeStyleGddFlow_ShouldCreateSkeletonStepsAssetsAndPackage"
+}

@@ -20,6 +20,12 @@ def main() -> int:
     completed = subprocess.run(command, cwd=root, capture_output=True, text=True, check=False)
     if completed.returncode != 0:
         return completed.returncode
+    try:
+        validation = json.loads(completed.stdout.strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError):
+        return 1
+    if validation.get("status") != "pass" or validation.get("validated_state") != "implementation-complete":
+        return 1
     result = {
         "schema_version": "quick-dev-implementation-complete.v1",
         "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
@@ -30,6 +36,7 @@ def main() -> int:
         "authorizes": ["implementation-complete"],
         "contract_hash": "sha256:" + hashlib.sha256((plan / "implementation-contract.v1.json").read_bytes()).hexdigest(),
         "command_registry_hash": "sha256:" + hashlib.sha256((plan / "command-registry.v1.json").read_bytes()).hexdigest(),
+        "validation": validation,
     }
     output = Path(args.out)
     output.parent.mkdir(parents=True, exist_ok=True)

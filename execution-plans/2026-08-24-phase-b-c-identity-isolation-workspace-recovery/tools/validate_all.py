@@ -3,6 +3,13 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import subprocess
+import sys
+import re
+import os
+import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -49,8 +56,90 @@ def slice_validation_snapshot(slice_id: str | None = None) -> dict[str, str]:
     return current_candidate_identity(slice_id)
 
 
+def _run(command: list[str], timeout: int = 180) -> dict[str, object]:
+    started = datetime.now(timezone.utc).isoformat()
+    with tempfile.TemporaryDirectory(prefix="phasea-validator-") as temp_dir:
+        stdout_path = Path(temp_dir) / "stdout.log"
+        stderr_path = Path(temp_dir) / "stderr.log"
+        with stdout_path.open("w", encoding="utf-8") as stdout_file, stderr_path.open("w", encoding="utf-8") as stderr_file:
+            process = subprocess.Popen(command, cwd=ROOT, stdout=stdout_file, stderr=stderr_file, close_fds=True, creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+            try:
+                process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                if os.name == "nt":
+                    subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True, check=False)
+                else:
+                    process.kill()
+                process.wait()
+                stdout = stdout_path.read_text(encoding="utf-8", errors="replace")
+                stderr = stderr_path.read_text(encoding="utf-8", errors="replace")
+                return {"command": command, "exit_code": 124, "failure": "validation-timeout", "started_at": started, "finished_at": datetime.now(timezone.utc).isoformat(), "stdout_tail": stdout[-4000:], "stderr_tail": stderr[-4000:]}
+        stdout = stdout_path.read_text(encoding="utf-8", errors="replace")
+        stderr = stderr_path.read_text(encoding="utf-8", errors="replace")
+    return {"command": command, "exit_code": process.returncode, "started_at": started, "finished_at": datetime.now(timezone.utc).isoformat(), "stdout_tail": stdout[-4000:], "stderr_tail": stderr[-4000:]}
+
+
+def _dotnet_shards() -> tuple[list[dict[str, object]], int]:
+    test_root = ROOT / "PhaseA.Platform.Tests"
+    inventory_count = 0
+    test_classes: set[str] = set()
+    for source in test_root.rglob("*.cs"):
+        try:
+            text = source.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        method_count = len(re.findall(r"^\s*\[(?:Fact|Theory)(?:\([^\]]*)?\]", text, re.MULTILINE))
+        inventory_count += method_count
+        if method_count:
+            namespace = re.search(r"^\s*namespace\s+([A-Za-z0-9_.]+)\s*;", text, re.MULTILINE)
+            class_matches = list(re.finditer(r"\b(?:public|internal|private|protected)?\s*(?:sealed\s+|abstract\s+)?class\s+([A-Za-z0-9_]+)", text))
+            for index, match in enumerate(class_matches):
+                segment_end = class_matches[index + 1].start() if index + 1 < len(class_matches) else len(text)
+                segment = text[match.start():segment_end]
+                if re.search(r"^\s*\[(?:Fact|Theory)(?:\([^\]]*)?\]", segment, re.MULTILINE):
+                    test_classes.add(f"{namespace.group(1) if namespace else 'PhaseA.Platform.Tests'}.{match.group(1)}")
+    if inventory_count == 0:
+        return [{"command": ["dotnet", "test"], "exit_code": 1, "failure": "empty-test-inventory"}], 0
+    if not test_classes:
+        return [{"command": ["dotnet", "test"], "exit_code": 1, "failure": "empty-test-class-inventory"}], 0
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    diagnostics = PLAN / "terminal" / "dotnet-test-runs" / run_id
+    diagnostics.mkdir(parents=True, exist_ok=True)
+    def run_class(index_and_class: tuple[int, str]) -> dict[str, object]:
+        index, cls = index_and_class
+        result = _run([
+            "dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+            "--no-restore", "--no-build", "--disable-build-servers", "--nologo",
+            "--blame-hang-timeout", "60s", "--blame-hang-dump-type", "none",
+            "--filter", f"FullyQualifiedName~{cls}",
+        ], 600)
+        result.update({"run_id": run_id, "class": cls, "class_index": index, "test_inventory_count": inventory_count})
+        (diagnostics / f"{index:04d}-{cls.rsplit('.', 1)[-1]}.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        return result
+
+    results: list[dict[str, object]] = []
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(run_class, item) for item in enumerate(sorted(test_classes))]
+        for future in as_completed(futures):
+            results.append(future.result())
+    results.sort(key=lambda item: int(item["class_index"]))
+    return results, inventory_count
+
+
 def main() -> int:
-    print(json.dumps({"status": "pass", "validated_state": "implementation-authorized", "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery", "authorizes": []}, sort_keys=True))
+    dotnet_results, inventory_count = _dotnet_shards()
+    results = [{"type": "dotnet-shards", "inventory_count": inventory_count, "shards": dotnet_results}]
+    (PLAN / "terminal").mkdir(parents=True, exist_ok=True)
+    (PLAN / "terminal" / "dotnet-shard-diagnostics.json").write_text(json.dumps(results[0], indent=2) + "\n", encoding="utf-8")
+    if inventory_count == 0 or any(item.get("exit_code") != 0 for item in dotnet_results):
+        print(json.dumps({"status": "fail", "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery", "results": results, "authorizes": []}, sort_keys=True))
+        return 1
+    pytest_result = _run([sys.executable, "-m", "pytest", "tests/phase_b_c_identity_isolation", "-q"], 180)
+    results.append({"type": "python-behavior", **pytest_result})
+    if pytest_result["exit_code"] != 0:
+        print(json.dumps({"status": "fail", "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery", "results": results, "authorizes": []}, sort_keys=True))
+        return int(pytest_result["exit_code"])
+    print(json.dumps({"status": "pass", "validated_state": "implementation-complete", "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery", "results": results, "authorizes": []}, sort_keys=True))
     return 0
 
 

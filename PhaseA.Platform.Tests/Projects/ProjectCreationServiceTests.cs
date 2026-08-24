@@ -902,7 +902,8 @@ public sealed class ProjectCreationServiceTests
             "..",
             "..",
             "..",
-            ".."));
+            "Fixtures",
+            "ProjectSeedRepository"));
     }
 
     private sealed class TempWorkspaceRoot : IDisposable
