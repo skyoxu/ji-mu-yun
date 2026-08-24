@@ -189,6 +189,41 @@ def _git_changed_paths(repository_root: Path, baseline_commit: str, candidate_co
     return paths
 
 
+def _scoped_candidate_paths(target_root: Path, run_input: dict[str, Any], declared_paths: set[str]) -> set[str] | None:
+    scope = run_input.get("candidate_scope_manifest")
+    if scope is None:
+        return None
+    if not isinstance(scope, dict) or set(scope) != {"path", "sha256", "candidate_source_root"}:
+        raise InputError("candidate scope manifest is invalid")
+    relative = _normalized_relative(scope.get("path"), "candidate scope manifest path")
+    _hash(scope.get("sha256"), "candidate scope manifest sha256")
+    _hash(scope.get("candidate_source_root"), "candidate scope manifest root")
+    path = (target_root / relative).resolve()
+    try:
+        path.relative_to(target_root.resolve())
+        payload = path.read_bytes()
+        manifest = json.loads(payload.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        raise InputError("candidate scope manifest is unreadable") from exc
+    if _content_hash(payload) != scope["sha256"] or not isinstance(manifest, dict):
+        raise InputError("candidate scope manifest is stale")
+    entries = manifest.get("entries")
+    if manifest.get("schema_version") != "jimuyun.candidate-source-manifest.v1" or not isinstance(entries, list):
+        raise InputError("candidate scope manifest is invalid")
+    canonical = sorted(entries, key=lambda item: (item.get("path", ""), item.get("role", ""), item.get("slice_ids", [])))
+    root = _content_hash(json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+    if root != manifest.get("candidate_source_root") or root != scope["candidate_source_root"]:
+        raise InputError("candidate scope manifest root is stale")
+    paths: set[str] = set()
+    for entry in entries:
+        if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
+            raise InputError("candidate scope manifest entry is invalid")
+        paths.add(_normalized_relative(entry["path"], "candidate scope manifest path"))
+    if paths != declared_paths:
+        raise InputError("candidate scope manifest does not exactly match candidate content")
+    return paths
+
+
 def _native_path(path: Path) -> Path:
     """Use the Windows extended path namespace without changing logical custody paths."""
     if os.name != "nt":
@@ -262,7 +297,9 @@ def verify_manifest_bytes(
         if candidate.get("status") == "complete":
             declared_changes = set(candidate_changed_paths(candidate))
             actual_changes = _git_changed_paths(repository_root, baseline_commit, candidate_commit)
-            if declared_changes != actual_changes:
+            scope_paths = _scoped_candidate_paths(target_root, run_input, declared_changes)
+            observed_changes = actual_changes if scope_paths is None else actual_changes.intersection(scope_paths)
+            if declared_changes != observed_changes:
                 raise InputError("complete candidate manifest does not exactly match the immutable commit diff")
         return {
             "schemaVersion": "acceptance-candidate-custody.v1",
@@ -430,6 +467,8 @@ def validate_run_input(value: Any) -> None:
     for field in ("allowed_write_roots", "forbidden_write_roots", "changed_paths", "affected_consumer_refs"):
         if not isinstance(parsed.get(field), list):
             raise InputError(f"run input {field} is required")
+    if parsed.get("candidate_scope_manifest") is not None and parsed["candidate_mode"] != "commit":
+        raise InputError("candidate scope manifest requires commit mode")
 
 
 def validate_baseline_manifest(value: Any) -> None:

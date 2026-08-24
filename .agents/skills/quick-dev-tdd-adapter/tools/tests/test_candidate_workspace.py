@@ -74,3 +74,19 @@ def test_materialize_accepts_overlapping_explicit_paths(tmp_path: Path):
 
     assert (candidate / "plan" / "implementation-contract.v1.json").is_file()
     assert (candidate / "plan" / "tools" / "validator.py").is_file()
+
+
+def test_materialize_rejects_generated_run_evidence(tmp_path: Path):
+    module = _load()
+    source = tmp_path / "source"
+    candidate = tmp_path / "candidate"
+    generated = source / "execution-plans" / "target" / "skill-input" / "receipt.json"
+    generated.parent.mkdir(parents=True)
+    generated.write_text("{}\n", encoding="utf-8")
+
+    try:
+        module.materialize(source, candidate, ["execution-plans/target/skill-input/receipt.json"])
+    except ValueError as exc:
+        assert "candidate content" in str(exc)
+    else:
+        raise AssertionError("generated evidence unexpectedly entered a candidate workspace")
