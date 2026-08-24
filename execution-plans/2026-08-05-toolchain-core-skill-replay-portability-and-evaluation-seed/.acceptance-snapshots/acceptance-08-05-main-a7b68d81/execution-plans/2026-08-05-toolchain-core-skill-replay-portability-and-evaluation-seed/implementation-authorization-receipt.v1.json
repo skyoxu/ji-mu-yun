@@ -1,0 +1,10 @@
+{
+  "schema_version": "jimuyun.tc-d1-implementation-authorization-receipt.v1",
+  "plan_id": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "implementation_contract": {"path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json", "sha256": "sha256:0f9cb835d4a6e34936ade1c4f0f6e62e94417c8d3e8ac7ab5d827a9cfcfe168f"},
+  "authority_manifest": {"path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/authority-manifest.v1.json", "sha256": "sha256:116db89ee5df8c9284f8f02721663d56faf83a593fca111a186f45608c3cce33"},
+  "knowledge_context_freeze": {"path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/knowledge-context.freeze.v1.json", "sha256": "sha256:530011025c62cb856cdcd179174f63d0c730ab85aad5f29a52fb5ebe478b091a"},
+  "decision": {"owner": "maintainer", "transition": "implementation-authorized", "reason": "plan-local-successor-projection"},
+  "authorizes": ["implementation-authorized"],
+  "does_not_authorize": ["implementation-complete", "acceptance-passed", "commit", "release", "archived"]
+}

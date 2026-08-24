@@ -1,0 +1,45 @@
+{
+  "actionDag": {
+    "path": "acceptance-inputs/acceptance-08-05-main-a7b68d81/action-dag.v1.json",
+    "sha256": "sha256:382748f2fd332eb7e82ebefe2e59fffda2e52e5a31cf9bb72abe8b822086403c"
+  },
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "acceptance-inputs/acceptance-08-05-main-a7b68d81/baseline-content-manifest.v1.json",
+    "sha256": "sha256:65fd812bb4607245d8c2367ca690332409042c2e7322533f32907db575d0ca87"
+  },
+  "bundleHash": "sha256:5c4864ae733854303988d5030a61361b6700648e8840e77fdf5c87d689aa7d33",
+  "candidateManifest": {
+    "path": "acceptance-inputs/acceptance-08-05-main-a7b68d81/candidate-content-manifest.v1.json",
+    "sha256": "sha256:a55f9b1993f7b985930ef55ae3597d68ccaa712982ec907b4de6156e54f9c511"
+  },
+  "candidateSnapshotPath": ".acceptance-snapshots/acceptance-08-05-main-a7b68d81",
+  "commandRegistry": {
+    "path": "acceptance-inputs/acceptance-08-05-main-a7b68d81/command-registry.v1.json",
+    "sha256": "sha256:be37313d06bc751df45856aa851a33a25c390a341bf085228e98284de2eb2de4"
+  },
+  "implementationReceipt": {
+    "path": "repair/quick-dev-implementation-complete.970e59ccfb6b13e8.v2.json",
+    "sha256": "sha256:9bfb2bb34f338d932aa7d7dc9225a49c934db34f0534e77ef0141fe592a391b3",
+    "terminalCommandId": "terminal-implementation-validation"
+  },
+  "knowledgeContext": {
+    "path": "knowledge-context.refactor-acceptance-main-a7b68d81.v1.json",
+    "sha256": "sha256:1c2d1c7b00feb75864c14d4a65f4cd102af292401d5bb17ce89e8c3d8fe9254a"
+  },
+  "policy": {
+    "path": "acceptance-inputs/acceptance-08-05-main-a7b68d81/toolchain-code-review.v1.json",
+    "sha256": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4"
+  },
+  "runId": "acceptance-08-05-main-a7b68d81",
+  "runRequest": {
+    "path": "acceptance-run-request.acceptance-08-05-main-a7b68d81.v1.json",
+    "sha256": "sha256:a84e5492a6f0a04f93adbbe71c927d68b2416b2d50ae802cab92bba696e2c595"
+  },
+  "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+  "targetPlan": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "terminalRunner": {
+    "path": "tools/validate_implementation.py",
+    "sha256": "sha256:ab1c91a14034a531b7ae514d37abb2d778965e56c41c3a7436b23bdcfae9cadf"
+  }
+}

@@ -1,0 +1,421 @@
+{
+  "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
+  "targetPlan": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "runId": "acceptance-08-05-main-a7b68d81",
+  "changeId": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "baselineRevision": "8c47a52fc8f241f76da9ccb5d936b0fafe807f0f",
+  "candidateRevision": "519b99ca44e4d1f884adb18e3c90723b2d35c933",
+  "changedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_workspace.py",
+    ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+    ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+    ".agents/skills/run-phase-bootstrap-review/tests/test_direct_script_startup.py",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/95-implementation-evolution-and-completion-report.md",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/authority-manifest.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/historical-compatibility-replay.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-authorization-receipt.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/knowledge-context.freeze.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/knowledge-context.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/plan-state.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/stable-candidate-replay-matrix.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-4/implementation-authorization.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/tests/test_validate_implementation.py",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_all.py",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_plan.py",
+    "scripts/__init__.py",
+    "scripts/python/launch_skill_input_consumer.py",
+    "scripts/python/skill_input_consumption.py",
+    "scripts/python/tests/test_skill_input_consumption.py",
+    "scripts/sc/config/skill-package-validator-capability.v1.json",
+    "scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json",
+    "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+    "scripts/sc/skill_package_replay.py",
+    "scripts/sc/tests/test_skill_package_replay.py",
+    "scripts/toolchain/__init__.py"
+  ],
+  "affectedConsumerRefs": [
+    ".agents/skills/run-refactor-implementation-acceptance",
+    ".agents/skills/vdd-execution-plan",
+    "scripts/sc/skill_package_replay.py"
+  ],
+  "targetPlanPaths": [
+    "implementation-contract.v1.json",
+    "requirements.v1.json"
+  ],
+  "knowledgeContextPath": "knowledge-context.refactor-acceptance-main-a7b68d81.v1.json",
+  "codeReviewDomain": "toolchain",
+  "codeReviewPolicyPath": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+  "implementationReceiptPath": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/quick-dev-implementation-complete.970e59ccfb6b13e8.v2.json",
+  "implementationReceiptHash": "sha256:9bfb2bb34f338d932aa7d7dc9225a49c934db34f0534e77ef0141fe592a391b3",
+  "commands": [
+    {
+      "id": "plan-validator",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_plan.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 120,
+      "shell": false
+    },
+    {
+      "id": "plan-validator-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/tests",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 120,
+      "shell": false
+    },
+    {
+      "id": "slice-s0-predicate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+        "--slice",
+        "RMAP-S0"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "slice-s1-predicate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+        "--slice",
+        "RMAP-S1"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "slice-s2-predicate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+        "--slice",
+        "RMAP-S2"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "slice-s3-predicate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+        "--slice",
+        "RMAP-S3"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "skill-replay-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "scripts/sc/tests/test_skill_package_replay.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "historical-skill-package-replay",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "scripts/sc/skill_package_replay.py",
+        "replay-package",
+        "--target",
+        ".agents/skills/run-refactor-implementation-acceptance",
+        "--capability",
+        "scripts/sc/config/skill-package-validator-capability.v1.json",
+        "--probe-mode",
+        "detached-positive-negative"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "stable-candidate-matrix-replay",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "scripts/sc/skill_package_replay.py",
+        "replay-matrix",
+        "--matrix",
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "vdd-skill-contract",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
+        "--skill-root",
+        ".agents/skills/vdd-execution-plan"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "vdd-skill-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".agents/skills/vdd-execution-plan/scripts/tests",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "acceptance-package-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "validate-package"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "acceptance-targeted-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".agents/skills/run-refactor-implementation-acceptance/tests",
+        "-p",
+        "test_*skill*replay*.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "downstream-workflow-model-routing-replay",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "terminal-implementation-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "shell": false
+    }
+  ],
+  "actions": [
+    {
+      "actionId": "validate-plan-validator",
+      "activation": true,
+      "commandId": "plan-validator",
+      "dependsOn": [],
+      "order": 1
+    },
+    {
+      "actionId": "validate-plan-validator-tests",
+      "activation": true,
+      "commandId": "plan-validator-tests",
+      "dependsOn": [
+        "validate-plan-validator"
+      ],
+      "order": 2
+    },
+    {
+      "actionId": "validate-slice-s0-predicate",
+      "activation": true,
+      "commandId": "slice-s0-predicate",
+      "dependsOn": [
+        "validate-plan-validator-tests"
+      ],
+      "order": 3
+    },
+    {
+      "actionId": "validate-slice-s1-predicate",
+      "activation": true,
+      "commandId": "slice-s1-predicate",
+      "dependsOn": [
+        "validate-slice-s0-predicate"
+      ],
+      "order": 4
+    },
+    {
+      "actionId": "validate-slice-s2-predicate",
+      "activation": true,
+      "commandId": "slice-s2-predicate",
+      "dependsOn": [
+        "validate-slice-s1-predicate"
+      ],
+      "order": 5
+    },
+    {
+      "actionId": "validate-slice-s3-predicate",
+      "activation": true,
+      "commandId": "slice-s3-predicate",
+      "dependsOn": [
+        "validate-slice-s2-predicate"
+      ],
+      "order": 6
+    },
+    {
+      "actionId": "validate-skill-replay-tests",
+      "activation": true,
+      "commandId": "skill-replay-tests",
+      "dependsOn": [
+        "validate-slice-s3-predicate"
+      ],
+      "order": 7
+    },
+    {
+      "actionId": "validate-historical-skill-package-replay",
+      "activation": true,
+      "commandId": "historical-skill-package-replay",
+      "dependsOn": [
+        "validate-skill-replay-tests"
+      ],
+      "order": 8
+    },
+    {
+      "actionId": "validate-stable-candidate-matrix-replay",
+      "activation": true,
+      "commandId": "stable-candidate-matrix-replay",
+      "dependsOn": [
+        "validate-historical-skill-package-replay"
+      ],
+      "order": 9
+    },
+    {
+      "actionId": "validate-vdd-skill-contract",
+      "activation": true,
+      "commandId": "vdd-skill-contract",
+      "dependsOn": [
+        "validate-stable-candidate-matrix-replay"
+      ],
+      "order": 10
+    },
+    {
+      "actionId": "validate-vdd-skill-tests",
+      "activation": true,
+      "commandId": "vdd-skill-tests",
+      "dependsOn": [
+        "validate-vdd-skill-contract"
+      ],
+      "order": 11
+    },
+    {
+      "actionId": "validate-acceptance-package-validation",
+      "activation": true,
+      "commandId": "acceptance-package-validation",
+      "dependsOn": [
+        "validate-vdd-skill-tests"
+      ],
+      "order": 12
+    },
+    {
+      "actionId": "validate-acceptance-targeted-tests",
+      "activation": true,
+      "commandId": "acceptance-targeted-tests",
+      "dependsOn": [
+        "validate-acceptance-package-validation"
+      ],
+      "order": 13
+    },
+    {
+      "actionId": "validate-downstream-workflow-model-routing-replay",
+      "activation": true,
+      "commandId": "downstream-workflow-model-routing-replay",
+      "dependsOn": [
+        "validate-acceptance-targeted-tests"
+      ],
+      "order": 14
+    },
+    {
+      "actionId": "validate-terminal-implementation-validation",
+      "activation": true,
+      "commandId": "terminal-implementation-validation",
+      "dependsOn": [
+        "validate-downstream-workflow-model-routing-replay"
+      ],
+      "order": 15
+    }
+  ],
+  "authorizes": []
+}

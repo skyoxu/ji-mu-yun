@@ -1,0 +1,12 @@
+{
+  "schema_version":"jimuyun.stable-candidate-replay-matrix.v1",
+  "cases":[
+    {"case_id":"case-positive","category":"positive","validation_surface":"positive replay","expected_observation":"pass"},
+    {"case_id":"case-negative","category":"negative","validation_surface":"negative replay","expected_observation":"pass"},
+    {"case_id":"case-historical","category":"historical_compatibility","validation_surface":"historical replay","expected_observation":"pass"},
+    {"case_id":"case-dirty","category":"dirty_baseline","validation_surface":"dirty baseline","expected_observation":"pass"},
+    {"case_id":"case-knowledge","category":"knowledge_read_set","validation_surface":"knowledge read set","expected_observation":"pass"},
+    {"case_id":"case-policy","category":"closed_policy","validation_surface":"closed policy","expected_observation":"pass"}
+  ],
+  "authorizes": []
+}
