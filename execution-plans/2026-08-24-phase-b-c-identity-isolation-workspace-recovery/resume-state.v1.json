@@ -1,0 +1,10 @@
+{
+  "schema_version": "resume-state.v1",
+  "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "status": "implementation-authorized",
+  "next_action": "quick-dev-tdd-s0-red",
+  "current_slice": "S0",
+  "completed_slices": [],
+  "recovery": {"action":"read current slice selector and rerun targeted validation","do_not":"import RED or mutate live metadata"},
+  "last_transition": {"from":"semantic-review-complete","to":"implementation-authorized","reason":"maintainer explicitly accepted the current semantic successor; authorization does not imply implementation completion or acceptance"}
+}

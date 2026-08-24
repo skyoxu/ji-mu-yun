@@ -1,0 +1,423 @@
+{
+  "adapter_bridge": {
+    "runner": "tools/migration_bridge.py"
+  },
+  "authority": {
+    "authority_manifest": "authority-manifest.v1.json"
+  },
+  "backend": {
+    "hidden_state": false
+  },
+  "command_registry": "command-registry.v1.json",
+  "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "profile": "resumable",
+  "terminal": {
+    "command_id": "implementation-complete",
+    "runner": "tools/terminal_full.py",
+    "predicate": "implementation-complete"
+  },
+  "protocol_artifacts": {
+    "attempt_layout": "attempts/<attempt-id>",
+    "context_layout": "context/<capsule-id>"
+  },
+  "red_execution_owner": "quick-dev-tdd-adapter",
+  "schema_version": "phase-b-c-identity-isolation-workspace-recovery.implementation-contract.v1",
+  "slices": [
+    {
+      "acceptance_ids": [
+        "PIWR-A01",
+        "PIWR-A02",
+        "PIWR-A03",
+        "PIWR-A04",
+        "PIWR-A15",
+        "PIWR-A17"
+      ],
+      "allowed_changes": {
+        "documentation": [
+          "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/**"
+        ],
+        "production": [
+          "PhaseA.Platform/**"
+        ],
+        "tests": [
+          "tests/phase_b_c_identity_isolation/**",
+          "PhaseA.Platform.Tests/**"
+        ]
+      },
+      "dependency_closure": [
+        "PhaseA.Platform/**",
+        "PhaseA.Platform.Tests/**"
+      ],
+      "depends_on": [],
+      "execution_read_set": [
+        "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+        "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+        "implementation-slices.md"
+      ],
+      "execution_snapshot_paths": [
+        "implementation-contract.v1.json",
+        "command-registry.v1.json",
+        "authority-manifest.v1.json"
+      ],
+      "exit_predicate": "slice-ready",
+      "forbidden_changes": [
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**"
+      ],
+      "planned_new_files": [
+        "tests/phase_b_c_identity_isolation/test_s0_identity_context.py"
+      ],
+      "post_refactor_command_id": "s0-terminal",
+      "recovery": "Resume from the first missing stage; preserve failed evidence and never infer identity from client fields.",
+      "requirement_ids": [
+        "PIWR-001..PIWR-014"
+      ],
+      "slice_id": "S0",
+      "source_refs": [
+        "implementation-slices.md",
+        "requirements.v1.json"
+      ],
+      "tdd": {
+        "green": {
+          "command_id": "s0-green",
+          "expected_exit": "zero"
+        },
+        "red": {
+          "expected_failure_ids": [
+            "PIWR-S0-RED"
+          ],
+          "test_selector": "tests/phase_b_c_identity_isolation/test_s0_identity_context.py"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "s0-terminal",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "title": "Identity and Context Authority"
+    },
+    {
+      "acceptance_ids": [
+        "PIWR-A05",
+        "PIWR-A06",
+        "PIWR-A07",
+        "PIWR-A13",
+        "PIWR-A16"
+      ],
+      "allowed_changes": {
+        "documentation": [
+          "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/**"
+        ],
+        "production": [
+          "PhaseA.Platform/**"
+        ],
+        "tests": [
+          "tests/phase_b_c_identity_isolation/**",
+          "PhaseA.Platform.Tests/**"
+        ]
+      },
+      "dependency_closure": [
+        "PhaseA.Platform/**",
+        "PhaseA.Platform.Tests/**"
+      ],
+      "depends_on": [
+        "S0"
+      ],
+      "execution_read_set": [
+        "implementation-slices.md",
+        "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/runner-isolation.md"
+      ],
+      "execution_snapshot_paths": [
+        "implementation-contract.v1.json",
+        "command-registry.v1.json",
+        "authority-manifest.v1.json"
+      ],
+      "exit_predicate": "slice-ready",
+      "forbidden_changes": [
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**"
+      ],
+      "planned_new_files": [
+        "tests/phase_b_c_identity_isolation/test_s1_runner_isolation.py"
+      ],
+      "post_refactor_command_id": "s1-terminal",
+      "recovery": "Resume isolated filesystem evidence from durable state; never use live Hosted workspaces.",
+      "requirement_ids": [
+        "PIWR-015..PIWR-020",
+        "PIWR-038"
+      ],
+      "slice_id": "S1",
+      "source_refs": [
+        "implementation-slices.md",
+        "requirements.v1.json"
+      ],
+      "tdd": {
+        "green": {
+          "command_id": "s1-green",
+          "expected_exit": "zero"
+        },
+        "red": {
+          "expected_failure_ids": [
+            "PIWR-S1-RED"
+          ],
+          "test_selector": "tests/phase_b_c_identity_isolation/test_s1_runner_isolation.py"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "s1-terminal",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "title": "Runner and OS Isolation"
+    },
+    {
+      "acceptance_ids": [
+        "PIWR-A08",
+        "PIWR-A09",
+        "PIWR-A10",
+        "PIWR-A14",
+        "PIWR-A16"
+      ],
+      "allowed_changes": {
+        "documentation": [
+          "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/**"
+        ],
+        "production": [
+          "PhaseA.Platform/**"
+        ],
+        "tests": [
+          "tests/phase_b_c_identity_isolation/**",
+          "PhaseA.Platform.Tests/**"
+        ]
+      },
+      "dependency_closure": [
+        "PhaseA.Platform/**",
+        "PhaseA.Platform.Tests/**"
+      ],
+      "depends_on": [
+        "S0",
+        "S1"
+      ],
+      "execution_read_set": [
+        "implementation-slices.md",
+        "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/workspace-recovery-contract.md"
+      ],
+      "execution_snapshot_paths": [
+        "implementation-contract.v1.json",
+        "command-registry.v1.json",
+        "authority-manifest.v1.json"
+      ],
+      "exit_predicate": "slice-ready",
+      "forbidden_changes": [
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**"
+      ],
+      "planned_new_files": [
+        "tests/phase_b_c_identity_isolation/test_s2_snapshot.py"
+      ],
+      "post_refactor_command_id": "s2-terminal",
+      "recovery": "Use disposable roots and preserve immutable manifests.",
+      "requirement_ids": [
+        "PIWR-021..PIWR-024"
+      ],
+      "slice_id": "S2",
+      "source_refs": [
+        "implementation-slices.md",
+        "requirements.v1.json"
+      ],
+      "tdd": {
+        "green": {
+          "command_id": "s2-green",
+          "expected_exit": "zero"
+        },
+        "red": {
+          "expected_failure_ids": [
+            "PIWR-S2-RED"
+          ],
+          "test_selector": "tests/phase_b_c_identity_isolation/test_s2_snapshot.py"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "s2-terminal",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "title": "Logical Workspace and Immutable Snapshot"
+    },
+    {
+      "acceptance_ids": [
+        "PIWR-A08",
+        "PIWR-A09",
+        "PIWR-A10",
+        "PIWR-A11",
+        "PIWR-A12",
+        "PIWR-A13",
+        "PIWR-A14",
+        "PIWR-A18"
+      ],
+      "allowed_changes": {
+        "documentation": [
+          "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/**"
+        ],
+        "production": [
+          "PhaseA.Platform/**"
+        ],
+        "tests": [
+          "tests/phase_b_c_identity_isolation/**",
+          "PhaseA.Platform.Tests/**"
+        ]
+      },
+      "dependency_closure": [
+        "PhaseA.Platform/**",
+        "PhaseA.Platform.Tests/**"
+      ],
+      "depends_on": [
+        "S0",
+        "S1",
+        "S2"
+      ],
+      "execution_read_set": [
+        "implementation-slices.md",
+        "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/workspace-recovery-contract.md"
+      ],
+      "execution_snapshot_paths": [
+        "implementation-contract.v1.json",
+        "command-registry.v1.json",
+        "authority-manifest.v1.json"
+      ],
+      "exit_predicate": "slice-ready",
+      "forbidden_changes": [
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**"
+      ],
+      "planned_new_files": [
+        "tests/phase_b_c_identity_isolation/test_s3_restore_recovery.py"
+      ],
+      "post_refactor_command_id": "s3-terminal",
+      "recovery": "Resume durable Restore Attempt or quarantine; never infer from chat or logs.",
+      "requirement_ids": [
+        "PIWR-025..PIWR-032"
+      ],
+      "slice_id": "S3",
+      "source_refs": [
+        "implementation-slices.md",
+        "requirements.v1.json"
+      ],
+      "tdd": {
+        "green": {
+          "command_id": "s3-green",
+          "expected_exit": "zero"
+        },
+        "red": {
+          "expected_failure_ids": [
+            "PIWR-S3-RED"
+          ],
+          "test_selector": "tests/phase_b_c_identity_isolation/test_s3_restore_recovery.py"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "s3-terminal",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "title": "Restore Attempt and Fail-Safe Publication"
+    },
+    {
+      "acceptance_ids": [
+        "PIWR-A04",
+        "PIWR-A12",
+        "PIWR-A15",
+        "PIWR-A16",
+        "PIWR-A17",
+        "PIWR-A18"
+      ],
+      "allowed_changes": {
+        "documentation": [
+          "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/**"
+        ],
+        "production": [
+          "PhaseA.Platform/**"
+        ],
+        "tests": [
+          "tests/phase_b_c_identity_isolation/**",
+          "PhaseA.Platform.Tests/**"
+        ]
+      },
+      "dependency_closure": [
+        "PhaseA.Platform/**",
+        "PhaseA.Platform.Tests/**"
+      ],
+      "depends_on": [
+        "S0",
+        "S1",
+        "S2",
+        "S3"
+      ],
+      "execution_read_set": [
+        "implementation-slices.md",
+        "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/api-evolution-and-operations.md"
+      ],
+      "execution_snapshot_paths": [
+        "implementation-contract.v1.json",
+        "command-registry.v1.json",
+        "authority-manifest.v1.json"
+      ],
+      "exit_predicate": "implementation-candidate",
+      "forbidden_changes": [
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**"
+      ],
+      "planned_new_files": [
+        "tests/phase_b_c_identity_isolation/test_s4_migration_evidence.py"
+      ],
+      "post_refactor_command_id": "s4-terminal",
+      "recovery": "Resume additive migrations and evidence validation without mutating live metadata.",
+      "requirement_ids": [
+        "PIWR-033..PIWR-040"
+      ],
+      "slice_id": "S4",
+      "source_refs": [
+        "implementation-slices.md",
+        "requirements.v1.json"
+      ],
+      "tdd": {
+        "green": {
+          "command_id": "s4-green",
+          "expected_exit": "zero"
+        },
+        "red": {
+          "expected_failure_ids": [
+            "PIWR-S4-RED"
+          ],
+          "test_selector": "tests/phase_b_c_identity_isolation/test_s4_migration_evidence.py"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "s4-terminal",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "title": "API Evolution, Migration, Audit, and Evidence"
+    }
+  ]
+}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import stat
 import subprocess
 import tempfile
 from contextlib import contextmanager
@@ -60,6 +61,11 @@ def _native_path(path: Path) -> Path:
     return Path("\\\\?\\" + rendered)
 
 
+def _clear_readonly_and_retry(operation, path: str, _exception) -> None:
+    os.chmod(path, stat.S_IWRITE)
+    operation(path)
+
+
 def read_only_index_tree(repository_root: Path) -> str:
     temporary = Path(tempfile.mkdtemp(prefix="ri", dir=repository_root.anchor))
     try:
@@ -83,7 +89,7 @@ def read_only_index_tree(repository_root: Path) -> str:
     finally:
         native = _native_path(temporary)
         if native.exists():
-            shutil.rmtree(native)
+            shutil.rmtree(native, onexc=_clear_readonly_and_retry)
 
 
 @contextmanager
@@ -126,4 +132,4 @@ def isolated_test_repository(repository_root: Path, plan_root: Path):
     finally:
         native = _native_path(temporary)
         if native.exists():
-            shutil.rmtree(native)
+            shutil.rmtree(native, onexc=_clear_readonly_and_retry)

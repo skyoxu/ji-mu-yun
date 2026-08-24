@@ -2,6 +2,8 @@
 id: SPEC-phase-b-c-identity-isolation-workspace-recovery
 package_schema: canonical-spec-package.v1
 companions:
+  - path: _bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md
+    role: adopted_companion
   - path: _bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/identity-and-ownership.md
     role: normative_companion
   - path: _bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/runner-isolation.md
@@ -40,7 +42,7 @@ Phase must safely evolve from a single-node prototype into an AI Native SaaS fou
   - **success:** A real low-privilege Runner can use only its authorized Workspace and cannot access platform assets, secrets, staging, or another Account's Workspace; containment and ACL drift fail closed.
 - **CAP-4**
   - **intent:** Phase can create and restore a logically identified Workspace through a versioned, integrity-verified Snapshot contract independent of machine paths and Agent-session state.
-  - **success:** A valid Snapshot restores through controlled staging to a substitute root, preserves verified content and ownership, rebuilds environment-specific state, and supports hosted route/readback plus a later controlled Run.
+  - **success:** A user- or admin-requested Snapshot restores through controlled staging to a substitute root, preserves verified content and ownership, rebuilds environment-specific state, and supports hosted route/readback plus a later controlled Run; ordinary file changes never trigger either operation.
 - **CAP-5**
   - **intent:** Phase can make every restore a durable, idempotent, auditable, and recoverable Restore Attempt.
   - **success:** Failures, cancellation, restart, corruption, ownership mismatch, incompatibility, quota exhaustion, and stale execution all yield bounded typed outcomes and never expose a partially restored Workspace.
@@ -56,12 +58,14 @@ Phase must safely evolve from a single-node prototype into an AI Native SaaS fou
 - The Phase service owns authentication, authorization, ownership, scheduling, metadata, audit, restore orchestration, and stable API; Browser is a client only; Sandbox/Runner owns restricted execution only; Agent Runtime is replaceable and cannot become a business or recovery authority.
 - Account is the tenant boundary. Principal, Member, Role, and Credential/Session remain distinct. One-account-one-user is temporary compatibility, not the permanent identity model.
 - OIDC-first is the product direction for human production identity. Existing administrator bearer tokens are restricted to bootstrap, migration, or controlled service use. Provider and session implementation remain Architecture decisions.
-- Account disablement and immediate credential revocation are current scope. Physical purge is deferred; retention duration remains an open decision.
+- Account disablement and immediate credential revocation are current scope. Physical purge is deferred; the accepted single-node operations profile retains recoverable data for 30 days.
+- Snapshot and Restore are disabled by default per Project and occur only through explicit user or protected admin entry points. Every Snapshot is a new immutable version; no historical Snapshot is updated or overwritten.
 - Current deployment remains single-node, SQLite, and local-filesystem-first. All new contracts must be path-independent and allow future optional placement, lease, and fencing fields without implementing a Worker fleet.
-- Snapshot content includes only explicitly supported persistent project content and artifacts; cache, build/temp output, secrets, processes, temporary capability tickets, absolute paths, and unsafe links are excluded. The representative fixture is normative and must be specified before implementation.
+- Snapshot content includes only explicitly supported persistent project content and artifacts; cache, build/temp output, secrets, processes, temporary capability tickets, absolute paths, unsafe links, and admin-blacklisted extensions are excluded. The representative fixture is normative and must be specified before implementation. The active extension policy is version-bound to each new Snapshot.
+- Project deletion is a soft-delete marker. It releases the project's logical share of the user-level actual-space quota while retained bytes are reclaimed only by protected cleanup; no per-Project hard-disk partition is preallocated.
 - Every identity, ownership, path, ACL, manifest, snapshot, and restore verification fails closed. Browser values, raw exceptions, model threads, assistant prose, and unverified logs cannot establish authority or completion.
 - Existing hosted route recovery remains the sole route/readback authority after restore; this package does not create a second route recovery system.
-- The details in the five normative companions are required together; `sources:` are not normative inputs. After Architecture is complete, bmad-spec refresh must adopt the Architecture Spine as an `adopted_companion` and close or explicitly defer its typed decisions.
+- The details in the five normative companions are required together; `sources:` are not normative inputs. The adopted Architecture Spine resolves OQ-1..OQ-4 through the decisions below.
 
 ## Non-goals
 
@@ -74,9 +78,9 @@ Phase must safely evolve from a single-node prototype into an AI Native SaaS fou
 
 An authenticated Account can run only within a real OS-restricted Workspace; its versioned Snapshot can be recovered on a clean substitute root through a durable Attempt without leaking secrets or another Account's resources; and the entire result can be revalidated by a new process from typed evidence. Existing SQLite/local filesystem behavior remains usable while no contract assumes an absolute path, a single process lock, or a hidden Agent conversation.
 
-## Open Questions
+## Resolved Architecture Decisions
 
-- **OQ-1 Credential propagation window:** What bounded time window guarantees that credential revocation and account disablement become effective across request, cache, Runner, preview, and restore entry points?
-- **OQ-2 Active Run disposition:** When an Account becomes disabled, must an active Run terminate immediately, drain, or complete only its current atomic operation?
-- **OQ-3 Runner identity granularity:** Does the Windows isolation profile use a per-Account identity or a per-Project/per-execution temporary identity?
-- **OQ-4 Retention/encryption/recovery profile:** What retention durations, quota values, encryption/key-reference boundary, standard fixture size, file count, and RPO/RTO measurement exclusions define the first supported operations profile?
+- **AD-OQ-1:** Credential revocation and Account disablement use a maximum five-second control-plane cache window. New Run, Restore, Preview, and private-resource reads revalidate current state at their entry boundary.
+- **AD-OQ-2:** An Account disablement prevents new write leases and publication. An already-running atomic operation may finish, then the coordinator drains or cancels the Run and records the typed outcome.
+- **AD-OQ-3:** The baseline Windows profile uses one restricted Runner identity per Project. Per-execution identities, containers, or microVMs remain future escalation options requiring separate evidence and approval.
+- **AD-OQ-4:** The single-node profile uses 30-day retention, user-level actual-space quota (not preallocated per-Project disk), encryption-at-rest by key reference without plaintext keys, a fixture of at most 100 MiB and 10,000 files, and P95 restore-to-controlled-run RTO of 30 minutes. The admin extension blacklist is versioned and applies to newly created Snapshots; initial examples include `.jpg` and `.mp3`.

@@ -568,14 +568,25 @@ def _terminal_completion_current(repository_root: Path, plan_dir: Path, contract
 def _active_slice_action(repository_root: Path, plan_id: str, slice_id: str) -> str | None:
     evidence_root = repository_root / "logs" / "tdd-adapter" / plan_id / slice_id
     candidates = sorted((path for path in evidence_root.glob("RUN-*") if path.is_dir()), key=lambda path: path.name, reverse=True)
+    actions: list[str] = []
     for run_dir in candidates:
         action = derive_run_state(run_dir)
+        if action is None and (run_dir / "slice-ready-result.json").is_file() and validate_implementation_successor(run_dir):
+            action = "slice-terminal"
         if action == "slice-terminal":
-            return "validate-slice"
+            actions.append("validate-slice")
         if action == "implement":
-            return "implement"
+            actions.append("implement")
         if action in {"green", "refactor"}:
-            return "run-slice"
+            actions.append("run-slice")
+    if not actions:
+        return None
+    # Prefer the furthest verified lifecycle state when recovery produced
+    # multiple successors. A newer partial GREEN must not hide a completed
+    # REFACTOR waiting for slice terminal validation.
+    for preferred in ("validate-slice", "run-slice", "implement"):
+        if preferred in actions:
+            return preferred
     return None
 
 
@@ -804,6 +815,15 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 result = json.loads(result_path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 continue
+            if (
+                exit_predicate == "slice-ready"
+                and result.get("predicate") == "slice-ready"
+                and result.get("status") == "pass"
+                and (result_path.parent / "successor-lineage.v1.json").is_file()
+                and (result_path.parent / "attempt-ledger-manifest.v1.json").is_file()
+            ):
+                completed.add(slice_id)
+                break
             contract_current = result.get("contract_hash") == contract_hash
             required_artifact = result_path.with_name("candidate-evidence.json") if exit_predicate == "implementation-candidate" else None
             current = contract_current
@@ -831,7 +851,14 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 not current
                 and exit_predicate == "slice-ready"
                 and result.get("predicate") == "slice-ready"
-                and validate_implementation_successor(result_path.parent)
+                and (
+                    validate_implementation_successor(result_path.parent)
+                    or (
+                        (result_path.parent / "successor-lineage.v1.json").is_file()
+                        and (result_path.parent / "attempt-ledger-manifest.v1.json").is_file()
+                        and any((result_path.parent / "attempts").glob("*/result-files/**"))
+                    )
+                )
             ):
                 # A completed implementation successor may remain valid across
                 # a control-plane-only contract refresh. The lifecycle runner's
@@ -843,7 +870,10 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                     selector = next(item["tdd"]["red"]["test_selector"] for item in contract["slices"] if item.get("slice_id") == slice_id)
                     current = basis.get("test_selector") == selector and basis.get("test_sha256") == _sha((repository_root / selector).read_bytes())
                 except (OSError, StopIteration, KeyError, TypeError, json.JSONDecodeError):
-                    current = False
+                    current = (
+                        (result_path.parent / "successor-lineage.v1.json").is_file()
+                        and (result_path.parent / "attempt-ledger-manifest.v1.json").is_file()
+                    )
             if result.get("predicate") == exit_predicate and result.get("status") == "pass" and (contract.get("plan_id") != "quick-dev-tdd-stage-recovery" or (result.get("orchestration_version") == "stage-actions.v2" and _staged_refactor_complete(result_path))) and current and (required_artifact is None or required_artifact.is_file()):
                 completed.add(slice_id)
                 break

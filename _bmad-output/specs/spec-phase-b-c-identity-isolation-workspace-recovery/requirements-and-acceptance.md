@@ -41,6 +41,7 @@
 | NFR-004 Compatibility | identity-and-ownership.md, api-evolution-and-operations.md |
 | NFR-005 Recoverability | workspace-recovery-contract.md, SPEC.md |
 | NFR-006 Observability | api-evolution-and-operations.md |
+| NFR-007 User-level space control | workspace-recovery-contract.md, api-evolution-and-operations.md |
 
 ## Acceptance contract
 
@@ -65,16 +66,16 @@
 | PIWR-A17 | API authorization positive/negative evidence is present; React E2E follows React baseline. | PIWR-010, 033, 036 |
 | PIWR-A18 | New-process evidence package covers isolation, permissions, round-trip, fault, DB upgrade, and redaction. | PIWR-001..040 |
 
-## Deferred and resolved product choices
+## Resolved product choices and Architecture decisions
 
 | Source question | Canonical disposition |
 | --- | --- |
 | PIWR-Q01 Account meaning | Resolved: Account is Tenant; one-to-one user compatibility is temporary. |
 | PIWR-Q02 Production identity | Resolved direction: OIDC-first; provider/session design deferred to Architecture. |
-| PIWR-Q03 Disable/delete/retention | Resolved current scope: disablement and immediate revocation; physical purge deferred. Retention duration remains OQ-4. |
-| PIWR-Q04 OS identity granularity | Open OQ-3 for Architecture. |
+| PIWR-Q03 Disable/delete/retention | Resolved: disablement and immediate revocation; physical purge deferred; accepted retention profile is 30 days with user-level actual-space quota. |
+| PIWR-Q04 OS identity granularity | Resolved by Architecture: baseline is one restricted Runner identity per Project; stronger per-execution/container/microVM isolation requires a future evidence gate. |
 | PIWR-Q05 Snapshot content | Resolved boundary in `workspace-recovery-contract.md`; representative fixture fixed in the operations profile. |
-| PIWR-Q06 Retention/quota/encryption/RPO/RTO | Open OQ-4 for Spec/Architecture operations profile. |
+| PIWR-Q06 Retention/quota/encryption/RPO/RTO | Resolved by Architecture: 30-day retention, user-level actual-space quota, key-reference encryption boundary, fixture <=100 MiB and <=10,000 files, P95 RTO 30 minutes, and versioned admin extension blacklist. |
 | PIWR-Q07 React timing | Resolved: deferred and non-blocking for backend closure. |
 
 ## Wrapper-only content

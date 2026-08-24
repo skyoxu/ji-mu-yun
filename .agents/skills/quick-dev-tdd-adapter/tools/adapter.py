@@ -171,6 +171,13 @@ def _run_path(run_dir: Path, relative: str) -> Path | None:
     return candidate
 
 
+def _write_path(path: Path) -> Path:
+    """Use the Windows extended-length form for deep immutable evidence paths."""
+    if sys.platform == "win32" and len(str(path)) >= 240 and not str(path).startswith("\\\\?\\"):
+        return Path("\\\\?\\" + str(path))
+    return path
+
+
 def compose_stage_binding(protocol_bundle: dict[str, Any], stage: str) -> dict[str, str]:
     """Derive one non-authoritative stage binding from caller-supplied protocol documents."""
     if stage not in {"red", "green", "refactor"} or protocol_bundle.get("schema_version") != "rmap.capsule-attempt-bundle.v1":
@@ -283,6 +290,7 @@ def persist_protocol_bundle(
         destination = _run_path(run_dir, path)
         if destination is None:
             raise ValueError("protocol artifact escapes the run")
+        destination = _write_path(destination)
         destination.parent.mkdir(parents=True, exist_ok=True)
         if not destination.exists():
             destination.write_bytes(payloads[path])
@@ -290,6 +298,7 @@ def persist_protocol_bundle(
         destination = _run_path(run_dir, path)
         if destination is None:
             raise ValueError("protocol artifact escapes the run")
+        destination = _write_path(destination)
         destination.parent.mkdir(parents=True, exist_ok=True)
         if not destination.exists():
             destination.write_bytes(payloads[path])

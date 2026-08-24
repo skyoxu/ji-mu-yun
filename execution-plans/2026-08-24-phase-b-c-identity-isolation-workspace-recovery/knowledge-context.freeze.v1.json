@@ -1,0 +1,24 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:99bec2788969c1afe05a0d0b4aaf5e838f4b87f0bb722976ae36b8d07e4242ce",
+  "canonical_context_sha256": "sha256:0b357ed374a5f69459b96c7dc5093f55239a7edd36e7de1de52603159aa7b85f",
+  "request_sha256": "sha256:eae81c6a131fb693d8a8ede218f4b510c2811d3ed03ef96acb403ee97bfd08a1",
+  "result_sha256": "sha256:6137b7137ccefa2779c79809d47f726832418636b53414c2272d8e4b2e263628",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
+  },
+  "source_snapshot_id": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+      "satisfies": [
+        "repository-rules"
+      ]
+    }
+  ],
+  "authorizes": []
+}

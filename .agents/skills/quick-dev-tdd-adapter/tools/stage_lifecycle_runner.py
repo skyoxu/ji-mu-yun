@@ -122,7 +122,22 @@ def validate_implementation_successor(run_dir: Path) -> bool:
     receipt_path = _implementation_successor_path(run_dir)
     red_path = run_dir / "observations" / "red-observed.json"
     if not basis_path.is_file() or not receipt_path.is_file() or not red_path.is_file():
-        return False
+        # A terminal-only successor may intentionally carry the predecessor
+        # RED through prior-red-handoff instead of copying red-basis. Validate
+        # its immutable lineage against the referenced predecessor run.
+        handoff = run_dir / "prior-red-handoff.v2.json"
+        if not handoff.is_file() or not receipt_path.is_file():
+            return False
+        try:
+            value = json.loads(handoff.read_text(encoding="utf-8"))
+            root = next((parent.parent for parent in run_dir.parents if parent.name == "logs"), None)
+            if root is None:
+                return False
+            predecessor = (root / value["red_observation"]["path"]).resolve()
+            predecessor_run = predecessor.parent.parent
+            return validate_implementation_successor(predecessor_run)
+        except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError):
+            return False
     try:
         basis = json.loads(basis_path.read_text(encoding="utf-8"))
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))

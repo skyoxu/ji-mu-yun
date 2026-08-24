@@ -1,0 +1,24 @@
+{
+  "authority_manifest": {
+    "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/authority-manifest.v1.json",
+    "sha256": "sha256:9e105578e27194fa509df4f5a5ce4f08a8d6345053c50c7a6928989cec446771"
+  },
+  "authorizes": [
+    "implementation-authorized"
+  ],
+  "decision": {
+    "owner": "maintainer",
+    "reason": "explicit-maintainer-authorization",
+    "transition": "implementation-authorized"
+  },
+  "implementation_contract": {
+    "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/implementation-contract.v1.json",
+    "sha256": "sha256:50e22d67adc224a0ea60f0ca50bdbce0d1be9cd1d90f276b5dc6f82605cb372e"
+  },
+  "knowledge_context_freeze": {
+    "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/knowledge-context.freeze.v1.json",
+    "sha256": "sha256:35b5062c8837435aef6618774162e85318323f9f6fcb0090e67b2bd81b1f288d"
+  },
+  "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "schema_version": "phase-b-c-identity-isolation-workspace-recovery.implementation-authorization-receipt.v1"
+}

@@ -272,6 +272,29 @@ class KnowledgeContextValidationTests(unittest.TestCase):
             document = payload(digest=hashlib.sha256(source.read_bytes()).hexdigest())
             self.assertIsNone(validation.validate_worktree_sources(document, root))
 
+    def test_rejected_catalog_candidate_drift_does_not_block_selected_read_set(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            selected = root / "AGENTS.md"
+            rejected = root / "README.md"
+            selected.write_text("rules\n", encoding="utf-8")
+            rejected.write_text("changed\n", encoding="utf-8")
+            document = payload(digest=hashlib.sha256(selected.read_bytes()).hexdigest())
+            rejected_digest = "b" * 64
+            document["locator_result"]["candidates"].append({
+                "path": "README.md",
+                "source_sha256": rejected_digest,
+                "read_set": [{"path": "README.md", "source_sha256": rejected_digest}],
+            })
+            document["decisions"].append({
+                "owner": "adapter",
+                "candidate": {"path": "README.md", "source_sha256": rejected_digest},
+                "decision": "rejected",
+                "satisfies": [],
+                "rejection_reason": "insufficient_specificity",
+            })
+            self.assertIsNone(validation.validate_worktree_sources(document, root))
+
     def test_hash_only_read_set_drift_is_refreshed_without_selection_expansion(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-23T16:18:37.940143Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The specification defines Phase B/C evolution from a single-node prototype to an independently verifiable foundation. It covers server-controlled identity and account ownership, consistent private-resource isolation, OS-restricted Runner execution, versioned integrity-checked Workspace snapshots, durable restore attempts, compatible asynchronous resource state, and machine-verifiable evidence.",
+      "title": "Purpose and Capabilities"
+    },
+    {
+      "content": "The Phase service owns identity, ownership, scheduling, metadata, audit, restore orchestration, and stable APIs. Account is the tenant boundary and Browser is only a client. Deployment remains single-node with SQLite and local storage. Snapshots are explicit, immutable, path-independent, and exclude unsupported transient or sensitive project content. Restore and verification fail closed, project deletion is soft deletion, and retained data follows a 30-day single-node profile.",
+      "title": "Constraints and Scope"
+    },
+    {
+      "content": "Control-plane state may be cached for at most five seconds, with entry-boundary revalidation for new Runs, Restores, Previews, and private reads. Account disablement blocks new write leases and publication while atomic work drains or records a typed outcome. The baseline Windows profile assigns one restricted Runner identity per Project. The profile uses user-level actual-space quota, key references for encryption at rest, a fixture capped at 100 MiB and 10,000 files, and a 30-minute P95 restore-to-controlled-run target.",
+      "title": "Resolved Decisions"
+    }
+  ],
+  "source_manifest_hash": "sha256:7c9e12e6058195d8851765e303552b02a063b343bd42d9db4fd917e9c87dc255",
+  "truncated": false
+}

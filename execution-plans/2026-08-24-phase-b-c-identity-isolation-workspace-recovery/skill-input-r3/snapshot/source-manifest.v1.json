@@ -1,0 +1,16 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "vdd-execution-plan",
+  "operation": "create",
+  "sources": [
+    {
+      "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+      "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff",
+      "semantic_snapshot_sha256": "sha256:382095432f22d085d9f123258317b611f74494192b0ad3a01f16488f63c612ac",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    }
+  ],
+  "created_at": "2026-08-23T16:18:37.940143Z"
+}

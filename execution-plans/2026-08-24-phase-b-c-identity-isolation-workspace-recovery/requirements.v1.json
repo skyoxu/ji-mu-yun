@@ -1,0 +1,18 @@
+{
+  "schema_version": "vdd-requirements-ledger.v1",
+  "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "profile": "resumable",
+  "canonical_spec": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+  "capabilities": ["CAP-1", "CAP-2", "CAP-3", "CAP-4", "CAP-5", "CAP-6", "CAP-7"],
+  "obligations": {"FR": "FR-001..FR-026", "NFR": ["NFR-001", "NFR-002", "NFR-003", "NFR-004", "NFR-005", "NFR-006", "NFR-007"], "PIWR": "PIWR-001..PIWR-040", "acceptance": "PIWR-A01..PIWR-A18"},
+  "slices": [
+    {"slice_id":"S0","title":"Identity and Context Authority","obligations":["PIWR-001..PIWR-014"],"acceptance":["PIWR-A01","PIWR-A02","PIWR-A03","PIWR-A04","PIWR-A15","PIWR-A17"],"depends_on":[]},
+    {"slice_id":"S1","title":"Runner and OS Isolation","obligations":["PIWR-015..PIWR-020","PIWR-038"],"acceptance":["PIWR-A05","PIWR-A06","PIWR-A07","PIWR-A13","PIWR-A16"],"depends_on":["S0"]},
+    {"slice_id":"S2","title":"Logical Workspace and Immutable Snapshot","obligations":["PIWR-021..PIWR-024"],"acceptance":["PIWR-A08","PIWR-A09","PIWR-A10","PIWR-A14","PIWR-A16"],"depends_on":["S0","S1"]},
+    {"slice_id":"S3","title":"Restore Attempt and Fail-Safe Publication","obligations":["PIWR-025..PIWR-032"],"acceptance":["PIWR-A08","PIWR-A09","PIWR-A10","PIWR-A11","PIWR-A12","PIWR-A13","PIWR-A14","PIWR-A18"],"depends_on":["S0","S1","S2"]},
+    {"slice_id":"S4","title":"API Evolution, Migration, Audit, and Evidence","obligations":["PIWR-033..PIWR-040"],"acceptance":["PIWR-A04","PIWR-A12","PIWR-A15","PIWR-A16","PIWR-A17","PIWR-A18"],"depends_on":["S0","S1","S2","S3"]}
+  ],
+  "non_goals": ["React frontend rebuild","Program.cs refactor","multi-node scheduling","object storage","containers/microVMs","Codex App Server","Tasks/Taskmaster","unrelated Phase governance"],
+  "failure_intent_policy": "Quick Dev resolves each selector after candidate freeze and observes the real RED; VDD emits no RED command, run ID, receipt, or imported historical evidence.",
+  "lifecycle": {"owner":"vdd","initial":"draft","next":"plan-ready"}
+}
