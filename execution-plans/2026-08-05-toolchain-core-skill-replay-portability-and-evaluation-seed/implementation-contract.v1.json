@@ -6,6 +6,11 @@
   "backend": {"hidden_state":false,"provider_scheduling":false,"subprocess_ownership":false},
   "protocol_artifacts": {"context_layout":"context/<capsule-id>","attempt_layout":"attempts/<attempt-id>"},
   "authority": {"authority_manifest":"authority-manifest.v1.json"},
+  "terminal": {
+    "command_id": "terminal-implementation-validation",
+    "runner": "tools/validate_implementation.py",
+    "predicate": "implementation-complete"
+  },
   "artifact_contracts": {
     "historical_compatibility_replay": {
       "required_bindings":["historical_validator","historical_command_evidence","current_wrapper_replay"],
