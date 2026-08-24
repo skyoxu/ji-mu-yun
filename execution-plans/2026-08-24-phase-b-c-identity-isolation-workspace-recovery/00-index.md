@@ -1,16 +1,16 @@
 # Phase B/C Identity Isolation and Workspace Recovery
 
 - Title: Phase B/C Identity Isolation and Workspace Recovery
-- Status: semantic-review-complete; maintainer implementation authorization pending
+- Status: implementation-authorized
 - Profile: `resumable` — dependent identity, Runner, Snapshot, Restore, and API slices cross sessions but do not modify the VDD/Quick Dev/Acceptance control plane.
 - Branch: main
 - Git Head: dcd3cc04051cdb57bde3d40313ba88100ba63b47
 - Goal: Implement the accepted Phase B/C identity, execution isolation, Workspace Snapshot, Restore Attempt, and recovery contracts on the current single-node Phase service without expanding into multi-node or frontend rebuild work.
 - Scope: Canonical Spec Package `SPEC-phase-b-c-identity-isolation-workspace-recovery` and all six declared companions; PhaseA.Platform plus targeted tests, additive migrations, and required contract docs only.
-- Current step: External semantic review is rebound to the current candidate and successor exact-cover is conformant; awaiting maintainer authorization.
+- Current step: External semantic review is rebound to the current candidate, successor exact-cover is conformant, and maintainer authorization is published; ready for S0 RED.
 - Last completed step: Skill-input, knowledge preflight, source-freeze, and repair-round exact-cover projection.
 - Stop-loss: Stop on any protected auth/runner/storage boundary conflict, missing required authority, unsafe ownership inference, or failing targeted validation; do not mutate live metadata.
-- Next action: Maintainer must publish implementation authorization. This semantic receipt authorizes nothing and Quick Dev remains blocked until that separate transition.
+- Next action: Run Quick Dev TDD S0 RED. Authorization does not imply implementation completion, Acceptance, or release.
 - Recovery command: Read `00-index.md`, `requirements.v1.json`, `repair/round-1/requirements-acceptance.v1.json`, `repair/round-1/source-freeze.v1.json`, `implementation-slices.md`, `plan-state.v1.json`, `resume-state.v1.json`, and the latest indexed `95-*.md`; resolve semantic review before authorization.
 - Open questions: None that change scope. OIDC provider/session mechanics, exact Windows API composition, manifest serialization, storage tables, and migration layout remain implementation-owned seeds constrained by AD-1..AD-13.
 - Exit criteria: All active PIWR obligations and PIWR-A01..A18 have an observable acceptance path; targeted tests and one terminal full validation pass; lifecycle remains distinct through acceptance.
