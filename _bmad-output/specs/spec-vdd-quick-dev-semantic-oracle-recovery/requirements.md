@@ -11,13 +11,13 @@ This companion preserves the complete requirement IDs from the PRD. It is normat
 ## Execution, evidence and completion
 
 - **FR-3:** Freeze shell=false, executable, argv, cwd, target, fixture hash and RED oracle/test hash; GREEN/REFACTOR cannot replace the RED basis.
-- **FR-4:** Independent executor derives outcome, process receipt, target/fixture identity, execution count, failure_family, failure_id and actual matrix results. SUT status/observed_result is never accepted.
+- **FR-4:** Independent executor derives `evidence_state`, `verification_outcome`, process receipt, target/fixture identity, execution count, `failure_family`, `failure_id` and actual matrix results. SUT status/observed_result is never accepted; evidence state and verification outcome are distinct fields.
 - **FR-5:** Support test-runner and case-matrix adapters; 0 tests + exit 0 fails; matrix cases execute and compare actual results.
 - **FR-6:** `implementation-complete` requires all active IDs covered by current observations, receipts, non-zero execution, unchanged hashes and self-hosted independence.
 - **FR-7:** Produce semantic-observation.v1 and acceptance-coverage.v1 with schema, time, hashes, coverage and layered failure evidence.
-- **FR-11:** Distinguish planned-only, observed-run, recovered-run and invalid-run; only valid observed/recovered evidence contributes.
+- **FR-11:** Distinguish `evidence_state` values planned-only, observed-run, recovered-run and invalid-run from independent `verification_outcome`; only valid observed/recovered evidence contributes to completion, and evidence state cannot be inferred from outcome alone.
 - **FR-12:** Publish recommendation-only fields: recommended_action, forbidden_actions, reason, blocked_by, reusable_observations and invalidated_observations.
-- **FR-13:** Classify semantic-contract-gap, expected-red, unexpected-green, task-implementation-failure, test-harness-failure, target-binding-failure, repo-noise, timeout-no-observation, repeated-deterministic-failure and artifact-integrity. Repo noise is not RED; harness failure is not GREEN; timeout is neither pass nor fail; repeated deterministic failure stops blind reruns.
+- **FR-13:** Classify semantic-contract-gap, expected-red, unexpected-green, task-implementation-failure, test-harness-failure, target-binding-failure, repo-noise, timeout-no-observation, repeated-deterministic-failure and artifact-integrity as `failure_family` values with deterministic `failure_id` members. `verification_outcome` remains independent: repo noise is not RED; harness failure is not GREEN; timeout is neither pass nor fail; repeated deterministic failure stops blind reruns.
 - **FR-14:** Re-run affected oracles for code/test/schema/validator changes; reuse for ordinary non-semantic docs; recompute coverage for requirements/acceptance/plan changes; invalidate RED/GREEN/REFACTOR on fixture/target/command changes. Each oracle publishes reusable, invalidated_by and required_next_action.
 - **FR-15:** Profiles fast-ship, standard and self-hosted control cost/scope only; authenticity invariants remain mandatory.
 - **FR-17:** Quick Dev publishes an external-coordinator-consumable recovery artifact containing current state, evidence identity, recommendations, reusable/invalidated observations and live blockers. The top-level coordinator is out of scope.
@@ -54,8 +54,9 @@ This companion preserves the complete requirement IDs from the PRD. It is normat
 
 ## Layered result contract
 
-- **outcome:** run-level disposition such as planned-only, observed-run, recovered-run, invalid-run, pass, fail, blocked or incomplete.
-- **failure_family:** stable category explaining why a run or oracle cannot advance.
+- **evidence_state:** evidence lifecycle state: planned-only, observed-run, recovered-run or invalid-run. It answers whether evidence exists and is admissible.
+- **verification_outcome:** independent run/oracle disposition: pass, fail, blocked, incomplete or not-applicable. It answers what verification concluded.
+- **failure_family:** stable category explaining why verification cannot advance, or why an expected failure occurred.
 - **failure_id:** specific deterministic identity within a failure family, suitable for expected-failure matching.
 
-These layers are independent: a non-failing outcome may still carry no failure identity; a failure family groups IDs; a failure ID never substitutes for the run outcome.
+These layers are independent: `evidence_state` is not a verification result; `verification_outcome` is not an evidence lifecycle state; a non-failing outcome may carry no failure identity; a failure family groups IDs; a failure ID never substitutes for either state or outcome.

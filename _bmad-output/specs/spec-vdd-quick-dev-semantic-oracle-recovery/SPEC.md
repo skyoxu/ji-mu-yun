@@ -6,11 +6,11 @@ companions:
     role: normative_companion
   - path: _bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/open-questions.md
     role: normative_companion
-  - path: _bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/prd.md
-    role: adopted_companion
   - path: _bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/addendum.md
     role: adopted_companion
-sources: []
+sources:
+  - path: _bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/prd.md
+    role: provenance
 ---
 
 # VDD 与 Quick Dev 语义验证及独立裁判恢复
@@ -37,8 +37,8 @@ Ji Mu Yun 需要把 VDD 的验收意图转化为由真实进程产生、可审�
   - **intent:** Self-hosted changes can be verified by a frozen predecessor or external judge while the candidate remains only the SUT.
   - **success:** Required false-green regressions are blocked, corrected fixtures pass, and the candidate is eligible as the next executor only after independent N→N+1 validation.
 - **CAP-6**
-  - **intent:** Quick Dev can publish machine-readable run state, recommendation, failure, reuse and recovery artifacts for an external coordinator.
-  - **success:** Planned, observed, recovered and invalid runs are distinct; recommendation-only output identifies next/forbidden actions and invalidated evidence; FR-17 requires publication only, not implementation of the top-level coordinator.
+  - **intent:** Quick Dev can publish machine-readable evidence state, verification outcome, failure family, failure ID, recommendation, reuse and recovery artifacts for an external coordinator.
+  - **success:** `evidence_state` distinguishes planned, observed, recovered and invalid evidence; `verification_outcome` records run disposition; `failure_family` groups causes and `failure_id` identifies a deterministic case; recommendation-only output identifies next/forbidden actions and invalidated evidence; FR-17 requires publication only, not implementation of the top-level coordinator.
 - **CAP-7**
   - **intent:** Execution profiles and change-impact rules can control cost and selective replay without lowering authenticity.
   - **success:** fast-ship, standard and self-hosted profiles preserve real execution, exact cover, non-zero cases, target/fixture binding and independent judging; semantic changes invalidate or recompute coverage as required.
@@ -48,7 +48,7 @@ Ji Mu Yun 需要把 VDD 的验收意图转化为由真实进程产生、可审�
 - All FR, NFR and SM obligations in `requirements.md` are normative and stable.
 - VDD defines intent only; it must not generate commands, receipts or hashes.
 - Exact cover is sound-and-complete many-to-many coverage; multiple oracles may cover one Acceptance ID and one oracle may cover many IDs; exclusive partition is not required.
-- Outcome, failure_family and failure_id are separate layers and must not be conflated.
+- Evidence state, verification outcome, failure_family and failure_id are separate layers and must not be conflated.
 - Quick Dev must use real process execution, target/fixture binding and an independent judge; SUT self-report is not evidence.
 - Legacy plans remain read-only compatible; new self-hosted completion cannot use the legacy contract.
 - Review, commit authority, business-repository rules and Chapter 5 batch processing remain outside Quick Dev.
