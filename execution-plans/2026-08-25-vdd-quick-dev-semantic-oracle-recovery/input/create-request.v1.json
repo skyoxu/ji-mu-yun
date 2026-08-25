@@ -1,0 +1,9 @@
+{
+  "operation": "create",
+  "profile": "self-hosted",
+  "canonical_selection_hash": "sha256:61515842288ab50b48dc16641ef4136365652de92105da258ec6a09a71c3977e",
+  "canonical_selection_path": "_bmad-output/specs/canonical-spec-package-selections/sha256-61515842288ab50b48dc16641ef4136365652de92105da258ec6a09a71c3977e.json",
+  "requirements_root": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery",
+  "provenance_prd_excluded": true,
+  "intent": "Create a self-hosted execution plan for VDD, Quick Dev, independent executor/judge and coverage-gate semantic oracle recovery."
+}

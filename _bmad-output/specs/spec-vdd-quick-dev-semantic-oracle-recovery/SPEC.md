@@ -4,6 +4,8 @@ package_schema: canonical-spec-package.v1
 companions:
   - path: _bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements.md
     role: normative_companion
+  - path: _bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements-and-acceptance.md
+    role: normative_companion
   - path: _bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/open-questions.md
     role: normative_companion
   - path: _bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/addendum.md

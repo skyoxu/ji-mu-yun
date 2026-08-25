@@ -1,0 +1,37 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "vdd-execution-plan",
+  "operation": "create",
+  "sources": [
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/.memlog.md",
+      "sha256": "sha256:5bc8e963fc5771a96783eaba9b67c20d56de1a2aa282c9c70a13aa6a5c526bbd",
+      "semantic_snapshot_sha256": "sha256:5bc8e963fc5771a96783eaba9b67c20d56de1a2aa282c9c70a13aa6a5c526bbd",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+      "sha256": "sha256:5dfdcc8d243d548b2ce67ebd285c463d711a2075bcca5466625d15a8667989e5",
+      "semantic_snapshot_sha256": "sha256:5dfdcc8d243d548b2ce67ebd285c463d711a2075bcca5466625d15a8667989e5",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/open-questions.md",
+      "sha256": "sha256:44d67094533edc2bf609a1228e294d9c0f6e844990d9a414721cae8aebd16cfd",
+      "semantic_snapshot_sha256": "sha256:44d67094533edc2bf609a1228e294d9c0f6e844990d9a414721cae8aebd16cfd",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements.md",
+      "sha256": "sha256:bda1639113f918c0f203faf652a536d73743bbe69bb54d03aceb205602746805",
+      "semantic_snapshot_sha256": "sha256:bda1639113f918c0f203faf652a536d73743bbe69bb54d03aceb205602746805",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-25T10:26:47.966259Z"
+}

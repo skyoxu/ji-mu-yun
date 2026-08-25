@@ -1,0 +1,38 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:7db30664ab15efaa3099ad08027642163d674bb514c843c453f9e9c97a6a2446",
+  "canonical_context_sha256": "sha256:959e2081f0571956320a33692606c66491f28443dd8ad5fd4e2b62de457eb571",
+  "request_sha256": "sha256:998f2d2c2396d8f10edbe9cf15a7ca7853f54cf8cad334170d73bb79f35e3f6a",
+  "result_sha256": "sha256:d2a3aacbab98226010a229cbed1968359c1fa1b1fde90479dfa20321bd71ae4c",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
+  },
+  "source_snapshot_id": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
+      "satisfies": [
+        "adr.ADR-0048"
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007",
+      "satisfies": [
+        "repository-rules"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+      "source_sha256": "2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254",
+      "satisfies": [
+        "adr.ADR-0044"
+      ]
+    }
+  ],
+  "authorizes": []
+}

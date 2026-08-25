@@ -1,0 +1,6 @@
+{
+  "status": "complete",
+  "context_artifact": "C:/jimuyun/execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/skill-input/semantic-child/skill-input-context.v1.json",
+  "semantic_decision": "C:/jimuyun/execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/skill-input/semantic-child/semantic-decision.v1.json",
+  "source_manifest_hash": "sha256:545e65eaf4a19168c876e73fabb04cb94ff85c14f30cdcfd7541605f0c803785"
+}

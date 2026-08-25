@@ -1,0 +1,10 @@
+{
+  "schema_version": "vdd.lifecycle.v2",
+  "plan_id": "vdd-quick-dev-semantic-oracle-recovery",
+  "state": "plan-ready",
+  "owner": "vdd-execution-plan",
+  "profile": "self-hosted",
+  "canonical_selection_hash": "sha256:4cf516d611eb0aba633adcebc37df679e6270dd74f231fd98c782a6e754def40",
+  "baseline_commit": "ee3b9dbf6f4699200657d5698aed35258692808b",
+  "authorizes": ["plan-ready"]
+}

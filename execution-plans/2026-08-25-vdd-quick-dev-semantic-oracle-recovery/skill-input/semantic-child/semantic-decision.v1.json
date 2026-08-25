@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "context_artifact_hash": "sha256:5431a80757be2675ac84bb6ca338836b3416ca47d3204b80621cf44be42119b4",
+  "execution_identity": "sha256:4bf63385a853dad89396f00693b2e84214fe4dea5111bb0d6cfdd4fd89a3cfef",
+  "producer_role": "semantic-child",
+  "rationale": "Frozen inputs were reviewed.",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "redaction_status": "not-required",
+  "schema_version": "skill-semantic-decision.v1",
+  "source_manifest_hash": "sha256:545e65eaf4a19168c876e73fabb04cb94ff85c14f30cdcfd7541605f0c803785",
+  "source_statuses": {
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/.memlog.md": "accepted",
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md": "accepted",
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/open-questions.md": "accepted",
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements.md": "accepted"
+  },
+  "status": "accepted"
+}

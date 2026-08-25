@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-25T10:26:47.966259Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The canonical specification defines VDD and Quick Dev semantic verification with independent execution, real process evidence, target and fixture binding, exact sound-and-complete many-to-many Acceptance ID coverage, and publication of an external recovery artifact.",
+      "title": "Specification"
+    },
+    {
+      "content": "Normative requirements cover semantic verification contracts, preflight lanes, frozen execution descriptors, independent judging, non-zero execution, layered evidence and outcomes, deterministic failure identities, selective reuse and invalidation, self-hosted predecessor validation, false-green regressions, profiles, recovery, and completion gating.",
+      "title": "Requirements"
+    },
+    {
+      "content": "The package preserves provenance and adopted companion roles, separates evidence_state, verification_outcome, failure_family, and failure_id, and resolves artifact authority, evidence snapshots, identity construction, and promotion ownership. Comparator policy, judge lifecycle, rollback probes, unexpected-green proof, stop-loss thresholds, platform compatibility, and detailed reuse remain deferred.",
+      "title": "Decisions And Open Questions"
+    }
+  ],
+  "source_manifest_hash": "sha256:545e65eaf4a19168c876e73fabb04cb94ff85c14f30cdcfd7541605f0c803785",
+  "truncated": false
+}

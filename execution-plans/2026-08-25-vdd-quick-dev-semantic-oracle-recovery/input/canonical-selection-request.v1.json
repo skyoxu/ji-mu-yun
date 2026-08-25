@@ -1,0 +1,15 @@
+{
+  "operation": "create",
+  "profile": "self-hosted",
+  "canonical_selection_hash": "sha256:61515842288ab50b48dc16641ef4136365652de92105da258ec6a09a71c3977e",
+  "selected_paths": [
+    "_bmad-output/specs/canonical-spec-package-selections/sha256-61515842288ab50b48dc16641ef4136365652de92105da258ec6a09a71c3977e.json",
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements.md",
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/open-questions.md",
+    "_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/addendum.md",
+    "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md"
+  ],
+  "excluded_paths": ["_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/prd.md"],
+  "intent": "Create the plan from the complete canonical role graph while excluding provenance-only PRD content."
+}
