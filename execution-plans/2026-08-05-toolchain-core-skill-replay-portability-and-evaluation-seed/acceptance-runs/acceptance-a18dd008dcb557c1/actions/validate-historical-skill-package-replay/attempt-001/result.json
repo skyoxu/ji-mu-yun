@@ -1,0 +1,87 @@
+{
+  "authorizes": [],
+  "commandId": "historical-skill-package-replay",
+  "commandRegistryHash": "sha256:354d807466ffefea43cd6b3f11fb6ee917be375b503e659aecefab79c3256a83",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "scripts/sc/skill_package_replay.py",
+      "replay-package",
+      "--target",
+      ".agents/skills/run-refactor-implementation-acceptance",
+      "--capability",
+      "scripts/sc/config/skill-package-validator-capability.v1.json",
+      "--probe-mode",
+      "detached-positive-negative"
+    ],
+    "commandId": "historical-skill-package-replay",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 300
+  },
+  "invocationHash": "sha256:5507fdf95204bce50312189f635ab4890df4d9c31a1cc92326c91ba279ee58f5",
+  "processResult": {
+    "commandId": "historical-skill-package-replay",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"authorizes\": [], \"current_wrapper_replay\": {\"authorizes\": [], \"capability\": {\"path\": \"scripts/sc/config/skill-package-validator-capability.v1.json\", \"sha256\": \"sha256:bd728dc93eb4fa871f0dd9a61fa3490adaa1d88cf781e61d61719445bb985cb0\"}, \"command\": [\"py\", \"-3\", \"-B\", \"scripts/sc/skill_package_replay.py\", \"replay-package\", \"--target\", \".agents/skills/run-refactor-implementation-acceptance\", \"--capability\", \"scripts/sc/config/skill-package-validator-capability.v1.json\", \"--probe-mode\", \"detached-positive-negative\"], \"entrypoint\": \"scripts/sc/skill_package_replay.py\", \"exit_code\": 0, \"probes\": [{\"exit_code\": 0, \"probe_id\": \"detached-positive\", \"status\": \"pass\"}, {\"exit_code\": 1, \"probe_id\": \"detached-negative\", \"status\": \"expected-failure\"}], \"resolved_validator\": {\"package_identity\": \"acceptance-package-v1\", \"path\": \".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py\", \"sha256\": \"sha256:b64a766120d73d136292243401b2395c45c0834914a43403d8c2cf18eddbb001\", \"version\": \"{\\\"authorizes\\\": [], \\\"findings\\\": [], \\\"status\\\": \\\"pass\\\"}\"}, \"schema_version\": \"jimuyun.skill-package-validation-receipt.v1\", \"status\": \"pass\", \"target_package\": {\"manifest_sha256\": \"sha256:886117a9cb41d2ce9901fb65e607a9e4b089ad8b23ea2314dd2b4b08a5906e9a\", \"path\": \".agents/skills/run-refactor-implementation-acceptance\"}}, \"exit_code\": 0, \"historical_command_evidence\": {\"command\": [\"py\", \"-3\", \"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py\"], \"path\": \"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md\", \"recorded_result\": \"pass\", \"sha256\": \"sha256:51a3e7b69d33760233c76573cec852e350927d82094ebec6e392ec69c7a83c63\"}, \"historical_portability\": \"machine-bound\", \"historical_validator\": {\"path\": \"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py\", \"sha256\": \"sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8\"}, \"schema_version\": \"jimuyun.tc-d1-historical-replay-receipt.v1\", \"status\": \"pass\"}\r\n",
+    "stdoutSha256": "sha256:e6aa55785023e04c3a18fb00a9e560bb67810c325dcc746de192a168e3499957"
+  },
+  "processResultHash": "sha256:98e60f8a4921be3da94182c12ec6382f411a5cfc425e2e689c79e9c3b2b7a8ac",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

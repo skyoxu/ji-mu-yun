@@ -1,0 +1,80 @@
+{
+  "authorizes": [],
+  "commandId": "skill-replay-tests",
+  "commandRegistryHash": "sha256:354d807466ffefea43cd6b3f11fb6ee917be375b503e659aecefab79c3256a83",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "scripts/sc/tests/test_skill_package_replay.py"
+    ],
+    "commandId": "skill-replay-tests",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 300
+  },
+  "invocationHash": "sha256:29451f47cf0345e1ba27fd1682bc3e7dcddb427d4b525685c399a6fafd210e99",
+  "processResult": {
+    "commandId": "skill-replay-tests",
+    "exitCode": 0,
+    "stderr": "..\r\n----------------------------------------------------------------------\r\nRan 2 tests in 0.650s\r\n\r\nOK\r\n",
+    "stderrSha256": "sha256:c64d9a6ceef4945d858ae42b1db1611ee3f4c895bf71f9c33df294f3ecb394e1",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:b7960e9eda009f084ec39b5bf6dbedb716cc51e8f80bfd9bc3c894fbe69769f3",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

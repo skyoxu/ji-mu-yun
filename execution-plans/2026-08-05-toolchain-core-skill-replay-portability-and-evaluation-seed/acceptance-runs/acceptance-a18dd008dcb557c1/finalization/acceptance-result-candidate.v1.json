@@ -1,0 +1,99 @@
+{
+  "authorizes": [],
+  "candidate": {
+    "actionReceipts": [
+      {
+        "path": "actions/validate-acceptance-package-validation/attempt-001/result.json",
+        "sha256": "sha256:a6fa8f40ad8de204f0138d4563a0886d22c1bf1e99172f27f2886847416aa5c1"
+      },
+      {
+        "path": "actions/validate-acceptance-targeted-tests/attempt-001/result.json",
+        "sha256": "sha256:ea9c3ce5f8b675d260637f7f70f7cfda3e440e59874003d18b9e1edac497eb12"
+      },
+      {
+        "path": "actions/validate-downstream-workflow-model-routing-replay/attempt-001/result.json",
+        "sha256": "sha256:74430821b27b034a4c4207f29585a489ca152fc256074fba60ce6704850b4124"
+      },
+      {
+        "path": "actions/validate-historical-skill-package-replay/attempt-001/result.json",
+        "sha256": "sha256:8e25099d4ecdbd627d727f0e6eb6e4340bbf6fd9ecdb509f6baf00dd2d8c37f5"
+      },
+      {
+        "path": "actions/validate-plan-validator/attempt-002/result.json",
+        "sha256": "sha256:3e2df4f0aaef3afc131068bc34a335e23fd7fa507825e9f2158a2dd55fb4d65e"
+      },
+      {
+        "path": "actions/validate-plan-validator-tests/attempt-001/result.json",
+        "sha256": "sha256:20e20869b8ac4fc4b71615304b953312130f994befd3c24d1015bcc415c8f3e2"
+      },
+      {
+        "path": "actions/validate-skill-replay-tests/attempt-001/result.json",
+        "sha256": "sha256:9e067cbe9b72d57a8b1b16b7dabaa3717dbda26d708e9ea89a9ec7d00d11ad89"
+      },
+      {
+        "path": "actions/validate-slice-s0-predicate/attempt-001/result.json",
+        "sha256": "sha256:72179c96f396326acf01398e5e046a738046fe40b548ca6268eadc88f0857d2f"
+      },
+      {
+        "path": "actions/validate-slice-s1-predicate/attempt-002/result.json",
+        "sha256": "sha256:22569ec98d33c7dc41b5bf79edc9ee347214ddd58366500525b6c86ea8d69220"
+      },
+      {
+        "path": "actions/validate-slice-s2-predicate/attempt-001/result.json",
+        "sha256": "sha256:12329151d94983f8c66f3d0f74ab831fd721144e0ee6f30bcaa86420ddc8ec47"
+      },
+      {
+        "path": "actions/validate-slice-s3-predicate/attempt-002/result.json",
+        "sha256": "sha256:d20c7c33dc8745106a06b1049e74d21e5364144b8be007c45ea06b00f0592420"
+      },
+      {
+        "path": "actions/validate-stable-candidate-matrix-replay/attempt-001/result.json",
+        "sha256": "sha256:76afef7f6a857f362bcc4a515bb89366fc94a2a12eb53e6f0f18b2b18c15fa08"
+      },
+      {
+        "path": "actions/validate-terminal-implementation-validation/attempt-001/result.json",
+        "sha256": "sha256:0c1abcc7fe645eaa7f7c3779337ce4c1be85dbff47d17017f8c56bae15569434"
+      },
+      {
+        "path": "actions/validate-vdd-skill-contract/attempt-001/result.json",
+        "sha256": "sha256:7541d89980ddcb8c42ef6c481025407116ea4c0f12f150e214de051968c9b878"
+      },
+      {
+        "path": "actions/validate-vdd-skill-tests/attempt-001/result.json",
+        "sha256": "sha256:882885a67242006ac2be7ccfc194bfbf38a75c3900d822fc40858af208d265a4"
+      }
+    ],
+    "authorizes": [],
+    "candidateCustodyHash": "sha256:f308c3e09ad2e62e8a684f124e2fdb1c3f4fa3eb903c22a599702cfdcdba0cb2",
+    "implementationReceiptBinding": {
+      "path": "repair/quick-dev-implementation-complete.970e59ccfb6b13e8.v2.json",
+      "sha256": "sha256:9bfb2bb34f338d932aa7d7dc9225a49c934db34f0534e77ef0141fe592a391b3",
+      "terminalCommandId": "terminal-implementation-validation"
+    },
+    "inputBindings": {
+      "candidateCustodyHash": "sha256:f308c3e09ad2e62e8a684f124e2fdb1c3f4fa3eb903c22a599702cfdcdba0cb2",
+      "contractHash": "sha256:cb51ea94536ac26fc671b9a7a75036a1de24f1d054f7aa51ae4e2625b407a867",
+      "knowledgeContextHash": "sha256:1c2d1c7b00feb75864c14d4a65f4cd102af292401d5bb17ce89e8c3d8fe9254a",
+      "runInputHash": "sha256:965e9f8a4921bdb6bc68c417954497959a17058d368a61429fa8fc6f316462ae",
+      "skillInputBindingHash": "sha256:6e6679caa91f32881842aaadaf4f30cf2c01adb19e38983844fe076d586d205c",
+      "skillInputContextHash": "sha256:a2eb245e28245872c9e9968926f946dd1b5c45bcc3e766b9bd58702cb114d3ef"
+    },
+    "prerequisiteBundle": {
+      "bundleHash": "sha256:5c4864ae733854303988d5030a61361b6700648e8840e77fdf5c87d689aa7d33",
+      "implementationReceipt": {
+        "path": "repair/quick-dev-implementation-complete.970e59ccfb6b13e8.v2.json",
+        "sha256": "sha256:9bfb2bb34f338d932aa7d7dc9225a49c934db34f0534e77ef0141fe592a391b3",
+        "terminalCommandId": "terminal-implementation-validation"
+      },
+      "path": "acceptance-inputs/acceptance-08-05-main-a7b68d81/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+      "sha256": "sha256:322067bdbcaeda295267ebd916111df885505a5cc912305804533c90734cd26a"
+    },
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-deterministic-evaluation.v1",
+    "status": "passed",
+    "terminalResultHash": "sha256:a6f96d0c5a66d5892c97c22aa9f8c09d66486bedce50fe87f7ce3eb4f78cf2a7"
+  },
+  "candidateHash": "sha256:02c47b779c63a43753a90369c6bc2fddd2ba7e86f10ce4c97a08c318f14ca55a",
+  "candidateInputHash": "sha256:f00eec8ed5fb6bd1adcf4eb4806a19f0ad7d879f7ceabdeaa7dd56fa1a956bde",
+  "schemaVersion": "acceptance-result-candidate.v1"
+}

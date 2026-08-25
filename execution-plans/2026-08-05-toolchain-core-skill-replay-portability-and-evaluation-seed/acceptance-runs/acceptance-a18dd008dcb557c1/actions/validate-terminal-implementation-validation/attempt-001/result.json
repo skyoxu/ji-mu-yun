@@ -1,0 +1,80 @@
+{
+  "authorizes": [],
+  "commandId": "terminal-implementation-validation",
+  "commandRegistryHash": "sha256:354d807466ffefea43cd6b3f11fb6ee917be375b503e659aecefab79c3256a83",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py"
+    ],
+    "commandId": "terminal-implementation-validation",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 1800
+  },
+  "invocationHash": "sha256:381175abcd558e9160de290ba6ae9dd746a2150c98bef5e2d711f8a3b8448f7d",
+  "processResult": {
+    "commandId": "terminal-implementation-validation",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\r\n  \"schema_version\": \"jimuyun.tc-d1-implementation-validation.v1\",\r\n  \"status\": \"pass\",\r\n  \"predicate\": \"implementation-complete\",\r\n  \"selected_slices\": [\r\n    \"RMAP-S0\",\r\n    \"RMAP-S1\",\r\n    \"RMAP-S2\",\r\n    \"RMAP-S3\"\r\n  ],\r\n  \"errors\": [],\r\n  \"failure_family\": null,\r\n  \"results\": [\r\n    {\r\n      \"command\": [\r\n        \"C:\\\\Users\\\\weiruan\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\",\r\n        \"-B\",\r\n        \"scripts/sc/tests/test_skill_package_replay.py\"\r\n      ],\r\n      \"exit_code\": 0,\r\n      \"stdout_sha256\": \"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\r\n      \"output_tail\": \"\"\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"C:\\\\Users\\\\weiruan\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\",\r\n        \"-B\",\r\n        \".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py\",\r\n        \"--skill-root\",\r\n        \".agents/skills/vdd-execution-plan\"\r\n      ],\r\n      \"exit_code\": 0,\r\n      \"stdout_sha256\": \"sha256:4cba835d482ac1ab88e53774b5f1eb000509cab421979edbb2fe5bbe5f13f7da\",\r\n      \"output_tail\": \"\"\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"C:\\\\Users\\\\weiruan\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\",\r\n        \"-B\",\r\n        \"-m\",\r\n        \"unittest\",\r\n        \"discover\",\r\n        \"-s\",\r\n        \".agents/skills/vdd-execution-plan/scripts/tests\",\r\n        \"-p\",\r\n        \"test_*.py\"\r\n      ],\r\n      \"exit_code\": 0,\r\n      \"stdout_sha256\": \"sha256:2ba31fd5dbf8a58aad3f5d310697f6d2aeabd32bf88f959f4adecf174ea332ed\",\r\n      \"output_tail\": \"\"\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \"-B\",\r\n        \"scripts/sc/skill_package_replay.py\",\r\n        \"replay-package\",\r\n        \"--target\",\r\n        \".agents/skills/run-refactor-implementation-acceptance\",\r\n        \"--capability\",\r\n        \"scripts/sc/config/skill-package-validator-capability.v1.json\",\r\n        \"--probe-mode\",\r\n        \"detached-positive-negative\"\r\n      ],\r\n      \"exit_code\": 0,\r\n      \"stdout_sha256\": \"sha256:caa6ff8dabbe803f4fcc6e71308fd49d91090d43ce5f997d7a5becc428e5d5cf\",\r\n      \"receipt_path\": \"execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json\",\r\n      \"receipt_match\": true,\r\n      \"output_tail\": \"\"\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \"-B\",\r\n        \"scripts/sc/skill_package_replay.py\",\r\n        \"replay-matrix\",\r\n        \"--matrix\",\r\n        \"execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json\"\r\n      ],\r\n      \"exit_code\": 0,\r\n      \"stdout_sha256\": \"sha256:0a92264de0adbfa4b06e1507c14405ba18465d7b5020ca5836bcc1cb89b9372b\",\r\n      \"receipt_path\": \"execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/stable-candidate-replay-matrix.v1.json\",\r\n      \"receipt_match\": true,\r\n      \"output_tail\": \"\"\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"C:\\\\Users\\\\weiruan\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\",\r\n        \"-B\",\r\n        \"-m\",\r\n        \"unittest\",\r\n        \"discover\",\r\n        \"-s\",\r\n        \".agents/skills/run-refactor-implementation-acceptance/tests\",\r\n        \"-p\",\r\n        \"test_*skill*replay*.py\"\r\n      ],\r\n      \"exit_code\": 0,\r\n      \"stdout_sha256\": \"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\r\n      \"output_tail\": \"\"\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"C:\\\\Users\\\\weiruan\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\",\r\n        \"-B\",\r\n        \".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py\",\r\n        \"validate-package\"\r\n      ],\r\n      \"exit_code\": 0,\r\n      \"stdout_sha256\": \"sha256:9815fcccf31130da67ae273fc6411ed8094d019631e2c026f5c532b43765830e\",\r\n      \"output_tail\": \"\"\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"C:\\\\Users\\\\weiruan\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\",\r\n        \"-B\",\r\n        \"execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py\"\r\n      ],\r\n      \"exit_code\": 0,\r\n      \"stdout_sha256\": \"sha256:dfcac206351a8967f7ee2b154524eb9d47eaad87d773206e398eefd1a275402a\",\r\n      \"output_tail\": \"\"\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"C:\\\\Users\\\\weiruan\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\",\r\n        \"-B\",\r\n        \"C:\\\\buildgame\\\\jimuyun\\\\execution-plans\\\\2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed\\\\tools\\\\validate_plan.py\",\r\n        \"--implementation-state\"\r\n      ],\r\n      \"exit_code\": 0,\r\n      \"stdout_sha256\": \"sha256:c33b5112ae9ae00e38c5f40027d90c2bb8b85143cbd32632bfa583a1ed2d225e\",\r\n      \"output_tail\": \"\"\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"C:\\\\Users\\\\weiruan\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\",\r\n        \"-B\",\r\n        \"-m\",\r\n        \"unittest\",\r\n        \"discover\",\r\n        \"-s\",\r\n        \"C:\\\\buildgame\\\\jimuyun\\\\execution-plans\\\\2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed\\\\tools\\\\tests\",\r\n        \"-p\",\r\n        \"test_*.py\"\r\n      ],\r\n      \"exit_code\": 0,\r\n      \"stdout_sha256\": \"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\r\n      \"output_tail\": \"\"\r\n    }\r\n  ],\r\n  \"mutable_authority_source_hashes\": {\r\n    \".agents/skills/vdd-execution-plan/SKILL.md\": \"sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba\",\r\n    \".agents/skills/run-refactor-implementation-acceptance/SKILL.md\": \"sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86\"\r\n  },\r\n  \"authorizes\": [\r\n    \"implementation-complete\"\r\n  ],\r\n  \"does_not_authorize\": [\r\n    \"acceptance-passed\",\r\n    \"release\",\r\n    \"archived\"\r\n  ]\r\n}\r\n",
+    "stdoutSha256": "sha256:fc7057826416d3b45ed218434209be51ad358f88c658962e0a82f05f0bef51db"
+  },
+  "processResultHash": "sha256:dedd5c5472a83e55c0d40ef6beeaddc0a8654c9877dafef99d0f0cc44ab2b619",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

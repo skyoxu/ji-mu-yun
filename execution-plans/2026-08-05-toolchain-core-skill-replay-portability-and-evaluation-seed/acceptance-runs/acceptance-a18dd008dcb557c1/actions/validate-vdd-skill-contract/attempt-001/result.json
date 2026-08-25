@@ -1,0 +1,82 @@
+{
+  "authorizes": [],
+  "commandId": "vdd-skill-contract",
+  "commandRegistryHash": "sha256:354d807466ffefea43cd6b3f11fb6ee917be375b503e659aecefab79c3256a83",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
+      "--skill-root",
+      ".agents/skills/vdd-execution-plan"
+    ],
+    "commandId": "vdd-skill-contract",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 180
+  },
+  "invocationHash": "sha256:73001f73ba63d7f3aff71dd886559eb2b09f2254e1fe236445a8642978107732",
+  "processResult": {
+    "commandId": "vdd-skill-contract",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\r\n  \"ok\": true,\r\n  \"checks\": [\r\n    \"required-files\",\r\n    \"required-headings\",\r\n    \"input-routing\",\r\n    \"static-lifecycle\",\r\n    \"review-reentry\",\r\n    \"profile-cases\",\r\n    \"clarification-fixtures\",\r\n    \"generic-source\"\r\n  ],\r\n  \"findings\": []\r\n}\r\n",
+    "stdoutSha256": "sha256:e9236db4a52dc110014c647361d99ce4a3f7cc25e819692e6cb44cbe0fe96a08"
+  },
+  "processResultHash": "sha256:31c4902e680e4c143a99373115303356d32d39f63461653337736a4af6fd7634",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}
