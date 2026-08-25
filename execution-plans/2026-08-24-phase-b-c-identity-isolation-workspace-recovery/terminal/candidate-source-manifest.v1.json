@@ -1,0 +1,5010 @@
+{
+  "schema_version": "jimuyun.candidate-source-manifest.v1",
+  "entries": [
+    {
+      "path": "PhaseA.Platform.Tests/Browser/AdminReviewQueueHttpIntegrationTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:071a1480d4cde066620b7e8a75cd607a7e13285f8141f491fd3d5b8a3a5652fd"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Browser/BrowserUiRendererTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:128c8bc7aa86d4a003b20f216cccb457a8178e84f0b45a8e95dc1532e4d06aca"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Configuration/PhaseAPlatformOptionsLoaderTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1a44eca4ed4753cb5a5c51a14c71ec43100471248cdd291404da8fea02e2ab05"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Data/HostedContextManifestIssuerTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:55c8afed0a273caa9814799942c96d75f1e33484bc26da444a999c3900b929b6"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Data/HostedContextManifestSignatureServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:cf4ee05a6ae752b06e20e987e9d8c3e68682e291dc87a7a27f2213d86405ef0a"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Data/HostedContextManifestStoreTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:2df522d1aa441fa5879fa9431b941c07d2fd5d12ebdcd2b6ffafe6613fdaab95"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Data/ProjectCreationFailureTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b6d7e796442abaedc8968050178ce786c3d6e3da65e19fabe1281338892a22eb"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Data/RunCancellationPolicyTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e99b3385e6385b6f06e5cf53dd524d4ef9eceb310e488e688bde136a4ee866c6"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Data/SqliteMetadataSchemaTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3706b77819956ce092cbe8e493c84901047615c4e35e8f013b6f19325fbdb66f"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Data/TempSqliteDatabase.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:64761d532606bfabfeb2a05a7344e7a044b024615e21a68bc99b675e6212a519"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Fixtures/ProjectSeedRepository/docs/game-type-guides/card-game.md",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b2fcbdb27be888556a0fa2718f5a859d1517da9262bd44f67e63f42d8ce08e33"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Fixtures/ProjectSeedRepository/docs/game-type-guides/game-types.csv",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a5d5634a00daa0a5ea1719fa59e6331e67710f7e66ee835a35778bc7396f26fc"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Fixtures/ProjectSeedRepository/docs/game-type-guides/rpg.md",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ded569b5bb58a4193cd4cc06c1ec12ccd4b7664e8c836495b91607ab9e66d176"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Fixtures/evidence-ref-kind.v1.json",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:142157a4c2ed90d12953101bbd6cf94da4fcef3302c43e76b7c2c858fd0736b9"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Fixtures/godot-engine-semantics.v1.json",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:43fdc129b16c956b1ffc39d493291791c1801f6a2a233af13e28d7265218ac9a"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Fixtures/godot-ui-capability-contract.v1.json",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ee054a9cb398bdf65abfba3f3792c16f127b87d358e34743422b6b832f0e9424"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Fixtures/godot-ui-style-catalog.v1.json",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b817a9be81f4ff05ec8ae7c6349357f7cfddb038a0a3ba8885e628e6e1423fb0"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Fixtures/godot-ui-style-contract.v1.example.json",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c954842bd22a5e3f417f7bc1282e9209b5133d72d576d966d8831d09edf88cec"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Fixtures/route-action-descriptors.v1.json",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:29bc6ed26376bf21ade31848cef2a49a8dfc9c09afa4cee8b44aef1ca2dcdcb3"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Fixtures/route-module-contracts.v1.json",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a83a9e5574dd56f7e5736254f4ef60cd69d78bf527e8da7601cecd947da11ef7"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Fixtures/route-status-vocabulary.v1.json",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b2c9b790cbca9b947fd0d71000402129367964dd1f1795611747080444ffcdc3"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Llm/AiCodeMirrorBillingClientTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c3279d1d8702abef0dc91e9dc820dc01ca4d0144342e703803792257e95f746f"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Llm/ChatServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:fa196769fd33d9b82cc50f4702c6281df08f20ef4a84dacc1a5f65204c872292"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Llm/LlmBindingServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d0e35dc90a41320effc583a74b7caa6151edbb21cde74b54b29169ad2561b981"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:15826140fc263c5f05c821c656c25f05266341fd6d88589c692aef8a45dee6cf"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Llm/LlmStopLossServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f49c1b27133d1e58d8e3f3815cd0e0ad41a82470930154945a7faeaf0dec506d"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Llm/ProjectChatHistoryServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5096556f9c900a92e098073776150d7ffc5566ae12eaacad353b30cc94c1667a"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:bc827fc832a8210653cf8508b37fd33c9c52e9cd09da950c4140fae95cb3417f"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Projects/ProjectCreationRequestJsonPolicyTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:94324637da5ea6cca76ca40f9a379f7c3f3c8e90be3d28f64961934948a48248"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Projects/ProjectCreationServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d09677f701ffebcb25881c7c84ac451b5a3eb3fb1646c83c2c69020e2f0fceb9"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Projects/ProjectDraftImportServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:356a3479f46b6e0acd51afa820faae7735afc6b38534ed6f63989ceae3cb0612"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Projects/ProjectInitializationRecoveryServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:03442e8c63b7c81189d4bca8621e906c189d513170f79c6f3e48fcfdd340e3d5"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Projects/ProjectRuleCatalogTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9622792f394c96c6a5ebe3623dd5985bbc00c03d8136d1ea0b38ae94358cbaf7"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Prototypes/GameTypeGuideCatalogTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7e95f51a3737f0b6b77b9cf39c0cf84357db1c3ef3bd2ca15535ad7afe33d835"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Prototypes/GameTypeTemplateCatalogTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:714cbb7f198ff7c36ad8a69e9eff5641a2ab4e442ab416edf2b7707369f6bbcd"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Prototypes/ProjectGameTypeMatchServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c03745b2ae349e315385e196ca7da540cf395bc260e2749c3f61ce91b9994c25"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Prototypes/SteamGameTypeMetadataProviderTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:56d6054866f20e1f17beaba896bf0e08d78a37c66bb8a49c16482b576af51625"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Readback/ArtifactReadbackServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ab0814073698ad41e04b1118d23b1630f1de6f152ac9161aa50c7bafb9603ec3"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Readback/ProjectWebPreviewSemanticAdapterServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e2048810355decbfa8205d9fa6d4cbfa9638ed02a5b1a43f0cf1f445186c58f0"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Readback/ProjectWebPreviewServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6938301ab0178b2425fea5bcc55c0aa683fd0587b64607dad3bd5b09b6d3551b"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/Chapter2BootstrapCommandBuilderTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:dadfdce2169feb8e6b34335e7bce31038986c86d05954332802aca416c6b20ec"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/Chapter2BootstrapServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f961784094ce7f3c0d5ecf951a746216231766dbee311b3c0c88f83ff5d61ee5"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8b3ef2bf582e87f365e0783cfc94830c9dec46b8b44504024275807649770d63"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/DiablolikeGddWorkflowIntegrationTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a702f70f9f74143ce77d9ed20cab3796e8268ad8b7aedf46bfb46bb7b6284b10"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/GameDesignDocumentServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:78605f52bdb5398fee14148ae54ad73653e87f420ae249ad7422f7c9a5944613"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/GameDesignQuestionFormServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:cde0b9b069d924a0a48195932f7889a0fe9eb533c6de74068ff87a63693a2756"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/GameDesignSceneRouteServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5bbe2fa7cf4a83e5e72e905ed69730b47696d5c6a554491ff63bb2ce7fb8a590"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/GddMilestoneStepServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:09c5bd4d9514736dfa7266a9bb5eb57638f45900f9a656872d1bdfbbf90ba765"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:823e0cc18f1187341bf3817434294e4f30ce447f22661b4688197567117d6d89"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/HeavyRunnerQueueServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e5c38b55c325f94bb8186530fdf75f9b24ffde7f8eb9dfdca0fb3276e8b67ee7"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/HostedProcessRunnerTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d5aa7b423dff41f06940a6bfa07297d7d5be2e0f7c3fb61671539264add3554e"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/IterationPlanExecutionPreflightTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8cf206753106f3fbbbc4072f6055fc490e0458fc86dad3dd71feabb824c13421"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/IterationPlanTraceabilityBuilderTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8b7e6bf94cb12df5513b981ea23d6faf76fa9b0c95cc63c13b06d5715a00cc6a"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PhaseAPrototypeRouteE2ETests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ff7551241239e026442b58d543649488df0ef96079de154ca62239ad4fe597c9"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/ProjectRouteStateArtifactServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4411a7fedf9e155c11f7cfe6e2f7f64c6a5445a2522b430e12bc10aa910f43a4"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/ProjectWorkflowRouteServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ee544ce9f2c9b5f7ccdf2440c00423257da692f7545a5cad98d90003de66fcfc"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeCommandTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8c94b28718efe55ce90a44b10818853d7dd91978711d75e4a7682f8fdfeb0be8"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeFeedbackIterationServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c8c8c5cbe1c20be714050ad191c4f32d625daaf335d4b608ff84abc5168299ea"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeGdUnitPathResolverTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1a60560442007ae76075f3de3b0dd017380c53b60d82f700a8815818cc5c8b76"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeIterationGoalServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9748d2a3b11e28bf15327a6265ece637259b8029043bb206d9b6d77561260068"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeIterationPlanServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c8c6387a4c66e0f69ee4eb8b2a08c7827783c45eed8284f86fae2549d10fb8da"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeNeedsFixRouteServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:206a31fbc883a7f3ab4b728250af231a99a8c004e744bb61f039b688271b9d17"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypePhysicsRequirementPolicyTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b8ffb2396bbd58c107c7d789d66e6c1796018932275092aab98bcf9d0df96e8e"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypePromptTextTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3ff0726f856c9d049feddc3f9a8ba1fda68f97883b04232c4dd3a7fc608327ef"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeQuickFixServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b5c43f1f310d3822d54feb352089f5f2723b6564a0f4654518a00ab8d9b92dab"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeRepairPlanServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1bb66c92022132b34cadc3668641e675b3516ff8b57f01888e870b819429596e"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeRouteSkillPolicyTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:db06a16edf2a7f92309ddbd4af99cd253b41c44f98f6cd4865d1fddeb6262407"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeRouteStateWriterTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d7ee22ca4ef4545ed666cd2bd612b8b5d3397bd8d38e91d927ce00d6d3cf69f4"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeSmokeSceneResolverTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:263292751a3dfb882e3a83393f9b6803497cefe5536800007d8b43a4bd6949e1"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeUiOptimizationServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f1c15035e03c1539e515808d4f8f91af3df092d0575bb6d09d0a650b6bd40261"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeWorkflowTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:86c61e286dd5f221c4e08737473bec6f8e910b8355428d8ef66a309d3b45124f"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/TestRpgIterationPlanServiceFactory.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0355c180aacaa3a6b14f6f5e5ad7ecfb0fb6e2ba141900a72efb1b0504e9fb56"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Security/DeploymentDocsTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d69b8fb95450045f5c7ab89e82fdf8a5edf62978beb9f03e6cceccbbb4ebcd44"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Security/MigrationEvidenceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0247914d78a8c5c2eb636df7e78012c422d68e9e63a0be45dcb7398fc70c3f5a"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Security/PhaseAAuthTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c4bcc669dadcc19b2514f479207194901584b0465fea8c6b6aad598f7afe63bb"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Security/RequestContextTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d981b4c9b61fb1fb307114b0bff7e7e1afc5fbce524fdc228d1c1d2cfcfd86d4"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Security/RestoreRecoveryTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ec44a9d00e8f77d3c22e6d5d20f69713f2818170bef35fc049829642118b88e7"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Security/RunnerIsolationTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0dfa44928a555a86d810580b69449485fb46ba25eebbcb19a02673910721c951"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Security/SnapshotTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:409be25fd5944b328d9490657547b7038a05996a478c8bd5b6892d2da62bb3ed"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Security/WorkspaceRecoveryBehaviorTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:54b2d6919fa855d15d90a8b3bfb87c7f0bb56b9cbe61b8eebc4fb884046808f0"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Skills/SkillActionServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7145aadeb787664434bba6bc46384cc946e18d5e2b63527fb03d7914ad225675"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5849ec7342cef91b96195052e9ddeb3f2bb7ed7a2954353e4ecb51b96f676026"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GddToModuleGlobalReviewStandardTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:da530133ffc1af98cf28eda97060841e6ed9dc8eb631fd2eff65462b3adbf6ed"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GddToModuleImplementationPhasesTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9740517c806b1abdedff20e100ceae890aa612a1bfe2cd64fa7a28142e739a71"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GddToModuleOriginalSplitAuditTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:cb3a968e2df16950c8315a8906e4b00771ad6c8e2b3f96166ccddf81ccf8d7dd"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GddToModuleRiskDodOpenQuestionsTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0b4c65ce8a46dcac8fd58df16bba88af58326b2c315399b9573ab9c268c29a04"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GddToModuleSourceCoverageMapTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9572b351c3fdf5d5964c3c87abf5ff04564c9bf3bfd9660991630eed7a023c6f"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GddToModuleSplitAddedRequirementsTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7b07e19a005c8402ee661285b81d74a9deadba69b9148a2518ee6d33fd79905e"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GodotDiagnosticsQualityGateTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9e38eeb87e68979b17d1f44ed245ab91f0f8d587229c4d2970e017660c37c478"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GodotEngineSemanticsTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:03e622f7bebc04ef31aa527b63ffeaf04bb93ba0252f80faa5cce1df9bcd5fb0"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GodotUiCapabilityContractTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:696660d5fefddde38553baede331a1b0af00038ec9b0ed813bcf4f0424dd35b2"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GodotUiStyleCatalogTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d80f479c581e2059021de769f1ca3098262dbcc6f3bf0eb0062d8d36623b2703"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GodotUiStyleClosureContractTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:61ed0263fe6f4b8b95c8d889e66fe9590c28a11f64b4171246649949fca139ef"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/GodotUiStyleSnapshotSchemaTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:02a778a8a9efc94fd74e4c884d83cef00554ecd2794007fab1d681a57c4b0852"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/RouteActionDescriptorsTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:da73294737735275816beb4999578b4492f7d29bb949c0789e64064b29f38472"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/RouteEvidenceRefKindsTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:fa77c83643db1d2e5b615cbe3111490bbfdd4065fdc21c2de82e08e2733ef735"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/RouteFreshnessPolicyTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9d1c0970bcea74caba5e11d32403332adea58344ea0bd0cf765574d0ad8dd676"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/RouteModuleContractsTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:fd64be802c3c9b21d38b5e7ca7ecd8fc046420847d67375c41c4048fe9d303a4"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/RouteOperationGovernanceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5550022e16bf265609efce18b323871a7372f2f0ac31ca5891d657caa1f5999f"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/RouteReadbackPathPolicyTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b29cab2c7a76a5acc9ad1744a5072aa504af5905d8c6d84f405f33e3f55623ae"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/RouteStatusVocabularyTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:81bcf6f119f119bb3f1e5661875044011ef0704fcdefcbb946ce79e921ad4f88"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workspaces/ProjectWorkspaceMaintenanceServiceTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6db75945eed05c3dd84b41364375270171e174b16d56f299737a411e96d7427e"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workspaces/ProjectWorkspaceSeederTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b70c170638f1556ae272dac92b36d5104d0ec028b4324b153c7e8e3bf8b226cb"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workspaces/WorkspaceLayoutBuilderTests.cs",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b9900afaf5c9a9f4afccab93bea2b926fe8be8b7702e682a299ba57591ca8a0a"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/packages.lock.json",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f90526b112b5149d897a7cd034ec2be3a6a4c143f9e5b7c142a4a26599160f06"
+    },
+    {
+      "path": "PhaseA.Platform/AGENTS.md",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:2f614288110190beb200e788d39ae17db8a1722eead9e7e1868156c886fcfc3f"
+    },
+    {
+      "path": "PhaseA.Platform/Browser/Assets/PrototypeSkeletonRunNotes.txt",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:98af62f52b040b7d901b81f05929d6853ce428d165a204b7e97fb08eeb5526fb"
+    },
+    {
+      "path": "PhaseA.Platform/Browser/BrowserUiRenderer.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:856a58e56a2cd66bf61060b6ddd4446539b1ab144afcd7a73754c726e58e6173"
+    },
+    {
+      "path": "PhaseA.Platform/Configuration/PhaseAPlatformConfigException.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6a6116c78c9a01faa8de692096a43782d487cd43deca94789ca75dc131fa49a5"
+    },
+    {
+      "path": "PhaseA.Platform/Configuration/PhaseAPlatformOptions.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0f3f06ed12c352d78025f0850e0028364049a599e521be616bc9a76a27cb78fc"
+    },
+    {
+      "path": "PhaseA.Platform/Configuration/PhaseAPlatformOptionsLoader.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ff636e4cda5c6ad27224d6d52027ea4f635910f4ec895001ba51223c67421805"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AccountSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:453e5cc9123d56483d28f6c73451c53ccf52c91e8073c1c1ca924f1cdee09dab"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminAccountAuditEvent.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e843aeff082f649b74e7870dbc8424205b7d858ad3c0b70f9c3d702dca019d45"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminAccountAuditQuery.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:756aaede7b4216c4d56bea3613f1bd4acc2a365c667188fc0f4f829b98e3010d"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminAssetRunMetricsRow.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f72480ec6fedf97fd32c58f84490b129bb9334f00e0fa8b1c2a8ab8cf83cbf37"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminChatRunMetricSnapshotRow.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6b64d3a40607df5c566e8106c6c791a2f34bb873bb6c0f05474ff1108dff82ae"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminChatRunMetricsRow.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:960b2cddd4126c10cedcfef8d8872b64abb4e15f0cdb9467530465513b09173f"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminCreateUserRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6cf4fdd6d425aae301c069244bbdaa3d7431d2858354844e9b788c8cc4f61842"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminCreateUserResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:2f03fef5c0d38d7c131584f32bd1611c4a5d473e46ab9fbbc212457ad2e88da2"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminRotateUserTokenResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c7472ff0342b44c6f41d38fd7630c195b3f89770a56976a6efaec775fa7055dd"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminRunMetricsRow.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b8f2c51977f75b6c8ba7b2b210d1d1f79c8ef5dfccccb4adf54f8f6d9cb4780b"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminUpdateUserLimitsRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e6837ee6fe15e0a3d80f619f556c55efdfdce00bb99719c19456e0daab748247"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminUpdateUserStatusRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d1b3c103bc4b8692bed7966a10a2a627364246e6dfd6c42ec3275f33ca61c5ee"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AdminUserListItem.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:76abbb01b373d57136ad05347a0e0be4292ee74bd09c4700949063e12ab9d95d"
+    },
+    {
+      "path": "PhaseA.Platform/Data/AiCodeMirrorKeyPoolRecords.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6a996bd8d262bbc8799c09205b9ab55a801e2d7124fc94bac4c0d51cd47a3f07"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ArtifactCreationCommand.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:261e5856adb2d8fa7d397ff07b651f70c4033c5b0f59a0d66516cdd6e384921c"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ArtifactSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1eac3083343208737fe7e883fe7d2cdfd006accd4f210ac63dd8ebda25d8bf1b"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextManifestIssuer.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7b71a9b21542a18cbbc15b9d017e0b10af3b2cd39f2f6972b8b3bb658706b329"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextManifestRecord.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1ef2e577780006186fad78c9d165f428a69493e11e0709b8043d6351113447ca"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextManifestSignatureService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4881d36b55e3d849e7617490e3f6228f179703232eea1cfe47c845043f8f0462"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextManifestValidator.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b19e7694ca975cc16f0eea3d73161c4929642cdc00a551db4e679c3aa79c6fb3"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextRouteContractPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:378fe96d8ee7ab040d535333e58924b57374c47f0747f2d84069012294f2bb8c"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextSignedPayloadV1.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9ef63939a991043f1369123207da685736405f734adb2ae58456b546a682b2c9"
+    },
+    {
+      "path": "PhaseA.Platform/Data/InterruptedRunSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9b502136591cb27ae587beb6a0ba1a7c512f1ac94b29ffae8e3d10f6ee44a193"
+    },
+    {
+      "path": "PhaseA.Platform/Data/LlmBindingCommand.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:91db4f6438d3453c1fc6ad28dc14c1775f59f711ebab91e0cb52362878493f77"
+    },
+    {
+      "path": "PhaseA.Platform/Data/LlmBindingSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8677ace73433698a51220615d4e5649ae75845465b11c6fbe9e86ee79996935d"
+    },
+    {
+      "path": "PhaseA.Platform/Data/LlmUsageRunRow.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:385c9c1e85d53ad5811c1a2625b18ade8879e98a4c28719b535d8de6d32d9b6a"
+    },
+    {
+      "path": "PhaseA.Platform/Data/MigrationEvidence.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8211be4edc6a8968df8ec638e55fc639b56eabfba9b67cbb94b107fc32d5f400"
+    },
+    {
+      "path": "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8eae283f747174ff87a2fab0e23d50d0edacf730ed07f1fdf90d1380565ba0f3"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectChatMemorySnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ed52d8d63fa6de7144efa43d560cda4499e8b5c180aaf3778a6394263398e46b"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectChatMessageSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:cc141effc9912da3dcc434ed51c24a9baf3f6390aaccac853ca3e36ee254c6d6"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectCreationCommand.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5829d97377563ef86d1ad17698b8fe8993dda3f44b38bef3566bab1317860274"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectCreationFailureCommand.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:95bde774148cd77247efd20850f8d551a3197a0b2690a99864b47df736e6fe82"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectCreationFailureSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7f3db9e3faa868ba53bcfe90d55de42d46ead9b3e40389f904dec2320bc05913"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectCreationResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:832dffb0462ed0ad0849508757ab62158553db894073a3b3ac3ee68838ea0675"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectDiagnosticTriageRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d8191bb046c6b520d82685c9be8de9f3ead7a76a4ceecff921b63f53243618c0"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectGameTypeMatchFailureCommand.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d724136f168b884a37e5ef0bf1008eeac1774446a68f620511711f818165b4ba"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectGameTypeMatchFailureSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0970d0696d3d2b4a2244780db7eadaefeef9285f7462579bf684bf833ab588e4"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectGovernanceRecords.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e03d38e24aeaf0a065d292e63d48caf4619bab90c594409e575e883517fd9a3f"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectIterationGoalCreateCommand.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f44a75d374474862e2fb73143508a35efb60f0b9d13b65550cd0e6c2334fc9b6"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectIterationSessionSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:bfe348f2190a7544679084fe2cf1ae3a48c50a27630eb0deac0e1512cd0d4262"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectListItem.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:710624a499c61a769ff3e050092eb2274dd636c373e2217cd43479b193b5041e"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectPrototypeDraftSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e383e8515b5d32871866a39d6cc5f34fa9a72c9af5a1686032b371a4d7b603f6"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectRoutePromptEvidenceBinding.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:880069e3a0dc8000b36a26e1e888330216c8ed0bc74237a97bcc7de0b4d153c7"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectRoutePromptEvidenceBindingCommand.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:2f8111797eeb2211cdc443fe9863098b5927dec93c6152f0dca654ba5b433016"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectRunMemorySnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9c6c1c142753fcea2521822ba83f1e6bc5c9abd1bd8db1582d4ea3aee0815a3c"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f7c10e47f40cfd087847a36c2d14df94a62c702be17b53415857e4031d9ca9e4"
+    },
+    {
+      "path": "PhaseA.Platform/Data/ProjectUiStateSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:2cbeba0d50ae78564c2eb3a2bfc3cc698b0318270d4bde820ce65020d814910b"
+    },
+    {
+      "path": "PhaseA.Platform/Data/RunCancelResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1239a2d808e9c1fa495a3a7f9c002693eb7e1f93be29df98cf2e33f1865657db"
+    },
+    {
+      "path": "PhaseA.Platform/Data/RunCancellationPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:df109ac0ebb7ba70b6d4fee972cd6399295522c677ee17637079c17e6fbaff08"
+    },
+    {
+      "path": "PhaseA.Platform/Data/RunDurationMetricSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3ae0eaab044bc4b0045e8602ef17976f7075f46acaa1a56cc1c81f5c1dc9df4e"
+    },
+    {
+      "path": "PhaseA.Platform/Data/RunSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5362b7563a1fb13363fb6d1a58ba43e531be97971be04657b2b4497ec0386b44"
+    },
+    {
+      "path": "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:dd812e61e009e7064e1a89e0e48a08731dccc454ae04735e8e81a7172626cd3b"
+    },
+    {
+      "path": "PhaseA.Platform/Data/SqliteMigrationService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:67ae82961ec62b3ed69223170b6a7a49a32485e07796931c037ea83ea4d90599"
+    },
+    {
+      "path": "PhaseA.Platform/Data/StaleProjectInitializationSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4e9b7dcc1b9b9011d50f434219a204ff741d84a5ff1df51dbc2a91d43c9a437b"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/AiCodeMirrorBillingClient.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:803b0906eccc273d6ca6975947bb2d990ee160e6c5132fb77fc87afe3a5dbb1e"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/AiCodeMirrorKeyPoolService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:408aa44e8858df6f08728dca023f57421291477c9cc36840633d2c95806d0902"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/ChatConcurrencyLimiter.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:90623c63af673c7e0eec8bca70fcc9f4b9715ecfa80074179871f17e0a173abe"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/ChatRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5ab99103797cd358047dc57508cb815a4e8cc8aed8309eb631521f6ac988334a"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/ChatResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5972ad751b3dcde82e3ad5069d5d03b068a7e54dcc39401a54b4eb4496b74efb"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/ChatService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3d041aff35bdb1b7f68a5daa560c79f17bc48fbe8abfe4f084445e0ef94ad06b"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/CodexCliChatClient.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3ad04898cfa6f0c35aa94fd8c406b373cfc3745670ba79400ffbd1780149217a"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/CodexModelCatalog.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:dae1b951cea5fa3007358bfe3817bfce6a6f770496190eeb17cdd2a2af6177b7"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/CodexRuntimeEnvironment.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:dd2e3a73bd0494fc2a06b6659ac34a03bd2552699a1da9da17881d7e5636ed0e"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/CodexUsageExtractor.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4229265cc8c90650c52680e51c0a19520362eb005fc0ea0ee37a0df31c98cc48"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/HostedContextGate.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:fbdbe91cd124643ffdf0869b0415486b3cd63797d113aaa0ffad496e0d6b837e"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/IAiCodeMirrorResponsesClient.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d85ccafb121486b46e97179978950a32e6ff481c3a8782be3705ea40bb228e22"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/ICodexChatClient.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d0b4fd340de066b3945bb2027355437c2c1f6ef0e45b30b1436decbcc3deb092"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/INewApiChatClient.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9eaed64b7c99c211bd0e514c0eab236764844aba82b8562e334ea12d3e49aabf"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmBindingRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f7f9ff098b85ccca6a87631f637ff78fad465260d10473d04d410a2d86c554fd"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmBindingResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:dd5bb74fd8a9d0362d75e189a7bb989ddaddae10491d446d384c845621d11e25"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmBindingService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d92a41266c22da2aeb0ceae22eacba0e75b3d62d35a16dad932dfeabd36e1c44"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmCostEstimate.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:061104b4339f3e18a02ddb3da3e18d793ef6bb50e285bafbf0a9dc05dc365d3a"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3ce7d7a220fcb35404dd3c0995e6e16026be2c257e3b990fb9a5bff99b02e1cd"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmStopLossDecision.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9b1746c886d42d10d6db90cbbd52b901ef67351f1dda752957b100fd0ba50c86"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmStopLossService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3988ecdfeb35982615270d4f47e37cfc57aaefd36faa6f6961394b44a1e069f3"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmTokenResolver.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:408b5919158244f6aa153f2f3303645122824fa0467eca8ec300a7bd6d2e67b2"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmUsageAuditJson.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8f3fc57ade9b859251576c49d5e9773de7dd4b6c319f9b549cb68473ecd72391"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/NewApiChatClient.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8020e6ba369d4584ca894b815d2ecb2d5e8bcd8cf303713c6ffb3526c8c206cf"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/ProjectChatHistoryService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:de958ac971bacd0fdc1546ae9068a9d47e5e6fa9d4d3ae0b513b546f8ff9a51c"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/PublicChatSanitizer.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:77937f3743648ed84851df43d37a43595c373ea7d1e79980fad61862de806ae5"
+    },
+    {
+      "path": "PhaseA.Platform/PhaseA.Platform.csproj",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4ca72cb0044b3f00b3d943a80a88e204c11758e12575de6e583ddb96fe052cc5"
+    },
+    {
+      "path": "PhaseA.Platform/Program.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:bda047c916281fd94fc1156c7ec37acca7a3d5e9495705b5aa5c55bf19d248cc"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectCreationConcurrencyLimiter.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:45f0cdaa084d2a82bb794afb9e2a8d2611dec896f6bc6f078f9461d3cc6b14d3"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectCreationRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:2f55f5860104317ea73f7eb10032b613c161a8c763a56c0c2c4d6e25145eb603"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectCreationRequestJsonPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:90de6a6d541afac4398ccda6a7ff4c97b57cac059cf50a639765444d5e828157"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectCreationRule.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:02030017030a685bd10b1c2eb4e6cbf1671692f28349e4dc423964626314d73f"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectCreationService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:47a7c390cce2d67743df842eb916d41b16aa90b331bef5f25b8e1b9b90fb15c8"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectDeletionRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4d065c5aadf59fb64dd3d619c6c143adb715fa5ec3c6f015f6fe2cb845dd9e8f"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectDeletionResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:071352b1ecb4898aa6b9332d08cd3318c26e4ff30c439ff45b1840b3ce0e2bfc"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectDraftImportResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:be8908b5245820101022f1bbf16d110456da624b8588296f34c6eeee56ebea3a"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:38941aa359f29e02ccfbf52acb96253635f8f697e4e0f4042909380bc2b0f7e4"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectInitializationRecoveryService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:350978ba4eeccbdcf7b3faf2d54b0b949a587635de65716a91f218d45764053b"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectInitializationService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:30b782314c669260ebca226a420c27a7774fdcdbd908a3671b91850b052fa2ed"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectRuleCatalog.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:37841b302c5ac374bed180c1bbec07c795454701c6db4aa840ee5914010ea63c"
+    },
+    {
+      "path": "PhaseA.Platform/Properties/AssemblyInfo.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:dfffea718688aa27026fd305c5abbf0c3b7e3a61bcd43b2b87f7afc47bd5ea2b"
+    },
+    {
+      "path": "PhaseA.Platform/Prototypes/BmadGameTypeDesignCatalog.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:479c1a3806e3db408b7cf4154200da7ffdf0dc72e7809928c7e3086c07063ea3"
+    },
+    {
+      "path": "PhaseA.Platform/Prototypes/GameTypeGuideCatalog.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:cc0b835cd1e44e7b5b295008a3f1ebacfe15baa376feda216b0b68bd9dc4b37a"
+    },
+    {
+      "path": "PhaseA.Platform/Prototypes/GameTypeTemplateCatalog.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:feb95d023f426b1367fde23fcb32cf724f4c1e9f4023a1600ff7267cf4304807"
+    },
+    {
+      "path": "PhaseA.Platform/Prototypes/ProjectGameTypeContractSnapshot.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1de0d84c1d168c7e8dda18f5d96fc53ce8d5d8348e16859879545d3aa9d5adf7"
+    },
+    {
+      "path": "PhaseA.Platform/Prototypes/ProjectGameTypeMatchBackfillService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:244c9b4b67fe361459b4eb321d42c102a2643d3f9722d1234950f69cabbd95dd"
+    },
+    {
+      "path": "PhaseA.Platform/Prototypes/ProjectGameTypeMatchEvidence.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:58236b9b1bdbcbbc1ad01930b2e982eea614de51f3a15012633bf695543643c3"
+    },
+    {
+      "path": "PhaseA.Platform/Prototypes/ProjectGameTypeMatchService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:597f4c46aee8b1c7f2d3123d56aa6ac4462c766daa4fa9b2f5957a8308ea8e4f"
+    },
+    {
+      "path": "PhaseA.Platform/Prototypes/SteamGameTypeMetadataProvider.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a750bbd4d5ec424a1adab6dfaaf7cbe5898be7ee0e0e8998a112c6c050fe39a5"
+    },
+    {
+      "path": "PhaseA.Platform/README.md",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4ed2da20ed06ca2651357441ddcad94699a330e013a32a752db3635f180c58a1"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/AccountLlmUsageReadback.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:92f3275a3f2c19e4fe3bbb75d93166142466bba6514710b0fa3c7cad00a6d109"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ActiveRunReadback.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a6c8d9e2e1e331ed51c204250bf31b47c61dc08bfe2aa8be592c03723dce8235"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/AdminGameTypeMatchFailuresReadback.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:94ec20937382658d594762db71c23cbb3f55fe31b48984502912ff12175debc6"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/AdminLlmAccountUsageItem.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:09c8f53a598d5bb5cb82fe973d8955864ad21667da80e61bd70bad8acfc8c980"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/AdminLlmRunAuditItem.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0fc3b0d10e70765dbe55d3fc3a7a6dffed6a45bbbc3d207d1e245bf947c8cefc"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/AdminLlmRunAuditReadback.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7c19463b1b9684d13398e9d0a1c5049744374d39ada76f932c22a10f46e763fb"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/AdminLlmUsageAggregateReadback.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4331909641e52142d4da6ad396e9b18bf3463c98b8c1edff414fc8667fbada80"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/AdminLlmUsageReadback.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:adbfa069af0adcb7c8d408c8700d649a25005792cb5286c4025d078e20582488"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/AdminRunMetricsReadback.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:cee14e81947a5e4f4a9ff1984bea35a50fee33761d646444224b3931148dcb3c"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ArtifactReadResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:fcb41da251216864c11098933cf90a31013683b8805a67679b554d7c522d7891"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ArtifactReadbackService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d18a3bc7acb2e15cfca4483cba7a9e116c88251b17c6068169eb54ba261e66e8"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/AssetGenerationConcurrencyLimiter.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ed717c3e09c88569eda43b28d818237c2163a0dc8677dfabec9efa83e0589731"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetImageGenerator.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9ccf1e7ec10fdf31abecea298040bdd8ac0e086602d91b75d569b6f5dbfb3b7b"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetInventoryResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c91dd9d2f5fae74e881a0e71e8029a26c04985f8961503a690714807d555d982"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7e9159a2950cd9a780101a1472fb031ac803b82ad4be383cb15029efca11b1fe"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5f00f0405ac81b669377d7199f9f24466fa7be3fb1bc971300cf812535025ba3"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetPreviewTicketService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ccb7ff6877f2933df4fc62cbaf0c12beb09292259ff8c83fd9e8f510e2e3665a"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectHealthSummary.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:11b3d4fc732ca5a1141617ad84a7ec0a3b1fe61ce308f20b1d32916a130e020d"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectPackageDownloadTicketService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a04745e623a1e47884fe64d45247baced990f5d3caa1869f6105e5f450bb25f8"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectPackageListItem.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:dc43d11d4e78743c5a0b50e6e28c7fd39cddf2efa2bb837fad8fff1c488593c3"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectPackageListResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:448650794e117cd204ce369c60dc6ce406617921d07eb9943acd95aff98a22c3"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectPackageReadResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:eb6a5b73e0ad363121fe123e8f80f77acee270f024c0714c2fdcc0eca23cb34a"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectPackageResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:db751441360d001ba8e05a7764ab00b83831b80482b6048b034ee9a2a3309e37"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectPackageService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:505c5f566fa708a2026f84d0059b6032a84d7a412cd45ba4b156fdb878305b1d"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectRunsReadback.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:2cb308aad6812583d942edc56a4f8e6a331e8b97c799d16c63482f6d5568b0ff"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewConcurrencyLimiter.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6bcc02b42d13fb768924ff2aa1bc1e4c6892a24e9f82ecf3c18c40f2b6a3bd13"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewContractWriter.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7ff2a5ef2f09dcccc9f59779e8df4d2549f5cb8fe7af66ea4634e04612a3235a"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d15c301dbfd1dae508e24a3fc021c206400175195b198c35dafd19b7470f17d7"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewGameTypeCatalog.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6619876ed8c89f4848883cc44f1f3906a786fd6861af607050cfd08a89e090dd"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewHealth.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:bfaa94eeb8462be499477c0c26c26d58f5773d0087706c9f05ba75a656acc9db"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewPackageStatus.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0200bf28b13297862df0df43a6931a9c4e371832f3a0d98b794f8b0c41fe94b3"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewQueueResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:14b5a1f6baf2cbf4f244e106872d45b994d64904b99bc40f588c14716213ce05"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewReadResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9f4adcdca3b0891246f3fb37d519b1d33e05a45f2051d0c98ed859e0a25387c7"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5115f3392f9f75cc5125d9061c534a3a85130a4321169337af7ef130bdceab74"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9be842725c07d3b6fb57aef8b239c769f117faf45383d165d157f7fdc5ca4d8e"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:115265edc1ea2e86a84c35299b997f6d5e4975aa068cff66846af620efb70f2b"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/RunReadbackItem.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:82f61da7f88675fd3ce740d8ea8c8a91e2c96ae2b1c89a8914b3143b763d3698"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/Chapter2BootstrapCommandBuilder.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c081ac34d7fa9aefa702dab53a384c61975c72f446fced63302209a5e5ac4c2e"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/Chapter2BootstrapResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:299775f5a1040a4fc4d7d6134205000e25ae373897958d1adf69349c7a8ecaa1"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/Chapter2BootstrapService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8054c6ae7aa0dd1bcb9538a1af029bc187694fbf7f48c549f527b8a73930cda9"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3268425fdd6209efc92842ceacf53aa22a8d05eaee81cf0afad4b3b135798669"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignDocumentReadResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5643a9e2c0a0f0eeed930aff1fe7fd97655a4f0d3c6321ad3e2413b8d414c2e7"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignDocumentRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f144d582ffac645da5b461abc62d314df66d7435929b6814cc4225500cb7ff85"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignDocumentResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6c1152bb47f6c3e7b8c1e86d6510f11dc554574621a801351f2218445dd3badf"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:362f2e3e74f657ae5b8fcb04d07a5a24389b1af4cbfad01c543ef3c4644c5bc2"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignOutlineModels.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5a60354823dcb273ebf9994366ec54180e7b58294a565ebdf3726f178d21a9d3"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignQuestionFormModels.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:20a1ca32db452b0ca79a0dbd195b8d606dba501ae59695e512405a884bc00360"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignQuestionFormRestoreService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a29acca2d5a93d3a2bbdcd483d478cec93bce4a2723dd9a8ed41420e4ce4b8b6"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:898ce90c41d7cd51eda29c224757f137636b1d1245b868fcc1c882188976b3b6"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:48f3f00d2467fb2262de003cd862addd25dd55064b986891e87616e5363581a6"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignSceneRouteModels.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7c330ee37e3e6a63bb4448bd28601868bc44858e4d9e959112c646d14cad087b"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d6340e75261e08a88058fe4ef9504b0e29bbafe4a7b10dd67c55dd79c6a264be"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameTypeDesignTemplateDetector.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4568c8b8b4145738875948ec206d0da5c27e26a644cc5fc5581a0335cd9c361a"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameTypeRouteEngine.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4041bf1b342616e8c69a18048c503b40a9054409897cdf2aaab39411ff7258e2"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameTypeRouteStrategies.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e122c3fdf171116c9696afc507185a3b7fc89bea548246501fe6383b89b22534"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GddMilestoneSpecDocumentWriter.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:dcf6c8214f502c975dfb62e0e65c0e77df0e4fd245114e034ef8ca131b2f30ce"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GddMilestoneStepModels.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:91074ed81d798a141d8612c22b7d7f3b416ae30169439fd6506793cb9e25f6ef"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:11212811310ab9cace48a79129e8fcc8e0365edb64ae45aab59a217dccb9fed9"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GddMilestoneTextParser.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:17063e2d70d66c2502a9775ed7d935807b4ba172bde797bc4ebc17bc28a74557"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GddToModuleAuthorityHashes.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4dca01fac3255d81fdf4853765bd6f0cae0b911c90ec23a2099c313218607152"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GddToModulePhase1StateService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7d28608747d7a42c1ab24832cf299f55114af88fff75f659059ce12bf76d82fd"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GodotFailureDiagnosticService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:fc721db6f94a508e8f644243a0d8b28048c62f89570476fd0ee8b9d3367273a8"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/HeavyRunnerQueueService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:89cc5774800376f2536501fe99e4150f87e0351a8e0685c11fbea21a9222dbc7"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/HostedCommandResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:09ff6d3ea45c078d4124714f9ec21c322776d734ecb06982484a47c91182d952"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/HostedProcessCommand.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a4440b5c5af0a3e4a672ca671ee4099837471778d144dd0fc5b8d6f6c449b429"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/HostedProcessResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0cd476d7aefc22fbc0710b589d3a4a4bf05cdd2015a5910dadf07d204adffb4c"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/HostedProcessRunner.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:bdfa2fb9a0fbd9b1faeaafa0ae257832558790fa33d45b838ddb5f26eaccb216"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/IHostedProcessRunner.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:188188e142ae277c9a578838e41394f58fac8a249b463dd1ab40d6a6f6882eb5"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/IPrototypeFromGddWorkflow.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3ce80c2bb13f06220133894228bceb87c24861d85c012c0fa34abfef04e8aeda"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/IPrototypeLightweightValidationService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:44d4ac842919cead88358166891ad2b50d49b60d4fb3b2dfad140569235d84de"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/IterationPlanExecutionPreflight.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:afe792574b890dc1aa557ba2ad2b2ef92c990be02b754f9ce11a867008d55a7a"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/IterationPlanIntegrity.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1c63045a62c59e9f33e6556e6d8bd8acfd4e71a03d1225e69f6e36e24389e512"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/IterationPlanInteractionArtifactValidator.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3fd62c0f0ef12237821a15e51a021ebdc3e6c1fa9fe6567b89c1c3a7ec5fffa8"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/IterationPlanTraceabilityBuilder.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:42a192cce82b9fa166a2986e443680ce2c01df9e655d78d2ed6258676c6243bd"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/JrpgRouteSemantics.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7d0ffb5b238e9321ed74f87b425d175ca2175cc213af4453f24cabc079763488"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectAdminReviewQueueSidecarWriter.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4eff2323ce6afd2b257b6e6ae363da10dae4c3c2d5e6def1e8e1343afcf1a1fc"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectCreationRunnerQueue.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:408872c8958798728dc2936f2a572081bf54edd35a0c72d20278bf03c4f5389e"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectDiagnosticScopeKey.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:18b6ad79df3c2d5bf5792c300f2bf0cf8859977201119d6f16458b6777406f6a"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectHealthArtifactIndexer.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:884950b2b4fe760b23c98a4a289c061ba591d4938d1d6139ce05ea01dcf5fb3b"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectMutationLockRegistry.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1ed3f4a602348774aca0c7ae8a270db0f83f62ca8f9385fbbb8c6a16997313dc"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectRouteStateArtifactService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:546421d3dd799c5a3535eace71fc443b83d0b6f1ef1ce0a7a323a2b49bb3e225"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectWorkflowRouteModels.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ae0ff2c617b325e303bacaa7a4ffdce5b842e87adb0fa8096e67a54314e70ba9"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e8520ff8bcea2ea2dcea2b9f10b4aad2bfe61fe2f44638ff7cbd1f8ed5ad0cde"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeArtifactIndexer.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:fde9cea99edab2aa1ffb49ee618447ff5a34e2d2a547b843a3a10264993c4fff"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeCommandBuilder.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a2149449aec97bcd2243a6c8c8e13eb519e80c86bc04c280320f2e2e63ae731d"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeCommandService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:96ade27802dfc876419a55522b72d9105134b91526ee7617cf6ce72a305b5bb5"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeCommandValidation.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:218d65b72eb83fe3ced484cbd7e708cfe368128a078e9fce2d624bcefc6bc9ef"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeContractFreezeService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c7c625fcca09664f8683f293d6cb82f8b7c5ab513e4caf9091c173577a13ee64"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeContractService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e960560359de8198e73b121071c8555339370338196a4a2f4ea8cf88c33b8a5c"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeEngineeringClosureService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9f74ea3a84a523acc8d2afe934192d0b29bf66700bb29849803e3a6d2e620f97"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeFeedbackIterationService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:54efe3439e64e88ea37143092d805d9c46c5a8906160e1113652ee012bd611fb"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeFeedbackRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:37dee7fb739d6fc4e9bc08f001379209e234f5a369c8e7541693f1ed4445b7fb"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeFeedbackResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:dc1c9f63de53acae1e41d1267cc12d037a76d1230291c7f08dcbd6e0c65daf4e"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeFromGddRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:70308920a6b8895e415f9d59213d881b22c863b742cbe934c395f2b713a202aa"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeGameplayPromptGuards.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5934a7421697d6791180431b43eb2977a4919c185500937af0f5dedccd34aefc"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeGdUnitPathResolver.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d026082ca04065981bc9c0096b45398bf3ceb571c57d8f2e7748045a24335bac"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeGoalAcceptancePromptBuilder.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:814c712cb811a2387a55b5207b7fb953c1f7fe9ad4eccc4c7d454bf1f7862051"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeGoalAcceptanceValidator.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9a5845c5432cf17adccd1d5101e3021e94b67c37252a7279319408b8ae742b3d"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeGodotSmokeService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e35c8308880addaecbea514bb28cd8090cd133821668d4c55daaf74d64681f76"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationGoalResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a3a30d7c4152deb1f59e91a2fedf2fed735458a400d429ac2131a9dd202d99da"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ab27afcaa87ee1bd223e82ce0ce3f3f93a27b4883b9b4a8f054d5712d61657fe"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationPlanEvaluationRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:07d1310144ade301c82a7135456d970db74a36916c02e40f9ecd8997605f6c96"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationPlanEvaluationResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6cd6760f975393c3b4e559cad3ad75eda27ff304ba44ab15657f1cbe1b5b9bdf"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationPlanEvaluationRunResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:422b67259feb2fb392da634c006124912883c12a81467c617a0ba9b0c063f476"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationPlanRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:787797617aa75ee6c0048efb7270deec25959823f402207e38fab5cf2aecfabb"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationPlanResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:57822f9affa1f300a3c8de1086bf4f528b683bcf46e579fae0300956996e393c"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3c0b9fb0f08cf3e9972a9612a34799ca15167c97fd7754a57206392bc9a139df"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationPlanningAnalysisUpdater.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:69fdf281d81f7e04c9c295f07b6eadc11b465d258556b333032c5c02e876660a"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeLocalEntryContractValidator.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f99383b527b8ba92fae337771aed0e23a511cc93fc5cd6e724070c2ad4ebd5b2"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeModelPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:2f847f144391de39c0fc66d2b3f23424554e6c214cbc0d3cd9e83ab408d3f6ae"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeNeedsFixRepairLedger.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5bf08d41f9d235bdd2c9beed00b24092f5a234fab1bbfd9d4d3b134506c9ced2"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeNeedsFixRouteRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d6a3fb5132ebf5fafa3a3018c563deb57840eb97f031e88f2eebe82c7579a3cb"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeNeedsFixRouteResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c2c52bf203e808067f3a001f978b947cac2096c8fd17df60a2121ec50bfc816e"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeNeedsFixRouteService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5a638dced5965b6b21802bea84717053d7c2eb5f6afea388c222c531bb81ad7c"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypePhysicsRequirementPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:962dbe556b05141b4b211150cb0848399beef292d0e27ca7c13ea057edef6a8f"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypePlayerVisibleTextPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:3948e32e41efa1578dcdcfb2ce15be3e503944f060945c48b04c7c20107c345c"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypePromptText.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4539ba653c2fe6c1edd463e7a8b7c9fedd0ffc6ddec9bd7b2bb59d9c5650d256"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:773555d072dfe05904bbc2835b3c802a43178d6aaf9836734283203c27e7d6e1"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeRecordWriter.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d44581003c2e7550ec7d7c74732327969d1b16ebf578ed14af4f93c3378aa912"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeRepairMutationGuard.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0b6a2c76fdece6e95ef5493577669ca013d55aff4c8410bec26736216736a02e"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a7eb03a0f1dd43481c1c798d17898a8e06dfd0bdc74700302af6605438470799"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeRepairRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8bac6dc0e5e98a104f56b87936d8a1488528c6cb74fd9e379156a71181bd65a1"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeRouteSkillPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f98e944976d063551e288d97b43dbdc959f572ce6bf7123f1c239d3469116c3b"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeRouteStateSelection.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ec97e793694c240ab714d86500aac2efe94a17389e8f6b1d1b63927e0c76508b"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeRouteStateWriter.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0b7aa3582a552a5af33a780dbfa470c929d055419c0e23ba5a8f23f2092ed0ea"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeSceneReferenceInspector.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:65888bdf8aeb9462e0a00ebf16167e76a324e416369e18ea84b8c32533169c41"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeSceneRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a546ea6102a2562b5f4c00571f2550692ec6541fa1b27e4a6768a668c418c7cb"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeSkeletonAuthorityGate.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:2faaf63392525b956fd53dcf24d975d81bbd84d8e52c748fcb49718e081ce705"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeSmokeSceneResolver.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ea1df205aae61d72bd9a7af88c5142e4911b30628f49947a99d637dfab40bb84"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeTddArtifactIndexer.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d36b6e035fba35ba35ae5386e6d28f8998ae221d740ba37be34b89cb24dc216e"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeTddRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ba91647c36c5184d86c0be637a2e5aee7fd6571091bef83428e08d006ee17fbc"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1def0193ceb8be9c23d8b2eae223cc396c494da3e172b1816b414e99f264050c"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeValidationProcessEnvironment.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c09f394ef5626820ee576f08f21f6b276589bcea6a5d380d65b3310abb1594ef"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowCommandBuilder.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5428fe0b676a67e1550a4237e0d6aa58be655537e4f0b1b9c480dd3b7593826a"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowProgress.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d0c8d06f5435684ef5deceb6b3dd39c7440214a08da085ea5beaedce02df3739"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a315ffe1a8c5d11dc5acf56a06dfbb8d1fe4d48944565a055984858564ce5bff"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:cddaa809d4914c914e3224a77235b418c61e955b0f2f396e14577b720739b7d2"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9f12db3a0d6e94d6b25b1203c2c95bd2250797328cd20862de22be98c9276757"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowValidation.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:2bdd567e8bff7e0fa4ce1bb45e00c6647577791544adddb892bb3a0bd4ea73a9"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/QuestionFormConcurrencyLimiter.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9dd881afbfe775f36452fa66f5b9cfaabd50402c8bbb33ef82f3717627fdee66"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/RunCancellationService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:df739684513e3850cbc74373f8b16f65e0c53b229fa09e4244db0d5c75a04a6f"
+    },
+    {
+      "path": "PhaseA.Platform/Security/AccountIdentity.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a76d1e6887265494d43cb2967cce51164baee4671709c2aa8acc6ba1f0892f22"
+    },
+    {
+      "path": "PhaseA.Platform/Security/PhaseAAuth.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:561237da2cdd1156c6f195ed3d722a7d6b4bf4f784dff0d29479e13ca9bc3e28"
+    },
+    {
+      "path": "PhaseA.Platform/Security/RequestContext.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:15371d1c07bb036b5fc5a387cf03ca0dbf52b00a02639bcf373badc3106d07e4"
+    },
+    {
+      "path": "PhaseA.Platform/Security/RunnerIsolationPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:863e4cc705d1c7b40917b530976cc6f2ec15abebeb94abb47dfc185596095ddc"
+    },
+    {
+      "path": "PhaseA.Platform/Skills/SkillActionCatalog.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:49db0ecae4b6b5b4c17dbfa30a6ca21157a50649eb7e77249e9ac54a00267ab3"
+    },
+    {
+      "path": "PhaseA.Platform/Skills/SkillActionDefinition.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:882bcb1824642a7e08381944ed7b50ea1adc761c2d16eabebe821a6d4a10a8cb"
+    },
+    {
+      "path": "PhaseA.Platform/Skills/SkillActionRunRequest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6a191fa6d2a509900008b8055e1144e0a5d55fcfe5337a13059707dd5fafb5f2"
+    },
+    {
+      "path": "PhaseA.Platform/Skills/SkillActionRunResult.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c4ea3023ec386ad700e8e2db24db324b128ac9fff578c95540bc00f1dd72b69c"
+    },
+    {
+      "path": "PhaseA.Platform/Skills/SkillActionService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f1c3b93049d0b959a897af92c120e8f7a859414e58b6957b46dcb50800d15491"
+    },
+    {
+      "path": "PhaseA.Platform/TextAttachment.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:afa7e5c03b14ce448230dfa35392a67c19868aef0d045cce3525c97fc2c90315"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GddToModuleFirstSlice.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8e2e234ec29bb549c0009a7831c836164d1ca07cf04cddbe1003d97f13bcc9f6"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GddToModuleGlobalReviewStandard.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e4f7477b2fa0187a7e2c6997ffc0ac34a48f0ffb8bad9426780367d48865f906"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GddToModuleImplementationPhases.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4eed792cda641858d4df7538610575216d244b0268a70f478cb51079581dd163"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GddToModuleOriginalSplitAudit.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:174f618beaebe20f394a971b2b904132eb398ea60f08d7037296da0882344b9c"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GddToModuleRiskDodOpenQuestions.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:4a461f477d2e19bbefc3b757feb52d7742348679f36cb4b91833193646c44e17"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GddToModuleSourceCoverageMap.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5c9a8491ff0177ed5f13d0b80b57b1c5756485bd658ec298731085f60dab3863"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GddToModuleSplitAddedRequirements.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e3ad7796557bdb546c451a358a06630a209c027f641dfb468b3ae5e9bb929a3d"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GodotDiagnosticsQualityGate.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ed25dc64225bd66e4c195e00ad3f5d383b78dbf3ac3c929e6adcb67a307741e9"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GodotEngineSemantics.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:032d50de1ed906dda23b00fe37965703317044ddcd89908e6103ed67ad6fccd6"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GodotUiCapabilityContract.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9516e691f703be8d223c6a684eb065d1e26e9a188bf8633389c5f047e36600bf"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GodotUiStyleCatalog.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:24450a0fbfb46717be1ba2a1de46ed537fb674c5b1fc54f76f4f318d9607e6fa"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GodotUiStyleClosureContract.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:f5133f1eb867fd0b34ef72f2e869f594db9549853b6f8ec8eb1a82b27f5bc86b"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/GodotUiStyleSnapshotSchema.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:89e42e9975543a2dc8e7111a0e3cf64c84cb99fe10427f53ff53923ef6c7a57d"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/HostedRouteForbiddenSourceGuard.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1df8e67fad8e315f2b39a9e19e3a48d6087b374cdf4f0e724dd1642077bed197"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/HostedRouteRecoveryContract.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c450d9ba2a2623d2ed1e92f167393501c244e9e7f37bb754edd849792b86c86b"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/ProjectAdminReviewQueuePolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8c6914422b505c869b55e866677ff8c944aa9465dd24944cb5aea4a67e98bcde"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/RouteActionDescriptors.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d340bd0b1cfdd1b34697c220eb991bb42b07e1eb0f22b49759b4dcbfc2e3be85"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/RouteEvidenceRefKinds.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:005cf8ae3388ba8967af4ebb3f34311837e7b1ad459c52034ab9394cd162147f"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/RouteFreshnessPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d9beb111b90b6cb9fba8949ea02c8e224dec890da2bfa36750288ebb9ff59498"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/RouteModuleContracts.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:33287e0de46a51aaaed3728031e4f03b1cfbd2b1032c6d0be7ef78249444bf26"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/RouteOperationPreflight.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:aab082bdd120d9dfa5d8c0831da77430f488c4c257fc9072a4ffa60a39a30200"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/RouteReadbackPathPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:757c3b4c4395a1ef0b31be63aec1e3b10374873e01727e38ceba94f66e7bb156"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/RouteStatusVocabulary.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1e2c51fe478954091c8a5bb4047b3cc9e427200809a91394773d21af6367158d"
+    },
+    {
+      "path": "PhaseA.Platform/Workflow/SecretRedactionPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:d64c592a6f7b4f10f4ed5ec8a50e7536de9e23c2a9587293d0020c37c227e926"
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/HostedProjectTemplate/AGENTS.template.md",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:2624697cc2f2c9984674f009911d2c3c92c8e2488d280e29eca427c90261faa9"
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/HostedProjectTemplate/README.template.md",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:aa52215313a34d340b7c3e9f5bf486d3d920d5bcbbf83228090b7041af43a92c"
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/ProjectWorkspaceMaintenanceService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ece8b11c4952962ae981ff3e9e7c406009c9c5b20859dee8ccf08208922bcff0"
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/ProjectWorkspaceSeeder.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:88f6b4aed690960c13491a0057f63992b4705fe9e5f6e1563c298e332f95dd3d"
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/RestoreAttempt.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:48f0cf301b496c3ae5568ada44e37f0b4a1567b4cc0bf0707d7e14693dadcca1"
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/RestoreService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:a390080d519ae9c6f6b8c08c3f4b3eb32ce27920c561b7b99cfc8bfbfa4ccbd5"
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/SnapshotManifest.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:6492044c28fa0d4f5866b28eafc05e4208341bef5520d51145f628c93321cfd6"
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/WorkspaceLayout.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:02838cc0eac08ed7d32003c8ee178b3018188a27528ee8226d0a8b30fd759549"
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/WorkspaceLayoutBuilder.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:116025b828e8325ee90ab9653e20511204106793e637754c84f2a747d39a0d84"
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/WorkspacePathPolicy.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:29f8b5573b3b551f319de66a92054780d434508c852e0b30fd160370ea95de27"
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/WorkspaceStorageService.cs",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:faf51996a6a631155b3580fcfc6178e9556f54eddc82115aaa730b0550e71138"
+    },
+    {
+      "path": "PhaseA.Platform/packages.lock.json",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:c81b91a880c139baeac449838ecf7896e177d820f23999fc7382ee61ad5d4732"
+    },
+    {
+      "path": "PhaseA.Platform/wwwroot/.gdignore",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "PhaseA.Platform/wwwroot/ui-v2/icons/workflow-archive.svg",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b1a0db809e72ec84497b9528dee8918e41dda11c59d8f8ef1650c07d860e0584"
+    },
+    {
+      "path": "PhaseA.Platform/wwwroot/ui-v2/icons/workflow-check.svg",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:ecd91adf99e7e162173347ca6be147873e5eedaff270a28d568cfd4d77b03966"
+    },
+    {
+      "path": "PhaseA.Platform/wwwroot/ui-v2/icons/workflow-download.svg",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:b766723962ee579443b851329d5dfa386363a021d34b0da3ae47fc034bb590eb"
+    },
+    {
+      "path": "PhaseA.Platform/wwwroot/ui-v2/icons/workflow-image.svg",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:5c5851e64fe7e59ed27f61ba27f9e1a20788b1b244a6bc4820d001b51aff883d"
+    },
+    {
+      "path": "PhaseA.Platform/wwwroot/ui-v2/icons/workflow-layout.svg",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:7e728ac45098df2914fa33246139f6269d6ea3e13f443ff906e6395fef7d616a"
+    },
+    {
+      "path": "PhaseA.Platform/wwwroot/ui-v2/icons/workflow-list.svg",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:0cc4f6db7dd6a226f61cb448107b1f72aa43cd433c6e526b50c8eeb900870172"
+    },
+    {
+      "path": "PhaseA.Platform/wwwroot/ui-v2/icons/workflow-panel.svg",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:fbc8fd39b68f34b22dc1ee9c0a3863be594bbcc54615bd405805bb4468e389f6"
+    },
+    {
+      "path": "PhaseA.Platform/wwwroot/ui-v2/icons/workflow-spark.svg",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1090ed538d8a09f3511a0078d6fd31229f316e01c1afa6600e029932e1424fb2"
+    },
+    {
+      "path": "PhaseA.Platform/wwwroot/ui-v2/icons/workflow-wrench.svg",
+      "role": "production",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:90b27b3c5cb61989a5dab67f05df7630bc6a83a368493130dcf5723b2399e69e"
+    },
+    {
+      "path": "tests/phase_b_c_identity_isolation/test_s0_identity_context.py",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:1c0bdb698010541d67d947f0c6b16cdaa9b31f6b63f3bc4f3396c658cdb7af22"
+    },
+    {
+      "path": "tests/phase_b_c_identity_isolation/test_s1_runner_isolation.py",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:9b0d951adce7ec6304d79fd49b5e1a3db9d4f4f89041ae882b252ac8d58c22b6"
+    },
+    {
+      "path": "tests/phase_b_c_identity_isolation/test_s2_snapshot.py",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:57f54434040e98f3e0699331b3afa59a86c8c49d6c6e616b810840481aeeaaea"
+    },
+    {
+      "path": "tests/phase_b_c_identity_isolation/test_s3_restore_recovery.py",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:8f29c07a8aef7e16324b904b67a414175fe63d809223bb1c08a3dfcd5062cfd6"
+    },
+    {
+      "path": "tests/phase_b_c_identity_isolation/test_s4_migration_evidence.py",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:e29427aaeb4999a0514bc9a49a699599f2dd2e7c6e75897a1331add79b2887bf"
+    }
+  ],
+  "candidate_source_root": "sha256:892a0113553e4586595a1bfc37db5fa108e112af7d37a9add7d27914093bf894"
+}
