@@ -23,7 +23,11 @@ public sealed class WorkspaceStorageService
     public WorkspaceStorageService(string? connectionString = null)
     {
         _connectionString = connectionString;
-        if (!string.IsNullOrWhiteSpace(connectionString)) EnsureSchema();
+        if (!string.IsNullOrWhiteSpace(connectionString))
+        {
+            EnsureSchema();
+            LoadPersistedSnapshots();
+        }
     }
 
     public WorkspaceQuota SetQuota(string accountId, long limitBytes)
@@ -82,6 +86,17 @@ public sealed class WorkspaceStorageService
 
     public WorkspaceQuota GetQuota(string accountId) => GetPersistedQuota(accountId) ?? (_quotas.TryGetValue(accountId, out var q) ? q : new WorkspaceQuota(long.MaxValue, 0));
 
+    public IReadOnlyList<WorkspaceSnapshotRecord> ListSnapshots(string accountId, string projectId, bool includeDeleted = false)
+    {
+        lock (_gate)
+        {
+            return _snapshots.Values
+                .Where(record => record.Manifest.AccountId == accountId && record.Manifest.ProjectId == projectId && (includeDeleted || !record.Deleted))
+                .OrderBy(record => record.Manifest.SnapshotId, StringComparer.Ordinal)
+                .ToArray();
+        }
+    }
+
     private void EnsureSchema()
     {
         using var connection = new SqliteConnection(_connectionString);
@@ -92,6 +107,23 @@ public sealed class WorkspaceStorageService
             CREATE TABLE IF NOT EXISTS workspace_snapshots (snapshot_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, manifest_path TEXT NOT NULL, size_bytes INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0);
             """;
         command.ExecuteNonQuery();
+    }
+
+    private void LoadPersistedSnapshots()
+    {
+        if (string.IsNullOrWhiteSpace(_connectionString)) return;
+        using var connection = new SqliteConnection(_connectionString); connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT snapshot_id, manifest_path, deleted FROM workspace_snapshots";
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var path = reader.GetString(1);
+            if (!File.Exists(path)) continue;
+            var manifest = JsonSerializer.Deserialize<SnapshotManifest>(File.ReadAllText(path));
+            if (manifest is not null)
+                _snapshots[reader.GetString(0)] = new WorkspaceSnapshotRecord(manifest, path, reader.GetInt32(2) != 0);
+        }
     }
 
     private WorkspaceQuota? GetPersistedQuota(string accountId)

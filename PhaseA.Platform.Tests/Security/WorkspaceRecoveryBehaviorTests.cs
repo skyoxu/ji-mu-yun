@@ -129,6 +129,46 @@ public sealed class WorkspaceRecoveryBehaviorTests
     }
 
     [Fact]
+    public void PersistentStorage_ReloadsAndSoftDeletesSnapshotsAfterRestart()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"phase-b-{Guid.NewGuid():N}.db");
+        var root = Directory.CreateTempSubdirectory("phase-b-snapshot-reload");
+        try
+        {
+            using (var connection = new SqliteConnection($"Data Source={path}"))
+            { connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "CREATE TABLE projects(id TEXT PRIMARY KEY, account_id TEXT NOT NULL); INSERT INTO projects(id,account_id) VALUES('p','a');"; command.ExecuteNonQuery(); }
+            File.WriteAllText(Path.Combine(root.FullName, "project.godot"), "hello");
+            var context = RequestContext.FromIdentity(new AccountIdentity("a", "owner", PhaseAAuth.UserRole), "p", "c", "r");
+            var first = new WorkspaceStorageService($"Data Source={path}"); first.SetQuota("a", 100);
+            first.CreateSnapshot(context, root.FullName, "persisted", "w", "p", "v", new HashSet<string>());
+            var restarted = new WorkspaceStorageService($"Data Source={path}");
+            restarted.ListSnapshots("a", "p").Should().ContainSingle(x => x.Manifest.SnapshotId == "persisted");
+            restarted.SoftDeleteSnapshot(context, "persisted");
+            new WorkspaceStorageService($"Data Source={path}").ListSnapshots("a", "p").Should().BeEmpty();
+        }
+        finally { SqliteConnection.ClearAllPools(); root.Delete(true); if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Restore_RejectsLeaseThatIsNotThePersistedAuthority()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"phase-b-{Guid.NewGuid():N}.db");
+        var source = Directory.CreateTempSubdirectory("phase-b-lease-source");
+        var destination = Directory.CreateTempSubdirectory("phase-b-lease-destination");
+        try
+        {
+            using (var connection = new SqliteConnection($"Data Source={path}"))
+            { connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "CREATE TABLE runner_leases (lease_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, fence INTEGER NOT NULL); INSERT INTO runner_leases VALUES('lease','a','p',2);"; command.ExecuteNonQuery(); }
+            File.WriteAllText(Path.Combine(source.FullName, "project.godot"), "content");
+            var manifest = SnapshotManifest.Create("s", "w", "a", "p", "v", [("project.godot", "content"u8.ToArray())]);
+            var context = RequestContext.FromIdentity(new AccountIdentity("a", "owner", PhaseAAuth.UserRole), "p", "c", "r");
+            var act = () => new RestoreService($"Data Source={path}").Restore(context, manifest, source.FullName, destination.FullName, new RunnerLease("lease", "a", "p", 1));
+            act.Should().Throw<InvalidOperationException>().WithMessage("*not authoritative*");
+        }
+        finally { SqliteConnection.ClearAllPools(); source.Delete(true); destination.Delete(true); if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
     public void Restore_IsIdempotentAndDoesNotDeleteExistingPublishedTreeBeforeCommit()
     {
         var source = Directory.CreateTempSubdirectory("phase-b-idempotent-source");
