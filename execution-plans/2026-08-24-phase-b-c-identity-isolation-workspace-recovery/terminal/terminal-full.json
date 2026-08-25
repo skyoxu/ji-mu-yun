@@ -3,7 +3,7 @@
   "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
   "status": "pass",
   "predicate": "implementation-complete",
-  "terminal_command_id": "implementation-complete",
+  "terminal_command_id": "terminal-full",
   "validated_command_ids": [
     "implementation-complete"
   ],
@@ -12,7 +12,7 @@
   ],
   "implementation_contract": {
     "path": "implementation-contract.v1.json",
-    "sha256": "sha256:50e22d67adc224a0ea60f0ca50bdbce0d1be9cd1d90f276b5dc6f82605cb372e"
+    "sha256": "sha256:206e7c33c9df9aa2cc59d7373a07e1e19104c4e578805c503ca3f7e4ebe5da15"
   },
   "command_registry": {
     "path": "command-registry.v1.json",
@@ -20,16 +20,16 @@
   },
   "terminal_runner": {
     "path": "tools/terminal_full.py",
-    "sha256": "sha256:8283df0ed288ab67653f535a3506b96e71e1c13107db974263f5a812ca7c47e0"
+    "sha256": "sha256:56535c335df014ef074b31b4475b630a2fcb4516aeec59fbf2ad922a26488eb2"
   },
   "terminal_result": {
     "path": "terminal/terminal-result.json",
-    "sha256": "sha256:5d98699273cb8845a61e1e0cd57befbe95a79767e7912bc7495ca284952114a3",
-    "command_id": "implementation-complete"
+    "sha256": "sha256:5768cc74f6b893a6540b213c36db19103db1e52a8b55bb5acdb09d24f1f0dac4",
+    "command_id": "terminal-full"
   },
   "candidate_custody": {
     "mode": "commit",
-    "candidate_revision": "33b35bb1fb9b8d1874a53e7a656dce4f0100a963"
+    "candidate_revision": "248dada9c3c5d9a51233bdea05d66ba02e73504f"
   },
   "candidate_source_manifest": {
     "path": "terminal/candidate-source-manifest.v1.json",
@@ -37,10 +37,10 @@
     "candidate_source_root": "sha256:892a0113553e4586595a1bfc37db5fa108e112af7d37a9add7d27914093bf894"
   },
   "bindings": {
-    "producer_hash": "sha256:c3dfb1e01d78322fbd43ff99574bd8dc95c829ded1b11578fabab6b282512065"
+    "producer_hash": "sha256:2848b2dff7b5f41849cdf653f38783974b7d9ffbb1acc57126c1e8d8f1fc871d"
   },
-  "published_at_utc": "2026-08-25T04:48:03.468526+00:00",
-  "contract_hash": "sha256:50e22d67adc224a0ea60f0ca50bdbce0d1be9cd1d90f276b5dc6f82605cb372e",
+  "published_at_utc": "2026-08-25T05:03:01.040603+00:00",
+  "contract_hash": "sha256:206e7c33c9df9aa2cc59d7373a07e1e19104c4e578805c503ca3f7e4ebe5da15",
   "command_registry_hash": "sha256:128483970264ff036e9f54930b896ae323c3aae9a06589119661444cc0cf6401",
   "validation": {
     "authorizes": [],
@@ -68,9 +68,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Browser.AdminReviewQueueHttpIntegrationTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:32.950148+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:19.595045+00:00",
+            "finished_at": "2026-08-25T04:52:44.714488+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:30.173161+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -94,9 +94,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Browser.BrowserUiRendererTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:25.575002+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:19.595045+00:00",
+            "finished_at": "2026-08-25T04:52:36.113088+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:30.173161+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    67\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    67\uff0c\u6301\u7eed\u65f6\u95f4: 3 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -120,11 +120,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Configuration.PhaseAPlatformOptionsLoaderTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:29.788966+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:25.575002+00:00",
+            "finished_at": "2026-08-25T04:52:40.813898+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:36.113088+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    33\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    33\uff0c\u6301\u7eed\u65f6\u95f4: 85 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    33\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    33\uff0c\u6301\u7eed\u65f6\u95f4: 166 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -146,11 +146,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Data.HostedContextManifestIssuerTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:33.929137+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:29.788966+00:00",
+            "finished_at": "2026-08-25T04:52:45.745874+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:40.813898+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 467 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 415 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -172,11 +172,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Data.HostedContextManifestSignatureServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:35.247199+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:32.950148+00:00",
+            "finished_at": "2026-08-25T04:52:46.805350+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:44.714488+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     3\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     3\uff0c\u6301\u7eed\u65f6\u95f4: 24 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     3\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     3\uff0c\u6301\u7eed\u65f6\u95f4: 25 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -198,11 +198,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Data.HostedContextManifestStoreTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:36.111338+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:33.929137+00:00",
+            "finished_at": "2026-08-25T04:52:47.804009+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:45.745874+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     4\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     4\uff0c\u6301\u7eed\u65f6\u95f4: 101 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     4\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     4\uff0c\u6301\u7eed\u65f6\u95f4: 102 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -224,9 +224,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Data.ProjectCreationFailureTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:37.156247+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:35.247199+00:00",
+            "finished_at": "2026-08-25T04:52:48.692172+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:46.805350+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -250,11 +250,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Data.RunCancellationPolicyTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:37.981503+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:36.111338+00:00",
+            "finished_at": "2026-08-25T04:52:49.623276+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:47.804009+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 18 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 15 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -276,9 +276,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Data.SqliteMetadataSchemaTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:46.690062+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:37.156247+00:00",
+            "finished_at": "2026-08-25T04:52:58.329800+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:48.692172+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    58\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    58\uff0c\u6301\u7eed\u65f6\u95f4: 7 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -302,11 +302,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Llm.AiCodeMirrorBillingClientTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:39.918933+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:37.981503+00:00",
+            "finished_at": "2026-08-25T04:52:51.583082+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:49.623276+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     2\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     2\uff0c\u6301\u7eed\u65f6\u95f4: 11 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     2\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     2\uff0c\u6301\u7eed\u65f6\u95f4: 12 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -328,9 +328,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Llm.ChatServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:46.651755+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:39.918933+00:00",
+            "finished_at": "2026-08-25T04:52:58.266983+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:51.583082+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    18\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    18\uff0c\u6301\u7eed\u65f6\u95f4: 4 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -354,11 +354,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Llm.LlmBindingServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:48.731739+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:46.651755+00:00",
+            "finished_at": "2026-08-25T04:53:00.360671+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:58.266983+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     2\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     2\uff0c\u6301\u7eed\u65f6\u95f4: 42 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     2\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     2\uff0c\u6301\u7eed\u65f6\u95f4: 39 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -380,11 +380,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Llm.LlmRouteEngineTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:48.679192+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:46.690062+00:00",
+            "finished_at": "2026-08-25T04:53:00.423387+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:52:58.329800+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    10\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    10\uff0c\u6301\u7eed\u65f6\u95f4: 115 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    10\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    10\uff0c\u6301\u7eed\u65f6\u95f4: 150 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -406,11 +406,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Llm.LlmStopLossServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:51.184165+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:48.684128+00:00",
+            "finished_at": "2026-08-25T04:53:02.832500+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:00.360671+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     3\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     3\uff0c\u6301\u7eed\u65f6\u95f4: 516 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     3\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     3\uff0c\u6301\u7eed\u65f6\u95f4: 484 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -432,9 +432,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Llm.ProjectChatHistoryServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:51.028135+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:48.731739+00:00",
+            "finished_at": "2026-08-25T04:53:02.764633+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:00.456778+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -458,11 +458,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.PhaseB.IdentityContextTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:53.059211+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:51.028135+00:00",
+            "finished_at": "2026-08-25T04:53:04.751852+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:02.764633+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     2\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     2\uff0c\u6301\u7eed\u65f6\u95f4: 10 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     2\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     2\uff0c\u6301\u7eed\u65f6\u95f4: 12 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -484,9 +484,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.PhaseB.MigrationEvidenceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:53.184397+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:51.199822+00:00",
+            "finished_at": "2026-08-25T04:53:04.799437+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:02.832500+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -510,9 +510,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.PhaseB.RestoreRecoveryTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:54.918867+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:53.059211+00:00",
+            "finished_at": "2026-08-25T04:53:06.930511+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:04.751852+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -536,9 +536,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.PhaseB.RunnerIsolationTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:55.012276+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:53.184397+00:00",
+            "finished_at": "2026-08-25T04:53:06.930511+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:04.799437+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -562,9 +562,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.PhaseB.SnapshotTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:56.762487+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:54.918867+00:00",
+            "finished_at": "2026-08-25T04:53:08.877130+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:06.930511+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -588,11 +588,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.PhaseB.WorkspaceRecoveryBehaviorTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:57.090643+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:55.012276+00:00",
+            "finished_at": "2026-08-25T04:53:09.112693+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:06.946201+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 219 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 213 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -614,11 +614,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Projects.ProjectCreationRequestJsonPolicyTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:37:58.606115+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:56.762487+00:00",
+            "finished_at": "2026-08-25T04:53:10.782935+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:08.877130+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     4\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     4\uff0c\u6301\u7eed\u65f6\u95f4: 15 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     4\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     4\uff0c\u6301\u7eed\u65f6\u95f4: 12 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -640,9 +640,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Projects.ProjectCreationServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:00.981146+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:57.090643+00:00",
+            "finished_at": "2026-08-25T04:53:13.088558+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:09.112693+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    25\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    25\uff0c\u6301\u7eed\u65f6\u95f4: 1 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -666,9 +666,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Projects.ProjectDraftImportServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:03.655499+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:37:58.606115+00:00",
+            "finished_at": "2026-08-25T04:53:15.839836+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:10.782935+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    13\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    13\uff0c\u6301\u7eed\u65f6\u95f4: 2 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -692,11 +692,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Projects.ProjectInitializationRecoveryServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:03.390058+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:00.981146+00:00",
+            "finished_at": "2026-08-25T04:53:15.451012+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:13.088558+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     6\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     6\uff0c\u6301\u7eed\u65f6\u95f4: 117 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     6\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     6\uff0c\u6301\u7eed\u65f6\u95f4: 118 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -718,9 +718,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Projects.ProjectRuleCatalogTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:05.257770+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:03.390058+00:00",
+            "finished_at": "2026-08-25T04:53:17.380557+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:15.451012+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -744,11 +744,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Prototypes.GameTypeGuideCatalogTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:05.535342+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:03.656389+00:00",
+            "finished_at": "2026-08-25T04:53:17.766824+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:15.839836+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 34 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 38 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -770,11 +770,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Prototypes.GameTypeTemplateCatalogTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:07.540794+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:05.257770+00:00",
+            "finished_at": "2026-08-25T04:53:19.801301+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:17.380557+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    27\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    27\uff0c\u6301\u7eed\u65f6\u95f4: 433 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    27\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    27\uff0c\u6301\u7eed\u65f6\u95f4: 507 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -796,9 +796,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Prototypes.ProjectGameTypeMatchServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:07.437287+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:05.535342+00:00",
+            "finished_at": "2026-08-25T04:53:19.767924+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:17.766824+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -822,11 +822,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Prototypes.SteamGameTypeMetadataProviderTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:09.326657+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:07.437287+00:00",
+            "finished_at": "2026-08-25T04:53:21.742187+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:19.769432+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 40 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 47 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -848,9 +848,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Readback.ArtifactReadbackServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:19.576843+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:07.540794+00:00",
+            "finished_at": "2026-08-25T04:53:32.058427+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:19.801301+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    69\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    69\uff0c\u6301\u7eed\u65f6\u95f4: 9 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -874,11 +874,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Readback.ProjectWebPreviewSemanticAdapterServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:11.560621+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:09.335023+00:00",
+            "finished_at": "2026-08-25T04:53:24.038895+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:21.742187+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 134 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 147 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -900,11 +900,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Readback.ProjectWebPreviewServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:19.369593+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:11.560621+00:00",
+            "finished_at": "2026-08-25T04:53:32.289643+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:24.038895+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    39\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    39\uff0c\u6301\u7eed\u65f6\u95f4: 5 s - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    39\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    39\uff0c\u6301\u7eed\u65f6\u95f4: 6 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -926,11 +926,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.Chapter2BootstrapCommandBuilderTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:21.362010+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:19.369593+00:00",
+            "finished_at": "2026-08-25T04:53:33.937909+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:32.059310+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     2\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     2\uff0c\u6301\u7eed\u65f6\u95f4: 13 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     2\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     2\uff0c\u6301\u7eed\u65f6\u95f4: 12 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -952,11 +952,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.Chapter2BootstrapServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:22.539192+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:19.576843+00:00",
+            "finished_at": "2026-08-25T04:53:35.148442+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:32.289643+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     7\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     7\uff0c\u6301\u7eed\u65f6\u95f4: 696 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     7\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     7\uff0c\u6301\u7eed\u65f6\u95f4: 699 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -978,9 +978,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.CodexHostedProcessCommandFactoryTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:23.563955+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:21.362010+00:00",
+            "finished_at": "2026-08-25T04:53:36.137916+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:33.937909+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     4\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     4\uff0c\u6301\u7eed\u65f6\u95f4: 18 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1004,9 +1004,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.DiablolikeGddWorkflowIntegrationTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:38:27.309029+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:22.539192+00:00",
+            "finished_at": "2026-08-25T04:53:40.673356+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:35.148442+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1030,11 +1030,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.GameDesignDocumentServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:04.774852+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:23.563955+00:00",
+            "finished_at": "2026-08-25T05:01:06.394229+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:36.140364+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    66\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    66\uff0c\u6301\u7eed\u65f6\u95f4: 7 m 38 s - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    66\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    66\uff0c\u6301\u7eed\u65f6\u95f4: 7 m 27 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1056,11 +1056,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.GameDesignQuestionFormServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:41:51.399804+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:38:27.325228+00:00",
+            "finished_at": "2026-08-25T04:56:55.611630+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:53:40.673356+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    17\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    17\uff0c\u6301\u7eed\u65f6\u95f4: 3 m 9 s - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    17\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    17\uff0c\u6301\u7eed\u65f6\u95f4: 3 m - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1082,11 +1082,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.GameDesignSceneRouteServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:43:10.967275+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:41:51.399804+00:00",
+            "finished_at": "2026-08-25T04:58:14.180740+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:56:55.611630+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     9\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     9\uff0c\u6301\u7eed\u65f6\u95f4: 1 m 15 s - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     9\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     9\uff0c\u6301\u7eed\u65f6\u95f4: 1 m 14 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1108,9 +1108,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.GddMilestoneStepServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:43:30.572475+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:43:10.967275+00:00",
+            "finished_at": "2026-08-25T04:58:33.646739+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:58:14.180740+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    39\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    39\uff0c\u6301\u7eed\u65f6\u95f4: 15 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1134,11 +1134,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.GddToModuleBackendContractServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:44:23.586053+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:43:30.572475+00:00",
+            "finished_at": "2026-08-25T04:59:26.581099+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:58:33.646739+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    97\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    97\uff0c\u6301\u7eed\u65f6\u95f4: 48 s - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    97\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    97\uff0c\u6301\u7eed\u65f6\u95f4: 49 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1160,11 +1160,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.HeavyRunnerQueueServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:44:27.108185+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:44:23.586053+00:00",
+            "finished_at": "2026-08-25T04:59:30.341000+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:59:26.582082+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 72 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 34 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1186,9 +1186,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.HostedProcessRunnerTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:44:35.409772+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:44:27.108185+00:00",
+            "finished_at": "2026-08-25T04:59:38.119296+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:59:30.341000+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 2 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1212,11 +1212,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.IterationPlanExecutionPreflightTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:44:38.588306+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:44:35.409772+00:00",
+            "finished_at": "2026-08-25T04:59:41.725721+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:59:38.119296+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    13\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    13\uff0c\u6301\u7eed\u65f6\u95f4: 116 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    13\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    13\uff0c\u6301\u7eed\u65f6\u95f4: 53 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1238,11 +1238,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.IterationPlanTraceabilityBuilderTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:44:41.483786+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:44:38.588306+00:00",
+            "finished_at": "2026-08-25T04:59:44.372341+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:59:41.737515+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    15\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    15\uff0c\u6301\u7eed\u65f6\u95f4: 127 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    15\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    15\uff0c\u6301\u7eed\u65f6\u95f4: 65 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1264,9 +1264,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PhaseAPrototypeRouteE2ETests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:44:46.546305+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:44:41.483786+00:00",
+            "finished_at": "2026-08-25T04:59:49.159154+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:59:44.372341+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1290,9 +1290,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.ProjectRouteStateArtifactServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:44:52.327266+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:44:46.546305+00:00",
+            "finished_at": "2026-08-25T04:59:55.003688+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:59:49.159154+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    56\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    56\uff0c\u6301\u7eed\u65f6\u95f4: 1 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1316,9 +1316,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.ProjectWorkflowRouteServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:45:01.608807+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:44:52.327266+00:00",
+            "finished_at": "2026-08-25T05:00:03.462350+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T04:59:55.003688+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    20\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    20\uff0c\u6301\u7eed\u65f6\u95f4: 4 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1342,11 +1342,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeCommandTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:45:04.961759+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:45:01.623507+00:00",
+            "finished_at": "2026-08-25T05:00:07.474962+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:00:03.462350+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    14\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    14\uff0c\u6301\u7eed\u65f6\u95f4: 487 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    14\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    14\uff0c\u6301\u7eed\u65f6\u95f4: 627 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1368,11 +1368,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeFeedbackIterationServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:45:09.702747+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:45:04.961759+00:00",
+            "finished_at": "2026-08-25T05:00:11.941255+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:00:07.474962+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 968 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 1 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1394,11 +1394,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeGdUnitPathResolverTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:45:12.428175+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:45:09.702747+00:00",
+            "finished_at": "2026-08-25T05:00:14.478489+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:00:11.941255+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     4\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     4\uff0c\u6301\u7eed\u65f6\u95f4: 66 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     4\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     4\uff0c\u6301\u7eed\u65f6\u95f4: 64 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1420,9 +1420,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeIterationGoalServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:45:27.170857+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:45:12.428175+00:00",
+            "finished_at": "2026-08-25T05:00:28.675497+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:00:14.487812+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    58\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    58\uff0c\u6301\u7eed\u65f6\u95f4: 11 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1446,11 +1446,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeIterationPlanServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:45:45.446514+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:45:27.170857+00:00",
+            "finished_at": "2026-08-25T05:00:44.208066+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:00:28.685271+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    68\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    68\uff0c\u6301\u7eed\u65f6\u95f4: 13 s - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    68\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    68\uff0c\u6301\u7eed\u65f6\u95f4: 12 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1472,11 +1472,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeNeedsFixRouteServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:00.202759+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:45:45.446514+00:00",
+            "finished_at": "2026-08-25T05:00:59.597747+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:00:44.208066+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    20\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    20\uff0c\u6301\u7eed\u65f6\u95f4: 11 s - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    20\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    20\uff0c\u6301\u7eed\u65f6\u95f4: 10 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1498,11 +1498,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypePhysicsRequirementPolicyTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:03.202692+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:00.202759+00:00",
+            "finished_at": "2026-08-25T05:01:02.745812+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:00:59.597747+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 17 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 20 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1524,11 +1524,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypePromptTextTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:05.771918+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:03.202692+00:00",
+            "finished_at": "2026-08-25T05:01:05.536187+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:02.759069+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     7\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     7\uff0c\u6301\u7eed\u65f6\u95f4: 19 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     7\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     7\uff0c\u6301\u7eed\u65f6\u95f4: 15 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1550,11 +1550,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeQuickFixServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:36.380820+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:04.774852+00:00",
+            "finished_at": "2026-08-25T05:01:37.597044+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:05.536187+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    96\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    96\uff0c\u6301\u7eed\u65f6\u95f4: 28 s - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    96\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    96\uff0c\u6301\u7eed\u65f6\u95f4: 29 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1576,9 +1576,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeRepairPlanServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:11.365921+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:05.771918+00:00",
+            "finished_at": "2026-08-25T05:01:12.341519+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:06.394229+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    15\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    15\uff0c\u6301\u7eed\u65f6\u95f4: 3 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1602,11 +1602,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeRouteSkillPolicyTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:13.890222+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:11.381586+00:00",
+            "finished_at": "2026-08-25T05:01:14.970007+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:12.341519+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    83\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    83\uff0c\u6301\u7eed\u65f6\u95f4: 179 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    83\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    83\uff0c\u6301\u7eed\u65f6\u95f4: 180 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1628,9 +1628,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeRouteStateWriterTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:16.228995+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:13.890222+00:00",
+            "finished_at": "2026-08-25T05:01:17.358295+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:14.970007+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 26 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1654,11 +1654,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeSmokeSceneResolverTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:19.037499+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:16.228995+00:00",
+            "finished_at": "2026-08-25T05:01:20.239376+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:17.363255+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    17\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    17\uff0c\u6301\u7eed\u65f6\u95f4: 638 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    17\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    17\uff0c\u6301\u7eed\u65f6\u95f4: 728 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1680,9 +1680,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeUiOptimizationServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:28.156107+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:19.037499+00:00",
+            "finished_at": "2026-08-25T05:01:29.069005+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:20.239376+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    28\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    28\uff0c\u6301\u7eed\u65f6\u95f4: 6 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1706,9 +1706,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Runs.PrototypeWorkflowTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:54.671490+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:28.156107+00:00",
+            "finished_at": "2026-08-25T05:01:55.612992+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:29.069005+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    64\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    64\uff0c\u6301\u7eed\u65f6\u95f4: 23 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1732,9 +1732,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Security.DeploymentDocsTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:38.269624+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:36.380820+00:00",
+            "finished_at": "2026-08-25T05:01:39.500500+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:37.597044+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1758,9 +1758,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Security.PhaseAAuthTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:40.158916+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:38.269624+00:00",
+            "finished_at": "2026-08-25T05:01:41.369131+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:39.500500+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 17 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -1784,11 +1784,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Skills.SkillActionServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:42.653237+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:40.158916+00:00",
+            "finished_at": "2026-08-25T05:01:43.851696+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:41.369131+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     6\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     6\uff0c\u6301\u7eed\u65f6\u95f4: 475 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     6\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     6\uff0c\u6301\u7eed\u65f6\u95f4: 447 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1810,11 +1810,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GddToModuleFirstSliceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:44.546119+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:42.653237+00:00",
+            "finished_at": "2026-08-25T05:01:45.837516+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:43.851696+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    10\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    10\uff0c\u6301\u7eed\u65f6\u95f4: 44 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    10\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    10\uff0c\u6301\u7eed\u65f6\u95f4: 48 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1836,11 +1836,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GddToModuleGlobalReviewStandardTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:46.426835+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:44.546119+00:00",
+            "finished_at": "2026-08-25T05:01:47.711123+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:45.837516+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 35 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 36 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1862,11 +1862,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GddToModuleImplementationPhasesTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:48.281510+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:46.426835+00:00",
+            "finished_at": "2026-08-25T05:01:49.595978+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:47.711123+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     6\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     6\uff0c\u6301\u7eed\u65f6\u95f4: 29 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     6\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     6\uff0c\u6301\u7eed\u65f6\u95f4: 34 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1888,11 +1888,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GddToModuleOriginalSplitAuditTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:50.140390+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:48.281510+00:00",
+            "finished_at": "2026-08-25T05:01:51.478409+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:49.595978+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     9\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     9\uff0c\u6301\u7eed\u65f6\u95f4: 20 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     9\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     9\uff0c\u6301\u7eed\u65f6\u95f4: 21 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1914,11 +1914,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GddToModuleRiskDodOpenQuestionsTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:51.993512+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:50.140390+00:00",
+            "finished_at": "2026-08-25T05:01:53.363353+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:51.478409+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     6\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     6\uff0c\u6301\u7eed\u65f6\u95f4: 19 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     6\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     6\uff0c\u6301\u7eed\u65f6\u95f4: 17 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1940,11 +1940,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GddToModuleSourceCoverageMapTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:53.851625+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:51.993512+00:00",
+            "finished_at": "2026-08-25T05:01:55.230791+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:53.363353+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 17 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 22 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1966,11 +1966,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GddToModuleSplitAddedRequirementsTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:55.765591+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:53.858979+00:00",
+            "finished_at": "2026-08-25T05:01:57.175880+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:55.230791+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    12\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    12\uff0c\u6301\u7eed\u65f6\u95f4: 73 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    12\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    12\uff0c\u6301\u7eed\u65f6\u95f4: 74 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -1992,11 +1992,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GodotDiagnosticsQualityGateTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:56.521924+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:54.671490+00:00",
+            "finished_at": "2026-08-25T05:01:57.569897+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:55.612992+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 16 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 18 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2018,11 +2018,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GodotEngineSemanticsTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:57.640603+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:55.765591+00:00",
+            "finished_at": "2026-08-25T05:01:59.124661+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:57.175880+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 51 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 46 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2044,11 +2044,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GodotUiCapabilityContractTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:58.390406+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:56.521924+00:00",
+            "finished_at": "2026-08-25T05:01:59.476470+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:57.569897+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 38 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 42 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2070,11 +2070,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GodotUiStyleCatalogTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:46:59.480364+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:57.640603+00:00",
+            "finished_at": "2026-08-25T05:02:01.004942+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:59.124661+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 21 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     5\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     5\uff0c\u6301\u7eed\u65f6\u95f4: 20 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2096,11 +2096,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GodotUiStyleClosureContractTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:00.235297+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:58.390406+00:00",
+            "finished_at": "2026-08-25T05:02:01.358814+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:01:59.476470+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     4\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     4\uff0c\u6301\u7eed\u65f6\u95f4: 26 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     4\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     4\uff0c\u6301\u7eed\u65f6\u95f4: 25 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2122,11 +2122,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.GodotUiStyleSnapshotSchemaTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:01.298484+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:46:59.480364+00:00",
+            "finished_at": "2026-08-25T05:02:02.894062+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:02:01.004942+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    11\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    11\uff0c\u6301\u7eed\u65f6\u95f4: 41 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    11\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    11\uff0c\u6301\u7eed\u65f6\u95f4: 43 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2148,11 +2148,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.RouteActionDescriptorsTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:02.132411+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:47:00.235297+00:00",
+            "finished_at": "2026-08-25T05:02:03.269138+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:02:01.358814+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 21 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     8\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     8\uff0c\u6301\u7eed\u65f6\u95f4: 22 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2174,9 +2174,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.RouteEvidenceRefKindsTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:03.160007+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:47:01.300934+00:00",
+            "finished_at": "2026-08-25T05:02:04.737722+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:02:02.894062+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -2200,11 +2200,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.RouteFreshnessPolicyTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:04.030612+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:47:02.132411+00:00",
+            "finished_at": "2026-08-25T05:02:05.128484+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:02:03.269138+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     3\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     3\uff0c\u6301\u7eed\u65f6\u95f4: 59 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     3\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     3\uff0c\u6301\u7eed\u65f6\u95f4: 64 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2226,11 +2226,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.RouteModuleContractsTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:05.093244+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:47:03.160007+00:00",
+            "finished_at": "2026-08-25T05:02:06.722165+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:02:04.737722+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     7\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     7\uff0c\u6301\u7eed\u65f6\u95f4: 76 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     7\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     7\uff0c\u6301\u7eed\u65f6\u95f4: 71 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2252,11 +2252,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.RouteOperationGovernanceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:05.936891+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:47:04.030612+00:00",
+            "finished_at": "2026-08-25T05:02:07.065976+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:02:05.128484+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    19\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    19\uff0c\u6301\u7eed\u65f6\u95f4: 88 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    19\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    19\uff0c\u6301\u7eed\u65f6\u95f4: 93 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2278,11 +2278,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.RouteReadbackPathPolicyTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:06.999562+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:47:05.093244+00:00",
+            "finished_at": "2026-08-25T05:02:08.597141+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:02:06.722165+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    14\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    14\uff0c\u6301\u7eed\u65f6\u95f4: 41 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    14\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    14\uff0c\u6301\u7eed\u65f6\u95f4: 43 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2304,11 +2304,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workflow.RouteStatusVocabularyTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:07.983950+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:47:05.936891+00:00",
+            "finished_at": "2026-08-25T05:02:09.081960+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:02:07.065976+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     7\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     7\uff0c\u6301\u7eed\u65f6\u95f4: 155 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     7\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     7\uff0c\u6301\u7eed\u65f6\u95f4: 157 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2330,9 +2330,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workspaces.ProjectWorkspaceMaintenanceServiceTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:08.937067+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:47:06.999562+00:00",
+            "finished_at": "2026-08-25T05:02:10.579401+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:02:08.597141+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -2356,11 +2356,11 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workspaces.ProjectWorkspaceSeederTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:17.819357+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:47:07.983950+00:00",
+            "finished_at": "2026-08-25T05:02:19.146905+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:02:09.081960+00:00",
             "stderr_tail": "",
-            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    18\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    18\uff0c\u6301\u7eed\u65f6\u95f4: 7 s - PhaseA.Platform.Tests.dll (net8.0)\n",
+            "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:    18\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:    18\uff0c\u6301\u7eed\u65f6\u95f4: 8 s - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
           },
           {
@@ -2382,9 +2382,9 @@
               "FullyQualifiedName~PhaseA.Platform.Tests.Workspaces.WorkspaceLayoutBuilderTests"
             ],
             "exit_code": 0,
-            "finished_at": "2026-08-25T04:47:10.999597+00:00",
-            "run_id": "20260825T043719Z",
-            "started_at": "2026-08-25T04:47:08.952715+00:00",
+            "finished_at": "2026-08-25T05:02:12.707153+00:00",
+            "run_id": "20260825T045230Z",
+            "started_at": "2026-08-25T05:02:10.581876+00:00",
             "stderr_tail": "",
             "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\u6570\u636e\u6536\u96c6\u5668\u201cBlame\u201d\u6d88\u606f: \u6240\u6709\u6d4b\u8bd5\u90fd\u5df2\u8fd0\u884c\u5b8c\u6bd5\uff0c\u5c06\u4e0d\u751f\u6210\u5e8f\u5217\u6587\u4ef6\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     3\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     3\uff0c\u6301\u7eed\u65f6\u95f4: 16 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
             "test_inventory_count": 1281
@@ -2401,10 +2401,10 @@
           "-q"
         ],
         "exit_code": 0,
-        "finished_at": "2026-08-25T04:48:03.374657+00:00",
-        "started_at": "2026-08-25T04:47:17.827686+00:00",
+        "finished_at": "2026-08-25T05:03:00.931086+00:00",
+        "started_at": "2026-08-25T05:02:19.146905+00:00",
         "stderr_tail": "",
-        "stdout_tail": ".....                                                                    [100%]\n5 passed in 45.19s\n",
+        "stdout_tail": ".....                                                                    [100%]\n5 passed in 41.42s\n",
         "type": "python-behavior"
       }
     ],

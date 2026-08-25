@@ -2,6 +2,6 @@
   "schema_version": "acceptance-coordinator-efficiency.terminal-result.v2",
   "predicate": "implementation-complete",
   "status": "pass",
-  "terminal_command_id": "implementation-complete",
+  "terminal_command_id": "terminal-full",
   "authorizes": []
 }
