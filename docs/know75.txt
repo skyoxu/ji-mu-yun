@@ -1,0 +1,151 @@
+建议把它做成一个统一的 self-hosted 工具链修复，而不是分别修两个 Skill。核心目标只有一个：
+
+VDD 负责定义可验证的语义；Quick Dev 必须真正执行这些语义验证，不能再用候选实现自己的 status=pass 证明自己正确。
+
+建议需求目录：
+
+execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery
+
+流程变为：
+
+VDD：定义验收语义和失败身份
+                ↓
+Quick Dev：冻结测试、目标和 fixture
+                ↓
+真实执行进程并派生 observation
+                ↓
+Acceptance ID 精确覆盖门禁
+                ↓
+implementation-complete
+1. 修 VDD Skill
+
+VDD 仍然不能运行 RED，也不能生成 command、receipt、hash；只增强它产出的验证意图。
+
+新增 semantic-verification.v1 合同，每个 oracle 至少包含：
+
+oracle_id
+covers_acceptance_ids
+oracle_class
+structural
+behavioral
+integration
+matrix
+recovery
+test_selector
+subject_role：被测目标是什么
+required_case_roles：positive、negative、mutation 等
+red_failure_family 和 expected_failure_ids
+green_expected_observations
+minimum_executed_cases
+independent_judge_required
+
+VDD 验证器必须拒绝：
+
+行为需求只有“文件存在”类 RED。
+Acceptance ID 没有 oracle 覆盖。
+matrix 只写预期结果，没有实际 case producer。
+validator、receipt、evidence 工具变更却没有 positive + negative/mutation fixture。
+rollback 是验收要求，却只有文字说明。
+self-hosted 变更允许候选实现作为唯一裁判。
+
+一个 oracle 可以覆盖多个 Acceptance ID，不要求一条验收一个命令，但必须做到 Acceptance ID exact cover。
+
+建议修改：
+
+.agents/skills/vdd-execution-plan/SKILL.md
+新增 references/semantic-verification-contract.md
+新增 scripts/validate_semantic_verification.py
+更新 scripts/validate_skill_contract.py
+增加有效、缺失覆盖、结构假绿、自证 validator 等 fixtures/tests
+
+主 SKILL.md 只增加简短规则，详细合同放 reference，确定性检查放脚本，避免 Skill 膨胀。
+
+2. 修 Quick Dev TDD Skill
+
+Quick Dev 在 candidate freeze 后把 VDD intent 编译为真实执行描述符：
+
+shell=false
+绑定 executable、argv、cwd
+绑定真实 target
+绑定 fixture 内容 hash
+绑定 RED 时的测试/oracle hash
+GREEN、REFACTOR 不允许更换 RED oracle 和预期结果
+
+新增一个独立 oracle executor，禁止接受候选程序直接提供的 status 或 observed_result。结果必须从实际进程派生：
+
+exit code
+stdout/stderr hash
+target identity
+fixture identity
+executed case/test count
+failure family/ID
+每个 matrix case 的实际结果
+
+支持两种主要 adapter：
+
+test-runner：解析 pytest、unittest、dotnet-test 等测试数；0 tests + exit 0 必须失败。
+case-matrix：Quick Dev 逐项执行 positive/negative/mutation fixture，自行比较预期 exit/output，不信任 SUT 的汇总 pass。
+
+终端门禁改成：
+
+全部 active Acceptance ID 有当前 observation
+AND 每个 observation 都有真实 process receipt
+AND minimum_executed_cases > 0
+AND target/fixture/oracle hash 未漂移
+AND self-hosted independence gate 通过
+=> implementation-complete
+
+建议产生两个新证据：
+
+semantic-observation.v1.json
+acceptance-coverage.v1.json
+
+建议修改：
+
+schemas/plan-owned-implementation-contract...schema.json
+schemas/slice-capsule...schema.json
+新增 semantic observation/coverage schemas
+tools/build_slice_invocation.py
+tools/run_slice_lifecycle.py
+tools/stage_artifact_composer.py
+tools/loop_plan_directory.py
+必要时拆出 tools/semantic_oracle.py
+对应工具测试
+3. Self-hosted 特殊规则
+
+这是修 Quick Dev 自己，不能让候选 Quick Dev 验证自己。
+
+采用 N → N+1：
+
+RED 阶段先写黑盒测试和假绿 fixtures。
+冻结测试、fixture 和 judge hash。
+修改两个 Skill。
+用冻结的外部测试驱动把候选 Quick Dev 当作 SUT 执行。
+候选 Quick Dev 只有被前代/冻结 judge 验证后才可成为下一代执行器。
+
+候选代码可以是被测对象，但不能同时提供最终判定。
+
+4. 必须有的 RED 回归案例
+
+至少覆盖这些真实漏洞：
+
+observed_result = expected_observation 后直接 pass。
+replay 命令忽略传入 target。
+hardcode positive/negative 成功但没有执行 fixture。
+matrix 六类结果全部从预期值复制。
+0 tests 返回 0。
+descriptor root 被替换到调用者指定目录。
+validator 既是 SUT 又是唯一 judge。
+一个 Acceptance ID 未覆盖。
+rollback 只有 prose，没有 runnable probe。
+
+最终 dogfood 使用 08-05 当前实现的脱离式副本：
+
+当前假绿实现必须被新工具阻断。
+修正后的实现 fixture 必须通过。
+不修改 08-05 原目录和历史证据。
+5. 兼容与范围
+旧计划保持只读兼容，不批量迁移。
+所有新的 VDD create/repair 默认使用 semantic contract。
+旧合同不得用于新的 self-hosted/toolchain implementation-complete。
+本需求不要修改 Acceptance Skill、08-05 实现、历史 snapshots/logs，也不要处理 README、计划状态等普通治理问题。

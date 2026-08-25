@@ -1,0 +1,129 @@
+对上一版修复方案的补充
+1. 吸收 Chapter 6 的 6.3 实施前置判断
+
+在 VDD 的 semantic-verification 中增加：
+
+{
+  "complexity_class": "simple|complex|architectural",
+  "verification_lane": "unit|integration|matrix|runtime",
+  "context_lookup_required": true,
+  "context_lookup_reason": "...",
+  "minimum_red_scope": "...",
+  "upgrade_conditions": []
+}
+
+主要作用：
+
+先判断 unit 是否足够。
+涉及多个测试根、跨模块、合同或 runtime 时自动升级验证 lane。
+验收语义不足时返回 VDD repair，不让 Quick Dev 临时猜测试。
+明确识别 unexpected_green，不能把它当成“功能已经存在”直接跳过；必须转 regression 模式或证明既有行为。
+2. 强化 planned 与 observed 的区分
+
+Chapter 6 对 planned-only 的处理非常值得直接学习。
+
+Quick Dev 应把运行分为：
+
+planned-only：只完成命令解析、路由和执行计划，绝不能授权完成。
+observed-run：真实进程已执行并产生 receipt。
+recovered-run：从可验证的真实 observation 恢复。
+invalid-run：artifact integrity 或执行身份不成立。
+
+这正好能阻断 08-05 的“生成了一份看似完整的报告，但实际没有执行 case”。
+
+3. 增加 recommendation-only 路由
+
+为 Quick Dev 增加类似 Chapter 6 的轻量路由输出：
+
+{
+  "recommended_action": "run-red|fix-red-contract|run-green|run-refactor|run-terminal|repair-vdd|handoff-acceptance|stop",
+  "forbidden_actions": [],
+  "reason": "...",
+  "blocked_by": "...",
+  "reusable_observations": [],
+  "invalidated_observations": []
+}
+
+调用者在任何昂贵动作前先获取 recommendation，而不是直接重跑完整 slice。
+
+这比继续扩展 loop_plan_directory.py 的隐式判断更清楚，也更适合跨会话恢复。
+
+4. 吸收 Chapter 6 的失败分类和止损
+
+Quick Dev 至少需要这些 failure family：
+
+semantic-contract-gap
+expected-red
+unexpected-green
+task-implementation-failure
+test-harness-failure
+target-binding-failure
+repo-noise
+timeout-no-observation
+repeated-deterministic-failure
+artifact-integrity
+
+路由规则：
+
+repo-noise 不得充当 RED。
+test-harness-failure 不得进入 GREEN。
+timeout-no-observation 不等于 fail，也不等于 pass。
+相同 deterministic fingerprint 连续出现时停止原参数重跑。
+oracle 合同缺失直接回 VDD repair。
+5. 增加按变化影响的选择性重放
+
+学习 Chapter 6 的 deterministic reuse，但绑定得更严格：
+
+代码/测试/schema/validator 变化
+    -> 重跑受影响 oracle
+
+普通非语义文档变化
+    -> 可复用已验证 observation
+
+requirements/acceptance/plan 语义变化
+    -> 测试结果可以部分复用
+    -> acceptance coverage 必须重新计算
+
+fixture/target/command 变化
+    -> 对应 RED、GREEN、REFACTOR 全部失效
+
+每个 oracle 生成：
+
+{
+  "reusable": false,
+  "invalidated_by": ["target_hash_changed"],
+  "required_next_action": "run-red"
+}
+6. 引入执行强度 Profile，但不能降低真实性
+
+可以学习 Chapter 6 的三个 profile：
+
+fast-ship：只运行精确受影响的 semantic oracles，P0/P1 阻断。
+standard：运行完整 slice terminal、负例和 mutation matrix。
+self-hosted：强制 predecessor/frozen judge 与完整反假绿套件。
+
+但所有 profile 都必须满足：
+
+真实进程执行。
+Acceptance ID exact cover。
+非零测试/case 数。
+target 和 fixture 绑定。
+禁止自报 status=pass。
+
+Profile 只能控制成本和范围，不能降低真实性底线。
+
+不应该吸收到 Quick Dev 的 Chapter 6 能力
+
+以下仍应留在外层：
+
+6.7 的 LLM Review：属于 Acceptance/Review。
+6.8 的多 reviewer Needs Fix：属于 Review 协调。
+6.9 commit 前全仓硬检查：Quick Dev 不是 commit authority。
+Godot、GdUnit、taskmaster、overlay 等业务仓专用规则。
+Chapter 5 的批量 jitter、shard、quarantine：与单计划实施内核无关。
+
+最终修复目标可以总结为：
+
+VDD 提供 Chapter 5 级别的稳定语义合同；Quick Dev 提供 Chapter 6 的 6.3～6.6 通用化实施内核；Acceptance 和 Review继续承接 6.7～6.8；另由顶层协调器提供 Chapter 6 的恢复、止损和统一入口。
+
+所以，上一方案最应该从 Chapter 6 新增的不是更多验收文档，而是四个机器能力：preflight、planned-only/observed 区分、recommendation-only 路由、重复失败止损。
