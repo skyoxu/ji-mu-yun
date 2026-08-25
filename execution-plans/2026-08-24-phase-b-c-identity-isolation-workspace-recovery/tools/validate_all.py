@@ -96,10 +96,21 @@ def _dotnet_shards() -> tuple[list[dict[str, object]], int]:
         if method_count:
             namespace = re.search(r"^\s*namespace\s+([A-Za-z0-9_.]+)\s*;", text, re.MULTILINE)
             class_matches = list(re.finditer(r"\b(?:public|internal|private|protected)?\s*(?:sealed\s+|abstract\s+)?class\s+([A-Za-z0-9_]+)", text))
-            for index, match in enumerate(class_matches):
-                segment_end = class_matches[index + 1].start() if index + 1 < len(class_matches) else len(text)
-                segment = text[match.start():segment_end]
-                if re.search(r"^\s*\[(?:Fact|Theory)(?:\([^\]]*)?\]", segment, re.MULTILINE):
+            for match in class_matches:
+                body_start = text.find("{", match.end())
+                if body_start < 0:
+                    continue
+                depth = 0
+                body_end = len(text)
+                for position in range(body_start, len(text)):
+                    if text[position] == "{": depth += 1
+                    elif text[position] == "}":
+                        depth -= 1
+                        if depth == 0:
+                            body_end = position
+                            break
+                body = text[body_start:body_end]
+                if re.search(r"^\s*\[(?:Fact|Theory)(?:\([^\]]*)?\]", body, re.MULTILINE):
                     test_classes.add(f"{namespace.group(1) if namespace else 'PhaseA.Platform.Tests'}.{match.group(1)}")
     if inventory_count == 0:
         return [{"command": ["dotnet", "test"], "exit_code": 1, "failure": "empty-test-inventory"}], 0
