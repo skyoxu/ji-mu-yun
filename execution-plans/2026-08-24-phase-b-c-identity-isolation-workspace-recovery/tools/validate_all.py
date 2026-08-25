@@ -94,22 +94,24 @@ def _dotnet_shards() -> tuple[list[dict[str, object]], int]:
         method_count = len(re.findall(r"^\s*\[(?:Fact|Theory)(?:\([^\]]*)?\]", text, re.MULTILINE))
         inventory_count += method_count
         if method_count:
-            namespace = re.search(r"^\s*namespace\s+([A-Za-z0-9_.]+)\s*;", text, re.MULTILINE)
-            class_matches = list(re.finditer(r"\b(?:public|internal|private|protected)?\s*(?:sealed\s+|abstract\s+)?class\s+([A-Za-z0-9_]+)", text))
+            scan_text = re.sub(r'""".*?"""', '', text, flags=re.DOTALL)
+            scan_text = re.sub(r'(?<!@)"(?:\\.|[^"\\])*"', '', scan_text)
+            namespace = re.search(r"^\s*namespace\s+([A-Za-z0-9_.]+)\s*;", scan_text, re.MULTILINE)
+            class_matches = list(re.finditer(r"\b(?:public|internal|private|protected)?\s*(?:sealed\s+|abstract\s+)?class\s+([A-Za-z0-9_]+)", scan_text))
             for match in class_matches:
-                body_start = text.find("{", match.end())
+                body_start = scan_text.find("{", match.end())
                 if body_start < 0:
                     continue
                 depth = 0
                 body_end = len(text)
-                for position in range(body_start, len(text)):
-                    if text[position] == "{": depth += 1
-                    elif text[position] == "}":
+                for position in range(body_start, len(scan_text)):
+                    if scan_text[position] == "{": depth += 1
+                    elif scan_text[position] == "}":
                         depth -= 1
                         if depth == 0:
                             body_end = position
                             break
-                body = text[body_start:body_end]
+                body = scan_text[body_start:body_end]
                 if re.search(r"^\s*\[(?:Fact|Theory)(?:\([^\]]*)?\]", body, re.MULTILINE):
                     test_classes.add(f"{namespace.group(1) if namespace else 'PhaseA.Platform.Tests'}.{match.group(1)}")
     if inventory_count == 0:
