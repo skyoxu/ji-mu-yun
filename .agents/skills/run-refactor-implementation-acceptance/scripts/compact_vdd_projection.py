@@ -63,6 +63,14 @@ def _git_blob(root: Path, revision: str, path: str) -> bytes | None:
     return _git(root, "show", f"{revision}:{path}", allow_missing=True)
 
 
+def _bound_hash(root: Path, revision: str | None, relative_path: str, current: Path) -> str:
+    """Hash the immutable candidate blob when commit custody is declared."""
+    payload = _git_blob(root, revision, relative_path) if revision else current.read_bytes()
+    if payload is None:
+        raise InputError("candidate source manifest is stale: candidate binding file is missing from declared revision")
+    return _hash_bytes(payload)
+
+
 def _is_within(path: Path, root: Path) -> bool:
     """Containment check that tolerates Windows short/long path aliases."""
     try:
@@ -188,12 +196,16 @@ def _implementation_handoff(root: Path, target: Path, request: dict[str, Any]) -
     if receipt.get("schema_version") == "quick-dev-implementation-complete.v2":
         if receipt.get("plan_id") != contract.get("plan_id") or receipt.get("predicate") != "implementation-complete" or receipt.get("status") != "pass":
             raise InputError("implementation receipt does not match the current Quick Dev terminal contract")
+        requested_revision = request.get("candidateRevision")
         for label, current, expected_path in (("implementation_contract", contract_path, "implementation-contract.v1.json"), ("command_registry", registry_path, "command-registry.v1.json")):
             descriptor = receipt.get(label)
-            if not isinstance(descriptor, dict) or descriptor.get("path") != expected_path or descriptor.get("sha256") != _hash_bytes(current.read_bytes()):
+            candidate_path = current.relative_to(root).as_posix()
+            if not isinstance(descriptor, dict) or descriptor.get("path") != expected_path or descriptor.get("sha256") != _bound_hash(root, requested_revision, candidate_path, current):
                 raise InputError("implementation receipt does not match the current Quick Dev terminal contract")
         runner = receipt.get("terminal_runner")
-        if not isinstance(runner, dict) or runner.get("path") != runner_value or runner.get("sha256") != _hash_bytes(runner_path.read_bytes()):
+        runner_relative = runner_value.replace("\\", "/")
+        candidate_runner_path = runner_path.relative_to(root).as_posix()
+        if not isinstance(runner, dict) or runner.get("path") != runner_relative or runner.get("sha256") != _bound_hash(root, requested_revision, candidate_runner_path, runner_path):
             raise InputError("implementation receipt terminal runner is stale")
         terminal_result = receipt.get("terminal_result")
         manifest_ref = receipt.get("candidate_source_manifest")

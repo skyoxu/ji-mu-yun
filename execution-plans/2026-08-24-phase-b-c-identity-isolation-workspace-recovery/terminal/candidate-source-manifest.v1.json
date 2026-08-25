@@ -575,7 +575,7 @@
         "S3",
         "S4"
       ],
-      "sha256": "sha256:09c5bd4d9514736dfa7266a9bb5eb57638f45900f9a656872d1bdfbbf90ba765"
+      "sha256": "sha256:7c1b64c610dd530d053679099264e3611f50d619186ae87201e9416037f2ba34"
     },
     {
       "path": "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
@@ -791,7 +791,7 @@
         "S3",
         "S4"
       ],
-      "sha256": "sha256:1bb66c92022132b34cadc3668641e675b3516ff8b57f01888e870b819429596e"
+      "sha256": "sha256:5ebd086e15cefe5f6ae2f1ce53a669ed8ca40c08235f30f3cb186aa866268cee"
     },
     {
       "path": "PhaseA.Platform.Tests/Runs/PrototypeRouteSkillPolicyTests.cs",
@@ -935,7 +935,7 @@
         "S3",
         "S4"
       ],
-      "sha256": "sha256:0dfa44928a555a86d810580b69449485fb46ba25eebbcb19a02673910721c951"
+      "sha256": "sha256:cc0ad79412d49a407958146ffb60e6b8602ab254d99cc77be896e6403f0e9aa7"
     },
     {
       "path": "PhaseA.Platform.Tests/Security/SnapshotTests.cs",
@@ -959,7 +959,7 @@
         "S3",
         "S4"
       ],
-      "sha256": "sha256:54b2d6919fa855d15d90a8b3bfb87c7f0bb56b9cbe61b8eebc4fb884046808f0"
+      "sha256": "sha256:1abaf206ff3d30ea335c4e17a5df90014b6ba2cc4bfc1628ef62b5b72b25701c"
     },
     {
       "path": "PhaseA.Platform.Tests/Skills/SkillActionServiceTests.cs",
@@ -1295,7 +1295,7 @@
         "S3",
         "S4"
       ],
-      "sha256": "sha256:856a58e56a2cd66bf61060b6ddd4446539b1ab144afcd7a73754c726e58e6173"
+      "sha256": "sha256:ae6f169c47e057195d53b981348644f5fb7dd08e1e79b2584dd3497936b5e62e"
     },
     {
       "path": "PhaseA.Platform/Configuration/PhaseAPlatformConfigException.cs",
@@ -1967,7 +1967,7 @@
         "S3",
         "S4"
       ],
-      "sha256": "sha256:67ae82961ec62b3ed69223170b6a7a49a32485e07796931c037ea83ea4d90599"
+      "sha256": "sha256:75a2064dba7938ba7f8ac02e7d439216e6dd829e5570144d19574f9c52cdf819"
     },
     {
       "path": "PhaseA.Platform/Data/StaleProjectInitializationSnapshot.cs",
@@ -4319,7 +4319,7 @@
         "S3",
         "S4"
       ],
-      "sha256": "sha256:863e4cc705d1c7b40917b530976cc6f2ec15abebeb94abb47dfc185596095ddc"
+      "sha256": "sha256:efada5047a2523fac980dde1b4660f3a4f3157cb612cf796bb2088212411ba9a"
     },
     {
       "path": "PhaseA.Platform/Skills/SkillActionCatalog.cs",
@@ -4751,7 +4751,7 @@
         "S3",
         "S4"
       ],
-      "sha256": "sha256:a390080d519ae9c6f6b8c08c3f4b3eb32ce27920c561b7b99cfc8bfbfa4ccbd5"
+      "sha256": "sha256:f98408491f1622a9c2ae5fc51966dce5d998b1de0f11f711f60abfe7de18f9bd"
     },
     {
       "path": "PhaseA.Platform/Workspaces/SnapshotManifest.cs",
@@ -4811,7 +4811,7 @@
         "S3",
         "S4"
       ],
-      "sha256": "sha256:faf51996a6a631155b3580fcfc6178e9556f54eddc82115aaa730b0550e71138"
+      "sha256": "sha256:7fcff2ac1bd054c920070664483128f6084df9795d92de9d4c71ab6cdae7c471"
     },
     {
       "path": "PhaseA.Platform/packages.lock.json",
@@ -5018,5 +5018,5 @@
       "sha256": "sha256:12a9c32230530a5c9d35bf87a4db55bf0995f2859ca4c5017a02ac987c39b42c"
     }
   ],
-  "candidate_source_root": "sha256:8863b6f87c1cd5724e0aa893bdbac2cf2b5b34a9d0fc350d07d9a7bc71ffbdbd"
+  "candidate_source_root": "sha256:fd81bf99598d51372a2ea53070feb2385d1154cbe1756eeb4f56bad570578f1c"
 }
