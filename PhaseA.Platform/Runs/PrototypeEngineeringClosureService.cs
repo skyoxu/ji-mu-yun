@@ -43,13 +43,31 @@ public sealed class PrototypeEngineeringClosureService
         var relativePath = Path.Combine(relativeDirectory, "evidence.json").Replace('\\', '/');
         var absolutePath = Path.Combine(absoluteDirectory, "evidence.json");
         var payload = BuildEvidencePayload(project, evidence, relativePath);
-        await File.WriteAllTextAsync(
-            absolutePath,
-            JsonSerializer.Serialize(payload, JsonOptions),
-            Encoding.UTF8,
-            cancellationToken);
+        await WriteEvidenceWithRetryAsync(absolutePath, JsonSerializer.Serialize(payload, JsonOptions), cancellationToken);
 
         return new PrototypeEngineeringEvidenceWriteResult(relativePath);
+    }
+
+    private static async Task WriteEvidenceWithRetryAsync(string path, string text, CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete, 4096, FileOptions.Asynchronous);
+                await using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+                await writer.WriteAsync(text.AsMemory(), cancellationToken);
+                return;
+            }
+            catch (IOException) when (attempt < 12)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(50 * attempt), cancellationToken);
+            }
+            catch (UnauthorizedAccessException) when (attempt < 12)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(50 * attempt), cancellationToken);
+            }
+        }
     }
 
     public async Task TouchMemoryAsync(
