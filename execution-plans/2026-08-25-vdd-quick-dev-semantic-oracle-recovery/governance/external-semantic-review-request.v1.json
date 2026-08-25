@@ -1,0 +1,26 @@
+{
+  "schema_version": "vdd-external-semantic-review-request.v1",
+  "plan_id": "vdd-quick-dev-semantic-oracle-recovery",
+  "profile": "bootstrap-upstream-plan",
+  "selection_hash": "sha256:4cf516d611eb0aba633adcebc37df679e6270dd74f231fd98c782a6e754def40",
+  "source_freeze": {
+    "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/governance/vdd-source-freeze-manifest.v1.binding-2.json",
+    "sha256": "sha256:7db5418ee17c3fe517859da8acae4ae4495fa1069a01e4114138c29f5be4b682"
+  },
+  "requirements_mapping": {
+    "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/governance/requirements-acceptance-mapping.v1.json",
+    "sha256": "sha256:20da7c4b716e068d47cb0d750925cec698e1a3ba544e99b147b243f85300c2e8"
+  },
+  "conformance_result": {
+    "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/governance/vdd-conformance-result.v1.json",
+    "sha256": "sha256:d6e21a8e6de8996939dd7998718bcc9aedf9c258f26ea4ce76a1f4af3442a68f"
+  },
+  "skill_input_receipt": {
+    "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/skill-input/repair-round-4/receipt.v1.json",
+    "sha256": "sha256:d59cf37ecfd6802b74130659f0fdf9acac4095d6b992916527d229950fd3592a"
+  },
+  "review_scope": "Decide whether each affected source obligation is covered by the preserved FR/NFR/SM/SM-C contract, explicitly not_applicable, or requires a requirements repair. Do not authorize implementation.",
+  "required_output": "vdd-review-run.v1",
+  "required_output_bindings": ["semantic_handoff_hash", "source_manifest_hash", "requirements_manifest_hash", "ambiguity_ids", "affected_requirement_ids"],
+  "authorizes": []
+}

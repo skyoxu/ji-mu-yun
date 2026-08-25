@@ -9,7 +9,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts"))
-from conformance import build_obligation_inventory, exact_cover, validate_conformance  # noqa: E402
+from conformance import build_obligation_inventory, exact_cover, validate_conformance, _expanded_ids  # noqa: E402
 sys.path.insert(0, str(ROOT / ".agents/skills/vdd-execution-plan/scripts"))
 from source_freeze import build_manifest  # noqa: E402
 
@@ -62,7 +62,7 @@ def main() -> int:
             requirement["obligation_ids"] = []
         requirement_index = {item["id"]: item for item in prepared["requirements"]}
         for obligation in inventory:
-            direct = sorted(set(re.findall(r"`(VCEC-\d{3})`", obligation["anchor"]["quote"])))
+            direct = sorted(set(_expanded_ids(obligation["anchor"]["quote"], "VCEC") + _expanded_ids(obligation["anchor"]["quote"], "PIWR")))
             if obligation["status"] == "active":
                 if not direct:
                     return 2

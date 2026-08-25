@@ -1,0 +1,163 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "create",
+  "request_binding": {
+    "request": {
+      "operation": "create",
+      "profile": "self-hosted",
+      "canonical_selection_hash": "sha256:4cf516d611eb0aba633adcebc37df679e6270dd74f231fd98c782a6e754def40",
+      "canonical_selection_path": "_bmad-output/specs/canonical-spec-package-selections/sha256-4cf516d611eb0aba633adcebc37df679e6270dd74f231fd98c782a6e754def40.json",
+      "requirements_root": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery",
+      "provenance_prd_excluded": true,
+      "intent": "Create a self-hosted execution plan for VDD, Quick Dev, independent executor/judge and coverage-gate semantic oracle recovery."
+    },
+    "consumer": "vdd-execution-plan",
+    "operation": "create",
+    "target": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery",
+    "route_identity": "vdd.self_hosted",
+    "source_roles": {
+      "requirements": [
+        "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery"
+      ]
+    }
+  },
+  "request_hash": "sha256:7641eebf313886127683fae55325dd2a9215ed54f0bd2fbe32cfb6a681ecc0f4",
+  "target": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery",
+  "route_identity": "vdd.self_hosted",
+  "repository_identity": {
+    "head": "0dffa5e50a433701154ddadc3f3522633cb6aaa9",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_selection_hash": "sha256:aaec8d0dc501e62e8ae6efbb5556fb4eec4c4793e22944ff9ad89aefff5669bf",
+    "selected_source_content_root": "sha256:c6b62ae9071bb6417678dc186f178e630741e277c7efdccb9af0f4dbbd562f20"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-25T13:45:36.541560Z",
+  "contract_hash": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+  "source_manifest": {
+    "path": "snapshot/source-manifest.v1.json",
+    "sha256": "sha256:1a7b6512950417dc1c4ca6264a8897fe756e2cf0c35ece954206e063bb8f0f82"
+  },
+  "child_request": {
+    "path": "pending/skill-input-child-request.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "sources": [
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/.memlog.md",
+      "required": true,
+      "sha256_before": "sha256:e33fd5fd1a0262ece851c6be60bc8cf22b4117c09e957e441610b923403a12cf",
+      "sha256_after": "sha256:e33fd5fd1a0262ece851c6be60bc8cf22b4117c09e957e441610b923403a12cf",
+      "size_bytes": 3894,
+      "line_count": 26,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:e33fd5fd1a0262ece851c6be60bc8cf22b4117c09e957e441610b923403a12cf",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 26
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+      "required": true,
+      "sha256_before": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c",
+      "sha256_after": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c",
+      "size_bytes": 6663,
+      "line_count": 79,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 79
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/open-questions.md",
+      "required": true,
+      "sha256_before": "sha256:44d67094533edc2bf609a1228e294d9c0f6e844990d9a414721cae8aebd16cfd",
+      "sha256_after": "sha256:44d67094533edc2bf609a1228e294d9c0f6e844990d9a414721cae8aebd16cfd",
+      "size_bytes": 1798,
+      "line_count": 20,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:44d67094533edc2bf609a1228e294d9c0f6e844990d9a414721cae8aebd16cfd",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 20
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements-and-acceptance.md",
+      "required": true,
+      "sha256_before": "sha256:32684f2dbb751a38001dc5fb59f88c0b5553d2d7d6b35d43a5db8e6984f2ab52",
+      "sha256_after": "sha256:32684f2dbb751a38001dc5fb59f88c0b5553d2d7d6b35d43a5db8e6984f2ab52",
+      "size_bytes": 1380,
+      "line_count": 20,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:32684f2dbb751a38001dc5fb59f88c0b5553d2d7d6b35d43a5db8e6984f2ab52",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 20
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements.md",
+      "required": true,
+      "sha256_before": "sha256:bda1639113f918c0f203faf652a536d73743bbe69bb54d03aceb205602746805",
+      "sha256_after": "sha256:bda1639113f918c0f203faf652a536d73743bbe69bb54d03aceb205602746805",
+      "size_bytes": 6855,
+      "line_count": 62,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:bda1639113f918c0f203faf652a536d73743bbe69bb54d03aceb205602746805",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 62
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "pending/semantic-decision.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "status": "insufficient"
+  },
+  "context_artifact": {
+    "path": "pending/skill-input-context.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": false,
+  "binding_hash": "sha256:8e068368f647a5e47531cbe42e7c36d1b556eda6d2a327fc305ac042ed6f792d"
+}

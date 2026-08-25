@@ -16,6 +16,8 @@ executor/judge and coverage-gate boundary so that every active Acceptance ID
 has one admissible manifest-to-observation evidence path. The candidate Quick
 Dev remains SUT for N to N+1 promotion.
 
+Repair rounds 1-4 rebound skill-input to selection `sha256:4cf516d611eb0aba633adcebc37df679e6270dd74f231fd98c782a6e754def40`; the round-4 semantic child produced typed artifacts and the gate is ready.
+
 VDD writes only `semantic-verification.v1`, `active-acceptance-manifest.v1`,
 `failure-taxonomy.v1`, and hash-free `semantic-rejection.v1`. Quick Dev alone
 writes descriptors, recommendation/reuse decisions, live blockers, recovery

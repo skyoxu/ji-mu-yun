@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-25T14:06:21.275320Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The specification defines VDD semantic verification and Quick Dev recovery for independent, auditable execution. It preserves FR-1 through FR-17, NFR-1 through NFR-11, SM-1 through SM-4, and SM-C1 through SM-C3.",
+      "title": "Scope"
+    },
+    {
+      "content": "The system requires semantic contracts, exact many-to-many Acceptance ID coverage, real process execution, target and fixture binding, independent judging, layered evidence state and verification outcome, deterministic failure identities, reusable recovery artifacts, and nonzero execution.",
+      "title": "Contracts"
+    },
+    {
+      "content": "Canonical package roles, architecture authority, evidence snapshots, failure-ID construction, promotion ownership, and closed-snapshot reuse foundations are adopted. Comparator policy, judge lifecycle, rollback probes, unexpected-green proof, stop-loss thresholds, platform compatibility, and detailed reuse remain deferred.",
+      "title": "Decisions And Open Questions"
+    }
+  ],
+  "source_manifest_hash": "sha256:ba048ac45eba1462f81360f19ea09ce3ae34a501ed9e7c923f63bdc587d8e62c",
+  "truncated": false
+}

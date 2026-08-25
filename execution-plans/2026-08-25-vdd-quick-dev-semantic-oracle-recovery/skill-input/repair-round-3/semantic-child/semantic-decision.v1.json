@@ -1,0 +1,19 @@
+{
+  "authorizes": [],
+  "context_artifact_hash": "sha256:0e0bd3967d0c2a78cce8238f1344a51137f9b3bd9edca6ec79ad2e589295bb9a",
+  "execution_identity": "sha256:283f3b3f44b2128ad27aacf7196f9115a86a07689f2b4587fc92b1dc46587adb",
+  "producer_role": "semantic-child",
+  "rationale": "Frozen inputs were reviewed.",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "redaction_status": "not-required",
+  "schema_version": "skill-semantic-decision.v1",
+  "source_manifest_hash": "sha256:12f4c6790baea2ff3a9496f943442d011a84fce2dc458b932ae17899e75b86ab",
+  "source_statuses": {
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/.memlog.md": "accepted",
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md": "accepted",
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/open-questions.md": "accepted",
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements-and-acceptance.md": "accepted",
+    "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements.md": "accepted"
+  },
+  "status": "accepted"
+}

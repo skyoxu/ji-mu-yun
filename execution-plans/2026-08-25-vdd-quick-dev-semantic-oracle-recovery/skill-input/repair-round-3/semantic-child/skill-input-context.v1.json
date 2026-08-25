@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-25T14:04:07.104562Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The canonical package defines VDD semantic verification and Quick Dev recovery for auditable independent execution.",
+      "title": "Package"
+    },
+    {
+      "content": "Normative requirements cover semantic contracts, real execution, independent judging, layered evidence, exact Acceptance ID coverage, recovery, profiles, and self-hosted validation.",
+      "title": "Requirements"
+    },
+    {
+      "content": "Exact cover is many-to-many. Artifact authority, evidence snapshots, identity construction, and promotion ownership are resolved; comparator policy, judge operations, rollback probes, stop-loss, and reuse details remain deferred.",
+      "title": "Decisions"
+    }
+  ],
+  "source_manifest_hash": "sha256:12f4c6790baea2ff3a9496f943442d011a84fce2dc458b932ae17899e75b86ab",
+  "truncated": false
+}

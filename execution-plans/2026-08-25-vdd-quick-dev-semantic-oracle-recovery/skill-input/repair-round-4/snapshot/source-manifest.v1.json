@@ -1,0 +1,44 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "vdd-execution-plan",
+  "operation": "create",
+  "sources": [
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/.memlog.md",
+      "sha256": "sha256:f89a5154c2ee986c3718739a3d85547d295ec54ca27b113737e93aa0e9cf1f94",
+      "semantic_snapshot_sha256": "sha256:f89a5154c2ee986c3718739a3d85547d295ec54ca27b113737e93aa0e9cf1f94",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+      "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c",
+      "semantic_snapshot_sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/open-questions.md",
+      "sha256": "sha256:44d67094533edc2bf609a1228e294d9c0f6e844990d9a414721cae8aebd16cfd",
+      "semantic_snapshot_sha256": "sha256:44d67094533edc2bf609a1228e294d9c0f6e844990d9a414721cae8aebd16cfd",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements-and-acceptance.md",
+      "sha256": "sha256:32684f2dbb751a38001dc5fb59f88c0b5553d2d7d6b35d43a5db8e6984f2ab52",
+      "semantic_snapshot_sha256": "sha256:32684f2dbb751a38001dc5fb59f88c0b5553d2d7d6b35d43a5db8e6984f2ab52",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements.md",
+      "sha256": "sha256:bda1639113f918c0f203faf652a536d73743bbe69bb54d03aceb205602746805",
+      "semantic_snapshot_sha256": "sha256:bda1639113f918c0f203faf652a536d73743bbe69bb54d03aceb205602746805",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-25T14:06:21.275320Z"
+}
