@@ -12,7 +12,7 @@
   "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
   "profile": "resumable",
   "terminal": {
-    "command_id": "implementation-complete",
+    "command_id": "terminal-full",
     "runner": "tools/terminal_full.py",
     "predicate": "implementation-complete"
   },
