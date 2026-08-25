@@ -278,7 +278,7 @@ public sealed class PrototypeIterationGoalService
             var goalAbsolutePath = Path.Combine(project.RepoPath, goalRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var resultAbsolutePath = Path.Combine(project.RepoPath, resultRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
-            var codexRuntimeOutputPath = CreateShortRuntimeOutputPath(runId);
+            var codexRuntimeOutputPath = CreateRuntimeOutputPath(project.RepoPath, runId);
             var now = DateTimeOffset.UtcNow.ToString("O");
             var projectReadme = _stateWriter.ReadProjectReadme(project);
             var prototypeContract = _contractService.Read(project);
@@ -328,7 +328,7 @@ public sealed class PrototypeIterationGoalService
             var codexCommand = await BuildCodexCommandAsync(prompt, codexRuntimeOutputPath, model, project, runId, timeout.Token);
             var codexResult = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(codexCommand, runtimeCredential).WithRunId(runId), timeout.Token);
             var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
-            if (File.Exists(codexRuntimeOutputPath))
+            if (File.Exists(codexRuntimeOutputPath) && !string.Equals(codexRuntimeOutputPath, codexOutputAbsolutePath, StringComparison.OrdinalIgnoreCase))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(codexOutputAbsolutePath)!);
                 File.Copy(codexRuntimeOutputPath, codexOutputAbsolutePath, overwrite: true);
@@ -875,9 +875,9 @@ public sealed class PrototypeIterationGoalService
             : credential;
     }
 
-    private static string CreateShortRuntimeOutputPath(string runId)
+    private static string CreateRuntimeOutputPath(string projectRepoPath, string runId)
     {
-        var root = Path.Combine(Path.GetTempPath(), "phasea-codex-out", runId);
+        var root = Path.Combine(projectRepoPath, "logs", "phase-a-iteration", ".runtime", runId);
         Directory.CreateDirectory(root);
         return Path.Combine(root, "codex-output.txt");
     }

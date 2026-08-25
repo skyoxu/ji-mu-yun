@@ -1,0 +1,19 @@
+{
+  "command": [
+    "dotnet",
+    "test",
+    "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+    "--no-restore",
+    "--no-build",
+    "--disable-build-servers",
+    "--nologo",
+    "--filter",
+    "FullyQualifiedName=PhaseA.Platform.Tests.Runs.GameDesignDocumentServiceTests.CreateAsync_ShouldUseGameplayTagsInsteadOfReferenceTitleWords"
+  ],
+  "exit_code": 0,
+  "started_at": "2026-08-24T15:24:15.491060+00:00",
+  "finished_at": "2026-08-24T15:24:40.938531+00:00",
+  "stdout_tail": "C:\\jimuyun\\PhaseA.Platform.Tests\\bin\\Debug\\net8.0\\PhaseA.Platform.Tests.dll (.NETCoreApp,Version=v8.0)\u7684\u6d4b\u8bd5\u8fd0\u884c\n\u603b\u5171 1 \u4e2a\u6d4b\u8bd5\u6587\u4ef6\u4e0e\u6307\u5b9a\u6a21\u5f0f\u76f8\u5339\u914d\u3002\n\n\u5df2\u901a\u8fc7! - \u5931\u8d25:     0\uff0c\u901a\u8fc7:     1\uff0c\u5df2\u8df3\u8fc7:     0\uff0c\u603b\u8ba1:     1\uff0c\u6301\u7eed\u65f6\u95f4: < 1 ms - PhaseA.Platform.Tests.dll (net8.0)\n",
+  "stderr_tail": "",
+  "test": "PhaseA.Platform.Tests.Runs.GameDesignDocumentServiceTests.CreateAsync_ShouldUseGameplayTagsInsteadOfReferenceTitleWords"
+}

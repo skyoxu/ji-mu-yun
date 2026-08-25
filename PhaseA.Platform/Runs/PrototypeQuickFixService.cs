@@ -3761,10 +3761,10 @@ public sealed partial class PrototypeQuickFixService
     {
         if (!ShouldUseFocusedWorkspace(project, goal))
         {
-            return new ExecutionWorkspace(project.RepoPath, CreateShortRuntimeOutputPath(runId), false, [], []);
+            return new ExecutionWorkspace(project.RepoPath, CreateShortRuntimeOutputPath(project.RepoPath, runId), false, [], []);
         }
 
-        var focusedRoot = Path.Combine(Path.GetTempPath(), "phasea-focused-workspaces", runId);
+        var focusedRoot = Path.Combine(project.RepoPath, ".phasea-focused-workspaces", runId);
         if (Directory.Exists(focusedRoot))
         {
             Directory.Delete(focusedRoot, recursive: true);
@@ -3799,9 +3799,9 @@ public sealed partial class PrototypeQuickFixService
         return new ExecutionWorkspace(focusedRoot, codexOutputPath, true, managedDirectories, managedDirectories.Concat(writableRootFiles).ToArray());
     }
 
-    private static string CreateShortRuntimeOutputPath(string runId)
+    private static string CreateShortRuntimeOutputPath(string projectRepoPath, string runId)
     {
-        var root = Path.Combine(Path.GetTempPath(), "phasea-codex-out", runId);
+        var root = Path.Combine(projectRepoPath, "logs", "phase-a-quick-fix", ".runtime", runId);
         Directory.CreateDirectory(root);
         return Path.Combine(root, "codex-output.txt");
     }

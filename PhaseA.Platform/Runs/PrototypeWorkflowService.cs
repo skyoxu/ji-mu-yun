@@ -1464,7 +1464,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         var preferredShellScene = ResolvePreferredPrototypeShellScene(project.RepoPath, slug);
         var previousRepairState = _routeStateWriter.ReadLatestPrototypeRepairState(project);
         var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, contract);
-        var outputPath = CreateShortRuntimeOutputPath(runId);
+        var outputPath = CreateShortRuntimeOutputPath(project.RepoPath, runId);
         var normalizedModel = PrototypeModelPolicy.Normalize(model);
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
@@ -1650,9 +1650,9 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             cancellationToken);
     }
 
-    private static string CreateShortRuntimeOutputPath(string runId)
+    private static string CreateShortRuntimeOutputPath(string projectRepoPath, string runId)
     {
-        var root = Path.Combine(Path.GetTempPath(), "phasea-prototype-repair", runId);
+        var root = Path.Combine(projectRepoPath, "logs", "phase-a-prototype-repair", ".runtime", runId);
         Directory.CreateDirectory(root);
         return Path.Combine(root, "codex-output.txt");
     }

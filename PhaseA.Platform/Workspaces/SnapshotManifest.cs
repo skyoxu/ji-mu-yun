@@ -29,11 +29,19 @@ public sealed record SnapshotManifest(
         ArgumentException.ThrowIfNullOrWhiteSpace(policyVersion);
         ArgumentNullException.ThrowIfNull(files);
         excludedExtensions ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        var entries = files
-            .Where(item => !excludedExtensions.Contains(Path.GetExtension(item.RelativePath)))
+        var materialized = files.ToArray();
+        if (materialized.Length > 10_000) throw new InvalidOperationException("snapshot file count exceeds fixture limit");
+        var entries = materialized
+            .Select(item =>
+            {
+                var normalized = item.RelativePath.Replace('\\', '/');
+                if (Path.IsPathRooted(normalized) || normalized.Split('/').Contains("..", StringComparer.Ordinal))
+                    throw new InvalidDataException("snapshot path is unsafe");
+                return (normalized, item.Content);
+            })
+            .Where(item => !excludedExtensions.Contains(Path.GetExtension(item.normalized)))
             .Select(item => new SnapshotFileEntry(
-                item.RelativePath.Replace('\\', '/'),
+                item.normalized,
                 item.Content.LongLength,
                 Convert.ToHexString(SHA256.HashData(item.Content)).ToLowerInvariant()))
             .OrderBy(item => item.RelativePath, StringComparer.Ordinal)

@@ -1,0 +1,3 @@
+id,name,description,genre_tags,fragment_file
+rpg,RPG,Character progression,rpg,rpg.md
+card-game,Card Game,Deck building,card-game,card-game.md

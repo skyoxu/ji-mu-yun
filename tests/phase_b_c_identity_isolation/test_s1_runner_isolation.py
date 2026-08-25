@@ -2,8 +2,8 @@ import subprocess
 from pathlib import Path
 
 
-def test_s1_contract_tests_are_present():
+def test_s1_runner_behavior_passes():
     root = Path(__file__).resolve().parents[2]
-    result = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-restore", "--list-tests"], cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    result = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-restore", "--filter", "FullyQualifiedName~PhaseB.RunnerIsolationTests|FullyQualifiedName~PhaseB.WorkspaceRecoveryBehaviorTests", "--nologo"], cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace")
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "PhaseB.RunnerIsolationTests" in result.stdout
+    assert "通过" in result.stdout and "失败:     0" in result.stdout

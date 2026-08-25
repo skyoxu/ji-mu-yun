@@ -31,7 +31,12 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         "obj",
         "buildcache",
         "logs",
-        "TestResults"
+        "TestResults",
+        "PhaseA.Platform",
+        "PhaseA.Platform.Tests",
+        "execution-plans",
+        "_bmad-output",
+        ".fastctx"
     ];
 
     private static readonly string[] ManagedRelativeDirectories =

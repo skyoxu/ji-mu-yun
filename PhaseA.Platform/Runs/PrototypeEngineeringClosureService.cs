@@ -43,13 +43,31 @@ public sealed class PrototypeEngineeringClosureService
         var relativePath = Path.Combine(relativeDirectory, "evidence.json").Replace('\\', '/');
         var absolutePath = Path.Combine(absoluteDirectory, "evidence.json");
         var payload = BuildEvidencePayload(project, evidence, relativePath);
-        await File.WriteAllTextAsync(
-            absolutePath,
-            JsonSerializer.Serialize(payload, JsonOptions),
-            Encoding.UTF8,
-            cancellationToken);
+        await WriteEvidenceWithRetryAsync(absolutePath, JsonSerializer.Serialize(payload, JsonOptions), cancellationToken);
 
         return new PrototypeEngineeringEvidenceWriteResult(relativePath);
+    }
+
+    private static async Task WriteEvidenceWithRetryAsync(string path, string text, CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete, 4096, FileOptions.Asynchronous);
+                await using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+                await writer.WriteAsync(text.AsMemory(), cancellationToken);
+                return;
+            }
+            catch (IOException) when (attempt < 12)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(50 * attempt), cancellationToken);
+            }
+            catch (UnauthorizedAccessException) when (attempt < 12)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(50 * attempt), cancellationToken);
+            }
+        }
     }
 
     public async Task TouchMemoryAsync(
@@ -104,7 +122,7 @@ public sealed class PrototypeEngineeringClosureService
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         if (!File.Exists(path))
         {
-            File.WriteAllText(path, defaultText, Encoding.UTF8);
+            WriteTextWithRetry(path, defaultText);
         }
 
         return relativePath;
@@ -114,8 +132,30 @@ public sealed class PrototypeEngineeringClosureService
     {
         var path = Resolve(project, relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, text, Encoding.UTF8);
+        WriteTextWithRetry(path, text);
         return relativePath;
+    }
+
+    private static void WriteTextWithRetry(string path, string text)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+                using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+                writer.Write(text);
+                return;
+            }
+            catch (IOException) when (attempt < 4)
+            {
+                Thread.Sleep(50 * attempt);
+            }
+            catch (UnauthorizedAccessException) when (attempt < 4)
+            {
+                Thread.Sleep(50 * attempt);
+            }
+        }
     }
 
     private static string Resolve(ProjectSnapshot project, string relativePath)

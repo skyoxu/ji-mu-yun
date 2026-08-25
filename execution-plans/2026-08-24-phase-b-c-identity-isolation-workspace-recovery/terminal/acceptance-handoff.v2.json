@@ -1,0 +1,11 @@
+{
+  "schema_version": "acceptance-handoff.v2",
+  "status": "ready",
+  "candidate_revision": "1c9b69d46545ff6e390a74fd1694f82d7465be44",
+  "candidate_manifest_sha256": "sha256:34b30857152edf369b34eab56d8a0722d2f7ef9dbc3f032c6b82f3a91fa08ded",
+  "implementation_receipt": "execution-plans\\2026-08-24-phase-b-c-identity-isolation-workspace-recovery\\terminal\\terminal-full.json",
+  "terminal_result": "pass",
+  "authorizes": [
+    "acceptance-handoff"
+  ]
+}

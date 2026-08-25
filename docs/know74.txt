@@ -1,0 +1,18 @@
+检查项	当前状态	判断
+Quick Dev 完成回执	仓库中没有 quick-dev-implementation-complete.v1	阻塞
+生命周期交接	plan-state 仍为 S0、completed_slices=[]；handoff 仍为 not-ready	Quick Dev 未真正收口
+终态验证	validate_all.py 没有运行任何测试，直接返回 status=pass	严重阻塞
+完成回执生成	terminal_full.py 仅调用上述空验证器，随后授权 implementation-complete	会制造假阳性
+实现深度	Phase 生产代码只新增四个领域记录/值对象，没有接入 HTTP、后台任务、Runner 启动、持久化 Snapshot/Restore、迁移和审计链路	未达到 S0–S4
+测试深度	Python 测试只运行 dotnet test --list-tests；C# 测试主要验证记录类型和简单状态转换	无法覆盖 PIWR-A01…A18
+
+计划本身明确要求真实 OS 权限、跨账户拒绝、数据库升级、Snapshot/Restore round-trip、故障注入和新进程证据包，见 Implementation Slices 与 Acceptance Contract。目前测试远未证明这些结果。
+
+最小收口顺序：
+
+先修复 validate_all.py，实际执行完整 dotnet test、数据库迁移、新进程证据、Snapshot/Restore fixture 和账户 smoke；任何缺失或跳过都必须失败。
+将 S0–S4 接入真实 Phase 运行路径，并补足 PIWR-A01…A18 对应的行为测试。
+由 Quick Dev terminal 生成真实的 quick-dev-implementation-complete.v1 回执。
+再调用 Acceptance skill；此时它可以直接构建 acceptance candidate 并正式验收。
+
+不需要重新处理 VDD、source-freeze 或历史哈希，也不需要动 React、Program.cs。当前阻塞项全部是实际实现与验证语义问题。
