@@ -17,7 +17,8 @@ def main() -> int:
     args = parser.parse_args()
     root = Path(args.repository_root)
     plan = Path(args.plan_dir)
-    status = subprocess.run(["git", "status", "--porcelain"], cwd=root, capture_output=True, text=True, check=True).stdout.strip()
+    status_lines = subprocess.run(["git", "status", "--porcelain"], cwd=root, capture_output=True, text=True, check=True).stdout.splitlines()
+    status = "\n".join(line for line in status_lines if "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/terminal/" not in line)
     if status:
         return 2
     command = [sys.executable, str(plan / "tools" / "validate_all.py")]
