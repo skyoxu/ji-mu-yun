@@ -44,8 +44,17 @@ def validate_terminal(plan_dir: Path) -> dict[str, object]:
         fixture_doc = json.loads(fixtures.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError):
         return {"status": "blocked", "predicate": "implementation-complete", "reason": "invalid-evidence-json"}
-    if any(item.get("status") != "pass" or item.get("slice_id") != f"S{i+1}" for i, item in enumerate(records)):
-        return {"status": "blocked", "predicate": "implementation-complete", "reason": "slice-evidence-not-closed"}
-    if not isinstance(fixture_doc, dict) or fixture_doc.get("count") != 9 or fixture_doc.get("status") != "pass":
+    for i, item in enumerate(records):
+        if item.get("status") != "pass" or item.get("slice_id") != f"S{i+1}" or item.get("producer") not in {"quick-dev-slice-probe", "independent-judge"}:
+            return {"status": "blocked", "predicate": "implementation-complete", "reason": "slice-evidence-not-closed"}
+        body = {key: value for key, value in item.items() if key != "evidence_sha256"}
+        expected = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+        if item.get("evidence_sha256") != expected:
+            return {"status": "blocked", "predicate": "implementation-complete", "reason": "slice-evidence-hash-invalid"}
+    if not isinstance(fixture_doc, dict) or fixture_doc.get("count") != 9 or fixture_doc.get("status") != "pass" or fixture_doc.get("producer") != "independent-judge" or len(fixture_doc.get("fixture_ids", [])) != 9:
         return {"status": "blocked", "predicate": "implementation-complete", "reason": "false-green-fixtures-not-closed"}
+    body = {key: value for key, value in fixture_doc.items() if key != "evidence_sha256"}
+    expected = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    if fixture_doc.get("evidence_sha256") != expected:
+        return {"status": "blocked", "predicate": "implementation-complete", "reason": "fixture-evidence-hash-invalid"}
     return {"status": "pass", "predicate": "implementation-complete", "slice_count": 6, "false_green_fixture_count": 9}
