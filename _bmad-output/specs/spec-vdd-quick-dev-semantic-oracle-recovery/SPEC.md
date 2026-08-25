@@ -8,6 +8,8 @@ companions:
     role: normative_companion
   - path: _bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/addendum.md
     role: adopted_companion
+  - path: _bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md
+    role: adopted_companion
 sources:
   - path: _bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/prd.md
     role: provenance
@@ -72,4 +74,4 @@ An independent execution can trace every active Acceptance ID through a sound-an
 
 ## Open Questions
 
-See `open-questions.md`; unresolved comparator, output normalization, judge lifecycle, rollback probe, unexpected-green proof and stop-loss threshold decisions are intentionally not inferred.
+See `open-questions.md`; adopted architecture decisions close artifact authority, evidence snapshots, byte-level failure-ID construction and promotion ownership, while comparator policy, output normalization, judge operations, rollback probe, unexpected-green proof, stop-loss threshold and detailed semantic-change reuse remain intentionally Deferred.
