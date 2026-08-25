@@ -19,6 +19,6 @@
     {"id":"s5-terminal","executable":"py","argv":["-3","-B","-m","pytest",".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py","-q"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
     {"id":"s6-green","executable":"py","argv":["-3","-B","-m","pytest",".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py","-q"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
     {"id":"s6-refactor","executable":"py","argv":["-3","-B","-m","pytest",".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py","-q"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
-    {"id":"s6-terminal","executable":"py","argv":["-3","-B","-m","pytest",".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py","-q"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false}
+    {"id":"s6-terminal","executable":"py","argv":["-3","-B","execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/terminal_predicate.py","--repository-root",{"type":"repo_path","value":"."},"--plan-dir",{"type":"plan_path","value":"."},"--slice","S6","--out",{"type":"plan_path","value":"terminal-results/S6.json"}],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false}
   ]
 }

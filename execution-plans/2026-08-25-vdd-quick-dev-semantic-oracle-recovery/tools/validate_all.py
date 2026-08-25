@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+import json
 
 
 def _sha(path: Path) -> str:
@@ -29,3 +30,22 @@ def validation_snapshot(slice_id: str | None = None) -> dict[str, str]:
 
 def slice_validation_snapshot(slice_id: str | None = None) -> dict[str, str]:
     return validation_snapshot(slice_id)
+
+
+def validate_terminal(plan_dir: Path) -> dict[str, object]:
+    """Validate the closed evidence envelope before implementation-complete."""
+    required = [plan_dir / "terminal-evidence" / f"S{i}.json" for i in range(1, 7)]
+    fixtures = plan_dir / "false-green-fixtures" / "nine-fixtures.json"
+    missing = [path.as_posix() for path in [*required, fixtures] if not path.is_file()]
+    if missing:
+        return {"status": "blocked", "predicate": "implementation-complete", "missing": missing}
+    try:
+        records = [json.loads(path.read_text(encoding="utf-8")) for path in required]
+        fixture_doc = json.loads(fixtures.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return {"status": "blocked", "predicate": "implementation-complete", "reason": "invalid-evidence-json"}
+    if any(item.get("status") != "pass" or item.get("slice_id") != f"S{i+1}" for i, item in enumerate(records)):
+        return {"status": "blocked", "predicate": "implementation-complete", "reason": "slice-evidence-not-closed"}
+    if not isinstance(fixture_doc, dict) or fixture_doc.get("count") != 9 or fixture_doc.get("status") != "pass":
+        return {"status": "blocked", "predicate": "implementation-complete", "reason": "false-green-fixtures-not-closed"}
+    return {"status": "pass", "predicate": "implementation-complete", "slice_count": 6, "false_green_fixture_count": 9}

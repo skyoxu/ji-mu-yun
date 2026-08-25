@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 from datetime import datetime, timezone
 import json
+import re
 from pathlib import Path, PurePosixPath
 import subprocess
 from typing import Any
@@ -47,7 +48,7 @@ def run(
     """Run one structured command and immediately return explicit file snapshots.
 
     The caller remains responsible for deciding when a stage is permitted and for
-    append-only persistence.  stdout and stderr are intentionally not retained.
+    append-only persistence. RED retains typed failure markers.
     """
     if stage not in {"red", "green", "refactor"} or not isinstance(response_summary, str):
         raise ValueError("stage or response summary is invalid")
@@ -83,8 +84,10 @@ def run(
             capture_output=True, timeout=timeout,
         )
         exit_code = completed.returncode
+        output = (completed.stdout + b"\n" + completed.stderr).decode("utf-8", errors="replace")
     except subprocess.TimeoutExpired:
         exit_code = 124
+        output = ""
     changed_files = [
         {"path": path, "before_bytes_base64": before[path], "after_bytes_base64": _snapshot(workspace, path)}
         for path in declared_paths
@@ -96,14 +99,18 @@ def run(
         "changed_files": changed_files,
         "commands_attempted": [command_id],
         "response_summary": response_summary,
+        "observed_failure_ids": sorted(set(re.findall(r"FAILURE_ID:([A-Z0-9][A-Z0-9._-]*)", output))) if stage == "red" else [],
     }
 
 
 def record_observation(run_dir: Path, observation: dict[str, Any]) -> Path:
     """Persist one captured observation without replacing historical stage evidence."""
     required = {"stage", "exit_code", "observed_at", "changed_files", "commands_attempted", "response_summary"}
-    if not isinstance(observation, dict) or set(observation) != required or observation.get("stage") not in {"red", "green", "refactor"}:
+    optional = {"observed_failure_ids"}
+    if not isinstance(observation, dict) or not set(observation).issubset(required | optional) or not required.issubset(observation) or observation.get("stage") not in {"red", "green", "refactor"}:
         raise ValueError("observation shape is invalid")
+    if "observed_failure_ids" in observation and (not isinstance(observation["observed_failure_ids"], list) or any(not isinstance(item, str) or not item for item in observation["observed_failure_ids"])):
+        raise ValueError("observed_failure_ids must be a string list")
     if not isinstance(observation["response_summary"], str) or not observation["response_summary"]:
         raise ValueError("response_summary must be nonempty")
     try:

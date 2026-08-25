@@ -62,7 +62,7 @@ def _projection(plan_dir: Path):
     return module
 
 
-def _validate_red_exit(mode: str, exit_code: int) -> None:
+def _validate_red_exit(mode: str, exit_code: int, expected_failure_ids: list[str] | None = None, observed_failure_ids: list[str] | None = None) -> None:
     if mode == "legacy-regression":
         if exit_code != 0:
             raise RuntimeError("legacy regression command failed")
@@ -71,6 +71,8 @@ def _validate_red_exit(mode: str, exit_code: int) -> None:
         raise RuntimeError("RED mode is invalid")
     if exit_code == 0:
         raise RuntimeError("RED command unexpectedly passed")
+    if expected_failure_ids is not None and sorted(expected_failure_ids) != sorted(observed_failure_ids or []):
+        raise RuntimeError("RED failure identity does not match declared failure IDs")
 
 
 def _prior_red_successor(workspace: Path, prior_red: Any, command_id: str) -> dict[str, str]:
@@ -178,7 +180,7 @@ def main() -> int:
             "red", commands["red"][0],
             "Recorded declared legacy regression observation." if red_mode == "legacy-regression" else "Recorded RED command observation.",
         )
-        _validate_red_exit(red_mode, red["exit_code"])
+        _validate_red_exit(red_mode, red["exit_code"], red_core["expected_failure_ids"], red.get("observed_failure_ids"))
         red_core = context["stage_results"]["red"]
         (run_dir / "red-basis.v1.json").write_text(json.dumps({
             "schema_version": "quick-dev-tdd-adapter.red-basis.v1",
@@ -215,7 +217,7 @@ def main() -> int:
                 "red", commands["red"][0],
                 "Recorded declared legacy regression observation." if red_mode == "legacy-regression" else "Recorded RED command observation.",
             )
-            _validate_red_exit(red_mode, red["exit_code"])
+            _validate_red_exit(red_mode, red["exit_code"], red_core["expected_failure_ids"], red.get("observed_failure_ids"))
 
     if args.stage == "refactor":
         green = json.loads((run_dir / "observations" / "green-observed.json").read_text(encoding="utf-8"))

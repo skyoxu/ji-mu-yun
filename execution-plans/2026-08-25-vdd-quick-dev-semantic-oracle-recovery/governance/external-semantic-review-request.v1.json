@@ -5,15 +5,15 @@
   "selection_hash": "sha256:4cf516d611eb0aba633adcebc37df679e6270dd74f231fd98c782a6e754def40",
   "source_freeze": {
     "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/governance/vdd-source-freeze-manifest.v1.binding-2.json",
-    "sha256": "sha256:a10f04552f75a6fdc7a4e07960edbccf6f6a70a3458f45f1f585a5590fa06d94"
+    "sha256": "sha256:88ea275509461ee6fb189ff1f2138b82dcc10dd40d14185d48b6fca1b11c86df"
   },
   "requirements_mapping": {
     "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/governance/requirements-acceptance-mapping.v1.json",
-    "sha256": "sha256:faa5920a2068c17f2968f029c44b48365eeacf75e8481cb909aed108d7d331d0"
+    "sha256": "sha256:563551b88312835c819924b550048745da219bfb7d9b0184322c63c4033bf56e"
   },
   "conformance_result": {
     "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/governance/vdd-conformance-result.v1.json",
-    "sha256": "sha256:06a651ce96412b31021085c620b1c3d1d50b6aeef36ee8a36f998e505fd1d7b3"
+    "sha256": "sha256:6770fd6f4862764058745926dd51baab3fd17c686ef5047e6685f02799b8c3c8"
   },
   "skill_input_receipt": {
     "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/skill-input/repair-round-4/receipt.v1.json",
