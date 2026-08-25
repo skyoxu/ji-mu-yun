@@ -1,0 +1,86 @@
+{
+  "authorizes": [],
+  "commandId": "acceptance-targeted-tests",
+  "commandRegistryHash": "sha256:354d807466ffefea43cd6b3f11fb6ee917be375b503e659aecefab79c3256a83",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      ".agents/skills/run-refactor-implementation-acceptance/tests",
+      "-p",
+      "test_*skill*replay*.py"
+    ],
+    "commandId": "acceptance-targeted-tests",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 300
+  },
+  "invocationHash": "sha256:7ee6faa72686d4110052548f0c2473d3e7fdf0eaca6f97eaf6bf9ea88937e5b2",
+  "processResult": {
+    "commandId": "acceptance-targeted-tests",
+    "exitCode": 0,
+    "stderr": ".\r\n----------------------------------------------------------------------\r\nRan 1 test in 0.000s\r\n\r\nOK\r\n",
+    "stderrSha256": "sha256:1a52ff93b2b7c8bc576900f70c9062f5baedb573cf55507ec33070c999cd9b12",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:d208e91b6c5247f74e1651e30e49d264a0d05b872687484775f287f0f452b346",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

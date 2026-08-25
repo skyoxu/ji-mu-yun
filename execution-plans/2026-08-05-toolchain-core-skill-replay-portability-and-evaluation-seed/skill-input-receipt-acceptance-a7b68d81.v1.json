@@ -35,8 +35,8 @@
     "sha256": "sha256:8f583ad665c9e2deb941e1156aaff4aa7bbcd1193c436f761f362bf0213d4558"
   },
   "child_request": {
-    "path": "pending/skill-input-child-request.v1.json",
-    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    "path": "skill-input-request-acceptance-a7b68d81-terra.v1.json",
+    "sha256": "sha256:478596d403d604fb266eff67fde512841387f6786c68650004c6cbe8e5fb85c0"
   },
   "sources": [
     {
@@ -57,7 +57,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": ".agents/skills/vdd-execution-plan/SKILL.md",
@@ -77,7 +77,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
@@ -97,7 +97,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md",
@@ -117,7 +117,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
@@ -137,7 +137,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json",
@@ -157,7 +157,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json",
@@ -177,7 +177,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/historical-compatibility-replay.v1.json",
@@ -197,7 +197,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
@@ -217,7 +217,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
@@ -237,7 +237,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/stable-candidate-replay-matrix.v1.json",
@@ -257,7 +257,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
@@ -277,7 +277,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
@@ -297,7 +297,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "scripts/sc/config/skill-package-validator-capability.v1.json",
@@ -317,7 +317,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json",
@@ -337,7 +337,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
@@ -357,7 +357,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "scripts/sc/skill_package_replay.py",
@@ -377,7 +377,7 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     },
     {
       "path": "scripts/sc/tests/test_skill_package_replay.py",
@@ -397,22 +397,21 @@
         }
       ],
       "transport_status": "complete",
-      "semantic_status": "not-evaluated"
+      "semantic_status": "accepted"
     }
   ],
   "missing_sources": [],
   "changed_sources": [],
   "semantic_decision": {
-    "path": "pending/semantic-decision.v1.json",
-    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-    "status": "insufficient"
+    "path": "semantic-input-acceptance-a7b68d81-terra/semantic-decision.v1.json",
+    "sha256": "sha256:3371469838b0b8e55b49e4ec2258bf9839cf4c81f69a6d78768a4c0bdb4f1000"
   },
   "context_artifact": {
-    "path": "pending/skill-input-context.v1.json",
-    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    "path": "semantic-input-acceptance-a7b68d81-terra/skill-input-context.v1.json",
+    "sha256": "sha256:a2eb245e28245872c9e9968926f946dd1b5c45bcc3e766b9bd58702cb114d3ef"
   },
   "diagnostic_authorization": null,
   "authorizes": [],
-  "ready": false,
-  "binding_hash": "sha256:1f997cc84126d7215fa1af71c472aa1ff57d66d6f0296ba6bbd419472306f185"
+  "ready": true,
+  "binding_hash": "sha256:6e6679caa91f32881842aaadaf4f30cf2c01adb19e38983844fe076d586d205c"
 }

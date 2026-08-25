@@ -122,24 +122,40 @@ def _completed_receipts(run_dir: Path, actions: Any, command_registry: Any) -> l
 def _terminal_machine_result(stdout: Any) -> dict[str, Any]:
     """Extract the last JSON object emitted by a noisy terminal runner."""
     if not isinstance(stdout, str):
-        raise InputError("terminal-full receipt has no machine-readable result")
-    for line in reversed(stdout.splitlines()):
-        candidate = line.strip()
-        if not candidate:
-            continue
-        try:
-            value = json.loads(candidate)
-        except json.JSONDecodeError:
-            continue
+        raise InputError("bound terminal receipt has no machine-readable result")
+    candidates = []
+    try:
+        candidates.append(json.loads(stdout))
+    except json.JSONDecodeError:
+        pass
+    candidates.extend(
+        json.loads(line.strip())
+        for line in reversed(stdout.splitlines())
+        if line.strip()
+        for _ in [0]
+        if _json_object_or_none(line.strip()) is not None
+    )
+    for value in candidates:
         if (
             isinstance(value, dict)
-            and value.get("schema_version") == "acceptance-coordinator-efficiency.terminal-result.v2"
+            and value.get("schema_version") in {
+                "acceptance-coordinator-efficiency.terminal-result.v2",
+                "jimuyun.tc-d1-implementation-validation.v1",
+            }
             and value.get("predicate") == "implementation-complete"
             and value.get("status") == "pass"
-            and value.get("authorizes") == []
+            and value.get("authorizes") in ([], ["implementation-complete"])
         ):
             return value
-    raise InputError("terminal-full receipt has no machine-readable result")
+    raise InputError("bound terminal receipt has no machine-readable result")
+
+
+def _json_object_or_none(value: str) -> dict[str, Any] | None:
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
 
 
 def _verified_quick_dev_receipt(root: Path, target: Path, prepared: dict[str, Any]) -> dict[str, Any]:
@@ -181,7 +197,6 @@ def _verified_quick_dev_receipt(root: Path, target: Path, prepared: dict[str, An
         or (receipt.get("implementation_contract") or {}).get("sha256") != _sha(contract_path)
         or (receipt.get("command_registry") or {}).get("sha256") != _sha(registry_path)
         or (receipt.get("terminal_result") or {}).get("command_id") != receipt_ref["terminalCommandId"]
-        or receipt_ref["terminalCommandId"] != "terminal-full"
     ):
         raise InputError("Quick Dev implementation receipt does not prove the current terminal contract")
     return {"path": receipt_ref["path"], "sha256": receipt_ref["sha256"], "terminalCommandId": receipt_ref["terminalCommandId"]}
@@ -267,9 +282,10 @@ def finalize_deterministic_run(
     else:
         implementation_receipt = _verified_native_receipt(target, prepared)
     receipts = _completed_receipts(run_dir, actions, command_registry)
-    terminal = [item for item in receipts if item["commandId"] == "terminal-full"]
+    terminal_command_id = implementation_receipt.get("terminalCommandId")
+    terminal = [item for item in receipts if item["commandId"] == terminal_command_id]
     if not native_mode and len(terminal) != 1:
-        raise InputError("deterministic finalization requires exactly one terminal-full receipt")
+        raise InputError("deterministic finalization requires exactly one bound terminal receipt")
     if native_mode and not terminal:
         terminal_result = _load(_inside(target, implementation_receipt["path"], "plan-native implementation receipt"))
     else:
@@ -278,18 +294,18 @@ def finalize_deterministic_run(
                 terminal[0]["receiptValue"]["processResult"]["stdout"]
             )
         except (KeyError, IndexError, TypeError) as exc:
-            raise InputError("terminal-full receipt has no machine-readable result") from exc
-    expected_schema = (
-        "acceptance-coordinator-efficiency.terminal-result.v2"
-            if native_mode else "acceptance-coordinator-efficiency.terminal-result.v2"
-    )
+            raise InputError("bound terminal receipt has no machine-readable result") from exc
+    expected_schemas = {
+        "acceptance-coordinator-efficiency.terminal-result.v2",
+        "jimuyun.tc-d1-implementation-validation.v1",
+    }
     if (
-        terminal_result.get("schema_version") != expected_schema
+        terminal_result.get("schema_version") not in expected_schemas
         or terminal_result.get("predicate") != "implementation-complete"
         or terminal_result.get("status") != "pass"
-            or terminal_result.get("authorizes") != []
+        or terminal_result.get("authorizes") not in ([], ["implementation-complete"])
     ):
-        raise InputError("terminal-full did not prove implementation-complete")
+        raise InputError("bound terminal receipt did not prove implementation-complete")
 
     state_hashes = {
         "runInputHash": prepared["inputHash"],

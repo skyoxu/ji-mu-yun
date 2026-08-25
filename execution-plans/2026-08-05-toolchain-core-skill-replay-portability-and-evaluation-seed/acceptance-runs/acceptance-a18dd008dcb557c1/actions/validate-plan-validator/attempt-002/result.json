@@ -1,0 +1,81 @@
+{
+  "authorizes": [],
+  "commandId": "plan-validator",
+  "commandRegistryHash": "sha256:354d807466ffefea43cd6b3f11fb6ee917be375b503e659aecefab79c3256a83",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_plan.py",
+      "--implementation-state"
+    ],
+    "commandId": "plan-validator",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 120
+  },
+  "invocationHash": "sha256:f0ba32a60ffad9144666cef5cc2c1cce6cea1d80e2c080b083f7a679e87611e3",
+  "processResult": {
+    "commandId": "plan-validator",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\r\n  \"schema_version\": \"jimuyun.tc-d1-plan-validation.v1\",\r\n  \"status\": \"pass\",\r\n  \"predicate\": \"implementation-authorized-valid\",\r\n  \"errors\": [],\r\n  \"authorizes\": [\r\n    \"implementation-authorized\"\r\n  ],\r\n  \"mutable_authority_source_hashes\": {\r\n    \".agents/skills/vdd-execution-plan/SKILL.md\": \"sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba\",\r\n    \".agents/skills/run-refactor-implementation-acceptance/SKILL.md\": \"sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86\"\r\n  },\r\n  \"does_not_authorize\": [\r\n    \"implementation-complete\",\r\n    \"acceptance-passed\",\r\n    \"release\",\r\n    \"archived\"\r\n  ]\r\n}\r\n",
+    "stdoutSha256": "sha256:c008608c2b7a13e880340e7748d1a4b72ac680a462a61808f308704a1d6e60fe"
+  },
+  "processResultHash": "sha256:6379d6d2738833a2a94f3530bc7e11bd19f22248e58a28f4e76e2fc1de1f898b",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

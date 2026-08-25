@@ -1,0 +1,82 @@
+{
+  "authorizes": [],
+  "commandId": "slice-s1-predicate",
+  "commandRegistryHash": "sha256:354d807466ffefea43cd6b3f11fb6ee917be375b503e659aecefab79c3256a83",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 1,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+      "--slice",
+      "RMAP-S1"
+    ],
+    "commandId": "slice-s1-predicate",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 180
+  },
+  "invocationHash": "sha256:940191e0f008520fee1e57aeb2d606b3dd0e9421630aaa80be9a672e500d8770",
+  "processResult": {
+    "commandId": "slice-s1-predicate",
+    "exitCode": 1,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\r\n  \"schema_version\": \"jimuyun.tc-d1-implementation-validation.v1\",\r\n  \"status\": \"fail\",\r\n  \"predicate\": \"slice-ready\",\r\n  \"selected_slices\": [\r\n    \"RMAP-S1\"\r\n  ],\r\n  \"errors\": [\r\n    \"historical replay receipt does not bind the intended target package manifest\"\r\n  ],\r\n  \"failure_family\": null,\r\n  \"results\": [],\r\n  \"mutable_authority_source_hashes\": {\r\n    \".agents/skills/vdd-execution-plan/SKILL.md\": \"sha256:83d2300130852a9d22bca79ca091873f9bf87b31da9c53ba35d90090207ba2ba\",\r\n    \".agents/skills/run-refactor-implementation-acceptance/SKILL.md\": \"sha256:cb9c1d773626b8241cd6ee67a26422786e9de0c44425232432ce87c4c9c43c86\"\r\n  },\r\n  \"authorizes\": [],\r\n  \"does_not_authorize\": [\r\n    \"acceptance-passed\",\r\n    \"release\",\r\n    \"archived\"\r\n  ]\r\n}\r\n",
+    "stdoutSha256": "sha256:9773f4a40c7dc7e5f2ddf3d2c4110d447ab697525155ad80cb0ff2620d5afcac"
+  },
+  "processResultHash": "sha256:80f7e3c8593b8bcf54fff078cef8f69f913f8104609ec8aa5598e9992df8b0bb",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

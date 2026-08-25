@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-24T17:24:40.755345Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The acceptance workflow coordinates deterministic implementation evidence for one explicit target plan. It requires frozen candidate and baseline manifests, typed requests, action DAGs, command registries, knowledge context, and validated semantic input. It preserves append-only runs, rejects ambiguous or stale bindings, and keeps acceptance distinct from implementation, release, and archive.",
+      "title": "Acceptance Skill"
+    },
+    {
+      "content": "The VDD workflow selects standard, resumable, or self-hosted profiles, requires authority and knowledge preflight, and maintains explicit lifecycle states. Plans define observable acceptance, scoped slices, failure intent, controlled validation, repair closure, and terminal full validation. Historical evidence remains read-only and generated artifacts are non-authorizing.",
+      "title": "VDD And Plan"
+    },
+    {
+      "content": "The toolchain plan establishes repository-owned Skill package replay, bounded capability resolution, detached probes, compatibility records, evaluation seeds, and a stable replay matrix. Evidence covers historical portability, policy and knowledge-bound failures, downstream replay, schemas, receipts, and tests. All listed sources are complete and available for acceptance.",
+      "title": "Toolchain Evidence"
+    }
+  ],
+  "source_manifest_hash": "sha256:8f583ad665c9e2deb941e1156aaff4aa7bbcd1193c436f761f362bf0213d4558",
+  "truncated": false
+}

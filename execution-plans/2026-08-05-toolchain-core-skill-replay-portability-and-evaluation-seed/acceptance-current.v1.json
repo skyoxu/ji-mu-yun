@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "currentRun": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-a18dd008dcb557c1",
+  "finalResult": {
+    "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-a18dd008dcb557c1/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:1864596d57408a1debda46f483353d254a00ee5ba0d8e3cee1b8a49f2bad0514"
+  },
+  "finalWrapper": {
+    "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-a18dd008dcb557c1/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:c8eb7d15835bdcd3404880e0701e03b88bd3ff66809c10d7d782fe48f2a29445"
+  },
+  "schemaVersion": "acceptance-current.v1"
+}

@@ -19,6 +19,6 @@
   "current_wrapper_replay": {
     "entrypoint": "scripts/sc/skill_package_replay.py",
     "receipt_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
-    "receipt_sha256": "sha256:b14e0538dc39fc2c48d20bd25b8ff8390f099acb5c18f101654813ccadb9b49b"
+    "receipt_sha256": "sha256:caa6ff8dabbe803f4fcc6e71308fd49d91090d43ce5f997d7a5becc428e5d5cf"
   }
 }

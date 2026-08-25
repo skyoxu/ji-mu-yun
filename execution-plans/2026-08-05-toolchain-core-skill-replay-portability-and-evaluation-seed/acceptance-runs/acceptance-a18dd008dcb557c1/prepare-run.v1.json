@@ -1,0 +1,130 @@
+{
+  "authorizes": [],
+  "candidateCustody": {
+    "authorizes": [],
+    "baselineResolvedCommit": "8c47a52fc8f241f76da9ccb5d936b0fafe807f0f",
+    "candidateMode": "commit",
+    "candidateResolvedCommit": "519b99ca44e4d1f884adb18e3c90723b2d35c933",
+    "schemaVersion": "acceptance-candidate-custody.v1",
+    "snapshotManifestHash": "",
+    "snapshotPath": ""
+  },
+  "input": {
+    "adapter_hash": "sha256:01d0bc19a4ebacfe9cb39a8ad2d528208f590695f2e0f645314b2f57d97daadb",
+    "adapter_id": "run-refactor-implementation-acceptance",
+    "adapter_version": "compact-vdd-projection.v1",
+    "affected_consumer_refs": [
+      ".agents/skills/run-refactor-implementation-acceptance",
+      ".agents/skills/vdd-execution-plan",
+      "scripts/sc/skill_package_replay.py"
+    ],
+    "allowed_write_roots": [],
+    "baseline_content_manifest_hash": "sha256:7588030170c7be171d2116f64b08807ed4ec9752a2dba6befd7007e9a15bdb3b",
+    "baseline_content_manifest_path": "acceptance-inputs/acceptance-08-05-main-a7b68d81/baseline-content-manifest.v1.json",
+    "baseline_revision": "8c47a52fc8f241f76da9ccb5d936b0fafe807f0f",
+    "candidate_content_manifest_hash": "sha256:0dbf8c301c4c07a95d1932fb47242ff4df62299589e0a10823eefa28d5ce3b2d",
+    "candidate_content_manifest_path": "acceptance-inputs/acceptance-08-05-main-a7b68d81/candidate-content-manifest.v1.json",
+    "candidate_mode": "commit",
+    "candidate_revision": "519b99ca44e4d1f884adb18e3c90723b2d35c933",
+    "candidate_scope_manifest": {
+      "candidate_source_root": "sha256:970e59ccfb6b13e82cc078d550ded00468f772e5937a41116e94f4355986b60f",
+      "path": "repair/candidate-source-manifest.970e59ccfb6b13e8.v1.json",
+      "sha256": "sha256:cfa27d5dc8413680f9ae580dd16fc0cb64c5d2a4029ad53d996baff353bfaa0e"
+    },
+    "change_id": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+    "changed_paths": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_workspace.py",
+      ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      ".agents/skills/run-phase-bootstrap-review/tests/test_direct_script_startup.py",
+      ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py",
+      ".agents/skills/vdd-execution-plan/SKILL.md",
+      "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/95-implementation-evolution-and-completion-report.md",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/authority-manifest.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/historical-compatibility-replay.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-authorization-receipt.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/knowledge-context.freeze.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/knowledge-context.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/plan-state.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/stable-candidate-replay-matrix.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-4/implementation-authorization.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/tests/test_validate_implementation.py",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_all.py",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_plan.py",
+      "scripts/__init__.py",
+      "scripts/python/launch_skill_input_consumer.py",
+      "scripts/python/skill_input_consumption.py",
+      "scripts/python/tests/test_skill_input_consumption.py",
+      "scripts/sc/config/skill-package-validator-capability.v1.json",
+      "scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json",
+      "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+      "scripts/sc/skill_package_replay.py",
+      "scripts/sc/tests/test_skill_package_replay.py",
+      "scripts/toolchain/__init__.py"
+    ],
+    "code_review_domain": "toolchain",
+    "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+    "code_review_policy_path": "acceptance-inputs/acceptance-08-05-main-a7b68d81/toolchain-code-review.v1.json",
+    "created_utc": "2026-08-01T00:00:00Z",
+    "execution_mode": "evidence_only",
+    "forbidden_write_roots": [
+      "logs/phase-a-innernet/",
+      "runtime/phase-a/"
+    ],
+    "run_id": "acceptance-08-05-main-a7b68d81",
+    "target": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+    "target_plan_hash": "sha256:cb51ea94536ac26fc671b9a7a75036a1de24f1d054f7aa51ae4e2625b407a867",
+    "target_plan_paths": [
+      "implementation-contract.v1.json",
+      "requirements.v1.json"
+    ],
+    "validator_hash": "sha256:ab1c91a14034a531b7ae514d37abb2d778965e56c41c3a7436b23bdcfae9cadf"
+  },
+  "inputHash": "sha256:965e9f8a4921bdb6bc68c417954497959a17058d368a61429fa8fc6f316462ae",
+  "knowledgeContext": {
+    "acceptedDecisions": [
+      {
+        "candidate": {
+          "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md",
+          "source_sha256": "ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      }
+    ],
+    "authorizes": [],
+    "contextHash": "sha256:635798b29018547c939f8c4e4b75fe4cfd9d510a3b277da42abe7da9bd8c941c",
+    "path": "knowledge-context.refactor-acceptance-main-a7b68d81.v1.json",
+    "requestHash": "sha256:947dd8dffd0c037f5a754fcfc6f6d347634bc157c030ea729f007df2eb2b97f6",
+    "resultHash": "sha256:0abb3a714c601615a7a5d7ebaa1ace23b767339aeb75be85e00809f6fcfccad0",
+    "sha256": "sha256:1c2d1c7b00feb75864c14d4a65f4cd102af292401d5bb17ce89e8c3d8fe9254a",
+    "sourceSnapshotId": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4"
+  },
+  "prerequisiteBundle": {
+    "bundleHash": "sha256:5c4864ae733854303988d5030a61361b6700648e8840e77fdf5c87d689aa7d33",
+    "implementationReceipt": {
+      "path": "repair/quick-dev-implementation-complete.970e59ccfb6b13e8.v2.json",
+      "sha256": "sha256:9bfb2bb34f338d932aa7d7dc9225a49c934db34f0534e77ef0141fe592a391b3",
+      "terminalCommandId": "terminal-implementation-validation"
+    },
+    "path": "acceptance-inputs/acceptance-08-05-main-a7b68d81/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+    "sha256": "sha256:322067bdbcaeda295267ebd916111df885505a5cc912305804533c90734cd26a"
+  },
+  "schemaVersion": "acceptance-run-input.v1"
+}
