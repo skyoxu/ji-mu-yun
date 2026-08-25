@@ -79,6 +79,28 @@ def _run(command: list[str], timeout: int = 180) -> dict[str, object]:
     return {"command": command, "exit_code": process.returncode, "started_at": started, "finished_at": datetime.now(timezone.utc).isoformat(), "stdout_tail": stdout[-4000:], "stderr_tail": stderr[-4000:]}
 
 
+def _test_output_failure(stdout: str, stderr: str) -> str | None:
+    """Reject green process exits that did not execute at least one test."""
+    output = f"{stdout}\n{stderr}"
+    lowered = output.lower()
+    no_match_markers = (
+        "no test matches",
+        "no tests matched",
+        "no test matched",
+        "没有测试匹配",
+        "没有测试匹配给定用例测试筛选器",
+        "0 tests",
+        "total tests: 0",
+        "total:     0",
+        "总计:     0",
+    )
+    if any(marker in lowered for marker in no_match_markers):
+        return "test-shard-no-tests-matched"
+    if not ("passed!" in lowered or "已通过" in output):
+        return "test-shard-produced-no-pass-summary"
+    return None
+
+
 def _dotnet_shards() -> tuple[list[dict[str, object]], int]:
     test_root = ROOT / "PhaseA.Platform.Tests"
     test_binary = test_root / "bin" / "Debug" / "net8.0" / "PhaseA.Platform.Tests.dll"
@@ -130,9 +152,10 @@ def _dotnet_shards() -> tuple[list[dict[str, object]], int]:
             "--filter", f"FullyQualifiedName~{cls}",
         ], 600)
         result.update({"run_id": run_id, "class": cls, "class_index": index, "test_inventory_count": inventory_count})
-        if "已通过" not in str(result.get("stdout_tail", "")) and "Passed!" not in str(result.get("stdout_tail", "")):
+        failure = _test_output_failure(str(result.get("stdout_tail", "")), str(result.get("stderr_tail", "")))
+        if failure:
             result["exit_code"] = 1
-            result["failure"] = "test-shard-produced-no-pass-summary"
+            result["failure"] = failure
         (diagnostics / f"{index:04d}-{cls.rsplit('.', 1)[-1]}.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         return result
 
