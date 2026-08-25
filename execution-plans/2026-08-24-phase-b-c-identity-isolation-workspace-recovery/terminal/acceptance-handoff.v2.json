@@ -1,8 +1,8 @@
 {
   "schema_version": "acceptance-handoff.v2",
   "status": "ready",
-  "candidate_revision": "248dada9c3c5d9a51233bdea05d66ba02e73504f",
-  "candidate_manifest_sha256": "sha256:0b0dc0a4ba2c207e7c68c98b58640061a5b72049fe396915646d0a04c220d778",
+  "candidate_revision": "1c9b69d46545ff6e390a74fd1694f82d7465be44",
+  "candidate_manifest_sha256": "sha256:34b30857152edf369b34eab56d8a0722d2f7ef9dbc3f032c6b82f3a91fa08ded",
   "implementation_receipt": "execution-plans\\2026-08-24-phase-b-c-identity-isolation-workspace-recovery\\terminal\\terminal-full.json",
   "terminal_result": "pass",
   "authorizes": [

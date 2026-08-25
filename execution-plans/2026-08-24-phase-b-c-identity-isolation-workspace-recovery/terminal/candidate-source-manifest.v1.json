@@ -5004,7 +5004,19 @@
         "S4"
       ],
       "sha256": "sha256:e29427aaeb4999a0514bc9a49a699599f2dd2e7c6e75897a1331add79b2887bf"
+    },
+    {
+      "path": "tests/phase_b_c_identity_isolation/test_validate_all.py",
+      "role": "test",
+      "slice_ids": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "sha256": "sha256:12a9c32230530a5c9d35bf87a4db55bf0995f2859ca4c5017a02ac987c39b42c"
     }
   ],
-  "candidate_source_root": "sha256:892a0113553e4586595a1bfc37db5fa108e112af7d37a9add7d27914093bf894"
+  "candidate_source_root": "sha256:8863b6f87c1cd5724e0aa893bdbac2cf2b5b34a9d0fc350d07d9a7bc71ffbdbd"
 }
