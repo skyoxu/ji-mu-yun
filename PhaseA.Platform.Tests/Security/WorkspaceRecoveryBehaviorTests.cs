@@ -26,6 +26,24 @@ public sealed class WorkspaceRecoveryBehaviorTests
         var expected = new RunnerLease("l", "a", "p", 2);
         var stale = () => RunnerIsolationPolicy.DemandCurrentLease(expected, expected with { Fence = 1 });
         stale.Should().Throw<InvalidOperationException>();
+        RunnerIsolationPolicy.Describe("a", "p", Path.GetTempPath()).LowPrivilegeRequired.Should().BeTrue();
+    }
+
+    [Fact]
+    public void RunnerPolicy_RejectsReparsePointWhenPlatformSupportsLinks()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var root = Directory.CreateTempSubdirectory("phase-b-reparse");
+        var target = Directory.CreateTempSubdirectory("phase-b-reparse-target");
+        try
+        {
+            var link = Path.Combine(root.FullName, "link");
+            try { Directory.CreateSymbolicLink(link, target.FullName); }
+            catch (Exception) { return; }
+            var act = () => RunnerIsolationPolicy.RequireContainedPath(root.FullName, "link/file.txt");
+            act.Should().Throw<UnauthorizedAccessException>();
+        }
+        finally { root.Delete(true); target.Delete(true); }
     }
 
     [Fact]
@@ -90,5 +108,42 @@ public sealed class WorkspaceRecoveryBehaviorTests
             }
         }
         finally { SqliteConnection.ClearAllPools(); if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void PersistentStorage_UsesProjectOwnershipAndQuotaAcrossInstances()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"phase-b-{Guid.NewGuid():N}.db");
+        var root = Directory.CreateTempSubdirectory("phase-b-persistent");
+        try
+        {
+            using (var connection = new SqliteConnection($"Data Source={path}"))
+            { connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "CREATE TABLE projects(id TEXT PRIMARY KEY, account_id TEXT NOT NULL); INSERT INTO projects(id,account_id) VALUES('p','a');"; command.ExecuteNonQuery(); }
+            File.WriteAllText(Path.Combine(root.FullName, "project.godot"), "hello");
+            var context = RequestContext.FromIdentity(new AccountIdentity("a", "owner", PhaseAAuth.UserRole), "p", "c", "r");
+            var storage = new WorkspaceStorageService($"Data Source={path}"); storage.SetQuota("a", 100);
+            storage.CreateSnapshot(context, root.FullName, "persisted", "w", "p", "v", new HashSet<string>());
+            new WorkspaceStorageService($"Data Source={path}").GetQuota("a").UsedBytes.Should().Be(5);
+        }
+        finally { SqliteConnection.ClearAllPools(); root.Delete(true); if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Restore_IsIdempotentAndDoesNotDeleteExistingPublishedTreeBeforeCommit()
+    {
+        var source = Directory.CreateTempSubdirectory("phase-b-idempotent-source");
+        var destination = Directory.CreateTempSubdirectory("phase-b-idempotent-destination");
+        try
+        {
+            File.WriteAllText(Path.Combine(source.FullName, "project.godot"), "new");
+            File.WriteAllText(Path.Combine(destination.FullName, "keep.txt"), "old");
+            var manifest = SnapshotManifest.Create("s", "w", "a", "p", "v", [("project.godot", "new"u8.ToArray())]);
+            var context = RequestContext.FromIdentity(new AccountIdentity("a", "owner", PhaseAAuth.UserRole), "p", "c", "r");
+            var service = new RestoreService(); var lease = new RunnerLease("l", "a", "p", 1);
+            var first = service.Restore(context, manifest, source.FullName, destination.FullName, lease, "key-1");
+            var second = service.Restore(context, manifest, source.FullName, destination.FullName, lease, "key-1");
+            first.Should().Be(second);
+        }
+        finally { source.Delete(true); destination.Delete(true); }
     }
 }

@@ -81,6 +81,9 @@ def _run(command: list[str], timeout: int = 180) -> dict[str, object]:
 
 def _dotnet_shards() -> tuple[list[dict[str, object]], int]:
     test_root = ROOT / "PhaseA.Platform.Tests"
+    test_binary = test_root / "bin" / "Debug" / "net8.0" / "PhaseA.Platform.Tests.dll"
+    if not test_binary.is_file() or test_binary.stat().st_size == 0:
+        return [{"command": ["dotnet", "test"], "exit_code": 1, "failure": "missing-current-build-artifact"}], 0
     inventory_count = 0
     test_classes: set[str] = set()
     for source in test_root.rglob("*.cs"):
@@ -114,6 +117,9 @@ def _dotnet_shards() -> tuple[list[dict[str, object]], int]:
             "--filter", f"FullyQualifiedName~{cls}",
         ], 600)
         result.update({"run_id": run_id, "class": cls, "class_index": index, "test_inventory_count": inventory_count})
+        if "已通过" not in str(result.get("stdout_tail", "")) and "Passed!" not in str(result.get("stdout_tail", "")):
+            result["exit_code"] = 1
+            result["failure"] = "test-shard-produced-no-pass-summary"
         (diagnostics / f"{index:04d}-{cls.rsplit('.', 1)[-1]}.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         return result
 

@@ -1,19 +1,41 @@
 using System.Security.Cryptography;
 using PhaseA.Platform.Security;
+using Microsoft.Data.Sqlite;
 
 namespace PhaseA.Platform.Workspaces;
 
 public sealed class RestoreService
 {
+    private readonly string? _connectionString;
+    private readonly Dictionary<string, RestoreAttempt> _inMemoryAttempts = new(StringComparer.Ordinal);
+
+    public RestoreService(string? connectionString = null)
+    {
+        _connectionString = connectionString;
+        if (!string.IsNullOrWhiteSpace(connectionString))
+        {
+            using var connection = new SqliteConnection(connectionString); connection.Open(); using var command = connection.CreateCommand();
+            command.CommandText = "CREATE TABLE IF NOT EXISTS restore_attempts (attempt_id TEXT PRIMARY KEY, idempotency_key TEXT NOT NULL UNIQUE, snapshot_id TEXT NOT NULL, workspace_id TEXT NOT NULL, status TEXT NOT NULL, fence INTEGER NOT NULL, updated_utc TEXT NOT NULL)"; command.ExecuteNonQuery();
+        }
+    }
+
     public RestoreAttempt Restore(RequestContext context, SnapshotManifest manifest, string sourceRoot, string destinationRoot, RunnerLease lease)
+        => Restore(context, manifest, sourceRoot, destinationRoot, lease, $"restore:{manifest.SnapshotId}:{manifest.WorkspaceId}");
+
+    public RestoreAttempt Restore(RequestContext context, SnapshotManifest manifest, string sourceRoot, string destinationRoot, RunnerLease lease, string idempotencyKey)
     {
         context.DemandAccount(manifest.AccountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
+        var existing = LoadAttempt(idempotencyKey) ?? (_inMemoryAttempts.TryGetValue(idempotencyKey, out var remembered) ? remembered : null);
+        if (existing is not null) return existing;
         var attempt = new RestoreAttempt(Guid.NewGuid().ToString("N"), manifest.SnapshotId, manifest.WorkspaceId, RestoreAttemptStatus.Requested).Advance(RestoreAttemptStatus.Staging);
+        PersistAttempt(attempt, idempotencyKey, lease.Fence);
         var staging = Path.Combine(destinationRoot, ".restore-staging", attempt.AttemptId);
         Directory.CreateDirectory(staging);
         try
         {
             if (string.IsNullOrWhiteSpace(lease.LeaseId) || lease.Fence <= 0) throw new InvalidOperationException("invalid runner lease");
+            RunnerIsolationPolicy.RequireNoReparsePoint(destinationRoot, destinationRoot);
             foreach (var entry in manifest.Files)
             {
                 var target = RunnerIsolationPolicy.RequireContainedPath(staging, entry.RelativePath);
@@ -24,9 +46,12 @@ public sealed class RestoreService
                 File.Copy(source, target);
             }
             var published = Path.Combine(destinationRoot, ".restore-current");
-            if (Directory.Exists(published)) Directory.Delete(published, true);
-            Directory.Move(staging, published);
-            return attempt.Advance(RestoreAttemptStatus.Published);
+            var backup = Path.Combine(destinationRoot, ".restore-previous", attempt.AttemptId);
+            Directory.CreateDirectory(Path.GetDirectoryName(backup)!);
+            if (Directory.Exists(published)) Directory.Move(published, backup);
+            try { Directory.Move(staging, published); }
+            catch { if (Directory.Exists(backup) && !Directory.Exists(published)) Directory.Move(backup, published); throw; }
+            var result = attempt.Advance(RestoreAttemptStatus.Published); _inMemoryAttempts[idempotencyKey] = result; PersistAttempt(result, idempotencyKey, lease.Fence); return result;
         }
         catch
         {
@@ -34,7 +59,21 @@ public sealed class RestoreService
             Directory.CreateDirectory(Path.GetDirectoryName(quarantine)!);
             if (Directory.Exists(quarantine)) Directory.Delete(quarantine, true);
             if (Directory.Exists(staging)) Directory.Move(staging, quarantine);
-            return attempt.Advance(RestoreAttemptStatus.Quarantined);
+            var result = attempt.Advance(RestoreAttemptStatus.Quarantined); _inMemoryAttempts[idempotencyKey] = result; PersistAttempt(result, idempotencyKey, lease.Fence); return result;
         }
+    }
+
+    private RestoreAttempt? LoadAttempt(string key)
+    {
+        if (string.IsNullOrWhiteSpace(_connectionString)) return null;
+        using var connection = new SqliteConnection(_connectionString); connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "SELECT attempt_id,snapshot_id,workspace_id,status FROM restore_attempts WHERE idempotency_key=$key"; command.Parameters.AddWithValue("$key", key); using var reader = command.ExecuteReader();
+        if (!reader.Read()) return null; return new RestoreAttempt(reader.GetString(0), reader.GetString(1), reader.GetString(2), Enum.Parse<RestoreAttemptStatus>(reader.GetString(3)));
+    }
+
+    private void PersistAttempt(RestoreAttempt attempt, string key, long fence)
+    {
+        if (string.IsNullOrWhiteSpace(_connectionString)) return;
+        using var connection = new SqliteConnection(_connectionString); connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "INSERT INTO restore_attempts(attempt_id,idempotency_key,snapshot_id,workspace_id,status,fence,updated_utc) VALUES($id,$key,$snapshot,$workspace,$status,$fence,$updated) ON CONFLICT(idempotency_key) DO UPDATE SET status=$status,fence=$fence,updated_utc=$updated";
+        command.Parameters.AddWithValue("$id", attempt.AttemptId); command.Parameters.AddWithValue("$key", key); command.Parameters.AddWithValue("$snapshot", attempt.SnapshotId); command.Parameters.AddWithValue("$workspace", attempt.WorkspaceId); command.Parameters.AddWithValue("$status", attempt.Status.ToString()); command.Parameters.AddWithValue("$fence", fence); command.Parameters.AddWithValue("$updated", DateTimeOffset.UtcNow.ToString("O")); command.ExecuteNonQuery();
     }
 }
