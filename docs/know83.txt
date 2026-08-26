@@ -1,0 +1,41 @@
+四个重要阻断：
+
+权威 contract 没有纳入新 owner 模块
+
+phase-a-successor-plan.v1.json 声明了 semantic_artifact_compiler.py、descriptor_compiler.py、process_executor.py 等新模块，但 implementation-contract.v1.json 的 allowed_changes.production 和 planned_new_files 仍然只允许旧的 semantic_oracle.py、artifact_owners.py 等文件。
+
+直接进入 Phase B，要么 Quick Dev 越界，要么继续修改旧单体实现，无法落实计划中的独立 executor/judge 边界。
+
+review binding 仍可假绿
+
+route_plan_directory.py 存在两个实质问题：
+
+可以接受只有 schema_version/status/decision 的 review；没有核对 review 中的 source manifest、requirements mapping、candidate tree。
+implementation-authorized 的前置分支没有验证 review input、review run、binding、conformance 的实际文件哈希，后面的严格检查会被提前返回绕过。
+
+test_candidate_review_binding.py 使用的“accepted review”正好只有三个字段，因此测试本身证明了这个门禁过弱。
+
+当前 review candidate 已被 72ca70a4 弄旧
+
+最新 external-semantic-review-input 绑定的是 3e611779。
+
+但 3e611779..HEAD 新增了 docs/know82.txt，而 _candidate_commit_is_current() 只允许 governance、authorization receipt 和 docs/vdd-review-run.v1.json 作为后续证据提交。因此即使现在补 review 和 authorization，路由仍会判定 candidate stale。
+
+没有当前候选的 review 与 authorization
+
+仓库中不存在绑定 Phase A successor 的：
+
+vdd-review-run.v1
+vdd-review-candidate-binding.v1.json
+新的 implementation authorization
+
+现有 implementation-authorization-receipt.successor.v2.json 仍绑定旧候选 1f75eaaf 和旧 contract/registry 哈希，不能复用。
+
+最短修复路径：
+
+把七个新 owner 模块及两个 lineage 文件正式加入各 slice 的 allowed_changes/planned_new_files。
+合并 authorization 的两条验证分支，强制校验全部引用文件的真实 SHA，并核对 candidate tree、source freeze、requirements mapping 和 review input。
+增加“篡改 review 内容但保留旧引用哈希”“复用旧 accepted review”“错误 tree/source/mapping”三类失败测试。
+提交形成新的 Phase A candidate；然后重新生成绑定该提交的 conformance 和 external review input。
+获得 accepted external review + binding，再由 maintainer 生成 authorization。
+确认路由返回 run-slice S1，才进入 Phase B。
