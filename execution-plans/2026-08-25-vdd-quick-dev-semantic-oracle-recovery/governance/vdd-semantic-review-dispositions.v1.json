@@ -1,0 +1,2086 @@
+{
+  "schema_version": "vdd-semantic-review-dispositions.v1",
+  "plan_id": "vdd-quick-dev-semantic-oracle-recovery",
+  "reviewed_repository": "skyoxu/ji-mu-yun",
+  "reviewed_commit": "bd210cef05c16f106a34a0aee6063e1fc9c32675",
+  "reviewed_tree": "198dd07d3233e6d8830a012d5ff65b2964b1a391",
+  "reviewed_at": "2026-08-26T06:40:19Z",
+  "reviewer": {
+    "kind": "external_semantic_reviewer",
+    "reviewer_id": "chatgpt-work-codex"
+  },
+  "bindings": {
+    "review_run": {
+      "path": "docs/vdd-review-run.v1.json"
+    },
+    "source_manifest_hash": "sha256:4fb8beff043ce1d5f1b7392b19df9643d8d756450ec2b74a54adc82ffe66f575",
+    "requirements_manifest": {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/governance/requirements-acceptance-mapping.v1.current-20260826.json",
+      "sha256": "sha256:8948b846c0e437a5b619d2fe8f04ee411ff51c80beee52868c5478e3a75c982a"
+    },
+    "semantic_handoff_hash": "sha256:289a3dee602274b8d302b0c9dc3ed17c0e60bbcabf39035c79aae0375a452b9f",
+    "profile": "bootstrap-upstream-plan"
+  },
+  "decision": {
+    "status": "accepted_with_itemized_dispositions",
+    "obligation_count": 63,
+    "all_obligations_disposed": true,
+    "new_requirement_ids": [],
+    "new_acceptance_ids": [],
+    "conformance_application": "approve each listed deferred obligation as not_applicable as a standalone obligation; retain its mapped canonical coverage as semantic rationale"
+  },
+  "dispositions": [
+    {
+      "obligation_id": "OBL-0132bbeed09a2f3f58c1890086e8eef8b57815a322bbd6e2ba1dded374e877c9",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 94,
+        "line_end": 94,
+        "quote": "- **Rule:** Artifact ownership is fixed: VDD writes semantic intent, active-acceptance manifest and taxonomy; Quick Dev writes descriptor, recommendation, reuse state, live blocker and recovery artifact; executor/judge writes receipt and observation; coverage gate writes coverage, evidence snapshot, completion and promotion. Each zone has write permission only to its owned artifact root and read permission only to identity-addressed inbound roots; SUT has no artifact-root write permission and coordinator has read-only recovery permission. All writers append a new versioned artifact by atomic create-if-absent and reference immutable predecessors by identity; none overwrites historical artifacts. AD-14 defines the only current resolver; owner-local indexes are not independently composable current views.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-12",
+          "FR-17",
+          "FR-3",
+          "FR-4",
+          "FR-6",
+          "FR-7",
+          "NFR-1",
+          "NFR-2",
+          "NFR-3"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-077932a0373d7cb0b9f50ad3170a4d708b4095f2e2d8116ebd33947cc7a31151",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/addendum.md",
+        "line_start": 18,
+        "line_end": 18,
+        "quote": "- **test-runner adapter**：解析 pytest、unittest、dotnet-test 等测试结果；`0 tests + exit 0` 必须判失败。",
+        "sha256": "sha256:f598849af1fb674f7f810d65a5785223527519b44b14e8ad3686cf620cea3e72"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-5",
+          "SM-4"
+        ],
+        "acceptance_ids": [
+          "A-JUDGE",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The zero-test adapter rule is already explicit in FR-5 and measured by SM-4.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-129329f1195149e9a1c4edd8a07e8e1ebd538aca28e5d8ec89cdc4a0e538f370",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 130,
+        "line_end": 130,
+        "quote": "  evidence must establish completion.",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-6",
+          "FR-7",
+          "NFR-2",
+          "SM-1"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-JUDGE",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-134437b69167dd524be0a92528138cafb1459f65563e2488f98c99e1d0975b7f",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 56,
+        "line_end": 56,
+        "quote": "- Quick Dev must use real process execution, target/fixture binding and an independent judge; SUT self-report is not evidence.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-3",
+          "FR-4",
+          "FR-5",
+          "NFR-3",
+          "NFR-4",
+          "SM-4"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The real-process and independent-judge boundary is already canonical.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-146732494745f7abfa9767cdc5dd9ed7188c3eead6d8563c996f82e1911529ac",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 39,
+        "line_end": 39,
+        "quote": "  - **success:** `implementation-complete` requires current observations, receipts, non-zero execution, unchanged bindings and self-hosted independence; semantic observation and coverage artifacts provide traceability.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-6",
+          "FR-7",
+          "NFR-2",
+          "SM-1"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-JUDGE",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "CAP-4 success restates current-evidence completion and traceability requirements.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-1486587f66ef8e720fc72b8d673cdc1c3d62bbd60974d9595692b2bf734b3ec3",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/open-questions.md",
+        "line_start": 9,
+        "line_end": 9,
+        "quote": "- Semantic-change reuse may retain identity-valid observations only while coverage is recomputed from a closed snapshot (AD-9 and AD-14); the detailed reuse decision matrix remains Deferred.",
+        "sha256": "sha256:44d67094533edc2bf609a1228e294d9c0f6e844990d9a414721cae8aebd16cfd"
+      },
+      "disposition_type": "scope_deferred",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-14",
+          "NFR-11"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "FR-14 and NFR-11 define the current safe floor: retain only identity-valid observations and recompute coverage from a closed snapshot. The detailed partial-reuse matrix remains outside this plan and requires a future canonical requirement before activation.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-1618101dacc2b61bee392c0220738849341520542d12151e99799060528dab2e",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 149,
+        "line_end": 149,
+        "quote": "- **Rule:** Quick Dev is the sole writer of append-only `live-blocker.v1` and `recovery-artifact.v1`; its blocker index uses atomic, strictly increasing Quick Dev revisions. A blocker contains detector input identities, stable blocker code, deterministic blocker ID and revision. Recovery copies one referenced observation's four result fields unchanged in `referenced_observation`; it reports current recovery only through separate Quick-Dev-owned `projection_status=ready|blocked|stale|unavailable` plus one `live_blocker` identity. A new blocker never changes the copied quartet. Coordinator reads this projection and never derives or writes a quartet.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-11",
+          "FR-12",
+          "FR-13",
+          "FR-17",
+          "NFR-10",
+          "NFR-11",
+          "NFR-2",
+          "NFR-3",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-166e917a34558557db469206fe388fb3d7cfa97e10053600a6cad28b93ce6fc8",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 107,
+        "line_end": 107,
+        "quote": "user-sandbox layer must not leak user tokens or secrets into Phase service or",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-184878b2abbe163811fdf68eb8563a6de217b6a7d83833b898a6a4d0424074a9",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 61,
+        "line_end": 61,
+        "quote": "guidance for that workspace only; it must not widen the server route or tool",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-1a87f2b12073f0af1500890141f137309050889ff1afd655ee8e895910e00011",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 55,
+        "line_end": 55,
+        "quote": "- Evidence state, verification outcome, failure_family and failure_id are separate layers and must not be conflated.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-11",
+          "FR-13",
+          "FR-4",
+          "NFR-10",
+          "NFR-7",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The layered result separation is already canonical.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-20105606a30aaa1a0aaad932c3c2914aa415d9445464a3fb35b784268e9733f0",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements.md",
+        "line_start": 3,
+        "line_end": 3,
+        "quote": "This companion preserves the complete requirement IDs from the PRD. It is normative, not provenance-only.",
+        "sha256": "sha256:bda1639113f918c0f203faf652a536d73743bbe69bb54d03aceb205602746805"
+      },
+      "disposition_type": "structural_context",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "This is document authority metadata, not an independently testable requirement.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-2412a6a7784d9eb6ac65b9bf9cfdcc5d00f355db18f0bb84ecb572a66d1c73a5",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/addendum.md",
+        "line_start": 14,
+        "line_end": 14,
+        "quote": "candidate freeze 后，描述符固定 `shell=false`、executable、argv、cwd、真实 target、fixture 内容 hash 和 RED oracle/hash。GREEN 与 REFACTOR 只能修改实现，不得替换 RED oracle、fixture 或预期结果。oracle executor 应在独立边界内启动进程并从 exit/stdout/stderr、target identity、fixture identity、执行计数和矩阵结果派生 observation。",
+        "sha256": "sha256:f598849af1fb674f7f810d65a5785223527519b44b14e8ad3686cf620cea3e72"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-3",
+          "FR-4",
+          "FR-5",
+          "NFR-1",
+          "NFR-3",
+          "NFR-4"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The freeze and independent execution boundary is already fully expressed by the listed canonical requirements.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-24fcf96fee7cf558ad68d323193aa714fed785c954b6a737727abda92ef4ddaa",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 24,
+        "line_end": 24,
+        "quote": "Read only the row that matches the task, then follow its local links.",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-47e99d77532651ad186f515f88421941775b2f6bfa1d6f252e1589e3c42bf1ac",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 53,
+        "line_end": 53,
+        "quote": "- VDD defines intent only; it must not generate commands, receipts or hashes.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-1",
+          "NFR-5"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The VDD intent-only boundary is already canonical.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-4b99bc89689f1257659189b8e72af1f130067957d58181993aa33135664db530",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/addendum.md",
+        "line_start": 43,
+        "line_end": 43,
+        "quote": "运行状态分为 `planned-only`、`observed-run`、`recovered-run`、`invalid-run`。建议路由可写入独立 `recommendation-only` artifact，字段包括 `recommended_action`、`forbidden_actions`、`reason`、`blocked_by`、`reusable_observations` 和 `invalidated_observations`。调用者在完整执行前读取该 artifact。",
+        "sha256": "sha256:f598849af1fb674f7f810d65a5785223527519b44b14e8ad3686cf620cea3e72"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-11",
+          "FR-12",
+          "FR-14",
+          "FR-17",
+          "NFR-10",
+          "NFR-11",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The state and recommendation projection is already covered by the listed canonical requirements.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-54f6058e4c77588b0afcbe2233ef679e6c255ddeafe6e32bb84ecb0faa10ede9",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 19,
+        "line_end": 19,
+        "quote": "These layers never share snapshot, current, cache, or LKG authority. Knowledge",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-562a7248e0be0052bc20d764ad597b2463e8c0654d6932a56b0978bcc9a02af2",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements.md",
+        "line_start": 57,
+        "line_end": 57,
+        "quote": "- **evidence_state:** evidence lifecycle state: planned-only, observed-run, recovered-run or invalid-run. It answers whether evidence exists and is admissible.",
+        "sha256": "sha256:bda1639113f918c0f203faf652a536d73743bbe69bb54d03aceb205602746805"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-11",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The evidence_state definition is already owned by FR-11 and NFR-9.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-62e774e60399893f87a2c721eaf9486bee3c3970cffe0831150cb99a86f47ebf",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 180,
+        "line_end": 180,
+        "quote": "| Identity | `sha256:<lowercase-hex>` plus schema/versioned projection; all references use immutable artifact identity, never “latest” bytes. |",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "NFR-1",
+          "NFR-2",
+          "NFR-7",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-63007931139c9361134a86ae97ec46e74e285e5a17e00cadffd288c687582bf7",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/addendum.md",
+        "line_start": 25,
+        "line_end": 25,
+        "quote": "先用冻结黑盒测试和假绿 fixtures 证明旧 judge 能识别漏洞，再修改 VDD 与 Quick Dev。候选 Quick Dev 作为 SUT 被前代/外部 judge 驱动；通过后才允许登记为下一代执行器。使用 08-05 当前实现的脱离式副本进行 dogfood，禁止修改 08-05 原目录及历史证据。",
+        "sha256": "sha256:f598849af1fb674f7f810d65a5785223527519b44b14e8ad3686cf620cea3e72"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-8",
+          "FR-9",
+          "NFR-3",
+          "NFR-5",
+          "SM-2"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The N-to-N+1 dogfood boundary and immutable legacy evidence rule are already canonical.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-6991dc57fc5143ba300459ba60267edd504a645a98500091bff03ec89a3acf7e",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements.md",
+        "line_start": 62,
+        "line_end": 62,
+        "quote": "These layers are independent: `evidence_state` is not a verification result; `verification_outcome` is not an evidence lifecycle state; a non-failing outcome may carry no failure identity; a failure family groups IDs; a failure ID never substitutes for either state or outcome.",
+        "sha256": "sha256:bda1639113f918c0f203faf652a536d73743bbe69bb54d03aceb205602746805"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-11",
+          "FR-13",
+          "NFR-10",
+          "NFR-7",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The separation of state, outcome, family, and ID is already canonical.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-6a13cf19094e049c7e704140b010e6820cf2a89561a7e95276ccf15f809556f9",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 24,
+        "line_end": 24,
+        "quote": "Use a hexagonal evidence pipeline. VDD produces semantic intent; Quick Dev compiles execution descriptors and publishes recovery projections; an independent executor/judge produces receipts and observations; the coverage gate alone evaluates completion. The SUT and external coordinator are adapters outside this authority core. Dependencies move toward immutable artifact contracts, never from a consumer back into an upstream writer.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "structural_context",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-1",
+          "FR-17",
+          "FR-3",
+          "FR-4",
+          "FR-6",
+          "FR-7",
+          "NFR-2",
+          "NFR-3"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "Architecture metadata, overview, diagram edge, or structural seed is explanatory structure rather than an additional independently testable obligation.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-6b59de8309c4e982c9cfc171144b418fbc79fb5a01212b0218fb11881d2b9008",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 54,
+        "line_end": 54,
+        "quote": "- Exact cover is sound-and-complete many-to-many coverage; multiple oracles may cover one Acceptance ID and one oracle may cover many IDs; exclusive partition is not required.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-2",
+          "FR-6",
+          "NFR-2",
+          "SM-1"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-JUDGE",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The many-to-many exact-cover rule is already canonical.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-6d3309b220459c6b7ba85b4af159fae1f781366b662a6182470c8af6a20c806d",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 128,
+        "line_end": 128,
+        "quote": "- A run is never complete based only on assistant text. Validators, diagnostics,",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-6",
+          "FR-7",
+          "NFR-2",
+          "SM-1"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-JUDGE",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-7048c7d84151ae0f5831fa1ef9e6f11163bd65293586d5cf91dca4e7912062b5",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 82,
+        "line_end": 82,
+        "quote": "- **Rule:** Coverage gate is the sole writer of `acceptance-coverage.v1` and the sole evaluator of `implementation-complete`. The active Acceptance ID universe is the immutable `active_acceptance_manifest` identity frozen by VDD; coverage stores and verifies that identity. It validates sound-and-complete many-to-many cover: every ID in that universe has at least one admissible oracle/observation path, and every asserted path resolves to an ID in that same universe; overlap is permitted. It accepts only current, identity-matched observations with receipts, non-zero execution, required independence, and no invalidation.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-11",
+          "FR-13",
+          "FR-14",
+          "FR-2",
+          "FR-6",
+          "FR-7",
+          "NFR-10",
+          "NFR-11",
+          "NFR-2",
+          "NFR-6",
+          "NFR-7",
+          "NFR-8",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-70fdfcad7c86dd2edd21667f03db7ac0e8bf7cf716f2daff606116f67c452017",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/open-questions.md",
+        "line_start": 3,
+        "line_end": 3,
+        "quote": "The adopted architecture spine resolves authority and identity foundations; it does not silently select the operational policies below. These decisions remain unresolved and must not be inferred by this spec.",
+        "sha256": "sha256:44d67094533edc2bf609a1228e294d9c0f6e844990d9a414721cae8aebd16cfd"
+      },
+      "disposition_type": "structural_context",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "This paragraph declares the open-question boundary; it is not itself an implementation obligation.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-72796ecc3c5e959f7ca60ad5a332242aabeaf6e2bfb933035242a8f1c2e10cf7",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 155,
+        "line_end": 155,
+        "quote": "- **Rule:** Coverage gate is the sole writer of `evidence-snapshot.v1`. Each snapshot has a strictly monotonic gate revision and immutable closed DAG containing active-acceptance manifest, semantic intent/oracles, descriptor, receipt, observation cells, reuse/invalidation decisions, live blocker, acceptance coverage and predecessor snapshot identities. `implementation-complete` and NN+1 promotion cite one closed snapshot. Current selection starts from the highest contiguous gate revision whose closure validates; missing predecessor, forked or duplicate revision, or unresolved identity fails closed. Recovery selects one snapshot root and closure only; it cannot independently select newest leaves.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-11",
+          "FR-14",
+          "FR-17",
+          "FR-6",
+          "FR-7",
+          "NFR-1",
+          "NFR-10",
+          "NFR-11",
+          "NFR-2",
+          "NFR-3",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-777e0f12b134f030fb13e87d60247433e87e24d32646884814836a8d5cacd15e",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 69,
+        "line_end": 69,
+        "quote": "An independent execution can trace every active Acceptance ID through a sound-and-complete many-to-many coverage graph to a real process receipt and observation, while planned-only, invalid, copied, drifted, timed-out and self-judged runs cannot reach `implementation-complete`. A downstream coordinator can consume the published recovery artifact without relying on chat context.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-11",
+          "FR-13",
+          "FR-17",
+          "FR-4",
+          "FR-5",
+          "FR-6",
+          "FR-7",
+          "FR-8",
+          "FR-9",
+          "NFR-10",
+          "NFR-11",
+          "NFR-2",
+          "NFR-3",
+          "SM-1",
+          "SM-2",
+          "SM-4"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The package-level success signal aggregates existing requirements and metrics; it creates no additional requirement.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-82e07dbeb3d85f6c286b75c6dc4cc842b1e313c75b4200310662746ef9e09d31",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 57,
+        "line_end": 57,
+        "quote": "- Legacy plans remain read-only compatible; new self-hosted completion cannot use the legacy contract.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-16",
+          "NFR-5",
+          "NFR-6"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The legacy compatibility boundary is already canonical.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-835baddfd1e61d3840d4327427f664d07fc900eb0f4e01e886a34a360f0f06df",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 184,
+        "line_end": 184,
+        "quote": "| Snapshot/recovery | Coverage snapshot is the only current root; recovery selects its closed DAG plus one Quick Dev blocker. Recovery is consumed externally, not a lifecycle command. |",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-11",
+          "FR-14",
+          "FR-17",
+          "FR-6",
+          "FR-7",
+          "NFR-1",
+          "NFR-10",
+          "NFR-11",
+          "NFR-2",
+          "NFR-3",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-859e839047e4f69a64588ab29771c268f99987815b0e89b0582e9dc01085d8aa",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/requirements-and-acceptance.md",
+        "line_start": 18,
+        "line_end": 18,
+        "quote": "Every active acceptance row must resolve through the architecture-defined path:",
+        "sha256": "sha256:32684f2dbb751a38001dc5fb59f88c0b5553d2d7d6b35d43a5db8e6984f2ab52"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-1",
+          "FR-2",
+          "FR-3",
+          "FR-4",
+          "FR-5",
+          "FR-6",
+          "FR-7",
+          "NFR-1",
+          "NFR-2",
+          "NFR-6",
+          "NFR-7",
+          "NFR-8",
+          "NFR-9",
+          "SM-1"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "This sentence is the prose form of the canonical A-* table and AD-15 evidence-path grammar; it does not add a second acceptance obligation.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-8800f971aecfa51841baa6f05cd70f559977ee8735ede2265708823eccdc2162",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 190,
+        "line_end": 190,
+        "quote": "  compatibility break, or assistant-only completion claim was introduced.",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-6",
+          "FR-7",
+          "NFR-2",
+          "SM-1"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-JUDGE",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-889dbbdb2e2c3fa2b4ca04fa7d2029144f276c196c0175820863e13d78ae216f",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 151,
+        "line_end": 151,
+        "quote": "Read-only decisions are schema/JSON parsed; writes require an executable route,",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-8dbffc400477aa8ce7499975be4745bf98c1ff648f3b472e1faffe728c9c9265",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 182,
+        "line_end": 182,
+        "quote": "- Targeted validation passed, or the exact validation gap and required",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-6",
+          "FR-7",
+          "NFR-2",
+          "SM-1"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-JUDGE",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-91bbcb6bf4f0bf3b7d206265374683fbedc7f4d4d60dd3ae980f56cba11ed8e7",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 64,
+        "line_end": 64,
+        "quote": "- **Rule:** VDD is the sole writer of `semantic-verification.v1`. Each oracle declares `case_source_refs` and `case_producer_ref` as abstract references, alongside selector, subject, required case roles, failure intent and lane/preflight fields. VDD must not emit executable, argv, cwd, command, receipt, hash, run ID, or observed result.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-1",
+          "FR-10",
+          "FR-2",
+          "NFR-5",
+          "NFR-6",
+          "NFR-7",
+          "NFR-8",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-96199b17145b889713af588c5d78cda92a272d0c0d502e259c7bc373ce2bdae6",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 177,
+        "line_end": 177,
+        "quote": "must not enter Taskmaster triplets, Chapter 3-7 orchestration, overlay-generator",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-9a2015922de226a1603f62f8bf381a71951c5858e00387767701ff3b95b67813",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 4,
+        "line_end": 4,
+        "quote": "This always-loaded file keeps only routing, authorization, and cross-tree",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-9c2cd405ffce658ddac35722450876635044e1791202117f0020db311340c647",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 167,
+        "line_end": 167,
+        "quote": "- **Rule:** VDD owns the closed `failure-taxonomy.v1` in semantic intent. Its v1 families are exactly `semantic-contract-gap`, `expected-red`, `unexpected-green`, `task-implementation-failure`, `test-harness-failure`, `target-binding-failure`, `repo-noise`, `timeout-no-observation`, `repeated-deterministic-failure`, and `artifact-integrity`. Executor/judge applies this total map: VDD rejection is `planned-only/blocked/semantic-contract-gap`; descriptor binding rejection is `invalid-run/fail/target-binding-failure`; artifact closure/identity failure is `invalid-run/fail/artifact-integrity`; expected RED is `observed-run/fail/expected-red`; unexpected green is `observed-run/fail/unexpected-green`; executed SUT assertion mismatch is `observed-run/fail/task-implementation-failure`; test harness error is `observed-run/blocked/test-harness-failure`; repository noise is `observed-run/blocked/repo-noise`; timeout is `observed-run/blocked/timeout-no-observation`; stop-loss after identical fingerprint is `recovered-run/blocked/repeated-deterministic-failure`. Only `planned-only/not-applicable` is unclassified. VDD writes hash-free `semantic-rejection.v1` containing taxonomy version, semantic-intent identity, active-manifest identity, rejection code and normalized predicate source. Quick Dev is sole writer of `preexecution-diagnostic.v1`, which consumes that rejection or descriptor binding failure and writes the classified failure ID. Its rejection predicate is exactly `{schema:\"rejection-predicate.v1\", stage:\"semantic|descriptor\", code, semantic_intent_identity, active_manifest_identity, proposed_descriptor_identity:\"sha256:...\"|\"absent\", fields:[{name,value}]}`: field names are unique ASCII lower-snake-case, `fields` sort by name, absent values are literal string `absent`, values are null/boolean/string/integer/array/object only, and integers are in the IEEE-754 safe range. Before serialization, every string is Unicode NFC-normalized; floats, duplicate keys and lone surrogates are rejected. Quick Dev serializes the resulting tree using RFC 8785 JSON Canonicalization Scheme (JCS), with no BOM or trailing newline. Its `failure_id` is SHA-256 of the JCS UTF-8 bytes for `{schema:\"preexecution-failure-id-input.v1\", taxonomy_version, failure_family, diagnostic_schema:\"preexecution-diagnostic.v1\", rejection_predicate}`; no concatenation or implementation-selected escaping is permitted. For every post-execution classified ID, executor/judge first derives `receipt_fingerprint` as SHA-256 of the JCS UTF-8 bytes for `{schema:\"receipt-fingerprint.v1\", receipt_schema:\"process-receipt.v1\", descriptor_identity, target_identity, fixture_identity, oracle_identity, case_id, execution_status, exit_code:\"integer|absent\", termination_reason:\"string|absent\", stdout_bytes_sha256, stderr_bytes_sha256, comparator_spec_identity, assertion_result:\"pass|fail|blocked|incomplete\"}`. `stdout_bytes_sha256` and `stderr_bytes_sha256` hash the raw captured byte streams; comparator semantics remain Deferred, but the selected comparator/normalization specification must be an immutable `comparator_spec_identity`. The same NFC, rejected-value, JCS, UTF-8, no-BOM and no-newline rules apply to both trees. The executor/judge `failure_id` is SHA-256 of the JCS UTF-8 bytes for `{schema:\"postexecution-failure-id-input.v1\", taxonomy_version, failure_family, descriptor_identity, target_identity, fixture_identity, oracle_identity, case_id, receipt_fingerprint}`. VDD never generates command, receipt or hash. No adapter may select another family, outcome or omitted ID for a classified condition.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-1",
+          "FR-11",
+          "FR-13",
+          "FR-17",
+          "FR-4",
+          "NFR-10",
+          "NFR-11",
+          "NFR-7",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-a1d11e90a9f910235a3bab131e6f8f1eaa4d51916edf48fc0535ed8150edf5f5",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 49,
+        "line_end": 49,
+        "quote": "  EC -. reads only .-> RA",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "structural_context",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-17",
+          "NFR-3"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "Architecture metadata, overview, diagram edge, or structural seed is explanatory structure rather than an additional independently testable obligation.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-a2be38422a23a2fa9927234d7812632a654b2d42921b5bfbc9c53ce43afe575b",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 41,
+        "line_end": 41,
+        "quote": "  - **intent:** Self-hosted changes can be verified by a frozen predecessor or external judge while the candidate remains only the SUT.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-8",
+          "NFR-3"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "CAP-5 intent restates the frozen-predecessor independent-judge boundary.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-a8c1aa5617c55209e1da1c98a1abd6f44c036ece49b8f926f2a90be090514377",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 86,
+        "line_end": 86,
+        "quote": "- If a command script needs Chinese literals, use a Python file or ASCII-only",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-ad2472d4f9a408ae17260bb603806ec5d24b2a5d91ea459921ee4c61d35fefd6",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 6,
+        "line_end": 6,
+        "quote": "paradigm: hexagonal evidence pipeline with independent judge and append-only artifact authority",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "structural_context",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Architecture metadata, overview, diagram edge, or structural seed is explanatory structure rather than an additional independently testable obligation.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-afca093a8fe72c2cb48b643578fd51903063e3a34289fd8b4cef7063c36e02e0",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 48,
+        "line_end": 48,
+        "quote": "  - **success:** fast-ship, standard and self-hosted profiles preserve real execution, exact cover, non-zero cases, target/fixture binding and independent judging; semantic changes invalidate or recompute coverage as required.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-14",
+          "FR-15",
+          "FR-5",
+          "FR-6",
+          "FR-8",
+          "FR-9",
+          "NFR-1",
+          "NFR-10",
+          "NFR-2",
+          "NFR-3",
+          "NFR-4",
+          "NFR-8"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "CAP-7 success restates the profile authenticity floor and replay rules.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-b25a7a53e580869efd79daec0cc4ae0d3ba0522964274dea3b59abdf9b9fe4e5",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 175,
+        "line_end": 175,
+        "quote": "must not create a VDD directory unless the user explicitly requests creation",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-b399db5cfe4a350dd73936f2fd6fb347f2bd3722ddec606eab980734637af299",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 58,
+        "line_end": 58,
+        "quote": "- **Rule:** VDD, Quick Dev, independent executor/judge, SUT, coverage gate, and external coordinator are separate trust zones. Each boundary exchanges versioned artifacts only. An adapter may validate inbound artifacts but may not write another zone's authoritative artifact.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-1",
+          "FR-10",
+          "FR-11",
+          "FR-12",
+          "FR-13",
+          "FR-14",
+          "FR-15",
+          "FR-16",
+          "FR-17",
+          "FR-2",
+          "FR-3",
+          "FR-4",
+          "FR-5",
+          "FR-6",
+          "FR-7",
+          "FR-8",
+          "FR-9",
+          "NFR-1",
+          "NFR-10",
+          "NFR-11",
+          "NFR-2",
+          "NFR-3",
+          "NFR-4",
+          "NFR-5",
+          "NFR-6",
+          "NFR-7",
+          "NFR-8",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-b7e02e019131479c7a2448fc4fbe250e33ccbc372ba2b5cf01aff9b9556eb1ce",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 100,
+        "line_end": 100,
+        "quote": "- **Rule:** A self-hosted candidate is always SUT. Before change, freeze predecessor judge bytes, black-box regression fixture bytes, expected failure IDs and identity hashes. The frozen predecessor or separately provisioned external judge executes the candidate. AD-17 defines promotion writer and snapshot binding. Frozen judge artifacts are read-only.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-15",
+          "FR-8",
+          "FR-9",
+          "NFR-1",
+          "NFR-10",
+          "NFR-3",
+          "NFR-8"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-ba1bb9a36f33d8be3eb23afb609123e111138f0e2ead99478885c7b7d013d521",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 63,
+        "line_end": 63,
+        "quote": "- Top-level coordinator implementation; this package requires only the externally consumable recovery artifact.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-16",
+          "FR-17"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-DESCRIPTOR",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The non-goal and required recovery publication are already represented by FR-16 and FR-17.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-bbe9b0ce1ab1ba4d77d4bbde23637ec42aa129d4acb5a96bc9992386f2b1c1b9",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-25/addendum.md",
+        "line_start": 29,
+        "line_end": 29,
+        "quote": "建议至少保留 `missing-coverage`、`copied-observation`、`target-ignored`、`fixture-not-executed`、`matrix-hardcoded`、`zero-tests`、`root-replaced`、`self-judging-validator`、`rollback-prose-only` 和 `hash-drift` 等稳定标识。最终命名和向后兼容策略属于架构阶段决策。",
+        "sha256": "sha256:f598849af1fb674f7f810d65a5785223527519b44b14e8ad3686cf620cea3e72"
+      },
+      "disposition_type": "superseded_recommendation",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-13",
+          "FR-9",
+          "NFR-7",
+          "SM-2"
+        ],
+        "acceptance_ids": [
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "This is a recommendation list, not the final taxonomy. AD-16 and FR-13 own failure-family naming; FR-9 and SM-2 own the mandatory false-green suite, so no additional canonical ID is created.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-bf1e61ef4e3d46f3d4a0761f4daddb79b3f795729dbf8af01d8f56654d1636a1",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 206,
+        "line_end": 206,
+        "quote": "  acceptance-or-review/               # external consumer boundary only",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "structural_context",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Architecture metadata, overview, diagram edge, or structural seed is explanatory structure rather than an additional independently testable obligation.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-cad21882f97e4f54047ee0d9b978f85a1c794cb465f26c3b38c2e6ab69df8d08",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 110,
+        "line_end": 110,
+        "quote": "  C-->>P: process behavior only",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "structural_context",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-8",
+          "NFR-3"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "Architecture metadata, overview, diagram edge, or structural seed is explanatory structure rather than an additional independently testable obligation.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-d0af56a2ec371f6dfe788482a73e59a3bc9aa3a546c12c14f0d11b21145cd2c0",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 88,
+        "line_end": 88,
+        "quote": "- **Rule:** `evidence_state` is exactly `planned-only|observed-run|recovered-run|invalid-run`. `verification_outcome` is exactly `pass|fail|blocked|incomplete|not-applicable`. Legal pairs are closed: `planned-only` only permits `not-applicable|incomplete|blocked`; `observed-run` permits `pass|fail|blocked|incomplete`; `recovered-run` permits `pass|fail|blocked|incomplete`; `invalid-run` only permits `fail|blocked|incomplete`; every other pair is invalid. `pass` and `not-applicable` carry neither failure family nor failure ID. AD-16 supplies the total taxonomy mapping for every other condition. `expected-red` is `fail`, never pass. A recovered run is an executor/judge-owned revalidation result that references an existing complete receipt plus observation and cannot synthesize matrix results, hashes, or process facts. A current identity mismatch makes the old observation edge inadmissible to AD-5; only a new executor/judge evaluation may write a new `invalid-run` observation. Recovery projection never mutates or reclassifies the referenced quartet. No state/outcome pair authorizes completion without AD-5.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-11",
+          "FR-13",
+          "FR-17",
+          "FR-4",
+          "FR-7",
+          "NFR-10",
+          "NFR-11",
+          "NFR-7",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-d311663b165ff0b4f5a9fefe38e17bd4e9dce7533395188beffa71a0437a4bb3",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 125,
+        "line_end": 125,
+        "quote": "- **Rule:** Quick Dev writes per-oracle reuse decisions. Code/test/schema/validator changes invalidate affected oracle evidence; requirements/acceptance/plan semantic changes retain only identity-valid test observations but require coverage recomputation against the new active-acceptance manifest; fixture/target/command changes invalidate related RED, GREEN and REFACTOR evidence; ordinary non-semantic documentation changes may reuse valid observations. Every invalidation names its cause and required next action. Validator, executor and schema owners must each provide positive, negative and mutation fixtures before their artifact type can enter a coverage decision.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-12",
+          "FR-14",
+          "FR-15",
+          "FR-17",
+          "NFR-1",
+          "NFR-10",
+          "NFR-11",
+          "NFR-2",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-d36423332d64f777763c810f4c184f0527858bddd47f28269c8c72701e315054",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 42,
+        "line_end": 42,
+        "quote": "  - **success:** Required false-green regressions are blocked, corrected fixtures pass, and the candidate is eligible as the next executor only after independent N→N+1 validation.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-8",
+          "FR-9",
+          "NFR-3",
+          "NFR-8",
+          "SM-2"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "CAP-5 success restates promotion and false-green acceptance.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-d3edf9fe4f0ead810e76596214039785eb2a676de4c5adc303dc7842713deedd",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 76,
+        "line_end": 76,
+        "quote": "- **Rule:** Only the independent executor/judge writes process receipts and semantic observations. It executes the descriptor against the SUT and derives exit code, stdout/stderr hash, target/fixture identity, executed count, actual matrix results, `evidence_state`, `verification_outcome`, `failure_family`, and `failure_id`. SUT output is input evidence only; it never writes a receipt, observation, coverage or judge verdict.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-4",
+          "FR-5",
+          "FR-8",
+          "FR-9",
+          "NFR-1",
+          "NFR-2",
+          "NFR-3",
+          "NFR-4",
+          "NFR-7",
+          "NFR-8"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-d530bddab3eed49afe55bf4fb033305965df8f84e7b933b9df52b7b7594e7b29",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 110,
+        "line_end": 110,
+        "quote": "must still not be returned to the model, published, or committed.",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-e824b8be1789c50bc8ae952d5f712a2575559f2403d25b2f1f60d04b72eed01e",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 187,
+        "line_end": 187,
+        "quote": "- Documentation is updated only where public behavior or ownership changed.",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-e9ec66e211886f3f40dd82dd4f9a7694867eaa077b4de872b74bd025fa3857c7",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 137,
+        "line_end": 137,
+        "quote": "- **Rule:** `fast-ship`, `standard`, and `self-hosted` alter selected oracle scope only. Every profile requires real process execution, non-zero case/test count, target/fixture binding, admissible many-to-many cover and independent judging. `self-hosted` additionally requires AD-8.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-15",
+          "FR-5",
+          "FR-6",
+          "FR-8",
+          "FR-9",
+          "NFR-1",
+          "NFR-10",
+          "NFR-2",
+          "NFR-3",
+          "NFR-4",
+          "NFR-8"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-eab38ac77ffaa67ecc9eda800ea4f7babb85526b3a23505b636f7c5410dbe33f",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 70,
+        "line_end": 70,
+        "quote": "- **Rule:** Quick Dev is the sole writer of execution descriptors, recommendation-only artifacts, reuse/invalidated-observation records, live blockers, and recovery artifacts. A descriptor is immutable after candidate freeze and binds `shell=false`, executable, argv, cwd, target identity, fixture identity, and RED oracle/test identity. Recovery is a projection of referenced identities and has no completion authority; AD-13 fixes its result and blocker semantics.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-12",
+          "FR-14",
+          "FR-15",
+          "FR-17",
+          "FR-3"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-ecbaf76bc3501fad2bf9bc0dd66e32caa8b7b4f3473a7a534e5d392fc3b6c6f2",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 161,
+        "line_end": 161,
+        "quote": "- **Rule:** An admissible coverage edge is exactly: `active_acceptance_manifest.acceptance_id -> semantic_verification.oracle_id/covers_acceptance_ids -> descriptor.selected_case_binding(case_source_ref, case_producer_ref, case_id) -> receipt.executed_case_cell(case_id) -> observation.case_assertion(case_id, actual_result) -> coverage.acceptance_id`. Every downstream artifact records immutable upstream identities; a missing arrow rejects the edge. One case may cover multiple IDs only when oracle declaration and observation assertion enumerate those exact IDs. Coverage records semantic-intent and descriptor generations for each edge.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-1",
+          "FR-2",
+          "FR-3",
+          "FR-4",
+          "FR-5",
+          "FR-6",
+          "FR-7",
+          "NFR-1",
+          "NFR-2",
+          "NFR-6",
+          "NFR-7",
+          "NFR-8",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-ede11e70e3cf883e36c908420e9a2d68f1e53243404306a786a6d816b2a8948b",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 173,
+        "line_end": 173,
+        "quote": "- **Rule:** Coverage gate is the sole writer of append-only `nn-plus-one-promotion.v1`. A promotion cites one closed AD-14 evidence snapshot and frozen predecessor judge, fixture suite and oracle identities. It is written only after that snapshot satisfies self-hosted profile, mandatory false-green suite, corrected-fixture suite and implementation-complete predicates. No other zone may materialize promotion from a notification, receipt or recommendation.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-15",
+          "FR-6",
+          "FR-8",
+          "FR-9",
+          "NFR-1",
+          "NFR-10",
+          "NFR-2",
+          "NFR-3",
+          "NFR-8"
+        ],
+        "acceptance_ids": [
+          "A-BOUNDARY",
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-f08eb5efcade045361ddde2d37d2b61568fb64d9f4f0a921fc6959bd92d05738",
+      "source": {
+        "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-quick-dev-semantic-oracle-recovery-2026-08-25/ARCHITECTURE-SPINE.md",
+        "line_start": 131,
+        "line_end": 131,
+        "quote": "- **Rule:** Quick Dev publishes a recovery-artifact projection with exactly the AD-13 `referenced_observation` quartet, `projection_status`, descriptor/receipt/observation/coverage snapshot identities, recommendation, reusable and invalidated observations, deterministic fingerprint and one live-blocker identity. It reads coverage and observation identities but neither writes coverage nor derives, rewrites or reclassifies an observation quartet. An external coordinator consumes this projection read-only and is not implemented or authorized by this spine. Recovery evaluates current artifact integrity and identity before historical summary.",
+        "sha256": "sha256:e241ce594528022267086fa618d2155ce69725ee66e8c9e8e4183cbb06c51578"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-11",
+          "FR-12",
+          "FR-13",
+          "FR-17",
+          "NFR-10",
+          "NFR-11",
+          "NFR-2",
+          "NFR-9"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-DESCRIPTOR",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "The adopted rule is already bound by its adjacent Binds row and the listed canonical requirements; treating the prose line as a second requirement would duplicate, not strengthen, the contract.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-f44271bf8e4bf355e4a5eb66121e95c02c276a028a986b2634424e7a1825b6c8",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 30,
+        "line_end": 30,
+        "quote": "  - **success:** Semantic validation rejects missing fields, uncovered IDs, non-producer matrices, prose-only rollback, weak behavior RED and self-judging definitions; accepted coverage is sound-and-complete many-to-many, not an exclusive partition.",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "covered_by_existing",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "FR-1",
+          "FR-2",
+          "FR-6",
+          "NFR-2",
+          "NFR-8",
+          "SM-1",
+          "SM-3"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-SEMANTIC",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "CAP-1 success restates existing semantic-contract and exact-cover requirements.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-fa08f903cf62fe4308377f1f80cd9f69a37a2109a9aec73619b81b8eef2ca8ca",
+      "source": {
+        "path": "AGENTS.md",
+        "line_start": 72,
+        "line_end": 72,
+        "quote": "- Prefer small, deterministic, testable changes; never disable tests to pass.",
+        "sha256": "sha256:59d45d516fc49810c0091d627c5b45fe58bcda0da78b692b75a6ebfc06b52007"
+      },
+      "disposition_type": "repository_policy_external",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [
+          "NFR-8",
+          "SM-C1"
+        ],
+        "acceptance_ids": [
+          "A-COVER",
+          "A-JUDGE",
+          "A-PROMOTION",
+          "A-TERMINAL"
+        ]
+      },
+      "new_canonical_ids": [],
+      "rationale": "Repository-wide operator policy remains independently authoritative; this source fragment is not a standalone feature requirement or Acceptance target for this plan.",
+      "authorizes": []
+    },
+    {
+      "obligation_id": "OBL-fb7e18e951b46264df5a794973d8b4e445e0ad823e8db6915d4ec4990c89bf84",
+      "source": {
+        "path": "_bmad-output/specs/spec-vdd-quick-dev-semantic-oracle-recovery/SPEC.md",
+        "line_start": 24,
+        "line_end": 24,
+        "quote": "Ji Mu Yun 需要把 VDD 的验收意图转化为由真实进程产生、可审计且不可自证的验证结果。当前风险是候选 Quick Dev 复制预期结果、忽略 target、伪造矩阵通过或把 planned-only 报告误当完成。该 spec 建立从语义合同、冻结输入、独立裁判到 Acceptance ID 完成门禁的统一契约，同时保留旧计划只读兼容。",
+        "sha256": "sha256:9c62c6e9744f01106098046a572b18c05047abd695fb74a0267078169853a31c"
+      },
+      "disposition_type": "structural_context",
+      "mapping_application": {
+        "status": "not_applicable",
+        "mapping_kind": "disposition"
+      },
+      "semantic_coverage": {
+        "requirement_ids": [],
+        "acceptance_ids": []
+      },
+      "new_canonical_ids": [],
+      "rationale": "The Why paragraph is package rationale and risk context, not an additional independently testable obligation.",
+      "authorizes": []
+    }
+  ],
+  "authorizes": []
+}
+

@@ -8,14 +8,14 @@ def digest(path:Path)->str:return "sha256:"+hashlib.sha256(path.read_bytes()).he
 def ref(path:Path)->dict[str,str]:return {"path":path.relative_to(ROOT).as_posix(),"sha256":digest(path)}
 def main()->None:
     review=json.loads((ROOT/"docs/vdd-review-run.v1.json").read_text(encoding="utf-8"))
-    conformance=json.loads((PLAN/"governance/vdd-conformance-result.v1.current-20260826-final-r3.json").read_text(encoding="utf-8"))
+    conformance=json.loads((PLAN/"governance/vdd-conformance-result.v1.external-bd210cef-successor.json").read_text(encoding="utf-8"))
     if review.get("schema_version") != "vdd-review-run.v1" or review.get("status") != "accepted" or review.get("decision") != "accepted":
         raise SystemExit("accepted external review is required")
     if conformance.get("status") != "conformant" or conformance.get("errors") != [] or conformance.get("authorizes") != []:
         raise SystemExit("conformant conformance result is required")
     commit=subprocess.run(["git","rev-parse","HEAD"],cwd=ROOT,capture_output=True,text=True,check=True).stdout.strip()
     tree=subprocess.run(["git","rev-parse",f"{commit}^{{tree}}"],cwd=ROOT,capture_output=True,text=True,check=True).stdout.strip()
-    value={"schema_version":"quick-dev-tdd-adapter.implementation-authorization-successor.v2","plan_id":"vdd-quick-dev-semantic-oracle-recovery","candidate_commit":commit,"candidate_tree_hash":"sha256:"+tree,"implementation_contract":ref(PLAN/"implementation-contract.v1.json"),"command_registry":ref(PLAN/"command-registry.v1.json"),"authority_manifest":ref(PLAN/"knowledge-context.freeze.v1.json"),"review_run":ref(ROOT/"docs/vdd-review-run.v1.json"),"conformance_result":ref(PLAN/"governance/vdd-conformance-result.v1.current-20260826-final-r3.json"),"decision":{"owner":"maintainer","transition":"implementation-authorized","basis":"accepted semantic review; candidate commit/tree is immutable and evidence publication is outside candidate closure"},"authorizes":["implementation-authorized"]}
+    value={"schema_version":"quick-dev-tdd-adapter.implementation-authorization-successor.v2","plan_id":"vdd-quick-dev-semantic-oracle-recovery","candidate_commit":commit,"candidate_tree_hash":"sha256:"+tree,"implementation_contract":ref(PLAN/"implementation-contract.v1.json"),"command_registry":ref(PLAN/"command-registry.v1.json"),"authority_manifest":ref(PLAN/"knowledge-context.freeze.v1.json"),"review_run":ref(ROOT/"docs/vdd-review-run.v1.json"),"conformance_result":ref(PLAN/"governance/vdd-conformance-result.v1.external-bd210cef-successor.json"),"decision":{"owner":"maintainer","transition":"implementation-authorized","basis":"accepted semantic review and conformant successor freeze; candidate commit/tree is immutable and evidence publication is outside candidate closure"},"authorizes":["implementation-authorized"]}
     out=PLAN/"implementation-authorization-receipt.successor.v2.json"
     out.write_text(json.dumps(value,sort_keys=True,separators=(",",":"))+"\n",encoding="utf-8",newline="\n")
 if __name__=="__main__":main()

@@ -6,7 +6,7 @@ PLAN=ROOT/"execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery"
 def sha(p:Path)->str:return "sha256:"+hashlib.sha256(p.read_bytes()).hexdigest()
 def ref(p:Path):return {"path":p.relative_to(ROOT).as_posix(),"sha256":sha(p)}
 def main():
-    review=ROOT/"docs/vdd-review-run.v1.json"; conf=PLAN/"governance/vdd-conformance-result.v1.current-20260826-final-r3.json"
+    review=ROOT/"docs/vdd-review-run.v1.json"; conf=PLAN/"governance/vdd-conformance-result.v1.external-bd210cef-successor.json"
     contract=PLAN/"implementation-contract.v1.json"; authority=PLAN/"knowledge-context.freeze.v1.json"
     value=json.loads(review.read_text(encoding="utf-8")); c=json.loads(conf.read_text(encoding="utf-8"))
     if value.get("schema_version")!="vdd-review-run.v1" or value.get("status")!="accepted" or value.get("decision")!="accepted": raise SystemExit("review not accepted")

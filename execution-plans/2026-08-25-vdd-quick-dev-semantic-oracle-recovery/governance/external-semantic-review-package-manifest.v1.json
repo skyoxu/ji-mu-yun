@@ -1,0 +1,35 @@
+{
+  "schema_version": "vdd-semantic-review-package-manifest.v1",
+  "repository": "skyoxu/ji-mu-yun",
+  "reviewed_commit": "bd210cef05c16f106a34a0aee6063e1fc9c32675",
+  "reviewed_tree": "198dd07d3233e6d8830a012d5ff65b2964b1a391",
+  "semantic_handoff_hash": "sha256:289a3dee602274b8d302b0c9dc3ed17c0e60bbcabf39035c79aae0375a452b9f",
+  "source_manifest_hash": "sha256:4fb8beff043ce1d5f1b7392b19df9643d8d756450ec2b74a54adc82ffe66f575",
+  "requirements_manifest_hash": "sha256:8948b846c0e437a5b619d2fe8f04ee411ff51c80beee52868c5478e3a75c982a",
+  "artifacts": [
+    {
+      "path": "requirements-acceptance-mapping.v1.reviewed.json",
+      "sha256": "sha256:d10cf0c1a49c5e4f200fa084cc67914bcd7b7a6d4bc044e1dbf4bf8bdaef5fec"
+    },
+    {
+      "path": "vdd-review-run.v1.json",
+      "sha256": "sha256:238a5da805de90c557ce47c05b9b7b16a7206ea19c483a2bfcb1bb16cf0adeb1"
+    },
+    {
+      "path": "vdd-semantic-review-dispositions.v1.json",
+      "sha256": "sha256:b901f803f6f5246a1256fef2a3f0387bd7f0030e675b853bad11f6e536b657f0"
+    }
+  ],
+  "decision": {
+    "status": "accepted_with_itemized_dispositions",
+    "obligation_count": 63,
+    "covered_by_existing": 37,
+    "repository_policy_external": 16,
+    "structural_context": 8,
+    "scope_deferred": 1,
+    "superseded_recommendation": 1,
+    "new_requirement_ids": [],
+    "new_acceptance_ids": []
+  },
+  "authorizes": []
+}
