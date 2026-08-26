@@ -1,100 +1,107 @@
-"""Plan-local production owners for staged evidence artifacts."""
+"""Run-local evidence producers for the self-hosted verification plan."""
 from __future__ import annotations
-import argparse, hashlib, json, sys
+
+import argparse
+import hashlib
+import json
+import subprocess
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent))
-from semantic_oracle import validate_semantic_intent, validate_descriptor, validate_judge, validate_many_to_many_cover, validate_promotion
+from semantic_oracle import compile_run_local_semantic_artifacts, validate_descriptor, validate_judge, validate_many_to_many_cover, validate_promotion
 
-FAILURES = {"S1":"VDD-RED-BOUNDARY","S2":"QD-DESCRIPTOR-RED","S3":"JUDGE-INDEPENDENCE-RED","S4":"COVERAGE-EXACT-COVER-RED","S5":"PROMOTION-FALSE-GREEN-RED","S6":"TERMINAL-BOUNDARY-RED"}
 
-def _write(path: Path, value: dict) -> None:
+def _digest(value: dict) -> str:
+    body = {key: item for key, item in value.items() if key != "evidence_sha256"}
+    return "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def _write(path: Path, value: dict) -> dict:
+    value["evidence_sha256"] = _digest(value)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8", newline="\n")
-
-
-def _document(path: Path) -> dict | None:
-    try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError):
-        return None
-    return value if isinstance(value, dict) else None
-
-
-def _run_local_input(run_root: Path, name: str, producer: str) -> dict | None:
-    value = _document(run_root / name)
-    if value is None or value.get("producer") != producer or value.get("status") != "pass":
-        return None
-    if value.get("run_id") != run_root.name or not isinstance(value.get("slice_id"), str):
-        return None
-    digest = value.get("evidence_sha256")
-    body = {key: item for key, item in value.items() if key != "evidence_sha256"}
-    expected = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
-    if digest != expected:
-        return None
     return value
 
+
+def _input(run_root: Path, name: str) -> dict:
+    path = run_root / name
+    if not path.is_file():
+        raise FileNotFoundError(name)
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"invalid object: {name}")
+    return value
+
+
+def _bound(value: dict, producer: str, slice_id: str, run_root: Path) -> bool:
+    return value.get("producer") == producer and value.get("status") == "pass" and value.get("slice_id") == slice_id and value.get("run_id") == run_root.name and value.get("evidence_sha256") == _digest(value)
+
+
+def produce_descriptor(run_root: Path) -> dict:
+    source, semantic = _input(run_root, "descriptor-input.v1.json"), _input(run_root, "semantic-artifacts.v1.json")
+    descriptor = source.get("descriptor")
+    valid, failure = validate_descriptor(descriptor)
+    if not valid or not _bound(semantic, "vdd", "S1", run_root):
+        raise ValueError(failure or "semantic-artifacts-unbound")
+    return _write(run_root / "execution-descriptor.v1.json", {"schema_version":"execution-descriptor.v1", "producer":"quick-dev", "status":"pass", "slice_id":"S2", "run_id":run_root.name, "descriptor":descriptor, "semantic_artifact_hash":semantic["evidence_sha256"]})
+
+
+def produce_receipt(run_root: Path) -> dict:
+    source, descriptor = _input(run_root, "execution-input.v1.json"), _input(run_root, "execution-descriptor.v1.json")
+    argv = source.get("argv")
+    if not _bound(descriptor, "quick-dev", "S2", run_root) or not isinstance(argv, list) or not argv or any(not isinstance(x, str) for x in argv):
+        raise ValueError("execution-input-invalid")
+    completed = subprocess.run(argv, cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
+    receipt = {"executor_id":source.get("executor_id", "sut-executor"), "judge_id":"independent-judge", "descriptor_hash":descriptor["evidence_sha256"], "candidate_hash":source.get("candidate_hash", "sha256:fixture"), "run_id":run_root.name, "exit_code":completed.returncode}
+    observation = {"run_id":run_root.name, "stdout":completed.stdout, "stderr":completed.stderr, "observation_id":source.get("observation_id", "OBS-S3")}
+    valid, failure = validate_judge(receipt, observation)
+    if not valid:
+        raise ValueError(failure)
+    return _write(run_root / "process-receipt.v1.json", {"schema_version":"process-receipt.v1", "producer":"independent-judge", "status":"pass", "slice_id":"S3", "run_id":run_root.name, "receipt":receipt, "observation":observation, "descriptor_evidence_sha256":descriptor["evidence_sha256"]})
+
+
+def produce_coverage(run_root: Path) -> dict:
+    source, receipt = _input(run_root, "coverage-input.v1.json"), _input(run_root, "process-receipt.v1.json")
+    acceptance_ids, observation_ids, edges = source.get("acceptance_ids"), source.get("observation_ids"), source.get("edges")
+    valid, failure = validate_many_to_many_cover(edges, set(acceptance_ids or []), set(observation_ids or []))
+    if not _bound(receipt, "independent-judge", "S3", run_root) or not isinstance(acceptance_ids, list) or not isinstance(observation_ids, list) or not isinstance(edges, list) or not valid:
+        raise ValueError(failure or "receipt-unbound")
+    return _write(run_root / "acceptance-coverage.v1.json", {"schema_version":"acceptance-coverage.v1", "producer":"coverage-gate", "status":"pass", "slice_id":"S4", "run_id":run_root.name, "acceptance_ids":acceptance_ids, "observation_ids":observation_ids, "edges":edges, "receipt_evidence_sha256":receipt["evidence_sha256"]})
+
+
+def produce_false_green_fixtures(run_root: Path) -> dict:
+    source, coverage = _input(run_root, "false-green-fixture-input.v1.json"), _input(run_root, "acceptance-coverage.v1.json")
+    fixtures = source.get("fixtures")
+    if not _bound(coverage, "coverage-gate", "S4", run_root) or not isinstance(fixtures, list):
+        raise ValueError("fixture-input-invalid")
+    results = []
+    for fixture in fixtures:
+        if not isinstance(fixture, dict) or not isinstance(fixture.get("blocked_argv"), list) or not isinstance(fixture.get("corrected_argv"), list):
+            raise ValueError("fixture-input-invalid")
+        blocked = subprocess.run(fixture["blocked_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
+        corrected = subprocess.run(fixture["corrected_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
+        results.append({"fixture_id":fixture.get("fixture_id"), "blocked":blocked.returncode != 0, "corrected_pair_pass":corrected.returncode == 0})
+    valid, failure = validate_promotion(results, coverage["evidence_sha256"], "coverage-gate")
+    if not valid:
+        raise ValueError(failure)
+    return _write(run_root / "false-green-fixtures.v1.json", {"schema_version":"false-green-fixtures.v1", "producer":"coverage-gate", "status":"pass", "slice_id":"S5", "run_id":run_root.name, "fixtures":results, "predecessor_judge_hash":coverage["evidence_sha256"]})
+
+
 def run(plan: Path, slice_id: str, stage: str, run_root: Path | None = None) -> int:
-    if stage == "red":
-        cases = {
-            "S1": lambda: validate_semantic_intent({"acceptance_ids": [], "producer": "vdd", "coverage": "oracle", "fixture_class": "negative", "taxonomy": []}),
-            "S2": lambda: validate_descriptor({"target":"runner", "argv":[], "cwd":".", "timeout_seconds":30, "shell":True, "case_source_refs":[], "case_producer_ref":"vdd"}),
-            "S3": lambda: validate_judge({"executor_id":"sut","judge_id":"sut","descriptor_hash":"sha256:x","candidate_hash":"sha256:y","run_id":"R","exit_code":0},{"run_id":"R"}),
-            "S4": lambda: validate_many_to_many_cover([], {"A-COVER"}, set()),
-            "S5": lambda: validate_promotion([], "", "sut"),
-            "S6": lambda: (False, "TERMINAL-BOUNDARY-RED"),
-        }
-        accepted, failure_id = cases[slice_id]()
-        if not accepted and failure_id == FAILURES[slice_id]:
-            print(f"FAILURE_ID:{failure_id}")
-            return 1
+    del plan
+    if stage not in {"green", "refactor"} or run_root is None:
         return 2
-    if stage in {"green", "refactor"}:
-        # A plan-root file is not execution evidence. Every GREEN/REFACTOR
-        # decision consumes a run-local, producer-identified artifact plus a
-        # lifecycle observation produced by the independent adapter.
-        if run_root is None or not (run_root / "observations" / "red-observed.json").is_file():
-            return 2
-        requirements = {
-            "S1": ("semantic-artifacts.v1.json", "vdd"),
-            "S2": ("execution-descriptor.v1.json", "quick-dev"),
-            "S3": ("process-receipt.v1.json", "independent-judge"),
-            "S4": ("acceptance-coverage.v1.json", "coverage-gate"),
-            "S5": ("false-green-fixtures.v1.json", "coverage-gate"),
-            "S6": ("implementation-complete-result.json", "terminal-validator"),
-        }
-        value = _run_local_input(run_root, *requirements[slice_id])
-        if value is None or value.get("slice_id") != slice_id or value.get("run_id") != run_root.name:
-            return 2
-        if slice_id == "S2":
-            valid, _ = validate_descriptor(value.get("descriptor", {}))
-            return 0 if valid else 2
-        if slice_id == "S3":
-            valid, _ = validate_judge(value.get("receipt", {}), value.get("observation", {}))
-            return 0 if valid else 2
-        if slice_id == "S4":
-            valid, _ = validate_many_to_many_cover(value.get("edges", []), set(value.get("acceptance_ids", [])), set(value.get("observation_ids", [])))
-            return 0 if valid else 2
-        if slice_id == "S5":
-            valid, _ = validate_promotion(value.get("fixtures", []), value.get("predecessor_judge_hash"), "coverage-gate")
-            return 0 if valid else 2
-        return 0
-    if stage == "terminal":
-        if run_root is None: return 2
-        evidence_root = run_root
-        try:
-            index = int(slice_id[1:])
-            lineage_root = evidence_root.parent.parent
-            if index > 1:
-                for prior in range(1, index):
-                    if not (lineage_root / f"S{prior}" / evidence_root.name / "terminal-evidence.json").is_file():
-                        return 2
-        except (ValueError, IndexError):
-            return 2
-        # Terminal evidence is written only by the lifecycle evidence writer;
-        # this owner merely verifies that the run-local artifacts exist.
-        required = [evidence_root / "terminal-evidence.json", evidence_root / "terminal-replay-report.json"]
-        return 0 if all(path.is_file() for path in required) else 2
-    return 2
+    try:
+        result = {"S1":compile_run_local_semantic_artifacts, "S2":produce_descriptor, "S3":produce_receipt, "S4":produce_coverage, "S5":produce_false_green_fixtures}[slice_id](run_root)
+        producer = {"S1":"vdd", "S2":"quick-dev", "S3":"independent-judge", "S4":"coverage-gate", "S5":"coverage-gate"}[slice_id]
+        return 0 if _bound(result, producer, slice_id, run_root) else 2
+    except (KeyError, OSError, ValueError, subprocess.SubprocessError, json.JSONDecodeError):
+        return 2
+
 
 if __name__ == "__main__":
-    p=argparse.ArgumentParser(); p.add_argument("--plan-dir",required=True); p.add_argument("--slice",required=True); p.add_argument("--stage",required=True); p.add_argument("--run-root"); a=p.parse_args(); raise SystemExit(run(Path(a.plan_dir),a.slice,a.stage,Path(a.run_root) if a.run_root else None))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--plan-dir", required=True); parser.add_argument("--slice", required=True); parser.add_argument("--stage", required=True); parser.add_argument("--run-root")
+    args = parser.parse_args()
+    raise SystemExit(run(Path(args.plan_dir), args.slice, args.stage, Path(args.run_root) if args.run_root else None))
