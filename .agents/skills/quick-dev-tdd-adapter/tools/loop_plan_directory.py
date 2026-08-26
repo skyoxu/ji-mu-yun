@@ -613,6 +613,12 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
     # Terminal slice evidence must carry the complete current candidate
     # identity so route validation cannot accept an old successor after a
     # contract, authority, or validator change.
+    result.update({
+        "plan_id": contract["plan_id"],
+        "slice_id": slice_id,
+        "run_id": run_dir.name,
+        "contract_hash": _sha(plan / "implementation-contract.v1.json"),
+    })
     identity = _validation_snapshot(plan, slice_id)
     if identity is None:
         raise RuntimeError("slice terminal candidate identity is unavailable")

@@ -84,6 +84,44 @@ def _implementation_candidate_current(result: dict[str, object], current: dict[s
     return all(result.get(key) == current[key] for key in _IMPLEMENTATION_CANDIDATE_ROOTS)
 
 
+def _successful_stage_observation(run_dir: Path, stage: str) -> bool:
+    try:
+        value = json.loads((run_dir / "observations" / f"{stage}-observed.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return False
+    return isinstance(value, dict) and value.get("stage") == stage and value.get("exit_code") == 0
+
+
+def _tdd_slice_ready_current(
+    repository_root: Path,
+    plan_dir: Path,
+    plan_id: str,
+    slice_id: str,
+    contract_hash: str,
+    result_path: Path,
+    result: dict[str, object],
+) -> bool:
+    """Accept only a complete, current TDD lifecycle under its formal run root."""
+    run_dir = result_path.parent
+    expected_parent = repository_root / "logs" / "tdd-adapter" / plan_id / slice_id
+    if (
+        run_dir.parent != expected_parent
+        or not run_dir.name.startswith("RUN-")
+        or "DIAGNOSTIC" in run_dir.name.upper()
+        or result.get("plan_id") != plan_id
+        or result.get("slice_id") != slice_id
+        or result.get("run_id") != run_dir.name
+        or result.get("contract_hash") != contract_hash
+    ):
+        return False
+    return (
+        validate_implementation_successor(run_dir)
+        and _successful_stage_observation(run_dir, "green")
+        and _successful_stage_observation(run_dir, "refactor")
+        and _implementation_candidate_current(result, _validation_snapshot(plan_dir, slice_id))
+    )
+
+
 def _sha(payload: bytes) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
@@ -933,12 +971,30 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
         if not isinstance(exit_predicate, str) or not exit_predicate:
             raise ValueError("slice exit predicate is invalid")
         result_paths = list((evidence_root / slice_id).glob(f"*/{exit_predicate}-result.json"))
+        if execution_mode == "tdd" and exit_predicate == "slice-ready":
+            # Formal TDD completion is owned only by canonical lifecycle run
+            # roots. Isolated diagnostic namespaces are never promotable.
+            result_paths = [
+                path for path in result_paths
+                if path.parent.name.startswith("RUN-") and "DIAGNOSTIC" not in path.parent.name.upper()
+            ]
+        else:
+            result_paths = [path for path in result_paths if "DIAGNOSTIC" not in path.parent.name.upper()]
         if execution_mode in {"regression", "dogfood-replay"}:
             result_paths.append(target / "terminal-results" / f"{slice_id}.json")
         for result_path in result_paths:
             try:
                 result = json.loads(result_path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
+                continue
+            if execution_mode == "tdd" and exit_predicate == "slice-ready":
+                current = _tdd_slice_ready_current(
+                    repository_root, target, str(contract["plan_id"]), slice_id,
+                    contract_hash, result_path, result,
+                )
+                if result.get("predicate") == exit_predicate and result.get("status") == "pass" and current:
+                    completed.add(slice_id)
+                    break
                 continue
             contract_current = result.get("contract_hash") == contract_hash
             required_artifact = result_path.with_name("candidate-evidence.json") if exit_predicate == "implementation-candidate" else None

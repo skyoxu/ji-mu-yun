@@ -45,6 +45,65 @@ class PlanDirectoryLoopTests(unittest.TestCase):
         (plan / "implementation-contract.v1.json").write_text(json.dumps({"plan_id": "target", "slices": slices}), encoding="utf-8")
         return plan
 
+    def _write_current_tdd_slice_ready(self, root: Path, plan: Path, slice_id: str, run_id: str = "RUN-1") -> Path:
+        """Create a complete run using the same successor validator as production."""
+        roots = {
+            "candidate_hash": "sha256:candidate",
+            "predicate_input_root": "sha256:predicate",
+            "authority_root": "sha256:authority",
+            "validator_root": "sha256:validator",
+            "validator_version": "validator-v1",
+            "closure_definition_hash": "sha256:closure",
+            "semantic_closure_hash": "sha256:semantic",
+        }
+        validator = plan / "tools" / "validate_all.py"
+        validator.parent.mkdir(parents=True, exist_ok=True)
+        validator.write_text(
+            "def current_candidate_identity(slice_id):\n    return {'candidate': 'after-' + slice_id}\n\n"
+            f"def slice_validation_snapshot(slice_id):\n    return {roots!r}\n\n"
+            f"def validation_snapshot():\n    return {roots!r}\n",
+            encoding="utf-8",
+        )
+        probe = root / "probe.py"
+        probe.write_text("# current test selector\n", encoding="utf-8")
+        contract_path = plan / "implementation-contract.v1.json"
+        contract_hash = "sha256:" + hashlib.sha256(contract_path.read_bytes()).hexdigest()
+        validator_hash = "sha256:" + hashlib.sha256(validator.read_bytes()).hexdigest()
+        run = root / "logs" / "tdd-adapter" / "target" / slice_id / run_id
+        observations = run / "observations"
+        observations.mkdir(parents=True)
+        (observations / "red-observed.json").write_text(json.dumps({"stage": "red", "exit_code": 1}), encoding="utf-8")
+        (observations / "green-observed.json").write_text(json.dumps({"stage": "green", "exit_code": 0}), encoding="utf-8")
+        (observations / "refactor-observed.json").write_text(json.dumps({"stage": "refactor", "exit_code": 0}), encoding="utf-8")
+        basis = {
+            "contract_hash": contract_hash,
+            "validator_hash": validator_hash,
+            "test_selector": "probe.py",
+            "test_sha256": "sha256:" + hashlib.sha256(probe.read_bytes()).hexdigest(),
+            "pre_implementation_candidate": {"candidate": "before"},
+            "plan_binding": {
+                "plan_id": "target", "path_type": "repo_path", "path": "execution-plans/target",
+                "contract_path": "implementation-contract.v1.json", "validator_path": "tools/validate_all.py",
+            },
+        }
+        basis_path = run / "red-basis.v1.json"
+        basis_path.write_text(json.dumps(basis), encoding="utf-8")
+        (run / "implementation-successor.v1.json").write_text(json.dumps({
+            "schema_version": "quick-dev-tdd-adapter.implementation-successor.v1",
+            "status": "implementation-observed",
+            "red_basis_sha256": "sha256:" + hashlib.sha256(basis_path.read_bytes()).hexdigest(),
+            "contract_hash": contract_hash,
+            "validator_hash": validator_hash,
+            "pre_implementation_candidate": {"candidate": "before"},
+            "post_implementation_candidate": {"candidate": "after-" + slice_id},
+            "changed_paths": ["probe.py"], "authorizes": [],
+        }), encoding="utf-8")
+        (run / "slice-ready-result.json").write_text(json.dumps({
+            **roots, "plan_id": "target", "slice_id": slice_id, "run_id": run_id,
+            "predicate": "slice-ready", "status": "pass", "contract_hash": contract_hash,
+        }), encoding="utf-8")
+        return run
+
     def test_quick_dev_compiles_vdd_failure_intent_without_a_prebound_red_command(self) -> None:
         red = BUILDER._generated_red_descriptor("S3", {
             "test_selector": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py::CoordinatorTests::test_replays_binding",
@@ -235,7 +294,10 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 DRIVER._run_slice_terminal(root, plan, "S1", ["implementation-contract.v1.json"])
 
             self.assertEqual(["RUN-FINAL"], seen_run_ids)
-            self.assertTrue((final_run / "slice-ready-result.json").is_file())
+            result = json.loads((final_run / "slice-ready-result.json").read_text(encoding="utf-8"))
+            self.assertEqual("target", result["plan_id"])
+            self.assertEqual("S1", result["slice_id"])
+            self.assertEqual("RUN-FINAL", result["run_id"])
 
     def test_router_rejects_plan_path_outside_execution_plans(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -264,7 +326,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
                 self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
 
-    def test_router_reuses_an_unaffected_slice_from_the_head_contract(self) -> None:
+    def test_router_does_not_reuse_an_unaffected_slice_without_current_tdd_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             baseline = {
@@ -302,9 +364,9 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             ):
                 routed = ROUTER.route(root, plan)
 
-            self.assertEqual({"next_action": "run-slice", "slice_id": "S1", "authorizes": []}, routed)
+            self.assertEqual({"next_action": "run-slice", "slice_id": "S0", "authorizes": []}, routed)
 
-    def test_router_reuses_unaffected_slice_when_contract_hash_changed(self) -> None:
+    def test_router_does_not_reuse_tdd_slice_when_contract_hash_changed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             baseline = {
@@ -341,7 +403,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             ):
                 routed = ROUTER.route(root, plan)
 
-            self.assertEqual("validate-terminal", routed["next_action"])
+            self.assertEqual("run-slice", routed["next_action"])
 
     def test_router_requires_implementation_authorization_before_run_slice(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -362,7 +424,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             self.assertEqual("S0", result["slice_id"])
             self.assertEqual([], result["authorizes"])
 
-    def test_router_identifies_s2_when_s1_is_complete_but_authorization_is_pending(self) -> None:
+    def test_router_rejects_handwritten_three_field_slice_ready_result(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             plan = self._plan(root, [
@@ -384,7 +446,45 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 result = ROUTER.route(root, plan)
 
             self.assertEqual("awaiting-implementation-authorization", result["next_action"])
+            self.assertEqual("S1", result["slice_id"])
+
+    def test_router_identifies_s2_after_a_complete_current_tdd_lifecycle(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [
+                {"slice_id": "S1", "depends_on": []},
+                {"slice_id": "S2", "depends_on": ["S1"]},
+            ])
+            self._write_current_tdd_slice_ready(root, plan, "S1")
+            (plan / "plan-state.v1.json").write_text(json.dumps({
+                "schema_version": "vdd.plan-state.v2", "plan_id": "target",
+                "status": "plan-ready", "authorizes": ["plan-ready"],
+            }), encoding="utf-8")
+
+            with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                result = ROUTER.route(root, plan)
+
+            self.assertEqual("awaiting-implementation-authorization", result["next_action"])
             self.assertEqual("S2", result["slice_id"])
+
+    def test_router_ignores_complete_diagnostic_tdd_namespace(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [
+                {"slice_id": "S1", "depends_on": []},
+                {"slice_id": "S2", "depends_on": ["S1"]},
+            ])
+            self._write_current_tdd_slice_ready(root, plan, "S1", "RUN-DIAGNOSTIC-1")
+            (plan / "plan-state.v1.json").write_text(json.dumps({
+                "schema_version": "vdd.plan-state.v2", "plan_id": "target",
+                "status": "plan-ready", "authorizes": ["plan-ready"],
+            }), encoding="utf-8")
+
+            with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                result = ROUTER.route(root, plan)
+
+            self.assertEqual("awaiting-implementation-authorization", result["next_action"])
+            self.assertEqual("S1", result["slice_id"])
 
     def test_router_runs_slice_after_explicit_implementation_authorization(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -600,14 +700,14 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             self.assertEqual("run-slice", result["next_action"])
             self.assertEqual("RMAP-S6", result["slice_id"])
 
-    def test_router_accepts_current_slice_evidence_with_targeted_validation(self) -> None:
+    def test_router_rejects_targeted_validation_without_tdd_lifecycle_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
             run = root / "logs/tdd-adapter/target/S0/targeted"; run.mkdir(parents=True)
             contract_hash = "sha256:" + __import__("hashlib").sha256((plan / "implementation-contract.v1.json").read_bytes()).hexdigest()
             (run / "slice-ready-result.json").write_text(json.dumps({"predicate": "slice-ready", "status": "pass", "contract_hash": contract_hash}), encoding="utf-8")
             (run / "targeted-validation.v1.json").write_text("{}", encoding="utf-8")
-            self.assertEqual("validate-terminal", ROUTER.route(root, plan)["next_action"])
+            self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
 
     def test_router_uses_global_snapshot_for_implementation_complete(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
