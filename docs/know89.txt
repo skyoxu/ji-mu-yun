@@ -1,0 +1,70 @@
+修复 Quick Dev implementation-successor 的 plan directory identity。
+
+1. 不再从 run_dir 的父目录名称推导 execution-plans/<plan_id>。
+   plan_id 是逻辑身份，不是物理目录名。
+
+2. 在 run_slice_lifecycle.py 创建 red-basis.v1.json 时加入不可歧义的 plan_binding：
+
+   {
+     "plan_binding": {
+       "plan_id": "<context plan_id>",
+       "path_type": "repo_path",
+       "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery",
+       "contract_path": "implementation-contract.v1.json",
+       "validator_path": "tools/validate_all.py"
+     }
+   }
+
+   path 必须来自：
+   plan_dir.resolve().relative_to(workspace.resolve()).as_posix()
+
+   保留现有 contract_hash 和 validator_hash，作为 binding 的内容校验。
+
+3. 在 stage_lifecycle_runner.py 增加唯一共享解析器：
+   _resolve_bound_plan(run_dir, basis)
+
+   它必须：
+   - 从 logs 祖先确定 repository_root；
+   - 读取 basis.plan_binding；
+   - 拒绝绝对路径、反斜杠和 `..`；
+   - 要求解析结果位于 repository_root/execution-plans 下；
+   - 要求 implementation-contract.v1.json 和 tools/validate_all.py 存在；
+   - 要求 contract.plan_id == plan_binding.plan_id；
+   - 要求 plan_binding.plan_id == run_dir.parents[1].name；
+   - 要求合同和 validator 的当前 SHA256 分别等于 basis 中的 contract_hash、validator_hash；
+   - 失败时 fail closed，不扫描 execution-plans，不按 plan_id 猜目录。
+
+4. publish_implementation_successor() 和
+   validate_implementation_successor() 必须调用同一个
+   _resolve_bound_plan()。
+
+   删除这两种逻辑：
+   - run_dir.parents[n].name 被当成 plan directory name；
+   - root / "execution-plans" / plan_id。
+
+5. 同步所有 RED-basis 构造入口，包括：
+   - run_slice_lifecycle.py 的正式 RED 路径；
+   - loop_plan_directory.py 的 build_red_basis()；
+   - 对应测试 fixture。
+
+6. 新增回归测试：
+   - plan_id 为 vdd-quick-dev-semantic-oracle-recovery，
+     实际目录为 2026-08-25-vdd-quick-dev-semantic-oracle-recovery，
+     successor 可以发布；
+   - 发布后 validate_implementation_successor(run_dir) == True；
+   - derive_run_state(run_dir) == "green"；
+   - plan_binding 缺失、路径逃逸、plan_id 不匹配、合同 hash 过期、
+     validator hash 过期均 fail closed；
+   - 明确证明没有目录扫描或 plan_id fallback。
+
+7. 旧的 A.6 diagnostic RED run 不要原地篡改。
+   修复后新建 diagnostic run，重新执行：
+   RED -> implementation successor -> GREEN -> REFACTOR
+   -> diagnostic slice terminal -> would-route-to-S2。
+
+8. 验证：
+   py -3 -B -m pytest .agents/skills/quick-dev-tdd-adapter/tools/tests -q
+
+   然后执行真实 A.6 diagnostic 链，而不只跑 mock/unit test。
+   不写 implementation-authorized、正式 slice-ready 或
+   implementation-complete。

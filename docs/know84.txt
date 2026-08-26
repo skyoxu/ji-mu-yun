@@ -1,0 +1,20 @@
+重要问题如下，本轮未发现其他同等级问题：
+
+级别	问题	实际影响
+阻断	六个切片的 execution_snapshot_paths 都包含尚不存在的 acceptance-coverage、evidence-snapshot、execution-descriptor、process-receipt；运行器遇到缺失路径直接抛错。见契约和运行器。	canonical Quick Dev 在 RED 前就可能停止。并且 artifact_owners.py 要求的几个 run-local input 也没有注册的生产者。
+阻断	授权候选被错误地当成“整个实现工作区永远不变”。_candidate_commit_is_current() 只允许治理文件变化，任何合法生产实现都会令授权失效；而路由在处理 GREEN 前再次执行该门禁。见route_plan_directory.py。	完成 RED 并修改代码后，会在进入 GREEN 前陷入 implementation-authorization-stale。这是执行死锁，不是要求你多做治理。
+阻断	S3、S4 仍无合法 GREEN 路径。successor 测试直接调用 semantic_oracle.validate_judge() / validate_many_to_many_cover()；但 façade 只委托了 S2、S5，S3/S4 写集也没有 semantic_oracle.py。见semantic_oracle.py。	新建 independent_judge.py 或 coverage_gate.py 不会改变测试调用的函数；除非篡改 RED 测试，否则无法通过。
+假绿	slice_ready_predicate.py 只检查两个 observation 文件存在，甚至 {} 也通过；新增测试还固化了这一行为。路由又存在只检查 result、lineage、ledger 文件存在的早退完成分支。见predicate、测试和路由。	空、损坏或手工拼出的证据能够把切片标为完成。
+假绿	RED basis 虽保存 test_sha256，但 implementation-successor 校验没有确认当前测试字节仍等于该哈希；GREEN 执行的是当前测试文件。见stage_lifecycle_runner.py和stage_command.py。	修改或弱化 successor 测试后可获得绿色结果。
+假绿	S6 RED 同时混入多种缺陷，而正向 owner fixture 又使用非当前的占位哈希。实现者只修结构字段就可能让测试转绿，却仍不绑定当前 candidate/contract/registry/authority。见S6 successor RED和terminal validator scaffold。	Phase B 可以“测试通过但终态仍未真正闭合”。
+
+最快修复路径是一次性做一个 Phase A.6 小补丁：
+
+从快照列表移除未来输出，补齐明确的 run-input materializer。
+把授权基线拆成“不可变计划权威”和“允许演进的实现候选”，允许 RED 后声明写集内的实现变化。
+给 S3/S4 增加 façade 委托，并把 semantic_oracle.py 加入对应生产写集。
+建立统一 validate_slice_ready()，校验真实 GREEN/REFACTOR observation、exit code、implementation successor 和身份；删除路由早退旁路。
+强制当前 successor 测试哈希等于 RED basis。
+将 S6 改成“一个有效基线 + 每次只变异一个绑定”的 mutation matrix。
+
+完成后跑一条真正的端到端回归：S1 RED → implementation successor → GREEN → REFACTOR → slice-ready → route S2。这条通过后，我会按快速演进标准给 Phase B GO。授权重绑可以最后一次性做，不需要单独再来一轮治理。
