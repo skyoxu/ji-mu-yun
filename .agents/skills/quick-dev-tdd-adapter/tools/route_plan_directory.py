@@ -994,6 +994,10 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
             continue
         authorization_gate = _slice_authorization_gate(target, contract["plan_id"])
         if authorization_gate is not None:
+            # Authorization is evaluated after dependency closure.  Preserve
+            # the first unlocked slice so callers can distinguish an initial
+            # wait from a wait before the next slice.
+            authorization_gate["slice_id"] = slice_id
             return authorization_gate
         active_action = _active_slice_action(repository_root, contract["plan_id"], slice_id)
         if active_action == "validate-slice":

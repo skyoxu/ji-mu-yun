@@ -437,7 +437,9 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
     evidence = root / "logs" / "tdd-adapter" / contract["plan_id"]
     run_dir = evidence / slice_id / run_id
     invocation = evidence / "_invocations" / invocation_id
-    _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", invocation_id, "--out-dir", str(invocation)])
+    # Invocation storage has its own identity.  Descriptor expansion must bind
+    # <run-id> to the lifecycle run that will own observations and artifacts.
+    _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", run_dir.name, "--out-dir", str(invocation)])
     if handoff is not None:
         context_path = invocation / "run-context.json"
         context = json.loads(context_path.read_text(encoding="utf-8"))
@@ -489,27 +491,36 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
     active = _active_slice_run(root, str(contract["plan_id"]), slice_id)
     if active is None or active[1] != "slice-terminal":
         raise RuntimeError("slice terminal requires a completed refactor observation")
-    run_dir = active[0]
-    run_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
-    invocation = root / "logs" / "tdd-adapter" / str(contract["plan_id"]) / "_invocations" / run_id
-    _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", run_id, "--out-dir", str(invocation)])
-    context = json.loads((invocation / "run-context.json").read_text(encoding="utf-8"))
-    for item in [*context["authority_refs"], context["implementation_contract"]]:
-        item["payload"] = base64.b64decode(item.pop("payload_base64"), validate=True)
-    prior_red = prior_red_observation_path(run_dir)
-    observation_sources = {"red": prior_red.parent.parent if prior_red is not None else run_dir, "green": run_dir, "refactor": run_dir}
+    predecessor_run = active[0]
+    prior_red = prior_red_observation_path(predecessor_run)
+    observation_sources = {"red": prior_red.parent.parent if prior_red is not None else predecessor_run, "green": predecessor_run, "refactor": predecessor_run}
     observations = {
         stage: json.loads((observation_sources[stage] / "observations" / f"{stage}-observed.json").read_text(encoding="utf-8"))
         for stage in ("red", "green", "refactor")
     }
-    for stage in ("green", "refactor"):
-        core = context["stage_results"][stage]
-        core["exit_code"] = observations[stage]["exit_code"]
-        core["observed_at"] = observations[stage]["observed_at"]
-        if stage == "refactor":
-            refactor_commands = json.loads((invocation / "refactor-commands.json").read_text(encoding="utf-8"))
-            core["command_ids"] = [item["id"] for item in refactor_commands]
-            core["command_id"] = refactor_commands[0]["id"]
+
+    def build_terminal_context(successor_run: Path) -> tuple[Path, dict[str, object]]:
+        invocation_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
+        invocation = root / "logs" / "tdd-adapter" / str(contract["plan_id"]) / "_invocations" / invocation_id
+        # Reserve the append-only successor before compiling the terminal
+        # command, so every <run-id> expansion names the result owner.
+        _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", successor_run.name, "--out-dir", str(invocation)])
+        context = json.loads((invocation / "run-context.json").read_text(encoding="utf-8"))
+        for item in [*context["authority_refs"], context["implementation_contract"]]:
+            item["payload"] = base64.b64decode(item.pop("payload_base64"), validate=True)
+        for stage in ("green", "refactor"):
+            core = context["stage_results"][stage]
+            core["exit_code"] = observations[stage]["exit_code"]
+            core["observed_at"] = observations[stage]["observed_at"]
+            if stage == "refactor":
+                refactor_commands = json.loads((invocation / "refactor-commands.json").read_text(encoding="utf-8"))
+                core["command_ids"] = [item["id"] for item in refactor_commands]
+                core["command_id"] = refactor_commands[0]["id"]
+        context["run_id"] = successor_run.name
+        for core in context["stage_results"].values():
+            core["run_id"] = successor_run.name
+        return invocation, context
+
     snapshots = _workspace_snapshot_paths(root, plan, snapshots)
     observation_refs = []
     for stage in ("red", "green", "refactor"):
@@ -519,17 +530,15 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
         observation_refs.append({"stage": stage, "path": source.relative_to(root).as_posix(), "sha256": _sha(source)})
     lineage = {
         "schema_version": "quick-dev-tdd-adapter.successor-lineage.v1",
-        "predecessor_run": run_dir.relative_to(root).as_posix(),
+        "predecessor_run": predecessor_run.relative_to(root).as_posix(),
         "predecessor_observations": observation_refs,
         "next_transition": "slice-terminal",
         "authorizes": [],
     }
     # Always close a fresh terminal successor. Historical runs may contain
     # immutable protocol artifacts from an older contract or partial retry.
-    run_dir = reserve_successor_run(run_dir, lineage)
-    context["run_id"] = run_dir.name
-    for core in context["stage_results"].values():
-        core["run_id"] = run_dir.name
+    run_dir = reserve_successor_run(predecessor_run, lineage)
+    invocation, context = build_terminal_context(run_dir)
     lifecycle = LifecycleRunner(root, run_dir, snapshots)
     lifecycle.resume_observations(run_dir, ["red", "green", "refactor"], observation_sources=observation_sources)
     try:
@@ -560,9 +569,7 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
         # Reservation is the single identity gate for real terminal recovery.
         # It is reused on retry before successor observations are materialized.
         run_dir = reserve_successor_run(run_dir, lineage)
-        context["run_id"] = run_dir.name
-        for core in context["stage_results"].values():
-            core["run_id"] = run_dir.name
+        invocation, context = build_terminal_context(run_dir)
         lifecycle = LifecycleRunner(root, run_dir, snapshots)
         lifecycle.resume_observations(
             run_dir.parent / run_dir.name.removesuffix("-SUCCESSOR"),

@@ -1,0 +1,37 @@
+已确认最新 main 为 503146ff，这些关键修复确实存在：
+
+RED basis 绑定实际物理 plan_dir。
+successor 校验当前 RED 测试字节。
+slice-ready 检查真实 GREEN/REFACTOR exit code。
+router 删除了原来的文件存在即完成旁路。
+S3/S4 façade 委托、snapshot 与 S6 当前身份校验也已修复。
+
+但还有一个真实执行阻断：
+
+_run_slice() 同时创建了实际 run_id 和独立 invocation_id，却把 invocation_id 传给 build_slice_invocation.py。因此命令中的 <run-id> 会展开到 invocation ID，而 run_slice_lifecycle.py 实际写入另一个 run_dir。相关代码
+
+这表示你手工组织的隔离诊断链已经闭合，但正式 loop_plan_directory 启动 S2 后，GREEN、run-input materializer 或 terminal 仍可能访问错误 run root。_run_slice_terminal() 也在最终 successor run 被确定前生成 terminal descriptor，存在同类问题。terminal 路径
+
+另外，当前 router 输出：
+
+{
+  "next_action": "awaiting-implementation-authorization",
+  "reason": "implementation-authorization-required"
+}
+
+没有 slice_id。同一结果既可能表示“等待执行 S1”，也可能表示“S1 已完成、等待执行 S2”，所以它本身不能证明 would-route-to-S2。router 返回位置
+
+最快收尾顺序：
+
+_run_slice() 构建 invocation 时传 run_id，invocation_id 只用于 _invocations 目录名。
+_run_slice_terminal() 先确定最终 successor run_dir，再以 run_dir.name 构建 terminal descriptor。
+给 authorization-gate 返回值补上当前 slice_id，确认明确显示 S2。
+不把 DIAGNOSTIC-FINAL-004 当作正式 S1 completion。外部授权后，用它的 hash-bound RED 做一次快速正式 S1 replay，再进入 S2。
+完成以上代码后再冻结 candidate、做一次最终外部 review，避免修复后再次使 review binding 过期。
+
+因此当前判断是：
+
+A.6 诊断链：通过。
+可以进入最终 review 前的收尾：可以。
+当前版本外部授权后直接可靠启动 S2：还不可以。
+剩余代码工作：一个集中式 run-root 修复，不是治理问题。

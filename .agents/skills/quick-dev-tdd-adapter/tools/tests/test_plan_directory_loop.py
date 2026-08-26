@@ -178,11 +178,64 @@ class PlanDirectoryLoopTests(unittest.TestCase):
 
             self.assertEqual("build_slice_invocation.py", Path(calls[0][0]).name)
             self.assertEqual("run_slice_lifecycle.py", Path(calls[1][0]).name)
+            self.assertEqual(
+                Path(calls[1][calls[1].index("--run-dir") + 1]).name,
+                calls[0][calls[0].index("--run-id") + 1],
+            )
             self.assertEqual("green", calls[1][calls[1].index("--stage") + 1])
             context_path = Path(calls[1][calls[1].index("--run-context") + 1])
             context = json.loads(context_path.read_text(encoding="utf-8"))
             self.assertEqual("prior-red-successor", context["stage_results"]["red"]["mode"])
             self.assertEqual(handoff, context["stage_results"]["red"]["prior_red"])
+
+    def test_slice_terminal_compiles_descriptor_against_reserved_successor_run(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{"slice_id": "S1", "depends_on": []}])
+            predecessor = root / "logs" / "tdd-adapter" / "target" / "S1" / "RUN-PREDECESSOR"
+            observations = predecessor / "observations"
+            observations.mkdir(parents=True)
+            for stage in ("red", "green", "refactor"):
+                (observations / f"{stage}-observed.json").write_text(json.dumps({
+                    "exit_code": 0, "observed_at": "2026-08-26T00:00:00Z",
+                }), encoding="utf-8")
+            seen_run_ids: list[str] = []
+
+            def fake_run(arguments: list[str], *, timeout_seconds: int = 0) -> None:
+                self.assertEqual("build_slice_invocation.py", Path(arguments[0]).name)
+                seen_run_ids.append(arguments[arguments.index("--run-id") + 1])
+                out = Path(arguments[arguments.index("--out-dir") + 1])
+                out.mkdir(parents=True)
+                command = {
+                    "id": "terminal", "executable": sys.executable,
+                    "argv": ["-c", "print('{\\\"status\\\": \\\"pass\\\", \\\"predicate\\\": \\\"slice-ready\\\"}')"],
+                    "cwd": ".", "timeout_seconds": 10, "shell": False,
+                }
+                (out / "terminal-command.json").write_text(json.dumps(command), encoding="utf-8")
+                (out / "refactor-commands.json").write_text(json.dumps([{"id": "refactor"}]), encoding="utf-8")
+                (out / "run-context.json").write_text(json.dumps({
+                    "authority_refs": [], "implementation_contract": {"payload_base64": ""},
+                    "stage_results": {"red": {"execution_fingerprint": "fingerprint"}, "green": {}, "refactor": {}},
+                }), encoding="utf-8")
+
+            final_run = predecessor.parent / "RUN-FINAL"
+
+            def reserve(_predecessor: Path, _lineage: dict) -> Path:
+                final_run.mkdir(parents=True)
+                return final_run
+
+            lifecycle = mock.Mock()
+            with mock.patch.object(DRIVER, "_active_slice_run", return_value=(predecessor, "slice-terminal")), mock.patch.object(
+                DRIVER, "_workspace_snapshot_paths", return_value=["implementation-contract.v1.json"]
+            ), mock.patch.object(DRIVER, "reserve_successor_run", side_effect=reserve), mock.patch.object(
+                DRIVER, "_run", side_effect=fake_run
+            ), mock.patch.object(DRIVER, "LifecycleRunner", return_value=lifecycle), mock.patch.object(
+                DRIVER, "_slice_terminal_predicate", return_value="slice-ready"
+            ), mock.patch.object(DRIVER, "_validation_snapshot", return_value={"candidate": "current"}):
+                DRIVER._run_slice_terminal(root, plan, "S1", ["implementation-contract.v1.json"])
+
+            self.assertEqual(["RUN-FINAL"], seen_run_ids)
+            self.assertTrue((final_run / "slice-ready-result.json").is_file())
 
     def test_router_rejects_plan_path_outside_execution_plans(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -306,7 +359,32 @@ class PlanDirectoryLoopTests(unittest.TestCase):
 
             self.assertEqual("awaiting-implementation-authorization", result["next_action"])
             self.assertEqual("implementation-authorization-required", result["reason"])
+            self.assertEqual("S0", result["slice_id"])
             self.assertEqual([], result["authorizes"])
+
+    def test_router_identifies_s2_when_s1_is_complete_but_authorization_is_pending(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [
+                {"slice_id": "S1", "depends_on": []},
+                {"slice_id": "S2", "depends_on": ["S1"]},
+            ])
+            contract_hash = "sha256:" + hashlib.sha256((plan / "implementation-contract.v1.json").read_bytes()).hexdigest()
+            completed = root / "logs" / "tdd-adapter" / "target" / "S1" / "RUN-1"
+            completed.mkdir(parents=True)
+            (completed / "slice-ready-result.json").write_text(json.dumps({
+                "predicate": "slice-ready", "status": "pass", "contract_hash": contract_hash,
+            }), encoding="utf-8")
+            (plan / "plan-state.v1.json").write_text(json.dumps({
+                "schema_version": "vdd.plan-state.v2", "plan_id": "target",
+                "status": "plan-ready", "authorizes": ["plan-ready"],
+            }), encoding="utf-8")
+
+            with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                result = ROUTER.route(root, plan)
+
+            self.assertEqual("awaiting-implementation-authorization", result["next_action"])
+            self.assertEqual("S2", result["slice_id"])
 
     def test_router_runs_slice_after_explicit_implementation_authorization(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
