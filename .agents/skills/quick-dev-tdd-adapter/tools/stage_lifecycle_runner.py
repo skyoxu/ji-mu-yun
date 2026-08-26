@@ -4,6 +4,7 @@ from pathlib import Path
 import base64
 import hashlib
 import json
+import importlib.util
 import sys
 from typing import Any
 
@@ -180,6 +181,25 @@ def publish_implementation_successor(run_dir: Path, post_candidate: dict[str, An
     state = json.loads(state_path.read_text(encoding="utf-8"))
     red = json.loads(red_path.read_text(encoding="utf-8"))
     pre = basis.get("pre_implementation_candidate")
+    if not isinstance(pre, dict) or not isinstance(pre.get("candidate_manifest"), dict):
+        raise ValueError("RED basis lacks a candidate manifest")
+    root = next((parent.parent for parent in run_dir.parents if parent.name == "logs"), None)
+    if root is None:
+        raise ValueError("run workspace root is unavailable")
+    plan_id = run_dir.parents[2].name
+    slice_id = run_dir.parents[1].name
+    validator = root / "execution-plans" / plan_id / "tools" / "validate_all.py"
+    spec = importlib.util.spec_from_file_location("plan_successor_identity", validator)
+    if spec is None or spec.loader is None:
+        raise ValueError("plan candidate validator is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    computed = module.current_candidate_identity(slice_id)
+    manifest_before = pre["candidate_manifest"]
+    manifest_after = computed.get("candidate_manifest", {})
+    actual_changed = sorted(path for path in set(manifest_before) | set(manifest_after) if manifest_before.get(path) != manifest_after.get(path))
+    if computed != post_candidate or sorted(changed_paths) != actual_changed:
+        raise ValueError("implementation successor does not match workspace-derived candidate or changed paths")
     if state.get("stage") != "red" or red.get("stage") != "red" or not isinstance(red.get("exit_code"), int) or red["exit_code"] == 0 or not isinstance(pre, dict) or post_candidate == pre or any(not isinstance(path, str) or not path for path in changed_paths):
         raise ValueError("implementation successor does not advance RED candidate")
     receipt = {

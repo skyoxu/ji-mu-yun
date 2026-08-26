@@ -31,6 +31,7 @@ _IMPLEMENTATION_CANDIDATE_ROOTS = (
     "validator_root",
     "validator_version",
     "closure_definition_hash",
+    "semantic_closure_hash",
 )
 
 

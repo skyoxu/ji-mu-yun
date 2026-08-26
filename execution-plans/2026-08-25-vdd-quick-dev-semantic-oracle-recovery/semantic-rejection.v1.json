@@ -1,0 +1,6 @@
+{
+  "schema_version": "semantic-rejection.v1",
+  "producer": "vdd-rejection-owner",
+  "hash_free": true,
+  "rejections": ["downstream-command", "missing-acceptance", "missing-producer", "missing-coverage", "prose-rollback", "self-judging"]
+}

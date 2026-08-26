@@ -1,0 +1,590 @@
+你现在需要修复 `skyoxu/ji-mu-yun` 中的需求：
+
+`execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery`
+
+审查基线是：
+
+`main@92fb65e73297c3417c7d0c440a6577dd98195521`
+
+如果当前 HEAD 已经领先于该提交，不要回退或覆盖新版本；在当前字节上执行同一套修复清单。禁止 `git reset --hard`、覆盖用户未提交修改或改写历史证据。未经明确要求不要 push。
+
+# 一、任务目标
+
+修复 VDD 与 Quick Dev TDD 的语义 oracle 和证据边界，使该需求能够：
+
+1. 用真实行为产生 RED，而不是依赖状态文件。
+2. 由真实生产实现使 RED 转为 GREEN。
+3. 精确绑定实施前后 candidate bytes 和 changed paths。
+4. 观察全部真实改动，并拒绝 forbidden/unrelated writes。
+5. 由独立 executor/judge 产生 receipt 和 observation。
+6. 执行真实的 `FG-01`～`FG-09` false-green fixtures 和 corrected pairs。
+7. 由 coverage gate 独占 completion/promotion。
+8. 通过完整 terminal replay 生成可信的 `implementation-complete`。
+9. 为后续 Acceptance skill 提供无假绿的 candidate，但本任务不得自行生成 `acceptance-passed`。
+
+不要通过更新状态、哈希、`producer` 字段或伪造 JSON 来完成任务。
+
+# 二、开始前必须阅读
+
+完整阅读：
+
+* 仓库根 `AGENTS.md` / `agents.md`
+* `README.md`
+* `workflow.md` 中 Chapter 5、Chapter 6
+* `.agents/skills/vdd-execution-plan/SKILL.md`
+* `.agents/skills/vdd-conformance-exact-cover/SKILL.md`
+* `.agents/skills/quick-dev-tdd-adapter/SKILL.md`
+* Quick Dev 的 backend contract、TDD run protocol、evidence/freshness 参考文件
+* 当前需求的 `00-index.md`
+* `requirements-and-acceptance.md`
+* `implementation-contract.v1.json`
+* `command-registry.v1.json`
+* canonical Spec、Architecture 和当前 selection pointer
+
+先执行只读检查：
+
+* `git status --short`
+* `git rev-parse HEAD`
+* 确认 `92fb65e7` 是当前 HEAD 或其祖先
+* 列出本次涉及文件与现有用户修改
+
+发现脏工作树时保留用户修改，不得清理或回退。
+
+# 三、固定验收清单
+
+本次修复必须一次性关闭：
+
+* QD-01：授权绑定过期
+* QD-02：六个 RED 不是语义测试
+* QD-03：GREEN 自行写入 pass state
+* QD-04：`probe-state` 越界、不可见且污染重放
+* QD-05：candidate identity 不绑定生产代码
+* QD-06：implementation successor 可以伪造
+* QD-07：`observed_failure_ids` 的 producer/parser schema 冲突
+* QD-08：只观察第一个 snapshot、真实改动不可见、no-op 被记录成 modify
+* QD-09：forbidden/unrelated write 未严格拒绝，测试 wildcard 可修改 validator
+* QD-10：修复根因所需文件不在合法写集
+* QD-11：artifact producer graph 不闭合
+* QD-12：SUT 自己伪装 independent judge
+* QD-13：九个 fixture 没有执行、ID 不正确、没有 corrected pairs
+* QD-14：terminal 只验证自写 JSON 和自哈希
+* QD-15：terminal 调用接口和输出路径不一致
+
+治理项在真实语义修复完成后处理，不能用治理修复代替代码修复。
+
+# 四、Phase 1：先修 Quick Dev 自举底座
+
+当前 Quick Dev 不能可信地执行自己的修复。因此先走一次 bounded bootstrap/legacy compatibility lane，使用普通代码修改和 repository-owned tests 修复底层；这一阶段不得伪装成已通过 Quick Dev TDD。
+
+重点检查并按实际架构修改：
+
+* `.agents/skills/quick-dev-tdd-adapter/tools/stage_observation_runner.py`
+* `.agents/skills/quick-dev-tdd-adapter/tools/stage_observation.py`
+* `.agents/skills/quick-dev-tdd-adapter/tools/stage_artifact_composer.py`
+* `.agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py`
+* `.agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py`
+* `.agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py`
+* `.agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py`
+* 对应 schemas 和 repository-owned tests
+
+## 4.1 修复 observation contract
+
+实现以下契约：
+
+1. `observed_failure_ids` 由 runner、recorder、parser、composer 使用同一 schema。
+2. RED 必须记录非零 exit code 和精确匹配的 failure IDs。
+3. GREEN/REFACTOR 不得携带非空 RED failure IDs。
+4. parser 接受声明的可选字段，但拒绝其他未知字段。
+5. 新鲜 lifecycle 必须能够走到 `LifecycleRunner.close()`，不能再出现 `stage observation shape is invalid`。
+6. 如果字段语义改变，发布 schema v2；v1 历史证据只能读取，禁止原地重写。
+
+新增测试至少覆盖：
+
+* 合法 RED observation
+* RED failure ID 缺失、重复、额外、错误
+* GREEN 携带 RED failure ID
+* 未知字段
+* v1 只读兼容
+* 完整 RED→GREEN→REFACTOR→close
+
+## 4.2 分离 input snapshot 与真实 changed paths
+
+不要再把 `execution_snapshot_paths` 当作 changed files。
+
+实现：
+
+1. persistent loop 传递全部 `execution_snapshot_paths`，不得只取 `[0]`。
+2. snapshot 是只读输入绑定；changed paths 必须由 RED baseline 与当前 candidate 的真实字节差异产生。
+3. before/after 字节相同的文件不得出现在 diff 中。
+4. 创建、修改、删除都必须被识别。
+5. 实施阶段写入但未列入 snapshot 的文件仍必须被检测。
+6. adapter 自己的 run-local evidence 只能通过明确的 adapter-owned boundary 排除，不能用宽泛 `logs/**` 漏掉业务越界写入。
+7. diff manifest 必须绑定实际 before/after hash，不能依赖 backend 自报 changed files。
+
+新增测试：
+
+* 两个以上 snapshot 都被绑定
+* no-op 不生成 diff
+* snapshot 外合法生产修改可见
+* undeclared file creation 被发现
+* deletion 被发现
+* forbidden write 被拒绝
+* unrelated write 被拒绝
+* 已存在脏文件的 before/after continuity 不被吞掉
+
+## 4.3 强制写边界
+
+构建 slice boundary 时：
+
+1. 合并顶层 `forbidden_changes` 和 slice-local `forbidden_changes`。
+2. 实际改动只能是 `allowed`。
+3. `forbidden` 和 `unrelated` 都必须 fail closed。
+4. `planned_new_files` 必须属于 allowed write set。
+5. 不允许使用 `tools/*.py` 这类可以覆盖测试、probe、validator、terminal runner 的宽泛模式。
+6. 每个测试文件、fixture 文件和生产文件使用精确路径。
+7. RED 后测试与 validator bytes 必须冻结；实施阶段修改 RED test 或 oracle 应使 run 失效。
+
+## 4.4 修复 candidate identity 和 implementation successor
+
+`current_candidate_identity(slice_id)` 必须绑定当前 slice 的完整语义闭包：
+
+* implementation contract
+* command registry
+* authority/knowledge freeze
+* RED test bytes
+* validator bytes及版本
+* slice 允许修改的生产文件
+* planned new file 的存在/缺失状态及字节
+* dependency closure 中相关产物
+* closure definition 本身
+
+实现要求：
+
+1. RED 时持久化 pre-implementation candidate manifest。
+2. 实施后由 adapter 从当前工作区重新计算 post candidate。
+3. changed paths 由 pre/post manifests 计算，禁止调用者自由提交。
+4. 如保留 `post_candidate`/`changed_paths` API，必须与重新计算值逐字节相等。
+5. changed paths 必须全部位于 allowed write set。
+6. 修改合法生产代码必须改变 identity。
+7. 只伪造任意字典、改状态 JSON 或改 `producer` 字段不得改变可信 identity。
+8. test、contract、authority 或 validator 变化后，旧 successor 必须失效。
+9. successor receipt 必须 append-only，并绑定 RED basis、execution fingerprint、pre/post candidate 和精确 changed paths。
+
+新增 mutation tests 证明：
+
+* 任意假 `post_candidate` 被拒绝
+* 少报、多报、错报 changed path 被拒绝
+* 只改生产代码时 identity 正确变化
+* 只改无关文件时执行失败
+* 修改 RED test 后旧 evidence 失效
+* 修改 authority/contract 后旧 evidence 失效
+
+## 4.5 修复 terminal 调用接口
+
+统一 terminal runner 的唯一接口。
+
+必须保证：
+
+* slice terminal 和 plan terminal 使用同一种参数契约；不得一边要求 `--slice`，另一边不传。
+* terminal 输出只能写入当前 `logs/tdd-adapter/<plan>/<slice-or-terminal>/<run-id>/`。
+* 不再写 `execution-plans/.../terminal-results/S6.json`。
+* `repository_root` 如果保留，必须真实用于解析和验证 candidate/evidence；否则移除。
+* terminal runner 只能验证并返回结果，不能替 SUT 伪造执行 evidence。
+
+完成 Phase 1 后，先运行 Quick Dev adapter 的全部 repository-owned tests。只有这些测试全部通过，才能进入下一阶段。
+
+# 五、Phase 2：修复 VDD 计划和 producer graph
+
+修订当前需求的 implementation contract、command registry、计划工具和验证器。
+
+## 5.1 删除假 oracle
+
+彻底删除：
+
+* `probe-state/**`
+* GREEN/REFACTOR 预先写入 `behavior=implemented`
+* 通过文件存在性控制 RED/GREEN
+* `slice_probe.py` 中直接生成 terminal evidence 或 fixture pass summary 的逻辑
+
+如果 `slice_probe.py` 不再有真实职责，删除它及所有 registry 引用；如果保留，只能作为无状态命令调度器，不能写通过状态或最终证据。
+
+所有 RED 必须因真实目标行为缺失而失败。
+
+## 5.2 收窄并补全各 slice 写集
+
+按实际现有模块选择 owner；不得新建重复 owner。
+
+建议责任边界：
+
+* S1：VDD semantic validator、对应精确测试、VDD 静态语义产物
+* S2：descriptor builder、全部 snapshot 传递、recovery projection、精确测试
+* S3：stage lifecycle、observation、artifact composer、independent executor/judge、精确测试
+* S4：exact-cover validator、coverage snapshot writer、精确测试
+* S5：coverage-owned promotion gate、九个 fixture 定义与 corrected pairs、精确测试
+* S6：terminal validator、terminal replay、精确测试
+
+S5 不得继续把 promotion writer 归给 Quick Dev router。promotion 必须由 coverage gate 独占。
+
+## 5.3 闭合 artifact graph
+
+明确区分：
+
+* plan-local immutable intent/fixture definitions
+* run-local append-only execution evidence
+
+计划内至少闭合以下生产关系：
+
+### S1 / VDD
+
+* `semantic-verification.v1.json`
+* `active-acceptance-manifest.v1.json`
+* `failure-taxonomy.v1.json`
+* `semantic-rejection.v1.json`
+
+这些路径必须在 S1 的 exact allowed/planned set 中，并有真实 writer 和 validator。
+
+### S2 / Quick Dev
+
+必须产生并绑定：
+
+* immutable structured execution descriptor
+* recommendation decision
+* reuse decision
+* live blocker projection
+* recovery projection
+* pre-execution failure IDs
+
+动态执行产物优先进入当前 run directory，不要把可变 receipt 当作 plan source 文件。
+
+### S3 / Independent executor/judge
+
+run-local append-only 产生：
+
+* raw process receipt
+* raw observation
+* legal layered result
+* deterministic failure/result IDs
+* executor identity
+* judge identity
+* descriptor和candidate绑定
+
+### S4 / Coverage gate
+
+产生：
+
+* acceptance coverage
+* closed evidence snapshot
+* exact-cover result
+* completion projection
+
+不得拼接“每种产物最新的一份”；所有引用必须属于同一个闭合 snapshot。
+
+### S5 / Promotion
+
+产生：
+
+* `FG-01`～`FG-09` 的独立失败记录
+* 九组 corrected fixture pass 记录
+* frozen predecessor judge binding
+* coverage-owned promotion record
+
+### S6 / Terminal
+
+产生：
+
+* terminal replay report
+* implementation-complete result
+* 所有 Acceptance ID 的最终 evidence-path projection
+* recovery route 或最早失效 slice
+
+下游 slice 应通过 predecessor run refs 消费前序产物，不得依赖一个没有 producer 的 plan-local `evidence-snapshot.v1.json`。
+
+# 六、Phase 3：为六个 slice 重写真实 RED
+
+每个 slice 至少具有：
+
+* positive fixture
+* negative fixture
+* mutation fixture
+* 精确 typed failure ID
+* 对真实生产入口的调用
+* 失败原因与需求行为直接对应
+
+## S1：A-SEMANTIC
+
+真实调用 VDD semantic validator。
+
+验证：
+
+* 完整 semantic intent 可接受
+* executable/command/hash 等下游字段被拒绝
+* active Acceptance ID 缺失被拒绝
+* producer、coverage、fixture class、taxonomy 缺失被拒绝
+* prose rollback 被拒绝
+* self-judging 被拒绝
+* VDD 不生成 descriptor、receipt、observation 或执行结果
+
+保留 failure ID `VDD-RED-BOUNDARY`，但必须由真实 validator 行为产生。
+
+## S2：A-DESCRIPTOR
+
+真实调用 descriptor/recovery builder。
+
+验证：
+
+* descriptor 是 immutable、structured、`shell=false`
+* cwd、argv、timeout、target 和 fixture binding 完整
+* 所有 execution snapshots 被保留
+* recommendation/reuse/blocker/recovery ownership 正确
+* mutable descriptor、VDD-owned command、非法 cwd、恢复流程伪造结果均被拒绝
+
+保留 `QD-DESCRIPTOR-RED`。
+
+## S3：A-JUDGE
+
+真实执行受控测试进程和独立 judge。
+
+验证：
+
+* 非零/零 exit 的语义正确
+* raw receipt 与 observation 来自执行器/judge，而非 SUT 自报
+* deterministic IDs 正确
+* legal result layers 正确
+* SUT self-report、零执行、复制 expected matrix、非规范 ID 被拒绝
+* receipt/observation 与 descriptor、candidate、run ID 完整绑定
+
+保留 `JUDGE-INDEPENDENCE-RED`。
+
+## S4：A-COVER
+
+真实调用 exact-cover validator。
+
+验证完整路径：
+
+`active manifest Acceptance ID`
+→ `semantic oracle covers_acceptance_ids`
+→ `descriptor case binding`
+→ `receipt executed case`
+→ `observation assertion`
+→ `coverage Acceptance ID`
+
+验证：
+
+* many-to-many sound-and-complete cover 通过
+* missing edge、orphan Acceptance ID、stale identity、forked snapshot、跨 run 拼接都失败
+* 覆盖不是错误地要求 exclusive partition
+
+保留 `COVERAGE-EXACT-COVER-RED`。
+
+## S5：A-PROMOTION
+
+从 canonical Spec/Architecture 提取并固定全部九个 fixture 的真实语义，不得自行简化。
+
+验证：
+
+* ID 精确为 `FG-01`～`FG-09`
+* ID 唯一且集合完全相等
+* 每个 false-green fixture 必须阻断 promotion
+* 每个 corrected pair 必须通过
+* predecessor judge 必须冻结且独立
+* candidate 不得自判
+* coverage gate 是唯一 promotion writer
+* 缺任何一个 fixture、corrected pair 或 predecessor binding 都失败
+
+保留 `PROMOTION-FALSE-GREEN-RED`。
+
+## S6：A-TERMINAL、A-BOUNDARY
+
+真实执行端到端 replay。
+
+验证：
+
+* 所有 active Acceptance ID 均有完整 evidence path
+* S1～S5 的真实产物均被读取并验证
+* 九个 fixture 和 corrected pairs 均被验证
+* contract、registry、authority、tests、validators、candidate identity 全部 current
+* tampered selection、deferred-gate bypass、profile weakening、stale recovery root 均失败
+* review/commit/business repository/Chapter 5 authority 保持在 Quick Dev 外部
+* terminal replay report 是必需产物，不存在即失败
+
+保留 `TERMINAL-BOUNDARY-RED`。
+
+# 七、Phase 4：独立 judge 与 terminal 信任模型
+
+SUT 不得写入或声明最终 producer identity。
+
+独立 judge 必须：
+
+1. 通过 registry-owned structured descriptor 启动独立进程。
+2. 输入 immutable candidate、fixture、expected comparator contract。
+3. 输出 raw observation。
+4. 由 adapter 根据实际启动的 descriptor、executable hash/version 和 process receipt 写入 actor identity。
+5. 不信任 SUT 输出中的 `producer`、`status`、`pass`。
+6. predecessor judge 必须由 hash-bound frozen reference 指定。
+7. judge、candidate、coverage gate 三者职责分离。
+
+terminal validator 必须绑定：
+
+* plan ID、slice ID、run ID
+* candidate commit/worktree identity
+* contract、registry、authority hashes
+* RED test和validator hashes
+* RED/GREEN/REFACTOR observations及exit code
+* implementation successor和changed paths
+* execution fingerprint
+* descriptor、receipt、observation lineage
+* active Acceptance manifest
+* exact-cover graph
+* `FG-01`～`FG-09` 结果与corrected pairs
+* judge identity和predecessor judge hash
+* terminal replay report
+
+单纯的 JSON 自哈希只能用于完整性检查，不能证明 provenance、independence 或行为通过。
+
+所有 run evidence 必须：
+
+* run-local
+* append-only
+* 新 run 使用新目录
+* 不能覆盖旧 evidence
+* stale/tampered evidence fail closed
+
+# 八、Phase 5：重新运行 VDD 与 Quick Dev
+
+代码和计划修复完成后：
+
+1. 运行 VDD Knowledge refresh。
+2. 运行 VDD `validate_plan.py --implementation-state` 对应的正式入口。
+3. 运行 `vdd-conformance-exact-cover`。
+4. 确认 implementation contract、command registry、planned files、producer graph、write sets 和 terminal contract 全部闭合。
+5. 执行六个真实 RED，逐个确认：
+
+   * exit code 非零
+   * 只出现声明的 failure ID
+   * 失败来自目标行为缺失
+   * 不是 import、path、pytest collection、fixture missing 或状态文件错误
+6. 完成代码实现后由 adapter 重新计算 successor；不得手工提供 candidate identity。
+7. 逐 slice 执行 GREEN、REFACTOR、slice terminal。
+8. 最后执行 S6 full terminal replay。
+9. 从干净工作区再运行一次，证明不存在 `probe-state` 或旧 evidence 污染。
+10. 修改一份 contract/test/authority/candidate fixture，确认旧 evidence 会失效；然后恢复测试夹具。
+11. 只有所有测试和 terminal 均通过，才进入授权/状态更新。
+
+不要跳过 RED。不要把已有旧 RED 当作当前字节的 RED，除非 legacy successor 契约能完整证明 test、validator、contract 和 execution fingerprint 没有变化。
+
+# 九、Phase 6：最后处理授权与治理绑定
+
+真实语义闭合后再做：
+
+1. 刷新 requirement mapping、conformance 和 source-freeze 的当前字节绑定。
+2. 完成要求的 semantic review run；不得只修改其状态字段。
+3. 消除 `00-index` 与 conformance 状态矛盾。
+4. 最后生成新的 implementation authorization receipt，绑定：
+
+   * 当前 implementation contract
+   * 当前 authority/knowledge freeze
+   * 当前 candidate commit
+   * 当前 semantic review/conformance
+5. 授权后不得再修改 contract、registry、RED tests、validators 或 authority；如修改必须重新授权。
+6. Quick Dev terminal 只能生成 `implementation-complete`。
+7. 不得在本任务中生成 `acceptance-passed`；完成后交给 Acceptance skill 独立验收。
+
+# 十、禁止的修复方式
+
+禁止：
+
+* 保留或改名 `probe-state`
+* GREEN 前写入 pass marker
+* 只检查文件存在
+* 伪造 `producer=independent-judge`
+* 只生成 `count=9/status=pass`
+* 手工提交任意 post candidate
+* 接受 backend 自报 changed paths
+* 使用 `tools/*.py` 宽泛写集
+* 放宽 validator 让现有假 evidence 通过
+* 删除失败测试
+* 修改 expected failure ID 来迎合错误输出
+* 覆盖旧 run evidence
+* 只更新 hash、state 或 completion report
+* 在 unrelated downstream test 失败时伪造 implementation-complete
+* 修改 PhaseA、业务 runtime、PRD 或 Chapter 5 权限边界
+
+# 十一、必须新增的回归测试
+
+至少加入以下回归类别：
+
+1. observation optional-field compatibility
+2. complete lifecycle close
+3. multi-snapshot preservation
+4. real diff/no-op distinction
+5. hidden undeclared write detection
+6. forbidden/unrelated write rejection
+7. candidate identity production-byte sensitivity
+8. fabricated successor rejection
+9. stale test/contract/authority evidence rejection
+10. exact artifact producer closure
+11. independent executor/judge ownership
+12. exact `FG-01`～`FG-09` set
+13. nine blocked fixtures
+14. nine corrected fixture passes
+15. candidate self-judging rejection
+16. unfrozen predecessor rejection
+17. exact-cover missing/fork/stale/orphan cases
+18. terminal missing-primary-artifact rejection
+19. terminal tamper rejection
+20. clean-workspace replay without stale state
+21. legacy v1 evidence read-only compatibility
+22. top-level and slice terminal invocation compatibility
+
+# 十二、完成判据
+
+只有同时满足以下条件才可以报告完成：
+
+* 不存在 `probe-state` 机制
+* 六个 RED 都是行为型 RED
+* 六个 RED 均先真实失败
+* GREEN/REFACTOR 均运行真实测试
+* candidate identity 随合法生产实现变化
+* successor 无法由调用者伪造
+* 全部真实 changed paths 可见且精确
+* forbidden/unrelated write 均 fail closed
+* artifact producer graph 闭合
+* 独立 judge 不是 SUT 自报
+* `FG-01`～`FG-09` 全部实际执行并阻断
+* corrected pairs 全部实际执行并通过
+* terminal 验证全部七个 Acceptance ID 和完整 evidence path
+* terminal 缺任一主产物都会失败
+* stale/tampered evidence 会失败
+* fresh clean replay 成功
+* authorization receipt 绑定当前最终字节
+* Quick Dev 路由最终返回 `implementation-complete`
+* 未生成 `acceptance-passed`
+
+# 十三、交付报告格式
+
+完成后一次性报告：
+
+1. 最终 HEAD
+2. 修改文件，按 Phase 1～6 分类
+3. QD-01～QD-15 每项的关闭证据
+4. 所有执行命令及 exit code
+5. 每个 slice 的 RED failure ID 和 RED evidence 路径
+6. 每个 slice 的 GREEN/REFACTOR/terminal evidence 路径
+7. candidate pre/post identity 和精确 changed paths
+8. 九个 false-green fixtures 与九个 corrected pairs 的结果
+9. terminal replay report 路径
+10. implementation-complete result 路径
+11. 尚存 blocker；如有任何 blocker，明确报告并不得声称完成
+12. 建议的 commit 拆分，但未经授权不要 push
+
+推荐 commit 边界：
+
+1. `repair(quick-dev): restore trustworthy stage observation substrate`
+2. `repair(quick-dev): bind candidate successor to actual workspace bytes`
+3. `test(vdd): replace probe reds with semantic behavior oracles`
+4. `repair(vdd): close semantic artifact producer graph`
+5. `test(toolchain): add independent judge and false-green corpus`
+6. `test(toolchain): close terminal semantic replay`
+7. `docs(vdd): publish current authorization and review bindings`
+
+不要先提交一个只更新状态或哈希的版本。优先完成代码现实和语义闭包。

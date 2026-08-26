@@ -548,6 +548,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 "validator_root": "sha256:validator",
                 "validator_version": "validator-v1",
                 "closure_definition_hash": "sha256:closure",
+                "semantic_closure_hash": "sha256:semantic",
             }
             result = dict(current, predicate="implementation-complete", status="pass")
             (run / "implementation-complete-result.json").write_text(

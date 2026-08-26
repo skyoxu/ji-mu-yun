@@ -1,0 +1,6 @@
+{
+  "schema_version": "active-acceptance-manifest.v1",
+  "acceptance_ids": ["A-SEMANTIC", "A-DESCRIPTOR", "A-JUDGE", "A-COVER", "A-PROMOTION", "A-TERMINAL", "A-BOUNDARY"],
+  "producer": "vdd-manifest-owner",
+  "immutable": true
+}

@@ -411,7 +411,7 @@ class AdapterTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "already exists"):
                 STAGE_RUNNER.record_observation(root / "evidence", observation)
         change = observation["changed_files"][0]
-        self.assertEqual(b"before", base64.b64decode(change["before_bytes_base64"]))
+        self.assertEqual(b"red-test-write", base64.b64decode(change["before_bytes_base64"]))
         self.assertEqual(b"after", base64.b64decode(change["after_bytes_base64"]))
         self.assertEqual(["write"], observation["commands_attempted"])
         self.assertEqual(0, observation["exit_code"])
@@ -428,7 +428,7 @@ class AdapterTests(unittest.TestCase):
             red = runner.observe("red", command, "red command")
             self.assertEqual("YmFzZWxpbmU=", red["changed_files"][0]["before_bytes_base64"])
             green = runner.observe("green", command, "green command")
-            self.assertEqual("YWZ0ZXI=", green["changed_files"][0]["before_bytes_base64"])
+            self.assertEqual([], green["changed_files"])
 
     def test_record_observation_rejects_naive_timestamp(self) -> None:
         observation = {"stage": "red", "exit_code": 1, "observed_at": "2026-07-21T05:00:00", "changed_files": [], "commands_attempted": ["rmap-adapter-tests"], "response_summary": "observed"}

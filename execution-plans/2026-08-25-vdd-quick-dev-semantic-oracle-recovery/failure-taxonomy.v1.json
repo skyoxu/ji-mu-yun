@@ -1,0 +1,5 @@
+{
+  "schema_version": "failure-taxonomy.v1",
+  "producer": "vdd-taxonomy-owner",
+  "families": ["semantic-contract-gap", "expected-red", "unexpected-green", "task-implementation-failure", "test-harness-failure", "target-binding-failure", "repo-noise", "timeout-no-observation", "repeated-deterministic-failure", "artifact-integrity"]
+}

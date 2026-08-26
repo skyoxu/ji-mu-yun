@@ -7,6 +7,7 @@ import importlib.util
 import json
 from pathlib import Path
 import subprocess
+import fnmatch
 from typing import Any
 from pathlib import PurePosixPath
 
@@ -73,6 +74,27 @@ def _validate_red_exit(mode: str, exit_code: int, expected_failure_ids: list[str
         raise RuntimeError("RED command unexpectedly passed")
     if expected_failure_ids is not None and sorted(expected_failure_ids) != sorted(observed_failure_ids or []):
         raise RuntimeError("RED failure identity does not match declared failure IDs")
+
+
+def _validate_changed_paths(context: dict[str, Any], stage: str, observation: dict[str, Any]) -> None:
+    boundaries = context.get("boundaries")
+    if not isinstance(boundaries, dict):
+        raise RuntimeError("lifecycle boundaries are missing")
+    allowed = boundaries.get("allowed_write_set", [])
+    forbidden = boundaries.get("forbidden_write_set", [])
+    if not isinstance(allowed, list) or not isinstance(forbidden, list):
+        raise RuntimeError("lifecycle boundaries are invalid")
+    stage_allowed = boundaries.get("stage_write_sets", {}).get(stage, allowed)
+    if not isinstance(stage_allowed, list):
+        raise RuntimeError("stage write boundary is invalid")
+    for change in observation.get("changed_files", []):
+        path = change.get("path") if isinstance(change, dict) else None
+        if not isinstance(path, str):
+            raise RuntimeError("observed changed path is invalid")
+        if any(fnmatch.fnmatchcase(path, pattern) for pattern in forbidden):
+            raise RuntimeError("observed forbidden write")
+        if not any(fnmatch.fnmatchcase(path, pattern) for pattern in stage_allowed):
+            raise RuntimeError("observed unrelated write")
 
 
 def _prior_red_successor(workspace: Path, prior_red: Any, command_id: str) -> dict[str, str]:
@@ -180,6 +202,7 @@ def main() -> int:
             "red", commands["red"][0],
             "Recorded declared legacy regression observation." if red_mode == "legacy-regression" else "Recorded RED command observation.",
         )
+        _validate_changed_paths(context, "red", red)
         _validate_red_exit(red_mode, red["exit_code"], red_core["expected_failure_ids"], red.get("observed_failure_ids"))
         red_core = context["stage_results"]["red"]
         (run_dir / "red-basis.v1.json").write_text(json.dumps({
@@ -217,12 +240,14 @@ def main() -> int:
                 "red", commands["red"][0],
                 "Recorded declared legacy regression observation." if red_mode == "legacy-regression" else "Recorded RED command observation.",
             )
+            _validate_changed_paths(context, "red", red)
             _validate_red_exit(red_mode, red["exit_code"], red_core["expected_failure_ids"], red.get("observed_failure_ids"))
 
     if args.stage == "refactor":
         green = json.loads((run_dir / "observations" / "green-observed.json").read_text(encoding="utf-8"))
     else:
         green = lifecycle.observe("green", commands["green"][0], "Recorded GREEN command observation.")
+        _validate_changed_paths(context, "green", green)
     if green["exit_code"] != 0:
         raise RuntimeError("GREEN command failed")
     if args.stage == "green":
@@ -252,6 +277,7 @@ def main() -> int:
             if _run(workspace, command) != 0:
                 raise RuntimeError("REFACTOR pre-observation command failed")
         refactor = lifecycle.observe("refactor", commands["refactor"][-1], "Recorded REFACTOR command observation.")
+        _validate_changed_paths(context, "refactor", refactor)
     if refactor["exit_code"] != 0:
         raise RuntimeError("REFACTOR command failed")
 

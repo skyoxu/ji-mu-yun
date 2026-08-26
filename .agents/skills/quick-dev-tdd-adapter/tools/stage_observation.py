@@ -22,8 +22,14 @@ def _snapshot(value: Any) -> bytes | None:
 def parse(observation: dict[str, Any]) -> dict[str, Any]:
     """Validate an explicit, non-authoritative stage observation and decode snapshot bytes."""
     required = {"stage", "exit_code", "observed_at", "changed_files", "commands_attempted", "response_summary"}
-    if set(observation) != required or observation.get("stage") not in {"red", "green", "refactor"}:
+    optional = {"observed_failure_ids"}
+    if not required.issubset(observation) or not set(observation).issubset(required | optional) or observation.get("stage") not in {"red", "green", "refactor"}:
         raise ValueError("stage observation shape is invalid")
+    failure_ids = observation.get("observed_failure_ids", [])
+    if not isinstance(failure_ids, list) or any(not isinstance(item, str) or not item for item in failure_ids) or len(failure_ids) != len(set(failure_ids)):
+        raise ValueError("observed_failure_ids must be a unique string list")
+    if observation["stage"] != "red" and failure_ids:
+        raise ValueError("GREEN and REFACTOR cannot carry RED failure IDs")
     if not isinstance(observation["exit_code"], int) or not isinstance(observation["observed_at"], str) or not isinstance(observation["response_summary"], str):
         raise ValueError("stage observation scalar fields are invalid")
     commands = observation["commands_attempted"]
@@ -38,7 +44,7 @@ def parse(observation: dict[str, Any]) -> dict[str, Any]:
         if path.is_absolute() or ".." in path.parts or not item["path"]:
             raise ValueError("changed file path is invalid")
         parsed.append({"path": item["path"], "before_bytes": _snapshot(item["before_bytes_base64"]), "after_bytes": _snapshot(item["after_bytes_base64"])})
-    return {**observation, "changed_files": parsed}
+    return {**observation, "observed_failure_ids": list(failure_ids), "changed_files": parsed}
 
 
 def parse_sequence(observations: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -69,6 +75,8 @@ def canonical_diff(observation: dict[str, Any]) -> list[dict[str, Any]]:
         before, after = item.get("before_bytes"), item.get("after_bytes")
         if before is None and after is None:
             raise ValueError("a changed file requires before or after bytes")
+        if before == after:
+            continue
         change_type = "add" if before is None else "delete" if after is None else "modify"
         result.append({
             "path": item["path"], "change_type": change_type,

@@ -259,7 +259,13 @@ def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> 
         "authority_refs": [{"role": "authority-manifest", "path_type": "plan_path", "path": authority.relative_to(plan).as_posix(), "payload_base64": base64.b64encode(authority.read_bytes()).decode("ascii")}],
         "implementation_contract": {"role": "implementation-contract", "path_type": "plan_path", "path": "implementation-contract.v1.json", "payload_base64": base64.b64encode(contract_bytes).decode("ascii")},
         "requirement_ids": selected["requirement_ids"], "acceptance_ids": selected["acceptance_ids"], "source_refs": selected["source_refs"],
-        "boundaries": {"allowed_write_set": [path for group in selected["allowed_changes"].values() for path in group], "forbidden_write_set": selected["forbidden_changes"], "execution_read_set": selected["execution_read_set"], "dependency_closure": selected["dependency_closure"]},
+        "boundaries": {
+            "allowed_write_set": [path for group in selected["allowed_changes"].values() for path in group],
+            "stage_write_sets": {"red": [*selected["allowed_changes"].get("tests", []), *selected["allowed_changes"].get("documentation", [])], "green": list(selected["allowed_changes"].get("production", [])), "refactor": [path for group in selected["allowed_changes"].values() for path in group]},
+            "forbidden_write_set": [*contract.get("forbidden_changes", []), *selected["forbidden_changes"]],
+            "execution_read_set": selected["execution_read_set"],
+            "dependency_closure": selected["dependency_closure"],
+        },
         "target_command_ids": [red["id"], green["id"], *[item["id"] for item in refactor], terminal["id"]],
         "stage_results": {
             "red": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "legacy-regression-observed" if red_mode == "legacy-regression" else "prior-red-imported" if red_mode == "prior-red-successor" else "red-observed", "mode": red_mode, "legacy_predecessor": predecessor if red_mode == "legacy-regression" else None, "prior_red": predecessor if red_mode == "prior-red-successor" else None, "command_id": red["id"], "test_selector": tdd["red"]["test_selector"], "test_sha256": test_hash, "expected_failure_ids": tdd["red"]["expected_failure_ids"], "execution_fingerprint": execution_fingerprint, "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"], "pre_implementation_candidate": identity},

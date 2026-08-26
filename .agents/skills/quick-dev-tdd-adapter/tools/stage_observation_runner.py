@@ -4,6 +4,7 @@ import base64
 from datetime import datetime, timezone
 import json
 import re
+import os
 from pathlib import Path, PurePosixPath
 import subprocess
 from typing import Any
@@ -34,6 +35,33 @@ def freeze(workspace: Path, paths: list[str]) -> dict[str, str | None]:
     if not declared:
         raise ValueError("at least one snapshot path is required")
     return {path: _snapshot(root, path) for path in declared}
+
+
+def _workspace_manifest(root: Path) -> dict[str, bytes | None]:
+    """Capture real workspace bytes, excluding only adapter-owned runtime data."""
+    manifest: dict[str, bytes | None] = {}
+    for current, dirs, files in os.walk(root):
+        dirs[:] = [name for name in dirs if name not in {".git", "__pycache__", ".pytest_cache"}]
+        current_path = Path(current)
+        try:
+            relative_dir = current_path.relative_to(root).as_posix()
+        except ValueError:
+            continue
+        if relative_dir == "logs/tdd-adapter" or relative_dir.startswith("logs/tdd-adapter/"):
+            dirs[:] = []
+            continue
+        for name in files:
+            path = current_path / name
+            relative = path.relative_to(root).as_posix()
+            if relative == "logs/tdd-adapter" or relative.startswith("logs/tdd-adapter/"):
+                continue
+            try:
+                if path.is_symlink() or not path.is_file():
+                    continue
+                manifest[relative] = path.read_bytes()
+            except OSError:
+                continue
+    return manifest
 
 
 def run(
@@ -75,9 +103,9 @@ def run(
     declared_paths = sorted({_relative_path(path) for path in paths})
     if not declared_paths:
         raise ValueError("at least one snapshot path is required")
-    before = freeze(workspace, declared_paths) if before_snapshots is None else dict(before_snapshots)
-    if set(before) != set(declared_paths) or any(value is not None and not isinstance(value, str) for value in before.values()):
-        raise ValueError("frozen snapshots do not match declared paths")
+    before = _workspace_manifest(workspace)
+    for path in declared_paths:
+        before.setdefault(path, _snapshot(workspace, path))
     try:
         completed = subprocess.run(
             [executable, *argv], cwd=command_cwd, shell=False, check=False,
@@ -88,9 +116,11 @@ def run(
     except subprocess.TimeoutExpired:
         exit_code = 124
         output = ""
+    after = _workspace_manifest(workspace)
+    changed_paths = sorted(set(before) | set(after))
     changed_files = [
-        {"path": path, "before_bytes_base64": before[path], "after_bytes_base64": _snapshot(workspace, path)}
-        for path in declared_paths
+        {"path": path, "before_bytes_base64": None if before.get(path) is None else base64.b64encode(before[path]).decode("ascii"), "after_bytes_base64": None if after.get(path) is None else base64.b64encode(after[path]).decode("ascii")}
+        for path in changed_paths if before.get(path) != after.get(path)
     ]
     return {
         "stage": stage,
