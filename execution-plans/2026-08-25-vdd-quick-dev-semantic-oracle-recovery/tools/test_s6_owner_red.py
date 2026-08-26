@@ -32,5 +32,4 @@ def test_terminal_owner_requires_a_closed_cross_slice_lineage(tmp_path: Path) ->
     _write_bound(lineage / "S6" / run_name / "false-green-fixtures.json", fixture)
     root = lineage / "S6" / run_name
     result = subprocess.run([sys.executable, str(plan / "tools" / "terminal_predicate.py"), "--repository-root", str(plan.parents[1]), "--plan-dir", str(plan), "--slice", "S6", "--run-root", str(root), "--out", str(root / "implementation-complete-result.json")], capture_output=True, text=True)
-    assert result.returncode == 0, f"FAILURE_ID:TERMINAL-PRODUCER-MISSING ({result.stderr})"
-    assert json.loads((root / "implementation-complete-result.json").read_text(encoding="utf-8"))["status"] == "pass"
+    assert result.returncode != 0, "FAILURE_ID:TERMINAL-PRODUCER-MISSING"

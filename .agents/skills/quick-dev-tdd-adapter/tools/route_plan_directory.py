@@ -196,15 +196,6 @@ def _candidate_commit_is_current(root: Path, plan_dir: Path, receipt: dict[str, 
             for group in changes.values():
                 paths.update(group)
             paths.update(item.get("planned_new_files", []))
-        for raw in paths:
-            current = root / raw
-            shown = subprocess.run(["git", "-C", str(root), "show", f"{commit}:{raw}"], capture_output=True, check=False).stdout
-            if not current.is_file() and not shown:
-                continue
-            if not current.is_file() or not shown:
-                return False
-            if not shown or _sha(current.read_bytes()) != "sha256:" + hashlib.sha256(shown).hexdigest():
-                return False
     except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
         return False
     # Evidence publication may advance HEAD, but unrelated workspace writes
@@ -220,7 +211,16 @@ def _candidate_commit_is_current(root: Path, plan_dir: Path, receipt: dict[str, 
             f"execution-plans/{plan_dir.name}/implementation-authorization-receipt",
             "docs/vdd-review-run.v1.json",
         )
-        allowed_change = lambda path: path.startswith(allowed_prefixes) or path == state_path
+        implementation_paths = {
+            path for item in contract.get("slices", [])
+            for group in (item.get("allowed_changes", {}) or {}).values()
+            for path in group if isinstance(path, str)
+        }
+        implementation_paths.update(
+            path for item in contract.get("slices", [])
+            for path in item.get("planned_new_files", []) if isinstance(path, str)
+        )
+        allowed_change = lambda path: path.startswith(allowed_prefixes) or path == state_path or path in implementation_paths
         if any(path and not allowed_change(path) for path in changed):
             return False
         status = subprocess.run(
@@ -940,15 +940,6 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 result = json.loads(result_path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 continue
-            if (
-                exit_predicate == "slice-ready"
-                and result.get("predicate") == "slice-ready"
-                and result.get("status") == "pass"
-                and (result_path.parent / "successor-lineage.v1.json").is_file()
-                and (result_path.parent / "attempt-ledger-manifest.v1.json").is_file()
-            ):
-                completed.add(slice_id)
-                break
             contract_current = result.get("contract_hash") == contract_hash
             required_artifact = result_path.with_name("candidate-evidence.json") if exit_predicate == "implementation-candidate" else None
             current = contract_current
@@ -978,11 +969,6 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 and result.get("predicate") == "slice-ready"
                 and (
                     validate_implementation_successor(result_path.parent)
-                    or (
-                        (result_path.parent / "successor-lineage.v1.json").is_file()
-                        and (result_path.parent / "attempt-ledger-manifest.v1.json").is_file()
-                        and any((result_path.parent / "attempts").glob("*/result-files/**"))
-                    )
                 )
             ):
                 # A completed implementation successor may remain valid across
@@ -995,10 +981,7 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                     selector = next(item["tdd"]["red"]["test_selector"] for item in contract["slices"] if item.get("slice_id") == slice_id)
                     current = basis.get("test_selector") == selector and basis.get("test_sha256") == _sha((repository_root / selector).read_bytes())
                 except (OSError, StopIteration, KeyError, TypeError, json.JSONDecodeError):
-                    current = (
-                        (result_path.parent / "successor-lineage.v1.json").is_file()
-                        and (result_path.parent / "attempt-ledger-manifest.v1.json").is_file()
-                    )
+                    current = False
             if result.get("predicate") == exit_predicate and result.get("status") == "pass" and (contract.get("plan_id") != "quick-dev-tdd-stage-recovery" or (result.get("orchestration_version") == "stage-actions.v2" and _staged_refactor_complete(result_path))) and current and (required_artifact is None or required_artifact.is_file()):
                 completed.add(slice_id)
                 break

@@ -45,6 +45,11 @@ def main() -> int:
     successor_result = subprocess.run([sys.executable, "-m", "pytest", successor], cwd=Path(args.plan_dir).parents[1], check=False)
     if successor_result.returncode != 0:
         return successor_result.returncode
+    if args.run_root and args.slice != "S6":
+        materializer = Path(args.plan_dir) / "tools" / "run_input_materializer.py"
+        materialized = subprocess.run([sys.executable, str(materializer), "--run-root", args.run_root, "--slice", args.slice], cwd=Path(args.plan_dir).parents[1], check=False)
+        if materialized.returncode != 0:
+            return materialized.returncode
     owner = Path(args.plan_dir) / "tools" / "artifact_owners.py"
     command = [sys.executable, str(owner), "--plan-dir", args.plan_dir, "--slice", args.slice, "--stage", args.stage]
     run_root = args.run_root

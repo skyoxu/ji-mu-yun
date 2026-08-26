@@ -37,6 +37,9 @@ def validate_descriptor(value: dict[str, Any]) -> tuple[bool, str]:
 
 
 def validate_judge(receipt: dict[str, Any], observation: dict[str, Any]) -> tuple[bool, str]:
+    owner = _owner_delegate("independent_judge", "validate_judge")
+    if owner is not None:
+        return owner(receipt, observation)
     required = {"executor_id", "judge_id", "descriptor_hash", "candidate_hash", "run_id", "exit_code"}
     if not isinstance(receipt, dict) or not required.issubset(receipt):
         return False, "JUDGE-INDEPENDENCE-RED"
@@ -48,6 +51,9 @@ def validate_judge(receipt: dict[str, Any], observation: dict[str, Any]) -> tupl
 
 
 def validate_many_to_many_cover(edges: list[dict[str, Any]], manifest: set[str], observations: set[str]) -> tuple[bool, str]:
+    owner = _owner_delegate("coverage_gate", "validate_many_to_many_cover")
+    if owner is not None:
+        return owner(edges, manifest, observations)
     covered: set[str] = set()
     seen_cases: set[str] = set()
     for edge in edges:

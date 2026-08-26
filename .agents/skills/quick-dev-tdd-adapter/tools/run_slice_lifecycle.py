@@ -210,6 +210,13 @@ def main() -> int:
             "failure_intent": {"command_id": red_core["command_id"], "test_selector": red_core["test_selector"], "expected_failure_ids": red_core["expected_failure_ids"]},
             "test_selector": red_core["test_selector"],
             "test_sha256": red_core["test_sha256"],
+            "plan_binding": {
+                "plan_id": context["plan_id"],
+                "path_type": "repo_path",
+                "path": plan_dir.resolve().relative_to(workspace.resolve()).as_posix(),
+                "contract_path": "implementation-contract.v1.json",
+                "validator_path": "tools/validate_all.py",
+            },
             "contract_hash": red_core["contract_hash"],
             "validator_hash": red_core["validator_hash"],
             "execution_fingerprint": red_core["execution_fingerprint"],

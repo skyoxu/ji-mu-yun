@@ -25,6 +25,28 @@ def _sha(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _resolve_bound_plan(run_dir: Path, basis: dict[str, Any]) -> tuple[Path, Path, Path]:
+    """Resolve only the RED-bound physical plan path; never scan or infer it."""
+    logs = next((parent for parent in run_dir.parents if parent.name == "logs"), None)
+    binding = basis.get("plan_binding") if isinstance(basis, dict) else None
+    if logs is None or not isinstance(binding, dict) or set(binding) != {"plan_id", "path_type", "path", "contract_path", "validator_path"}:
+        raise ValueError("plan binding is invalid")
+    if binding.get("path_type") != "repo_path" or not all(isinstance(binding.get(key), str) and binding[key] for key in binding):
+        raise ValueError("plan binding is invalid")
+    raw = binding["path"]
+    if raw.startswith(("/", "\\")) or "\\" in raw or ".." in Path(raw).parts:
+        raise ValueError("plan binding path escapes")
+    root = logs.parent.resolve(); plan = (root / raw).resolve()
+    plan.relative_to(root / "execution-plans")
+    contract, validator = plan / binding["contract_path"], plan / binding["validator_path"]
+    if not contract.is_file() or not validator.is_file() or binding["plan_id"] != run_dir.parents[1].name:
+        raise ValueError("bound plan is unavailable")
+    document = json.loads(contract.read_text(encoding="utf-8"))
+    if document.get("plan_id") != binding["plan_id"] or _sha(contract) != basis.get("contract_hash") or _sha(validator) != basis.get("validator_hash"):
+        raise ValueError("bound plan identity is stale")
+    return root, plan, validator
+
+
 def _valid_observation(path: Path, stage: str, *, required_exit: int | None = None) -> bool:
     """Validate an immutable observation before deriving a recovery action."""
     try:
@@ -148,17 +170,12 @@ def validate_implementation_successor(run_dir: Path) -> bool:
     if not isinstance(basis, dict) or not isinstance(receipt, dict):
         return False
     try:
-        logs_root = next((parent for parent in run_dir.parents if parent.name == "logs"), None)
-        if logs_root is None:
+        if next((parent for parent in run_dir.parents if parent.name == "logs"), None) is None:
             # Isolated unit fixtures have no repository context; retain the
             # structural successor checks and skip only the workspace identity.
             current = None
         else:
-            repository_root = logs_root.parent
-            plan = repository_root / "execution-plans" / run_dir.parents[1].name
-            if not plan.is_dir():
-                return False
-            validator = plan / "tools" / "validate_all.py"
+            repository_root, plan, validator = _resolve_bound_plan(run_dir, basis)
             spec = importlib.util.spec_from_file_location("current_candidate_validator", validator)
             if spec is None or spec.loader is None: return False
             module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
@@ -169,6 +186,13 @@ def validate_implementation_successor(run_dir: Path) -> bool:
     post = receipt.get("post_implementation_candidate")
     changed_paths = receipt.get("changed_paths")
     expected_basis_hash = _sha(basis_path)
+    selector = basis.get("test_selector")
+    test_current = False
+    if current is None:
+        test_current = isinstance(selector, str) and isinstance(basis.get("test_sha256"), str)
+    elif isinstance(selector, str):
+        test_path = repository_root / selector
+        test_current = test_path.is_file() and _sha(test_path) == basis.get("test_sha256")
     return (
         receipt.get("schema_version") == "quick-dev-tdd-adapter.implementation-successor.v1"
         and receipt.get("status") == "implementation-observed"
@@ -179,6 +203,7 @@ def validate_implementation_successor(run_dir: Path) -> bool:
         and receipt.get("contract_hash") == basis.get("contract_hash")
         and receipt.get("validator_hash") == basis.get("validator_hash")
         and receipt.get("pre_implementation_candidate") == pre
+        and test_current
         and (current is None or receipt.get("post_implementation_candidate") == current)
         and isinstance(post, dict)
         and post != pre
@@ -202,12 +227,8 @@ def publish_implementation_successor(run_dir: Path, post_candidate: dict[str, An
     pre = basis.get("pre_implementation_candidate")
     if not isinstance(pre, dict) or not isinstance(pre.get("candidate_manifest"), dict):
         raise ValueError("RED basis lacks a candidate manifest")
-    root = next((parent.parent for parent in run_dir.parents if parent.name == "logs"), None)
-    if root is None:
-        raise ValueError("run workspace root is unavailable")
-    plan_id = run_dir.parents[2].name
-    slice_id = run_dir.parents[1].name
-    validator = root / "execution-plans" / plan_id / "tools" / "validate_all.py"
+    root, plan, validator = _resolve_bound_plan(run_dir, basis)
+    slice_id = run_dir.parents[0].name
     spec = importlib.util.spec_from_file_location("plan_successor_identity", validator)
     if spec is None or spec.loader is None:
         raise ValueError("plan candidate validator is unavailable")

@@ -32,8 +32,10 @@ def test_persisted_stage_router_requires_each_boundary():
         (run / "red-basis.v1.json").write_text("{}", encoding="utf-8")
         assert driver.route_staged_run(run) == "implement"
         (run / "red-basis.v1.json").write_text(json.dumps({
-            "contract_hash": "sha256:contract",
-            "validator_hash": "sha256:validator",
+                "contract_hash": "sha256:contract",
+                "validator_hash": "sha256:validator",
+                "test_selector": "probe.py",
+                "test_sha256": "sha256:probe",
             "pre_implementation_candidate": {"candidate_binding_hash": "sha256:before"},
         }), encoding="utf-8")
         (run / "implementation-successor.v1.json").write_text(json.dumps({
@@ -67,7 +69,8 @@ def test_recovery_derives_refactor_without_stage_state():
         observations.mkdir(parents=True)
         (observations / "red-observed.json").write_text(json.dumps({"stage": "red", "exit_code": 1}), encoding="utf-8")
         (run / "red-basis.v1.json").write_text(json.dumps({
-            "contract_hash": "sha256:contract", "validator_hash": "sha256:validator",
+                "contract_hash": "sha256:contract", "validator_hash": "sha256:validator",
+                "test_selector": "probe.py", "test_sha256": "sha256:probe",
             "pre_implementation_candidate": {"candidate_binding_hash": "sha256:before"},
         }), encoding="utf-8")
         (run / "implementation-successor.v1.json").write_text(json.dumps({

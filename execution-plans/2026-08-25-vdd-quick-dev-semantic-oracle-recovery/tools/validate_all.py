@@ -118,12 +118,17 @@ def validate_terminal(plan_dir: Path, run_root: Path | None = None) -> dict[str,
     except (OSError, UnicodeError, json.JSONDecodeError):
         return {"status": "blocked", "predicate": "implementation-complete", "reason": "invalid-evidence-json"}
     expected_acceptance = {"A-SEMANTIC", "A-DESCRIPTOR", "A-JUDGE", "A-COVER", "A-PROMOTION", "A-TERMINAL", "A-BOUNDARY"}
+    identity = current_candidate_identity("S6")
+    observed_acceptance: set[str] = set()
     for i, item in enumerate(records[::2]):
         if item.get("status") != "pass" or item.get("slice_id") != f"S{i+1}" or item.get("producer") not in {"quick-dev-adapter", "independent-judge", "coverage-gate", "terminal-validator"}:
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "slice-evidence-not-closed"}
         required_fields = {"plan_id", "slice_id", "run_id", "candidate_hash", "contract_hash", "registry_hash", "authority_hash", "observation_ref", "receipt_ref", "acceptance_ids"}
         if not required_fields.issubset(item) or not isinstance(item.get("acceptance_ids"), list) or not set(item["acceptance_ids"]).issubset(expected_acceptance):
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "evidence-lineage-incomplete"}
+        if any(item.get(field) != identity[key] for field, key in (("candidate_hash", "candidate_hash"), ("contract_hash", "candidate_hash"), ("registry_hash", "predicate_input_root"), ("authority_hash", "authority_root"))):
+            return {"status": "blocked", "predicate": "implementation-complete", "reason": "candidate-binding-invalid"}
+        observed_acceptance.update(item["acceptance_ids"])
         body = {key: value for key, value in item.items() if key != "evidence_sha256"}
         expected = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
         if item.get("evidence_sha256") != expected:
@@ -139,6 +144,8 @@ def validate_terminal(plan_dir: Path, run_root: Path | None = None) -> dict[str,
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "referenced-evidence-invalid"}
         if observation_value.get("stage") not in {"green", "refactor", "terminal"} or receipt_value.get("authorizes") != []:
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "referenced-evidence-untrusted"}
+    if observed_acceptance != expected_acceptance:
+        return {"status": "blocked", "predicate": "implementation-complete", "reason": "acceptance-cover-incomplete"}
     expected_ids = [f"FG-{i:02d}" for i in range(1, 10)]
     if not isinstance(fixture_doc, dict) or fixture_doc.get("status") != "pass" or fixture_doc.get("producer") != "coverage-gate" or fixture_doc.get("fixture_ids") != expected_ids or fixture_doc.get("blocked_ids") != expected_ids or fixture_doc.get("corrected_pair_ids") != expected_ids:
         return {"status": "blocked", "predicate": "implementation-complete", "reason": "false-green-fixtures-not-closed"}

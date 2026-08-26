@@ -142,6 +142,7 @@ def build_red_basis(
     pre_implementation_candidate: dict[str, object],
     validator_hash: str,
     contract_hash: str,
+    plan_binding: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Build the non-authorizing identity that a RED observation must bind."""
     required = {"id", "executable", "argv", "cwd", "timeout_seconds", "shell"}
@@ -155,13 +156,16 @@ def build_red_basis(
         raise ValueError("pre-implementation candidate identity is missing")
     if not isinstance(validator_hash, str) or not validator_hash or not isinstance(contract_hash, str) or not contract_hash:
         raise ValueError("RED identity hashes are invalid")
-    return {
+    basis = {
         "failure_intent": {"command_id": command["id"], "test_selector": selector, "expected_failure_ids": list(expected)},
         "test_selector": selector,
         "contract_hash": contract_hash,
         "validator_hash": validator_hash,
         "pre_implementation_candidate": dict(pre_implementation_candidate),
     }
+    if plan_binding is not None:
+        basis["plan_binding"] = dict(plan_binding)
+    return basis
 
 
 def staged_cutover_guard(repository_root: Path, plan_dir: Path) -> bool:
