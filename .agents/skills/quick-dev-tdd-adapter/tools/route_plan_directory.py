@@ -740,6 +740,17 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                 }
             try:
                 receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+                if receipt.get("schema_version") == "quick-dev-tdd-adapter.implementation-authorization-successor.v2":
+                    if (
+                        receipt.get("plan_id") == plan_id
+                        and receipt.get("decision", {}).get("owner") == "maintainer"
+                        and receipt.get("decision", {}).get("transition") == "implementation-authorized"
+                        and receipt.get("authorizes") == ["implementation-authorized"]
+                        and _candidate_commit_is_current(root, plan_dir, receipt)
+                        and all(_binding_is_current(root, receipt.get(field)) for field in ("implementation_contract", "command_registry", "authority_manifest", "review_run", "conformance_result"))
+                    ):
+                        return None
+                    raise ValueError("tree-bound authorization receipt is stale")
                 if (
                     receipt.get("plan_id") != plan_id
                     or receipt.get("decision", {}).get("owner") != "maintainer"
