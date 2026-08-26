@@ -7,6 +7,7 @@ predicate only validates run-local artifacts.
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -31,12 +32,19 @@ def main() -> int:
     if args.stage == "terminal":
         if not args.run_root:
             return 2
-        out = Path(args.run_root) / "implementation-complete-result.json"
-        command = [sys.executable, str(Path(args.plan_dir) / "tools" / "terminal_predicate.py"),
+        out_name = "implementation-complete-result.json" if args.slice == "S6" else "slice-ready-result.json"
+        predicate = "terminal_predicate.py" if args.slice == "S6" else "slice_ready_predicate.py"
+        command = [sys.executable, str(Path(args.plan_dir) / "tools" / predicate),
                    "--repository-root", str(Path(args.plan_dir).parents[1]),
                    "--plan-dir", args.plan_dir, "--slice", args.slice,
-                   "--run-root", args.run_root, "--out", str(out)]
+                   "--run-root", args.run_root, "--out", str(Path(args.run_root) / out_name)]
         return subprocess.call(command, cwd=Path(args.plan_dir).parents[1])
+    contract = json.loads((Path(args.plan_dir) / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+    selected = next(item for item in contract["slices"] if item["slice_id"] == args.slice)
+    successor = selected["tdd"]["red"]["test_selector"]
+    successor_result = subprocess.run([sys.executable, "-m", "pytest", successor], cwd=Path(args.plan_dir).parents[1], check=False)
+    if successor_result.returncode != 0:
+        return successor_result.returncode
     owner = Path(args.plan_dir) / "tools" / "artifact_owners.py"
     command = [sys.executable, str(owner), "--plan-dir", args.plan_dir, "--slice", args.slice, "--stage", args.stage]
     run_root = args.run_root

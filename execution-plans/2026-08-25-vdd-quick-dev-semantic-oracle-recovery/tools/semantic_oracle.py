@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 from pathlib import Path
 import hashlib
+import importlib
 import json
 
 
@@ -24,6 +25,9 @@ def validate_semantic_intent(value: dict[str, Any]) -> tuple[bool, str]:
 
 
 def validate_descriptor(value: dict[str, Any]) -> tuple[bool, str]:
+    owner = _owner_delegate("descriptor_compiler", "validate_descriptor")
+    if owner is not None:
+        return owner(value)
     required = {"target", "argv", "cwd", "timeout_seconds", "shell", "case_source_refs", "case_producer_ref"}
     if not isinstance(value, dict) or not required.issubset(value):
         return False, "QD-DESCRIPTOR-RED"
@@ -60,12 +64,24 @@ FALSE_GREEN_IDS = {f"FG-{index:02d}" for index in range(1, 10)}
 
 
 def validate_promotion(fixtures: list[dict[str, Any]], predecessor_judge: str | None, writer: str) -> tuple[bool, str]:
+    owner = _owner_delegate("promotion_gate", "validate_promotion")
+    if owner is not None:
+        return owner(fixtures, predecessor_judge, writer)
     ids = {item.get("fixture_id") for item in fixtures if isinstance(item, dict)}
     if ids != FALSE_GREEN_IDS or len(fixtures) != 9 or not predecessor_judge or writer != "coverage-gate":
         return False, "PROMOTION-FALSE-GREEN-RED"
     if any(item.get("blocked") is not True or item.get("corrected_pair_pass") is not True for item in fixtures):
         return False, "PROMOTION-FALSE-GREEN-RED"
     return True, ""
+
+
+def _owner_delegate(module_name: str, function_name: str):
+    """Use a Phase B owner when it is present; retain a stable compatibility API."""
+    try:
+        candidate = getattr(importlib.import_module(module_name), function_name)
+    except (ImportError, AttributeError):
+        return None
+    return candidate if callable(candidate) else None
 
 
 def compile_run_local_semantic_artifacts(run_root: Path) -> dict[str, Any]:
