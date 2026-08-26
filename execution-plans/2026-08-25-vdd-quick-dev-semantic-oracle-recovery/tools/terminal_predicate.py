@@ -20,15 +20,10 @@ def main() -> int:
         raise RuntimeError("plan aggregate validator is unavailable")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    lineage_path = args.plan_dir / "tools" / "terminal_validator.py"
-    lineage_spec = importlib.util.spec_from_file_location("plan_terminal_validator", lineage_path)
-    if lineage_spec is None or lineage_spec.loader is None:
-        raise RuntimeError("plan terminal lineage validator is unavailable")
-    lineage = importlib.util.module_from_spec(lineage_spec)
-    lineage_spec.loader.exec_module(lineage)
     if args.run_root is None:
         raise RuntimeError("terminal run root is required")
-    lineage.publish_terminal_evidence(args.plan_dir, args.run_root)
+    # The terminal predicate is a reader.  It must never manufacture slice
+    # evidence, acceptance coverage, or a replay report to satisfy itself.
     result = module.validate_terminal(args.plan_dir, args.run_root)
     result.update({
         "slice_id": args.slice,

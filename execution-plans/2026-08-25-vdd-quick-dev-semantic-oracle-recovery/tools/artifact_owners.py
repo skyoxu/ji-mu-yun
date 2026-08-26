@@ -62,17 +62,6 @@ def _artifact(run_root: Path, name: str, producer: str, slice_id: str) -> dict:
     return artifact
 
 
-def _publish_plan_artifact(run_root: Path, name: str, value: dict) -> None:
-    logs = next((parent for parent in run_root.resolve().parents if parent.name == "logs"), None)
-    if logs is None:
-        # Isolated owner tests have no repository authority to publish into.
-        # They still validate the run-local producer behavior.
-        return
-    plan = logs.parent / "execution-plans" / "2026-08-25-vdd-quick-dev-semantic-oracle-recovery"
-    payload = {"source_run": run_root.relative_to(logs.parent).as_posix(), "source_evidence_sha256": value["evidence_sha256"], "artifact": value}
-    (plan / name).write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
-
-
 def produce_descriptor(run_root: Path) -> dict:
     source, semantic = _input(run_root, "descriptor-input.v1.json"), _input(run_root, "semantic-artifacts.v1.json")
     descriptor = source.get("descriptor")
@@ -81,7 +70,6 @@ def produce_descriptor(run_root: Path) -> dict:
     if not valid or not _bound(semantic, "vdd", "S1", semantic["run_id"]):
         raise ValueError(failure or "semantic-artifacts-unbound")
     result = _write(run_root / "execution-descriptor.v1.json", {"schema_version":"execution-descriptor.v1", "producer":"quick-dev", "status":"pass", "slice_id":"S2", "run_id":run_root.name, "descriptor":descriptor, "semantic_artifact_hash":semantic["evidence_sha256"]})
-    _publish_plan_artifact(run_root, "execution-descriptor.v1.json", result)
     return result
 
 
@@ -98,7 +86,6 @@ def produce_receipt(run_root: Path) -> dict:
     if not valid:
         raise ValueError(failure)
     result = _write(run_root / "process-receipt.v1.json", {"schema_version":"process-receipt.v1", "producer":"independent-judge", "status":"pass", "slice_id":"S3", "run_id":run_root.name, "receipt":receipt, "observation":observation, "descriptor_evidence_sha256":descriptor["evidence_sha256"]})
-    _publish_plan_artifact(run_root, "process-receipt.v1.json", result)
     return result
 
 
@@ -109,8 +96,6 @@ def produce_coverage(run_root: Path) -> dict:
     if not _bound(receipt, "independent-judge", "S3", receipt["run_id"]) or not isinstance(acceptance_ids, list) or not isinstance(observation_ids, list) or not isinstance(edges, list) or not valid:
         raise ValueError(failure or "receipt-unbound")
     result = _write(run_root / "acceptance-coverage.v1.json", {"schema_version":"acceptance-coverage.v1", "producer":"coverage-gate", "status":"pass", "slice_id":"S4", "run_id":run_root.name, "acceptance_ids":acceptance_ids, "observation_ids":observation_ids, "edges":edges, "receipt_evidence_sha256":receipt["evidence_sha256"]})
-    _publish_plan_artifact(run_root, "acceptance-coverage.v1.json", result)
-    _publish_plan_artifact(run_root, "evidence-snapshot.v1.json", result)
     return result
 
 
@@ -131,7 +116,6 @@ def produce_false_green_fixtures(run_root: Path) -> dict:
         raise ValueError(failure)
     ids = [f"FG-{index:02d}" for index in range(1, 10)]
     result = _write(run_root / "false-green-fixtures.v1.json", {"schema_version":"false-green-fixtures.v1", "producer":"coverage-gate", "status":"pass", "slice_id":"S5", "run_id":run_root.name, "fixtures":results, "fixture_ids":ids, "blocked_ids":ids, "corrected_pair_ids":ids, "corrected_pairs_executed":True, "predecessor_judge_hash":coverage["receipt_evidence_sha256"]})
-    _publish_plan_artifact(run_root, "predecessor-judge-freeze.v1.json", result)
     return result
 
 

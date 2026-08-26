@@ -37,7 +37,21 @@ def validate_slice_ready(repository_root: Path, run_root: Path, slice_id: str) -
         return {"status": "blocked", "reason": "planned-file-contract-invalid"}
     if missing:
         return {"status": "blocked", "reason": "planned-files-missing", "missing": missing}
-    return {"status": "pass", "predicate": "slice-ready", "slice_id": slice_id, "run_id": run_root.name}
+    produced_by_slice = {
+        "S1": ("semantic-artifacts.v1.json",),
+        "S2": ("execution-descriptor.v1.json",),
+        "S3": ("process-receipt.v1.json",),
+        "S4": ("acceptance-coverage.v1.json",),
+        "S5": ("false-green-fixtures.v1.json",),
+    }
+    names = produced_by_slice.get(slice_id, ())
+    references: list[dict[str, str]] = []
+    for name in names:
+        artifact = run_root / name
+        if not artifact.is_file():
+            return {"status": "blocked", "reason": "produced-artifact-missing", "missing": [name]}
+        references.append({"path": artifact.relative_to(repository_root).as_posix(), "sha256": _sha(artifact)})
+    return {"status": "pass", "predicate": "slice-ready", "slice_id": slice_id, "run_id": run_root.name, "produced_artifact_refs": references}
 
 
 def main() -> int:

@@ -11,6 +11,8 @@ def _sha(path: Path) -> str:
 
 
 def write_manifest(plan_dir: Path, s6_run: Path) -> Path:
+    raise ValueError("terminal lineage must be supplied as run-local producer evidence")
+    # Historical implementation retained below for evidence inspection only.
     root = plan_dir.resolve().parents[1]
     plan_id = json.loads((plan_dir / "implementation-contract.v1.json").read_text(encoding="utf-8"))["plan_id"]
     entries = []
@@ -45,6 +47,8 @@ def _write(path: Path, value: dict[str, object]) -> None:
 
 
 def publish_terminal_evidence(plan_dir: Path, s6_run: Path) -> None:
+    """Deprecated producer entry point retained to fail closed."""
+    raise RuntimeError("terminal validator must not publish per-slice evidence")
     """Append terminal replay evidence derived from manifest-selected lifecycle facts."""
     manifest_path = write_manifest(plan_dir, s6_run)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))

@@ -440,6 +440,25 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
     # Invocation storage has its own identity.  Descriptor expansion must bind
     # <run-id> to the lifecycle run that will own observations and artifacts.
     _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", run_dir.name, "--out-dir", str(invocation)])
+    selected = next((item for item in contract.get("slices", []) if item.get("slice_id") == slice_id), {})
+    dependencies = selected.get("depends_on", []) if isinstance(selected, dict) else []
+    if dependencies:
+        # The loop records one explicit predecessor result; downstream input
+        # builders consume this immutable path/hash and never scan RUN-*.
+        predecessor_id = dependencies[-1]
+        base = evidence / predecessor_id
+        candidates = [path / "slice-ready-result.json" for path in base.glob("RUN-*")
+                      if path.is_dir() and "DIAGNOSTIC" not in path.name.upper()
+                      and (path / "slice-ready-result.json").is_file()]
+        if len(candidates) != 1:
+            raise RuntimeError("direct predecessor slice-ready result is ambiguous or missing")
+        predecessor_result = candidates[0]
+        context_path = invocation / "run-context.json"
+        context = json.loads(context_path.read_text(encoding="utf-8"))
+        context["predecessor_slice_ready_ref"] = {"result": {
+            "path": predecessor_result.relative_to(root).as_posix(), "sha256": _sha(predecessor_result)
+        }}
+        context_path.write_text(json.dumps(context, indent=2) + "\n", encoding="utf-8", newline="\n")
     if handoff is not None:
         context_path = invocation / "run-context.json"
         context = json.loads(context_path.read_text(encoding="utf-8"))
@@ -491,127 +510,31 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
     active = _active_slice_run(root, str(contract["plan_id"]), slice_id)
     if active is None or active[1] != "slice-terminal":
         raise RuntimeError("slice terminal requires a completed refactor observation")
-    predecessor_run = active[0]
-    prior_red = prior_red_observation_path(predecessor_run)
-    observation_sources = {"red": prior_red.parent.parent if prior_red is not None else predecessor_run, "green": predecessor_run, "refactor": predecessor_run}
-    observations = {
-        stage: json.loads((observation_sources[stage] / "observations" / f"{stage}-observed.json").read_text(encoding="utf-8"))
-        for stage in ("red", "green", "refactor")
-    }
+    # A normal TDD lifecycle has one canonical run.  A successor is recovery
+    # evidence only; creating one for the terminal would split its RED/GREEN/
+    # REFACTOR facts from the slice-ready result and permit self-assembled
+    # completion evidence.
+    run_dir = active[0]
 
-    def build_terminal_context(successor_run: Path) -> tuple[Path, dict[str, object]]:
+    def build_terminal_context(canonical_run: Path) -> tuple[Path, dict[str, object]]:
         invocation_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
         invocation = root / "logs" / "tdd-adapter" / str(contract["plan_id"]) / "_invocations" / invocation_id
-        # Reserve the append-only successor before compiling the terminal
-        # command, so every <run-id> expansion names the result owner.
-        _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", successor_run.name, "--out-dir", str(invocation)])
+        _run([str(TOOLS / "build_slice_invocation.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--run-id", canonical_run.name, "--out-dir", str(invocation)])
         context = json.loads((invocation / "run-context.json").read_text(encoding="utf-8"))
         for item in [*context["authority_refs"], context["implementation_contract"]]:
             item["payload"] = base64.b64decode(item.pop("payload_base64"), validate=True)
-        for stage in ("green", "refactor"):
-            core = context["stage_results"][stage]
-            core["exit_code"] = observations[stage]["exit_code"]
-            core["observed_at"] = observations[stage]["observed_at"]
-            if stage == "refactor":
-                refactor_commands = json.loads((invocation / "refactor-commands.json").read_text(encoding="utf-8"))
-                core["command_ids"] = [item["id"] for item in refactor_commands]
-                core["command_id"] = refactor_commands[0]["id"]
-        context["run_id"] = successor_run.name
+        context["run_id"] = canonical_run.name
         for core in context["stage_results"].values():
-            core["run_id"] = successor_run.name
+            core["run_id"] = canonical_run.name
         return invocation, context
 
     snapshots = _workspace_snapshot_paths(root, plan, snapshots)
-    observation_refs = []
     for stage in ("red", "green", "refactor"):
-        source = observation_sources[stage] / "observations" / f"{stage}-observed.json"
-        if not source.is_file():
-            raise RuntimeError("terminal successor requires complete lifecycle observations")
-        observation_refs.append({"stage": stage, "path": source.relative_to(root).as_posix(), "sha256": _sha(source)})
-    lineage = {
-        "schema_version": "quick-dev-tdd-adapter.successor-lineage.v1",
-        "predecessor_run": predecessor_run.relative_to(root).as_posix(),
-        "predecessor_observations": observation_refs,
-        "next_transition": "slice-terminal",
-        "authorizes": [],
-    }
-    # Always close a fresh terminal successor. Historical runs may contain
-    # immutable protocol artifacts from an older contract or partial retry.
-    run_dir = reserve_successor_run(predecessor_run, lineage)
+        if not (run_dir / "observations" / f"{stage}-observed.json").is_file():
+            raise RuntimeError("canonical run requires complete lifecycle observations")
+    if not validate_implementation_successor(run_dir):
+        raise RuntimeError("canonical run implementation successor is invalid")
     invocation, context = build_terminal_context(run_dir)
-    def write_terminal_handoff(successor_run: Path, terminal_context: dict[str, object]) -> None:
-        red_source = observation_sources["red"] / "observations" / "red-observed.json"
-        red_basis = red_source.parent.parent / "red-basis.v1.json"
-        if not red_source.is_file() or not red_basis.is_file():
-            raise RuntimeError("terminal successor requires a RED-bound predecessor")
-        red = terminal_context["stage_results"]["red"]
-        handoff = {
-            "schema_version": "quick-dev-tdd-adapter.prior-red-handoff.v2",
-            "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": successor_run.name,
-            "red_observation": {"path": red_source.relative_to(root).as_posix(), "sha256": _sha(red_source)},
-            "execution_fingerprint": red["execution_fingerprint"], "test_selector": red["test_selector"],
-            "test_sha256": red["test_sha256"], "expected_failure_ids": red["expected_failure_ids"],
-            "authorizes": [],
-        }
-        (successor_run / "prior-red-handoff.v2.json").write_text(
-            json.dumps(handoff, indent=2) + "\n", encoding="utf-8", newline="\n"
-        )
-        receipt = predecessor_run / "implementation-successor.v1.json"
-        if not receipt.is_file():
-            raise RuntimeError("terminal successor requires an implementation successor receipt")
-        (successor_run / "prior-implementation-successor.v1.json").write_text(
-            json.dumps({
-                "schema_version": "quick-dev-tdd-adapter.prior-implementation-successor.v1",
-                "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": successor_run.name,
-                "receipt": {"path": receipt.relative_to(root).as_posix(), "sha256": _sha(receipt)},
-                "authorizes": [],
-            }, indent=2) + "\n", encoding="utf-8", newline="\n"
-        )
-
-    write_terminal_handoff(run_dir, context)
-    lifecycle = LifecycleRunner(root, run_dir, snapshots)
-    lifecycle.resume_observations(run_dir, ["red", "green", "refactor"], observation_sources=observation_sources)
-    try:
-        try:
-            lifecycle.close(context, {}, observation_sources=observation_sources)
-        except ValueError as exc:
-            if "existing protocol artifact conflicts" not in str(exc) or not _has_complete_protocol_bundle(run_dir):
-                raise
-    except (ValueError, FileNotFoundError) as exc:
-        # A partially closed run is immutable. Reconcile it by creating an
-        # append-only successor carrying only stage observations, never by
-        # overwriting protocol attempts from the predecessor.
-        if "protocol artifact conflicts" not in str(exc):
-            raise
-        observation_refs = []
-        for stage in ("red", "green", "refactor"):
-            source = observation_sources[stage] / "observations" / f"{stage}-observed.json"
-            if not source.is_file():
-                raise RuntimeError("terminal successor requires complete lifecycle observations")
-            observation_refs.append({"stage": stage, "path": source.relative_to(root).as_posix(), "sha256": _sha(source)})
-        lineage = {
-            "schema_version": "quick-dev-tdd-adapter.successor-lineage.v1",
-            "predecessor_run": run_dir.relative_to(root).as_posix(),
-            "predecessor_observations": observation_refs,
-            "next_transition": "slice-terminal",
-            "authorizes": [],
-        }
-        # Reservation is the single identity gate for real terminal recovery.
-        # It is reused on retry before successor observations are materialized.
-        run_dir = reserve_successor_run(run_dir, lineage)
-        invocation, context = build_terminal_context(run_dir)
-        write_terminal_handoff(run_dir, context)
-        lifecycle = LifecycleRunner(root, run_dir, snapshots)
-        lifecycle.resume_observations(
-            run_dir.parent / run_dir.name.removesuffix("-SUCCESSOR"),
-            ["red", "green", "refactor"],
-            observation_sources=observation_sources,
-        )
-        try:
-            lifecycle.close(context, {}, observation_sources=observation_sources)
-        except ValueError as exc:
-            if "existing protocol artifact conflicts" not in str(exc) or not _has_complete_protocol_bundle(run_dir):
-                raise
     expected_predicate = _slice_terminal_predicate(plan, slice_id)
     command = json.loads((invocation / "terminal-command.json").read_text(encoding="utf-8"))
     completed = subprocess.run([command["executable"], *command["argv"]], cwd=root / command["cwd"], shell=False, check=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=command["timeout_seconds"])

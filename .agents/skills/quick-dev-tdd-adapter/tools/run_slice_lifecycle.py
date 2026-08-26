@@ -188,6 +188,13 @@ def main() -> int:
 
     stage_runner = _load("stage_lifecycle_runner")
     lifecycle = stage_runner.LifecycleRunner(workspace, run_dir, args.snapshot_path)
+    predecessor_ref = context.get("predecessor_slice_ready_ref")
+    if predecessor_ref is not None:
+        if not isinstance(predecessor_ref, dict) or set(predecessor_ref) != {"result"}:
+            raise RuntimeError("predecessor result reference is invalid")
+        run_dir.mkdir(parents=True, exist_ok=True)
+        pointer = run_dir / "predecessor-slice-ready-ref.v1.json"
+        pointer.write_text(json.dumps(predecessor_ref, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     red_core = context["stage_results"]["red"]
     red_mode = red_core.get("mode", "red")
     predecessor = red_core.get("legacy_predecessor")

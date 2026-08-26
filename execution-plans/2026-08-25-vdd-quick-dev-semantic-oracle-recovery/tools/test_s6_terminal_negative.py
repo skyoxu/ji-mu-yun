@@ -2,12 +2,12 @@ from pathlib import Path
 import importlib.util
 import pytest
 
-def test_terminal_boundary_red(tmp_path: Path) -> None:
+
+def test_terminal_rejects_missing_manifest() -> None:
     validator = Path(__file__).parent / "terminal_validator.py"
     spec = importlib.util.spec_from_file_location("terminal_validator", validator)
-    assert spec and spec.loader, "FAILURE_ID:TERMINAL-BOUNDARY-RED"
+    assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    plan = Path(__file__).parent.parent
     with pytest.raises(ValueError, match="must be supplied"):
-        module.write_manifest(plan, tmp_path / "RUN-1")
+        module.write_manifest(Path(__file__).parent.parent, Path("missing-run"))

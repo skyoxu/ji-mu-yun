@@ -13,12 +13,12 @@ import subprocess
 import sys
 
 TESTS = {
-    "S1": ("test_semantic_red.py", "test_s1_owner_red.py", "test_s1_successor_red.py"),
-    "S2": ("test_s2_descriptor_red.py", "test_s2_owner_red.py", "test_s2_successor_red.py"),
-    "S3": ("test_s3_judge_red.py", "test_s3_owner_red.py", "test_s3_successor_red.py"),
-    "S4": ("test_s4_cover_red.py", "test_s4_owner_red.py", "test_s4_successor_red.py"),
-    "S5": ("test_s5_promotion_red.py", "test_s5_owner_red.py", "test_s5_successor_red.py"),
-    "S6": ("test_s6_terminal_red.py", "test_s6_owner_red.py", "test_s6_successor_red.py"),
+    "S1": ("test_s1_owner_red.py", "test_semantic_negative.py"),
+    "S2": ("test_s2_descriptor_red.py", "test_s2_owner_red.py", "test_s2_descriptor_negative.py"),
+    "S3": ("test_s3_judge_red.py", "test_s3_owner_red.py", "test_s3_judge_negative.py"),
+    "S4": ("test_s4_cover_red.py", "test_s4_owner_red.py", "test_s4_cover_negative.py"),
+    "S5": ("test_s5_promotion_red.py", "test_s5_owner_red.py", "test_s5_promotion_negative.py"),
+    "S6": ("test_s6_terminal_red.py", "test_s6_owner_red.py", "test_s6_terminal_negative.py"),
 }
 
 
@@ -55,10 +55,8 @@ def main() -> int:
         if materialized.returncode != 0:
             return materialized.returncode
     if args.run_root and args.slice == "S6":
-        validator = Path(args.plan_dir) / "tools" / "terminal_validator.py"
-        prepared = subprocess.run([sys.executable, "-c", "from terminal_validator import write_manifest; from pathlib import Path; write_manifest(Path(r'''" + args.plan_dir + "'''), Path(r'''" + args.run_root + "'''))"], cwd=validator.parent, check=False)
-        if prepared.returncode != 0:
-            return prepared.returncode
+        # Terminal validation is read-only until the registered terminal stage.
+        # GREEN/REFACTOR must not manufacture a manifest or completion result.
         return 0
     owner = Path(args.plan_dir) / "tools" / "artifact_owners.py"
     command = [sys.executable, str(owner), "--plan-dir", args.plan_dir, "--slice", args.slice, "--stage", args.stage]

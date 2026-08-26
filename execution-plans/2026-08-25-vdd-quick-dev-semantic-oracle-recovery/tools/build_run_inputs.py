@@ -8,6 +8,13 @@ from pathlib import Path
 import sys
 
 
+FIXTURE_RED_SELECTORS = (
+    "red_s1_semantic_artifact.py", "red_s2_descriptor_producer.py", "red_s3_judge_producer.py",
+    "red_s4_coverage_producer.py", "red_s5_promotion_producer.py", "red_s6_terminal_producer.py",
+    "red_s1_semantic_artifact.py", "red_s2_descriptor_producer.py", "red_s3_judge_producer.py",
+)
+
+
 def _sha(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -19,25 +26,34 @@ def _repository_root(run_root: Path) -> Path:
     return logs.parent
 
 
-def _formal_artifact(root: Path, plan_id: str, slice_id: str, name: str) -> dict[str, str]:
-    base = root / "logs" / "tdd-adapter" / plan_id / slice_id
-    candidates = [
-        path for path in base.glob("RUN-*")
-        if path.is_dir() and "DIAGNOSTIC" not in path.name.upper()
-        and (path / "slice-ready-result.json").is_file() and (path / name).is_file()
-    ]
-    if len(candidates) != 1:
-        raise ValueError(f"formal predecessor artifact is ambiguous or missing: {slice_id}/{name}")
-    artifact = candidates[0] / name
+def _formal_artifact(root: Path, run_root: Path, slice_id: str, name: str) -> dict[str, str]:
+    """Resolve only the explicit predecessor ref supplied by the lifecycle."""
+    pointer = run_root / "predecessor-slice-ready-ref.v1.json"
     try:
+        pointer_value = json.loads(pointer.read_text(encoding="utf-8"))
+        result_ref = pointer_value["result"]
+        result = (root / result_ref["path"]).resolve()
+        result.relative_to(root / "logs" / "tdd-adapter")
+        if not result.is_file() or _sha(result) != result_ref["sha256"]:
+            raise ValueError("predecessor result is stale")
+        result_value = json.loads(result.read_text(encoding="utf-8"))
+        if result_value.get("slice_id") != slice_id or result_value.get("run_id") != result.parent.name:
+            raise ValueError("predecessor result identity is invalid")
+        candidates = [ref for ref in result_value.get("produced_artifact_refs", []) if isinstance(ref, dict) and ref.get("path", "").endswith("/" + name)]
+        if len(candidates) != 1:
+            raise ValueError("predecessor artifact ref is missing or ambiguous")
+        artifact = (root / candidates[0]["path"]).resolve()
+        artifact.relative_to(result.parent)
+        if not artifact.is_file() or _sha(artifact) != candidates[0]["sha256"]:
+            raise ValueError("predecessor artifact is stale")
         value = json.loads(artifact.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ValueError("formal predecessor artifact is invalid") from exc
-    if value.get("slice_id") != slice_id or value.get("run_id") != candidates[0].name:
+    if value.get("slice_id") != slice_id or value.get("run_id") != artifact.parent.name:
         raise ValueError("formal predecessor artifact identity is invalid")
     return {
         "path": artifact.relative_to(root).as_posix(), "sha256": _sha(artifact),
-        "producer": str(value.get("producer", "")), "slice_id": slice_id, "run_id": candidates[0].name,
+        "producer": str(value.get("producer", "")), "slice_id": slice_id, "run_id": artifact.parent.name,
     }
 
 
@@ -48,7 +64,7 @@ def build(plan_dir: Path, run_root: Path, slice_id: str) -> dict[str, object]:
     plan_id = contract.get("plan_id")
     if not isinstance(plan_id, str) or run_root.parent.name != slice_id or not run_root.name.startswith("RUN-"):
         raise ValueError("run input identity is invalid")
-    refs = lambda predecessor, artifact: {"artifact_ref": _formal_artifact(root, plan_id, predecessor, artifact)}
+    refs = lambda predecessor, artifact: {"artifact_ref": _formal_artifact(root, run_root, predecessor, artifact)}
     inputs: dict[str, dict[str, object]]
     if slice_id == "S1":
         inputs = {"semantic-intent-input.v1.json": {
@@ -57,12 +73,12 @@ def build(plan_dir: Path, run_root: Path, slice_id: str) -> dict[str, object]:
         }}
     elif slice_id == "S2":
         inputs = {
-            "descriptor-input.v1.json": {"descriptor": {"target": "semantic-oracle", "argv": [sys.executable, "-c", "pass"], "cwd": ".", "timeout_seconds": 30, "shell": False, "case_source_refs": ["active-acceptance-manifest"], "case_producer_ref": "vdd"}},
+            "descriptor-input.v1.json": {"descriptor": {"target": "semantic-oracle", "argv": [sys.executable, "-m", "pytest", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_semantic_negative.py", "-q"], "cwd": ".", "timeout_seconds": 30, "shell": False, "case_source_refs": ["active-acceptance-manifest"], "case_producer_ref": "vdd"}},
             "semantic-artifacts.v1.json": refs("S1", "semantic-artifacts.v1.json"),
         }
     elif slice_id == "S3":
         inputs = {
-            "execution-input.v1.json": {"argv": [sys.executable, "-c", "print('independent execution')"], "executor_id": "sut-executor", "observation_id": "OBS-S3", "candidate_hash": _sha(plan / "implementation-contract.v1.json")},
+            "execution-input.v1.json": {"argv": [sys.executable, "-m", "pytest", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_s2_descriptor_negative.py", "-q"], "executor_id": "sut-executor", "observation_id": "OBS-S3", "candidate_hash": _sha(plan / "implementation-contract.v1.json")},
             "execution-descriptor.v1.json": refs("S2", "execution-descriptor.v1.json"),
         }
     elif slice_id == "S4":
@@ -72,7 +88,7 @@ def build(plan_dir: Path, run_root: Path, slice_id: str) -> dict[str, object]:
         }
     elif slice_id == "S5":
         inputs = {
-            "false-green-fixture-input.v1.json": {"fixtures": [{"fixture_id": f"FG-{index:02d}", "blocked_argv": [sys.executable, "-c", "raise SystemExit(1)"], "corrected_argv": [sys.executable, "-c", "pass"]} for index in range(1, 10)]},
+            "false-green-fixture-input.v1.json": {"fixtures": [{"fixture_id": f"FG-{index:02d}", "blocked_argv": [sys.executable, "-m", "pytest", f"execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/{selector}", "-q"], "corrected_argv": [sys.executable, "-m", "pytest", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_semantic_negative.py", "-q"]} for index, selector in enumerate(FIXTURE_RED_SELECTORS, start=1)]},
             "acceptance-coverage.v1.json": refs("S4", "acceptance-coverage.v1.json"),
         }
     else:

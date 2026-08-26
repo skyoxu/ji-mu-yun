@@ -1,0 +1,76 @@
+你先不要再追着单个报错修了。现在看似有很多问题，其实只有三个根因：
+
+RED 测试角色写反了：现在测的是“错误输入能否被拒绝”，因此天然是绿色回归测试，不是 RED。
+一个 slice 被拆成两个 run：实现产物和 GREEN/REFACTOR 在前一个 run，slice-ready 在 terminal successor，但消费者又假设它们同目录。
+验证器变成了生产者：GREEN、terminal 在生成 candidate 和 status: pass，导致 successor 失效并产生自签式假绿。
+
+你修了一天，是因为此前一直在修这三个根因产生的不同症状。我前面也应该更早要求跑一次“全新工作树、无历史 logs、无 mock”的生产链，而不是继续逐项补洞。
+
+现在唯一推荐方案
+
+做一次独立的 Quick Dev execution-chain preflight repair。它不是 VDD、review 或治理修复，也不是正式 S1 实施。
+
+核心决策：普通 TDD slice 使用一个 canonical run。
+
+同一个 run 必须拥有：
+
+red-basis
+implementation-successor
+RED/GREEN/REFACTOR observations
+run-local produced artifacts
+protocol bundle
+slice-ready-result
+
+不要再为正常 terminal 创建另一个 successor。successor 只用于冲突恢复和失败重试。
+
+让本地 Codex 一次完成以下修改
+修改 loop_plan_directory.py
+_run_slice_terminal() 直接关闭当前完成 REFACTOR 的 run。
+普通路径不再调用 reserve_successor_run()。
+删除普通路径的 prior-implementation-successor.v1.json。
+terminal result 写回同一个 canonical run。
+修改 artifact_owners.py 和 stage_command.py
+GREEN/REFACTOR 必须只读 candidate。
+删除 _publish_plan_artifact()。
+descriptor、receipt、coverage、fixtures 都只写入 logs/.../<run-id>/。
+planned_new_files 只保留源码文件，不再包含运行生成的 evidence JSON。
+修改 build_run_inputs.py
+禁止扫描 RUN-*、禁止要求“恰好一个目录”。
+每个 slice-ready-result.json 输出明确的 produced_artifact_refs。
+下一 slice 只沿这个显式的 path/hash 引用读取 predecessor artifact。
+恢复真正的 RED
+现有 test_s*_successor_red.py 改名为 regression/negative tests。
+新 RED 测试必须验证当前尚未实现的正向能力。
+在本次 preflight 结束时，S1 RED 必须故意返回非零，并包含精确的 VDD-SEMANTIC-ARTIFACT-SET-INCOMPLETE。
+不要在这次修复中顺手实现 S1，让 RED 变绿。
+修改 terminal_validator.py
+只能读取和验证证据。
+禁止生成逐 slice 的 status: pass、Acceptance IDs 或伪造 replay report。
+只在所有生产者证据验证完成后写一个 aggregate terminal result。
+去掉硬编码假数据
+删除 python -c pass、单条 coverage edge、九组相同 exit-code fixture。
+输入必须来自 active Acceptance manifest、semantic verification 和 predecessor artifact refs。
+九个 FG fixture 必须是九个独立失败语义。
+新增一个不使用 mock 的生产链集成测试：
+fresh workspace，无历史 logs
+→ S1 RED 非零且 failure ID 精确
+→ 发布 implementation successor
+→ GREEN
+→ REFACTOR
+→ 同一 run 生成 slice-ready
+→ router 返回 S2
+→ S2 成功解析 S1 produced artifact
+
+并验证删除任意 observation、receipt、artifact 或篡改 hash 后，router 都停留在 S1。
+
+这次修复的停止条件
+
+本地 Codex 完成后，只需要给你下面三个结果：
+
+control-plane regression tests: PASS
+S1 RED selector: EXPECTED NONZERO
+fresh-worktree lifecycle readiness test: PASS
+
+不要生成 authorization，不要重新 external review，不要声称 S1 implementation-complete。
+
+做到这里，才是真正的“可以进入 Quick Dev TDD”。之后 S1 从真实 RED 开始，按正常 RED → GREEN → REFACTOR 实施，不会再一层层爆出新的生命周期结构问题。

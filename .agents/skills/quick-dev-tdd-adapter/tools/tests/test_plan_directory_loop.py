@@ -247,7 +247,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             self.assertEqual("prior-red-successor", context["stage_results"]["red"]["mode"])
             self.assertEqual(handoff, context["stage_results"]["red"]["prior_red"])
 
-    def test_slice_terminal_compiles_descriptor_against_reserved_successor_run(self) -> None:
+    def test_slice_terminal_compiles_descriptor_against_canonical_run(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             plan = self._plan(root, [{"slice_id": "S1", "depends_on": []}])
@@ -284,32 +284,22 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                     "stage_results": {"red": {"execution_fingerprint": "fingerprint", "test_selector": "probe.py", "test_sha256": "sha256:probe", "expected_failure_ids": ["FAIL"]}, "green": {}, "refactor": {}},
                 }), encoding="utf-8")
 
-            final_run = predecessor.parent / "RUN-FINAL"
-
-            def reserve(_predecessor: Path, _lineage: dict) -> Path:
-                final_run.mkdir(parents=True)
-                return final_run
-
-            lifecycle = mock.Mock()
             with mock.patch.object(DRIVER, "_active_slice_run", return_value=(predecessor, "slice-terminal")), mock.patch.object(
                 DRIVER, "_workspace_snapshot_paths", return_value=["implementation-contract.v1.json"]
-            ), mock.patch.object(DRIVER, "reserve_successor_run", side_effect=reserve), mock.patch.object(
+            ), mock.patch.object(DRIVER, "validate_implementation_successor", return_value=True), mock.patch.object(
                 DRIVER, "_run", side_effect=fake_run
-            ), mock.patch.object(DRIVER, "LifecycleRunner", return_value=lifecycle), mock.patch.object(
+            ), mock.patch.object(
                 DRIVER, "_slice_terminal_predicate", return_value="slice-ready"
             ), mock.patch.object(DRIVER, "_validation_snapshot", return_value={"candidate": "current"}):
                 DRIVER._run_slice_terminal(root, plan, "S1", ["implementation-contract.v1.json"])
 
-            self.assertEqual(["RUN-FINAL"], seen_run_ids)
-            result = json.loads((final_run / "slice-ready-result.json").read_text(encoding="utf-8"))
+            self.assertEqual(["RUN-PREDECESSOR"], seen_run_ids)
+            result = json.loads((predecessor / "slice-ready-result.json").read_text(encoding="utf-8"))
             self.assertEqual("target", result["plan_id"])
             self.assertEqual("S1", result["slice_id"])
-            self.assertEqual("RUN-FINAL", result["run_id"])
-            handoff = json.loads((final_run / "prior-red-handoff.v2.json").read_text(encoding="utf-8"))
-            self.assertEqual("RUN-FINAL", handoff["run_id"])
-            self.assertEqual("S1", handoff["slice_id"])
-            prior_receipt = json.loads((final_run / "prior-implementation-successor.v1.json").read_text(encoding="utf-8"))
-            self.assertTrue(prior_receipt["receipt"]["path"].endswith("implementation-successor.v1.json"))
+            self.assertEqual("RUN-PREDECESSOR", result["run_id"])
+            self.assertFalse((predecessor / "prior-red-handoff.v2.json").exists())
+            self.assertFalse((predecessor / "prior-implementation-successor.v1.json").exists())
 
     def test_router_rejects_plan_path_outside_execution_plans(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
