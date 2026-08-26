@@ -36,8 +36,8 @@ def write_new(path: Path, value: object) -> None:
 def main() -> None:
     mapping = GOV / "requirements-acceptance-mapping.v1.current-20260826.json"
     manifest = GOV / "vdd-source-freeze-manifest.v1.current-bound-20260826.json"
-    conformance = GOV / "vdd-conformance-result.v1.current-20260826-final.json"
-    review_input = GOV / "external-semantic-review-input.v1.current-20260826-final.json"
+    conformance = GOV / "vdd-conformance-result.v1.current-20260826-final-r2.json"
+    review_input = GOV / "external-semantic-review-input.v1.current-20260826-final-r2.json"
     validator = ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py"
     result = subprocess.run(
         ["python", str(validator), "--repository-root", str(ROOT), "--manifest", str(manifest), "--mapping", str(mapping)],
