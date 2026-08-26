@@ -1,0 +1,319 @@
+最合适的方案不是回滚 ff78f34c，也不是伪造历史 RED，而是建立一个 successor plan：保留已有的部分实现，把 RED 从“producer 不存在”升级为“关键语义约束尚未满足”。这样当前代码会真实 RED，随后再由 Quick Dev 完成 GREEN。
+
+总体执行原则
+当前拒绝 review 保留，不覆盖、不改成 accepted。
+旧 authorization 永久视为失效。
+Phase A 只能改计划、测试、契约和 review-binding 基础设施，不能提前修改 S1–S6 的目标生产代码。
+Phase A 完成并获得新的外部 review、maintainer authorization 后，才启动 Quick Dev。
+每个 RED 必须在当前实现上因预期语义缺口失败，且输出与 contract 完全一致的 failure ID。
+阻断 1：当前六个 RED 已经全绿
+
+不要再测试“函数是否存在”，改成测试当前实现确实缺失的行为。
+
+Slice	新 RED 行为	建议 Failure ID
+S1	空 taxonomy 必须拒绝；必须生成完整语义 artifact 集并相互绑定	VDD-SEMANTIC-ARTIFACT-SET-INCOMPLETE
+S2	空 argv/source refs、未注册命令、未绑定 candidate 的 descriptor 必须拒绝	QD-DESCRIPTOR-BINDING-INCOMPLETE
+S3	descriptor argv 与实际执行 argv 不一致必须拒绝；executor/judge 同源必须拒绝	JUDGE-INDEPENDENCE-UNPROVEN
+S4	coverage edge 无法追溯到真实 receipt/observation 时必须拒绝	COVERAGE-EVIDENCE-LINEAGE-UNBOUND
+S5	没有冻结 predecessor judge 或用 coverage hash 冒充时必须拒绝	PROMOTION-PREDECESSOR-JUDGE-UNBOUND
+S6	假 hash、Acceptance 子集、跨 run 拼接、空 replay report 必须拒绝	TERMINAL-LINEAGE-NOT-CLOSED
+
+每个 selector 应精确到单个测试：
+
+tools/test_s3_owner_red.py::test_rejects_descriptor_execution_drift
+
+不要让同一 RED selector 包含多个不确定失败。
+
+同时：
+
+更新 expected_failure_ids 与实际断言完全一致。
+删除 contract 中不存在的 test_s1_red.py、test_s2_red.py 等路径，或改成真实文件名。
+Phase A 不修改 semantic_oracle.py、producer、judge、coverage、terminal 的目标行为。
+新 planning candidate 继续保持 plan-ready、authorizes: []。
+阻断 2：S3 不是真正的独立 executor/judge
+
+将当前 produce_receipt() 拆成两个进程边界：
+
+descriptor
+   ↓
+process_executor.py
+   ↓ raw-process-receipt
+independent_judge.py
+   ↓ judge-observation
+Executor
+
+只负责执行，不允许得出 pass/fail 判断。输出必须包含：
+
+descriptor hash；
+candidate hash；
+command ID；
+实际 argv、cwd、timeout；
+case ID、fixture ID；
+exit code；
+stdout/stderr hash；
+executor entrypoint hash；
+run ID。
+
+执行参数必须直接来自冻结 descriptor，不再接受独立的 execution-input.argv。
+
+Judge
+作为独立 subprocess 启动；
+不执行 SUT；
+不导入 executor 的执行函数；
+只消费 descriptor、raw receipt、oracle；
+judge entrypoint hash 必须与 executor entrypoint hash 不同；
+executor/judge 身份由运行器产生，禁止输入文件自行声明；
+验证 descriptor argv 与实际 argv 完全一致；
+验证 candidate、case、fixture、run ID 全部一致。
+
+至少加入这些负向测试：
+
+descriptor argv 与执行 argv 不一致；
+executor/judge 使用同一 entrypoint；
+receipt 被篡改；
+candidate hash 不一致；
+observation 来自另一个 run。
+阻断 3：S4 coverage 可以由调用者任意编造
+
+coverage-input.v1.json 不再直接提供权威 edges。Coverage gate 应从以下真实证据计算：
+
+active acceptance manifest
+→ semantic oracle covers_acceptance_ids
+→ descriptor case binding
+→ process receipt executed case
+→ judge observation assertion
+→ coverage edge
+
+每个 edge 至少绑定：
+
+{
+  "acceptance_id": "...",
+  "oracle_id": "...",
+  "case_id": "...",
+  "descriptor_hash": "...",
+  "receipt_hash": "...",
+  "observation_id": "...",
+  "observation_hash": "..."
+}
+
+验证规则：
+
+Acceptance ID 必须属于 active manifest；
+oracle 必须明确覆盖该 Acceptance；
+case 必须存在于 descriptor；
+receipt 必须证明执行了同一个 case；
+observation 必须来自该 receipt；
+不允许未知 edge、缺失 edge 或孤立 observation；
+many-to-many 可以重复覆盖，但最终 Acceptance 集必须 exact-cover。
+
+必须增加 mutation tests：
+
+替换 observation ID；
+删除一个 Acceptance edge；
+添加不存在的 Acceptance；
+使用另一个 run 的 receipt；
+修改 receipt 后仍沿用旧 hash。
+
+全部必须 fail-closed。
+
+阻断 4：S5 没有真正运行 predecessor judge
+
+新增不可变文件：
+
+predecessor-judge-freeze.v1.json
+
+至少绑定：
+
+predecessor candidate commit；
+judge entrypoint path/hash；
+oracle hash；
+descriptor/schema hash；
+executor版本；
+-冻结时间；
+authorizes: []。
+
+每个 FG-01～FG-09 必须真实运行两次：
+
+错误 fixture：predecessor judge 必须阻断；
+corrected pair：同一 predecessor judge 必须通过。
+
+每个 fixture 生成独立 receipt，不能只保存布尔值。Promotion artifact 必须引用九组 receipt hash。
+
+修正字段含义：
+
+predecessor_judge_hash
+
+必须是冻结 judge identity/hash，不能再填 acceptance-coverage hash。
+
+只有 coverage_gate.py 可以写 promotion。以下情况必须拒绝：
+
+少于九个 fixture；
+重复 fixture ID；
+coverage hash 冒充 judge hash；
+corrected pair 没有真实执行；
+predecessor judge 与当前 candidate 自判；
+任一负向 fixture 未被阻断。
+阻断 5：S6 terminal 存在明确假绿
+
+禁止通过 mtime 搜索“最新 slice run”。新增显式：
+
+terminal-lineage-manifest.v1.json
+
+它必须列出 S1–S6 各自唯一的：
+
+run root；
+terminal evidence hash；
+replay report hash；
+candidate hash；
+contract/registry/authority hash；
+acceptance IDs。
+
+Terminal validator 必须：
+
+从仓库实际文件重新计算 contract、registry、authority hashes；
+要求所有 slice 证据绑定最终 candidate；
+验证每个引用文件的 hash，而不只是检查存在；
+验证每个 slice 的 Acceptance IDs 与 contract 完全相等；
+验证最终并集精确等于七个 Acceptance ID；
+验证 replay report 的内容、commands、结果和引用；
+验证九个 false-green receipts 和 predecessor judge freeze；
+拒绝不同 lineage/run 的拼接；
+重新计算 terminal evidence 自身 hash。
+
+当前 S6 中“假 hash + 每个 slice 只有 A-TERMINAL 也能通过”的 fixture，应改成负向测试，断言 terminal 非零。
+
+正向 fixture 必须使用真实计算的 hash、完整七个 Acceptance ID 和同一显式 lineage。
+
+阻断 6：review 没有真正绑定 candidate
+
+不要直接扩展现有 vdd-review-run.v1，因为当前 source-freeze validator 对它采用严格字段集合。采用兼容方案：保留 v1，新增 reviewer 产出的 companion artifact：
+
+vdd-review-candidate-binding.v1.json
+
+建议结构：
+
+{
+  "schema_version": "vdd-review-candidate-binding.v1",
+  "status": "accepted",
+  "decision": "accepted",
+  "reviewer": {
+    "id": "external-reviewer-id",
+    "role": "external-semantic-reviewer"
+  },
+  "reviewed_at": "ISO-8601",
+  "review_input": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "candidate_commit": "...",
+  "candidate_tree_oid": "...",
+  "implementation_contract": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "command_registry": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "conformance_result": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "review_run": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "source_freeze": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "requirements_mapping": {
+    "path": "...",
+    "sha256": "sha256:..."
+  },
+  "authorizes": []
+}
+
+修改：
+
+publish_external_review_input.py
+publish_candidate_authorization.py
+route_plan_directory.py
+
+Authorization 必须同时验证：
+
+binding.review_input hash
+→ review_input.candidate commit
+→ authorization candidate commit
+→ contract/registry hashes
+→ conformance hash
+→ review-run hash
+
+任意一个不一致都返回 implementation-authorization-stale。
+
+publish_candidate_authorization.py 不再硬编码 docs/vdd-review-run.v1.json，必须显式接收：
+
+--review-input
+--review-run
+--review-binding
+--conformance
+
+增加以下回归测试：
+
+复用旧 accepted review 到新 commit；
+review input hash 被修改；
+contract 或 registry 在 review 后变化；
+只有 accepted v1、没有 candidate binding；
+binding 为 rejected；
+conformance 与 input 不一致。
+
+全部必须拒绝授权。
+
+推荐的实际执行顺序
+Phase A：准备真正的 TDD successor
+保留 ff78f34c 的部分实现。
+修订六个 RED，使它们针对上述真实缺口。
+修正 contract selectors、failure IDs、allowed paths。
+拆分计划中的 owner：
+semantic_artifact_compiler.py
+descriptor_compiler.py
+process_executor.py
+independent_judge.py
+coverage_gate.py
+promotion_gate.py
+terminal_validator.py
+
+此阶段只声明 planned files，不实现目标行为。artifact_owners.py 最终只做薄分发。
+
+实施第六项 candidate-review binding 基础设施及其自身回归测试。
+保持 plan-ready，重新生成 conformance 和 external review input。
+推送后停止，等待外部 reviewer。
+Phase B：Quick Dev TDD
+
+获得 accepted review binding 和 maintainer authorization 后，严格执行：
+
+S1 RED → IMPLEMENT → GREEN → REFACTOR → terminal
+S2 RED → IMPLEMENT → GREEN → REFACTOR → terminal
+...
+S6 RED → IMPLEMENT → GREEN → REFACTOR → implementation-complete
+
+每个 canonical RED 必须：
+
+非零退出；
+只出现 contract 声明的 failure ID；
+在生产代码首次写入之前留下 immutable observation。
+Phase C：最终防假绿验证
+
+必须至少执行以下七种篡改：
+
+descriptor/actual argv 不一致；
+executor 与 judge 同源；
+coverage 使用伪造 observation；
+promotion 使用 coverage hash 冒充 judge；
+删除任一 Acceptance ID；
+混用两个 run 的 slice evidence；
+review receipt 复用到另一 candidate。
+
+七种都被阻断，正向完整链路通过，才允许生成 implementation-complete。
+
+最终验收标准是：不是文件和状态全绿，而是任何单点伪造都会让整条链路 fail-closed。
