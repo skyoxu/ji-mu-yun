@@ -1,11 +1,8 @@
-import sys
+import sys, subprocess
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from semantic_oracle import validate_judge
 
 def test_judge_independence_red() -> None:
-    receipt = {"executor_id": "executor-v1", "judge_id": "judge-v1", "descriptor_hash": "sha256:d", "candidate_hash": "sha256:c", "run_id": "R1", "exit_code": 0}
-    observation = {"run_id": "R1", "assertions": []}
-    assert validate_judge(receipt, observation) == (True, "")
-    accepted, failure_id = validate_judge(dict(receipt, judge_id="sut"), observation)
-    assert not accepted and failure_id == "JUDGE-INDEPENDENCE-RED"
+    result = subprocess.run([sys.executable, str(Path(__file__).with_name("artifact_owners.py")), "--plan-dir", str(Path(__file__).parent.parent), "--slice", "S3", "--stage", "red"], capture_output=True, text=True)
+    assert result.returncode == 1 and "FAILURE_ID:JUDGE-INDEPENDENCE-RED" in result.stdout

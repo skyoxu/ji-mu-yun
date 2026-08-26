@@ -1,0 +1,107 @@
+但还有以下全部重要阻断。
+
+1. Semantic review 和授权仍未成立
+
+current conformance 仍然是：
+
+status=requirement_semantic_review_required
+review_run_required=true
+63 个 obligation 待处置
+authorizes=[]
+
+current mapping 的 semantic_review=[]，仓库中没有本计划的 vdd-review-run.v1。
+
+现有 authorization receipt 仍绑定旧 contract hash af4854...；而 contract 已在本提交修改，因此授权过期。plan state 也仍为 plan-ready。
+
+此外，external review input 还有两个绑定问题：
+
+没有绑定 candidate commit 64007ff9。
+引用的是旧 skill-input/receipt.v1.json，其 selection 是 615158...；当前计划 selection 是 4cf516...。正确的 repair-round-4 receipt 才绑定 4cf516...。
+2. 六个 RED 在当前提交上已经是 GREEN
+
+新的测试全部在验证 semantic_oracle.py 当前实现已经正确：
+
+合法输入断言通过；
+非法输入被拒绝也断言通过。
+
+所以 fresh RED 执行 pytest 会返回 0，Quick Dev 将直接报：
+
+RED command unexpectedly passed
+
+而且这些测试没有输出 FAILURE_ID:<id> 格式，无法形成 typed RED observation。
+
+更关键的是测试没有调用 contract 声明的生产 owner：
+
+Slice	contract 生产 owner	测试实际调用
+S1	VDD validate_plan.py	semantic_oracle.validate_semantic_intent
+S2	build_slice_invocation.py	semantic_oracle.validate_descriptor
+S3	stage_lifecycle_runner.py	semantic_oracle.validate_judge
+S4	exact_cover.py	semantic_oracle.validate_many_to_many_cover
+S5	route_plan_directory.py	semantic_oracle.validate_promotion
+S6	terminal_predicate.py	仅检查缺文件时 blocked
+
+因此它们是 plan-local oracle 单元测试，不是各 slice 的生产行为 RED。
+
+3. Artifact producer graph 仍然断裂
+
+以下被下游 snapshot/read set 要求的文件仍不存在，也没有合法 writer：
+
+execution-descriptor.v1.json
+process-receipt.v1.json
+acceptance-coverage.v1.json
+evidence-snapshot.v1.json
+
+结果：
+
+S3 会在解析缺失的 execution-descriptor.v1.json 时停止。
+S4 会因缺失 process-receipt.v1.json 停止。
+当前 tests 即使全部通过，也不会生产这些 artifact。
+4. Slice terminal 当前无法通过
+
+S1～S5 的 terminal 都调用 stage_command.py --stage terminal，它随后执行：
+
+validate_terminal(plan_dir)，没有传 run_root。
+
+这会回退查找旧的：
+
+false-green-fixtures/nine-fixtures.json
+
+该文件不存在，因此 S1 第一次 slice terminal 就会失败。
+
+同时代码中没有找到以下 run-local evidence 的 writer：
+
+terminal-evidence.json
+terminal-replay-report.json
+false-green-fixtures.json
+
+S6 terminal 又假设 S1～S6 使用与 S6 相同的 run_id，但 Quick Dev 每个 slice 独立生成 run ID，因此即使有人手工生成文件，也无法按当前路径聚合前序证据。
+
+5. Candidate/write trust 仍有缺口
+
+当前 candidate manifest 只跟踪声明的 production/test/planned files：
+
+不绑定 semantic_oracle.py
+不绑定 stage_command.py
+不覆盖整个 workspace
+
+因此实施阶段修改 unrelated 文件不会进入 actual_changed；GREEN 前的 stage observation 又是在实施之后才开始，无法发现这类改动。
+
+另外，successor 在 publish 时重新计算了 candidate，但后续 validate_implementation_successor() 没有再次与当前 workspace 对比。receipt 发布后继续修改允许文件，仍可能使用旧 successor 进入 GREEN。
+
+最终判断
+
+64007ff9 的正确状态是：
+
+semantic-oracle bootstrap repair candidate，尚未达到 Quick Dev TDD executable handoff。
+
+不要现在只补 semantic review 和 authorization；那样仍然无法开跑。
+
+剩余修复顺序：
+
+让六个 RED 直接调用各自真实生产 owner，并在当前未实现行为上非零失败、输出精确 FAILURE_ID:。
+给 descriptor、receipt、coverage、snapshot 和 run-local terminal evidence 建立真实 producer。
+修正 slice terminal 与跨 slice run lineage。
+将 semantic_oracle.py、stage_command.py 等真实执行字节纳入 authority/candidate closure，并检测整个实施阶段的 unrelated writes。
+重新生成绑定最终候选提交和 repair-round-4 receipt 的 review input。
+完成 external semantic review。
+最后生成当前字节的 authorization receipt，才可以启动 Quick Dev。

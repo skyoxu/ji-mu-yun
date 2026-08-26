@@ -36,8 +36,8 @@ def write_new(path: Path, value: object) -> None:
 def main() -> None:
     mapping = GOV / "requirements-acceptance-mapping.v1.current-20260826.json"
     manifest = GOV / "vdd-source-freeze-manifest.v1.current-bound-20260826.json"
-    conformance = GOV / "vdd-conformance-result.v1.current-20260826.json"
-    review_input = GOV / "external-semantic-review-input.v1.current-20260826.json"
+    conformance = GOV / "vdd-conformance-result.v1.current-20260826-know78-r2.json"
+    review_input = GOV / "external-semantic-review-input.v1.current-20260826-know78-r2.json"
     validator = ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py"
     result = subprocess.run(
         ["python", str(validator), "--repository-root", str(ROOT), "--manifest", str(manifest), "--mapping", str(mapping)],
@@ -47,13 +47,18 @@ def main() -> None:
         raise RuntimeError(result.stderr)
     conformance_value = json.loads(result.stdout)
     write_new(conformance, conformance_value)
-    current_receipt = PLAN / "skill-input/receipt.v1.json"
+    current_receipt = PLAN / "skill-input/repair-round-4/receipt.v1.json"
     handoff = conformance_value.get("semantic_handoff") or {}
     package = {
         "schema_version": "vdd-external-semantic-review-input.v1",
         "plan_id": "vdd-quick-dev-semantic-oracle-recovery",
         "profile": handoff.get("profile", "bootstrap-upstream-plan"),
         "selection_hash": json.loads(manifest.read_text(encoding="utf-8"))["selection_hash"],
+        "candidate": {
+            "head_commit": subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip(),
+            "implementation_contract": ref(PLAN / "implementation-contract.v1.json"),
+            "command_registry": ref(PLAN / "command-registry.v1.json"),
+        },
         "source_freeze": ref(manifest),
         "requirements_mapping": ref(mapping),
         "conformance_result": ref(conformance),

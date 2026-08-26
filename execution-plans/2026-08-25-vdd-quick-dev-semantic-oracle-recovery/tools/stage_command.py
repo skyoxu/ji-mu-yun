@@ -26,14 +26,19 @@ def main() -> int:
     parser.add_argument("--slice", required=True, choices=sorted(TESTS))
     parser.add_argument("--stage", required=True, choices=("green", "refactor", "terminal"))
     parser.add_argument("--plan-dir", required=True)
+    parser.add_argument("--run-root")
     args = parser.parse_args()
-    root = Path(args.plan_dir).parents[1].parent
-    if args.stage == "terminal":
-        from validate_all import validate_terminal
-        result = validate_terminal(Path(args.plan_dir))
-        return 0 if result.get("status") == "pass" else 1
-    test = Path(args.plan_dir) / "tools" / TESTS[args.slice]
-    return subprocess.call([sys.executable, "-m", "pytest", str(test), "-q"], cwd=root)
+    owner = Path(args.plan_dir) / "tools" / "artifact_owners.py"
+    command = [sys.executable, str(owner), "--plan-dir", args.plan_dir, "--slice", args.slice, "--stage", args.stage]
+    run_root = args.run_root
+    if not run_root and args.stage == "terminal":
+        plan_id = Path(args.plan_dir).name
+        candidates = sorted((Path(args.plan_dir).parents[1] / "logs" / "tdd-adapter" / plan_id / args.slice).glob("*"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if candidates:
+            run_root = str(candidates[0])
+    if run_root:
+        command.extend(["--run-root", run_root])
+    return subprocess.call(command, cwd=Path(args.plan_dir).parents[1].parent)
 
 
 if __name__ == "__main__":

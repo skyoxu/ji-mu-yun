@@ -3,10 +3,17 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 import json
+import subprocess
 
 
 def _sha(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+def _workspace_closure(root: Path) -> str:
+    status = subprocess.run(["git", "status", "--porcelain=v1", "--untracked-files=all"], cwd=root, capture_output=True, text=True, check=True).stdout
+    tracked = subprocess.run(["git", "ls-files", "-s"], cwd=root, capture_output=True, text=True, check=True).stdout
+    payload = (tracked + "\nSTATUS\n" + status).encode("utf-8")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
 def current_candidate_identity(slice_id: str) -> dict[str, str]:
@@ -15,7 +22,8 @@ def current_candidate_identity(slice_id: str) -> dict[str, str]:
     registry = root / "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/command-registry.v1.json"
     document = json.loads(contract.read_text(encoding="utf-8"))
     selected = next(item for item in document["slices"] if item["slice_id"] == slice_id)
-    tracked = [selected["tdd"]["red"]["test_selector"], *selected.get("allowed_changes", {}).get("production", []), *selected.get("planned_new_files", [])]
+    tracked = [selected["tdd"]["red"]["test_selector"], *selected.get("allowed_changes", {}).get("production", []), *selected.get("allowed_changes", {}).get("tests", []), *selected.get("planned_new_files", [])]
+    tracked.extend(["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/stage_command.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_oracle.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/validate_all.py", ".agents/skills/vdd-execution-plan/scripts/validate_plan.py"])
     for dependency_id in selected.get("dependency_closure", []):
         dependency = next(item for item in document["slices"] if item["slice_id"] == dependency_id)
         tracked.extend(dependency.get("allowed_changes", {}).get("production", []))
@@ -52,6 +60,7 @@ def current_candidate_identity(slice_id: str) -> dict[str, str]:
         "validator_version": "plan-local-bootstrap-v1",
         "closure_definition_hash": _sha(contract),
         "validator_hash": _sha(Path(__file__).resolve()),
+        "workspace_closure_hash": _workspace_closure(root),
         "semantic_closure_hash": semantic_hash,
         "candidate_manifest": file_state,
     }
@@ -69,8 +78,8 @@ def validate_terminal(plan_dir: Path, run_root: Path | None = None) -> dict[str,
     """Validate one append-only run-local evidence envelope fail-closed."""
     evidence_roots = []
     if run_root is not None:
-        plan_logs = run_root.parents[1]
-        evidence_roots = [plan_logs / f"S{i}" / run_root.name for i in range(1, 7)]
+        lineage_root = run_root.parent.parent
+        evidence_roots = [lineage_root / f"S{i}" / run_root.name for i in range(1, 7)]
     required_names = ["terminal-evidence.json", "terminal-replay-report.json"]
     required = [root / name for root in evidence_roots for name in required_names]
     fixtures = (evidence_roots[-1] / "false-green-fixtures.json") if evidence_roots else plan_dir / "false-green-fixtures" / "nine-fixtures.json"

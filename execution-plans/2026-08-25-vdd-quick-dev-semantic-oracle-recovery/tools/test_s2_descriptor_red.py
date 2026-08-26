@@ -1,10 +1,8 @@
-import sys
+import sys, subprocess
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from semantic_oracle import validate_descriptor
 
 def test_descriptor_boundary_red() -> None:
-    valid = {"target": "semantic-runner", "argv": ["--case", "A"], "cwd": ".", "timeout_seconds": 30, "shell": False, "case_source_refs": ["A"], "case_producer_ref": "vdd"}
-    assert validate_descriptor(valid) == (True, "")
-    accepted, failure_id = validate_descriptor(dict(valid, shell=True))
-    assert not accepted and failure_id == "QD-DESCRIPTOR-RED"
+    result = subprocess.run([sys.executable, str(Path(__file__).with_name("artifact_owners.py")), "--plan-dir", str(Path(__file__).parent.parent), "--slice", "S2", "--stage", "red"], capture_output=True, text=True)
+    assert result.returncode == 1 and "FAILURE_ID:QD-DESCRIPTOR-RED" in result.stdout
