@@ -134,6 +134,41 @@ def _minimal_authorization_binding_is_current(root: Path, binding: object) -> bo
     return binding["sha256"] in {raw, canonical}
 
 
+def _candidate_commit_is_current(root: Path, plan_dir: Path, receipt: dict[str, object]) -> bool:
+    """Validate candidate commit/tree for the normative closure only.
+
+    Evidence publication commits are intentionally outside this closure, so a
+    receipt remains valid after its own evidence is appended to the branch.
+    """
+    commit = receipt.get("candidate_commit")
+    tree = receipt.get("candidate_tree_hash")
+    if commit is None and tree is None:
+        return True
+    if not isinstance(commit, str) or not commit or not isinstance(tree, str) or not tree.startswith("sha256:"):
+        return False
+    expected_tree = subprocess.run(["git", "-C", str(root), "rev-parse", f"{commit}^{{tree}}"], capture_output=True, text=True, check=False)
+    if expected_tree.returncode != 0 or "sha256:" + expected_tree.stdout.strip() != tree:
+        return False
+    try:
+        contract = json.loads((plan_dir / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+        paths: set[str] = {"execution-plans/" + plan_dir.name + "/implementation-contract.v1.json", "execution-plans/" + plan_dir.name + "/command-registry.v1.json"}
+        for item in contract.get("slices", []):
+            changes = item.get("allowed_changes", {})
+            for group in changes.values():
+                paths.update(group)
+            paths.update(item.get("planned_new_files", []))
+        for raw in paths:
+            current = root / raw
+            if not current.is_file():
+                return False
+            shown = subprocess.run(["git", "-C", str(root), "show", f"{commit}:{raw}"], capture_output=True, check=False).stdout
+            if not shown or _sha(current.read_bytes()) != "sha256:" + hashlib.sha256(shown).hexdigest():
+                return False
+    except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+        return False
+    return True
+
+
 def _skill_input_generation_is_current(root: Path, generation: object) -> bool:
     required = {
         "schema_version", "receipt", "source_selection_hash", "selected_source_content_root",
@@ -663,6 +698,7 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                         and receipt.get("decision", {}).get("transition") == "implementation-authorized"
                         and receipt.get("authorizes") == ["implementation-authorized"]
                         and all(_minimal_authorization_binding_is_current(plan_dir.resolve().parents[1], receipt.get(field)) for field in required)
+                        and _candidate_commit_is_current(plan_dir.resolve().parents[1], plan_dir, receipt)
                     ):
                         return None
                 except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
@@ -692,8 +728,9 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                     "reason": "repair-state-invalid",
                     "authorizes": [],
                 }
-            receipt_path = plan_dir / "implementation-authorization-receipt.successor.v1.json"
-            if not receipt_path.is_file():
+            receipt_candidates = sorted([*plan_dir.glob("implementation-authorization-receipt.successor.v1.json"), *plan_dir.glob("implementation-authorization-receipt.successor.v2.json")])
+            receipt_path = receipt_candidates[-1] if receipt_candidates else None
+            if receipt_path is None:
                 return {
                     "next_action": "awaiting-implementation-authorization",
                     "reason": "implementation-authorization-receipt-missing",
