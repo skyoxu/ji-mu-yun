@@ -21,7 +21,12 @@ def main() -> int:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     result = module.validate_terminal(args.plan_dir, args.run_root)
-    result.update({"slice_id": args.slice, "plan_id": "vdd-quick-dev-semantic-oracle-recovery"})
+    result.update({
+        "slice_id": args.slice,
+        "run_id": args.run_root.name if args.run_root else None,
+        "plan_id": "vdd-quick-dev-semantic-oracle-recovery",
+        "producer": "terminal-validator",
+    })
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps(result, sort_keys=True))

@@ -1,0 +1,41 @@
+1. 六个 RED 的语义全部反了
+Slice	当前 RED 的行为	正确需求
+S1	要求空 acceptance_ids/taxonomy 被接受	应拒绝
+S2	要求 shell=true、空 argv/source 被接受	应拒绝
+S3	要求 executor 自己充当 judge 被接受	应拒绝
+S4	要求空 exact-cover 覆盖非空 manifest	应拒绝
+S5	要求无 fixtures、无 predecessor、错误 writer 被接受	应拒绝
+S6	比较一个硬编码字典，完全没有调用生产代码	不是真正的 RED
+
+当前 semantic_oracle.py 已经正确拒绝 S1–S5 的非法输入。因此执行这些 RED 后，如果为了 GREEN 修改生产代码，反而会把正确行为改坏；如果修改测试，则是在改写冻结的 RED。
+
+更严重的是，S2–S5 的测试调用 semantic_oracle.py，但对应 slice 的允许写集并不包含它；S6 根本没有生产代码入口。它们无法在现有契约下合法完成 RED→GREEN。
+
+2. GREEN 仍然只是“文件存在即通过”
+
+artifact_owners.py 对 S1–S6 的 GREEN/REFACTOR 主要检查计划目录中的 JSON 文件是否存在，没有证明：
+
+descriptor 是否真的被编译和绑定；
+executor 是否真正执行；
+independent judge 是否真正判定；
+exact-cover 是否覆盖实际路径；
+false-green fixtures 是否被实际运行；
+terminal predicate 是否消费完整 run-local evidence。
+
+因此实现者可以预写若干 JSON 文件获得“全绿”，存在明确假绿路径。
+
+必须先修的内容
+将当前已经存在的非法输入拒绝行为改为 regression/terminal coverage，不再作为 RED。
+每个 slice 新建真正缺失行为的 RED，并直接调用该 slice 声明的生产 owner。
+S6 必须调用真实 terminal_predicate，不能使用硬编码字典。
+GREEN 必须产生并语义校验真实 run-local artifact，不能只检查文件存在。
+测试、契约和 registry 修正后，重新生成 freeze 与 implementation authorization。
+
+所以当前状态是：
+
+VDD review/conformance/authorization：通过
+Quick Dev 路由门禁：通过
+可执行的语义 TDD 契约：不通过
+最终判断：不能开始 Quick Dev TDD，否则极可能得到假绿或反向实现
+
+这次我看到的重要阻断就是上述两类，没有再隐藏其他普通治理项。
