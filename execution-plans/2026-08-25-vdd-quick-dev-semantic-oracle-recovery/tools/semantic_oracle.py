@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from typing import Any
+from pathlib import Path
+import hashlib
+import json
 
 
 def validate_semantic_intent(value: dict[str, Any]) -> tuple[bool, str]:
@@ -63,3 +66,26 @@ def validate_promotion(fixtures: list[dict[str, Any]], predecessor_judge: str | 
     if any(item.get("blocked") is not True or item.get("corrected_pair_pass") is not True for item in fixtures):
         return False, "PROMOTION-FALSE-GREEN-RED"
     return True, ""
+
+
+def compile_run_local_semantic_artifacts(run_root: Path) -> dict[str, Any]:
+    """Compile VDD semantic outputs from an explicit run-local intent input."""
+    input_path = run_root / "semantic-intent-input.v1.json"
+    if not input_path.is_file():
+        raise FileNotFoundError("semantic-intent-input.v1.json")
+    value = json.loads(input_path.read_text(encoding="utf-8"))
+    accepted, failure_id = validate_semantic_intent(value)
+    if not accepted:
+        raise ValueError(failure_id)
+    body = {
+        "schema_version": "semantic-artifacts.v1",
+        "producer": "vdd",
+        "status": "pass",
+        "slice_id": "S1",
+        "run_id": run_root.name,
+        "semantic_intent": value,
+    }
+    body["evidence_sha256"] = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    run_root.mkdir(parents=True, exist_ok=True)
+    (run_root / "semantic-artifacts.v1.json").write_text(json.dumps(body, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8", newline="\n")
+    return body

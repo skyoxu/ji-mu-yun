@@ -1,0 +1,34 @@
+仍有两个重要阻断。
+
+1. RED failure ID 与契约不一致
+
+新 owner RED 实际产生：
+
+VDD-SEMANTIC-PRODUCER-MISSING
+QD-DESCRIPTOR-PRODUCER-MISSING
+JUDGE-PRODUCER-MISSING
+COVERAGE-PRODUCER-MISSING
+PROMOTION-PRODUCER-MISSING
+TERMINAL-PRODUCER-MISSING
+
+但 implementation-contract.v1.json 仍声明旧 failure IDs。Quick Dev 会精确比较 expected/observed IDs，因此 RED 虽然非零，仍会被判定为：
+
+RED failure identity does not match declared failure IDs
+
+2. 新 owner RED 仍允许假绿
+S1 只检查函数是否存在，空函数也能 GREEN。
+S2–S5 使用空目录调用 artifact_owners.run()，只断言返回 0；没有断言实际生成的 artifact、内容、绑定和真实执行。
+S6 给 terminal predicate 一个空且目录结构非法的 tmp_path，却要求返回 0。正确的 fail-closed 实现必然返回非零；为了 GREEN 反而需要削弱 terminal validator。
+
+因此实现者仍可通过“直接返回 0”或制造常量文件让测试变绿，没有被迫实现真实 descriptor、executor/judge、exact-cover 和九类 fixture。
+
+另外，计划已经主动退回 plan-ready，旧 authorization 因 contract/registry 改变而失效；这是修完语义 RED 后需要重新发布的机械门禁。
+
+最终判断：
+
+原反向断言问题：已修复
+文件存在型 GREEN：部分修复
+可执行且无假绿的 RED→GREEN 契约：未修复
+当前能否开始 Quick Dev TDD：不能
+
+下一版需要一次完成：让六个 owner RED 使用完整但当前无法满足的输入夹具，并断言真实产物及内容；同步 failure IDs；然后重新 conformance 和 authorization。

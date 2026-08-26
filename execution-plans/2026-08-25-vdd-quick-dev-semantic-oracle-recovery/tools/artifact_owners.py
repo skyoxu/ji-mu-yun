@@ -24,6 +24,13 @@ def _run_local_input(run_root: Path, name: str, producer: str) -> dict | None:
     value = _document(run_root / name)
     if value is None or value.get("producer") != producer or value.get("status") != "pass":
         return None
+    if value.get("run_id") != run_root.name or not isinstance(value.get("slice_id"), str):
+        return None
+    digest = value.get("evidence_sha256")
+    body = {key: item for key, item in value.items() if key != "evidence_sha256"}
+    expected = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    if digest != expected:
+        return None
     return value
 
 def run(plan: Path, slice_id: str, stage: str, run_root: Path | None = None) -> int:
