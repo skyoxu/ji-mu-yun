@@ -27,9 +27,11 @@ def _receipt(root: Path) -> dict:
     conformance = _write(root, "conformance.json", {"status":"conformant","errors":[],"authorizes":[]})
     contract = _write(root, "contract.json", {})
     registry = _write(root, "registry.json", {})
-    review_input = _write(root, "input.json", {"candidate":{"head_commit":"candidate-1","implementation_contract":contract,"command_registry":registry}})
-    binding = _write(root, "binding.json", {"schema_version":"vdd-review-candidate-binding.v1","status":"accepted","decision":"accepted","candidate_commit":"candidate-1","review_input":review_input,"review_run":review,"conformance_result":conformance,"implementation_contract":contract,"command_registry":registry})
-    return {"candidate_commit":"candidate-1","review_input":review_input,"review_run":review,"review_candidate_binding":binding,"conformance_result":conformance,"implementation_contract":contract,"command_registry":registry}
+    freeze = _write(root, "freeze.json", {})
+    mapping = _write(root, "mapping.json", {})
+    review_input = _write(root, "input.json", {"candidate":{"head_commit":"candidate-1","implementation_contract":contract,"command_registry":registry},"source_freeze":freeze,"requirements_mapping":mapping})
+    binding = _write(root, "binding.json", {"schema_version":"vdd-review-candidate-binding.v1","status":"accepted","decision":"accepted","candidate_commit":"candidate-1","review_input":review_input,"review_run":review,"conformance_result":conformance,"implementation_contract":contract,"command_registry":registry,"source_freeze":freeze,"requirements_mapping":mapping})
+    return {"candidate_commit":"candidate-1","review_input":review_input,"review_run":review,"review_candidate_binding":binding,"conformance_result":conformance,"implementation_contract":contract,"command_registry":registry,"source_freeze":freeze,"requirements_mapping":mapping}
 
 
 def test_candidate_binding_requires_every_link(tmp_path: Path) -> None:

@@ -373,7 +373,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             self.assertEqual("awaiting-implementation-authorization", result["next_action"])
             self.assertEqual("implementation-authorization-stale", result["reason"])
 
-    def test_router_accepts_minimal_maintainer_authorization_receipt(self) -> None:
+    def test_router_rejects_minimal_maintainer_authorization_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
@@ -397,13 +397,13 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 "authorizes": ["implementation-authorized"],
             }), encoding="utf-8")
             with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
-                self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+                self.assertEqual("external-repair-required", ROUTER.route(root, plan)["next_action"])
 
             raw_receipt = json.loads((plan / "implementation-authorization-receipt.v1.json").read_text(encoding="utf-8"))
             raw_receipt["knowledge_context_freeze"]["sha256"] = "sha256:" + hashlib.sha256((plan / "knowledge-context.freeze.v1.json").read_bytes()).hexdigest()
             (plan / "implementation-authorization-receipt.v1.json").write_text(json.dumps(raw_receipt), encoding="utf-8")
             with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
-                self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+                self.assertEqual("external-repair-required", ROUTER.route(root, plan)["next_action"])
 
     def test_top_level_active_route_exposes_implementation_handoff(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

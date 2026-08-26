@@ -143,6 +143,8 @@ def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) ->
         input_ref = receipt.get("review_input")
         if not all(isinstance(value, dict) for value in (review_ref, conformance_ref, binding_ref, input_ref)):
             return False
+        if not all(_minimal_authorization_binding_is_current(root, value) for value in (review_ref, conformance_ref, binding_ref, input_ref, receipt.get("implementation_contract"), receipt.get("command_registry"))):
+            return False
         review = json.loads((root / review_ref["path"]).read_text(encoding="utf-8"))
         conformance = json.loads((root / conformance_ref["path"]).read_text(encoding="utf-8"))
         binding = json.loads((root / binding_ref["path"]).read_text(encoding="utf-8"))
@@ -164,6 +166,8 @@ def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) ->
             and binding.get("conformance_result") == conformance_ref
             and binding.get("implementation_contract") == receipt.get("implementation_contract") == review_input.get("candidate", {}).get("implementation_contract")
             and binding.get("command_registry") == receipt.get("command_registry") == review_input.get("candidate", {}).get("command_registry")
+            and binding.get("source_freeze") == receipt.get("source_freeze") == review_input.get("source_freeze")
+            and binding.get("requirements_mapping") == receipt.get("requirements_mapping") == review_input.get("requirements_mapping")
         )
     except (KeyError, OSError, UnicodeError, json.JSONDecodeError, TypeError):
         return False
@@ -750,26 +754,19 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
     if lifecycle_state == "implementation-authorized":
         if document["authorizes"] in (["implementation-authorized"], ["plan-ready", "implementation-authorized"]):
             root = plan_dir.resolve().parents[1]
-            minimal_receipts = sorted([*plan_dir.glob("implementation-authorization-receipt.successor.v1.json"), *plan_dir.glob("implementation-authorization-receipt.successor.v2.json"), *plan_dir.glob("implementation-authorization-receipt.v1.json"), *plan_dir.glob("implementation-authorization-receipt.v2.json")], key=lambda p: ("successor" not in p.name, "v1" in p.name, p.name))
+            minimal_receipts = sorted(plan_dir.glob("implementation-authorization-receipt.successor.v2.json"))
             if minimal_receipts:
                 receipt_path = minimal_receipts[-1]
                 try:
                     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-                    required = ("implementation_contract", "authority_manifest")
-                    review_gate = True
-                    if receipt.get("schema_version") not in {
-                        "quick-dev-tdd-adapter.implementation-authorization-successor.v2",
-                        "quick-dev-tdd-adapter.implementation-authorization.v2",
-                    } and not receipt.get("candidate_commit"):
-                        # Preserve the historical minimal test fixture contract;
-                        # current tree-bound receipts always take the strict gate.
-                        review_gate = False
+                    required = ("implementation_contract", "command_registry", "authority_manifest", "review_input", "review_run", "review_candidate_binding", "conformance_result", "source_freeze", "requirements_mapping")
                     if (
                         receipt.get("plan_id") == plan_id
                         and receipt.get("decision", {}).get("owner") == "maintainer"
                         and receipt.get("decision", {}).get("transition") == "implementation-authorized"
                         and receipt.get("authorizes") == ["implementation-authorized"]
-                        and (not review_gate or _review_and_conformance_authorize(root, receipt))
+                        and receipt.get("schema_version") == "quick-dev-tdd-adapter.implementation-authorization-successor.v2"
+                        and _review_and_conformance_authorize(root, receipt)
                         and all(_minimal_authorization_binding_is_current(plan_dir.resolve().parents[1], receipt.get(field)) for field in required)
                         and _candidate_commit_is_current(plan_dir.resolve().parents[1], plan_dir, receipt)
                     ):
@@ -819,7 +816,7 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                         and receipt.get("authorizes") == ["implementation-authorized"]
                         and _review_and_conformance_authorize(root, receipt)
                         and _candidate_commit_is_current(root, plan_dir, receipt)
-                        and all(_minimal_authorization_binding_is_current(root, receipt.get(field)) for field in ("implementation_contract", "command_registry", "authority_manifest", "review_input", "review_run", "review_candidate_binding", "conformance_result"))
+                        and all(_minimal_authorization_binding_is_current(root, receipt.get(field)) for field in ("implementation_contract", "command_registry", "authority_manifest", "review_input", "review_run", "review_candidate_binding", "conformance_result", "source_freeze", "requirements_mapping"))
                     ):
                         return None
                     raise ValueError("tree-bound authorization receipt is stale")
