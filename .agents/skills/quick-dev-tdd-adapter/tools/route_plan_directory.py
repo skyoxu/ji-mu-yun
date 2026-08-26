@@ -139,10 +139,15 @@ def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) ->
     try:
         review_ref = receipt.get("review_run")
         conformance_ref = receipt.get("conformance_result")
-        if not isinstance(review_ref, dict) or not isinstance(conformance_ref, dict):
+        binding_ref = receipt.get("review_candidate_binding")
+        input_ref = receipt.get("review_input")
+        if not all(isinstance(value, dict) for value in (review_ref, conformance_ref, binding_ref, input_ref)):
             return False
         review = json.loads((root / review_ref["path"]).read_text(encoding="utf-8"))
         conformance = json.loads((root / conformance_ref["path"]).read_text(encoding="utf-8"))
+        binding = json.loads((root / binding_ref["path"]).read_text(encoding="utf-8"))
+        review_input = json.loads((root / input_ref["path"]).read_text(encoding="utf-8"))
+        candidate = receipt.get("candidate_commit")
         return (
             review.get("schema_version") == "vdd-review-run.v1"
             and review.get("status") == "accepted"
@@ -150,6 +155,15 @@ def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) ->
             and conformance.get("status") == "conformant"
             and conformance.get("errors") == []
             and conformance.get("authorizes") == []
+            and binding.get("schema_version") == "vdd-review-candidate-binding.v1"
+            and binding.get("status") == "accepted"
+            and binding.get("decision") == "accepted"
+            and binding.get("candidate_commit") == candidate == review_input.get("candidate", {}).get("head_commit")
+            and binding.get("review_input") == input_ref
+            and binding.get("review_run") == review_ref
+            and binding.get("conformance_result") == conformance_ref
+            and binding.get("implementation_contract") == receipt.get("implementation_contract") == review_input.get("candidate", {}).get("implementation_contract")
+            and binding.get("command_registry") == receipt.get("command_registry") == review_input.get("candidate", {}).get("command_registry")
         )
     except (KeyError, OSError, UnicodeError, json.JSONDecodeError, TypeError):
         return False
@@ -805,7 +819,7 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                         and receipt.get("authorizes") == ["implementation-authorized"]
                         and _review_and_conformance_authorize(root, receipt)
                         and _candidate_commit_is_current(root, plan_dir, receipt)
-                        and all(_minimal_authorization_binding_is_current(root, receipt.get(field)) for field in ("implementation_contract", "command_registry", "authority_manifest", "review_run", "conformance_result"))
+                        and all(_minimal_authorization_binding_is_current(root, receipt.get(field)) for field in ("implementation_contract", "command_registry", "authority_manifest", "review_input", "review_run", "review_candidate_binding", "conformance_result"))
                     ):
                         return None
                     raise ValueError("tree-bound authorization receipt is stale")

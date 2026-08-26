@@ -1,0 +1,19 @@
+{
+  "schema_version": "vdd-semantic-oracle-recovery.phase-a-successor-plan.v1",
+  "predecessor_candidate": "ff78f34cb222f6cbb1cac565b33eae51d8038605",
+  "lifecycle_state": "plan-ready",
+  "authorizes": [],
+  "phase_boundary": "Planning, RED tests, contract and candidate-review binding infrastructure only; target producer behavior is Phase B Quick Dev work.",
+  "slices": {
+    "S1": {"selector":"tools/test_s1_successor_red.py::test_rejects_empty_taxonomy","failure_id":"VDD-SEMANTIC-ARTIFACT-SET-INCOMPLETE","planned_files":["tools/semantic_artifact_compiler.py"]},
+    "S2": {"selector":"tools/test_s2_successor_red.py::test_rejects_empty_descriptor_argv","failure_id":"QD-DESCRIPTOR-BINDING-INCOMPLETE","planned_files":["tools/descriptor_compiler.py"]},
+    "S3": {"selector":"tools/test_s3_successor_red.py::test_rejects_descriptor_execution_drift","failure_id":"JUDGE-INDEPENDENCE-UNPROVEN","planned_files":["tools/process_executor.py","tools/independent_judge.py"]},
+    "S4": {"selector":"tools/test_s4_successor_red.py::test_rejects_unbound_observation_edge","failure_id":"COVERAGE-EVIDENCE-LINEAGE-UNBOUND","planned_files":["tools/coverage_gate.py"]},
+    "S5": {"selector":"tools/test_s5_successor_red.py::test_rejects_coverage_hash_as_predecessor_judge","failure_id":"PROMOTION-PREDECESSOR-JUDGE-UNBOUND","planned_files":["tools/promotion_gate.py","predecessor-judge-freeze.v1.json"]},
+    "S6": {"selector":"tools/test_s6_successor_red.py::test_rejects_forged_terminal_lineage","failure_id":"TERMINAL-LINEAGE-NOT-CLOSED","planned_files":["tools/terminal_validator.py","terminal-lineage-manifest.v1.json"]}
+  },
+  "review_binding": {
+    "companion_schema": "vdd-review-candidate-binding.v1",
+    "required_chain": ["review_input_sha256", "candidate_commit", "candidate_tree_oid", "implementation_contract_sha256", "command_registry_sha256", "conformance_sha256", "review_run_sha256", "source_freeze_sha256", "requirements_mapping_sha256"]
+  }
+}
