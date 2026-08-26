@@ -159,9 +159,11 @@ def _candidate_commit_is_current(root: Path, plan_dir: Path, receipt: dict[str, 
             paths.update(item.get("planned_new_files", []))
         for raw in paths:
             current = root / raw
-            if not current.is_file():
-                return False
             shown = subprocess.run(["git", "-C", str(root), "show", f"{commit}:{raw}"], capture_output=True, check=False).stdout
+            if not current.is_file() and not shown:
+                continue
+            if not current.is_file() or not shown:
+                return False
             if not shown or _sha(current.read_bytes()) != "sha256:" + hashlib.sha256(shown).hexdigest():
                 return False
     except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
