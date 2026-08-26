@@ -28,6 +28,15 @@ def validate_slice_ready(repository_root: Path, run_root: Path, slice_id: str) -
     from stage_lifecycle_runner import validate_implementation_successor
     if not validate_implementation_successor(run_root):
         return {"status": "blocked", "reason": "implementation-successor-invalid"}
+    plan = repository_root / "execution-plans" / "2026-08-25-vdd-quick-dev-semantic-oracle-recovery"
+    try:
+        contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+        selected = next(item for item in contract["slices"] if item.get("slice_id") == slice_id)
+        missing = [path for path in selected.get("planned_new_files", []) if not (repository_root / path).is_file()]
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, StopIteration, TypeError):
+        return {"status": "blocked", "reason": "planned-file-contract-invalid"}
+    if missing:
+        return {"status": "blocked", "reason": "planned-files-missing", "missing": missing}
     return {"status": "pass", "predicate": "slice-ready", "slice_id": slice_id, "run_id": run_root.name}
 
 

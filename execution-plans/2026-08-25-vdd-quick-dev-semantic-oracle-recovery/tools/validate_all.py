@@ -39,7 +39,7 @@ def current_candidate_identity(slice_id: str) -> dict[str, str]:
     document = json.loads(contract.read_text(encoding="utf-8"))
     selected = next(item for item in document["slices"] if item["slice_id"] == slice_id)
     tracked = [selected["tdd"]["red"]["test_selector"], *selected.get("allowed_changes", {}).get("production", []), *selected.get("allowed_changes", {}).get("tests", []), *selected.get("planned_new_files", [])]
-    tracked.extend(["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/stage_command.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_oracle.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/validate_all.py", ".agents/skills/vdd-execution-plan/scripts/validate_plan.py"])
+    tracked.extend(["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/stage_command.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/run_input_materializer.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_oracle.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/terminal_validator.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/validate_all.py", ".agents/skills/vdd-execution-plan/scripts/validate_plan.py"])
     for dependency_id in selected.get("dependency_closure", []):
         dependency = next(item for item in document["slices"] if item["slice_id"] == dependency_id)
         tracked.extend(dependency.get("allowed_changes", {}).get("production", []))
@@ -91,24 +91,47 @@ def slice_validation_snapshot(slice_id: str | None = None) -> dict[str, str]:
     return validation_snapshot(slice_id)
 
 
+def _manifest_lineage(plan_dir: Path, run_root: Path) -> list[Path] | None:
+    root = plan_dir.resolve().parents[1]
+    path = plan_dir / "terminal-lineage-manifest.v1.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        body = {key: item for key, item in value.items() if key != "manifest_sha256"}
+        expected = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+        entries = value.get("entries")
+        if value.get("schema_version") != "quick-dev-tdd-adapter.terminal-lineage-manifest.v1" or value.get("manifest_sha256") != expected or not isinstance(entries, list) or len(entries) != 6:
+            return None
+        roots: list[Path] = []
+        for index, entry in enumerate(entries, start=1):
+            if not isinstance(entry, dict) or entry.get("slice_id") != f"S{index}" or not isinstance(entry.get("run_path"), str) or not isinstance(entry.get("run_id"), str):
+                return None
+            candidate = (root / entry["run_path"]).resolve()
+            candidate.relative_to(root / "logs" / "tdd-adapter")
+            if candidate.name != entry["run_id"] or not candidate.name.startswith("RUN-") or "DIAGNOSTIC" in candidate.name.upper():
+                return None
+            if index == 6 and candidate != run_root.resolve():
+                return None
+            result_name = "implementation-complete-result.json" if index == 6 else "slice-ready-result.json"
+            result = candidate / result_name
+            declared_hash = entry.get("result_sha256")
+            if index < 6 and (not isinstance(declared_hash, str) or not result.is_file() or _sha(result) != declared_hash):
+                return None
+            roots.append(candidate)
+        return roots
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError, TypeError):
+        return None
+
+
 def validate_terminal(plan_dir: Path, run_root: Path | None = None) -> dict[str, object]:
     """Validate one append-only run-local evidence envelope fail-closed."""
-    evidence_roots = []
-    if run_root is not None:
-        lineage_root = run_root.parent.parent
-        try:
-            selected_slice = int(run_root.parent.name[1:])
-        except (ValueError, IndexError):
-            return {"status": "blocked", "predicate": "implementation-complete", "reason": "invalid-run-root"}
-        # Each slice owns its own run ID. A terminal invocation may provide one
-        # slice root; resolve the other slices from their latest run-local roots.
-        for i in range(1, 7):
-            slice_root = lineage_root / f"S{i}"
-            candidates = sorted([p for p in slice_root.iterdir() if p.is_dir()], key=lambda p: p.stat().st_mtime, reverse=True) if slice_root.is_dir() else []
-            evidence_roots.append(run_root if i == selected_slice else (candidates[0] if candidates else slice_root / "MISSING"))
+    if run_root is None:
+        return {"status": "blocked", "predicate": "implementation-complete", "reason": "run-root-required"}
+    evidence_roots = _manifest_lineage(plan_dir, run_root)
+    if evidence_roots is None:
+        return {"status": "blocked", "predicate": "implementation-complete", "reason": "terminal-lineage-manifest-invalid"}
     required_names = ["terminal-evidence.json", "terminal-replay-report.json"]
     required = [root / name for root in evidence_roots for name in required_names]
-    fixtures = next((root / "false-green-fixtures.json" for root in reversed(evidence_roots) if (root / "false-green-fixtures.json").is_file()), plan_dir / "false-green-fixtures" / "nine-fixtures.json")
+    fixtures = next((root / "false-green-fixtures.v1.json" for root in reversed(evidence_roots) if (root / "false-green-fixtures.v1.json").is_file()), plan_dir / "false-green-fixtures" / "nine-fixtures.json")
     missing = [path.as_posix() for path in [*required, fixtures] if not path.is_file()]
     if missing:
         return {"status": "blocked", "predicate": "implementation-complete", "missing": missing}
@@ -140,7 +163,16 @@ def validate_terminal(plan_dir: Path, run_root: Path | None = None) -> dict[str,
         try:
             observation_value = json.loads(observation.read_text(encoding="utf-8"))
             receipt_value = json.loads(receipt.read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, json.JSONDecodeError):
+            if receipt_value.get("schema_version") == "quick-dev-tdd-adapter.prior-implementation-successor.v1":
+                reference = receipt_value.get("receipt")
+                if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+                    return {"status": "blocked", "predicate": "implementation-complete", "reason": "prior-receipt-reference-invalid"}
+                target = (plan_dir.resolve().parents[1] / reference["path"]).resolve()
+                target.relative_to(plan_dir.resolve().parents[1])
+                if not target.is_file() or _sha(target) != reference["sha256"]:
+                    return {"status": "blocked", "predicate": "implementation-complete", "reason": "prior-receipt-reference-stale"}
+                receipt_value = json.loads(target.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "referenced-evidence-invalid"}
         if observation_value.get("stage") not in {"green", "refactor", "terminal"} or receipt_value.get("authorizes") != []:
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "referenced-evidence-untrusted"}

@@ -156,10 +156,48 @@ def validate_implementation_successor(run_dir: Path) -> bool:
             root = next((parent.parent for parent in run_dir.parents if parent.name == "logs"), None)
             if root is None:
                 return False
-            predecessor = (root / value["red_observation"]["path"]).resolve()
+            if (
+                value.get("schema_version") != "quick-dev-tdd-adapter.prior-red-handoff.v2"
+                or value.get("plan_id") != run_dir.parents[1].name
+                or value.get("slice_id") != run_dir.parent.name
+                or value.get("run_id") != run_dir.name
+                or not isinstance(value.get("execution_fingerprint"), str)
+                or not value["execution_fingerprint"]
+                or not isinstance(value.get("test_selector"), str)
+                or not isinstance(value.get("test_sha256"), str)
+                or not isinstance(value.get("expected_failure_ids"), list)
+            ):
+                return False
+            reference = value.get("red_observation")
+            if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+                return False
+            raw_path, expected_hash = reference["path"], reference["sha256"]
+            if not isinstance(raw_path, str) or not isinstance(expected_hash, str) or not expected_hash.startswith("sha256:"):
+                return False
+            predecessor = (root / raw_path).resolve()
+            predecessor.relative_to(root)
+            expected_parent = root / "logs" / "tdd-adapter" / value["plan_id"] / value["slice_id"]
+            if predecessor.parent.parent.parent != expected_parent or not predecessor.parent.parent.name.startswith("RUN-"):
+                return False
+            if _sha(predecessor) != expected_hash:
+                return False
+            red = json.loads(predecessor.read_text(encoding="utf-8"))
+            if red.get("stage") != "red" or not isinstance(red.get("exit_code"), int) or red["exit_code"] == 0:
+                return False
             predecessor_run = predecessor.parent.parent
+            predecessor_basis = predecessor_run / "red-basis.v1.json"
+            if not predecessor_basis.is_file():
+                return False
+            basis = json.loads(predecessor_basis.read_text(encoding="utf-8"))
+            if (
+                basis.get("execution_fingerprint") != value["execution_fingerprint"]
+                or basis.get("test_selector") != value["test_selector"]
+                or basis.get("test_sha256") != value["test_sha256"]
+                or basis.get("failure_intent", {}).get("expected_failure_ids") != value["expected_failure_ids"]
+            ):
+                return False
             return validate_implementation_successor(predecessor_run)
-        except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError):
+        except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError, ValueError):
             return False
     try:
         basis = json.loads(basis_path.read_text(encoding="utf-8"))

@@ -256,8 +256,15 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             observations.mkdir(parents=True)
             for stage in ("red", "green", "refactor"):
                 (observations / f"{stage}-observed.json").write_text(json.dumps({
-                    "exit_code": 0, "observed_at": "2026-08-26T00:00:00Z",
+                    "stage": stage, "exit_code": 1 if stage == "red" else 0, "observed_at": "2026-08-26T00:00:00Z",
                 }), encoding="utf-8")
+            (predecessor / "red-basis.v1.json").write_text(json.dumps({
+                "execution_fingerprint": "fingerprint", "test_selector": "probe.py",
+                "test_sha256": "sha256:probe", "failure_intent": {"expected_failure_ids": ["FAIL"]},
+            }), encoding="utf-8")
+            (predecessor / "implementation-successor.v1.json").write_text(
+                json.dumps({"authorizes": []}), encoding="utf-8"
+            )
             seen_run_ids: list[str] = []
 
             def fake_run(arguments: list[str], *, timeout_seconds: int = 0) -> None:
@@ -274,7 +281,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 (out / "refactor-commands.json").write_text(json.dumps([{"id": "refactor"}]), encoding="utf-8")
                 (out / "run-context.json").write_text(json.dumps({
                     "authority_refs": [], "implementation_contract": {"payload_base64": ""},
-                    "stage_results": {"red": {"execution_fingerprint": "fingerprint"}, "green": {}, "refactor": {}},
+                    "stage_results": {"red": {"execution_fingerprint": "fingerprint", "test_selector": "probe.py", "test_sha256": "sha256:probe", "expected_failure_ids": ["FAIL"]}, "green": {}, "refactor": {}},
                 }), encoding="utf-8")
 
             final_run = predecessor.parent / "RUN-FINAL"
@@ -298,6 +305,11 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             self.assertEqual("target", result["plan_id"])
             self.assertEqual("S1", result["slice_id"])
             self.assertEqual("RUN-FINAL", result["run_id"])
+            handoff = json.loads((final_run / "prior-red-handoff.v2.json").read_text(encoding="utf-8"))
+            self.assertEqual("RUN-FINAL", handoff["run_id"])
+            self.assertEqual("S1", handoff["slice_id"])
+            prior_receipt = json.loads((final_run / "prior-implementation-successor.v1.json").read_text(encoding="utf-8"))
+            self.assertTrue(prior_receipt["receipt"]["path"].endswith("implementation-successor.v1.json"))
 
     def test_router_rejects_plan_path_outside_execution_plans(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -485,6 +497,63 @@ class PlanDirectoryLoopTests(unittest.TestCase):
 
             self.assertEqual("awaiting-implementation-authorization", result["next_action"])
             self.assertEqual("S1", result["slice_id"])
+
+    def test_router_requires_every_declared_planned_file_before_advancing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [
+                {"slice_id": "S1", "depends_on": [], "planned_new_files": ["generated/S1-owner.py"]},
+                {"slice_id": "S2", "depends_on": ["S1"]},
+            ])
+            self._write_current_tdd_slice_ready(root, plan, "S1")
+            (plan / "plan-state.v1.json").write_text(json.dumps({
+                "schema_version": "vdd.plan-state.v2", "plan_id": "target",
+                "status": "plan-ready", "authorizes": ["plan-ready"],
+            }), encoding="utf-8")
+            with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                self.assertEqual("S1", ROUTER.route(root, plan)["slice_id"])
+
+            planned = root / "generated" / "S1-owner.py"
+            planned.parent.mkdir(parents=True)
+            planned.write_text("# materialized\n", encoding="utf-8")
+            with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                self.assertEqual("S2", ROUTER.route(root, plan)["slice_id"])
+
+    def test_router_fails_closed_when_complete_tdd_lineage_is_tampered(self) -> None:
+        def route_after(mutator) -> str:
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                plan = self._plan(root, [
+                    {"slice_id": "S1", "depends_on": [], "planned_new_files": ["generated/S1-owner.py"]},
+                    {"slice_id": "S2", "depends_on": ["S1"]},
+                ])
+                planned = root / "generated" / "S1-owner.py"
+                planned.parent.mkdir(parents=True)
+                planned.write_text("# materialized\n", encoding="utf-8")
+                run = self._write_current_tdd_slice_ready(root, plan, "S1")
+                (plan / "plan-state.v1.json").write_text(json.dumps({
+                    "schema_version": "vdd.plan-state.v2", "plan_id": "target",
+                    "status": "plan-ready", "authorizes": ["plan-ready"],
+                }), encoding="utf-8")
+                mutator(run, planned)
+                with mock.patch.object(ROUTER, "_verify_plan_context", return_value={"status": "ready"}):
+                    return str(ROUTER.route(root, plan)["slice_id"])
+
+        self.assertEqual("S1", route_after(lambda run, planned: (run / "implementation-successor.v1.json").unlink()))
+        self.assertEqual("S1", route_after(lambda run, planned: planned.unlink()))
+
+        def tamper_hash(run: Path, _planned: Path) -> None:
+            result = run / "slice-ready-result.json"
+            value = json.loads(result.read_text(encoding="utf-8"))
+            value["candidate_hash"] = "sha256:tampered"
+            result.write_text(json.dumps(value), encoding="utf-8")
+
+        self.assertEqual("S1", route_after(tamper_hash))
+
+        def diagnostic_name(run: Path, _planned: Path) -> None:
+            run.rename(run.with_name("RUN-DIAGNOSTIC-TAMPER"))
+
+        self.assertEqual("S1", route_after(diagnostic_name))
 
     def test_router_runs_slice_after_explicit_implementation_authorization(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

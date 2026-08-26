@@ -92,6 +92,18 @@ def _successful_stage_observation(run_dir: Path, stage: str) -> bool:
     return isinstance(value, dict) and value.get("stage") == stage and value.get("exit_code") == 0
 
 
+def _planned_files_exist(repository_root: Path, plan_dir: Path, slice_id: str) -> bool:
+    try:
+        contract = json.loads((plan_dir / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+        selected = next(item for item in contract["slices"] if item.get("slice_id") == slice_id)
+        planned = selected.get("planned_new_files", [])
+        return isinstance(planned, list) and all(
+            isinstance(raw, str) and (repository_root / raw).is_file() for raw in planned
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, StopIteration, TypeError):
+        return False
+
+
 def _tdd_slice_ready_current(
     repository_root: Path,
     plan_dir: Path,
@@ -118,6 +130,7 @@ def _tdd_slice_ready_current(
         validate_implementation_successor(run_dir)
         and _successful_stage_observation(run_dir, "green")
         and _successful_stage_observation(run_dir, "refactor")
+        and _planned_files_exist(repository_root, plan_dir, slice_id)
         and _implementation_candidate_current(result, _validation_snapshot(plan_dir, slice_id))
     )
 

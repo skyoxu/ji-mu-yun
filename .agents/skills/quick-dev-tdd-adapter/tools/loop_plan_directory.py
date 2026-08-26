@@ -539,6 +539,36 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
     # immutable protocol artifacts from an older contract or partial retry.
     run_dir = reserve_successor_run(predecessor_run, lineage)
     invocation, context = build_terminal_context(run_dir)
+    def write_terminal_handoff(successor_run: Path, terminal_context: dict[str, object]) -> None:
+        red_source = observation_sources["red"] / "observations" / "red-observed.json"
+        red_basis = red_source.parent.parent / "red-basis.v1.json"
+        if not red_source.is_file() or not red_basis.is_file():
+            raise RuntimeError("terminal successor requires a RED-bound predecessor")
+        red = terminal_context["stage_results"]["red"]
+        handoff = {
+            "schema_version": "quick-dev-tdd-adapter.prior-red-handoff.v2",
+            "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": successor_run.name,
+            "red_observation": {"path": red_source.relative_to(root).as_posix(), "sha256": _sha(red_source)},
+            "execution_fingerprint": red["execution_fingerprint"], "test_selector": red["test_selector"],
+            "test_sha256": red["test_sha256"], "expected_failure_ids": red["expected_failure_ids"],
+            "authorizes": [],
+        }
+        (successor_run / "prior-red-handoff.v2.json").write_text(
+            json.dumps(handoff, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+        receipt = predecessor_run / "implementation-successor.v1.json"
+        if not receipt.is_file():
+            raise RuntimeError("terminal successor requires an implementation successor receipt")
+        (successor_run / "prior-implementation-successor.v1.json").write_text(
+            json.dumps({
+                "schema_version": "quick-dev-tdd-adapter.prior-implementation-successor.v1",
+                "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": successor_run.name,
+                "receipt": {"path": receipt.relative_to(root).as_posix(), "sha256": _sha(receipt)},
+                "authorizes": [],
+            }, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+
+    write_terminal_handoff(run_dir, context)
     lifecycle = LifecycleRunner(root, run_dir, snapshots)
     lifecycle.resume_observations(run_dir, ["red", "green", "refactor"], observation_sources=observation_sources)
     try:
@@ -570,6 +600,7 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
         # It is reused on retry before successor observations are materialized.
         run_dir = reserve_successor_run(run_dir, lineage)
         invocation, context = build_terminal_context(run_dir)
+        write_terminal_handoff(run_dir, context)
         lifecycle = LifecycleRunner(root, run_dir, snapshots)
         lifecycle.resume_observations(
             run_dir.parent / run_dir.name.removesuffix("-SUCCESSOR"),

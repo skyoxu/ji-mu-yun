@@ -20,7 +20,11 @@ def materialize(run_root: Path, slice_id: str) -> None:
     value = json.loads(source.read_text(encoding="utf-8"))
     entries = value.get("inputs") if isinstance(value, dict) else None
     expected = set(INPUTS.get(slice_id, ()))
-    if not isinstance(entries, dict) or set(entries) != expected:
+    if (
+        value.get("schema_version") != "quick-dev-tdd-adapter.run-inputs.v1"
+        or value.get("slice_id") != slice_id or value.get("run_id") != run_root.name
+        or not isinstance(entries, dict) or set(entries) != expected
+    ):
         raise ValueError("run input manifest does not exactly match slice inputs")
     for name, payload in entries.items():
         if not isinstance(payload, dict):

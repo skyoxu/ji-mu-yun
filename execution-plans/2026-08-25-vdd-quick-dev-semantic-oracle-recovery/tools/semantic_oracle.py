@@ -17,7 +17,7 @@ def validate_semantic_intent(value: dict[str, Any]) -> tuple[bool, str]:
     forbidden = {"command", "descriptor", "receipt", "observation", "hash", "failure_id", "executable", "argv"}
     if forbidden.intersection(value):
         return False, "VDD-RED-BOUNDARY"
-    if not value["acceptance_ids"] or not value["producer"] or not value["coverage"]:
+    if not value["acceptance_ids"] or not value["producer"] or not value["coverage"] or not isinstance(value.get("taxonomy"), list) or not value["taxonomy"]:
         return False, "VDD-RED-BOUNDARY"
     if value.get("rollback") not in (None, "deferred"):
         return False, "VDD-RED-BOUNDARY"
@@ -31,7 +31,7 @@ def validate_descriptor(value: dict[str, Any]) -> tuple[bool, str]:
     required = {"target", "argv", "cwd", "timeout_seconds", "shell", "case_source_refs", "case_producer_ref"}
     if not isinstance(value, dict) or not required.issubset(value):
         return False, "QD-DESCRIPTOR-RED"
-    if value.get("shell") is not False or not isinstance(value.get("argv"), list) or value.get("timeout_seconds", 0) <= 0:
+    if value.get("shell") is not False or not isinstance(value.get("argv"), list) or not value["argv"] or value.get("timeout_seconds", 0) <= 0:
         return False, "QD-DESCRIPTOR-RED"
     return True, ""
 
@@ -45,7 +45,10 @@ def validate_judge(receipt: dict[str, Any], observation: dict[str, Any]) -> tupl
         return False, "JUDGE-INDEPENDENCE-RED"
     if receipt.get("executor_id") == receipt.get("judge_id") or receipt.get("judge_id") in {"sut", "candidate"}:
         return False, "JUDGE-INDEPENDENCE-RED"
-    if not isinstance(observation, dict) or observation.get("run_id") != receipt.get("run_id"):
+    if (
+        not isinstance(observation, dict) or observation.get("run_id") != receipt.get("run_id")
+        or receipt.get("actual_argv") != observation.get("descriptor_argv")
+    ):
         return False, "JUDGE-INDEPENDENCE-RED"
     return True, ""
 
@@ -59,7 +62,7 @@ def validate_many_to_many_cover(edges: list[dict[str, Any]], manifest: set[str],
     for edge in edges:
         if not isinstance(edge, dict) or not {"acceptance_id", "case_id", "observation_id"}.issubset(edge):
             return False, "COVERAGE-EXACT-COVER-RED"
-        if edge["acceptance_id"] not in manifest or edge["observation_id"] not in observations:
+        if edge["acceptance_id"] not in manifest or edge["observation_id"] not in observations or not str(edge["observation_id"]).startswith("OBS-"):
             return False, "COVERAGE-EXACT-COVER-RED"
         covered.add(edge["acceptance_id"])
         seen_cases.add(edge["case_id"])
@@ -74,7 +77,7 @@ def validate_promotion(fixtures: list[dict[str, Any]], predecessor_judge: str | 
     if owner is not None:
         return owner(fixtures, predecessor_judge, writer)
     ids = {item.get("fixture_id") for item in fixtures if isinstance(item, dict)}
-    if ids != FALSE_GREEN_IDS or len(fixtures) != 9 or not predecessor_judge or writer != "coverage-gate":
+    if ids != FALSE_GREEN_IDS or len(fixtures) != 9 or not isinstance(predecessor_judge, str) or not predecessor_judge.startswith("sha256:") or "coverage" in predecessor_judge or writer != "coverage-gate":
         return False, "PROMOTION-FALSE-GREEN-RED"
     if any(item.get("blocked") is not True or item.get("corrected_pair_pass") is not True for item in fixtures):
         return False, "PROMOTION-FALSE-GREEN-RED"

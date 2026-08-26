@@ -1,0 +1,24 @@
+c70e1cb6 确实堵住了“三字段手写 slice-ready”漏洞，但新增正向测试使用的是合成 run，没有覆盖真实 _run_slice_terminal() 生成的 successor。完整沿生产路径检查后，共发现以下 6 个重要的非治理问题。
+
+重要问题	实际影响
+run-inputs.v1.json 只有消费者，没有正式生产者	S1–S5 的 GREEN 都会先调用 materializer；如果不人工写入该文件，就会直接失败。人工写入又没有来源绑定，可能注入伪造 predecessor artifact。run_input_materializer.py
+terminal successor 的生产格式和验证格式不一致	正式 _run_slice_terminal() 写 successor-lineage.v1.json；新的 router 却要求同目录存在 RED basis/successor/RED observation，或 prior-red-handoff.v2.json。实际 successor 两者都不具备，因此 S1 terminal 即使成功，router 仍不会承认，会反复 validate-slice。loop_plan_directory.py
+prior-red-handoff fallback 本身验证不完整	当前递归分支没有校验 observation hash、路径 containment、同 plan/slice、execution fingerprint 等。直接补一个 handoff 文件可能把“卡死”修成“假绿”。stage_lifecycle_runner.py
+GREEN/REFACTOR 覆盖面过窄	stage_command.py 只运行当前 successor RED selector，再运行一次正向 owner action；文件中的 TESTS 映射实际上未使用，已有 owner negative、mutation、完整行为测试没有进入正式门禁。stage_command.py
+planned_new_files 没有存在性门禁	例如 semantic_artifact_compiler.py、descriptor_compiler.py 等可以继续缺失；candidate snapshot 只记录为 null，router 比较“当前是否一致”，不会要求文件已经创建。实施者只修一条判断也可能获得 slice-ready。implementation-contract.v1.json
+S6 的 RED 当前已经是绿	test_s6_successor_red.py 只要求伪造 lineage 被拒绝，而当前 validator 本来就会拒绝，所以 pytest 返回 0；到 S6 时 Quick Dev 无法观察要求的非零 RED。此外终端 validator 按 mtime 选择各 slice run，没有排除 diagnostic，也没有把 evidence run_id 与目录名严格匹配。S6 RED、validate_all.py
+
+最快修复顺序：
+
+用真实 _run_slice_terminal() 建立集成测试：RED → successor → GREEN → REFACTOR → terminal successor → router 指向 S2。
+统一 terminal-successor lineage，并完整校验路径、hash、plan/slice/run 和 execution fingerprint。
+增加确定性的 run-input builder；跨 slice 只引用前一正式 run 的路径和 hash，不复制、改写 predecessor artifact。
+GREEN/REFACTOR 注册完整正向、负向、mutation 测试，并强制当前 slice 的 planned_new_files 全部存在。
+把 S6 RED 改成当前确实失败、实现 terminal validator 后才会通过的正向闭环测试；终端选择改为 manifest-bound，禁止 mtime 和 diagnostic 推断。
+
+修完后只需证明两个端到端结果：
+
+正式 S1 能闭合且 router 返回 slice_id: S2。
+删除任一 successor、planned file、hash binding 或将 run 改为 diagnostic 时，router 都停留在 S1。
+
+这些属于 Quick Dev 执行链和计划脚手架修复，不需要重新做 PRD、Spec 或 Architecture
