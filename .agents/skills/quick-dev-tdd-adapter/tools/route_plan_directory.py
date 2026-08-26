@@ -688,6 +688,7 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
         }
     if lifecycle_state == "implementation-authorized":
         if document["authorizes"] in (["implementation-authorized"], ["plan-ready", "implementation-authorized"]):
+            root = plan_dir.resolve().parents[1]
             minimal_receipts = sorted([*plan_dir.glob("implementation-authorization-receipt.successor.v1.json"), *plan_dir.glob("implementation-authorization-receipt.successor.v2.json"), *plan_dir.glob("implementation-authorization-receipt.v1.json"), *plan_dir.glob("implementation-authorization-receipt.v2.json")], key=lambda p: ("successor" not in p.name, "v1" in p.name, p.name))
             if minimal_receipts:
                 receipt_path = minimal_receipts[-1]
@@ -772,7 +773,6 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                     "terminal_validator",
                     "immutable_predecessor",
                 )
-                root = plan_dir.resolve().parents[1]
                 bindings = legacy_bindings
                 if "skill_input_generation" in receipt:
                     bindings = legacy_bindings
