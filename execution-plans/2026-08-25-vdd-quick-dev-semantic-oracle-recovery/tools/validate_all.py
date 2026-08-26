@@ -19,7 +19,7 @@ def _workspace_closure(root: Path) -> str:
 def _workspace_manifest(root: Path) -> dict[str, str]:
     result = {}
     for base, dirs, files in os.walk(root):
-        dirs[:] = [d for d in dirs if d not in {".git", "logs", "__pycache__"}]
+        dirs[:] = [d for d in dirs if d not in {".git", "logs", "__pycache__", ".pytest_cache"}]
         for name in files:
             path = Path(base) / name
             rel = path.relative_to(root).as_posix()
