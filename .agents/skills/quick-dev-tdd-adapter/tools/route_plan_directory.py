@@ -149,7 +149,7 @@ def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) ->
             and review.get("decision") == "accepted"
             and conformance.get("status") == "conformant"
             and conformance.get("errors") == []
-            and conformance.get("authorizes") == ["implementation-authorized"]
+            and conformance.get("authorizes") == []
         )
     except (KeyError, OSError, UnicodeError, json.JSONDecodeError, TypeError):
         return False
