@@ -1,0 +1,1 @@
+{"schema_version":"vdd-repair-state.v1","plan_id":"vdd-quick-dev-semantic-oracle-recovery","status":"closed","blocks_execution":false,"basis":{"review_run":"docs/vdd-review-run.v1.json","review_status":"accepted","conformance_errors":[]},"authorizes":[]}

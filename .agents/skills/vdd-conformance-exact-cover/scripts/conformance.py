@@ -243,7 +243,7 @@ def _validate_review_envelope(handoff: dict[str, Any], review: object) -> None:
 
 
 def _approved_semantic_dispositions(
-    root: Path, mapping: dict[str, Any], inventory: list[dict[str, Any]], manifest: dict[str, Any], manifest_path: Path
+    root: Path, mapping: dict[str, Any], inventory: list[dict[str, Any]], manifest: dict[str, Any], manifest_path: Path, mapping_path: Path | None = None
 ) -> set[str]:
     records = mapping.get("approved_semantic_dispositions", [])
     if records is None:
@@ -412,7 +412,7 @@ def canonical_requirement_acceptance(root: Path, manifest: dict[str, Any]) -> di
 
 
 def _mapping_obligation_errors(
-    root: Path, mapping: dict[str, Any], inventory: list[dict[str, Any]], manifest: dict[str, Any], manifest_path: Path
+    root: Path, mapping: dict[str, Any], inventory: list[dict[str, Any]], manifest: dict[str, Any], manifest_path: Path, mapping_path: Path | None = None
 ) -> tuple[list[dict[str, str]], dict[str, dict[str, Any]], set[str]]:
     provided = mapping.get("obligations")
     requirements = mapping.get("requirements")
@@ -436,7 +436,7 @@ def _mapping_obligation_errors(
     errors: list[dict[str, str]] = []
     canonical_acceptance = canonical_requirement_acceptance(root, manifest)
     try:
-        approved = _approved_semantic_dispositions(root, mapping, inventory, manifest, manifest_path)
+        approved = _approved_semantic_dispositions(root, mapping, inventory, manifest, manifest_path, mapping_path)
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
         return [{"family": "deterministic_coverage_gap", "code": "semantic_disposition_invalid"}], actual, set()
     for identifier, expected_item in expected.items():
@@ -763,7 +763,7 @@ def validate_conformance(root: Path, manifest_path: Path, mapping_path: Path) ->
         or requirements_identity.get("sha256") != file_hash(mapping_path)
     ):
         result = {**result, "status": "blocked", "errors": [*result["errors"], {"family": "deterministic_coverage_gap", "code": "requirements_identity_mismatch"}]}
-    mapping_errors, _mapping_index, approved = _mapping_obligation_errors(root, mapping, obligations, manifest, manifest_path)
+    mapping_errors, _mapping_index, approved = _mapping_obligation_errors(root, mapping, obligations, manifest, manifest_path, mapping_path)
     if mapping_errors:
         result = {**result, "status": "blocked", "errors": [*result["errors"], *mapping_errors]}
     handoff = _semantic_handoff(mapping, obligations, manifest_path, manifest, mapping_path, approved)

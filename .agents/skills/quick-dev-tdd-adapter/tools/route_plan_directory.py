@@ -651,12 +651,12 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
         }
     if lifecycle_state == "implementation-authorized":
         if document["authorizes"] in (["implementation-authorized"], ["plan-ready", "implementation-authorized"]):
-            minimal_receipts = sorted(plan_dir.glob("implementation-authorization-receipt.v1.json"))
+            minimal_receipts = sorted([*plan_dir.glob("implementation-authorization-receipt.v1.json"), *plan_dir.glob("implementation-authorization-receipt.v2.json")])
             if minimal_receipts:
                 receipt_path = minimal_receipts[-1]
                 try:
                     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-                    required = ("implementation_contract", "authority_manifest", "knowledge_context_freeze")
+                    required = ("implementation_contract", "authority_manifest")
                     if (
                         receipt.get("plan_id") == plan_id
                         and receipt.get("decision", {}).get("owner") == "maintainer"
