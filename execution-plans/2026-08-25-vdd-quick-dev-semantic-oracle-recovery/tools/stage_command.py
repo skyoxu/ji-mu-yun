@@ -28,6 +28,15 @@ def main() -> int:
     parser.add_argument("--plan-dir", required=True)
     parser.add_argument("--run-root")
     args = parser.parse_args()
+    if args.stage == "terminal":
+        if not args.run_root:
+            return 2
+        out = Path(args.run_root) / "implementation-complete-result.json"
+        command = [sys.executable, str(Path(args.plan_dir) / "tools" / "terminal_predicate.py"),
+                   "--repository-root", str(Path(args.plan_dir).parents[1]),
+                   "--plan-dir", args.plan_dir, "--slice", args.slice,
+                   "--run-root", args.run_root, "--out", str(out)]
+        return subprocess.call(command, cwd=Path(args.plan_dir).parents[1])
     owner = Path(args.plan_dir) / "tools" / "artifact_owners.py"
     command = [sys.executable, str(owner), "--plan-dir", args.plan_dir, "--slice", args.slice, "--stage", args.stage]
     run_root = args.run_root

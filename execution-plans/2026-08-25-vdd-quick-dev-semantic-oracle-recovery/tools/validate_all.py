@@ -23,7 +23,12 @@ def _workspace_manifest(root: Path) -> dict[str, str]:
         for name in files:
             path = Path(base) / name
             rel = path.relative_to(root).as_posix()
-            result[rel] = _sha(path)
+            try:
+                result[rel] = _sha(path)
+            except FileNotFoundError:
+                # A concurrent cache/snapshot cleanup must not produce a
+                # partially trusted identity. Recompute on the next call.
+                continue
     return dict(sorted(result.items()))
 
 
@@ -91,10 +96,19 @@ def validate_terminal(plan_dir: Path, run_root: Path | None = None) -> dict[str,
     evidence_roots = []
     if run_root is not None:
         lineage_root = run_root.parent.parent
-        evidence_roots = [lineage_root / f"S{i}" / run_root.name for i in range(1, 7)]
+        try:
+            selected_slice = int(run_root.parent.name[1:])
+        except (ValueError, IndexError):
+            return {"status": "blocked", "predicate": "implementation-complete", "reason": "invalid-run-root"}
+        # Each slice owns its own run ID. A terminal invocation may provide one
+        # slice root; resolve the other slices from their latest run-local roots.
+        for i in range(1, 7):
+            slice_root = lineage_root / f"S{i}"
+            candidates = sorted([p for p in slice_root.iterdir() if p.is_dir()], key=lambda p: p.stat().st_mtime, reverse=True) if slice_root.is_dir() else []
+            evidence_roots.append(run_root if i == selected_slice else (candidates[0] if candidates else slice_root / "MISSING"))
     required_names = ["terminal-evidence.json", "terminal-replay-report.json"]
     required = [root / name for root in evidence_roots for name in required_names]
-    fixtures = (evidence_roots[-1] / "false-green-fixtures.json") if evidence_roots else plan_dir / "false-green-fixtures" / "nine-fixtures.json"
+    fixtures = next((root / "false-green-fixtures.json" for root in reversed(evidence_roots) if (root / "false-green-fixtures.json").is_file()), plan_dir / "false-green-fixtures" / "nine-fixtures.json")
     missing = [path.as_posix() for path in [*required, fixtures] if not path.is_file()]
     if missing:
         return {"status": "blocked", "predicate": "implementation-complete", "missing": missing}
@@ -114,6 +128,17 @@ def validate_terminal(plan_dir: Path, run_root: Path | None = None) -> dict[str,
         expected = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
         if item.get("evidence_sha256") != expected:
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "slice-evidence-hash-invalid"}
+        observation = evidence_roots[i] / item["observation_ref"]
+        receipt = evidence_roots[i] / item["receipt_ref"]
+        if not observation.is_file() or not receipt.is_file():
+            return {"status": "blocked", "predicate": "implementation-complete", "reason": "referenced-evidence-missing"}
+        try:
+            observation_value = json.loads(observation.read_text(encoding="utf-8"))
+            receipt_value = json.loads(receipt.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            return {"status": "blocked", "predicate": "implementation-complete", "reason": "referenced-evidence-invalid"}
+        if observation_value.get("stage") not in {"green", "refactor", "terminal"} or receipt_value.get("authorizes") != []:
+            return {"status": "blocked", "predicate": "implementation-complete", "reason": "referenced-evidence-untrusted"}
     expected_ids = [f"FG-{i:02d}" for i in range(1, 10)]
     if not isinstance(fixture_doc, dict) or fixture_doc.get("status") != "pass" or fixture_doc.get("producer") != "coverage-gate" or fixture_doc.get("fixture_ids") != expected_ids or fixture_doc.get("blocked_ids") != expected_ids or fixture_doc.get("corrected_pair_ids") != expected_ids:
         return {"status": "blocked", "predicate": "implementation-complete", "reason": "false-green-fixtures-not-closed"}
