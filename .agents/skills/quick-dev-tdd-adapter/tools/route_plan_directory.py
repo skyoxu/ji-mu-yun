@@ -214,12 +214,14 @@ def _candidate_commit_is_current(root: Path, plan_dir: Path, receipt: dict[str, 
             ["git", "-C", str(root), "diff", "--name-only", f"{commit}..HEAD"],
             capture_output=True, text=True, check=False,
         ).stdout.splitlines()
+        state_path = f"execution-plans/{plan_dir.name}/plan-state.v1.json"
         allowed_prefixes = (
             f"execution-plans/{plan_dir.name}/governance/",
             f"execution-plans/{plan_dir.name}/implementation-authorization-receipt",
             "docs/vdd-review-run.v1.json",
         )
-        if any(path and not path.startswith(allowed_prefixes) for path in changed):
+        allowed_change = lambda path: path.startswith(allowed_prefixes) or path == state_path
+        if any(path and not allowed_change(path) for path in changed):
             return False
         status = subprocess.run(
             ["git", "-C", str(root), "status", "--porcelain=v1", "--untracked-files=all"],
@@ -229,7 +231,11 @@ def _candidate_commit_is_current(root: Path, plan_dir: Path, receipt: dict[str, 
             path = row[3:] if len(row) >= 4 else ""
             if " -> " in path:
                 path = path.split(" -> ", 1)[1]
-            if path and not path.startswith(allowed_prefixes):
+            if path and not allowed_change(path):
+                return False
+        if state_path in changed or any(row[3:] == state_path for row in status if len(row) >= 4):
+            state = json.loads((plan_dir / "plan-state.v1.json").read_text(encoding="utf-8"))
+            if state.get("plan_id") != contract.get("plan_id") or state.get("state", state.get("status")) != "implementation-authorized" or state.get("authorizes") != ["implementation-authorized"] or state.get("baseline_commit") != commit:
                 return False
     except OSError:
         return False
