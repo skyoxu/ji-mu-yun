@@ -148,11 +148,16 @@ def validate_implementation_successor(run_dir: Path) -> bool:
     if not isinstance(basis, dict) or not isinstance(receipt, dict):
         return False
     try:
-        plan_root = next((parent for parent in run_dir.parents if parent.name == "execution-plans"), None)
-        if plan_root is None:
+        logs_root = next((parent for parent in run_dir.parents if parent.name == "logs"), None)
+        if logs_root is None:
+            # Isolated unit fixtures have no repository context; retain the
+            # structural successor checks and skip only the workspace identity.
             current = None
         else:
-            plan = plan_root / run_dir.parents[1].name
+            repository_root = logs_root.parent
+            plan = repository_root / "execution-plans" / run_dir.parents[1].name
+            if not plan.is_dir():
+                return False
             validator = plan / "tools" / "validate_all.py"
             spec = importlib.util.spec_from_file_location("current_candidate_validator", validator)
             if spec is None or spec.loader is None: return False

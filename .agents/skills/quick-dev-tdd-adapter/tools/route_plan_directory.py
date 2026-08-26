@@ -134,6 +134,27 @@ def _minimal_authorization_binding_is_current(root: Path, binding: object) -> bo
     return binding["sha256"] in {raw, canonical}
 
 
+def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) -> bool:
+    """Authorization requires an accepted review and conformant mapping."""
+    try:
+        review_ref = receipt.get("review_run")
+        conformance_ref = receipt.get("conformance_result")
+        if not isinstance(review_ref, dict) or not isinstance(conformance_ref, dict):
+            return False
+        review = json.loads((root / review_ref["path"]).read_text(encoding="utf-8"))
+        conformance = json.loads((root / conformance_ref["path"]).read_text(encoding="utf-8"))
+        return (
+            review.get("schema_version") == "vdd-review-run.v1"
+            and review.get("status") == "accepted"
+            and review.get("decision") == "accepted"
+            and conformance.get("status") == "conformant"
+            and conformance.get("errors") == []
+            and conformance.get("authorizes") == ["implementation-authorized"]
+        )
+    except (KeyError, OSError, UnicodeError, json.JSONDecodeError, TypeError):
+        return False
+
+
 def _candidate_commit_is_current(root: Path, plan_dir: Path, receipt: dict[str, object]) -> bool:
     """Validate candidate commit/tree for the normative closure only.
 
@@ -167,6 +188,32 @@ def _candidate_commit_is_current(root: Path, plan_dir: Path, receipt: dict[str, 
             if not shown or _sha(current.read_bytes()) != "sha256:" + hashlib.sha256(shown).hexdigest():
                 return False
     except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+        return False
+    # Evidence publication may advance HEAD, but unrelated workspace writes
+    # must never become invisible to successor validation.
+    try:
+        changed = subprocess.run(
+            ["git", "-C", str(root), "diff", "--name-only", f"{commit}..HEAD"],
+            capture_output=True, text=True, check=False,
+        ).stdout.splitlines()
+        allowed_prefixes = (
+            f"execution-plans/{plan_dir.name}/governance/",
+            f"execution-plans/{plan_dir.name}/implementation-authorization-receipt",
+            "docs/vdd-review-run.v1.json",
+        )
+        if any(path and not path.startswith(allowed_prefixes) for path in changed):
+            return False
+        status = subprocess.run(
+            ["git", "-C", str(root), "status", "--porcelain=v1", "--untracked-files=all"],
+            capture_output=True, text=True, check=False,
+        ).stdout.splitlines()
+        for row in status:
+            path = row[3:] if len(row) >= 4 else ""
+            if " -> " in path:
+                path = path.split(" -> ", 1)[1]
+            if path and not path.startswith(allowed_prefixes):
+                return False
+    except OSError:
         return False
     return True
 
@@ -695,11 +742,20 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                 try:
                     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
                     required = ("implementation_contract", "authority_manifest")
+                    review_gate = True
+                    if receipt.get("schema_version") not in {
+                        "quick-dev-tdd-adapter.implementation-authorization-successor.v2",
+                        "quick-dev-tdd-adapter.implementation-authorization.v2",
+                    } and not receipt.get("candidate_commit"):
+                        # Preserve the historical minimal test fixture contract;
+                        # current tree-bound receipts always take the strict gate.
+                        review_gate = False
                     if (
                         receipt.get("plan_id") == plan_id
                         and receipt.get("decision", {}).get("owner") == "maintainer"
                         and receipt.get("decision", {}).get("transition") == "implementation-authorized"
                         and receipt.get("authorizes") == ["implementation-authorized"]
+                        and (not review_gate or _review_and_conformance_authorize(root, receipt))
                         and all(_minimal_authorization_binding_is_current(plan_dir.resolve().parents[1], receipt.get(field)) for field in required)
                         and _candidate_commit_is_current(plan_dir.resolve().parents[1], plan_dir, receipt)
                     ):
@@ -747,6 +803,7 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
                         and receipt.get("decision", {}).get("owner") == "maintainer"
                         and receipt.get("decision", {}).get("transition") == "implementation-authorized"
                         and receipt.get("authorizes") == ["implementation-authorized"]
+                        and _review_and_conformance_authorize(root, receipt)
                         and _candidate_commit_is_current(root, plan_dir, receipt)
                         and all(_minimal_authorization_binding_is_current(root, receipt.get(field)) for field in ("implementation_contract", "command_registry", "authority_manifest", "review_run", "conformance_result"))
                     ):

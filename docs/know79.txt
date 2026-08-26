@@ -1,0 +1,13 @@
+固定检查项	结果	关键问题
+1. Semantic review 闭环	部分完成	vdd-review-run 已正确加入且为 accepted，但 review 结论没有落实到 mapping；conformance r3 仍为 requirement_semantic_review_required、authorizes=[]。
+2. Review 输入绑定	通过	r3 输入与当前 review package 的主要哈希绑定已修正。
+3. Authorization 有效性	严重失败	在 conformance 仍要求 review 的情况下签发了 implementation authorization；路由器只验证文件哈希，没有验证 conformance 语义状态。路由代码
+4. 真实 RED	严重失败	S1–S6 仍主要运行硬编码非法样本和计划本地 oracle，不会击中声明的生产 owner；S6 RED 甚至是固定返回失败。artifact_owners.py
+5. 真实 GREEN/producer	严重失败	GREEN 通过构造“合法对象”直接生成 pass evidence；S3 没有真正执行进程，S4 没有真实覆盖计算，S5 没有运行九类 fixtures。
+6. Terminal predicate	失败	S1–S5 基本是自己写出 status=pass，没有验证真实实现结果。
+7. 跨 slice lineage	失败	仍假设所有 slice 使用同一 run ID；false-green fixture 的写入位置、读取位置及必需摘要字段不一致。validate_all.py
+8. Candidate closure	失败	新增 workspace manifest，但没有拒绝 allowlist 外变化，路由授权也没有校验完整 workspace closure；部分信任链脚本不在授权闭包中。
+9. Successor 使用时重验	失败	run_dir.parents 中查找名为 execution-plans 的父目录会得到 None，随后条件将重验直接放行。stage_lifecycle_runner.py
+
+
+下一次修复应一次性完成三件事：把 review 结论落实到 mapping 并重新生成 conformant 输出；让 RED/GREEN/terminal 调用真实 owner、进程和 fixtures；修正 candidate closure 与 successor 的 fail-closed 重验。完成后再重新签发 authorization。

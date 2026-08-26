@@ -165,10 +165,7 @@ def _generated_red_descriptor(slice_id: str, red: dict[str, Any], allowed_tests:
         or any(not isinstance(item, str) or not item for item in failure_ids)
     ):
         raise ValueError("VDD RED intent is invalid")
-    plan_dir = selector.split("/tools/", 1)[0] if "/tools/" in selector else "."
     argv = ["-3", "-B", "-m", "pytest", selector, "-q"]
-    if selector.startswith("execution-plans/") and "/tools/" in selector:
-        argv = ["-3", "-B", f"{plan_dir}/tools/artifact_owners.py", "--plan-dir", plan_dir, "--slice", slice_id, "--stage", "red"]
     return {
         "id": f"quick-dev-generated-red-{slice_id}",
         "executable": "py",
