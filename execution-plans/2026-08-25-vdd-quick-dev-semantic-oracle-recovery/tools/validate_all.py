@@ -4,6 +4,7 @@ import hashlib
 from pathlib import Path
 import json
 import subprocess
+import os
 
 
 def _sha(path: Path) -> str:
@@ -14,6 +15,16 @@ def _workspace_closure(root: Path) -> str:
     tracked = subprocess.run(["git", "ls-files", "-s"], cwd=root, capture_output=True, text=True, check=True).stdout
     payload = (tracked + "\nSTATUS\n" + status).encode("utf-8")
     return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+def _workspace_manifest(root: Path) -> dict[str, str]:
+    result = {}
+    for base, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in {".git", "logs", "__pycache__"}]
+        for name in files:
+            path = Path(base) / name
+            rel = path.relative_to(root).as_posix()
+            result[rel] = _sha(path)
+    return dict(sorted(result.items()))
 
 
 def current_candidate_identity(slice_id: str) -> dict[str, str]:
@@ -61,6 +72,7 @@ def current_candidate_identity(slice_id: str) -> dict[str, str]:
         "closure_definition_hash": _sha(contract),
         "validator_hash": _sha(Path(__file__).resolve()),
         "workspace_closure_hash": _workspace_closure(root),
+        "workspace_manifest": _workspace_manifest(root),
         "semantic_closure_hash": semantic_hash,
         "candidate_manifest": file_state,
     }

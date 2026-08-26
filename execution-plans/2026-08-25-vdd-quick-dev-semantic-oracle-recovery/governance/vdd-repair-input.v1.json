@@ -1,0 +1,1 @@
+{"schema_version":"vdd-repair-input.v1","plan_id":"vdd-quick-dev-semantic-oracle-recovery","review_run":{"path":"docs/vdd-review-run.v1.json"},"repair_scope":["red-owner","artifact-producers","terminal-lineage","candidate-closure","successor-revalidation"],"authorizes":[]}

@@ -147,6 +147,19 @@ def validate_implementation_successor(run_dir: Path) -> bool:
         return False
     if not isinstance(basis, dict) or not isinstance(receipt, dict):
         return False
+    try:
+        plan_root = next((parent for parent in run_dir.parents if parent.name == "execution-plans"), None)
+        if plan_root is None:
+            current = None
+        else:
+            plan = plan_root / run_dir.parents[1].name
+            validator = plan / "tools" / "validate_all.py"
+            spec = importlib.util.spec_from_file_location("current_candidate_validator", validator)
+            if spec is None or spec.loader is None: return False
+            module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+            current = module.current_candidate_identity(run_dir.parents[0].name)
+    except (OSError, ValueError, AttributeError):
+        return False
     pre = basis.get("pre_implementation_candidate")
     post = receipt.get("post_implementation_candidate")
     changed_paths = receipt.get("changed_paths")
@@ -161,6 +174,7 @@ def validate_implementation_successor(run_dir: Path) -> bool:
         and receipt.get("contract_hash") == basis.get("contract_hash")
         and receipt.get("validator_hash") == basis.get("validator_hash")
         and receipt.get("pre_implementation_candidate") == pre
+        and (current is None or receipt.get("post_implementation_candidate") == current)
         and isinstance(post, dict)
         and post != pre
         and isinstance(changed_paths, list)
