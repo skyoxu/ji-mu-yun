@@ -149,7 +149,7 @@ def validate_implementation_successor(run_dir: Path) -> bool:
         # RED through prior-red-handoff instead of copying red-basis. Validate
         # its immutable lineage against the referenced predecessor run.
         handoff = run_dir / "prior-red-handoff.v2.json"
-        if not handoff.is_file() or not receipt_path.is_file():
+        if not handoff.is_file():
             return False
         try:
             value = json.loads(handoff.read_text(encoding="utf-8"))

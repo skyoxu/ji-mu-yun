@@ -122,7 +122,11 @@ def _expand(value: Any, *, plan_rel: str, plan_id: str, slice_id: str, run_id: s
                        .replace("<slice-id>", slice_id)
                        .replace("<run-id>", run_id)
                        .replace("<candidate-run-id>", candidate_run_id))
-        return expanded if expanded.startswith("logs/") else f"logs/{expanded}"
+        if expanded.startswith("logs/tdd-adapter/"):
+            return expanded
+        if expanded.startswith("tdd-adapter/"):
+            return f"logs/{expanded}"
+        return f"logs/tdd-adapter/{expanded.removeprefix('logs/')}"
     if kind == "slice_id" and raw == "<slice-id>":
         return slice_id
     raise ValueError("unsupported command placeholder")
