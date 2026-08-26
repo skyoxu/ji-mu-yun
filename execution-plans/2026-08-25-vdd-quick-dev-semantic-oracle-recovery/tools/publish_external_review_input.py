@@ -5,6 +5,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import argparse
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -34,10 +35,16 @@ def write_new(path: Path, value: object) -> None:
 
 
 def main() -> None:
-    mapping = GOV / "requirements-acceptance-mapping.v1.current-20260826.json"
-    manifest = GOV / "vdd-source-freeze-manifest.v1.current-bound-20260826.json"
-    conformance = GOV / "vdd-conformance-result.v1.current-20260826-final-r3.json"
-    review_input = GOV / "external-semantic-review-input.v1.current-20260826-final-r3.json"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tag", required=True)
+    parser.add_argument("--mapping", type=Path, default=GOV / "requirements-acceptance-mapping.v1.reviewed.json")
+    parser.add_argument("--manifest", type=Path, default=GOV / "vdd-source-freeze-manifest.v1.external-bd210cef-successor.json")
+    parser.add_argument("--skill-input-receipt", type=Path, default=PLAN / "skill-input/repair-round-4/receipt.v1.json")
+    args = parser.parse_args()
+    mapping = args.mapping.resolve()
+    manifest = args.manifest.resolve()
+    conformance = GOV / f"vdd-conformance-result.v1.{args.tag}.json"
+    review_input = GOV / f"external-semantic-review-input.v1.{args.tag}.json"
     validator = ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py"
     result = subprocess.run(
         ["python", str(validator), "--repository-root", str(ROOT), "--manifest", str(manifest), "--mapping", str(mapping)],
@@ -47,8 +54,12 @@ def main() -> None:
         raise RuntimeError(result.stderr)
     conformance_value = json.loads(result.stdout)
     write_new(conformance, conformance_value)
-    current_receipt = PLAN / "skill-input/repair-round-4/receipt.v1.json"
+    current_receipt = args.skill_input_receipt.resolve()
     handoff = conformance_value.get("semantic_handoff") or {}
+    frozen_authority = handoff.get("frozen_authority", {})
+    source_manifest_hash = frozen_authority.get("source_manifest_hash", conformance_value.get("source_manifest_hash"))
+    ambiguity_ids = handoff.get("affected_obligation_ids", [])
+    affected_requirement_ids = handoff.get("affected_requirement_ids", [])
     package = {
         "schema_version": "vdd-external-semantic-review-input.v1",
         "plan_id": "vdd-quick-dev-semantic-oracle-recovery",
@@ -64,13 +75,13 @@ def main() -> None:
         "conformance_result": ref(conformance),
         "skill_input_receipt": ref(current_receipt),
         "required_review_bindings": {
-            "semantic_handoff_hash": semantic_handoff_hash(handoff),
-            "source_manifest_hash": handoff.get("frozen_authority", {}).get("source_manifest_hash"),
+            "semantic_handoff_hash": semantic_handoff_hash(handoff) if handoff else None,
+            "source_manifest_hash": source_manifest_hash,
             "requirements_manifest_hash": ref(mapping)["sha256"],
-            "ambiguity_ids": handoff.get("affected_obligation_ids", []),
-            "affected_requirement_ids": handoff.get("affected_requirement_ids", []),
+            "ambiguity_ids": ambiguity_ids,
+            "affected_requirement_ids": affected_requirement_ids,
         },
-        "review_scope": "Classify every affected source obligation against the preserved contract; do not authorize implementation.",
+        "review_scope": "Rebind the reviewed semantic dispositions and source evidence to this exact candidate; do not authorize implementation.",
         "required_output": "vdd-review-run.v1",
         "authorizes": [],
     }
