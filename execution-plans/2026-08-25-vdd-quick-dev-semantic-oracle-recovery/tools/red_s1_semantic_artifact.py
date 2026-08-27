@@ -23,7 +23,7 @@ def test_semantic_positive_manifest_rejects_missing_fr_fields() -> None:
         "upgrade_conditions": [],
     }
     accepted, failure_id = validate_semantic_intent(intent)
-    assert not accepted and failure_id == "VDD-SEMANTIC-JUDGE-REQUIRED", f"FAILURE_ID:{failure_id or 'VDD-SEMANTIC-JUDGE-REQUIRED'}"
+    assert not accepted and failure_id == "VDD-SEMANTIC-COVERAGE-MISMATCH", f"FAILURE_ID:{failure_id or 'VDD-SEMANTIC-COVERAGE-MISMATCH'}"
 
 
 def test_semantic_negative_rejects_downstream_execution_fields() -> None:
