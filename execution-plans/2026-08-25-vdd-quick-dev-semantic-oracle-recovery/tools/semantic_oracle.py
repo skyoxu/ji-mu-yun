@@ -30,6 +30,14 @@ def validate_semantic_intent(value: dict[str, Any]) -> tuple[bool, str]:
     }
     if not semantic_manifest.issubset(value):
         return False, "VDD-SEMANTIC-MANIFEST-INCOMPLETE"
+    if set(value.get("covers_acceptance_ids", [])) != set(value.get("acceptance_ids", [])):
+        return False, "VDD-SEMANTIC-COVERAGE-MISMATCH"
+    if set(value.get("required_case_roles", [])) != {"positive", "negative", "mutation"}:
+        return False, "VDD-SEMANTIC-ARTIFACT-SET-INCOMPLETE"
+    if not isinstance(value.get("expected_failure_ids"), list) or not value["expected_failure_ids"]:
+        return False, "VDD-SEMANTIC-ARTIFACT-SET-INCOMPLETE"
+    if value.get("independent_judge_required") is not True:
+        return False, "VDD-SEMANTIC-JUDGE-REQUIRED"
     if value.get("rollback") not in (None, "deferred"):
         return False, "VDD-RED-BOUNDARY"
     return True, ""
