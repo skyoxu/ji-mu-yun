@@ -186,57 +186,93 @@ def _minimal_authorization_binding_is_current(root: Path, binding: object) -> bo
 
 
 def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) -> bool:
-    """Authorization requires an accepted review and conformant mapping."""
+    """Authorization requires an exact accepted review and conformant mapping."""
     try:
         review_ref = receipt.get("review_run")
         conformance_ref = receipt.get("conformance_result")
         binding_ref = receipt.get("review_candidate_binding")
         input_ref = receipt.get("review_input")
-        if not all(isinstance(value, dict) for value in (review_ref, conformance_ref, binding_ref, input_ref)):
+        contract_ref = receipt.get("implementation_contract")
+        registry_ref = receipt.get("command_registry")
+        if not all(
+            isinstance(value, dict)
+            for value in (review_ref, conformance_ref, binding_ref, input_ref, contract_ref, registry_ref)
+        ):
             return False
-        if not all(_minimal_authorization_binding_is_current(root, value) for value in (review_ref, conformance_ref, binding_ref, input_ref, receipt.get("implementation_contract"), receipt.get("command_registry"))):
+        if not all(
+            _minimal_authorization_binding_is_current(root, value)
+            for value in (review_ref, conformance_ref, binding_ref, input_ref, contract_ref, registry_ref)
+        ):
             return False
+
         review = json.loads((root / review_ref["path"]).read_text(encoding="utf-8"))
         conformance = json.loads((root / conformance_ref["path"]).read_text(encoding="utf-8"))
         binding = json.loads((root / binding_ref["path"]).read_text(encoding="utf-8"))
         review_input = json.loads((root / input_ref["path"]).read_text(encoding="utf-8"))
-        candidate = receipt.get("candidate_commit")
+        candidate_input = review_input.get("candidate")
+        required_bindings = review_input.get("required_review_bindings")
+        if (
+            review_input.get("schema_version") != "vdd-external-semantic-review-input.v1"
+            or review_input.get("required_output") != "vdd-review-run.v1"
+            or review_input.get("authorizes") != []
+            or not isinstance(candidate_input, dict)
+            or not isinstance(candidate_input.get("head_commit"), str)
+            or not candidate_input["head_commit"]
+            or not isinstance(required_bindings, dict)
+        ):
+            return False
+
+        review_binding_fields = (
+            "semantic_handoff_hash",
+            "source_manifest_hash",
+            "requirements_manifest_hash",
+            "ambiguity_ids",
+            "affected_requirement_ids",
+        )
+        if (
+            review.get("schema_version") != "vdd-review-run.v1"
+            or review.get("status") != "accepted"
+            or review.get("decision") != "accepted"
+            or review.get("authorizes") != []
+            or review.get("profile") != review_input.get("profile")
+            or any(review.get(field) != required_bindings.get(field) for field in review_binding_fields)
+            or conformance.get("status") != "conformant"
+            or conformance.get("errors") != []
+            or conformance.get("authorizes") != []
+            or conformance.get("source_manifest_hash") != required_bindings.get("source_manifest_hash")
+            or conformance.get("requirements_manifest_hash") != required_bindings.get("requirements_manifest_hash")
+            or binding.get("schema_version") != "vdd-review-candidate-binding.v1"
+            or binding.get("status") != "accepted"
+            or binding.get("decision") != "accepted"
+            or binding.get("review_input") != input_ref
+            or binding.get("review_run") != review_ref
+            or binding.get("conformance_result") != conformance_ref
+            or binding.get("source_freeze") != receipt.get("source_freeze")
+            or binding.get("source_freeze") != review_input.get("source_freeze")
+            or binding.get("requirements_mapping") != receipt.get("requirements_mapping")
+            or binding.get("requirements_mapping") != review_input.get("requirements_mapping")
+        ):
+            return False
+
         if receipt.get("schema_version") == "quick-dev-tdd-adapter.implementation-authorization.v3":
             return (
-                review.get("schema_version") == "vdd-review-run.v1"
-                and review.get("status") == "accepted" and review.get("decision") == "accepted"
-                and conformance.get("status") == "conformant" and conformance.get("errors") == []
-                and conformance.get("authorizes") == []
-                and binding.get("schema_version") == "vdd-review-candidate-binding.v1"
-                and binding.get("status") == "accepted" and binding.get("decision") == "accepted"
-                and binding.get("review_input") == input_ref
-                and binding.get("review_run") == review_ref
-                and binding.get("conformance_result") == conformance_ref
-                and binding.get("source_freeze") == receipt.get("source_freeze") == review_input.get("source_freeze")
-                and binding.get("requirements_mapping") == receipt.get("requirements_mapping") == review_input.get("requirements_mapping")
+                binding.get("candidate_commit") == candidate_input.get("head_commit")
+                and binding.get("implementation_contract") == contract_ref
+                and binding.get("implementation_contract") == candidate_input.get("implementation_contract")
+                and binding.get("command_registry") == registry_ref
+                and binding.get("command_registry") == candidate_input.get("command_registry")
             )
+
+        candidate = receipt.get("candidate_commit")
         return (
-            review.get("schema_version") == "vdd-review-run.v1"
-            and review.get("status") == "accepted"
-            and review.get("decision") == "accepted"
-            and conformance.get("status") == "conformant"
-            and conformance.get("errors") == []
-            and conformance.get("authorizes") == []
-            and binding.get("schema_version") == "vdd-review-candidate-binding.v1"
-            and binding.get("status") == "accepted"
-            and binding.get("decision") == "accepted"
-            and binding.get("candidate_commit") == candidate == review_input.get("candidate", {}).get("head_commit")
-            and binding.get("review_input") == input_ref
-            and binding.get("review_run") == review_ref
-            and binding.get("conformance_result") == conformance_ref
-            and binding.get("implementation_contract") == receipt.get("implementation_contract") == review_input.get("candidate", {}).get("implementation_contract")
-            and binding.get("command_registry") == receipt.get("command_registry") == review_input.get("candidate", {}).get("command_registry")
-            and binding.get("source_freeze") == receipt.get("source_freeze") == review_input.get("source_freeze")
-            and binding.get("requirements_mapping") == receipt.get("requirements_mapping") == review_input.get("requirements_mapping")
+            binding.get("candidate_commit") == candidate == candidate_input.get("head_commit")
+            and binding.get("implementation_contract") == contract_ref
+            and binding.get("implementation_contract") == candidate_input.get("implementation_contract")
+            and binding.get("command_registry") == registry_ref
+            and binding.get("command_registry") == candidate_input.get("command_registry")
         )
     except (KeyError, OSError, UnicodeError, json.JSONDecodeError, TypeError):
         return False
-
 
 def _high_velocity_plan_authorize(root: Path, receipt: dict[str, object]) -> bool:
     """Validate a maintainer's whole-plan authorization without candidate binding.
