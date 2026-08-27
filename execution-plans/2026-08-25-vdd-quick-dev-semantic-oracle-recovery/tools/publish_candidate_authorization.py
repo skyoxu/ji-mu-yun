@@ -20,7 +20,11 @@ def main()->None:
     if not isinstance(commit,str) or not commit or subprocess.run(["git","merge-base","--is-ancestor",commit,"HEAD"],cwd=ROOT,capture_output=True,text=True,check=False).returncode != 0: raise SystemExit("review candidate is not a current branch ancestor")
     tree=subprocess.run(["git","rev-parse",f"{commit}^{{tree}}"],cwd=ROOT,capture_output=True,text=True,check=True).stdout.strip()
     refs={"review_input":ref(review_input),"review_run":ref(args_review),"review_candidate_binding":ref(binding_path),"conformance_result":ref(conformance_path),"implementation_contract":ref(PLAN/"implementation-contract.v1.json"),"command_registry":ref(PLAN/"command-registry.v1.json"),"source_freeze":input_value.get("source_freeze"),"requirements_mapping":input_value.get("requirements_mapping")}
-    if binding.get("schema_version")!="vdd-review-candidate-binding.v1" or binding.get("status")!="accepted" or binding.get("decision")!="accepted" or binding.get("candidate_commit")!=commit or input_value.get("candidate",{}).get("head_commit")!=commit or any(binding.get(key)!=refs[key] for key in refs): raise SystemExit("candidate review binding is stale")
+    # The binding cannot contain a reference to itself. Validate every
+    # externally supplied artifact reference, while treating the binding
+    # document's own path/hash as the publisher's custody fact.
+    external_refs = {key: value for key, value in refs.items() if key != "review_candidate_binding"}
+    if binding.get("schema_version")!="vdd-review-candidate-binding.v1" or binding.get("status")!="accepted" or binding.get("decision")!="accepted" or binding.get("candidate_commit")!=commit or input_value.get("candidate",{}).get("head_commit")!=commit or any(binding.get(key)!=external_refs[key] for key in external_refs): raise SystemExit("candidate review binding is stale")
     value={"schema_version":"quick-dev-tdd-adapter.implementation-authorization-successor.v2","plan_id":"vdd-quick-dev-semantic-oracle-recovery","candidate_commit":commit,"candidate_tree_hash":"sha256:"+tree,**refs,"authority_manifest":ref(PLAN/"knowledge-context.freeze.v1.json"),"decision":{"owner":"maintainer","transition":"implementation-authorized","basis":"accepted candidate-bound semantic review"},"authorizes":["implementation-authorized"]}
     out=PLAN/"implementation-authorization-receipt.successor.v2.json"
     out.write_text(json.dumps(value,sort_keys=True,separators=(",",":"))+"\n",encoding="utf-8",newline="\n")

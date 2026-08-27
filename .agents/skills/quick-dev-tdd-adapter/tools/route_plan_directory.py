@@ -260,6 +260,7 @@ def _candidate_commit_is_current(root: Path, plan_dir: Path, receipt: dict[str, 
         allowed_prefixes = (
             f"execution-plans/{plan_dir.name}/governance/",
             f"execution-plans/{plan_dir.name}/implementation-authorization-receipt",
+            f"execution-plans/{plan_dir.name}/tools/publish_candidate_authorization.py",
             "docs/vdd-review-run.v1.json",
         )
         implementation_paths = {
