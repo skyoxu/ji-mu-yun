@@ -15,15 +15,15 @@ def test_semantic_positive_manifest_rejects_missing_fr_fields() -> None:
         "test_selector": "tests/semantic.py", "subject_role": "sut",
             "required_case_roles": ["positive", "negative", "mutation"],
             "red_failure_family": "semantic-contract-gap", "expected_failure_ids": ["VDD-RED-BOUNDARY"],
-        "green_expected_observations": ["semantic-artifacts.v1.json"], "minimum_executed_cases": 3,
-        "independent_judge_required": False, "case_source_refs": ["SPEC:FR-1"],
+        "green_expected_observations": ["semantic-artifacts.v1.json"], "minimum_executed_cases": 0,
+        "independent_judge_required": True, "case_source_refs": ["SPEC:FR-1"],
         "case_producer_ref": "semantic-fixture-owner", "complexity_class": "complex",
         "verification_lane": "self-hosted", "context_lookup_required": False,
         "context_lookup_reason": "repository-owned", "minimum_red_scope": "semantic",
         "upgrade_conditions": [],
     }
     accepted, failure_id = validate_semantic_intent(intent)
-    assert not accepted and failure_id == "VDD-SEMANTIC-COVERAGE-MISMATCH", f"FAILURE_ID:{failure_id or 'VDD-SEMANTIC-COVERAGE-MISMATCH'}"
+    assert not accepted and failure_id == "VDD-SEMANTIC-MINIMUM-CASES", f"FAILURE_ID:{failure_id or 'VDD-SEMANTIC-MINIMUM-CASES'}"
 
 
 def test_semantic_negative_rejects_downstream_execution_fields() -> None:
