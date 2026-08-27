@@ -1,0 +1,73 @@
+我上一轮方案修得过头了。当前不需要完整 S1→S2 E2E，也不需要继续修 router、protocol bundle、S5 fixture 或 S6 terminal。进入 Quick Dev 前只剩一个技术问题：RED 与 GREEN 没有因果连接。
+
+证据很明确：
+
+Spec 的 FR-2 明确禁止“仅检查文件存在”的行为 RED。requirements.md
+当前 S1 RED 正是在检查计划目录文件是否存在；S2–S6 则是永久 assert False。S1 RED
+GREEN/REFACTOR 只运行 TESTS 映射，没有重新运行该 slice 的 RED selector。stage_command.py
+
+因此当前可以产生“永久失败的 RED + 已经通过的 GREEN”，这才是唯一必须在入场前关闭的问题。
+
+最短方案只做两件事：
+
+修改 stage_command.py
+
+GREEN 和 REFACTOR 必须在现有 TESTS[slice] 之前重新执行：
+
+selected["tdd"]["red"]["test_selector"]
+
+使用完全相同的测试文件。RED 后该文件已有 hash 绑定，实施者不能再修改测试来骗绿。
+
+恢复真正的 S1 RED
+
+只改 red_s1_semantic_artifact.py，不改生产代码。测试范围严格限定在 S1：
+
+完整 FR-1、FR-10 字段能被接受；
+缺少 producer、fixture 类、taxonomy、Acceptance 覆盖时拒绝；
+file-existence-only、self-judging、嵌入 executable/argv/hash 时拒绝；
+覆盖 positive、negative、mutation；
+当前实现必须以
+VDD-SEMANTIC-ARTIFACT-SET-INCOMPLETE 失败。
+
+完成后只验证：
+
+control-plane regressions: PASS
+S1 RED: EXPECTED NONZERO + exact failure ID
+S1 GREEN before implementation: NONZERO because the same RED selector fails
+
+第三项必须通过真实 stage_command.py 子进程验证，不能因为临时路径错误或缺输入而失败。
+
+满足这三项后，准确结论就是：
+
+可以立即进入正式 Quick Dev TDD，从 S1 的真实 RED 开始实施。
+
+不再要求提前跑通 S1→S2；那是在入场前先实施 S1，口径确实错了。
+
+后续建议使用 bounded loop，每次只推进一个动作。进入 S2–S6 的 RED 前，再把对应的 assert False 改成该 slice 的真实行为测试；不要现在一次性修完，也暂时不要启动无人值守的 persistent loop。
+
+以下内容不再作为入场阻断：
+
+protocol bundle 完备度；
+router 是否在 artifact 篡改后显示回到 S1；
+多 RUN-* 的恢复优化；
+九组 false-green fixture 的最终真实性；
+S6 terminal 全闭环；
+external review、authorization 等治理状态。
+
+当前两个入口缺陷很明确：
+
+S1 RED 仍是“文件是否存在”，不是真实行为测试。S1 RED
+GREEN/REFACTOR 仍未执行 contract 声明的 RED selector，只运行 TESTS 映射，确实可能假绿。stage_command.py
+
+准确的最小方案只有三步：
+
+GREEN、REFACTOR 强制重新执行当前 slice 在 contract 中声明的同一个 RED selector。
+在首次正式 RED 前，把 S1 RED 改成可由 S1 实现转绿的行为测试；禁止文件存在断言和永久 assert False。
+实际取得三项结果：
+control-plane 回归测试通过；
+S1 RED 因目标行为缺失而非零，并包含精确 failure ID；
+未实施 S1 时，真实 GREEN 命令也因同一测试、同一 failure ID 非零。
+
+取得这三项后：技术上直接 GO，开始 S1 的 RED → GREEN → REFACTOR。 不需要先做 S1→S2 全链 E2E、protocol bundle 补全或治理修复。
+
+唯一运行约束是每次只推进一个 action；到 S2–S6 时，在各自首次 RED 前把永久失败 selector 改为真实行为测试。这样不会把后续假 RED 提前冻结。

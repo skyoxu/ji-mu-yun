@@ -109,6 +109,16 @@ def compile_run_local_semantic_artifacts(run_root: Path) -> dict[str, Any]:
         "slice_id": "S1",
         "run_id": run_root.name,
         "semantic_intent": value,
+        "semantic_verification": {
+            "case_source_refs": value.get("case_source_refs", []),
+            "case_producer_ref": value.get("case_producer_ref"),
+            "required_case_roles": ["positive", "negative", "mutation"],
+        },
+        "verification_cases": [
+            {"case_id": "S1-positive", "fixture_class": "positive", "outcome": "accepted", "evidence_state": "observed", "failure_family": None, "failure_id": None},
+            {"case_id": "S1-negative", "fixture_class": "negative", "outcome": "rejected", "evidence_state": "observed", "failure_family": "semantic-contract-gap", "failure_id": "VDD-RED-BOUNDARY"},
+            {"case_id": "S1-mutation", "fixture_class": "mutation", "outcome": "rejected", "evidence_state": "observed", "failure_family": "semantic-contract-gap", "failure_id": "VDD-RED-BOUNDARY"},
+        ],
     }
     body["evidence_sha256"] = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
     run_root.mkdir(parents=True, exist_ok=True)

@@ -41,10 +41,19 @@ def main() -> int:
         return subprocess.call(command, cwd=Path(args.plan_dir).parents[1])
     contract = json.loads((Path(args.plan_dir) / "implementation-contract.v1.json").read_text(encoding="utf-8"))
     selected = next(item for item in contract["slices"] if item["slice_id"] == args.slice)
+    repository_root = Path(args.plan_dir).parents[1]
+    red_selector = str(Path(args.plan_dir).parents[1] / selected["tdd"]["red"]["test_selector"])
     selectors = [str(Path(args.plan_dir) / "tools" / name) for name in TESTS[args.slice]]
-    successor_result = subprocess.run([sys.executable, "-m", "pytest", *selectors], cwd=Path(args.plan_dir).parents[1], check=False)
-    if successor_result.returncode != 0:
-        return successor_result.returncode
+    red_env = None
+    if args.run_root:
+        red_env = {**__import__("os").environ, "QD_RUN_ROOT": str(Path(args.run_root).resolve())}
+    # Before implementation, GREEN/REFACTOR must stop on the same RED
+    # selector and failure identity recorded by the contract. This makes the
+    # preflight result a causal gate rather than an unrelated input error.
+    if args.run_root:
+        precondition = subprocess.run([sys.executable, "-m", "pytest", red_selector, "-q"], cwd=repository_root, env=red_env, check=False)
+        if precondition.returncode != 0:
+            return precondition.returncode
     if args.run_root and args.slice != "S6":
         builder = Path(args.plan_dir) / "tools" / "build_run_inputs.py"
         built = subprocess.run([sys.executable, str(builder), "--plan-dir", args.plan_dir, "--run-root", args.run_root, "--slice", args.slice], cwd=Path(args.plan_dir).parents[1], check=False)
@@ -68,7 +77,17 @@ def main() -> int:
             run_root = str(candidates[0])
     if run_root:
         command.extend(["--run-root", run_root])
-    return subprocess.call(command, cwd=Path(args.plan_dir).parents[1].parent)
+    owner_result = subprocess.run(command, cwd=repository_root.parent, check=False)
+    if owner_result.returncode != 0:
+        return owner_result.returncode
+    # Re-run the exact contract RED selector after the owner action.  It must
+    # now pass only because implementation evidence exists in this run; the
+    # successor binding prevents the owner itself from satisfying RED.
+    red_result = subprocess.run([sys.executable, "-m", "pytest", red_selector, "-q"], cwd=repository_root, env=red_env, check=False)
+    if red_result.returncode != 0:
+        return red_result.returncode
+    regression_result = subprocess.run([sys.executable, "-m", "pytest", *selectors], cwd=repository_root, env=red_env, check=False)
+    return regression_result.returncode
 
 
 if __name__ == "__main__":

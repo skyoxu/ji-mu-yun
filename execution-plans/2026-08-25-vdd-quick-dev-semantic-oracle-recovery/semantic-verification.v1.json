@@ -3,7 +3,7 @@
   "oracle_id": "A-SEMANTIC",
   "covers_acceptance_ids": ["A-SEMANTIC"],
   "oracle_class": "semantic-boundary",
-  "test_selector": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_semantic_red.py",
+  "test_selector": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s1_semantic_artifact.py",
   "subject_role": "vdd",
   "required_case_roles": ["positive", "negative", "mutation"],
   "case_source_refs": ["SPEC:FR-1", "SPEC:FR-2", "SPEC:NFR-5"],
