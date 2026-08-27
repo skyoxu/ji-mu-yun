@@ -1,0 +1,53 @@
+现有 authorization 绑定 candidate 88078b86。你完成最小恢复后代码提交发生变化，当前 candidate 已不是 88078b86，于是：
+
+candidate 改变
+→ external review binding 过期
+→ authorization 过期
+→ router 返回 awaiting-implementation-authorization
+→ Codex 按严格规则拒绝启动 RED
+
+这属于治理模型与高速开发不匹配，不是 Quick Dev TDD 的技术要求。继续重新 review 只会循环：每次实现代码都会再次改变 candidate。
+
+推荐的高速演进模式
+
+改为一次性的“计划级开发授权”：
+
+mode: high_velocity_tdd
+
+implementation_authorization:
+  issuer: maintainer
+  scope: whole_plan
+  valid_until: plan_complete
+  bind:
+    - plan_id
+    - requirements
+    - spec
+    - architecture
+    - implementation_contract
+    - allowed_and_forbidden_paths
+  do_not_bind:
+    - candidate_commit
+    - implementation_source_hashes
+    - run_evidence
+
+external_semantic_review:
+  timing: final_candidate_only
+
+行为应当是：
+
+S1 前只需要 maintainer 对整个计划授权一次。
+S1–S6 正常修改代码、测试和运行证据，不导致授权失效。
+只有需求、Spec、Architecture、Acceptance 边界或允许写集发生变化，才需要重新授权。
+完成所有切片后，对最终 candidate 做一次 external review，再进入 Acceptance。
+RED 真实性、GREEN/REFACTOR、hash-bound artifacts 和防假绿检查继续保留；这些是技术门禁，不应删除。
+当前最短处理方式
+
+不要再次为恢复提交生成 external review。应一次性修改 authorization publisher/router：
+
+支持 high_velocity_tdd。
+当前计划改用 plan-scoped maintainer authorization。
+router 不再因 implementation candidate commit 改变而退回 authorization。
+旧的未完成 S1 run 不复用，重新创建正式 run。
+lifecycle RED 能在限定时间内产生正确的 red-observed.json 后，立即进入正常 Quick Dev TDD。
+
+所以，本地 Codex 现在拒绝是因为它在忠实执行旧规则；反复提示不是它多虑，而是旧规则必然造成的结果。不要用提示词强迫它绕过，应该把规则一次改成高速演进模式。之后无需每个提交都找我重新做 external review。

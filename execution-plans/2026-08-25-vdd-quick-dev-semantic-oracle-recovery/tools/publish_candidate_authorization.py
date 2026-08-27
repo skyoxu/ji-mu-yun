@@ -1,4 +1,4 @@
-"""Publish an authorization receipt bound to a pre-publication candidate commit."""
+"""Publish a plan-scoped authorization for high-velocity TDD."""
 from __future__ import annotations
 import argparse, hashlib, json, subprocess
 from pathlib import Path
@@ -16,18 +16,15 @@ def main()->None:
         raise SystemExit("accepted external review is required")
     if conformance.get("status") != "conformant" or conformance.get("errors") != [] or conformance.get("authorizes") != []:
         raise SystemExit("conformant conformance result is required")
-    commit=input_value.get("candidate",{}).get("head_commit")
-    if not isinstance(commit,str) or not commit or subprocess.run(["git","merge-base","--is-ancestor",commit,"HEAD"],cwd=ROOT,capture_output=True,text=True,check=False).returncode != 0: raise SystemExit("review candidate is not a current branch ancestor")
-    tree=subprocess.run(["git","rev-parse",f"{commit}^{{tree}}"],cwd=ROOT,capture_output=True,text=True,check=True).stdout.strip()
     refs={"review_input":ref(review_input),"review_run":ref(args_review),"review_candidate_binding":ref(binding_path),"conformance_result":ref(conformance_path),"implementation_contract":ref(PLAN/"implementation-contract.v1.json"),"command_registry":ref(PLAN/"command-registry.v1.json"),"source_freeze":input_value.get("source_freeze"),"requirements_mapping":input_value.get("requirements_mapping")}
     # The binding cannot contain a reference to itself. Validate every
     # externally supplied artifact reference, while treating the binding
     # document's own path/hash as the publisher's custody fact.
-    external_refs = {key: value for key, value in refs.items() if key != "review_candidate_binding"}
-    if binding.get("schema_version")!="vdd-review-candidate-binding.v1" or binding.get("status")!="accepted" or binding.get("decision")!="accepted" or binding.get("candidate_commit")!=commit or input_value.get("candidate",{}).get("head_commit")!=commit or any(binding.get(key)!=external_refs[key] for key in external_refs): raise SystemExit("candidate review binding is stale")
-    value={"schema_version":"quick-dev-tdd-adapter.implementation-authorization-successor.v2","plan_id":"vdd-quick-dev-semantic-oracle-recovery","candidate_commit":commit,"candidate_tree_hash":"sha256:"+tree,**refs,"authority_manifest":ref(PLAN/"knowledge-context.freeze.v1.json"),"decision":{"owner":"maintainer","transition":"implementation-authorized","basis":"accepted candidate-bound semantic review"},"authorizes":["implementation-authorized"]}
-    out=PLAN/"implementation-authorization-receipt.successor.v2.json"
+    external_refs = {key: value for key, value in refs.items() if key in {"review_input", "review_run", "conformance_result", "source_freeze", "requirements_mapping"}}
+    if binding.get("schema_version")!="vdd-review-candidate-binding.v1" or binding.get("status")!="accepted" or binding.get("decision")!="accepted" or any(binding.get(key)!=external_refs[key] for key in external_refs): raise SystemExit("semantic review binding is stale")
+    value={"schema_version":"quick-dev-tdd-adapter.implementation-authorization.v3","plan_id":"vdd-quick-dev-semantic-oracle-recovery","scope":"whole_plan","mode":"high_velocity_tdd",**refs,"authority_manifest":ref(PLAN/"knowledge-context.freeze.v1.json"),"decision":{"owner":"maintainer","transition":"implementation-authorized","basis":"accepted semantic review for plan-scoped high-velocity TDD"},"binds":["plan_id","requirements_mapping","source_freeze","implementation_contract","command_registry","authority_manifest"],"does_not_bind":["candidate_commit","implementation_source_hashes","run_evidence"],"authorizes":["implementation-authorized"]}
+    out=PLAN/"implementation-authorization-receipt.v3.json"
     out.write_text(json.dumps(value,sort_keys=True,separators=(",",":"))+"\n",encoding="utf-8",newline="\n")
-    state={"schema_version":"vdd.lifecycle.v2","plan_id":"vdd-quick-dev-semantic-oracle-recovery","state":"implementation-authorized","owner":"maintainer","profile":"self-hosted","canonical_selection_hash":json.loads((PLAN/"plan-state.v1.json").read_text(encoding="utf-8"))["canonical_selection_hash"],"baseline_commit":commit,"authorization_receipt":ref(out),"authorizes":["implementation-authorized"]}
+    state={"schema_version":"vdd.lifecycle.v2","plan_id":"vdd-quick-dev-semantic-oracle-recovery","state":"implementation-authorized","owner":"maintainer","profile":"self-hosted","authorization_scope":"whole_plan","mode":"high_velocity_tdd","canonical_selection_hash":json.loads((PLAN/"plan-state.v1.json").read_text(encoding="utf-8"))["canonical_selection_hash"],"authorization_receipt":ref(out),"authorizes":["implementation-authorized"]}
     (PLAN/"plan-state.v1.json").write_text(json.dumps(state,sort_keys=True,separators=(",",":"))+"\n",encoding="utf-8",newline="\n")
 if __name__=="__main__":main()

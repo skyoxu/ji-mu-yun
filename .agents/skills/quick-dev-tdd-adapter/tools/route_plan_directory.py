@@ -201,6 +201,20 @@ def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) ->
         binding = json.loads((root / binding_ref["path"]).read_text(encoding="utf-8"))
         review_input = json.loads((root / input_ref["path"]).read_text(encoding="utf-8"))
         candidate = receipt.get("candidate_commit")
+        if receipt.get("schema_version") == "quick-dev-tdd-adapter.implementation-authorization.v3":
+            return (
+                review.get("schema_version") == "vdd-review-run.v1"
+                and review.get("status") == "accepted" and review.get("decision") == "accepted"
+                and conformance.get("status") == "conformant" and conformance.get("errors") == []
+                and conformance.get("authorizes") == []
+                and binding.get("schema_version") == "vdd-review-candidate-binding.v1"
+                and binding.get("status") == "accepted" and binding.get("decision") == "accepted"
+                and binding.get("review_input") == input_ref
+                and binding.get("review_run") == review_ref
+                and binding.get("conformance_result") == conformance_ref
+                and binding.get("source_freeze") == receipt.get("source_freeze") == review_input.get("source_freeze")
+                and binding.get("requirements_mapping") == receipt.get("requirements_mapping") == review_input.get("requirements_mapping")
+            )
         return (
             review.get("schema_version") == "vdd-review-run.v1"
             and review.get("status") == "accepted"
@@ -222,6 +236,32 @@ def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) ->
         )
     except (KeyError, OSError, UnicodeError, json.JSONDecodeError, TypeError):
         return False
+
+
+def _high_velocity_plan_authorize(root: Path, receipt: dict[str, object]) -> bool:
+    """Validate a maintainer's whole-plan authorization without candidate binding.
+
+    This leaves lifecycle evidence hash-bound while allowing declared S1..S6
+    implementation writes to advance the candidate.  Any change to the
+    normative contract, command registry, source freeze, mapping, or authority
+    invalidates the receipt through its explicit references.
+    """
+    required = (
+        "implementation_contract", "command_registry", "authority_manifest",
+        "review_input", "review_run", "review_candidate_binding",
+        "conformance_result", "source_freeze", "requirements_mapping",
+    )
+    if (
+        receipt.get("schema_version") != "quick-dev-tdd-adapter.implementation-authorization.v3"
+        or receipt.get("scope") != "whole_plan"
+        or receipt.get("mode") != "high_velocity_tdd"
+        or receipt.get("authorizes") != ["implementation-authorized"]
+        or receipt.get("does_not_bind") != ["candidate_commit", "implementation_source_hashes", "run_evidence"]
+        or receipt.get("binds") != ["plan_id", "requirements_mapping", "source_freeze", "implementation_contract", "command_registry", "authority_manifest"]
+        or not all(_minimal_authorization_binding_is_current(root, receipt.get(field)) for field in required)
+    ):
+        return False
+    return _review_and_conformance_authorize(root, receipt)
 
 
 def _candidate_commit_is_current(root: Path, plan_dir: Path, receipt: dict[str, object]) -> bool:
@@ -812,6 +852,19 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
     if lifecycle_state == "implementation-authorized":
         if document["authorizes"] in (["implementation-authorized"], ["plan-ready", "implementation-authorized"]):
             root = plan_dir.resolve().parents[1]
+            velocity_receipts = sorted(plan_dir.glob("implementation-authorization-receipt.v3.json"))
+            if velocity_receipts:
+                try:
+                    velocity = json.loads(velocity_receipts[-1].read_text(encoding="utf-8"))
+                    if (
+                        velocity.get("plan_id") == plan_id
+                        and velocity.get("decision", {}).get("owner") == "maintainer"
+                        and velocity.get("decision", {}).get("transition") == "implementation-authorized"
+                        and _high_velocity_plan_authorize(root, velocity)
+                    ):
+                        return None
+                except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+                    pass
             minimal_receipts = sorted(plan_dir.glob("implementation-authorization-receipt.successor.v2.json"))
             if minimal_receipts:
                 receipt_path = minimal_receipts[-1]
