@@ -2,7 +2,9 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import sys
+import types
 
 import pytest
 
@@ -14,6 +16,11 @@ PUBLISHER = (
     / "tools/publish_candidate_authorization.py"
 )
 PLAN_NAME = "2026-08-25-vdd-quick-dev-semantic-oracle-recovery"
+REVIEW_INPUT_PUBLISHER = (
+    ROOT
+    / "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery"
+    / "tools/publish_external_review_input.py"
+)
 
 
 def _load():
@@ -22,6 +29,27 @@ def _load():
     assert spec.loader is not None
     spec.loader.exec_module(module)
     return module
+
+
+def _load_review_input_publisher():
+    conformance = types.ModuleType("conformance")
+    conformance.semantic_handoff_hash = lambda value: "sha256:handoff"
+    previous = sys.modules.get("conformance")
+    sys.modules["conformance"] = conformance
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "external_review_input_publisher",
+            REVIEW_INPUT_PUBLISHER,
+        )
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+        return module
+    finally:
+        if previous is None:
+            sys.modules.pop("conformance", None)
+        else:
+            sys.modules["conformance"] = previous
 
 
 def _write(root: Path, relative: str, value: dict) -> dict[str, str]:
@@ -142,3 +170,32 @@ def test_publisher_rejects_a_stale_reviewed_contract(monkeypatch, tmp_path: Path
     monkeypatch.setattr(sys, "argv", _argv(paths))
     with pytest.raises(SystemExit, match="external review input is stale"):
         module.main()
+
+
+def test_review_input_publisher_requires_exact_head_bytes(tmp_path: Path) -> None:
+    candidate = tmp_path / "candidate.json"
+    candidate.write_text("{}\n", encoding="utf-8", newline="\n")
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+    subprocess.run(["git", "add", "candidate.json"], cwd=tmp_path, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.invalid",
+            "commit",
+            "-m",
+            "candidate",
+        ],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+    )
+    module = _load_review_input_publisher()
+    module.ROOT = tmp_path
+    module.require_head_bytes(candidate)
+
+    candidate.write_text("{\"dirty\":true}\n", encoding="utf-8", newline="\n")
+    with pytest.raises(RuntimeError, match="must match HEAD exactly"):
+        module.require_head_bytes(candidate)

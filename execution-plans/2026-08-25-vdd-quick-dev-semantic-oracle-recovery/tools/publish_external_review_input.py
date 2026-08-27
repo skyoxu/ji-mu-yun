@@ -23,6 +23,24 @@ def ref(path: Path) -> dict[str, str]:
     return {"path": path.resolve().relative_to(ROOT.resolve()).as_posix(), "sha256": sha(path)}
 
 
+def require_head_bytes(path: Path) -> None:
+    """Refuse to bind HEAD to dirty or differently normalized candidate bytes."""
+    root = ROOT.resolve()
+    target = path.resolve()
+    try:
+        relative = target.relative_to(root).as_posix()
+    except ValueError as exc:
+        raise RuntimeError(f"candidate input escapes repository: {path}") from exc
+    committed = subprocess.run(
+        ["git", "-C", str(root), "show", f"HEAD:{relative}"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if committed.returncode != 0 or committed.stdout != target.read_bytes():
+        raise RuntimeError(f"candidate input must match HEAD exactly: {relative}")
+
+
 def write_new(path: Path, value: object) -> None:
     encoded = (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
     if path.exists():
@@ -43,6 +61,15 @@ def main() -> None:
     args = parser.parse_args()
     mapping = args.mapping.resolve()
     manifest = args.manifest.resolve()
+    current_receipt = args.skill_input_receipt.resolve()
+    for candidate_input in (
+        PLAN / "implementation-contract.v1.json",
+        PLAN / "command-registry.v1.json",
+        manifest,
+        mapping,
+        current_receipt,
+    ):
+        require_head_bytes(candidate_input)
     conformance = GOV / f"vdd-conformance-result.v1.{args.tag}.json"
     review_input = GOV / f"external-semantic-review-input.v1.{args.tag}.json"
     validator = ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py"
@@ -54,7 +81,6 @@ def main() -> None:
         raise RuntimeError(result.stderr)
     conformance_value = json.loads(result.stdout)
     write_new(conformance, conformance_value)
-    current_receipt = args.skill_input_receipt.resolve()
     handoff = conformance_value.get("semantic_handoff") or {}
     frozen_authority = handoff.get("frozen_authority", {})
     source_manifest_hash = frozen_authority.get("source_manifest_hash", conformance_value.get("source_manifest_hash"))
