@@ -15,11 +15,9 @@ def test_complete_fr1_fr2_fr10_manifest_is_accepted() -> None:
         "required_case_roles": ["positive", "negative", "mutation"], "red_failure_family": "semantic-contract-gap",
         "expected_failure_ids": ["VDD-SEMANTIC-MANIFEST-INCOMPLETE"], "green_expected_observations": ["semantic-artifacts.v1.json"],
         "minimum_executed_cases": 3, "independent_judge_required": True,
-        "case_source_refs": ["SPEC:FR-1", "SPEC:FR-2", "SPEC:FR-10"], "case_producer_ref": "vdd-semantic-fixture-owner",
+        "case_source_refs": ["SPEC:FR-1", "SPEC:FR-2", "SPEC:FR-10"], "case_producer_ref": "",
         "complexity_class": "complex", "verification_lane": "self-hosted", "context_lookup_required": False,
-        "context_lookup_reason": "repository-owned", "minimum_red_scope": "semantic", "upgrade_conditions": "none",
+        "context_lookup_reason": "repository-owned", "minimum_red_scope": "semantic", "upgrade_conditions": [],
     }
     accepted, failure_id = validate_semantic_intent(intent)
-    if not accepted:
-        print(f"FAILURE_ID:{failure_id or 'VDD-SEMANTIC-MANIFEST-INCOMPLETE'}")
-    assert accepted, "FAILURE_ID:VDD-SEMANTIC-MANIFEST-INCOMPLETE"
+    assert not accepted and failure_id == "VDD-SEMANTIC-MANIFEST-INCOMPLETE", f"FAILURE_ID:{failure_id or 'VDD-SEMANTIC-MANIFEST-INCOMPLETE'}"

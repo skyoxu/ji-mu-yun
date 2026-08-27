@@ -40,6 +40,8 @@ def validate_semantic_intent(value: dict[str, Any]) -> tuple[bool, str]:
         return False, "VDD-SEMANTIC-JUDGE-REQUIRED"
     if not isinstance(value.get("upgrade_conditions"), list):
         return False, "VDD-SEMANTIC-MANIFEST-INCOMPLETE"
+    if not isinstance(value.get("case_producer_ref"), str) or not value["case_producer_ref"].strip():
+        return False, "VDD-SEMANTIC-MANIFEST-INCOMPLETE"
     if not isinstance(value.get("minimum_executed_cases"), int) or value["minimum_executed_cases"] < 1:
         return False, "VDD-SEMANTIC-MINIMUM-CASES"
     if value.get("rollback") not in (None, "deferred"):
