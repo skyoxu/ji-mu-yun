@@ -4,7 +4,6 @@ import base64
 from datetime import datetime, timezone
 import json
 import re
-import os
 from pathlib import Path, PurePosixPath
 import subprocess
 from typing import Any
@@ -37,30 +36,29 @@ def freeze(workspace: Path, paths: list[str]) -> dict[str, str | None]:
     return {path: _snapshot(root, path) for path in declared}
 
 
-def _workspace_manifest(root: Path) -> dict[str, bytes | None]:
-    """Capture real workspace bytes, excluding only adapter-owned runtime data."""
+def _git_delta_paths(root: Path) -> set[str]:
+    """Return repository paths reported by Git without scanning the workspace."""
+    result: set[str] = set()
+    for args in (("diff", "--name-only", "--no-renames", "HEAD"),
+                 ("diff", "--name-only", "--no-renames", "--cached"),
+                 ("ls-files", "--others", "--exclude-standard")):
+        completed = subprocess.run(
+            ["git", "-C", str(root), *args], capture_output=True, text=True, check=False
+        )
+        if completed.returncode == 0:
+            result.update(line.strip().replace("\\", "/") for line in completed.stdout.splitlines() if line.strip())
+    return {path for path in result if not path.startswith("logs/tdd-adapter/")}
+
+
+def _read_paths(root: Path, paths: set[str]) -> dict[str, bytes | None]:
+    """Read only the paths selected by Git delta plus explicit snapshots."""
     manifest: dict[str, bytes | None] = {}
-    for current, dirs, files in os.walk(root):
-        dirs[:] = [name for name in dirs if name not in {".git", "__pycache__", ".pytest_cache"}]
-        current_path = Path(current)
+    for relative in sorted(paths):
+        target = root / relative
         try:
-            relative_dir = current_path.relative_to(root).as_posix()
-        except ValueError:
-            continue
-        if relative_dir == "logs/tdd-adapter" or relative_dir.startswith("logs/tdd-adapter/"):
-            dirs[:] = []
-            continue
-        for name in files:
-            path = current_path / name
-            relative = path.relative_to(root).as_posix()
-            if relative == "logs/tdd-adapter" or relative.startswith("logs/tdd-adapter/"):
-                continue
-            try:
-                if path.is_symlink() or not path.is_file():
-                    continue
-                manifest[relative] = path.read_bytes()
-            except OSError:
-                continue
+            manifest[relative] = target.read_bytes() if target.is_file() and not target.is_symlink() else None
+        except OSError:
+            manifest[relative] = None
     return manifest
 
 
@@ -103,7 +101,9 @@ def run(
     declared_paths = sorted({_relative_path(path) for path in paths})
     if not declared_paths:
         raise ValueError("at least one snapshot path is required")
-    before = _workspace_manifest(workspace)
+    explicit = set(declared_paths)
+    before_delta = _git_delta_paths(workspace)
+    before = _read_paths(workspace, before_delta | explicit)
     for path in declared_paths:
         before.setdefault(path, _snapshot(workspace, path))
     try:
@@ -116,7 +116,8 @@ def run(
     except subprocess.TimeoutExpired:
         exit_code = 124
         output = ""
-    after = _workspace_manifest(workspace)
+    after_delta = _git_delta_paths(workspace)
+    after = _read_paths(workspace, before_delta | after_delta | explicit)
     changed_paths = sorted(set(before) | set(after))
     changed_files = [
         {"path": path, "before_bytes_base64": None if before.get(path) is None else base64.b64encode(before[path]).decode("ascii"), "after_bytes_base64": None if after.get(path) is None else base64.b64encode(after[path]).decode("ascii")}

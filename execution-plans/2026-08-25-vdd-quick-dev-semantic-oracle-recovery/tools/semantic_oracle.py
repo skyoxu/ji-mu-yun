@@ -19,6 +19,17 @@ def validate_semantic_intent(value: dict[str, Any]) -> tuple[bool, str]:
         return False, "VDD-RED-BOUNDARY"
     if not value["acceptance_ids"] or not value["producer"] or not value["coverage"] or not isinstance(value.get("taxonomy"), list) or not value["taxonomy"]:
         return False, "VDD-RED-BOUNDARY"
+    semantic_manifest = {
+        "oracle_id", "covers_acceptance_ids", "oracle_class", "test_selector",
+        "subject_role", "required_case_roles", "red_failure_family",
+        "expected_failure_ids", "green_expected_observations",
+        "minimum_executed_cases", "independent_judge_required",
+        "case_source_refs", "case_producer_ref", "complexity_class",
+        "verification_lane", "context_lookup_required", "context_lookup_reason",
+        "minimum_red_scope", "upgrade_conditions",
+    }
+    if not semantic_manifest.issubset(value):
+        return False, "VDD-SEMANTIC-MANIFEST-INCOMPLETE"
     if value.get("rollback") not in (None, "deferred"):
         return False, "VDD-RED-BOUNDARY"
     return True, ""
