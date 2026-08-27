@@ -38,6 +38,8 @@ def validate_semantic_intent(value: dict[str, Any]) -> tuple[bool, str]:
         return False, "VDD-SEMANTIC-ARTIFACT-SET-INCOMPLETE"
     if value.get("independent_judge_required") is not True:
         return False, "VDD-SEMANTIC-JUDGE-REQUIRED"
+    if not isinstance(value.get("minimum_executed_cases"), int) or value["minimum_executed_cases"] < 1:
+        return False, "VDD-SEMANTIC-MINIMUM-CASES"
     if value.get("rollback") not in (None, "deferred"):
         return False, "VDD-RED-BOUNDARY"
     return True, ""
