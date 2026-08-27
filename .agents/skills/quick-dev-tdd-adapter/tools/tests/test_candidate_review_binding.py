@@ -132,3 +132,14 @@ def test_review_metadata_must_match_the_published_review_input(tmp_path: Path) -
     binding["review_run"] = receipt["review_run"]
     receipt["review_candidate_binding"] = _write(tmp_path, "binding.json", binding)
     assert not module._review_and_conformance_authorize(tmp_path, receipt)
+
+
+def test_authorization_json_refs_accept_repository_lf_identity_on_crlf_checkout(tmp_path: Path) -> None:
+    path = tmp_path / "receipt.json"
+    path.write_bytes(b"{\"status\":\"accepted\"}\r\n")
+    repository_lf = b"{\"status\":\"accepted\"}\n"
+    binding = {
+        "path": "receipt.json",
+        "sha256": "sha256:" + hashlib.sha256(repository_lf).hexdigest(),
+    }
+    assert _module()._minimal_authorization_binding_is_current(tmp_path, binding)

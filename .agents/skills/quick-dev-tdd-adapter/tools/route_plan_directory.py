@@ -180,9 +180,11 @@ def _minimal_authorization_binding_is_current(root: Path, binding: object) -> bo
         return False
     if not path.is_file():
         return False
-    raw = _sha(path.read_bytes())
+    payload = path.read_bytes()
+    raw = _sha(payload)
+    repository_text = _sha(payload.replace(b"\r\n", b"\n")) if path.suffix.casefold() == ".json" else raw
     canonical = _artifact_hash(path)
-    return binding["sha256"] in {raw, canonical}
+    return binding["sha256"] in {raw, repository_text, canonical}
 
 
 def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) -> bool:
