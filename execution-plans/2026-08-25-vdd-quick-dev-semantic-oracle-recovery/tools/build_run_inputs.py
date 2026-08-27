@@ -69,7 +69,14 @@ def build(plan_dir: Path, run_root: Path, slice_id: str) -> dict[str, object]:
     if slice_id == "S1":
         inputs = {"semantic-intent-input.v1.json": {
             "acceptance_ids": ["A-SEMANTIC"], "producer": "vdd", "coverage": "exact-cover",
-            "fixture_class": "positive", "taxonomy": ["outcome", "failure_family", "failure_id"], "rollback": "deferred",
+            "covers_acceptance_ids": ["A-SEMANTIC"], "fixture_class": "positive",
+            "taxonomy": ["outcome", "failure_family", "failure_id"], "rollback": "deferred",
+            "oracle_id": "semantic-oracle", "oracle_class": "contract", "test_selector": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s1_semantic_artifact.py",
+            "subject_role": "sut", "required_case_roles": ["positive", "negative", "mutation"], "red_failure_family": "semantic-contract-gap",
+            "expected_failure_ids": ["VDD-SEMANTIC-MINIMUM-CASES"], "green_expected_observations": ["semantic-artifacts.v1.json"],
+            "minimum_executed_cases": 3, "independent_judge_required": True, "case_source_refs": ["SPEC:FR-1", "SPEC:FR-2", "SPEC:FR-10"],
+            "case_producer_ref": "vdd-semantic-fixture-owner", "complexity_class": "complex", "verification_lane": "self-hosted",
+            "context_lookup_required": False, "context_lookup_reason": "repository-owned", "minimum_red_scope": "semantic", "upgrade_conditions": [],
         }}
     elif slice_id == "S2":
         inputs = {
