@@ -90,11 +90,17 @@ def produce_receipt(run_root: Path) -> dict:
     else:
         cwd.relative_to(repo_root.parent)
     completed = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=descriptor_value.get("timeout_seconds", 30), check=False)
-    receipt = {"executor_id":source.get("executor_id", "sut-executor"), "judge_id":"independent-judge", "descriptor_hash":descriptor["evidence_sha256"], "candidate_hash":source.get("candidate_hash", "sha256:fixture"), "run_id":run_root.name, "exit_code":completed.returncode}
+    candidate_hash = source.get("candidate_hash")
+    if not isinstance(candidate_hash, str) or not candidate_hash.startswith("sha256:") or candidate_hash == "sha256:fixture":
+        raise ValueError("JUDGE-CANDIDATE-BINDING-INCOMPLETE")
+    expected_exit = source.get("expected_exit", "zero")
+    if expected_exit not in {"zero", "nonzero"}:
+        raise ValueError("JUDGE-EXPECTATION-INCOMPLETE")
+    receipt = {"executor_id":source.get("executor_id", "sut-executor"), "judge_id":"independent-judge", "descriptor_hash":descriptor["evidence_sha256"], "candidate_hash":candidate_hash, "run_id":run_root.name, "exit_code":completed.returncode}
     assertions = source.get("acceptance_assertions", {})
     if not isinstance(assertions, dict) or not assertions or any(not isinstance(key, str) or not isinstance(value, str) or not value for key, value in assertions.items()):
         raise ValueError("JUDGE-INDEPENDENCE-UNPROVEN")
-    observation = {"run_id":run_root.name, "stdout":completed.stdout, "stderr":completed.stderr, "observation_id":source.get("observation_id", "OBS-S3"), "descriptor_argv":argv, "expected_exit":source.get("expected_exit", "zero"), "executions":1, "acceptance_assertions":assertions}
+    observation = {"run_id":run_root.name, "stdout":completed.stdout, "stderr":completed.stderr, "observation_id":source.get("observation_id", "OBS-S3"), "descriptor_argv":argv, "expected_exit":expected_exit, "executions":1, "acceptance_assertions":assertions}
     receipt["actual_argv"] = argv
     valid, failure = validate_judge(receipt, observation)
     if not valid:
@@ -143,7 +149,7 @@ def produce_false_green_fixtures(run_root: Path) -> dict:
             raise ValueError("fixture-input-invalid")
         blocked = subprocess.run(fixture["blocked_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
         corrected = subprocess.run(fixture["corrected_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
-        results.append({"fixture_id":fixture.get("fixture_id"), "blocked":blocked.returncode != 0, "corrected_pair_pass":corrected.returncode == 0})
+        results.append({"fixture_id":fixture.get("fixture_id"), "blocked":blocked.returncode != 0, "blocked_exit_code":blocked.returncode, "corrected_pair_pass":corrected.returncode == 0, "corrected_exit_code":corrected.returncode})
     valid, failure = validate_promotion(results, predecessor_hash, "coverage-gate")
     if not valid:
         raise ValueError(failure)
