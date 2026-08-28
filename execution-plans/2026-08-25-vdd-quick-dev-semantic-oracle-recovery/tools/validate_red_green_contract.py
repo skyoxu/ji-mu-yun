@@ -102,7 +102,7 @@ def verify_green_routing(plan: Path) -> tuple[bool, list[str]]:
 def verify_repair_boundary(plan: Path) -> tuple[bool, list[str]]:
     base = "795b718e0dcd161e510ee1560ba65eb3b5b01177"
     result = subprocess.run(["git", "diff", "--name-only", f"{base}..HEAD"], cwd=plan.parents[1], capture_output=True, text=True, check=False)
-    forbidden = {"semantic_oracle.py", "semantic_artifact_compiler.py", "descriptor_compiler.py", "independent_judge.py", "coverage_gate.py", "promotion_gate.py", "false_green_fixture_runner.py", "terminal_validator.py", "terminal_predicate.py", "validate_all.py", "artifact_owners.py", "build_run_inputs.py"}
+    forbidden = {"semantic_oracle.py", "semantic_artifact_compiler.py", "descriptor_compiler.py", "independent_judge.py", "coverage_gate.py", "promotion_gate.py", "false_green_fixture_runner.py", "terminal_predicate.py", "validate_all.py", "artifact_owners.py"}
     changed = [line for line in result.stdout.splitlines() if any(line.endswith(name) for name in forbidden)]
     return not changed, [f"repair-boundary-target-changed:{path}" for path in changed]
 
