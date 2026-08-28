@@ -157,8 +157,11 @@ def verify_review(plan: Path) -> tuple[bool, list[str], dict]:
     candidate = value.get("candidate", {})
     if not _candidate_is_ancestor(root, candidate.get("head_commit", "")):
         errors.append("review-candidate-not-ancestor")
-    for key in ("implementation_contract", "command_registry", "source_freeze", "requirements_mapping", "skill_input_receipt"):
+    for key in ("source_freeze", "requirements_mapping", "skill_input_receipt"):
         if not _ref_current(root, value.get(key)):
+            errors.append(f"review-input-stale:{key}")
+    for key in ("implementation_contract", "command_registry"):
+        if not _ref_current(root, candidate.get(key)):
             errors.append(f"review-input-stale:{key}")
     bindings = value.get("required_review_bindings", {})
     run_candidates = sorted((plan / "governance").glob("vdd-review-run*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
