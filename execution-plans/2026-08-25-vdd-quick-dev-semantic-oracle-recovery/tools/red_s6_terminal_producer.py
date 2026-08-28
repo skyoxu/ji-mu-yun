@@ -17,7 +17,14 @@ def test_terminal_requires_explicit_lineage_selection(tmp_path: Path) -> None:
             run = repo / "logs" / "tdd-adapter" / "vdd-quick-dev-semantic-oracle-recovery" / f"S{index}" / f"RUN-{suffix}-{index}"
             run.mkdir(parents=True)
             (run / "slice-ready-result.json").write_text(json.dumps({"status":"pass","predicate":"slice-ready","slice_id":f"S{index}","run_id":run.name}), encoding="utf-8")
+    s6_run = repo / "logs" / "tdd-adapter" / "vdd-quick-dev-semantic-oracle-recovery" / "S6" / "RUN-S6"
+    s6_run.mkdir(parents=True)
+    (s6_run / "terminal-lineage-input.v1.json").write_text(json.dumps({
+        "schema_version": "quick-dev-tdd-adapter.terminal-lineage-input.v1",
+        "plan_id": "vdd-quick-dev-semantic-oracle-recovery",
+        "slice_id": "S6", "run_id": s6_run.name, "entries": []
+    }, sort_keys=True), encoding="utf-8")
     try:
-        prepare_terminal_observation(plan, repo / "logs" / "tdd-adapter" / "vdd-quick-dev-semantic-oracle-recovery" / "S6" / "RUN-S6")
+        prepare_terminal_observation(plan, s6_run)
     except ValueError as exc:
         raise AssertionError(f"FAILURE_ID:TERMINAL-LINEAGE-NOT-CLOSED ({exc})") from exc

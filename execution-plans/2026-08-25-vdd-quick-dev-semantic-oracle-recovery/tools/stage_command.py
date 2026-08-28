@@ -69,11 +69,11 @@ def main() -> int:
             run_root = str(candidates[0])
     if run_root:
         command.extend(["--run-root", run_root])
-    owner_result = subprocess.run(command, cwd=repository_root.parent, check=False)
-    if owner_result.returncode != 0:
-        return owner_result.returncode
     regression_result = subprocess.run([sys.executable, "-m", "pytest", *selectors], cwd=repository_root, env=red_env, check=False)
-    return regression_result.returncode
+    if regression_result.returncode != 0:
+        return regression_result.returncode
+    owner_result = subprocess.run(command, cwd=repository_root.parent, check=False)
+    return owner_result.returncode
 
 
 if __name__ == "__main__":

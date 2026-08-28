@@ -172,7 +172,7 @@ def main() -> int:
         raise ValueError("run directory already exists")
     if args.stage in {"green", "refactor"} and not run_dir.is_dir():
         raise ValueError("stage successor run directory is missing")
-        context = json.loads(args.run_context.read_text(encoding="utf-8"))
+    context = json.loads(args.run_context.read_text(encoding="utf-8"))
     if context.get("slice_id") != args.slice_id or not isinstance(context.get("plan_id"), str):
         raise ValueError("run context identity does not match invocation")
     for item in [*context["authority_refs"], context["implementation_contract"]]:

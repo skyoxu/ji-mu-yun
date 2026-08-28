@@ -30,6 +30,19 @@
         "context_layout": "context/<capsule-id>"
     },
     "red_execution_owner": "quick-dev-tdd-adapter",
+    "red_contract": {
+        "requires_nonzero_exit": true,
+        "requires_exact_failure_ids": true,
+        "selector_is_behavior_test": true
+    },
+    "green_owner_paths": {
+        "S1": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_artifact_compiler.py"],
+        "S2": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py"],
+        "S3": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py"],
+        "S4": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py"],
+        "S5": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py"],
+        "S6": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/terminal_validator.py"]
+    },
     "schema_version": "vdd-semantic-oracle-recovery.implementation-contract.v2",
     "selection_hash": "sha256:4cf516d611eb0aba633adcebc37df679e6270dd74f231fd98c782a6e754def40",
     "selection_pointer": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-vdd-quick-dev-semantic-oracle-recovery.json",

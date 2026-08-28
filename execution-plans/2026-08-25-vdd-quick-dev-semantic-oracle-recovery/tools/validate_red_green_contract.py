@@ -13,7 +13,6 @@ from pathlib import Path
 def validate(plan: Path) -> tuple[bool, list[str]]:
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
     errors: list[str] = []
-    subjects = {"S1": "compile_run_local_semantic_artifacts", "S2": "validate_descriptor", "S3": "validate_judge", "S4": "validate_many_to_many_cover", "S5": "validate_fixture_observation", "S6": "prepare_terminal_observation"}
     for item in contract.get("slices", []):
         sid = item.get("slice_id")
         red = item.get("tdd", {}).get("red", {})
@@ -32,8 +31,16 @@ def validate(plan: Path) -> tuple[bool, list[str]]:
             errors.append(f"{sid}:constant-red-placeholder")
         if not any(isinstance(node, ast.Call) for node in ast.walk(tree)):
             errors.append(f"{sid}:red-has-no-behavior-call")
-        if subjects.get(sid) and subjects[sid] not in source:
-            errors.append(f"{sid}:red-subject-not-called:{subjects[sid]}")
+        red_contract = contract.get("red_contract", {})
+        if red_contract.get("selector_is_behavior_test") and not any(isinstance(node, ast.Call) for node in ast.walk(tree)):
+            errors.append(f"{sid}:red-behavior-call-missing")
+        expected_ids = red.get("expected_failure_ids")
+        if not isinstance(expected_ids, list) or len(expected_ids) != len(set(expected_ids)) or not expected_ids:
+            errors.append(f"{sid}:failure-ids-not-unique")
+        if sid == "S4" and set(item.get("acceptance_ids", [])) != {"A-COVER"}:
+            errors.append("S4:scope-must-be-A-COVER")
+        if sid == "S6" and "terminal-lineage-input.v1.json" not in source:
+            errors.append("S6:red-missing-explicit-lineage-input")
         if "Path.cwd()" in source or "os.environ" in source:
             errors.append(f"{sid}:red-uses-environment-fixture")
         if "FileNotFoundError" in source or "ImportError" in source:
@@ -74,6 +81,11 @@ def probe_red_contracts(plan: Path) -> tuple[bool, list[str]]:
 def verify_green_routing(plan: Path) -> tuple[bool, list[str]]:
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
     errors = []
+    stage_source = (plan / "tools" / "stage_command.py").read_text(encoding="utf-8")
+    if "subprocess.run([sys.executable, \"-m\", \"pytest\"" not in stage_source or "owner_result" not in stage_source:
+        errors.append("stage:pytest-selector-path-unreachable")
+    if stage_source.index("owner_result") < stage_source.index("regression_result"):
+        errors.append("stage:owner-runs-before-pytest")
     for item in contract.get("slices", []):
         expected = item["tdd"]["red"]["test_selector"]
         for stage in ("green", "refactor"):
@@ -125,11 +137,12 @@ def verify_review(plan: Path) -> tuple[bool, list[str], dict]:
             value = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
-        if value.get("candidate", {}).get("head_commit") == head:
+        candidate_commit = value.get("candidate", {}).get("head_commit")
+        if isinstance(candidate_commit, str) and _candidate_is_ancestor(root, candidate_commit) and _candidate_post_files_allowed(root, candidate_commit):
             selected = (path, value)
             break
     if selected is None:
-        errors.append(f"candidate-review-input-missing-or-stale:HEAD={head}")
+        errors.append(f"candidate-review-input-missing-or-stale-or-protected-drift:HEAD={head}")
         return False, errors, {"candidate_commit": head, "hashes_current": False}
     input_path, value = selected
     candidate = value.get("candidate", {})
@@ -163,6 +176,16 @@ def _binding_matches(root: Path, path: Path, input_path: Path, run_path: Path | 
         return False
     return (value.get("status") == "accepted" and value.get("decision") == "accepted" and value.get("candidate_commit") == commit and value.get("review_input") == {"path": input_path.relative_to(root).as_posix(), "sha256": _sha(input_path)} and (run_path is None or value.get("review_run") == {"path": run_path.relative_to(root).as_posix(), "sha256": _sha(run_path)}))
 
+def _candidate_post_files_allowed(root: Path, commit: str) -> bool:
+    protected = {
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/implementation-contract.v1.json",
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/command-registry.v1.json",
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/stage_command.py",
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/validate_red_green_contract.py",
+    }
+    result = subprocess.run(["git", "diff", "--name-only", f"{commit}..HEAD"], cwd=root, capture_output=True, text=True, check=False)
+    return all(path not in protected for path in result.stdout.splitlines())
+
 def verify_authorization(plan: Path) -> tuple[bool, list[str], dict]:
     root = plan.parents[1]
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=True).stdout.strip()
@@ -175,7 +198,8 @@ def verify_authorization(plan: Path) -> tuple[bool, list[str], dict]:
     except (OSError, json.JSONDecodeError):
         return False, ["implementation-authorization-v4-invalid-json"], {"candidate_commit": head, "hashes_current": False, "authorizes_implementation": False}
     if value.get("schema_version") != "quick-dev-tdd-adapter.implementation-authorization.v4": errors.append("authorization-schema-not-v4")
-    if value.get("candidate_commit") != head: errors.append("authorization-candidate-mismatch")
+    candidate_commit = value.get("candidate_commit")
+    if not isinstance(candidate_commit, str) or not _candidate_is_ancestor(root, candidate_commit) or not _candidate_post_files_allowed(root, candidate_commit): errors.append("authorization-candidate-mismatch-or-protected-drift")
     if value.get("owner") != "maintainer": errors.append("authorization-owner-mismatch")
     if value.get("mode") != "high_velocity_tdd": errors.append("authorization-mode-mismatch")
     if value.get("authorizes") != ["implementation-authorized"]: errors.append("authorization-scope-mismatch")

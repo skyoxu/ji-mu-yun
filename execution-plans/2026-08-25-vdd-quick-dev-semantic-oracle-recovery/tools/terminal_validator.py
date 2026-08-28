@@ -22,17 +22,28 @@ def prepare_terminal_observation(plan_dir: Path, s6_run: Path) -> dict[str, obje
     for required in (contract, registry, authority):
         if not required.is_file():
             raise ValueError("terminal authority input is missing")
+    lineage_input = s6_run / "terminal-lineage-input.v1.json"
+    if not lineage_input.is_file():
+        raise ValueError("explicit terminal lineage input is missing")
+    lineage = json.loads(lineage_input.read_text(encoding="utf-8"))
+    if lineage.get("schema_version") != "quick-dev-tdd-adapter.terminal-lineage-input.v1" or lineage.get("slice_id") != "S6" or lineage.get("run_id") != s6_run.name:
+        raise ValueError("terminal lineage input identity is invalid")
+    supplied = lineage.get("entries")
+    if not isinstance(supplied, list) or {item.get("slice_id") for item in supplied if isinstance(item, dict)} != {f"S{index}" for index in range(1, 6)}:
+        raise ValueError("terminal lineage input must name S1-S5 exactly")
     entries = []
-    for index in range(1, 6):
-        base = root / "logs" / "tdd-adapter" / json.loads(contract.read_text(encoding="utf-8"))["plan_id"] / f"S{index}"
-        candidates = [p for p in base.glob("RUN-*") if p.is_dir() and "DIAGNOSTIC" not in p.name.upper() and (p / "slice-ready-result.json").is_file()]
-        if len(candidates) != 1:
-            raise ValueError(f"terminal lineage for S{index} is ambiguous or missing")
-        result = candidates[0] / "slice-ready-result.json"
+    for item in supplied:
+        if not isinstance(item, dict) or not isinstance(item.get("result_path"), str) or not isinstance(item.get("result_sha256"), str):
+            raise ValueError("terminal lineage entry is invalid")
+        result = (root / item["result_path"]).resolve()
+        result.relative_to(root / "logs" / "tdd-adapter")
+        if not result.is_file() or _sha(result) != item["result_sha256"]:
+            raise ValueError(f"terminal lineage result is stale: {item.get('slice_id')}")
+        candidates = [result.parent]
         value = json.loads(result.read_text(encoding="utf-8"))
-        if value.get("status") != "pass" or value.get("predicate") != "slice-ready" or value.get("slice_id") != f"S{index}" or value.get("run_id") != candidates[0].name:
-            raise ValueError(f"slice-ready result for S{index} is invalid")
-        entries.append({"slice_id": f"S{index}", "run_id": candidates[0].name, "result_sha256": _sha(result)})
+        if value.get("status") != "pass" or value.get("predicate") != "slice-ready" or value.get("slice_id") != item.get("slice_id") or value.get("run_id") != item.get("run_id") or value.get("run_id") != candidates[0].name:
+            raise ValueError(f"slice-ready result for {item.get('slice_id')} is invalid")
+        entries.append({"slice_id": item["slice_id"], "run_id": item["run_id"], "result_sha256": _sha(result)})
     payload = {"plan_id": json.loads(contract.read_text(encoding="utf-8"))["plan_id"], "slice_id": "S6", "run_id": s6_run.name, "entries": entries, "contract_hash": _sha(contract), "registry_hash": _sha(registry), "authority_hash": _sha(authority)}
     fingerprint = "sha256:" + hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
     observation = {"stage": "terminal", "run_id": s6_run.name, "command_id": "s6-terminal", "exit_code": 0, "execution_fingerprint": fingerprint, "inputs_hash": fingerprint}

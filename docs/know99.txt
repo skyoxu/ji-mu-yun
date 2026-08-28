@@ -1,0 +1,106 @@
+本地仍未完成的阻塞
+生命周期启动错误仍存在
+
+run_slice_lifecycle.py 的 context 赋值仍缩进在 raise 后面：
+
+if args.stage in {"green", "refactor"} and not run_dir.is_dir():
+    raise ValueError(...)
+    context = json.loads(...)
+
+正常调用仍会触发 UnboundLocalError。
+
+S6 RED 没有显式 lineage input
+
+red_s6_terminal_producer.py 仍未创建：
+
+terminal-lineage-input.v1.json
+
+它只是创建重复历史，然后调用当前扫描实现。因此它证明的是“重复历史导致失败”，没有证明“提供显式引用后生产入口仍未消费”。
+
+GREEN/REFACTOR 的 selector 可达性仍是假证明
+
+stage_command.py 新增了 --resolve-selectors，但真实执行仍是：
+
+artifact owner
+→ owner 成功后
+→ pytest RED selector
+
+S6 owner 对 GREEN/REFACTOR 固定返回 2，所以真实 pytest 仍不可达。--resolve-selectors 只能证明列表里有 selector，不能证明实际执行路径可达。
+
+implementation contract 没有按方案更新
+
+implementation-contract.v1.json 仍然：
+
+没有 red_contract
+没有 green_owner_paths
+S2 allowed production 没有 build_run_inputs.py
+S4 allowed production 没有 build_run_inputs.py
+S6 allowed production没有 lineage input materializer/builder
+
+因此“RED 缺口有合法 GREEN 修改入口”的机器自证没有形成。
+
+S2/S3/S5 主要只改了测试名称
+
+S2 虽然改名为 semantic artifact binding，但没有同步修改 contract 的机器语义与允许生产路径。S3、S5 也主要是改名。这些修改本身没有问题，但不能代表完整方案已经实施。
+
+合同验证器没有完成关键检查
+
+validate_red_green_contract.py 仍然：
+
+使用硬编码 subjects，没有从 contract 读取真实入口。
+没有验证 selector 的 import/call AST 关系。
+没有验证 failure ID 精确唯一。
+没有 S4 scope 专项检查。
+没有验证 S6 创建显式 lineage input。
+verify_green_routing() 只检查解析输出，不检查 pytest 实际可达。
+review/authorization 校验还存在循环绑定错误
+
+新 verifier 要求：
+
+review_input.candidate.head_commit == git rev-parse HEAD
+authorization.candidate_commit == git rev-parse HEAD
+
+这是不可满足的持久化模型：
+
+repair candidate 为 REPAIR_SHA
+review 文件提交后，HEAD 变成 governance successor
+authorization 文件再次提交后，HEAD 又变化
+verifier 立即认为原 candidate 不等于 HEAD
+
+正确规则应是：
+
+candidate_commit == REPAIR_SHA
+REPAIR_SHA 必须是当前 HEAD 的祖先
+从 REPAIR_SHA 到当前 HEAD，只允许新增/修改 review、authorization、plan-state 等治理文件
+contract、registry、selectors、stage runner 等受保护文件不得在 candidate 后变化
+所有绑定文件 hash 必须仍然与当前文件一致
+
+不能要求 candidate 永远等于包含 review/authorization 文件后的 HEAD。
+
+外部 reviewer 结论
+{
+  "candidate_commit": "700b8eff8e3961dca9b607088cc9ffaf2b9784cd",
+  "decision": "blocked",
+  "status": "blocked",
+  "accepted_review_generated": false,
+  "blocking_findings": [
+    "lifecycle-context-initialization-unfixed",
+    "s6-explicit-lineage-input-missing",
+    "s6-green-refactor-selector-unreachable",
+    "implementation-contract-green-ownership-incomplete",
+    "red-contract-machine-bindings-missing",
+    "review-authorization-head-binding-circular"
+  ]
+}
+下一轮最小修复
+
+本地 Codex 只需完成以下六项：
+
+修正 run_slice_lifecycle.py 的 context 缩进并增加阶段回归测试。
+S6 RED 创建完整 terminal-lineage-input.v1.json，绑定显式 run/result/hash。
+调整 stage_command.py，让 pytest selector 在真实路径上可达，不能只提供解析输出。
+更新 implementation contract 的 red_contract、green_owner_paths 和缺失的 allowed production。
+补全 S4/S6、AST、failure-ID、allowed-owner 检查。
+将 review/authorization verifier 改为“candidate 是祖先 + candidate 后受保护文件不变”，而不是 candidate == HEAD。
+
+形成新的 REPAIR_SHA 后，我才能基于该提交进行 accepted external review。review accepted 后，再由 maintainer 生成 authorization；当前不应为 700b8eff... 发布 accepted review 或 authorization。
