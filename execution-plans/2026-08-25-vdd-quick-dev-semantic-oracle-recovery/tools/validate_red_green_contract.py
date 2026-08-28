@@ -32,6 +32,8 @@ def validate(plan: Path) -> tuple[bool, list[str]]:
             errors.append(f"{sid}:red-has-no-behavior-call")
         if "Path.cwd()" in source or "os.environ" in source:
             errors.append(f"{sid}:red-uses-environment-fixture")
+        if sid == "S1" and "compile_run_local_semantic_artifacts" not in source:
+            errors.append(f"{sid}:red-not-production-subject")
         green = item.get("tdd", {}).get("green", {})
         green_id = green.get("command_id")
         if not isinstance(green_id, str) or green_id == red.get("command_id"):
@@ -57,7 +59,7 @@ def probe_red_contracts(plan: Path) -> tuple[bool, list[str]]:
         red = item.get("tdd", {}).get("red", {})
         expected = set(red.get("expected_failure_ids", []))
         result = subprocess.run([sys.executable, "-m", "pytest", red["test_selector"], "-q"], cwd=plan.parents[1], capture_output=True, text=True)
-        output = result.stdout + "\n" + result.stderr
+        output = (result.stdout or "") + "\n" + (result.stderr or "")
         observed = set(re.findall(r"FAILURE_ID:([A-Z0-9-]+)", output))
         if result.returncode == 0 or observed != expected:
             errors.append(f"{item.get('slice_id')}:red-probe-mismatch:exit={result.returncode}:observed={sorted(observed)}:expected={sorted(expected)}")

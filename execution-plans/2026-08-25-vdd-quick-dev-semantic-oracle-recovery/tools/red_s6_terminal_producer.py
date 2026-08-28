@@ -1,9 +1,23 @@
-from terminal_validator import prepare_terminal_observation
+"""S6 RED: explicit predecessor refs are required when history has duplicates."""
+import json
+import shutil
 from pathlib import Path
+from terminal_validator import prepare_terminal_observation
 
-def test_terminal_requires_closed_lineage(tmp_path: Path) -> None:
-    plan_dir = Path(__file__).resolve().parents[1]
+def test_terminal_requires_explicit_lineage_selection(tmp_path: Path) -> None:
+    source_plan = Path(__file__).resolve().parents[1]
+    repo = tmp_path / "repo"
+    plan = repo / "execution-plans" / source_plan.name
+    plan.parent.mkdir(parents=True)
+    plan.mkdir(parents=True, exist_ok=True)
+    for name in ("implementation-contract.v1.json", "command-registry.v1.json", "knowledge-context.freeze.v1.json"):
+        shutil.copy2(source_plan / name, plan / name)
+    for index in range(1, 6):
+        for suffix in ("A", "B"):
+            run = repo / "logs" / "tdd-adapter" / "vdd-quick-dev-semantic-oracle-recovery" / f"S{index}" / f"RUN-{suffix}-{index}"
+            run.mkdir(parents=True)
+            (run / "slice-ready-result.json").write_text(json.dumps({"status":"pass","predicate":"slice-ready","slice_id":f"S{index}","run_id":run.name}), encoding="utf-8")
     try:
-        prepare_terminal_observation(plan_dir, tmp_path / "RUN-S6")
-    except (ValueError, OSError) as exc:
+        prepare_terminal_observation(plan, repo / "logs" / "tdd-adapter" / "vdd-quick-dev-semantic-oracle-recovery" / "S6" / "RUN-S6")
+    except ValueError as exc:
         raise AssertionError(f"FAILURE_ID:TERMINAL-LINEAGE-NOT-CLOSED ({exc})") from exc
