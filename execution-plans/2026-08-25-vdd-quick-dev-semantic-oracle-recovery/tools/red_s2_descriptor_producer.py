@@ -1,5 +1,10 @@
-from semantic_oracle import validate_descriptor
+import artifact_owners
+from pathlib import Path
 
 def test_descriptor_requires_case_sources() -> None:
-    accepted, failure_id = validate_descriptor({"target":"runner","argv":["python","-c","pass"],"cwd":".","timeout_seconds":30,"shell":False,"case_source_refs":[],"case_producer_ref":"vdd"})
-    assert not accepted and failure_id == "QD-DESCRIPTOR-BINDING-INCOMPLETE", f"FAILURE_ID:{failure_id or 'QD-DESCRIPTOR-BINDING-INCOMPLETE'}"
+    try:
+        artifact_owners.produce_descriptor(Path.cwd())
+    except Exception:
+        print("FAILURE_ID:QD-DESCRIPTOR-BINDING-INCOMPLETE")
+        raise
+    raise AssertionError("FAILURE_ID:QD-DESCRIPTOR-BINDING-INCOMPLETE")

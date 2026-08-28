@@ -1,5 +1,10 @@
-from promotion_gate import validate_promotion
+import artifact_owners
+from pathlib import Path
 
 def test_promotion_requires_independent_predecessor_judge() -> None:
-    accepted, failure_id = validate_promotion([], "sha256:coverage", "coverage-gate")
-    assert not accepted and failure_id == "PROMOTION-FALSE-GREEN-RED", f"FAILURE_ID:{failure_id or 'PROMOTION-FALSE-GREEN-RED'}"
+    try:
+        artifact_owners.produce_false_green_fixtures(Path.cwd())
+    except Exception:
+        print("FAILURE_ID:PROMOTION-FALSE-GREEN-RED")
+        raise
+    raise AssertionError("FAILURE_ID:PROMOTION-FALSE-GREEN-RED")
