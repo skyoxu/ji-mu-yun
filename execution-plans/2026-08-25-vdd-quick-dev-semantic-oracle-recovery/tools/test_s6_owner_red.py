@@ -33,3 +33,12 @@ def test_terminal_owner_requires_a_closed_cross_slice_lineage(tmp_path: Path) ->
     root = lineage / "S6" / run_name
     result = subprocess.run([sys.executable, str(plan / "tools" / "terminal_predicate.py"), "--repository-root", str(plan.parents[1]), "--plan-dir", str(plan), "--slice", "S6", "--run-root", str(root), "--out", str(root / "implementation-complete-result.json")], capture_output=True, text=True)
     assert result.returncode != 0, "FAILURE_ID:TERMINAL-PRODUCER-MISSING"
+
+
+def test_terminal_owner_requires_real_terminal_observation(tmp_path: Path) -> None:
+    plan = Path(__file__).parent.parent
+    run = tmp_path / "RUN-S6"
+    run.mkdir()
+    result = subprocess.run([sys.executable, str(plan / "tools" / "artifact_owners.py"), "--plan-dir", str(plan), "--slice", "S6", "--stage", "terminal", "--run-root", str(run)], capture_output=True, text=True)
+    assert result.returncode != 0
+    assert not (run / "terminal-lineage-manifest.v1.json").exists()

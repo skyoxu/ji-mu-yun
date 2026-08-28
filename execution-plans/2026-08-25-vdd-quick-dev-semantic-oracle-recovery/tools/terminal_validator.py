@@ -3,11 +3,28 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 
 def _sha(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _create(path: Path, payload: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        raise ValueError(f"terminal evidence already exists: {path.name}")
+    temporary = path.with_name(path.name + ".tmp")
+    try:
+        with temporary.open("xb") as stream:
+            stream.write(payload)
+        os.replace(temporary, path)
+    except FileExistsError as exc:
+        raise ValueError("terminal evidence write raced") from exc
+    finally:
+        if temporary.exists():
+            temporary.unlink()
 
 
 def write_manifest(plan_dir: Path, s6_run: Path) -> Path:
@@ -32,7 +49,7 @@ def write_manifest(plan_dir: Path, s6_run: Path) -> Path:
     value = {"schema_version": "quick-dev-tdd-adapter.terminal-lineage-manifest.v1", "plan_id": plan_id, "entries": entries, "authorizes": []}
     value["manifest_sha256"] = "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
     output = s6_run / "terminal-lineage-manifest.v1.json"
-    output.write_text(json.dumps(value, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+    _create(output, (json.dumps(value, sort_keys=True) + "\n").encode("utf-8"))
     return output
 
 
@@ -41,11 +58,13 @@ def _write(path: Path, value: dict[str, object]) -> None:
     value["evidence_sha256"] = "sha256:" + hashlib.sha256(
         json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
-    path.write_text(json.dumps(value, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+    _create(path, (json.dumps(value, sort_keys=True) + "\n").encode("utf-8"))
 
 
 def publish_terminal_evidence(plan_dir: Path, s6_run: Path) -> None:
     """Append terminal replay evidence derived from explicit lifecycle facts."""
+    if not (s6_run / "observations" / "terminal-observed.json").is_file():
+        raise ValueError("terminal observation is missing")
     manifest_path = write_manifest(plan_dir, s6_run)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     root = plan_dir.resolve().parents[1]
@@ -60,6 +79,7 @@ def publish_terminal_evidence(plan_dir: Path, s6_run: Path) -> None:
         "S1": ["A-SEMANTIC"], "S2": ["A-DESCRIPTOR"], "S3": ["A-JUDGE"],
         "S4": ["A-COVER"], "S5": ["A-PROMOTION"], "S6": ["A-TERMINAL", "A-BOUNDARY"],
     }
+    prepared = []
     for entry in manifest["entries"]:
         run = (root / entry["run_path"]).resolve()
         observation = run / "observations" / "refactor-observed.json"
@@ -90,5 +110,7 @@ def publish_terminal_evidence(plan_dir: Path, s6_run: Path) -> None:
             "authority_hash": identity["authority_root"], "observation_ref": "observations/refactor-observed.json",
             "receipt_ref": receipt_ref, "acceptance_ids": acceptance[slice_id],
         }
+        prepared.append((run, evidence, {"status": "pass", "producer": "terminal-validator", "plan_id": manifest["plan_id"], "slice_id": slice_id, "run_id": entry["run_id"], "evidence_ref": "terminal-evidence.json"}))
+    for run, evidence, replay in prepared:
         _write(run / "terminal-evidence.json", evidence)
-        _write(run / "terminal-replay-report.json", {"status": "pass", "producer": "terminal-validator", "plan_id": manifest["plan_id"], "slice_id": slice_id, "run_id": entry["run_id"], "evidence_ref": "terminal-evidence.json"})
+        _write(run / "terminal-replay-report.json", replay)
