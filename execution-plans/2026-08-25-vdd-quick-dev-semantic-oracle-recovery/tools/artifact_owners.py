@@ -119,10 +119,11 @@ def produce_coverage(run_root: Path) -> dict:
         raise ValueError("COVERAGE-EVIDENCE-LINEAGE-UNBOUND")
     if any(edge.get("assertion") != observed_assertions.get(edge.get("acceptance_id")) for edge in edges if isinstance(edge, dict)):
         raise ValueError("COVERAGE-EVIDENCE-LINEAGE-UNBOUND")
-    if isinstance(receipt.get("receipt"), dict):
-        observed = receipt.get("receipt", {}).get("observation_id") or receipt.get("observation", {}).get("observation_id")
-        if observed and any(edge.get("observation_id") != observed for edge in edges if isinstance(edge, dict)):
-            raise ValueError("COVERAGE-EVIDENCE-LINEAGE-UNBOUND")
+    observed = receipt.get("observation", {}).get("observation_id") if isinstance(receipt.get("observation"), dict) else None
+    if not isinstance(observed, str) or observed not in set(observation_ids or []):
+        raise ValueError("COVERAGE-EVIDENCE-LINEAGE-UNBOUND")
+    if any(edge.get("observation_id") != observed for edge in edges if isinstance(edge, dict)):
+        raise ValueError("COVERAGE-EVIDENCE-LINEAGE-UNBOUND")
     if not _bound(receipt, "independent-judge", "S3", receipt["run_id"]) or not isinstance(acceptance_ids, list) or not isinstance(observation_ids, list) or not isinstance(edges, list) or not valid:
         raise ValueError(failure or "receipt-unbound")
     result = _write(run_root / "acceptance-coverage.v1.json", {"schema_version":"acceptance-coverage.v1", "producer":"coverage-gate", "status":"pass", "slice_id":"S4", "run_id":run_root.name, "acceptance_ids":acceptance_ids, "observation_ids":observation_ids, "edges":edges, "receipt_evidence_sha256":receipt["evidence_sha256"]})
