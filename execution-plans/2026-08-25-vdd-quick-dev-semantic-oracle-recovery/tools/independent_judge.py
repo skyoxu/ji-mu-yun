@@ -19,6 +19,21 @@ def validate_judge(receipt: dict[str, Any], observation: dict[str, Any]) -> tupl
         return False, "JUDGE-INDEPENDENCE-UNPROVEN"
     if receipt.get("actual_argv") != observation.get("descriptor_argv"):
         return False, "JUDGE-INDEPENDENCE-RED"
+    if observation.get("descriptor_hash") != receipt.get("descriptor_hash"):
+        return False, "JUDGE-INDEPENDENCE-UNPROVEN"
+    if observation.get("executions", 0) < 1:
+        return False, "JUDGE-INDEPENDENCE-UNPROVEN"
+    if observation.get("expected_exit") == "zero" and receipt.get("exit_code") != 0:
+        return False, "JUDGE-INDEPENDENCE-UNPROVEN"
+    if observation.get("expected_exit") == "nonzero" and receipt.get("exit_code") == 0:
+        return False, "JUDGE-INDEPENDENCE-UNPROVEN"
+    if observation.get("executions", 0) < 1:
+        return False, "JUDGE-INDEPENDENCE-UNPROVEN"
+    expected = observation.get("expected_exit")
+    if expected == "zero" and receipt.get("exit_code") != 0:
+        return False, "JUDGE-INDEPENDENCE-UNPROVEN"
+    if expected == "nonzero" and receipt.get("exit_code") == 0:
+        return False, "JUDGE-INDEPENDENCE-UNPROVEN"
     if observation.get("expected_exit") == "nonzero" and (receipt.get("exit_code", 0) == 0 or observation.get("executions", 0) < 1):
         return False, "JUDGE-INDEPENDENCE-UNPROVEN"
     return True, ""

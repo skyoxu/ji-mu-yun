@@ -179,6 +179,10 @@ def produce_false_green_fixtures(run_root: Path) -> dict:
                 or receipt_doc.get("run_id") != freeze_doc.get("run_id")
                 or receipt_doc.get("receipt", {}).get("judge_id") != freeze_doc.get("judge_id")):
             raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND")
+        observed = receipt_doc.get("observation", {})
+        receipt = receipt_doc.get("receipt", {})
+        if observed.get("expected_exit") != "zero" or receipt.get("exit_code") != 0:
+            raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND")
     results = []
     for fixture in fixtures:
         if not isinstance(fixture, dict) or not isinstance(fixture.get("blocked_argv"), list) or not isinstance(fixture.get("corrected_argv"), list) or fixture.get("blocked_argv") == fixture.get("corrected_argv"):
