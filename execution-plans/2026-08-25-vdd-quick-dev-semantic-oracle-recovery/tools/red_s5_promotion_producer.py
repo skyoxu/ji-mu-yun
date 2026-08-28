@@ -1,7 +1,7 @@
 from promotion_gate import validate_fixture_observation
 import hashlib, json
 
-def test_promotion_requires_independent_predecessor_judge() -> None:
+def test_corrected_fixture_requires_mutation_removed() -> None:
     mutation_hash = "sha256:" + hashlib.sha256(json.dumps({"fixture_id": "FG-01", "field": "case_producer_ref"}, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     observation = {
         "fixture_id": "FG-01", "category": "semantic-manifest-drift", "source_ref": "FR-2",

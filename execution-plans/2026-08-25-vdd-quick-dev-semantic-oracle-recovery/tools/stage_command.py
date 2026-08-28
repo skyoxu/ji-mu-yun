@@ -18,6 +18,7 @@ def main() -> int:
     parser.add_argument("--stage", required=True, choices=("green", "refactor", "terminal"))
     parser.add_argument("--plan-dir", required=True)
     parser.add_argument("--run-root")
+    parser.add_argument("--resolve-selectors", action="store_true")
     args = parser.parse_args()
     if args.stage == "terminal":
         if not args.run_root:
@@ -40,8 +41,11 @@ def main() -> int:
     selected = next(item for item in contract["slices"] if item["slice_id"] == args.slice)
     repository_root = Path(args.plan_dir).parents[1]
     red_selector = str(Path(args.plan_dir).parents[1] / selected["tdd"]["red"]["test_selector"])
-    # GREEN and REFACTOR must rerun the exact RED selector, plus regressions.
     regression = selected.get("tdd", {}).get("regression", {}).get("test_selectors", [])
+    if args.resolve_selectors:
+        print(json.dumps({"slice_id": args.slice, "stage": args.stage, "red_selector": selected["tdd"]["red"]["test_selector"], "pytest_selectors": [selected["tdd"]["red"]["test_selector"], *regression]}, sort_keys=True))
+        return 0
+    # GREEN and REFACTOR must rerun the exact RED selector, plus regressions.
     selectors = [red_selector, *[str(Path(args.plan_dir).parents[1] / path) for path in regression]]
     red_env = None
     if args.run_root:

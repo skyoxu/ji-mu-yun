@@ -1,0 +1,581 @@
+先校正一个关键边界：S6 当前生产代码扫描历史 run，正是 S6 要通过 TDD 修复的目标缺陷；VDD repair 不应提前删除它。进入 Quick Dev 前必须做到的是：S6 RED 自己提供显式 lineage 输入、不读取真实历史日志，并因当前生产代码没有消费显式输入而稳定变红。
+
+下面是完整、干净的修复方案。
+
+一、修复目标
+
+最终形成一个新的代码候选提交 REPAIR_SHA，满足：
+
+六个 RED 都是独立、可执行、单一语义缺口。
+六个 RED 都调用合同声明的真实生产函数。
+RED 只修改 selector、合同和执行控制面，不修改目标生产行为。
+GREEN/REFACTOR 的解析结果明确包含同一个 RED selector。
+S6 RED 使用显式 lineage 输入，不扫描真实日志。
+Quick Dev 的允许修改路径足以完成每个 GREEN。
+生命周期 runner 可以正常启动。
+external review 与 maintainer authorization 绑定 REPAIR_SHA。
+二、第一组：修复生命周期启动错误
+
+修复：
+
+.agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py
+
+当前错误：
+
+if args.stage in {"green", "refactor"} and not run_dir.is_dir():
+    raise ValueError(...)
+    context = json.loads(...)
+
+改成：
+
+if args.stage in {"green", "refactor"} and not run_dir.is_dir():
+    raise ValueError("stage successor run directory is missing")
+
+context = json.loads(args.run_context.read_text(encoding="utf-8"))
+
+同时增加回归测试，至少覆盖：
+
+stage=all 能加载 context。
+stage=red 能加载 context。
+stage=green 在已有 run directory 下能加载 context。
+stage=refactor 在已有 run directory 下能加载 context。
+GREEN/REFACTOR 缺少 run directory 时仍 fail closed。
+context 的 slice_id 不匹配时仍拒绝。
+
+这是控制面修复，不是任何 slice 的目标生产实现。
+
+三、第二组：清理六个 RED selector
+S1：保留真实 compiler manifest 缺口
+
+现有方向基本正确，保留：
+
+compile_run_local_semantic_artifacts(tmp_path)
+
+fixture 必须包含：
+
+完整合法的 semantic-intent-input.v1.json
+active-acceptance-manifest.v1.json
+与其不一致的 semantic-verification-input.v1.json
+
+当前 compiler 忽略后两者并错误成功，因此 RED 输出：
+
+FAILURE_ID:VDD-SEMANTIC-COVERAGE-MISMATCH
+
+只需补充静态验证，确保 selector 确实写入并调用这三个输入，而不是仅在测试内比较常量。
+
+S2：改成 semantic artifact binding
+
+当前 S2 名称和 fixture 仍然错误：它叫 requires_case_sources，但 fixture 已提供合法 case sources。
+
+改名：
+
+test_descriptor_requires_semantic_artifact_binding
+
+构造一个其他字段都合法、只缺少以下字段的 descriptor：
+
+{
+  "semantic_artifact_sha256": "sha256:..."
+}
+
+然后调用：
+
+accepted, failure = validate_descriptor(descriptor)
+
+预期 RED：
+
+assert not accepted
+assert failure == "QD-DESCRIPTOR-BINDING-INCOMPLETE"
+
+当前 validator 会接受，因此能够形成干净 RED。
+
+合同中的 S2 allowed production 至少包含：
+
+tools/descriptor_compiler.py
+tools/artifact_owners.py
+tools/build_run_inputs.py
+必要的 descriptor schema/producer 文件
+S3：保留 candidate hash mismatch，修正名称
+
+当前数据已经能暴露真实缺口：
+
+receipt candidate hash 为 A
+observation candidate hash 为 B
+descriptor、argv、run ID、exit code 均有效
+
+改名：
+
+test_judge_rejects_candidate_binding_mismatch
+
+只观察：
+
+JUDGE-INDEPENDENCE-UNPROVEN
+
+不要继续使用 requires_observed_nonzero_execution，因为 fixture 实际不是在测试 nonzero execution。
+
+S4：固定为 through-S4 provenance 缺口
+
+保留当前四个 acceptance ID 的 scope。
+
+fixture 中 edge 只提供旧字段：
+
+{
+  "acceptance_id": "A-JUDGE",
+  "case_id": "CASE-S4",
+  "observation_id": "OBS-S3",
+  "assertion": "unbound assertion"
+}
+
+故意缺少生产实现未来必须验证的 provenance，例如：
+
+case_source_ref
+artifact_ref
+artifact_sha256
+assertion_id
+assertion_result
+producer
+slice_id
+run_id
+
+当前 coverage gate 错误接受，selector 要求拒绝：
+
+COVERAGE-EVIDENCE-LINEAGE-UNBOUND
+
+S4 allowed production 必须补入：
+
+tools/build_run_inputs.py
+tools/coverage_gate.py
+tools/artifact_owners.py
+必要的 exact-cover validator
+
+否则 Quick Dev 无法合法生成新的 edge 格式。
+
+S5：保留 corrected mutation 缺口，修正名称
+
+当前 fixture 的真实缺口是：
+
+variant = "corrected"
+mutation_applied = True
+failure_id = None
+
+改名：
+
+test_corrected_fixture_requires_mutation_removed
+
+预期拒绝：
+
+PROMOTION-FALSE-GREEN-RED
+
+不要再称为 requires_independent_predecessor_judge，因为该 fixture 测试的不是 predecessor judge。
+
+S6：重写为显式 lineage 输入
+
+这是本轮最关键的 RED 修复。
+
+在 tmp_path 中构造隔离仓库：
+
+repo/
+  execution-plans/<plan-id>/
+  logs/tdd-adapter/<plan-id>/
+    S1/RUN-A-1/
+    S1/RUN-A-2/
+    ...
+    S5/RUN-E-1/
+    S5/RUN-E-2/
+    S6/RUN-S6/
+
+为 S1–S5 每个 slice 创建两个形式有效的历史结果，以证明不能依赖“目录中只有一个成功 run”。
+
+然后在 S6 run 中创建：
+
+terminal-lineage-input.v1.json
+
+每个 predecessor entry 至少绑定：
+
+{
+  "slice_id": "S1",
+  "run_id": "RUN-A-1",
+  "result_ref": "logs/tdd-adapter/<plan-id>/S1/RUN-A-1/slice-ready-result.json",
+  "result_sha256": "sha256:..."
+}
+
+要求：
+
+每个引用都来自临时仓库。
+不读取当前仓库的 logs/。
+不使用 Path.cwd()。
+不使用环境变量寻找 run。
+不使用 glob()、mtime、名称排序选择 predecessor。
+不预先创建生产函数应生成的成功输出。
+
+调用真实入口：
+
+prepare_terminal_observation(plan_dir, s6_run)
+
+当前生产实现没有消费 terminal-lineage-input.v1.json，而是扫描历史目录，因此应稳定产生：
+
+FAILURE_ID:TERMINAL-LINEAGE-NOT-CLOSED
+
+S6 allowed production 增加：
+
+tools/terminal_validator.py
+tools/artifact_owners.py
+tools/stage_command.py
+tools/build_run_inputs.py
+tools/run_input_materializer.py
+必要的 adapter lineage context/materialization 文件
+四、第三组：确保 GREEN/REFACTOR 真实执行同一 selector
+
+修改 stage_command.py，固定非 terminal 阶段顺序：
+
+根据 contract 解析 RED selector。
+解析 regression selectors。
+构造最终 pytest selector 列表。
+执行相同 RED selector 和 regression。
+pytest 成功后调用 artifact owner 生成阶段工件。
+任一步非零立即返回，不产生伪成功。
+
+核心结构：
+
+red_selector = resolve(selected["tdd"]["red"]["test_selector"])
+regressions = resolve_all(
+    selected["tdd"]["regression"]["test_selectors"]
+)
+selectors = [red_selector, *regressions]
+
+test_result = subprocess.run(
+    [sys.executable, "-m", "pytest", *selectors],
+    ...
+)
+if test_result.returncode != 0:
+    return test_result.returncode
+
+return run_artifact_owner(...)
+
+这样即使 owner 当前尚未完成，GREEN 命令也已经真实重跑相同 selector。
+
+增加一个无副作用的解析模式，例如：
+
+--resolve-selectors
+
+输出：
+
+{
+  "slice_id": "S6",
+  "stage": "green",
+  "red_selector": ".../red_s6_terminal_producer.py",
+  "pytest_selectors": [
+    ".../red_s6_terminal_producer.py",
+    ".../test_s6_terminal_red.py"
+  ]
+}
+
+合同验证器使用此模式检查 GREEN 和 REFACTOR，不要只通过阅读字符串推断。
+
+五、第四组：加强 RED/GREEN 合同验证器
+
+修改：
+
+tools/validate_red_green_contract.py
+1. 使用机器字段声明真实入口
+
+每个 slice 增加：
+
+{
+  "red_contract": {
+    "subject_module": "terminal_validator",
+    "subject_function": "prepare_terminal_observation",
+    "subject_path": "execution-plans/.../tools/terminal_validator.py",
+    "primary_failure_id": "TERMINAL-LINEAGE-NOT-CLOSED"
+  },
+  "green_owner_paths": [
+    "execution-plans/.../tools/terminal_validator.py",
+    "execution-plans/.../tools/artifact_owners.py"
+  ]
+}
+
+不要继续在 validator 中维护另一套硬编码 subjects = {...}。
+
+2. AST 检查
+
+验证 selector：
+
+从声明模块导入真实函数。
+AST 中存在对该函数的调用。
+failure ID 与 contract 完全一致。
+没有额外 primary failure ID。
+没有 Path.cwd()。
+没有依赖 os.environ 寻找 fixture。
+没有 ImportError/FileNotFoundError 型环境 RED。
+没有无条件失败占位符。
+没有直接修改或 monkeypatch 生产函数返回值。
+3. RED 动态 probe
+
+对六个 selector 分别运行：
+
+py -m pytest <exact-selector> -q
+
+必须满足：
+
+退出码非零。
+只观察到合同声明的 failure ID。
+不出现 ImportError。
+不出现 command-not-found。
+不出现 cwd 错误。
+不读取正式 lifecycle logs。
+临时目录清理后结果仍一致。
+4. GREEN/REFACTOR selector 解析检查
+
+调用 stage_command.py --resolve-selectors，验证：
+
+green.red_selector == contract.red.test_selector
+refactor.red_selector == contract.red.test_selector
+
+并验证 pytest 列表第一项就是该 selector。
+
+5. allowed production 检查
+
+验证：
+
+red_contract.subject_path
+
+必须包含在该 slice 的：
+
+allowed_changes.production
+
+green_owner_paths 也必须全部是 allowed production 的子集。
+
+这可以证明 RED 指向的缺口确实存在合法的 GREEN 修改入口。
+
+6. S4/S6 专项检查
+
+S4：
+
+selector 的 acceptance scope 必须与 S4 合同一致。
+不允许包含其他 slice 才拥有的 acceptance ID。
+
+S6：
+
+selector 必须创建 terminal-lineage-input.v1.json。
+必须创建重复历史 fixture。
+显式输入必须包含 path、slice、run、hash。
+selector 本身不得扫描真实历史。
+selector 调用的必须是 prepare_terminal_observation()。
+六、第五组：严格限制 VDD repair 写边界
+
+本轮 repair 可以修改：
+
+implementation-contract.v1.json
+六个 red_*.py
+stage_command.py
+validate_red_green_contract.py
+上述控制面的测试
+run_slice_lifecycle.py 及其回归测试
+command-registry.v1.json，仅在命令参数确实变化时
+
+本轮禁止修改目标生产行为：
+
+semantic_oracle.py
+semantic_artifact_compiler.py
+descriptor_compiler.py
+independent_judge.py
+coverage_gate.py
+promotion_gate.py
+false_green_fixture_runner.py
+terminal_validator.py
+terminal_predicate.py
+artifact_owners.py 中的 slice 目标逻辑
+build_run_inputs.py 中的 slice 目标逻辑
+
+这些只能在 Quick Dev 对应 slice 的 GREEN 阶段修改。
+
+七、Quick Dev 的预声明 GREEN 路径
+
+这部分只写入 implementation contract，不在 VDD repair 中实施。
+
+Slice	Quick Dev GREEN 的目标修改
+S1	compiler 读取 active manifest 与 verification，校验一致性并绑定输入 hash。
+S2	descriptor 强制合法 semantic_artifact_sha256，producer 从 S1 evidence 派生，禁止自由声明。
+S3	observation 必须包含 candidate hash，并与 receipt 完全一致。
+S4	coverage edge 强制完整 provenance，验证 artifact hash、producer、slice、run 和 assertion result。
+S5	corrected variant 必须 mutation_applied=False。
+S6	只消费 run-local 显式 lineage 输入，校验引用路径、slice、run 和 hash；删除历史目录发现逻辑。
+八、第六组：生成新的 repair candidate
+
+完成上述 pre-entry 修改后：
+
+git status --short
+git diff --check
+py -m pytest .agents\skills\quick-dev-tdd-adapter\tools\tests -q
+py $Plan\tools\validate_red_green_contract.py `
+  --plan-dir $Plan `
+  --probe-red-contracts
+
+提交形成：
+
+REPAIR_SHA
+
+此后不再修改：
+
+implementation contract
+command registry
+六个 selectors
+stage command
+lifecycle runner
+
+如果这些文件再次变化，review 和 authorization 必须重新生成。
+
+九、第七组：重新绑定 external review
+
+生成：
+
+external-semantic-review-input.v1.<REPAIR_SHA>.json
+
+至少绑定：
+
+candidate_commit = REPAIR_SHA
+当前 implementation contract path/hash
+当前 command registry path/hash
+source freeze path/hash
+requirements mapping path/hash
+conformance result path/hash
+selection hash
+
+Reviewer 产生：
+
+vdd-review-run.v1.<REPAIR_SHA>.json
+vdd-review-candidate-binding.v1.<REPAIR_SHA>.json
+
+candidate binding 必须满足：
+
+{
+  "candidate_commit": "<REPAIR_SHA>",
+  "decision": "accepted",
+  "status": "accepted"
+}
+
+review 只接受该代码候选，不授权实施。
+
+十、第八组：maintainer 生成新 authorization
+
+生成新的、不可复用旧版本的 authorization，例如：
+
+implementation-authorization-receipt.v4.json
+
+必须绑定：
+
+candidate_commit = REPAIR_SHA
+accepted review candidate binding path/hash
+implementation contract path/hash
+command registry path/hash
+requirements mapping path/hash
+source freeze path/hash
+authority manifest path/hash
+owner = maintainer
+mode = high_velocity_tdd
+authorizes = ["implementation-authorized"]
+
+旧 v3 保持 invalidated，不得删除 invalidation 或重新激活。
+
+authorization 发布后，只允许新增 governance successor 文件；如果 contract、registry、selectors 或控制代码变化，v4 自动失效。
+
+最终需要自证的通过证明方式
+
+必须由一个统一 preflight 命令输出机器可读结果，例如：
+
+py $Plan\tools\validate_red_green_contract.py `
+  --plan-dir $Plan `
+  --probe-red-contracts `
+  --verify-green-routing `
+  --verify-repair-boundary `
+  --verify-review `
+  --verify-authorization
+
+预期输出：
+
+{
+  "status": "pass",
+  "candidate_commit": "<REPAIR_SHA>",
+  "red_selectors": {
+    "S1": {
+      "real_subject_called": true,
+      "exit_nonzero": true,
+      "failure_ids_exact": true,
+      "green_owner_allowed": true
+    },
+    "S2": {
+      "real_subject_called": true,
+      "exit_nonzero": true,
+      "failure_ids_exact": true,
+      "green_owner_allowed": true
+    },
+    "S3": {
+      "real_subject_called": true,
+      "exit_nonzero": true,
+      "failure_ids_exact": true,
+      "green_owner_allowed": true
+    },
+    "S4": {
+      "real_subject_called": true,
+      "exit_nonzero": true,
+      "failure_ids_exact": true,
+      "scope_valid": true,
+      "green_owner_allowed": true
+    },
+    "S5": {
+      "real_subject_called": true,
+      "exit_nonzero": true,
+      "failure_ids_exact": true,
+      "green_owner_allowed": true
+    },
+    "S6": {
+      "real_subject_called": true,
+      "exit_nonzero": true,
+      "failure_ids_exact": true,
+      "run_local_fixture": true,
+      "explicit_lineage_input": true,
+      "historical_run_discovery": false,
+      "green_owner_allowed": true
+    }
+  },
+  "green_refactor_routing": {
+    "same_red_selector_all_slices": true,
+    "selector_execution_reachable": true
+  },
+  "repair_boundary": {
+    "target_production_files_changed": []
+  },
+  "lifecycle_runner": {
+    "context_initialization_valid": true,
+    "stage_tests_passed": true
+  },
+  "external_review": {
+    "candidate_commit_matches": true,
+    "decision": "accepted",
+    "hashes_current": true
+  },
+  "maintainer_authorization": {
+    "candidate_commit_matches": true,
+    "review_binding_matches": true,
+    "hashes_current": true,
+    "owner": "maintainer",
+    "authorizes_implementation": true
+  }
+}
+
+同时人工复核以下三个 Git 证明：
+
+git rev-parse HEAD
+git diff --check
+git diff --name-only 795b718e0dcd161e510ee1560ba65eb3b5b01177 <REPAIR_SHA>
+
+最终通过标准是：
+
+preflight 总状态为 pass。
+六个 RED 均以唯一、预期 failure ID 非零退出。
+repair diff 没有目标生产文件。
+S6 fixture 明确提供 lineage 输入且不访问真实历史。
+GREEN/REFACTOR 解析出的 selector 与 RED 完全相同并可达。
+lifecycle runner 回归测试通过。
+accepted review 和 maintainer authorization 都绑定同一个 REPAIR_SHA 及当前 hashes。
+
+只有这些证明同时成立，才可以正式进入本地 Quick Dev TDD。
