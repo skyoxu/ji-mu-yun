@@ -1,0 +1,141 @@
+仍然阻塞的核心问题
+1. S6 显式 lineage input 是空的
+
+最新 S6 selector 虽然创建了：
+
+terminal-lineage-input.v1.json
+
+但内容是：
+
+{
+  "entries": []
+}
+
+它没有提供任何：
+
+slice_id
+run_id
+result_path
+result_sha256
+
+所以当前 RED 是因为输入本身不完整而失败，不是因为生产代码尚未实现目标行为。
+
+2. S6 目标生产代码被提前实现了
+
+最新 terminal_validator.py 已经：
+
+读取 terminal-lineage-input.v1.json
+不再在 prepare_terminal_observation() 中使用 glob("RUN-*")
+校验显式 result_path
+校验 result_sha256
+校验 slice/run identity
+
+这正是原本应由 Quick Dev S6 GREEN 实施的生产行为。
+
+随后 boundary validator 又把 terminal_validator.py 从 forbidden 集合中删除，使 boundary 自证继续通过。这个做法不能接受：不能通过修改自证规则来容纳提前发生的生产实现。
+
+因此目前同时违反：
+
+VDD repair 不提前实施目标生产代码。
+RED 必须由尚未实现的生产语义导致失败。
+六个 RED 都能通过允许的生产修改转绿——当前 S6 实际需要先修改测试输入。
+3. red_contract 仍不是逐 slice 的真实入口绑定
+
+当前 contract 只有全局：
+
+{
+  "red_contract": {
+    "requires_nonzero_exit": true,
+    "requires_exact_failure_ids": true,
+    "selector_is_behavior_test": true
+  }
+}
+
+它没有声明每个 slice 的：
+
+subject_module
+subject_function
+subject_path
+primary_failure_id
+
+validator 的 AST 检查也只验证“某个 import 被某个 call 调用了”。例如调用 json.dumps() 就可能满足该检查，并不能证明调用了合同声明的生产入口。
+
+4. S6 validator 自证过弱
+
+它只检查源码中出现：
+
+terminal-lineage-input.v1.json
+
+没有检查：
+
+entries 是否包含 S1–S5。
+entries 是否具有 path/run/slice/hash。
+是否为每个 slice 显式选择一个 predecessor。
+fixture 是否能被视为完整有效输入。
+
+所以空数组也能通过静态检查。
+
+5. candidate 后受保护文件集合不完整
+
+_candidate_post_files_allowed() 目前只保护：
+
+contract
+registry
+stage command
+contract validator
+
+没有保护：
+
+六个 RED selector
+lifecycle runner
+-目标生产 baseline 文件
+
+未来 candidate 后即使 selector 或生产代码变化，review 仍可能错误保持有效。
+
+正确的最小恢复方式
+
+不要回滚当前已经实现的 terminal_validator.py。回滚正确行为重新制造旧 RED 仍然不允许。
+
+应把当前实现作为新 baseline，为 S6 绑定一个仍真实缺失的相邻行为。当前实现至少还有一个清晰缺口：它读取 lineage 的 plan_id，但没有验证它等于 implementation contract 的 plan_id。
+
+新的 S6 RED 可以：
+
+创建完整的 S1–S5 entries。
+每项提供真实 slice_id/run_id/result_path/result_sha256。
+保留重复历史，证明不会扫描猜选。
+唯一错误设为：
+{
+  "plan_id": "wrong-plan-id"
+}
+调用 prepare_terminal_observation()。
+当前生产代码会错误接受并生成 observation，因此 selector 因要求拒绝而真实变红。
+Quick Dev S6 只需增加：
+if lineage["plan_id"] != contract["plan_id"]:
+    raise ValueError("TERMINAL-LINEAGE-NOT-CLOSED")
+
+这能重新形成合法的 RED→GREEN 路径，而且不需要回滚现有正确行为。
+
+然后还要：
+
+为六个 slice 增加逐 slice red_contract。
+AST 检查精确匹配声明的 module/function。
+S6 静态检查验证五个完整 entry。
+恢复完整的 candidate protected file 集。
+以新的 repair commit 重新生成 review input。
+当前 external reviewer 结论
+{
+  "review_candidate": "f79a3dc9bf77ca7319a36a0e9fba804e4c7dfd85",
+  "review_successor": "aba686e20604059a696ea8b3c54b0fb8c3e02be5",
+  "decision": "blocked",
+  "status": "blocked",
+  "accepted_review_generated": false,
+  "blocking_findings": [
+    "S6-lineage-input-entries-empty",
+    "S6-target-production-preimplemented",
+    "S6-red-caused-by-invalid-fixture",
+    "red-subject-binding-not-slice-specific",
+    "candidate-protected-file-set-incomplete"
+  ]
+}
+
+因此这次不能签 accepted review，也还不能生成 maintainer authorization。
