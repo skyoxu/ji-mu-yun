@@ -20,7 +20,7 @@ def test_promotion_owner_runs_all_false_green_fixtures(tmp_path: Path) -> None:
     assert artifact_owners.run(tmp_path, "S4", "green", run_root) == 0
     runner = str(Path(__file__).with_name("false_green_fixture_runner.py"))
     fixtures = [{"fixture_id":f"FG-{index:02d}","blocked_argv":[sys.executable,runner,f"FG-{index:02d}","blocked"],"corrected_argv":[sys.executable,runner,f"FG-{index:02d}","corrected"]} for index in range(1, 10)]
-    (run_root / "false-green-fixture-input.v1.json").write_text(json.dumps({"predecessor_judge_hash":"sha256:judge-predecessor","fixtures":fixtures}), encoding="utf-8")
+    (run_root / "false-green-fixture-input.v1.json").write_text(json.dumps({"predecessor_judge_hash":"sha256:real-predecessor","fixtures":fixtures}), encoding="utf-8")
     assert artifact_owners.run(tmp_path, "S5", "green", run_root) == 0, "FAILURE_ID:PROMOTION-PRODUCER-MISSING"
     value = json.loads((run_root / "false-green-fixtures.v1.json").read_text(encoding="utf-8"))
     assert value.get("producer") == "coverage-gate" and value.get("slice_id") == "S5" and value.get("run_id") == run_root.name, "FAILURE_ID:PROMOTION-PRODUCER-MISSING"

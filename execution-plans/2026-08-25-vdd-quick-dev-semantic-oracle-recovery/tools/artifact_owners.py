@@ -147,20 +147,56 @@ def produce_false_green_fixtures(run_root: Path) -> dict:
     if "logs" in run_root.parts:
         if not freeze.is_file() or "independent" not in freeze.read_text(encoding="utf-8").lower():
             raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND")
+        try:
+            freeze_doc = json.loads(freeze.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND") from exc
+        if (freeze_doc.get("producer") != "independent-judge"
+                or freeze_doc.get("slice_id") != "S3"
+                or freeze_doc.get("status") != "pass"
+                or not isinstance(freeze_doc.get("run_id"), str)
+                or freeze_doc.get("judge_id") in {None, "sut", "candidate"}):
+            raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND")
+        receipt_path = freeze_doc.get("receipt_path")
+        if not isinstance(receipt_path, str):
+            raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND")
+        receipt_file = (freeze.parent.parent.parent / receipt_path).resolve()
+        try:
+            receipt_file.relative_to(freeze.parent.parent.parent.resolve())
+        except ValueError as exc:
+            raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND") from exc
+        if (not receipt_file.is_file()
+                or "sha256:" + hashlib.sha256(receipt_file.read_bytes()).hexdigest() != predecessor_hash
+                or freeze_doc.get("receipt_sha256") != predecessor_hash):
+            raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND")
+        try:
+            receipt_doc = json.loads(receipt_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND") from exc
+        if (receipt_doc.get("producer") != "independent-judge"
+                or receipt_doc.get("slice_id") != "S3"
+                or receipt_doc.get("status") != "pass"
+                or receipt_doc.get("run_id") != freeze_doc.get("run_id")
+                or receipt_doc.get("receipt", {}).get("judge_id") != freeze_doc.get("judge_id")):
+            raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND")
     results = []
     for fixture in fixtures:
         if not isinstance(fixture, dict) or not isinstance(fixture.get("blocked_argv"), list) or not isinstance(fixture.get("corrected_argv"), list) or fixture.get("blocked_argv") == fixture.get("corrected_argv"):
             raise ValueError("fixture-input-invalid")
-        blocked = subprocess.run(fixture["blocked_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
-        corrected = subprocess.run(fixture["corrected_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
+        child_env = dict(__import__("os").environ)
+        child_env["FG_PREDECESSOR_JUDGE_HASH"] = predecessor_hash
+        blocked = subprocess.run(fixture["blocked_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False, env=child_env)
+        corrected = subprocess.run(fixture["corrected_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False, env=child_env)
         try:
             blocked_doc = json.loads(blocked.stdout.strip().splitlines()[-1])
             corrected_doc = json.loads(corrected.stdout.strip().splitlines()[-1])
         except (json.JSONDecodeError, IndexError):
-            raise ValueError("fixture-observation-invalid")
-        if blocked_doc.get("fixture_id") != fixture.get("fixture_id") or corrected_doc.get("fixture_id") != fixture.get("fixture_id") or blocked_doc.get("baseline_hash") != corrected_doc.get("baseline_hash") or blocked_doc.get("mutation_hash") != corrected_doc.get("mutation_hash"):
-            raise ValueError("fixture-lineage-unbound")
-        results.append({"fixture_id":fixture.get("fixture_id"), "category":blocked_doc.get("category"), "baseline_hash":blocked_doc.get("baseline_hash"), "mutation_hash":blocked_doc.get("mutation_hash"), "blocked":blocked.returncode != 0, "blocked_exit_code":blocked.returncode, "blocked_failure_id":blocked_doc.get("failure_id"), "corrected_pair_pass":corrected.returncode == 0 and corrected_doc.get("status") == "corrected" and corrected_doc.get("failure_id") is None, "corrected_exit_code":corrected.returncode})
+            raise ValueError(f"fixture-observation-invalid:blocked={blocked.returncode}:{blocked.stderr[-200:]} corrected={corrected.returncode}:{corrected.stderr[-200:]}")
+        if blocked_doc.get("fixture_id") != fixture.get("fixture_id") or corrected_doc.get("fixture_id") != fixture.get("fixture_id") or blocked_doc.get("baseline_hash") != corrected_doc.get("baseline_hash") or blocked_doc.get("candidate_hash") != corrected_doc.get("candidate_hash") or blocked_doc.get("coverage_hash") != corrected_doc.get("coverage_hash") or blocked_doc.get("predecessor_judge_hash") != predecessor_hash or corrected_doc.get("predecessor_judge_hash") != predecessor_hash or blocked_doc.get("mutation_hash") != corrected_doc.get("mutation_hash"):
+            raise ValueError(f"fixture-lineage-unbound:{blocked_doc}:{corrected_doc}")
+        from false_green_registry import FIXTURE_REGISTRY
+        expected = FIXTURE_REGISTRY.get(fixture.get("fixture_id"), {})
+        results.append({"fixture_id":fixture.get("fixture_id"), "category":blocked_doc.get("category"), "source_ref":blocked_doc.get("source_ref"), "validator":blocked_doc.get("validator"), "expected_failure_id":expected.get("failure_id"), "baseline_hash":blocked_doc.get("baseline_hash"), "candidate_hash":blocked_doc.get("candidate_hash"), "coverage_hash":blocked_doc.get("coverage_hash"), "predecessor_judge_hash":blocked_doc.get("predecessor_judge_hash"), "mutation_hash":blocked_doc.get("mutation_hash"), "mutation_applied":blocked_doc.get("mutation_applied") is True, "blocked":blocked.returncode != 0, "blocked_exit_code":blocked.returncode, "blocked_failure_id":blocked_doc.get("failure_id"), "corrected_pair_pass":corrected.returncode == 0 and corrected_doc.get("status") == "corrected" and corrected_doc.get("failure_id") is None, "corrected_exit_code":corrected.returncode})
     valid, failure = validate_promotion(results, predecessor_hash, "coverage-gate")
     if not valid:
         raise ValueError(failure)
@@ -189,7 +225,8 @@ def run(plan: Path, slice_id: str, stage: str, run_root: Path | None = None) -> 
             result = {"S1":compile_run_local_semantic_artifacts, "S2":produce_descriptor, "S3":produce_receipt, "S4":produce_coverage, "S5":produce_false_green_fixtures}[slice_id](run_root)
         producer = {"S1":"vdd", "S2":"quick-dev", "S3":"independent-judge", "S4":"coverage-gate", "S5":"coverage-gate", "S6":"terminal-validator"}[slice_id]
         return 0 if _bound(result, producer, slice_id, run_root.name) else 2
-    except (KeyError, OSError, ValueError, subprocess.SubprocessError, json.JSONDecodeError):
+    except (KeyError, OSError, ValueError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+        print(f"artifact-owner-error:{exc}", file=sys.stderr)
         return 2
 
 

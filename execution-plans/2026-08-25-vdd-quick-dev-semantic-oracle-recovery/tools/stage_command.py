@@ -38,6 +38,8 @@ def main() -> int:
         if not args.run_root:
             return 2
         if args.slice == "S6":
+            from terminal_validator import prepare_terminal_observation
+            prepare_terminal_observation(Path(args.plan_dir), Path(args.run_root))
             owner = Path(args.plan_dir) / "tools" / "artifact_owners.py"
             produced = subprocess.run([sys.executable, str(owner), "--plan-dir", args.plan_dir, "--slice", "S6", "--stage", "terminal", "--run-root", args.run_root], cwd=Path(args.plan_dir).parents[1], check=False)
             if produced.returncode != 0:

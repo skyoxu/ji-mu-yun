@@ -5,6 +5,9 @@ from pathlib import Path
 import json
 import subprocess
 import os
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
 def _sha(path: Path) -> str:
@@ -143,11 +146,18 @@ def validate_terminal(plan_dir: Path, run_root: Path | None = None) -> dict[str,
     expected_acceptance = {"A-SEMANTIC", "A-DESCRIPTOR", "A-JUDGE", "A-COVER", "A-PROMOTION", "A-TERMINAL", "A-BOUNDARY"}
     identity = current_candidate_identity("S6")
     observed_acceptance: set[str] = set()
+    expected_acceptance_by_slice = {
+        "S1": ["A-SEMANTIC"], "S2": ["A-DESCRIPTOR"], "S3": ["A-JUDGE"],
+        "S4": ["A-COVER"], "S5": ["A-PROMOTION"], "S6": ["A-TERMINAL", "A-BOUNDARY"],
+    }
     for i, item in enumerate(records[::2]):
         if item.get("status") != "pass" or item.get("slice_id") != f"S{i+1}" or item.get("producer") not in {"quick-dev-adapter", "independent-judge", "coverage-gate", "terminal-validator"}:
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "slice-evidence-not-closed"}
         required_fields = {"plan_id", "slice_id", "run_id", "candidate_hash", "contract_hash", "registry_hash", "authority_hash", "observation_ref", "receipt_ref", "acceptance_ids"}
-        if not required_fields.issubset(item) or not isinstance(item.get("acceptance_ids"), list) or not set(item["acceptance_ids"]).issubset(expected_acceptance):
+        if (not required_fields.issubset(item)
+                or not isinstance(item.get("acceptance_ids"), list)
+                or item.get("acceptance_ids") != expected_acceptance_by_slice.get(f"S{i+1}")
+                or not set(item["acceptance_ids"]).issubset(expected_acceptance)):
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "evidence-lineage-incomplete"}
         if any(item.get(field) != identity[key] for field, key in (("candidate_hash", "candidate_hash"), ("contract_hash", "candidate_hash"), ("registry_hash", "predicate_input_root"), ("authority_hash", "authority_root"))):
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "candidate-binding-invalid"}
@@ -176,6 +186,20 @@ def validate_terminal(plan_dir: Path, run_root: Path | None = None) -> dict[str,
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "referenced-evidence-invalid"}
         if observation_value.get("stage") not in {"green", "refactor", "terminal"} or receipt_value.get("authorizes") != []:
             return {"status": "blocked", "predicate": "implementation-complete", "reason": "referenced-evidence-untrusted"}
+        replay = records[i * 2 + 1]
+        replay_required = {"status", "producer", "plan_id", "slice_id", "run_id", "evidence_ref", "evidence_sha256"}
+        if (not replay_required.issubset(replay)
+                or replay.get("status") != "pass"
+                or replay.get("producer") != "terminal-validator"
+                or replay.get("plan_id") != item.get("plan_id")
+                or replay.get("slice_id") != item.get("slice_id")
+                or replay.get("run_id") != item.get("run_id")
+                or replay.get("evidence_ref") != "terminal-evidence.json"):
+            return {"status": "blocked", "predicate": "implementation-complete", "reason": "terminal-replay-invalid"}
+        replay_body = {key: value for key, value in replay.items() if key != "evidence_sha256"}
+        replay_expected = "sha256:" + hashlib.sha256(json.dumps(replay_body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+        if replay.get("evidence_sha256") != replay_expected:
+            return {"status": "blocked", "predicate": "implementation-complete", "reason": "terminal-replay-hash-invalid"}
     if observed_acceptance != expected_acceptance:
         return {"status": "blocked", "predicate": "implementation-complete", "reason": "acceptance-cover-incomplete"}
     expected_ids = [f"FG-{i:02d}" for i in range(1, 10)]
@@ -187,4 +211,16 @@ def validate_terminal(plan_dir: Path, run_root: Path | None = None) -> dict[str,
     expected = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
     if fixture_doc.get("evidence_sha256") != expected:
         return {"status": "blocked", "predicate": "implementation-complete", "reason": "fixture-evidence-hash-invalid"}
+    # The summary arrays are not sufficient evidence: validate every observed
+    # blocked/corrected pair through the repository-owned promotion gate.
+    fixture_rows = fixture_doc.get("fixtures")
+    if not isinstance(fixture_rows, list):
+        return {"status": "blocked", "predicate": "implementation-complete", "reason": "fixture-observations-missing"}
+    try:
+        from promotion_gate import validate_promotion
+        accepted, failure = validate_promotion(fixture_rows, fixture_doc.get("predecessor_judge_hash"), "coverage-gate")
+    except (ImportError, TypeError, ValueError):
+        return {"status": "blocked", "predicate": "implementation-complete", "reason": "fixture-observations-unreadable"}
+    if not accepted:
+        return {"status": "blocked", "predicate": "implementation-complete", "reason": failure or "fixture-observations-invalid"}
     return {"status": "pass", "predicate": "implementation-complete", "slice_count": 6, "false_green_fixture_count": 9}

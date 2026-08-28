@@ -11,6 +11,36 @@ def _sha(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def prepare_terminal_observation(plan_dir: Path, s6_run: Path) -> dict[str, object]:
+    """Validate terminal inputs and record the observed S6 terminal probe."""
+    if not s6_run.name.startswith("RUN-") or "DIAGNOSTIC" in s6_run.name.upper():
+        raise ValueError("terminal run identity is invalid")
+    root = plan_dir.resolve().parents[1]
+    contract = plan_dir / "implementation-contract.v1.json"
+    registry = plan_dir / "command-registry.v1.json"
+    authority = plan_dir / "knowledge-context.freeze.v1.json"
+    for required in (contract, registry, authority):
+        if not required.is_file():
+            raise ValueError("terminal authority input is missing")
+    entries = []
+    for index in range(1, 6):
+        base = root / "logs" / "tdd-adapter" / json.loads(contract.read_text(encoding="utf-8"))["plan_id"] / f"S{index}"
+        candidates = [p for p in base.glob("RUN-*") if p.is_dir() and "DIAGNOSTIC" not in p.name.upper() and (p / "slice-ready-result.json").is_file()]
+        if len(candidates) != 1:
+            raise ValueError(f"terminal lineage for S{index} is ambiguous or missing")
+        result = candidates[0] / "slice-ready-result.json"
+        value = json.loads(result.read_text(encoding="utf-8"))
+        if value.get("status") != "pass" or value.get("predicate") != "slice-ready" or value.get("slice_id") != f"S{index}" or value.get("run_id") != candidates[0].name:
+            raise ValueError(f"slice-ready result for S{index} is invalid")
+        entries.append({"slice_id": f"S{index}", "run_id": candidates[0].name, "result_sha256": _sha(result)})
+    payload = {"plan_id": json.loads(contract.read_text(encoding="utf-8"))["plan_id"], "slice_id": "S6", "run_id": s6_run.name, "entries": entries, "contract_hash": _sha(contract), "registry_hash": _sha(registry), "authority_hash": _sha(authority)}
+    fingerprint = "sha256:" + hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    observation = {"stage": "terminal", "run_id": s6_run.name, "command_id": "s6-terminal", "exit_code": 0, "execution_fingerprint": fingerprint, "inputs_hash": fingerprint}
+    destination = s6_run / "observations" / "terminal-observed.json"
+    _create(destination, (json.dumps(observation, sort_keys=True) + "\n").encode("utf-8"))
+    return observation
+
+
 def _create(path: Path, payload: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
@@ -63,8 +93,24 @@ def _write(path: Path, value: dict[str, object]) -> None:
 
 def publish_terminal_evidence(plan_dir: Path, s6_run: Path) -> None:
     """Append terminal replay evidence derived from explicit lifecycle facts."""
-    if not (s6_run / "observations" / "terminal-observed.json").is_file():
+    terminal_observation = s6_run / "observations" / "terminal-observed.json"
+    if not terminal_observation.is_file():
         raise ValueError("terminal observation is missing")
+    try:
+        observed = json.loads(terminal_observation.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError("terminal observation is invalid") from exc
+    if (
+        not isinstance(observed, dict)
+        or observed.get("stage") != "terminal"
+        or observed.get("run_id") != s6_run.name
+        or observed.get("exit_code") != 0
+        or not isinstance(observed.get("command_id"), str)
+        or observed.get("command_id") != "s6-terminal"
+        or not isinstance(observed.get("execution_fingerprint"), str)
+        or not observed.get("execution_fingerprint")
+    ):
+        raise ValueError("terminal observation is not a successful S6 terminal command")
     manifest_path = write_manifest(plan_dir, s6_run)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     root = plan_dir.resolve().parents[1]
@@ -75,6 +121,11 @@ def publish_terminal_evidence(plan_dir: Path, s6_run: Path) -> None:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     identity = module.current_candidate_identity("S6")
+    contract_hash = _sha(plan_dir / "implementation-contract.v1.json")
+    registry_path = plan_dir / "command-registry.v1.json"
+    if not registry_path.is_file():
+        raise ValueError("terminal command registry is missing")
+    registry_hash = _sha(registry_path)
     acceptance = {
         "S1": ["A-SEMANTIC"], "S2": ["A-DESCRIPTOR"], "S3": ["A-JUDGE"],
         "S4": ["A-COVER"], "S5": ["A-PROMOTION"], "S6": ["A-TERMINAL", "A-BOUNDARY"],
@@ -106,7 +157,7 @@ def publish_terminal_evidence(plan_dir: Path, s6_run: Path) -> None:
         evidence = {
             "status": "pass", "producer": "terminal-validator", "plan_id": manifest["plan_id"],
             "slice_id": slice_id, "run_id": entry["run_id"], "candidate_hash": identity["candidate_hash"],
-            "contract_hash": identity["candidate_hash"], "registry_hash": identity["predicate_input_root"],
+            "contract_hash": contract_hash, "registry_hash": registry_hash,
             "authority_hash": identity["authority_root"], "observation_ref": "observations/refactor-observed.json",
             "receipt_ref": receipt_ref, "acceptance_ids": acceptance[slice_id],
         }
