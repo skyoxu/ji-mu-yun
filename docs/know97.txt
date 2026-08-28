@@ -1,0 +1,445 @@
+下面这套方案以当前已审查的 795b718e 为基线，遵守仓库真实职责：
+
+VDD 创建/修复可执行 RED selector。
+Quick Dev 正式执行 RED、冻结证据并修改生产代码。
+不回滚已经存在的生产修复来制造 RED。
+不强求沿用原来的缺陷；每个 slice 改为当前仍真实缺失、且有原需求依据的行为。
+VDD repair 期间禁止继续提前实现目标生产行为。
+一、最终保留的六个真实 RED
+
+当前原始目标部分已经被提前实现，因此重新绑定到同一 slice 内尚未实现的相邻行为。
+
+Slice	当前仍缺失的行为	RED 调用对象	Failure ID
+S1	semantic compiler 没有消费并绑定真实 active manifest / semantic verification	compile_run_local_semantic_artifacts	VDD-SEMANTIC-COVERAGE-MISMATCH
+S2	descriptor 没有强制绑定 S1 semantic artifact hash	validate_descriptor	QD-DESCRIPTOR-BINDING-INCOMPLETE
+S3	observation candidate hash 与 receipt candidate hash 不一致仍被接受	validate_judge	JUDGE-INDEPENDENCE-UNPROVEN
+S4	coverage edge 缺少真实 artifact/case/assertion provenance 仍被接受	validate_many_to_many_cover	COVERAGE-EVIDENCE-LINEAGE-UNBOUND
+S5	corrected fixture 仍声明 mutation 已应用却被接受	validate_fixture_observation	PROMOTION-FALSE-GREEN-RED
+S6	terminal 不消费显式 predecessor refs，遇到多次历史成功 run 就失败	prepare_terminal_observation	TERMINAL-LINEAGE-NOT-CLOSED
+
+这些行为必须能追溯到现有 FR/NFR/Architecture。如果某一项无法找到现有 source ref，就不能新增为 RED，应将对应 slice 转 regression，而不是扩展需求。
+
+二、VDD repair 的严格写边界
+本轮允许修改
+implementation-contract.v1.json
+command-registry.v1.json（只有命令绑定确实需要时）
+red_s1_semantic_behavior.py
+red_s2_descriptor_producer.py
+red_s3_judge_producer.py
+red_s4_coverage_producer.py
+red_s5_promotion_producer.py
+red_s6_terminal_producer.py
+stage_command.py
+validate_red_green_contract.py
+上述合同/调度器的测试
+本轮禁止继续修改
+semantic_oracle.py
+semantic_artifact_compiler.py
+descriptor_compiler.py
+independent_judge.py
+coverage_gate.py
+promotion_gate.py
+false_green_fixture_runner.py
+terminal_validator.py
+terminal_predicate.py
+validate_all.py
+artifact_owners.py 中的目标行为
+build_run_inputs.py 中的目标行为
+
+这些文件保留 795b718e 当前状态，正式 RED 后才由 Quick Dev 修改。
+
+不要回滚它们来重新制造旧 RED。
+
+三、六个 selector 的准确写法
+S1：compiler 必须消费真实 manifest
+
+当前错误是 selector 自己比较两个常量。
+
+新 selector 使用 tmp_path 创建完整输入：
+
+RUN-S1/
+  semantic-intent-input.v1.json
+  active-acceptance-manifest.v1.json
+  semantic-verification-input.v1.json
+
+其中：
+
+active manifest 包含七个 acceptance ID。
+semantic verification 只覆盖 A-SEMANTIC。
+semantic intent 本身字段完整有效。
+
+然后调用真实生产函数：
+
+compile_run_local_semantic_artifacts(run_root)
+
+预期行为：
+
+try:
+    compile_run_local_semantic_artifacts(run_root)
+except ValueError as exc:
+    assert str(exc) == "VDD-SEMANTIC-COVERAGE-MISMATCH"
+else:
+    pytest.fail("FAILURE_ID:VDD-SEMANTIC-COVERAGE-MISMATCH")
+
+当前 compiler 不读取这两个 manifest 输入，会错误成功，因此 selector 真实变红。
+
+Quick Dev S1 实施：
+
+compiler 读取 active manifest 和 semantic verification。
+调用现有 validate_semantic_verification_coverage()。
+绑定两份输入的路径/hash。
+只有 exact cover 才生成 semantic artifact。
+S2：descriptor 必须绑定 semantic artifact
+
+selector 构造一个其他字段全部有效、但缺少：
+
+{
+  "semantic_artifact_sha256": "..."
+}
+
+的 descriptor：
+
+accepted, failure = validate_descriptor(descriptor)
+
+assert (
+    not accepted
+    and failure == "QD-DESCRIPTOR-BINDING-INCOMPLETE"
+), f"FAILURE_ID:{failure or 'QD-DESCRIPTOR-BINDING-INCOMPLETE'}"
+
+当前 validator 会接受，因此是真实 RED。
+
+Quick Dev S2 实施：
+
+descriptor schema 要求 semantic_artifact_sha256。
+必须是合法 sha256:。
+produce_descriptor() 从真实 S1 evidence 派生该值。
+不允许从输入自由声明。
+GREEN 正常 descriptor 输入必须携带真实 hash。
+
+测试名修改为：
+
+test_descriptor_requires_semantic_artifact_binding
+
+不要再叫 requires_case_sources，因为非空 case source 检查已经实现。
+
+S3：candidate binding mismatch
+
+当前 fixture 基本可用，但名字和描述错误。
+
+保留：
+
+receipt candidate = candidate-a
+observation candidate = candidate-b
+expected exit = zero
+actual exit = 0
+
+改名：
+
+test_judge_rejects_candidate_binding_mismatch
+
+断言：
+
+assert (
+    not accepted
+    and failure == "JUDGE-INDEPENDENCE-UNPROVEN"
+), f"FAILURE_ID:{failure or 'JUDGE-INDEPENDENCE-UNPROVEN'}"
+
+Quick Dev S3 实施：
+
+observation 必须包含 candidate hash。
+receipt 和 observation candidate hash 必须完全一致。
+artifact_owners.produce_receipt() 从同一个 execution input 派生二者。
+双向 exit 判断保留为 regression，不再作为 RED 目标。
+S4：coverage provenance
+
+S4 只处理 through-S4 scope：
+
+A-SEMANTIC
+A-DESCRIPTOR
+A-JUDGE
+A-COVER
+
+RED fixture 为四个 ID 创建 edge，但只提供旧字段：
+
+{
+  "acceptance_id": "A-JUDGE",
+  "case_id": "CASE-SHARED",
+  "observation_id": "OBS-SHARED",
+  "assertion": "receipt.exit_code == 0"
+}
+
+故意缺少：
+
+case_source_ref
+artifact_ref
+artifact_sha256
+assertion_id
+assertion_result
+producer
+
+调用：
+
+validate_many_to_many_cover(edges, through_s4_ids, {"OBS-SHARED"})
+
+当前 gate 会接受，因此测试要求拒绝时真实变红。
+
+Quick Dev S4 实施：
+
+edge schema 要求完整 provenance。
+artifact_owners 重新读取 artifact_ref 并校验 hash。
+assertion result 必须为 True。
+producer、slice、run ID 必须与引用工件匹配。
+S4 只覆盖 through-S4 scope。
+A-PROMOTION 在 S5 加入。
+A-TERMINAL/A-BOUNDARY 在 S6 加入。
+S6 最终校验七个 ID 的 whole-plan exact cover。
+
+将以下文件加入 S4 allowed production：
+
+tools/build_run_inputs.py
+
+否则 Quick Dev 无法合法生成新的 edge 格式。
+
+S5：corrected fixture 不能保留 mutation
+
+当前 selector 其实暴露了一个真实缺陷，只是名字错误。
+
+使用：
+
+variant = corrected
+mutation_applied = True
+failure_id = None
+
+其他 identity/hash 字段保持有效。
+
+期望 promotion gate 拒绝：
+
+assert (
+    not accepted
+    and failure == "PROMOTION-FALSE-GREEN-RED"
+), f"FAILURE_ID:{failure or 'PROMOTION-FALSE-GREEN-RED'}"
+
+改名：
+
+test_corrected_fixture_requires_mutation_removed
+
+Quick Dev S5 实施：
+
+if variant == "corrected":
+    if observation.get("mutation_applied") is not False:
+        return False, "PROMOTION-FALSE-GREEN-RED"
+
+正常 runner 已经为 corrected 输出 mutation_applied=False，因此实现后：
+
+RED selector 转绿。
+九个正常 corrected fixture 继续通过。
+predecessor expected-zero/actual-zero 检查作为 regression。
+S6：完整、自包含、显式 predecessor lineage
+
+在 tmp_path 下创建完整仓库结构：
+
+repo/
+  execution-plans/<plan-id>/
+    implementation-contract.v1.json
+    command-registry.v1.json
+    knowledge-context.freeze.v1.json
+  logs/tdd-adapter/<plan-id>/
+    S1/RUN-A-1/
+    S1/RUN-A-2/
+    ...
+    S5/RUN-E-1/
+    S5/RUN-E-2/
+    S6/RUN-S6/
+
+为 S1–S5 每个 slice 创建两个有效历史 slice-ready-result.json。
+
+在 S6 run 中创建：
+
+observations/refactor-observed.json
+terminal-lineage-input.v1.json
+
+terminal-lineage-input.v1.json 显式选择每个 slice 的一个 run，并绑定：
+
+slice_id
+run_id
+result_ref
+result_sha256
+
+调用：
+
+prepare_terminal_observation(plan_dir, s6_run)
+
+预期它使用显式 refs 并成功，不受另一个历史成功 run 干扰。
+
+当前实现扫描目录并要求恰好一个 candidate，因此会抛出 ambiguous，selector 转为：
+
+pytest.fail(
+    f"FAILURE_ID:TERMINAL-LINEAGE-NOT-CLOSED ({exc})"
+)
+
+这是真实且自包含的 RED，不读取真实仓库日志。
+
+Quick Dev S6 实施：
+
+prepare_terminal_observation() 只消费 S6 run-local 显式输入。
+不使用 glob、mtime 或“整个历史中恰好一个成功 run”。
+校验每个 ref 的路径、run ID、slice ID 和 hash。
+S6 GREEN/REFACTOR 不再固定返回 2。
+S6 refactor observation 成功后再运行 terminal publisher。
+最终 whole-plan exact cover 包含七个 acceptance ID。
+四、修复 GREEN 必须重跑同一 selector
+
+删除根据 _red.py 后缀过滤测试的逻辑。
+
+不要维护两套互相漂移的硬编码 TESTS/GREEN_TESTS。
+
+在每个 slice 合同中增加：
+
+{
+  "tdd": {
+    "red": {
+      "test_selector": "...",
+      "expected_failure_ids": ["..."]
+    },
+    "regression": {
+      "test_selectors": [
+        "..."
+      ]
+    }
+  }
+}
+
+stage_command.py 在 GREEN 和 REFACTOR 中执行：
+
+selectors = [
+    selected["tdd"]["red"]["test_selector"],
+    *selected["tdd"]["regression"]["test_selectors"],
+]
+
+因此：
+
+RED：selector 非零
+修改生产代码
+GREEN：同一 selector 为零
+REFACTOR：同一 selector + regression 为零
+
+S6 的非 terminal 分支在 Quick Dev S6 实施时改为运行 selector/regression，不能直接返回 2。
+
+五、加强 RED/GREEN 合同验证器
+
+validate_red_green_contract.py 必须增加以下规则。
+
+静态检查
+selector 文件必须存在并可解析。
+selector 中的 failure ID 与合同完全一致。
+selector 必须导入声明的生产 subject。
+selector 必须调用真实生产函数。
+禁止仅对本地常量作比较。
+禁止 Path.cwd() 作为 run-local fixture。
+禁止 broad exception 后原样 rethrow 作为 RED。
+禁止 producer 成功后无条件失败。
+GREEN selector 集必须包含合同中的 RED selector。
+regression selector 必须存在。
+当前 selector 只能观察一个主要 failure ID。
+
+建议每个 slice 增加机器字段：
+
+{
+  "red_subjects": [
+    "tools/independent_judge.py"
+  ],
+  "green_owner_paths": [
+    "tools/independent_judge.py",
+    "tools/artifact_owners.py"
+  ]
+}
+
+验证器检查 selector 导入的模块属于 red_subjects，且 Quick Dev allowed production 包含 green_owner_paths。
+
+动态只读 probe
+
+增加：
+
+--probe-red-contracts
+
+逐个执行 selector，要求：
+
+exit != 0
+observed failure IDs == expected failure IDs
+
+并拒绝：
+
+FileNotFoundError
+ImportError
+command not found
+wrong cwd
+真实仓库日志依赖
+未声明的 failure ID
+
+该 probe 不写正式 logs/tdd-adapter，不生成 RED receipt。
+
+六、VDD repair 提交的验收
+
+建议只做一个 repair 提交，内容限定为：
+
+六个 selector。
+implementation contract。
+RED/GREEN validator。
+stage command 的“GREEN 包含 RED selector”通用逻辑。
+对上述合同和调度器的测试。
+
+提交前检查 diff，禁止本轮出现目标生产文件变化。
+
+Windows 执行：
+
+py <plan-dir>\tools\validate_red_green_contract.py --plan-dir <plan-dir>
+py <plan-dir>\tools\validate_red_green_contract.py --plan-dir <plan-dir> --probe-red-contracts
+py -m pytest .agents\skills\quick-dev-tdd-adapter\tools\tests -q
+
+预期六个 RED probe：
+
+Slice	当前退出
+S1	非零
+S2	非零
+S3	非零
+S4	非零
+S5	非零
+S6	非零
+
+并且每个只出现合同声明的 failure ID。
+
+七、重新 review 和 authorization
+
+repair 完成后产生新提交 REPAIR_SHA。
+
+顺序：
+
+确认 main == REPAIR_SHA。
+生成绑定 REPAIR_SHA 的 external review input。
+Reviewer 检查：
+六个 selector 调用真实生产行为。
+没有环境型 RED。
+没有永久 RED。
+GREEN 重跑同一个 selector。
+每个 RED 有明确 allowed production owner。
+VDD repair 没有提前修改目标生产行为。
+生成 accepted：
+vdd-review-run.v1.<shortsha>.json
+vdd-review-candidate-binding.v1.<shortsha>.json
+Maintainer 生成 v3 authorization。
+plan-state 转为：
+implementation-authorized
+
+不要再给 795b718e 签授权；authorization 应引用新的 accepted review binding。
+
+只有以下全部满足才算修复干净：
+
+1.六个 RED 都调用真实生产入口。
+2.六个 RED 都能通过允许的生产修改转绿。
+3.没有为了制造 RED 回滚现有正确行为。
+4.VDD repair 没有提前实施目标生产代码。
+5.GREEN/REFACTOR 重跑完全相同的 selector。
+6.S4 不提前伪造 S5/S6 coverage。
+7.S6 不扫描或猜测历史 run。
+8.external review 绑定 repair commit 并 accepted。
+9.maintainer authorization 有效。
