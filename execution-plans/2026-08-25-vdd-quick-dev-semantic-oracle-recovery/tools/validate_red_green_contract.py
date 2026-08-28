@@ -27,6 +27,15 @@ def validate(plan: Path) -> tuple[bool, list[str]]:
             errors.append(f"{sid}:red-selector-unreadable")
             continue
         source = ast.unparse(tree)
+        imported = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                imported.update(alias.asname or alias.name for alias in node.names)
+            elif isinstance(node, ast.Import):
+                imported.update(alias.asname or alias.name.split(".")[0] for alias in node.names)
+        called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+        if not imported or not (imported & called):
+            errors.append(f"{sid}:red-import-call-unbound")
         if "assert False" in source or "raise AssertionError" in source and "FAILURE_ID" not in source:
             errors.append(f"{sid}:constant-red-placeholder")
         if not any(isinstance(node, ast.Call) for node in ast.walk(tree)):
