@@ -30,6 +30,8 @@ def validate(plan: Path) -> tuple[bool, list[str]]:
             errors.append(f"{sid}:constant-red-placeholder")
         if not any(isinstance(node, ast.Call) for node in ast.walk(tree)):
             errors.append(f"{sid}:red-has-no-behavior-call")
+        if "Path.cwd()" in source or "os.environ" in source:
+            errors.append(f"{sid}:red-uses-environment-fixture")
         green = item.get("tdd", {}).get("green", {})
         green_id = green.get("command_id")
         if not isinstance(green_id, str) or green_id == red.get("command_id"):
