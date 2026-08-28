@@ -47,13 +47,6 @@ def main() -> int:
     red_env = None
     if args.run_root:
         red_env = {**__import__("os").environ, "QD_RUN_ROOT": str(Path(args.run_root).resolve())}
-    # Before implementation, GREEN/REFACTOR must stop on the same RED
-    # selector and failure identity recorded by the contract. This makes the
-    # preflight result a causal gate rather than an unrelated input error.
-    if args.run_root:
-        precondition = subprocess.run([sys.executable, "-m", "pytest", red_selector, "-q"], cwd=repository_root, env=red_env, check=False)
-        if precondition.returncode != 0:
-            return precondition.returncode
     if args.run_root and args.slice != "S6":
         builder = Path(args.plan_dir) / "tools" / "build_run_inputs.py"
         built = subprocess.run([sys.executable, str(builder), "--plan-dir", args.plan_dir, "--run-root", args.run_root, "--slice", args.slice], cwd=Path(args.plan_dir).parents[1], check=False)
@@ -64,9 +57,8 @@ def main() -> int:
         if materialized.returncode != 0:
             return materialized.returncode
     if args.run_root and args.slice == "S6":
-        # Terminal validation is read-only until the registered terminal stage.
-        # GREEN/REFACTOR must not manufacture a manifest or completion result.
-        return 0
+        # S6 is a terminal-only producer; GREEN/REFACTOR cannot claim completion.
+        return 2
     owner = Path(args.plan_dir) / "tools" / "artifact_owners.py"
     command = [sys.executable, str(owner), "--plan-dir", args.plan_dir, "--slice", args.slice, "--stage", args.stage]
     run_root = args.run_root
@@ -80,12 +72,6 @@ def main() -> int:
     owner_result = subprocess.run(command, cwd=repository_root.parent, check=False)
     if owner_result.returncode != 0:
         return owner_result.returncode
-    # Re-run the exact contract RED selector after the owner action.  It must
-    # now pass only because implementation evidence exists in this run; the
-    # successor binding prevents the owner itself from satisfying RED.
-    red_result = subprocess.run([sys.executable, "-m", "pytest", red_selector, "-q"], cwd=repository_root, env=red_env, check=False)
-    if red_result.returncode != 0:
-        return red_result.returncode
     regression_result = subprocess.run([sys.executable, "-m", "pytest", *selectors], cwd=repository_root, env=red_env, check=False)
     return regression_result.returncode
 

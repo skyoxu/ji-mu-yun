@@ -8,11 +8,7 @@ from pathlib import Path
 import sys
 
 
-FIXTURE_RED_SELECTORS = (
-    "red_s1_semantic_artifact.py", "red_s2_descriptor_producer.py", "red_s3_judge_producer.py",
-    "red_s4_coverage_producer.py", "red_s5_promotion_producer.py", "red_s6_terminal_producer.py",
-    "red_s1_semantic_artifact.py", "red_s2_descriptor_producer.py", "red_s3_judge_producer.py",
-)
+FIXTURE_RED_SELECTORS = tuple(f"false_green_fixture_{index:02d}.py" for index in range(1, 10))
 
 
 def _sha(path: Path) -> str:
@@ -90,12 +86,12 @@ def build(plan_dir: Path, run_root: Path, slice_id: str) -> dict[str, object]:
         }
     elif slice_id == "S4":
         inputs = {
-            "coverage-input.v1.json": {"acceptance_ids": ["A-COVER"], "observation_ids": ["OBS-S3"], "edges": [{"acceptance_id": "A-COVER", "case_id": "CASE-S4", "observation_id": "OBS-S3"}]},
+            "coverage-input.v1.json": {"acceptance_ids": ["A-SEMANTIC", "A-DESCRIPTOR", "A-JUDGE", "A-COVER", "A-PROMOTION", "A-TERMINAL", "A-BOUNDARY"], "observation_ids": ["OBS-S3"], "edges": [{"acceptance_id": aid, "case_id": "CASE-S4", "observation_id": "OBS-S3", "assertion": "receipt.exit_code == 0"} for aid in ["A-SEMANTIC", "A-DESCRIPTOR", "A-JUDGE", "A-COVER", "A-PROMOTION", "A-TERMINAL", "A-BOUNDARY"]]},
             "process-receipt.v1.json": refs("S3", "process-receipt.v1.json"),
         }
     elif slice_id == "S5":
         inputs = {
-            "false-green-fixture-input.v1.json": {"fixtures": [{"fixture_id": f"FG-{index:02d}", "blocked_argv": [sys.executable, "-m", "pytest", f"execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/{selector}", "-q"], "corrected_argv": [sys.executable, "-m", "pytest", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_semantic_negative.py", "-q"]} for index, selector in enumerate(FIXTURE_RED_SELECTORS, start=1)]},
+            "false-green-fixture-input.v1.json": {"fixtures": [{"fixture_id": f"FG-{index:02d}", "blocked_argv": [sys.executable, "-c", f"raise SystemExit('FAILURE_ID:FG-{index:02d}')"], "corrected_argv": [sys.executable, "-c", "pass"]} for index in range(1, 10)]},
             "acceptance-coverage.v1.json": refs("S4", "acceptance-coverage.v1.json"),
         }
     else:

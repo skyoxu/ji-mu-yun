@@ -22,8 +22,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-from __future__ import annotations
-
-from semantic_oracle import compile_run_local_semantic_artifacts
-
-__all__ = ["compile_run_local_semantic_artifacts"]

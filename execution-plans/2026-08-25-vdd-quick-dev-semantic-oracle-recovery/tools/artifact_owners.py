@@ -10,6 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from semantic_oracle import compile_run_local_semantic_artifacts, validate_descriptor, validate_judge, validate_many_to_many_cover, validate_promotion
+from terminal_validator import publish_terminal_evidence
 
 
 def _digest(value: dict) -> str:
@@ -78,9 +79,19 @@ def produce_receipt(run_root: Path) -> dict:
     argv = descriptor.get("descriptor", {}).get("argv") if isinstance(descriptor.get("descriptor"), dict) else None
     if not _bound(descriptor, "quick-dev", "S2", descriptor["run_id"]) or not isinstance(argv, list) or not argv or any(not isinstance(x, str) for x in argv):
         raise ValueError("execution-input-invalid")
-    completed = subprocess.run(argv, cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
+    descriptor_value = descriptor["descriptor"]
+    cwd_value = descriptor_value.get("cwd", ".")
+    repo_root = next((parent for parent in run_root.resolve().parents if parent.name == "logs"), None)
+    cwd = (repo_root.parent / cwd_value).resolve() if repo_root else run_root
+    if repo_root is None:
+        # Unit-level owner tests use an isolated temporary run root; formal
+        # lifecycle runs always resolve through the repository logs root.
+        cwd = run_root.parent.resolve()
+    else:
+        cwd.relative_to(repo_root.parent)
+    completed = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=descriptor_value.get("timeout_seconds", 30), check=False)
     receipt = {"executor_id":source.get("executor_id", "sut-executor"), "judge_id":"independent-judge", "descriptor_hash":descriptor["evidence_sha256"], "candidate_hash":source.get("candidate_hash", "sha256:fixture"), "run_id":run_root.name, "exit_code":completed.returncode}
-    observation = {"run_id":run_root.name, "stdout":completed.stdout, "stderr":completed.stderr, "observation_id":source.get("observation_id", "OBS-S3"), "descriptor_argv":argv}
+    observation = {"run_id":run_root.name, "stdout":completed.stdout, "stderr":completed.stderr, "observation_id":source.get("observation_id", "OBS-S3"), "descriptor_argv":argv, "expected_exit":source.get("expected_exit", "zero"), "executions":1}
     receipt["actual_argv"] = argv
     valid, failure = validate_judge(receipt, observation)
     if not valid:
@@ -93,6 +104,10 @@ def produce_coverage(run_root: Path) -> dict:
     source, receipt = _input(run_root, "coverage-input.v1.json"), _artifact(run_root, "process-receipt.v1.json", "independent-judge", "S3")
     acceptance_ids, observation_ids, edges = source.get("acceptance_ids"), source.get("observation_ids"), source.get("edges")
     valid, failure = validate_many_to_many_cover(edges, set(acceptance_ids or []), set(observation_ids or []))
+    if isinstance(receipt.get("receipt"), dict):
+        observed = receipt.get("receipt", {}).get("observation_id") or receipt.get("observation", {}).get("observation_id")
+        if observed and any(edge.get("observation_id") != observed for edge in edges if isinstance(edge, dict)):
+            raise ValueError("COVERAGE-EVIDENCE-LINEAGE-UNBOUND")
     if not _bound(receipt, "independent-judge", "S3", receipt["run_id"]) or not isinstance(acceptance_ids, list) or not isinstance(observation_ids, list) or not isinstance(edges, list) or not valid:
         raise ValueError(failure or "receipt-unbound")
     result = _write(run_root / "acceptance-coverage.v1.json", {"schema_version":"acceptance-coverage.v1", "producer":"coverage-gate", "status":"pass", "slice_id":"S4", "run_id":run_root.name, "acceptance_ids":acceptance_ids, "observation_ids":observation_ids, "edges":edges, "receipt_evidence_sha256":receipt["evidence_sha256"]})
@@ -119,13 +134,25 @@ def produce_false_green_fixtures(run_root: Path) -> dict:
     return result
 
 
+def produce_terminal(run_root: Path, plan: Path) -> dict:
+    publish_terminal_evidence(plan, run_root)
+    result = _input(run_root, "terminal-replay-report.json")
+    if result.get("status") != "pass" or result.get("run_id") != run_root.name:
+        raise ValueError("TERMINAL-LINEAGE-NOT-CLOSED")
+    return result
+
+
 def run(plan: Path, slice_id: str, stage: str, run_root: Path | None = None) -> int:
-    del plan
-    if stage not in {"green", "refactor"} or run_root is None:
+    if run_root is None:
         return 2
     try:
-        result = {"S1":compile_run_local_semantic_artifacts, "S2":produce_descriptor, "S3":produce_receipt, "S4":produce_coverage, "S5":produce_false_green_fixtures}[slice_id](run_root)
-        producer = {"S1":"vdd", "S2":"quick-dev", "S3":"independent-judge", "S4":"coverage-gate", "S5":"coverage-gate"}[slice_id]
+        if slice_id == "S6":
+            if stage != "terminal": return 2
+            result = produce_terminal(run_root, plan)
+        else:
+            if stage not in {"green", "refactor"}: return 2
+            result = {"S1":compile_run_local_semantic_artifacts, "S2":produce_descriptor, "S3":produce_receipt, "S4":produce_coverage, "S5":produce_false_green_fixtures}[slice_id](run_root)
+        producer = {"S1":"vdd", "S2":"quick-dev", "S3":"independent-judge", "S4":"coverage-gate", "S5":"coverage-gate", "S6":"terminal-validator"}[slice_id]
         return 0 if _bound(result, producer, slice_id, run_root.name) else 2
     except (KeyError, OSError, ValueError, subprocess.SubprocessError, json.JSONDecodeError):
         return 2

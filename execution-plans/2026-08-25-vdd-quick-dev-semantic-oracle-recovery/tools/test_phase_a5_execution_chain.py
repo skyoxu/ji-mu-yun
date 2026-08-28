@@ -23,7 +23,7 @@ def test_fresh_worktree_s1_red_selector_is_expected_nonzero() -> None:
     env = {**os.environ, "QD_RUN_ROOT": str(Path.cwd() / "missing-fresh-run")}
     result = subprocess.run([sys.executable, "-m", "pytest", str(selector), "-vv", "-rA", "-s"], cwd=PLAN.parents[1], env=env, capture_output=True, text=True)
     assert result.returncode != 0
-    assert "VDD-SEMANTIC-ARTIFACT-SET-INCOMPLETE" in (result.stdout + result.stderr)
+    assert "VDD-SEMANTIC-MANIFEST-INCOMPLETE" in (result.stdout + result.stderr)
 
 
 def test_s1_slice_ready_rejects_placeholder_observations(tmp_path: Path) -> None:

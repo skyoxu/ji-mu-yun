@@ -1,0 +1,69 @@
+严重实施阻塞
+1. S2–S6 会进入确定性 RED/GREEN 死锁
+
+implementation-contract.v1.json 为 S2–S6 选择的是：
+
+red_s2_descriptor_producer.py
+red_s3_judge_producer.py
+red_s4_coverage_producer.py
+red_s5_promotion_producer.py
+red_s6_terminal_producer.py
+
+这些文件都是无条件失败的占位测试，例如 S2 和 S6。
+
+问题不只是“测试很弱”：
+
+adapter 在 RED 时冻结这些测试的字节哈希；
+implementation successor 要求测试字节保持不变；
+stage_command.py 在执行任何 owner/生产逻辑前先重跑同一个 RED selector；
+因为它永远失败，GREEN 永远到不了生产逻辑。
+
+这与 vdd-execution-plan 的规则直接冲突：已经存在的行为应转为 regression/terminal coverage，不能制造一个不存在的 RED。
+
+2. 全量语义覆盖图没有建立
+
+active manifest 包含七个 Acceptance ID，但当前 semantic-verification.v1.json 只覆盖 A-SEMANTIC。
+
+同时 build_run_inputs.py 的 S4 输入只声明 A-COVER 一个 ID。当前 coverage gate 只验证局部集合和 OBS- 前缀，无法证明规范要求的：
+
+active manifest → oracle → descriptor case → receipt cell → observation assertion → coverage ID
+
+这不是文档完整性问题，而是 FR-6/FR-7/SM-1 的运行时证据链无法成立。
+
+S3 也存在同类问题：artifact_owners.py 在 run root 下执行仓库相对路径，而 independent_judge.py 不检查预期结果、非零执行数或退出码语义。即使 pytest 因找不到测试路径而失败，也可能被包装成 status: pass 的 judge receipt。
+
+3. S5 的九个 false-green fixtures 不是真实九种回归
+
+build_run_inputs.py 实际使用 S1–S6 的 RED selector，再重复 S1–S3，凑成九个 ID：
+
+不是九个独立的 false-green 行为；
+多数只是恒定失败占位测试；
+corrected side 全部复用同一个 test_semantic_negative.py；
+命令又从 run root 执行仓库相对路径，corrected side 也会找不到文件。
+
+所以即使绕过生命周期死锁，这也不能满足规范中的 FR-8/FR-9/SM-2。
+
+4. S6 没有合法的终局证据生产者
+
+terminal_validator.py 的 write_manifest 和 publish_terminal_evidence 都立即失败；后面的旧实现不可达。
+
+与此同时：
+
+stage_command.py 对 S6 GREEN/REFACTOR 直接返回成功，不调用 artifact owner；
+artifact_owners.py 只注册了 S1–S5；
+terminal_predicate.py 明确是只读验证器；
+终局又要求六个 run root 中都有 terminal-evidence.json 和 terminal-replay-report.json。
+
+因此目前没有任何注册命令能够合法产生终局所需证据，implementation-complete 不可达。
+
+
+建议的最小前置修复
+
+在 Quick Dev 实施前，应先进行一次实质性的 VDD repair：
+
+把 S2–S6 selector 改成针对当前真实缺口的行为测试；已经实现的行为移出实施范围，只保留 regression。
+让语义 intent、descriptor、receipt、observation、coverage 对七个 active ID 建立完整且可验证的证据路径。
+修复 S3 的 cwd、退出码、执行数、实际结果和失败分层验证。
+用九个独立、候选相关的 false-green fixtures 替换当前重复占位集合。
+为 S6 增加注册且有明确 authority 的终局证据生产命令，保持 terminal predicate 只读。
+相应更新 implementation contract、read/write sets 和 command registry；这些绑定发生变化后，当前 v3 授权需要重新发布。
