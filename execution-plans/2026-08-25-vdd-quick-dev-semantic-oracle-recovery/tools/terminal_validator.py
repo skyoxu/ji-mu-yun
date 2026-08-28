@@ -79,6 +79,9 @@ def publish_terminal_evidence(plan_dir: Path, s6_run: Path) -> None:
                 raise ValueError("terminal replay predecessor receipt is invalid")
         if not observation.is_file():
             raise ValueError("terminal replay source is missing")
+        observation_value = json.loads(observation.read_text(encoding="utf-8"))
+        if observation_value.get("stage") != "refactor" or observation_value.get("exit_code") != 0 or observation_value.get("run_id") != entry["run_id"]:
+            raise ValueError("terminal replay observation is not a successful refactor")
         slice_id = entry["slice_id"]
         evidence = {
             "status": "pass", "producer": "terminal-validator", "plan_id": manifest["plan_id"],

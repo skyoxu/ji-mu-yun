@@ -133,6 +133,10 @@ def produce_false_green_fixtures(run_root: Path) -> dict:
     predecessor_hash = source.get("predecessor_judge_hash")
     if not isinstance(predecessor_hash, str) or not predecessor_hash.startswith("sha256:") or "coverage" in predecessor_hash:
         raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND")
+    freeze = run_root.parents[4] / "execution-plans" / "2026-08-25-vdd-quick-dev-semantic-oracle-recovery" / "predecessor-judge-freeze.v1.json"
+    if "logs" in run_root.parts:
+        if not freeze.is_file() or "independent" not in freeze.read_text(encoding="utf-8").lower():
+            raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND")
     results = []
     for fixture in fixtures:
         if not isinstance(fixture, dict) or not isinstance(fixture.get("blocked_argv"), list) or not isinstance(fixture.get("corrected_argv"), list) or fixture.get("blocked_argv") == fixture.get("corrected_argv"):
