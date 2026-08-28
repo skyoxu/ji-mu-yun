@@ -150,7 +150,14 @@ def produce_false_green_fixtures(run_root: Path) -> dict:
             raise ValueError("fixture-input-invalid")
         blocked = subprocess.run(fixture["blocked_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
         corrected = subprocess.run(fixture["corrected_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
-        results.append({"fixture_id":fixture.get("fixture_id"), "blocked":blocked.returncode != 0, "blocked_exit_code":blocked.returncode, "corrected_pair_pass":corrected.returncode == 0, "corrected_exit_code":corrected.returncode})
+        try:
+            blocked_doc = json.loads(blocked.stdout.strip().splitlines()[-1])
+            corrected_doc = json.loads(corrected.stdout.strip().splitlines()[-1])
+        except (json.JSONDecodeError, IndexError):
+            raise ValueError("fixture-observation-invalid")
+        if blocked_doc.get("fixture_id") != fixture.get("fixture_id") or corrected_doc.get("fixture_id") != fixture.get("fixture_id") or blocked_doc.get("baseline_hash") != corrected_doc.get("baseline_hash") or blocked_doc.get("mutation_hash") != corrected_doc.get("mutation_hash"):
+            raise ValueError("fixture-lineage-unbound")
+        results.append({"fixture_id":fixture.get("fixture_id"), "category":blocked_doc.get("category"), "baseline_hash":blocked_doc.get("baseline_hash"), "mutation_hash":blocked_doc.get("mutation_hash"), "blocked":blocked.returncode != 0, "blocked_exit_code":blocked.returncode, "blocked_failure_id":blocked_doc.get("failure_id"), "corrected_pair_pass":corrected.returncode == 0 and corrected_doc.get("status") == "corrected" and corrected_doc.get("failure_id") is None, "corrected_exit_code":corrected.returncode})
     valid, failure = validate_promotion(results, predecessor_hash, "coverage-gate")
     if not valid:
         raise ValueError(failure)

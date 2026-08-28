@@ -18,7 +18,8 @@ def test_promotion_owner_runs_all_false_green_fixtures(tmp_path: Path) -> None:
     ids=["A-SEMANTIC","A-DESCRIPTOR","A-JUDGE","A-COVER","A-PROMOTION","A-TERMINAL","A-BOUNDARY"]
     (run_root / "coverage-input.v1.json").write_text(json.dumps({"acceptance_ids":ids,"observation_ids":["OBS-S5"],"edges":[{"acceptance_id":aid,"case_id":"CASE-1","observation_id":"OBS-S5","assertion":"receipt.exit_code == 0"} for aid in ids]}), encoding="utf-8")
     assert artifact_owners.run(tmp_path, "S4", "green", run_root) == 0
-    fixtures = [{"fixture_id":f"FG-{index:02d}","blocked_argv":[sys.executable,"-c","import sys; sys.exit(1)"],"corrected_argv":[sys.executable,"-c","import sys; sys.exit(0)"]} for index in range(1, 10)]
+    runner = str(Path(__file__).with_name("false_green_fixture_runner.py"))
+    fixtures = [{"fixture_id":f"FG-{index:02d}","blocked_argv":[sys.executable,runner,f"FG-{index:02d}","blocked"],"corrected_argv":[sys.executable,runner,f"FG-{index:02d}","corrected"]} for index in range(1, 10)]
     (run_root / "false-green-fixture-input.v1.json").write_text(json.dumps({"predecessor_judge_hash":"sha256:judge-predecessor","fixtures":fixtures}), encoding="utf-8")
     assert artifact_owners.run(tmp_path, "S5", "green", run_root) == 0, "FAILURE_ID:PROMOTION-PRODUCER-MISSING"
     value = json.loads((run_root / "false-green-fixtures.v1.json").read_text(encoding="utf-8"))
