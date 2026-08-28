@@ -46,6 +46,23 @@ def validate(plan: Path) -> tuple[bool, list[str]]:
         expected_ids = red.get("expected_failure_ids")
         if not isinstance(expected_ids, list) or len(expected_ids) != len(set(expected_ids)) or not expected_ids:
             errors.append(f"{sid}:failure-ids-not-unique")
+        binding = contract.get("red_contracts", {}).get(sid, {})
+        subject_module = binding.get("subject_module")
+        subject_function = binding.get("subject_function")
+        if not isinstance(subject_module, str) or not isinstance(subject_function, str):
+            errors.append(f"{sid}:missing-slice-red-binding")
+        else:
+            imported_functions = set()
+            imported_modules = set()
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.module == subject_module:
+                    imported_functions.update(alias.asname or alias.name for alias in node.names)
+                if isinstance(node, ast.Import):
+                    imported_modules.update(alias.asname or alias.name.split(".")[0] for alias in node.names if alias.name == subject_module)
+            direct_calls = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+            module_calls = {node.func.attr for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name) and node.func.value.id in imported_modules}
+            if subject_function not in imported_functions and subject_function not in direct_calls and subject_function not in module_calls:
+                errors.append(f"{sid}:red-subject-binding-mismatch:{subject_module}.{subject_function}")
         if sid == "S4" and set(item.get("acceptance_ids", [])) != {"A-COVER"}:
             errors.append("S4:scope-must-be-A-COVER")
         if sid == "S6" and "terminal-lineage-input.v1.json" not in source:
@@ -194,6 +211,13 @@ def _candidate_post_files_allowed(root: Path, commit: str) -> bool:
         "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/command-registry.v1.json",
         "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/stage_command.py",
         "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/validate_red_green_contract.py",
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s1_semantic_behavior.py",
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s2_descriptor_producer.py",
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s3_judge_producer.py",
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s4_coverage_producer.py",
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s5_promotion_producer.py",
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s6_terminal_producer.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
     }
     result = subprocess.run(["git", "diff", "--name-only", f"{commit}..HEAD"], cwd=root, capture_output=True, text=True, check=False)
     return all(path not in protected for path in result.stdout.splitlines())

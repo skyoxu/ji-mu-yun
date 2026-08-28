@@ -26,7 +26,8 @@ def prepare_terminal_observation(plan_dir: Path, s6_run: Path) -> dict[str, obje
     if not lineage_input.is_file():
         raise ValueError("explicit terminal lineage input is missing")
     lineage = json.loads(lineage_input.read_text(encoding="utf-8"))
-    if lineage.get("schema_version") != "quick-dev-tdd-adapter.terminal-lineage-input.v1" or lineage.get("slice_id") != "S6" or lineage.get("run_id") != s6_run.name:
+    expected_plan_id = json.loads(contract.read_text(encoding="utf-8"))["plan_id"]
+    if lineage.get("schema_version") != "quick-dev-tdd-adapter.terminal-lineage-input.v1" or lineage.get("plan_id") != expected_plan_id or lineage.get("slice_id") != "S6" or lineage.get("run_id") != s6_run.name:
         raise ValueError("terminal lineage input identity is invalid")
     supplied = lineage.get("entries")
     if not isinstance(supplied, list) or {item.get("slice_id") for item in supplied if isinstance(item, dict)} != {f"S{index}" for index in range(1, 6)}:

@@ -35,6 +35,14 @@
         "requires_exact_failure_ids": true,
         "selector_is_behavior_test": true
     },
+    "red_contracts": {
+        "S1": {"subject_module": "semantic_oracle", "subject_function": "compile_run_local_semantic_artifacts", "subject_path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_oracle.py", "primary_failure_id": "VDD-SEMANTIC-COVERAGE-MISMATCH"},
+        "S2": {"subject_module": "descriptor_compiler", "subject_function": "validate_descriptor", "subject_path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/descriptor_compiler.py", "primary_failure_id": "QD-DESCRIPTOR-BINDING-INCOMPLETE"},
+        "S3": {"subject_module": "independent_judge", "subject_function": "validate_judge", "subject_path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/independent_judge.py", "primary_failure_id": "JUDGE-INDEPENDENCE-UNPROVEN"},
+        "S4": {"subject_module": "coverage_gate", "subject_function": "validate_many_to_many_cover", "subject_path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/coverage_gate.py", "primary_failure_id": "COVERAGE-EVIDENCE-LINEAGE-UNBOUND"},
+        "S5": {"subject_module": "promotion_gate", "subject_function": "validate_fixture_observation", "subject_path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/promotion_gate.py", "primary_failure_id": "PROMOTION-FALSE-GREEN-RED"},
+        "S6": {"subject_module": "terminal_validator", "subject_function": "prepare_terminal_observation", "subject_path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/terminal_validator.py", "primary_failure_id": "TERMINAL-LINEAGE-NOT-CLOSED"}
+    },
     "green_owner_paths": {
         "S1": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_artifact_compiler.py"],
         "S2": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py"],
