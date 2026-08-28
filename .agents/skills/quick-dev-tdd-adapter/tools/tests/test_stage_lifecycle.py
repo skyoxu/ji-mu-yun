@@ -1,4 +1,5 @@
 import importlib.util
+import ast
 import json
 from pathlib import Path
 import sys
@@ -25,6 +26,18 @@ def test_red_only_stage_runner_is_available():
     )
     assert set(basis) == {"failure_intent", "test_selector", "contract_hash", "validator_hash", "pre_implementation_candidate"}
     assert basis["failure_intent"]["command_id"] == "red"
+
+
+def test_run_slice_lifecycle_loads_context_outside_successor_guard():
+    source = (TOOLS / "run_slice_lifecycle.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    main = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "main")
+    assignments = [node for node in main.body if isinstance(node, ast.Assign)
+                   and any(isinstance(target, ast.Name) and target.id == "context" for target in node.targets)]
+    assert assignments, "context must be initialized in main"
+    assert isinstance(assignments[0].value, ast.Call)
+    assert not any(isinstance(parent, ast.If) for parent in ast.walk(main)
+                   if assignments[0] in ast.walk(parent) and parent is not assignments[0])
 
 
 def test_execution_fingerprint_ignores_non_execution_metadata(tmp_path):
