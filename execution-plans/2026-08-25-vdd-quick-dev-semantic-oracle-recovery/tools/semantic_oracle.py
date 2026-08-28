@@ -54,6 +54,14 @@ def validate_semantic_intent(value: dict[str, Any]) -> tuple[bool, str]:
         return False, "VDD-RED-BOUNDARY"
     return True, ""
 
+def validate_semantic_verification_coverage(verification: dict[str, Any], active_acceptance_ids: set[str]) -> tuple[bool, str]:
+    if not isinstance(verification, dict):
+        return False, "VDD-SEMANTIC-COVERAGE-MISMATCH"
+    covered = verification.get("covers_acceptance_ids")
+    if not isinstance(covered, list) or set(covered) != set(active_acceptance_ids):
+        return False, "VDD-SEMANTIC-COVERAGE-MISMATCH"
+    return True, ""
+
 
 def validate_descriptor(value: dict[str, Any]) -> tuple[bool, str]:
     owner = _owner_delegate("descriptor_compiler", "validate_descriptor")

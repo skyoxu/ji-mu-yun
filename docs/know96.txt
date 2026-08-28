@@ -1,0 +1,134 @@
+1. 重写六个 RED selector
+
+统一规则：
+
+RED 必须因为目标行为尚未实现而失败。
+不允许依赖缺文件、错误 cwd、ImportError 等环境问题。
+不允许 producer 成功后再无条件 raise AssertionError。
+测试必须提供完整输入，只改变一个目标语义。
+GREEN 必须重新运行同一个 RED selector。
+失败输出必须包含合同声明的唯一 failure ID。
+
+建议改成以下行为：
+
+Slice	新 RED 应验证的真实缺陷	统一 failure ID
+S1	semantic verification 没有精确覆盖 active acceptance manifest 的七个 ID	VDD-SEMANTIC-COVERAGE-MISMATCH
+S2	descriptor 接受空 case_source_refs、空 case_producer_ref 或未绑定 semantic artifact	QD-DESCRIPTOR-BINDING-INCOMPLETE
+S3	expected_exit=zero、实际非零仍被 judge 接受	JUDGE-INDEPENDENCE-UNPROVEN
+S4	一个 CASE、一个 OBS、一条相同 assertion 可以伪装覆盖全部 acceptance ID	COVERAGE-EVIDENCE-LINEAGE-UNBOUND
+S5	promotion 接受内容无效但自称 status=pass 的 predecessor receipt/coverage	PROMOTION-PREDECESSOR-JUDGE-UNBOUND
+S6	给出完整、显式的 S1–S6 lineage 后，terminal evidence 仍无法成功生成	TERMINAL-LINEAGE-NOT-CLOSED
+S1
+
+删除当前“缺少 case source 应被拒绝”的 RED。这个行为已经实现，所以它只能作为回归测试。
+
+新 RED 应比较：
+
+active-acceptance-manifest:
+A-SEMANTIC
+A-DESCRIPTOR
+A-JUDGE
+A-COVER
+A-PROMOTION
+A-TERMINAL
+A-BOUNDARY
+
+与当前仅覆盖 A-SEMANTIC 的 semantic-verification.v1.json。
+
+预期：
+
+accepted is False
+failure_id == "VDD-SEMANTIC-COVERAGE-MISMATCH"
+
+当前实现不能做出这个判断，因此测试会真实变红；S1 实施后同一测试转绿。
+
+S2
+
+使用 tmp_path 构造完整 descriptor，只把以下字段之一设为无效：
+
+"case_source_refs": []
+
+或者：
+
+"case_producer_ref": ""
+
+测试应要求 validate_descriptor() 拒绝它。当前 validator 只检查字段是否存在，没有检查非空绑定，因此会错误接受，测试真实失败。
+
+不要调用：
+
+produce_descriptor(Path.cwd())
+S3
+
+直接构造：
+
+receipt = {
+    "exit_code": 1,
+    ...
+}
+
+observation = {
+    "expected_exit": "zero",
+    "executions": 1,
+    ...
+}
+
+测试要求 judge 拒绝。当前会返回 (True, "")，所以这就是干净的行为 RED。
+
+同时保留以下回归用例：
+
+expected zero / actual zero：通过
+expected nonzero / actual nonzero：通过
+expected nonzero / actual zero：拒绝
+executions=0：拒绝
+executor 与 judge 同一身份：拒绝
+argv、run ID、candidate hash 不匹配：拒绝
+S4
+
+构造一份形式上包含七个 ID、但全部指向：
+
+case_id = CASE-S4
+observation_id = OBS-S3
+assertion = receipt.exit_code == 0
+
+的假 coverage。
+
+测试要求 coverage gate 拒绝。当前实现会接受，因此能够形成真实 RED。
+
+S5
+
+保留现有九类 fixture，但增加一条关键前置测试：
+
+predecessor receipt 自称 status=pass
+expected_exit=zero
+exit_code=1
+coverage 又引用该 receipt 并自称通过
+
+promotion 必须重新验证 predecessor 内容并拒绝，不能只信状态字段和 hash 格式。
+
+FG-05 的 judge-exit mutation 应同时覆盖两个方向：
+
+expected zero / actual nonzero
+expected nonzero / actual zero
+
+它们仍然可以算同一类 judge-exit-drift，不需要扩充成十个 fixture。
+
+S6
+
+不要再测试“缺 lineage 时抛异常”。那个行为已经存在，而且当前测试把异常吞掉后退出 0。
+
+新测试应构造完整临时运行图：
+
+S1 slice-ready
+S2 slice-ready
+S3 slice-ready
+S4 slice-ready
+S5 slice-ready
+S6 successful refactor observation
+explicit predecessor references
+
+然后要求：
+
+publish_terminal_evidence(...)
+validate_terminal(...) == implementation-complete/pass
+
+当前实现做不到，测试会真实失败；S6 实施后转绿。

@@ -96,7 +96,7 @@
                 },
                 "red": {
                     "expected_failure_ids": [
-                        "VDD-SEMANTIC-TAXONOMY-INCOMPLETE"
+                        "VDD-SEMANTIC-COVERAGE-MISMATCH"
                     ],
                         "test_selector": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s1_semantic_behavior.py"
                 },
@@ -176,7 +176,7 @@
                 },
                 "red": {
                     "expected_failure_ids": [
-                        "QD-DESCRIPTOR-RED"
+                        "QD-DESCRIPTOR-BINDING-INCOMPLETE"
                     ],
                     "test_selector": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s2_descriptor_producer.py"
                 },

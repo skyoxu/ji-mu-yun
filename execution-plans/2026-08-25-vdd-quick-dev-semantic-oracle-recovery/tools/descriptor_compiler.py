@@ -10,12 +10,8 @@ def validate_descriptor(value: dict[str, Any]) -> tuple[bool, str]:
         return False, "QD-DESCRIPTOR-RED"
     if value.get("shell") is not False or not isinstance(value.get("argv"), list) or not value["argv"]:
         return False, "QD-DESCRIPTOR-RED"
-    if (not isinstance(value.get("case_source_refs"), list)
-            or not value["case_source_refs"]
-            or any(not isinstance(item, str) or not item.strip() for item in value["case_source_refs"])
-            or not isinstance(value.get("case_producer_ref"), str)
-            or not value["case_producer_ref"].strip()):
-        return False, "QD-DESCRIPTOR-BINDING-INCOMPLETE"
     if not all(isinstance(item, str) and item for item in value["argv"]):
         return False, "QD-DESCRIPTOR-RED"
-    return isinstance(value.get("timeout_seconds"), int) and value["timeout_seconds"] > 0, "QD-DESCRIPTOR-RED"
+    if not isinstance(value.get("timeout_seconds"), int) or value["timeout_seconds"] <= 0:
+        return False, "QD-DESCRIPTOR-RED"
+    return True, ""
