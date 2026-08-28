@@ -135,6 +135,7 @@
                 ],
                 "production": [
                     ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+                    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/descriptor_compiler.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_oracle.py"
@@ -300,6 +301,7 @@
                 ],
                 "production": [
                     ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py",
+                    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/coverage_gate.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_oracle.py"
@@ -489,6 +491,8 @@
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/stage_command.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/terminal_predicate.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/terminal_validator.py",
+                    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py",
+                    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/run_input_materializer.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/validate_all.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/terminal-lineage-manifest.v1.json"
                 ],
