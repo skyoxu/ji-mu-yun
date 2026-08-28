@@ -1,10 +1,5 @@
-import artifact_owners
-from pathlib import Path
+from descriptor_compiler import validate_descriptor
 
 def test_descriptor_requires_case_sources() -> None:
-    try:
-        artifact_owners.produce_descriptor(Path.cwd())
-    except Exception:
-        print("FAILURE_ID:QD-DESCRIPTOR-BINDING-INCOMPLETE")
-        raise
-    raise AssertionError("FAILURE_ID:QD-DESCRIPTOR-BINDING-INCOMPLETE")
+    accepted, failure = validate_descriptor({"target":"", "argv":["py"], "cwd":".", "timeout_seconds":30, "shell":False, "case_source_refs":["SPEC:FR-3"], "case_producer_ref":"vdd"})
+    assert not accepted and failure == "QD-DESCRIPTOR-RED", f"FAILURE_ID:{failure or 'QD-DESCRIPTOR-RED'}"

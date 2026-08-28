@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import subprocess
 import fnmatch
+import os
 from typing import Any
 from pathlib import PurePosixPath
 
@@ -171,7 +172,7 @@ def main() -> int:
         raise ValueError("run directory already exists")
     if args.stage in {"green", "refactor"} and not run_dir.is_dir():
         raise ValueError("stage successor run directory is missing")
-    context = json.loads(args.run_context.read_text(encoding="utf-8"))
+        context = json.loads(args.run_context.read_text(encoding="utf-8"))
     if context.get("slice_id") != args.slice_id or not isinstance(context.get("plan_id"), str):
         raise ValueError("run context identity does not match invocation")
     for item in [*context["authority_refs"], context["implementation_contract"]]:
@@ -187,6 +188,9 @@ def main() -> int:
         raise ValueError("RED and GREEN require one command; REFACTOR requires at least one")
 
     stage_runner = _load("stage_lifecycle_runner")
+    # RED selectors are run-local behavior tests. Make the reserved run root
+    # explicit to the selector while preserving the structured command bytes.
+    os.environ["QD_RUN_ROOT"] = str(run_dir)
     lifecycle = stage_runner.LifecycleRunner(workspace, run_dir, args.snapshot_path)
     predecessor_ref = context.get("predecessor_slice_ready_ref")
     if predecessor_ref is not None:

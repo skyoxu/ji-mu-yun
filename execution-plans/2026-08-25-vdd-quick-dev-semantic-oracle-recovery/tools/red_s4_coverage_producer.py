@@ -1,10 +1,6 @@
-import artifact_owners
-from pathlib import Path
+from coverage_gate import validate_many_to_many_cover
 
 def test_exact_cover_requires_receipt_observation_assertion() -> None:
-    try:
-        artifact_owners.produce_coverage(Path.cwd())
-    except Exception:
-        print("FAILURE_ID:COVERAGE-EVIDENCE-LINEAGE-UNBOUND")
-        raise
-    raise AssertionError("FAILURE_ID:COVERAGE-EVIDENCE-LINEAGE-UNBOUND")
+    edges = [{"acceptance_id":"A-COVER", "case_id":"", "observation_id":"OBS-S4", "assertion":"receipt.exit_code == 0"}]
+    accepted, failure = validate_many_to_many_cover(edges, {"A-COVER"}, {"OBS-S4"})
+    assert not accepted and failure == "COVERAGE-EVIDENCE-LINEAGE-UNBOUND", f"FAILURE_ID:{failure or 'COVERAGE-EVIDENCE-LINEAGE-UNBOUND'}"

@@ -48,7 +48,7 @@
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_artifact_compiler.py"
                 ],
                 "tests": [
-                    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_s1_semantic_behavior_red.py"
+                    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s1_semantic_behavior.py"
                 ]
             },
             "dependency_closure": [
@@ -63,7 +63,7 @@
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/process-receipt.v1.json"
             ],
             "execution_snapshot_paths": [
-                "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_s1_semantic_behavior_red.py"
+                "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s1_semantic_behavior.py"
             ],
             "exit_predicate": "slice-ready",
             "forbidden_changes": [
@@ -96,9 +96,9 @@
                 },
                 "red": {
                     "expected_failure_ids": [
-                        "VDD-SEMANTIC-TAXONOMY-INCOMPLETE"
+                        "VDD-SEMANTIC-MANIFEST-INCOMPLETE"
                     ],
-                    "test_selector": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_s1_semantic_behavior_red.py"
+                        "test_selector": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s1_semantic_behavior.py"
                 },
                 "refactor": {
                     "invocations": [
@@ -176,7 +176,7 @@
                 },
                 "red": {
                     "expected_failure_ids": [
-                        "QD-DESCRIPTOR-BINDING-INCOMPLETE"
+                        "QD-DESCRIPTOR-RED"
                     ],
                     "test_selector": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s2_descriptor_producer.py"
                 },

@@ -44,7 +44,9 @@ def validate_semantic_intent(value: dict[str, Any]) -> tuple[bool, str]:
         return False, "VDD-SEMANTIC-MANIFEST-INCOMPLETE"
     if not isinstance(value.get("case_producer_ref"), str) or not value["case_producer_ref"].strip():
         return False, "VDD-SEMANTIC-MANIFEST-INCOMPLETE"
-    if not isinstance(value.get("case_source_refs"), list) or not value["case_source_refs"]:
+    if (not isinstance(value.get("case_source_refs"), list)
+            or not value["case_source_refs"]
+            or any(not isinstance(ref, str) or not ref.strip() for ref in value["case_source_refs"])):
         return False, "VDD-SEMANTIC-MANIFEST-INCOMPLETE"
     if not isinstance(value.get("minimum_executed_cases"), int) or value["minimum_executed_cases"] < 1:
         return False, "VDD-SEMANTIC-MINIMUM-CASES"
