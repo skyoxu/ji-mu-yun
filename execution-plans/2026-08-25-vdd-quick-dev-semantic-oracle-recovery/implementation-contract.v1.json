@@ -96,7 +96,7 @@
                 },
                 "red": {
                     "expected_failure_ids": [
-                        "VDD-SEMANTIC-MANIFEST-INCOMPLETE"
+                        "VDD-SEMANTIC-TAXONOMY-INCOMPLETE"
                     ],
                         "test_selector": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s1_semantic_behavior.py"
                 },
@@ -442,7 +442,7 @@
                 },
                 "red": {
                     "expected_failure_ids": [
-                        "PROMOTION-PREDECESSOR-JUDGE-UNBOUND"
+                        "PROMOTION-FALSE-GREEN-RED"
                     ],
                     "test_selector": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s5_promotion_producer.py"
                 },
