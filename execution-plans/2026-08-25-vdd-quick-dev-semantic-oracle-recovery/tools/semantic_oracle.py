@@ -139,9 +139,11 @@ def compile_run_local_semantic_artifacts(run_root: Path) -> dict[str, Any]:
         "run_id": run_root.name,
         "semantic_intent": value,
         "semantic_verification": {
+            "acceptance_ids": ["A-SEMANTIC", "A-DESCRIPTOR", "A-JUDGE", "A-COVER", "A-PROMOTION", "A-TERMINAL", "A-BOUNDARY"],
             "case_source_refs": value.get("case_source_refs", []),
             "case_producer_ref": value.get("case_producer_ref"),
             "required_case_roles": ["positive", "negative", "mutation"],
+            "evidence_path_requirements": {aid: {"producer": "downstream", "runtime_evidence": True} for aid in ["A-SEMANTIC", "A-DESCRIPTOR", "A-JUDGE", "A-COVER", "A-PROMOTION", "A-TERMINAL", "A-BOUNDARY"]},
         },
         "verification_cases": [
             {"case_id": "S1-positive", "fixture_class": "positive", "outcome": "accepted", "evidence_state": "observed", "failure_family": None, "failure_id": None},

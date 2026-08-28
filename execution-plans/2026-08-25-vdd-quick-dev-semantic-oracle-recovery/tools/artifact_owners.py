@@ -10,6 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from semantic_oracle import compile_run_local_semantic_artifacts, validate_descriptor, validate_judge, validate_many_to_many_cover, validate_promotion
+from process_executor import execute
 from terminal_validator import publish_terminal_evidence
 
 
@@ -89,7 +90,7 @@ def produce_receipt(run_root: Path) -> dict:
         cwd = run_root.parent.resolve()
     else:
         cwd.relative_to(repo_root.parent)
-    completed = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=descriptor_value.get("timeout_seconds", 30), check=False)
+    completed = execute(argv, cwd=str(cwd), timeout=descriptor_value.get("timeout_seconds", 30))
     candidate_hash = source.get("candidate_hash")
     if not isinstance(candidate_hash, str) or not candidate_hash.startswith("sha256:") or candidate_hash == "sha256:fixture":
         raise ValueError("JUDGE-CANDIDATE-BINDING-INCOMPLETE")
@@ -126,7 +127,9 @@ def produce_coverage(run_root: Path) -> dict:
         raise ValueError("COVERAGE-EVIDENCE-LINEAGE-UNBOUND")
     if not _bound(receipt, "independent-judge", "S3", receipt["run_id"]) or not isinstance(acceptance_ids, list) or not isinstance(observation_ids, list) or not isinstance(edges, list) or not valid:
         raise ValueError(failure or "receipt-unbound")
-    result = _write(run_root / "acceptance-coverage.v1.json", {"schema_version":"acceptance-coverage.v1", "producer":"coverage-gate", "status":"pass", "slice_id":"S4", "run_id":run_root.name, "acceptance_ids":acceptance_ids, "observation_ids":observation_ids, "edges":edges, "receipt_evidence_sha256":receipt["evidence_sha256"]})
+    edge_hash = "sha256:" + hashlib.sha256(json.dumps(edges, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    manifest_hash = "sha256:" + hashlib.sha256(json.dumps(sorted(acceptance_ids), separators=(",", ":")).encode("utf-8")).hexdigest()
+    result = _write(run_root / "acceptance-coverage.v1.json", {"schema_version":"acceptance-coverage.v1", "producer":"coverage-gate", "status":"pass", "slice_id":"S4", "run_id":run_root.name, "acceptance_ids":acceptance_ids, "observation_ids":observation_ids, "edges":edges, "receipt_evidence_sha256":receipt["evidence_sha256"], "observation_id":observed, "manifest_sha256":manifest_hash, "edge_set_sha256":edge_hash})
     return result
 
 

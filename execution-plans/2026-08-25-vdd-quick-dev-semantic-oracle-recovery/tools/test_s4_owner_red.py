@@ -27,3 +27,10 @@ def test_coverage_owner_rejects_incomplete_cover(tmp_path: Path) -> None:
     (run_root / "process-receipt.v1.json").write_text(json.dumps({"producer":"independent-judge","status":"pass","slice_id":"S3","run_id":run_root.name,"evidence_sha256":"sha256:forged"}), encoding="utf-8")
     (run_root / "coverage-input.v1.json").write_text(json.dumps({"acceptance_ids":["A-1"],"observation_ids":["OBS-1"],"edges":[]}), encoding="utf-8")
     assert artifact_owners.run(tmp_path, "S4", "green", run_root) != 0
+
+
+def test_coverage_owner_rejects_observation_drift(tmp_path: Path) -> None:
+    run_root = tmp_path / "run"; run_root.mkdir()
+    (run_root / "process-receipt.v1.json").write_text(json.dumps({"producer":"independent-judge","status":"pass","slice_id":"S3","run_id":run_root.name,"evidence_sha256":"sha256:forged","observation":{"observation_id":"OBS-REAL","acceptance_assertions":{}}}), encoding="utf-8")
+    (run_root / "coverage-input.v1.json").write_text(json.dumps({"acceptance_ids":["A-SEMANTIC"],"observation_ids":["OBS-FAKE"],"edges":[]}), encoding="utf-8")
+    assert artifact_owners.run(tmp_path, "S4", "green", run_root) != 0

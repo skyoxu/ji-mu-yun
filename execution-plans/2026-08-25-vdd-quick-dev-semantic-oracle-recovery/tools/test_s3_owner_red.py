@@ -24,3 +24,10 @@ def test_judge_owner_rejects_non_executable_input(tmp_path: Path) -> None:
     (run_root / "execution-descriptor.v1.json").write_text(json.dumps({"producer":"quick-dev","status":"pass","slice_id":"S2","run_id":run_root.name,"evidence_sha256":"sha256:forged"}), encoding="utf-8")
     (run_root / "execution-input.v1.json").write_text(json.dumps({"argv":"not-an-argv"}), encoding="utf-8")
     assert artifact_owners.run(tmp_path, "S3", "green", run_root) != 0
+
+
+def test_judge_rejects_descriptor_execution_override(tmp_path: Path) -> None:
+    run_root = tmp_path / "run"; run_root.mkdir()
+    (run_root / "execution-descriptor.v1.json").write_text(json.dumps({"producer":"quick-dev","status":"pass","slice_id":"S2","run_id":run_root.name,"evidence_sha256":"sha256:forged","descriptor":{"argv":[sys.executable,"-c","raise SystemExit(0)"],"cwd":".","timeout_seconds":5}}), encoding="utf-8")
+    (run_root / "execution-input.v1.json").write_text(json.dumps({"argv":[sys.executable,"-c","raise SystemExit(1)"],"candidate_hash":"sha256:candidate"}), encoding="utf-8")
+    assert artifact_owners.run(tmp_path, "S3", "green", run_root) != 0
