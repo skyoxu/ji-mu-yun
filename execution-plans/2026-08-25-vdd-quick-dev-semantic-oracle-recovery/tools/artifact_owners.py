@@ -128,18 +128,23 @@ def produce_false_green_fixtures(run_root: Path) -> dict:
     fixtures = source.get("fixtures")
     if not _bound(coverage, "coverage-gate", "S4", coverage["run_id"]) or not isinstance(fixtures, list):
         raise ValueError("fixture-input-invalid")
+    if len(fixtures) != 9 or {item.get("fixture_id") for item in fixtures if isinstance(item, dict)} != {f"FG-{i:02d}" for i in range(1, 10)}:
+        raise ValueError("fixture-input-invalid")
+    predecessor_hash = source.get("predecessor_judge_hash")
+    if not isinstance(predecessor_hash, str) or not predecessor_hash.startswith("sha256:") or "coverage" in predecessor_hash:
+        raise ValueError("PROMOTION-PREDECESSOR-JUDGE-UNBOUND")
     results = []
     for fixture in fixtures:
-        if not isinstance(fixture, dict) or not isinstance(fixture.get("blocked_argv"), list) or not isinstance(fixture.get("corrected_argv"), list):
+        if not isinstance(fixture, dict) or not isinstance(fixture.get("blocked_argv"), list) or not isinstance(fixture.get("corrected_argv"), list) or fixture.get("blocked_argv") == fixture.get("corrected_argv"):
             raise ValueError("fixture-input-invalid")
         blocked = subprocess.run(fixture["blocked_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
         corrected = subprocess.run(fixture["corrected_argv"], cwd=run_root, capture_output=True, text=True, timeout=30, check=False)
         results.append({"fixture_id":fixture.get("fixture_id"), "blocked":blocked.returncode != 0, "corrected_pair_pass":corrected.returncode == 0})
-    valid, failure = validate_promotion(results, coverage["receipt_evidence_sha256"], "coverage-gate")
+    valid, failure = validate_promotion(results, predecessor_hash, "coverage-gate")
     if not valid:
         raise ValueError(failure)
     ids = [f"FG-{index:02d}" for index in range(1, 10)]
-    result = _write(run_root / "false-green-fixtures.v1.json", {"schema_version":"false-green-fixtures.v1", "producer":"coverage-gate", "status":"pass", "slice_id":"S5", "run_id":run_root.name, "fixtures":results, "fixture_ids":ids, "blocked_ids":ids, "corrected_pair_ids":ids, "corrected_pairs_executed":True, "predecessor_judge_hash":coverage["receipt_evidence_sha256"]})
+    result = _write(run_root / "false-green-fixtures.v1.json", {"schema_version":"false-green-fixtures.v1", "producer":"coverage-gate", "status":"pass", "slice_id":"S5", "run_id":run_root.name, "fixtures":results, "fixture_ids":ids, "blocked_ids":ids, "corrected_pair_ids":ids, "corrected_pairs_executed":True, "predecessor_judge_hash":predecessor_hash})
     return result
 
 

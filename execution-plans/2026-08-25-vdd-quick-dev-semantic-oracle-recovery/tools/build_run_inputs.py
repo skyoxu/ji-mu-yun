@@ -90,8 +90,9 @@ def build(plan_dir: Path, run_root: Path, slice_id: str) -> dict[str, object]:
             "process-receipt.v1.json": refs("S3", "process-receipt.v1.json"),
         }
     elif slice_id == "S5":
+        predecessor = plan / "predecessor-judge-freeze.v1.json"
         inputs = {
-            "false-green-fixture-input.v1.json": {"fixtures": [{"fixture_id": f"FG-{index:02d}", "blocked_argv": [sys.executable, str(plan / "tools" / "false_green_fixture_runner.py"), f"FG-{index:02d}", "blocked"], "corrected_argv": [sys.executable, str(plan / "tools" / "false_green_fixture_runner.py"), f"FG-{index:02d}", "corrected"]} for index in range(1, 10)]},
+            "false-green-fixture-input.v1.json": {"predecessor_judge_hash": _sha(predecessor), "fixtures": [{"fixture_id": f"FG-{index:02d}", "blocked_argv": [sys.executable, str(plan / "tools" / "false_green_fixture_runner.py"), f"FG-{index:02d}", "blocked"], "corrected_argv": [sys.executable, str(plan / "tools" / "false_green_fixture_runner.py"), f"FG-{index:02d}", "corrected"]} for index in range(1, 10)]},
             "acceptance-coverage.v1.json": refs("S4", "acceptance-coverage.v1.json"),
         }
     else:

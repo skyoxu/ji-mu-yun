@@ -21,6 +21,11 @@ TESTS = {
     "S6": ("test_s6_terminal_red.py", "test_s6_owner_red.py", "test_s6_terminal_negative.py"),
 }
 
+GREEN_TESTS = {
+    slice_id: tuple(name for name in names if not name.endswith("_red.py"))
+    for slice_id, names in TESTS.items()
+}
+
 
 def main() -> int:
     parser = argparse.ArgumentParser()
@@ -48,7 +53,7 @@ def main() -> int:
     selected = next(item for item in contract["slices"] if item["slice_id"] == args.slice)
     repository_root = Path(args.plan_dir).parents[1]
     red_selector = str(Path(args.plan_dir).parents[1] / selected["tdd"]["red"]["test_selector"])
-    selectors = [str(Path(args.plan_dir) / "tools" / name) for name in TESTS[args.slice]]
+    selectors = [str(Path(args.plan_dir) / "tools" / name) for name in GREEN_TESTS[args.slice]]
     red_env = None
     if args.run_root:
         red_env = {**__import__("os").environ, "QD_RUN_ROOT": str(Path(args.run_root).resolve())}
