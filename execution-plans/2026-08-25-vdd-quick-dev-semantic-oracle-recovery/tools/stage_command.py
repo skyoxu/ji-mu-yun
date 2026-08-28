@@ -32,6 +32,11 @@ def main() -> int:
     if args.stage == "terminal":
         if not args.run_root:
             return 2
+        if args.slice == "S6":
+            owner = Path(args.plan_dir) / "tools" / "artifact_owners.py"
+            produced = subprocess.run([sys.executable, str(owner), "--plan-dir", args.plan_dir, "--slice", "S6", "--stage", "terminal", "--run-root", args.run_root], cwd=Path(args.plan_dir).parents[1], check=False)
+            if produced.returncode != 0:
+                return produced.returncode
         out_name = "implementation-complete-result.json" if args.slice == "S6" else "slice-ready-result.json"
         predicate = "terminal_predicate.py" if args.slice == "S6" else "slice_ready_predicate.py"
         command = [sys.executable, str(Path(args.plan_dir) / "tools" / predicate),

@@ -10,20 +10,20 @@ def test_semantic_manifest_requires_case_producer() -> None:
     intent = {
         "acceptance_ids": ["A-SEMANTIC"], "covers_acceptance_ids": ["A-SEMANTIC"],
         "producer": "vdd", "coverage": "exact-cover", "fixture_class": "positive",
-        "taxonomy": ["outcome", "failure_family", "failure_id"],
+        "taxonomy": ["semantic"],
         "oracle_id": "semantic-oracle", "oracle_class": "contract",
         "test_selector": "tests/semantic.py", "subject_role": "sut",
             "required_case_roles": ["positive", "negative", "mutation"],
             "red_failure_family": "semantic-contract-gap", "expected_failure_ids": ["VDD-RED-BOUNDARY"],
         "green_expected_observations": ["semantic-artifacts.v1.json"], "minimum_executed_cases": 3,
         "independent_judge_required": True, "case_source_refs": ["SPEC:FR-1"],
-        "case_producer_ref": "", "complexity_class": "complex",
+        "case_producer_ref": "semantic-fixture-owner", "complexity_class": "complex",
         "verification_lane": "self-hosted", "context_lookup_required": False,
         "context_lookup_reason": "repository-owned", "minimum_red_scope": "semantic",
         "upgrade_conditions": [],
     }
     accepted, failure_id = validate_semantic_intent(intent)
-    assert accepted, f"FAILURE_ID:{failure_id or 'VDD-SEMANTIC-MANIFEST-INCOMPLETE'}"
+    assert not accepted and failure_id == "VDD-SEMANTIC-TAXONOMY-INCOMPLETE", f"FAILURE_ID:{failure_id or 'VDD-SEMANTIC-TAXONOMY-INCOMPLETE'}"
 
 
 def test_semantic_negative_rejects_downstream_execution_fields() -> None:

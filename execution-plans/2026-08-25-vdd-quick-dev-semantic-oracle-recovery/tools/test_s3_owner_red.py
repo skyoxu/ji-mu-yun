@@ -13,7 +13,7 @@ def test_judge_owner_executes_and_writes_independent_receipt(tmp_path: Path) -> 
     artifact_owners.compile_run_local_semantic_artifacts(run_root)
     (run_root / "descriptor-input.v1.json").write_text(json.dumps({"descriptor":{"target":"fixture","argv":["py","-3","-c","pass"],"cwd":".","timeout_seconds":30,"shell":False,"case_source_refs":["A-SEMANTIC"],"case_producer_ref":"vdd"}}), encoding="utf-8")
     assert artifact_owners.run(tmp_path, "S2", "green", run_root) == 0
-    (run_root / "execution-input.v1.json").write_text(json.dumps({"argv":[sys.executable,"-c","print('judge input')"],"executor_id":"sut-executor","observation_id":"OBS-S3"}), encoding="utf-8")
+    (run_root / "execution-input.v1.json").write_text(json.dumps({"argv":[sys.executable,"-c","print('judge input')"],"executor_id":"sut-executor","observation_id":"OBS-S3","acceptance_assertions":{"A-SEMANTIC":"receipt.exit_code == 0","A-DESCRIPTOR":"receipt.exit_code == 0","A-JUDGE":"receipt.exit_code == 0","A-COVER":"receipt.exit_code == 0","A-PROMOTION":"receipt.exit_code == 0","A-TERMINAL":"receipt.exit_code == 0","A-BOUNDARY":"receipt.exit_code == 0"}}), encoding="utf-8")
     assert artifact_owners.run(tmp_path, "S3", "green", run_root) == 0, "FAILURE_ID:JUDGE-PRODUCER-MISSING"
     value = json.loads((run_root / "process-receipt.v1.json").read_text(encoding="utf-8"))
     assert value.get("producer") == "independent-judge" and value.get("slice_id") == "S3" and value.get("run_id") == run_root.name, "FAILURE_ID:JUDGE-PRODUCER-MISSING"

@@ -91,7 +91,10 @@ def produce_receipt(run_root: Path) -> dict:
         cwd.relative_to(repo_root.parent)
     completed = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=descriptor_value.get("timeout_seconds", 30), check=False)
     receipt = {"executor_id":source.get("executor_id", "sut-executor"), "judge_id":"independent-judge", "descriptor_hash":descriptor["evidence_sha256"], "candidate_hash":source.get("candidate_hash", "sha256:fixture"), "run_id":run_root.name, "exit_code":completed.returncode}
-    observation = {"run_id":run_root.name, "stdout":completed.stdout, "stderr":completed.stderr, "observation_id":source.get("observation_id", "OBS-S3"), "descriptor_argv":argv, "expected_exit":source.get("expected_exit", "zero"), "executions":1}
+    assertions = source.get("acceptance_assertions", {})
+    if not isinstance(assertions, dict) or not assertions or any(not isinstance(key, str) or not isinstance(value, str) or not value for key, value in assertions.items()):
+        raise ValueError("JUDGE-INDEPENDENCE-UNPROVEN")
+    observation = {"run_id":run_root.name, "stdout":completed.stdout, "stderr":completed.stderr, "observation_id":source.get("observation_id", "OBS-S3"), "descriptor_argv":argv, "expected_exit":source.get("expected_exit", "zero"), "executions":1, "acceptance_assertions":assertions}
     receipt["actual_argv"] = argv
     valid, failure = validate_judge(receipt, observation)
     if not valid:
@@ -104,6 +107,12 @@ def produce_coverage(run_root: Path) -> dict:
     source, receipt = _input(run_root, "coverage-input.v1.json"), _artifact(run_root, "process-receipt.v1.json", "independent-judge", "S3")
     acceptance_ids, observation_ids, edges = source.get("acceptance_ids"), source.get("observation_ids"), source.get("edges")
     valid, failure = validate_many_to_many_cover(edges, set(acceptance_ids or []), set(observation_ids or []))
+    observed_assertions = receipt.get("observation", {}).get("acceptance_assertions") if isinstance(receipt.get("observation"), dict) else None
+    expected_acceptance = {"A-SEMANTIC", "A-DESCRIPTOR", "A-JUDGE", "A-COVER", "A-PROMOTION", "A-TERMINAL", "A-BOUNDARY"}
+    if set(acceptance_ids or []) != expected_acceptance or not isinstance(observed_assertions, dict):
+        raise ValueError("COVERAGE-EVIDENCE-LINEAGE-UNBOUND")
+    if any(edge.get("assertion") != observed_assertions.get(edge.get("acceptance_id")) for edge in edges if isinstance(edge, dict)):
+        raise ValueError("COVERAGE-EVIDENCE-LINEAGE-UNBOUND")
     if isinstance(receipt.get("receipt"), dict):
         observed = receipt.get("receipt", {}).get("observation_id") or receipt.get("observation", {}).get("observation_id")
         if observed and any(edge.get("observation_id") != observed for edge in edges if isinstance(edge, dict)):

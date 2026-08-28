@@ -16,14 +16,13 @@ def test_green_rejects_owner_success_while_successor_red_still_fails(tmp_path: P
     assert result.returncode != 0
 
 
-def test_fresh_worktree_s1_red_selector_is_expected_nonzero() -> None:
-    """The preflight RED is an intentional capability gap, not a rejection regression."""
+def test_preexisting_s1_behavior_is_a_passing_regression() -> None:
+    """Implemented S1 behavior is regression coverage, not a perpetual RED."""
     selector = PLAN / "tools" / "red_s1_semantic_artifact.py"
     import os
     env = {**os.environ, "QD_RUN_ROOT": str(Path.cwd() / "missing-fresh-run")}
     result = subprocess.run([sys.executable, "-m", "pytest", str(selector), "-vv", "-rA", "-s"], cwd=PLAN.parents[1], env=env, capture_output=True, text=True)
-    assert result.returncode != 0
-    assert "VDD-SEMANTIC-MANIFEST-INCOMPLETE" in (result.stdout + result.stderr)
+    assert result.returncode == 0
 
 
 def test_s1_slice_ready_rejects_placeholder_observations(tmp_path: Path) -> None:

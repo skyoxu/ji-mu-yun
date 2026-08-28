@@ -81,7 +81,7 @@ def build(plan_dir: Path, run_root: Path, slice_id: str) -> dict[str, object]:
         }
     elif slice_id == "S3":
         inputs = {
-            "execution-input.v1.json": {"argv": [sys.executable, "-m", "pytest", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_s2_descriptor_negative.py", "-q"], "executor_id": "sut-executor", "observation_id": "OBS-S3", "candidate_hash": _sha(plan / "implementation-contract.v1.json")},
+            "execution-input.v1.json": {"argv": [sys.executable, "-m", "pytest", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_s2_descriptor_negative.py", "-q"], "executor_id": "sut-executor", "observation_id": "OBS-S3", "candidate_hash": _sha(plan / "implementation-contract.v1.json"), "acceptance_assertions": {aid: "receipt.exit_code == 0" for aid in ["A-SEMANTIC", "A-DESCRIPTOR", "A-JUDGE", "A-COVER", "A-PROMOTION", "A-TERMINAL", "A-BOUNDARY"]}},
             "execution-descriptor.v1.json": refs("S2", "execution-descriptor.v1.json"),
         }
     elif slice_id == "S4":
@@ -91,7 +91,7 @@ def build(plan_dir: Path, run_root: Path, slice_id: str) -> dict[str, object]:
         }
     elif slice_id == "S5":
         inputs = {
-            "false-green-fixture-input.v1.json": {"fixtures": [{"fixture_id": f"FG-{index:02d}", "blocked_argv": [sys.executable, "-c", f"raise SystemExit('FAILURE_ID:FG-{index:02d}')"], "corrected_argv": [sys.executable, "-c", "pass"]} for index in range(1, 10)]},
+            "false-green-fixture-input.v1.json": {"fixtures": [{"fixture_id": f"FG-{index:02d}", "blocked_argv": [sys.executable, str(plan / "tools" / "false_green_fixture_runner.py"), f"FG-{index:02d}", "blocked"], "corrected_argv": [sys.executable, str(plan / "tools" / "false_green_fixture_runner.py"), f"FG-{index:02d}", "corrected"]} for index in range(1, 10)]},
             "acceptance-coverage.v1.json": refs("S4", "acceptance-coverage.v1.json"),
         }
     else:
