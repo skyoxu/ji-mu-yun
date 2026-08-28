@@ -32,12 +32,14 @@ def require_head_bytes(path: Path) -> None:
     except ValueError as exc:
         raise RuntimeError(f"candidate input escapes repository: {path}") from exc
     committed = subprocess.run(
-        ["git", "-C", str(root), "show", f"HEAD:{relative}"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
+        ["git", "-C", str(root), "rev-parse", f"HEAD:{relative}"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
     )
-    if committed.returncode != 0 or committed.stdout != target.read_bytes():
+    normalized = subprocess.run(
+        ["git", "-C", str(root), "hash-object", "--path", relative, str(target)],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
+    )
+    if committed.returncode != 0 or normalized.returncode != 0 or committed.stdout.strip() != normalized.stdout.strip():
         raise RuntimeError(f"candidate input must match HEAD exactly: {relative}")
 
 
