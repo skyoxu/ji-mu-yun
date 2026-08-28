@@ -31,7 +31,7 @@ def write_manifest(plan_dir: Path, s6_run: Path) -> Path:
         entries.append({"slice_id": slice_id, "run_id": run.name, "run_path": run.relative_to(root).as_posix(), "result_path": result.relative_to(root).as_posix(), "result_sha256": _sha(result) if result.is_file() else None})
     value = {"schema_version": "quick-dev-tdd-adapter.terminal-lineage-manifest.v1", "plan_id": plan_id, "entries": entries, "authorizes": []}
     value["manifest_sha256"] = "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
-    output = plan_dir / "terminal-lineage-manifest.v1.json"
+    output = s6_run / "terminal-lineage-manifest.v1.json"
     output.write_text(json.dumps(value, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     return output
 
@@ -45,8 +45,7 @@ def _write(path: Path, value: dict[str, object]) -> None:
 
 
 def publish_terminal_evidence(plan_dir: Path, s6_run: Path) -> None:
-    """Publish terminal evidence only after validating the complete lineage."""
-    """Append terminal replay evidence derived from manifest-selected lifecycle facts."""
+    """Append terminal replay evidence derived from explicit lifecycle facts."""
     manifest_path = write_manifest(plan_dir, s6_run)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     root = plan_dir.resolve().parents[1]

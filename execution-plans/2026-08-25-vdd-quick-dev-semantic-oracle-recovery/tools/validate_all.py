@@ -93,7 +93,7 @@ def slice_validation_snapshot(slice_id: str | None = None) -> dict[str, str]:
 
 def _manifest_lineage(plan_dir: Path, run_root: Path) -> list[Path] | None:
     root = plan_dir.resolve().parents[1]
-    path = plan_dir / "terminal-lineage-manifest.v1.json"
+    path = run_root / "terminal-lineage-manifest.v1.json"
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
         body = {key: item for key, item in value.items() if key != "manifest_sha256"}
