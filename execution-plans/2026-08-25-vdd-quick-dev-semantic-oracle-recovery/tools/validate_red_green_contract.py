@@ -36,6 +36,14 @@ def validate(plan: Path) -> tuple[bool, list[str]]:
         green_id = green.get("command_id")
         if not isinstance(green_id, str) or green_id == red.get("command_id"):
             errors.append(f"{sid}:green-reuses-red-command")
+        regressions = item.get("tdd", {}).get("regression", {}).get("test_selectors")
+        if not isinstance(regressions, list) or not regressions:
+            errors.append(f"{sid}:missing-regression-selectors")
+        else:
+            for regression in regressions:
+                regression_path = (plan.parents[1] / regression).resolve()
+                if not regression_path.is_file():
+                    errors.append(f"{sid}:regression-selector-missing:{regression}")
         if not isinstance(item.get("planned_new_files"), list) and not isinstance(item.get("allowed_changes", {}).get("production"), list):
             errors.append(f"{sid}:missing-implementation-entrypoint")
         if not item.get("allowed_changes", {}).get("production"):

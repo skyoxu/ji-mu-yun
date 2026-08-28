@@ -12,24 +12,9 @@ from pathlib import Path
 import subprocess
 import sys
 
-TESTS = {
-    "S1": ("test_s1_owner_red.py", "test_semantic_negative.py"),
-    "S2": ("test_s2_descriptor_red.py", "test_s2_owner_red.py", "test_s2_descriptor_negative.py"),
-    "S3": ("test_s3_judge_red.py", "test_s3_owner_red.py", "test_s3_judge_negative.py"),
-    "S4": ("test_s4_cover_red.py", "test_s4_owner_red.py", "test_s4_cover_negative.py"),
-    "S5": ("test_s5_promotion_red.py", "test_s5_owner_red.py", "test_s5_promotion_negative.py"),
-    "S6": ("test_s6_terminal_red.py", "test_s6_owner_red.py", "test_s6_terminal_negative.py"),
-}
-
-GREEN_TESTS = {
-    slice_id: tuple(name for name in names if not name.endswith("_red.py"))
-    for slice_id, names in TESTS.items()
-}
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--slice", required=True, choices=sorted(TESTS))
+    parser.add_argument("--slice", required=True, choices=[f"S{i}" for i in range(1, 7)])
     parser.add_argument("--stage", required=True, choices=("green", "refactor", "terminal"))
     parser.add_argument("--plan-dir", required=True)
     parser.add_argument("--run-root")
@@ -56,7 +41,8 @@ def main() -> int:
     repository_root = Path(args.plan_dir).parents[1]
     red_selector = str(Path(args.plan_dir).parents[1] / selected["tdd"]["red"]["test_selector"])
     # GREEN and REFACTOR must rerun the exact RED selector, plus regressions.
-    selectors = [red_selector, *[str(Path(args.plan_dir) / "tools" / name) for name in GREEN_TESTS[args.slice]]]
+    regression = selected.get("tdd", {}).get("regression", {}).get("test_selectors", [])
+    selectors = [red_selector, *[str(Path(args.plan_dir).parents[1] / path) for path in regression]]
     red_env = None
     if args.run_root:
         red_env = {**__import__("os").environ, "QD_RUN_ROOT": str(Path(args.run_root).resolve())}
