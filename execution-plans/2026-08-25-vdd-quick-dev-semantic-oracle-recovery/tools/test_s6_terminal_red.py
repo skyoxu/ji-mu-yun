@@ -9,5 +9,5 @@ def test_terminal_boundary_red(tmp_path: Path) -> None:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     plan = Path(__file__).parent.parent
-    with pytest.raises(ValueError, match="must be supplied"):
+    with pytest.raises(ValueError, match="lineage"):
         module.write_manifest(plan, tmp_path / "RUN-1")

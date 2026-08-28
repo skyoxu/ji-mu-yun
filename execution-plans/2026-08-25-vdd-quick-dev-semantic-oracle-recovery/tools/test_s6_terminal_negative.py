@@ -9,5 +9,5 @@ def test_terminal_rejects_missing_manifest() -> None:
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    with pytest.raises(ValueError, match="must be supplied"):
+    with pytest.raises(ValueError, match="lineage"):
         module.write_manifest(Path(__file__).parent.parent, Path("missing-run"))

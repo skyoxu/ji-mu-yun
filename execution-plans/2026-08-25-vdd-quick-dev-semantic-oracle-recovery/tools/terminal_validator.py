@@ -11,8 +11,6 @@ def _sha(path: Path) -> str:
 
 
 def write_manifest(plan_dir: Path, s6_run: Path) -> Path:
-    raise ValueError("terminal lineage must be supplied as run-local producer evidence")
-    # Historical implementation retained below for evidence inspection only.
     root = plan_dir.resolve().parents[1]
     plan_id = json.loads((plan_dir / "implementation-contract.v1.json").read_text(encoding="utf-8"))["plan_id"]
     entries = []
