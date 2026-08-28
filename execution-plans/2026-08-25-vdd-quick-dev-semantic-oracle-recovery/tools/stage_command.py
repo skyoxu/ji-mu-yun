@@ -55,7 +55,8 @@ def main() -> int:
     selected = next(item for item in contract["slices"] if item["slice_id"] == args.slice)
     repository_root = Path(args.plan_dir).parents[1]
     red_selector = str(Path(args.plan_dir).parents[1] / selected["tdd"]["red"]["test_selector"])
-    selectors = [str(Path(args.plan_dir) / "tools" / name) for name in GREEN_TESTS[args.slice]]
+    # GREEN and REFACTOR must rerun the exact RED selector, plus regressions.
+    selectors = [red_selector, *[str(Path(args.plan_dir) / "tools" / name) for name in GREEN_TESTS[args.slice]]]
     red_env = None
     if args.run_root:
         red_env = {**__import__("os").environ, "QD_RUN_ROOT": str(Path(args.run_root).resolve())}
@@ -68,9 +69,6 @@ def main() -> int:
         materialized = subprocess.run([sys.executable, str(materializer), "--run-root", args.run_root, "--slice", args.slice], cwd=Path(args.plan_dir).parents[1], check=False)
         if materialized.returncode != 0:
             return materialized.returncode
-    if args.run_root and args.slice == "S6":
-        # S6 is a terminal-only producer; GREEN/REFACTOR cannot claim completion.
-        return 2
     owner = Path(args.plan_dir) / "tools" / "artifact_owners.py"
     command = [sys.executable, str(owner), "--plan-dir", args.plan_dir, "--slice", args.slice, "--stage", args.stage]
     run_root = args.run_root

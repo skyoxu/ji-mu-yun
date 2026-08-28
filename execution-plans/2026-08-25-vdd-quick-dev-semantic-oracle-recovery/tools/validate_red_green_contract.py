@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import ast
 import json
+import subprocess
+import sys
+import re
 from pathlib import Path
 
 
@@ -37,13 +40,32 @@ def validate(plan: Path) -> tuple[bool, list[str]]:
             errors.append(f"{sid}:missing-success-artifact-owner")
     return not errors, errors
 
+def probe_red_contracts(plan: Path) -> tuple[bool, list[str]]:
+    contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+    errors = []
+    for item in contract.get("slices", []):
+        red = item.get("tdd", {}).get("red", {})
+        expected = set(red.get("expected_failure_ids", []))
+        result = subprocess.run([sys.executable, "-m", "pytest", red["test_selector"], "-q"], cwd=plan.parents[1], capture_output=True, text=True)
+        output = result.stdout + "\n" + result.stderr
+        observed = set(re.findall(r"FAILURE_ID:([A-Z0-9-]+)", output))
+        if result.returncode == 0 or observed != expected:
+            errors.append(f"{item.get('slice_id')}:red-probe-mismatch:exit={result.returncode}:observed={sorted(observed)}:expected={sorted(expected)}")
+    return not errors, errors
+
 
 def main() -> int:
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--plan-dir", type=Path, required=True)
+    parser.add_argument("--probe-red-contracts", action="store_true")
     args = parser.parse_args()
-    ok, errors = validate(args.plan_dir.resolve())
+    plan = args.plan_dir.resolve()
+    ok, errors = validate(plan)
+    if args.probe_red_contracts:
+        probe_ok, probe_errors = probe_red_contracts(plan)
+        ok = ok and probe_ok
+        errors.extend(probe_errors)
     print(json.dumps({"status": "pass" if ok else "blocked", "errors": errors}, sort_keys=True))
     return 0 if ok else 1
 
