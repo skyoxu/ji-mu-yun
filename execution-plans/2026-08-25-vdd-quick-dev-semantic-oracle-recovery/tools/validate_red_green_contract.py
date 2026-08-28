@@ -12,6 +12,7 @@ from pathlib import Path
 def validate(plan: Path) -> tuple[bool, list[str]]:
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
     errors: list[str] = []
+    subjects = {"S1": "compile_run_local_semantic_artifacts", "S2": "validate_descriptor", "S3": "validate_judge", "S4": "validate_many_to_many_cover", "S5": "validate_fixture_observation", "S6": "prepare_terminal_observation"}
     for item in contract.get("slices", []):
         sid = item.get("slice_id")
         red = item.get("tdd", {}).get("red", {})
@@ -30,6 +31,8 @@ def validate(plan: Path) -> tuple[bool, list[str]]:
             errors.append(f"{sid}:constant-red-placeholder")
         if not any(isinstance(node, ast.Call) for node in ast.walk(tree)):
             errors.append(f"{sid}:red-has-no-behavior-call")
+        if subjects.get(sid) and subjects[sid] not in source:
+            errors.append(f"{sid}:red-subject-not-called:{subjects[sid]}")
         if "Path.cwd()" in source or "os.environ" in source:
             errors.append(f"{sid}:red-uses-environment-fixture")
         if sid == "S1" and "compile_run_local_semantic_artifacts" not in source:
