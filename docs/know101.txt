@@ -1,0 +1,112 @@
+决定性错误：S6 RED 与生产修改方向完全相反
+
+在 129b4ce9... 中同时做了两件事：
+
+selector 把 plan_id 设成：
+{
+  "plan_id": "wrong-plan-id"
+}
+terminal_validator.py 同时增加了生产校验：
+if lineage.get("plan_id") != expected_plan_id:
+    raise ValueError(...)
+
+但 selector 的控制流仍然是：
+
+try:
+    prepare_terminal_observation(...)
+except ValueError as exc:
+    raise AssertionError(
+        "FAILURE_ID:TERMINAL-LINEAGE-NOT-CLOSED"
+    ) from exc
+
+结果是：
+
+当前生产代码正确拒绝错误 plan_id。
+selector 把这个正确拒绝转换成 RED。
+要让 selector 转绿，Quick Dev 反而必须删除 plan_id 校验，让错误输入通过。
+
+这违反了：
+
+不回滚正确行为制造 RED。
+RED 必须因生产行为缺失而失败。
+RED 必须能通过正向生产修改转绿。
+VDD repair 不提前实施目标生产代码。
+
+因此 S6 当前不是合法 TDD RED。
+
+另一个 S6 问题：selector 自己仍在扫描选择
+
+selector 使用：
+
+runs = sorted(p for p in base.glob("RUN-*") if p.is_dir())
+result = runs[0] / "slice-ready-result.json"
+
+虽然这是临时 fixture，不会读取正式日志，但它仍然通过扫描和排序猜选 predecessor。应直接引用已经明确创建的路径，例如：
+
+selected_run = base / f"RUN-A-{index}"
+最小且不回滚的修复方式
+
+不要删除当前已经正确存在的 plan_id 校验，把它视为新 baseline。
+
+为 S6 改用当前仍真实缺失的“重复 entry/cardinality”行为：
+
+创建完整显式 entries。
+直接引用 RUN-A-*，不使用 glob() 或排序。
+entries 包含 S1–S5，但额外重复一条 S1。
+当前 validator 只检查 slice ID 的集合，因此会错误接受重复 entry。
+selector 要求生产函数拒绝重复 entry。
+
+正确 selector 控制流：
+
+try:
+    prepare_terminal_observation(plan, s6_run)
+except ValueError:
+    return
+
+raise AssertionError(
+    "FAILURE_ID:TERMINAL-LINEAGE-NOT-CLOSED"
+)
+
+这样：
+
+当前生产错误接受六条 entries，selector 真实 RED。
+Quick Dev 增加 len(entries) == 5 和 slice 唯一性校验后，生产函数拒绝，原 selector 转绿。
+不需要回滚 plan_id 校验。
+VDD repair 不再修改 terminal_validator.py。
+
+同时必须恢复 repair boundary：下一轮 VDD repair 不得修改 terminal_validator.py。
+
+validator 还需一个小修正
+
+当前 subject 检查的条件是：
+
+if function_not_imported and function_not_called:
+    error
+
+这意味着“只导入但不调用”也可能通过。应分别要求：
+
+subject_imported is True
+subject_called is True
+
+并验证：
+
+red_contracts[Sx].primary_failure_id
+==
+tdd.red.expected_failure_ids 的唯一值
+本轮 external reviewer 结论
+{
+  "review_candidate": "77b0121ea395a019c2f626c3629198eb2c6b0662",
+  "review_successor": "fe8f44520a3fb3d82d3eab054999e96ec5958694",
+  "decision": "blocked",
+  "status": "blocked",
+  "accepted_review_generated": false,
+  "blocking_findings": [
+    "S6-correct-rejection-converted-to-red",
+    "S6-green-would-require-production-regression",
+    "S6-selector-scans-and-selects-history",
+    "S6-target-production-modified-during-repair",
+    "red-subject-import-call-check-not-strict"
+  ]
+}
+
+现在距离 accepted review 已经很近：只需重新绑定 S6 到一个当前真实缺失的正向行为，并且这一轮不要再修改生产代码。

@@ -34,8 +34,19 @@ def validate(plan: Path) -> tuple[bool, list[str]]:
             elif isinstance(node, ast.Import):
                 imported.update(alias.asname or alias.name.split(".")[0] for alias in node.names)
         called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
-        if not imported or not (imported & called):
-            errors.append(f"{sid}:red-import-call-unbound")
+        binding = contract.get("red_contracts", {}).get(sid, {})
+        subject_module = binding.get("subject_module")
+        subject_function = binding.get("subject_function")
+        imported_subject = False
+        called_subject = False
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module == subject_module:
+                imported_subject = any((alias.asname or alias.name) == subject_function for alias in node.names)
+            elif isinstance(node, ast.Import):
+                imported_subject = imported_subject or any((alias.asname or alias.name.split(".")[0]) == subject_module for alias in node.names)
+        called_subject = subject_function in called
+        if not imported_subject or not called_subject:
+            errors.append(f"{sid}:red-subject-import-call-incomplete")
         if "assert False" in source or "raise AssertionError" in source and "FAILURE_ID" not in source:
             errors.append(f"{sid}:constant-red-placeholder")
         if not any(isinstance(node, ast.Call) for node in ast.walk(tree)):
@@ -46,7 +57,6 @@ def validate(plan: Path) -> tuple[bool, list[str]]:
         expected_ids = red.get("expected_failure_ids")
         if not isinstance(expected_ids, list) or len(expected_ids) != len(set(expected_ids)) or not expected_ids:
             errors.append(f"{sid}:failure-ids-not-unique")
-        binding = contract.get("red_contracts", {}).get(sid, {})
         subject_module = binding.get("subject_module")
         subject_function = binding.get("subject_function")
         if not isinstance(subject_module, str) or not isinstance(subject_function, str):
@@ -63,6 +73,9 @@ def validate(plan: Path) -> tuple[bool, list[str]]:
             module_calls = {node.func.attr for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name) and node.func.value.id in imported_modules}
             if subject_function not in imported_functions and subject_function not in direct_calls and subject_function not in module_calls:
                 errors.append(f"{sid}:red-subject-binding-mismatch:{subject_module}.{subject_function}")
+        primary = binding.get("primary_failure_id")
+        if not isinstance(primary, str) or expected_ids != [primary]:
+            errors.append(f"{sid}:primary-failure-id-mismatch")
         if sid == "S4" and set(item.get("acceptance_ids", [])) != {"A-COVER"}:
             errors.append("S4:scope-must-be-A-COVER")
         if sid == "S6" and "terminal-lineage-input.v1.json" not in source:
@@ -218,6 +231,7 @@ def _candidate_post_files_allowed(root: Path, commit: str) -> bool:
         "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s5_promotion_producer.py",
         "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s6_terminal_producer.py",
         ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/terminal_validator.py",
     }
     result = subprocess.run(["git", "diff", "--name-only", f"{commit}..HEAD"], cwd=root, capture_output=True, text=True, check=False)
     return all(path not in protected for path in result.stdout.splitlines())
