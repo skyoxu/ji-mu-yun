@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-29T07:08:44.246452Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The repair plan vdd-quick-dev-semantic-oracle-recovery defines six dependent slices S1 through S6. Active acceptance covers semantic intent, descriptor binding, independent judging, evidence coverage, promotion protection, terminal lineage, and boundary compliance.",
+      "title": "Scope and acceptance"
+    },
+    {
+      "content": "The contract requires hash-bound predecessor artifacts, non-shell descriptors, independent execution and judging, many-to-many evidence edges, nine false-green fixture checks, and a closed terminal replay. Logs and protected platform paths are excluded from recovery and modification.",
+      "title": "Execution contract"
+    },
+    {
+      "content": "The semantic oracle validates required intent fields, taxonomy, coverage, fixture roles, and judge requirements. Run-local inputs are materialized from formal predecessor references, artifacts are identity-bound, and selected source content is summarized with bounded redaction.",
+      "title": "Input and verification"
+    }
+  ],
+  "source_manifest_hash": "sha256:8aefd83a5bdad6b99bb3407bcb924834d54aa56c940cc7dbe3ec36c9e0476dd1",
+  "truncated": false
+}

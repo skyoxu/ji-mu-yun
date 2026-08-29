@@ -1,0 +1,79 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/active-acceptance-manifest.v1.json",
+      "sha256": "sha256:71827a1fff1d273737197cfea2365e651c1cf67dac389477d67d9e55325b0a01",
+      "semantic_snapshot_sha256": "sha256:fa85f3f351e58bc1747dee05716ca095fe2160c35ec0be1b9db4bf94de7f3a46",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/command-registry.v1.json",
+      "sha256": "sha256:bd5d8b32cad999fb652565449c656723d502596febc7b84483cf2f6fd936b1c9",
+      "semantic_snapshot_sha256": "sha256:81a7dd90359ebd9d8955152d4ae38223c6045ae8a02eb21304672fb21164ca4f",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/implementation-contract.v1.json",
+      "sha256": "sha256:4f7f118320a5026847e682d06ca8cef80e5c2a898b52373c74bbb8cb460780eb",
+      "semantic_snapshot_sha256": "sha256:f19490809b62d13355efae56bc608c8f10dd26a13f2e83675254680d55a7a390",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/repair-input-selection-round-2/plan-sources.md",
+      "sha256": "sha256:493721dbb8874e53e43a5ad7948b44607be960ae060746a84947f62c28e929e5",
+      "semantic_snapshot_sha256": "sha256:493721dbb8874e53e43a5ad7948b44607be960ae060746a84947f62c28e929e5",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/requirements-and-acceptance.md",
+      "sha256": "sha256:ccf3efd2a4a2f5158c1d649a62f7703f05586065c930642fcc083d7abfd5f5cb",
+      "semantic_snapshot_sha256": "sha256:ccf3efd2a4a2f5158c1d649a62f7703f05586065c930642fcc083d7abfd5f5cb",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/semantic-verification.v1.json",
+      "sha256": "sha256:046836c7bc30d642cbc1c68a075b9101924a207f409d772db972a6ce9463df8b",
+      "semantic_snapshot_sha256": "sha256:c0002e4f1eb47cd4b1c3b536b28688ee9e3317a6f49f92940ed5c041580fcbc9",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py",
+      "sha256": "sha256:010299559ab53e83b8a4a779bd3efc62b9a116ac89b31e7f2454c1c47a7ec627",
+      "semantic_snapshot_sha256": "sha256:010299559ab53e83b8a4a779bd3efc62b9a116ac89b31e7f2454c1c47a7ec627",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/run_input_materializer.py",
+      "sha256": "sha256:8302655abfc52d7a8d9f14d270d64160a98be5a122abd65017245cd61815cc9b",
+      "semantic_snapshot_sha256": "sha256:8302655abfc52d7a8d9f14d270d64160a98be5a122abd65017245cd61815cc9b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_oracle.py",
+      "sha256": "sha256:51eea42c31d6df2cbcddd3aaaf5c9785a48593c8cd6f7d494e4d5d00190e790b",
+      "semantic_snapshot_sha256": "sha256:51eea42c31d6df2cbcddd3aaaf5c9785a48593c8cd6f7d494e4d5d00190e790b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "scripts/python/skill_input_consumption.py",
+      "sha256": "sha256:921f57f6c63ae2f4bc0766855870eee13c4ccf2c88281ff332444cf0b26c3718",
+      "semantic_snapshot_sha256": "sha256:7f67e07770701eab464227338901c1b18d537846c56e9a7d80fa8ce367c820d1",
+      "sensitivity": "credential-bearing",
+      "redaction_status": "complete"
+    }
+  ],
+  "created_at": "2026-08-29T07:08:44.246452Z"
+}
