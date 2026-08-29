@@ -342,15 +342,17 @@ def _active_slice_run(root: Path, plan: Path, slice_id: str) -> tuple[Path, str]
     for run_dir in candidates:
         # Runs bound to an earlier contract or RED selector are immutable
         # history and cannot mask a fresh lifecycle after a plan repair.
+        prior_red_handoff = (run_dir / "prior-red-handoff.v2.json").is_file()
         try:
             basis = json.loads((run_dir / "red-basis.v1.json").read_text(encoding="utf-8"))
             if basis.get("contract_hash") != current_contract_hash or basis.get("test_selector") != current_selector:
                 continue
         except (OSError, UnicodeError, json.JSONDecodeError, AttributeError):
-            continue
+            if not prior_red_handoff or not validate_implementation_successor(run_dir):
+                continue
         action = route_staged_run(run_dir)
         if (action in {"implement", "green", "refactor"}
-                and (run_dir / "implementation-successor.v1.json").is_file()
+                and ((run_dir / "implementation-successor.v1.json").is_file() or prior_red_handoff)
                 and not validate_implementation_successor(run_dir)):
             continue
         if action is None and (run_dir / "slice-ready-result.json").is_file() and validate_implementation_successor(run_dir):

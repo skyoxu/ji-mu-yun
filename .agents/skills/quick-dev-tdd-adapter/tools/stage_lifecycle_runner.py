@@ -25,10 +25,13 @@ def _sha(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _resolve_bound_plan(run_dir: Path, basis: dict[str, Any]) -> tuple[Path, Path, Path]:
-    """Resolve only the RED-bound physical plan path; never scan or infer it."""
+def _resolve_plan_binding(
+    run_dir: Path,
+    binding: object,
+    expected_contract_hash: object,
+) -> tuple[Path, Path, Path]:
+    """Resolve one explicit physical plan binding without scanning execution plans."""
     logs = next((parent for parent in run_dir.parents if parent.name == "logs"), None)
-    binding = basis.get("plan_binding") if isinstance(basis, dict) else None
     if logs is None or not isinstance(binding, dict) or set(binding) != {"plan_id", "path_type", "path", "contract_path", "validator_path"}:
         raise ValueError("plan binding is invalid")
     if binding.get("path_type") != "repo_path" or not all(isinstance(binding.get(key), str) and binding[key] for key in binding):
@@ -42,8 +45,20 @@ def _resolve_bound_plan(run_dir: Path, basis: dict[str, Any]) -> tuple[Path, Pat
     if not contract.is_file() or not validator.is_file() or binding["plan_id"] != run_dir.parents[1].name:
         raise ValueError("bound plan is unavailable")
     document = json.loads(contract.read_text(encoding="utf-8"))
-    if document.get("plan_id") != binding["plan_id"] or _sha(contract) != basis.get("contract_hash") or _sha(validator) != basis.get("validator_hash"):
+    if document.get("plan_id") != binding["plan_id"] or _sha(contract) != expected_contract_hash:
         raise ValueError("bound plan identity is stale")
+    return root, plan, validator
+
+
+def _resolve_bound_plan(run_dir: Path, basis: dict[str, Any]) -> tuple[Path, Path, Path]:
+    """Resolve only the RED-bound physical plan path; never scan or infer it."""
+    root, plan, validator = _resolve_plan_binding(
+        run_dir,
+        basis.get("plan_binding") if isinstance(basis, dict) else None,
+        basis.get("contract_hash") if isinstance(basis, dict) else None,
+    )
+    if _sha(validator) != basis.get("validator_hash"):
+        raise ValueError("bound validator identity is stale")
     return root, plan, validator
 
 
@@ -167,7 +182,11 @@ def validate_implementation_successor(run_dir: Path) -> bool:
                 or not isinstance(value.get("expected_failure_ids"), list)
             ):
                 return False
-            plan = root / "execution-plans" / value["plan_id"]
+            _, plan, _ = _resolve_plan_binding(
+                run_dir,
+                value.get("plan_binding"),
+                value.get("current_contract_hash"),
+            )
             contract_path = plan / "implementation-contract.v1.json"
             contract = json.loads(contract_path.read_text(encoding="utf-8"))
             selected = next(item for item in contract.get("slices", []) if item.get("slice_id") == value["slice_id"])
@@ -175,8 +194,7 @@ def validate_implementation_successor(run_dir: Path) -> bool:
             expected_failure_ids = selected.get("tdd", {}).get("red", {}).get("expected_failure_ids")
             compatibility = contract.get("slice_ready_repair_compatibility", {})
             if (
-                value.get("current_contract_hash") != _sha(contract_path)
-                or value["test_selector"] != expected_selector
+                value["test_selector"] != expected_selector
                 or value["expected_failure_ids"] != expected_failure_ids
                 or not isinstance(expected_selector, str)
                 or not isinstance(expected_failure_ids, list)

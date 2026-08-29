@@ -412,6 +412,8 @@
                 ],
                 "production": [
                     ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+                    ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+                    ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
                     ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py",
@@ -448,6 +450,8 @@
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_fixture_runner.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_registry.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/promotion_gate.py"
+                ,".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py"
+                ,".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py"
             ],
             "execution_snapshot_paths": [
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s5_promotion_producer.py",
@@ -455,6 +459,8 @@
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_fixture_runner.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_registry.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/promotion_gate.py",
+                ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+                ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
                 ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/write_predecessor_judge_freeze.py"
             ],

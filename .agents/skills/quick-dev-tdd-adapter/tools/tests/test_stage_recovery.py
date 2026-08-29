@@ -138,6 +138,9 @@ def test_prior_red_handoff_requires_current_contract_and_historical_successor(tm
     contract_path = root / "execution-plans" / plan_id / "implementation-contract.v1.json"
     contract_path.parent.mkdir(parents=True, exist_ok=True)
     contract_path.write_text(json.dumps(contract, sort_keys=True), encoding="utf-8")
+    validator_path = contract_path.parent / "tools" / "validate_all.py"
+    validator_path.parent.mkdir(parents=True, exist_ok=True)
+    validator_path.write_text("# validator\n", encoding="utf-8")
     predecessor = root / "logs" / "tdd-adapter" / plan_id / slice_id / "RUN-OLD"
     red = predecessor / "observations" / "red-observed.json"
     red.parent.mkdir(parents=True)
@@ -171,6 +174,13 @@ def test_prior_red_handoff_requires_current_contract_and_historical_successor(tm
         "slice_id": slice_id,
         "run_id": current.name,
         "current_contract_hash": "sha256:" + hashlib.sha256(contract_path.read_bytes()).hexdigest(),
+        "plan_binding": {
+            "plan_id": plan_id,
+            "path_type": "repo_path",
+            "path": contract_path.parent.relative_to(root).as_posix(),
+            "contract_path": "implementation-contract.v1.json",
+            "validator_path": "tools/validate_all.py",
+        },
         "execution_fingerprint": "sha256:current-run",
         "test_selector": selector,
         "test_sha256": basis["test_sha256"],
@@ -194,7 +204,45 @@ def test_prior_red_handoff_requires_current_contract_and_historical_successor(tm
     assert runner.derive_run_state(current) == "slice-terminal"
     router = _load("route_plan_directory")
     assert router._active_slice_action(root, contract_path.parent, slice_id) == "validate-slice"
+    loop = _load("loop_plan_directory")
+    assert loop._active_slice_run(root, contract_path.parent, slice_id) == (current, "slice-terminal")
 
     handoff["expected_failure_ids"] = ["TAMPERED"]
     handoff_path.write_text(json.dumps(handoff, sort_keys=True), encoding="utf-8")
     assert runner.validate_implementation_successor(current) is False
+
+    handoff["expected_failure_ids"] = ["EXPECTED-RED"]
+    handoff.pop("plan_binding")
+    handoff_path.write_text(json.dumps(handoff, sort_keys=True), encoding="utf-8")
+    assert runner.validate_implementation_successor(current) is False
+
+
+def test_prior_red_handoff_writer_binds_the_physical_plan_path(tmp_path):
+    lifecycle = _load("run_slice_lifecycle")
+    plan = tmp_path / "execution-plans" / "dated-plan"
+    context = {
+        "plan_id": "target",
+        "stage_results": {"red": {
+            "execution_fingerprint": "sha256:fingerprint",
+            "test_selector": "execution-plans/dated-plan/tools/red.py",
+            "test_sha256": "sha256:test",
+            "expected_failure_ids": ["EXPECTED-RED"],
+            "validator_hash": "sha256:validator",
+            "pre_implementation_candidate": {"candidate_hash": "sha256:before"},
+            "command_id": "quick-dev-generated-red-S5",
+            "contract_hash": "sha256:contract",
+        }},
+    }
+    payload = lifecycle._prior_red_handoff_payload(
+        tmp_path, plan, context, "S5", "RUN-NEW",
+        {"path": "logs/prior-red.json", "sha256": "sha256:red"},
+        {"path": "logs/prior-basis.json", "sha256": "sha256:basis"},
+        "RUN-OLD", "s5-green", 0,
+    )
+    assert payload["plan_binding"] == {
+        "plan_id": "target",
+        "path_type": "repo_path",
+        "path": "execution-plans/dated-plan",
+        "contract_path": "implementation-contract.v1.json",
+        "validator_path": "tools/validate_all.py",
+    }

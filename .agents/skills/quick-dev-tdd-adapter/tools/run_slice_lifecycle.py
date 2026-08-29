@@ -150,6 +150,67 @@ def _prior_red_basis(workspace: Path, prior_red: dict[str, str]) -> tuple[dict[s
     )
 
 
+def _plan_binding(workspace: Path, plan_dir: Path, plan_id: str) -> dict[str, str]:
+    """Bind a handoff to its one physical plan directory without discovery."""
+    root = workspace.resolve()
+    plan = plan_dir.resolve()
+    try:
+        plan.relative_to(root / "execution-plans")
+    except ValueError as exc:
+        raise ValueError("plan binding escapes execution plans") from exc
+    return {
+        "plan_id": plan_id,
+        "path_type": "repo_path",
+        "path": plan.relative_to(root).as_posix(),
+        "contract_path": "implementation-contract.v1.json",
+        "validator_path": "tools/validate_all.py",
+    }
+
+
+def _prior_red_handoff_payload(
+    workspace: Path,
+    plan_dir: Path,
+    context: dict[str, Any],
+    slice_id: str,
+    run_id: str,
+    prior_red: dict[str, str],
+    red_basis: dict[str, str],
+    predecessor_run: str,
+    green_command_id: str,
+    green_exit_code: int,
+    refactor_command_ids: list[str] | None = None,
+    refactor_exit_code: int | None = None,
+) -> dict[str, Any]:
+    """Produce the complete, explicit lineage consumed by prior-RED recovery."""
+    red = context["stage_results"]["red"]
+    payload: dict[str, Any] = {
+        "schema_version": "quick-dev-tdd-adapter.prior-red-handoff.v2",
+        "plan_id": context["plan_id"],
+        "slice_id": slice_id,
+        "run_id": run_id,
+        "plan_binding": _plan_binding(workspace, plan_dir, context["plan_id"]),
+        "red_observation": prior_red,
+        "red_basis": red_basis,
+        "execution_fingerprint": red["execution_fingerprint"],
+        "test_selector": red["test_selector"],
+        "test_sha256": red["test_sha256"],
+        "expected_failure_ids": red["expected_failure_ids"],
+        "validator_hash": red["validator_hash"],
+        "pre_implementation_candidate": red["pre_implementation_candidate"],
+        "predecessor_run": predecessor_run,
+        "red_command_id": red["command_id"],
+        "green_command_id": green_command_id,
+        "current_contract_hash": red["contract_hash"],
+        "green_exit_code": green_exit_code,
+        "authorizes": [],
+    }
+    if refactor_command_ids is not None:
+        payload["refactor_command_ids"] = refactor_command_ids
+    if refactor_exit_code is not None:
+        payload["refactor_exit_code"] = refactor_exit_code
+    return payload
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--workspace", type=Path, required=True)
@@ -273,15 +334,15 @@ def main() -> int:
             raise RuntimeError("GREEN command failed")
         (run_dir / "stage-state.json").write_text(json.dumps({"stage": "green", "next_stage": "refactor", "authorizes": []}, indent=2) + "\n", encoding="utf-8", newline="\n")
         if red_mode == "prior-red-successor":
-            (run_dir / "prior-red-handoff.v2.json").write_text(json.dumps({
-                "schema_version": "quick-dev-tdd-adapter.prior-red-handoff.v2",
-                "plan_id": context["plan_id"], "slice_id": args.slice_id, "run_id": run_dir.name,
-                "red_observation": prior_red,
-                "execution_fingerprint": context["stage_results"]["red"]["execution_fingerprint"],
-                "test_selector": context["stage_results"]["red"]["test_selector"],
-                "expected_failure_ids": context["stage_results"]["red"]["expected_failure_ids"],
-                "authorizes": [],
-            }, indent=2) + "\n", encoding="utf-8", newline="\n")
+            prior_basis = _prior_red_basis(workspace, prior_red)
+            if prior_basis is None:
+                raise RuntimeError("prior RED successor requires a readable predecessor basis")
+            red_basis, predecessor_run = prior_basis
+            payload = _prior_red_handoff_payload(
+                workspace, plan_dir, context, args.slice_id, run_dir.name,
+                prior_red, red_basis, predecessor_run, commands["green"][0]["id"], green["exit_code"],
+            )
+            (run_dir / "prior-red-handoff.v2.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
         print(json.dumps({"run_id": run_dir.name, "stage": "green", "next_stage": "refactor", "authorizes": []}, sort_keys=True))
         return 0
 
@@ -329,25 +390,12 @@ def main() -> int:
         if prior_basis is None:
             raise RuntimeError("prior RED successor requires a readable predecessor basis")
         red_basis, predecessor_run = prior_basis
-        (run_dir / "prior-red-handoff.v2.json").write_text(json.dumps({
-            "schema_version": "quick-dev-tdd-adapter.prior-red-handoff.v2",
-            "plan_id": context["plan_id"], "slice_id": args.slice_id, "run_id": run_dir.name,
-            "red_observation": prior_red,
-            "red_basis": red_basis,
-            "execution_fingerprint": context["stage_results"]["red"]["execution_fingerprint"],
-            "test_selector": context["stage_results"]["red"]["test_selector"],
-            "test_sha256": context["stage_results"]["red"]["test_sha256"],
-            "expected_failure_ids": context["stage_results"]["red"]["expected_failure_ids"],
-            "validator_hash": context["stage_results"]["red"]["validator_hash"],
-            "pre_implementation_candidate": context["stage_results"]["red"]["pre_implementation_candidate"],
-            "predecessor_run": predecessor_run,
-            "red_command_id": commands["red"][0]["id"],
-            "green_command_id": commands["green"][0]["id"],
-            "refactor_command_ids": [item["id"] for item in commands["refactor"]],
-            "current_contract_hash": context["stage_results"]["red"]["contract_hash"],
-            "green_exit_code": green["exit_code"], "refactor_exit_code": refactor["exit_code"],
-            "authorizes": [],
-        }, indent=2) + "\n", encoding="utf-8", newline="\n")
+        payload = _prior_red_handoff_payload(
+            workspace, plan_dir, context, args.slice_id, run_dir.name,
+            prior_red, red_basis, predecessor_run, commands["green"][0]["id"], green["exit_code"],
+            [item["id"] for item in commands["refactor"]], refactor["exit_code"],
+        )
+        (run_dir / "prior-red-handoff.v2.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
     elif args.stage == "all":
         bundle = lifecycle.close(context, {})
 
