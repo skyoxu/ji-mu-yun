@@ -12,7 +12,10 @@ PLAN = ROOT / "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery
 
 
 def digest(path: Path) -> str:
-    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+    payload = path.read_bytes()
+    if path.suffix.casefold() == ".json":
+        payload = payload.replace(b"\r\n", b"\n")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
 def ref(path: Path) -> dict[str, str]:

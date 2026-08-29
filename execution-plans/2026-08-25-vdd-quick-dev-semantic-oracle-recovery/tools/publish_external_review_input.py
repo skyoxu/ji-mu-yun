@@ -23,14 +23,42 @@ def ref(path: Path) -> dict[str, str]:
     return {"path": path.resolve().relative_to(ROOT.resolve()).as_posix(), "sha256": sha(path)}
 
 
+def candidate_ref(path: Path, candidate_commit: str) -> dict[str, str]:
+    """Reference an immutable candidate file by its committed blob bytes."""
+    target = path.resolve()
+    try:
+        relative = target.relative_to(ROOT.resolve()).as_posix()
+    except ValueError as exc:
+        raise RuntimeError(f"candidate input escapes repository: {path}") from exc
+    blob = subprocess.run(
+        ["git", "-C", str(ROOT), "show", f"{candidate_commit}:{relative}"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+    )
+    if blob.returncode != 0:
+        raise RuntimeError(f"candidate blob is unavailable: {relative}")
+    return {"path": relative, "sha256": "sha256:" + hashlib.sha256(blob.stdout).hexdigest()}
+
+
 def require_head_bytes(path: Path) -> None:
-    """Refuse to bind HEAD to dirty or differently normalized candidate bytes."""
+    """Compatibility guard for callers that bind the current HEAD directly."""
+    try:
+        require_candidate_bytes(path, "HEAD")
+    except RuntimeError as exc:
+        raise RuntimeError(f"candidate input must match HEAD exactly: {path}") from exc
+
+
+def require_candidate_bytes(path: Path, candidate_commit: str) -> None:
+    """Require immutable candidate inputs to match both the candidate and HEAD."""
     root = ROOT.resolve()
     target = path.resolve()
     try:
         relative = target.relative_to(root).as_posix()
     except ValueError as exc:
         raise RuntimeError(f"candidate input escapes repository: {path}") from exc
+    candidate = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", f"{candidate_commit}:{relative}"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
+    )
     committed = subprocess.run(
         ["git", "-C", str(root), "rev-parse", f"HEAD:{relative}"],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
@@ -39,8 +67,29 @@ def require_head_bytes(path: Path) -> None:
         ["git", "-C", str(root), "hash-object", "--path", relative, str(target)],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
     )
-    if committed.returncode != 0 or normalized.returncode != 0 or committed.stdout.strip() != normalized.stdout.strip():
-        raise RuntimeError(f"candidate input must match HEAD exactly: {relative}")
+    if (
+        candidate.returncode != 0
+        or committed.returncode != 0
+        or normalized.returncode != 0
+        or candidate.stdout.strip() != committed.stdout.strip()
+        or candidate.stdout.strip() != normalized.stdout.strip()
+    ):
+        raise RuntimeError(f"candidate input must match candidate and HEAD exactly: {relative}")
+
+
+def require_candidate_ancestor(candidate_commit: str) -> None:
+    resolved = subprocess.run(
+        ["git", "-C", str(ROOT), "rev-parse", "--verify", f"{candidate_commit}^{{commit}}"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
+    )
+    if resolved.returncode != 0:
+        raise RuntimeError(f"candidate commit is invalid: {candidate_commit}")
+    ancestor = subprocess.run(
+        ["git", "-C", str(ROOT), "merge-base", "--is-ancestor", candidate_commit, "HEAD"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
+    )
+    if ancestor.returncode != 0:
+        raise RuntimeError(f"candidate commit is not an ancestor of HEAD: {candidate_commit}")
 
 
 def write_new(path: Path, value: object) -> None:
@@ -57,10 +106,12 @@ def write_new(path: Path, value: object) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--tag", required=True)
+    parser.add_argument("--candidate-commit", required=True)
     parser.add_argument("--mapping", type=Path, default=GOV / "requirements-acceptance-mapping.v1.reviewed.json")
     parser.add_argument("--manifest", type=Path, default=GOV / "vdd-source-freeze-manifest.v1.external-bd210cef-successor.json")
     parser.add_argument("--skill-input-receipt", type=Path, default=PLAN / "skill-input/repair-round-4/receipt.v1.json")
     args = parser.parse_args()
+    require_candidate_ancestor(args.candidate_commit)
     mapping = args.mapping.resolve()
     manifest = args.manifest.resolve()
     current_receipt = args.skill_input_receipt.resolve()
@@ -71,7 +122,7 @@ def main() -> None:
         mapping,
         current_receipt,
     ):
-        require_head_bytes(candidate_input)
+        require_candidate_bytes(candidate_input, args.candidate_commit)
     conformance = GOV / f"vdd-conformance-result.v1.{args.tag}.json"
     review_input = GOV / f"external-semantic-review-input.v1.{args.tag}.json"
     validator = ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py"
@@ -94,9 +145,9 @@ def main() -> None:
         "profile": handoff.get("profile", "bootstrap-upstream-plan"),
         "selection_hash": json.loads(manifest.read_text(encoding="utf-8"))["selection_hash"],
         "candidate": {
-            "head_commit": subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip(),
-            "implementation_contract": ref(PLAN / "implementation-contract.v1.json"),
-            "command_registry": ref(PLAN / "command-registry.v1.json"),
+            "head_commit": args.candidate_commit,
+            "implementation_contract": candidate_ref(PLAN / "implementation-contract.v1.json", args.candidate_commit),
+            "command_registry": candidate_ref(PLAN / "command-registry.v1.json", args.candidate_commit),
         },
         "source_freeze": ref(manifest),
         "requirements_mapping": ref(mapping),
