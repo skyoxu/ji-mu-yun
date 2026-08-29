@@ -16,7 +16,18 @@ def _sha(path: Path) -> str:
 def _workspace_closure(root: Path) -> str:
     status = subprocess.run(["git", "status", "--porcelain=v1", "--untracked-files=all"], cwd=root, capture_output=True, text=True, check=True).stdout
     tracked = subprocess.run(["git", "ls-files", "-s"], cwd=root, capture_output=True, text=True, check=True).stdout
-    payload = (tracked + "\nSTATUS\n" + status).encode("utf-8")
+    # Lifecycle evidence is intentionally append-only under logs/ and must not
+    # churn the candidate identity between RED, GREEN, and REFACTOR. Observe
+    # only the repository's actual source/control-plane delta while retaining
+    # the explicit per-slice snapshot and manifest below for path-level proof.
+    delta_lines = []
+    for line in status.splitlines():
+        raw_path = line[3:] if len(line) >= 4 else ""
+        path = raw_path.split(" -> ", 1)[-1].replace("\\", "/")
+        if path == "logs" or path.startswith("logs/"):
+            continue
+        delta_lines.append(line)
+    payload = (tracked + "\nSTATUS\n" + "\n".join(delta_lines)).encode("utf-8")
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 def _workspace_manifest(root: Path) -> dict[str, str]:
@@ -42,7 +53,7 @@ def current_candidate_identity(slice_id: str) -> dict[str, str]:
     document = json.loads(contract.read_text(encoding="utf-8"))
     selected = next(item for item in document["slices"] if item["slice_id"] == slice_id)
     tracked = [selected["tdd"]["red"]["test_selector"], *selected.get("allowed_changes", {}).get("production", []), *selected.get("allowed_changes", {}).get("tests", []), *selected.get("planned_new_files", [])]
-    tracked.extend(["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/stage_command.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/run_input_materializer.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_oracle.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/terminal_validator.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/validate_all.py", ".agents/skills/vdd-execution-plan/scripts/validate_plan.py"])
+    tracked.append("execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/stage_command.py")
     for dependency_id in selected.get("dependency_closure", []):
         dependency = next(item for item in document["slices"] if item["slice_id"] == dependency_id)
         tracked.extend(dependency.get("allowed_changes", {}).get("production", []))

@@ -1,7 +1,7 @@
 from independent_judge import validate_judge
 
-def test_judge_rejects_candidate_binding_mismatch() -> None:
+def test_judge_rejects_empty_acceptance_assertion() -> None:
     receipt = {"executor_id":"sut-executor", "judge_id":"independent-judge", "descriptor_hash":"sha256:descriptor-a", "candidate_hash":"sha256:candidate-a", "run_id":"RUN-S3", "exit_code":0, "actual_argv":["py"]}
-    observation = {"run_id":"RUN-S3", "descriptor_argv":["py"], "descriptor_hash":"sha256:descriptor-a", "expected_exit":"zero", "executions":1, "candidate_hash":"sha256:candidate-b", "acceptance_assertions":{"A-JUDGE":"receipt.exit_code == 0"}}
+    observation = {"run_id":"RUN-S3", "descriptor_argv":["py"], "descriptor_hash":"sha256:descriptor-a", "expected_exit":"zero", "executions":1, "candidate_hash":"sha256:candidate-a", "acceptance_assertions":{"A-JUDGE":""}}
     accepted, failure = validate_judge(receipt, observation)
     assert not accepted and failure == "JUDGE-INDEPENDENCE-UNPROVEN", f"FAILURE_ID:{failure or 'JUDGE-INDEPENDENCE-UNPROVEN'}"

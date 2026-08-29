@@ -12,7 +12,11 @@ def validate_judge(receipt: dict[str, Any], observation: dict[str, Any]) -> tupl
         return False, "JUDGE-INDEPENDENCE-RED"
     if not isinstance(observation, dict) or observation.get("run_id") != receipt["run_id"]:
         return False, "JUDGE-INDEPENDENCE-RED"
-    if not isinstance(observation.get("acceptance_assertions"), dict) or not observation["acceptance_assertions"]:
+    assertions = observation.get("acceptance_assertions")
+    if (not isinstance(assertions, dict) or not assertions
+            or any(not isinstance(acceptance_id, str) or not acceptance_id
+                   or not isinstance(assertion, str) or not assertion
+                   for acceptance_id, assertion in assertions.items())):
         return False, "JUDGE-INDEPENDENCE-UNPROVEN"
     if (not isinstance(receipt.get("descriptor_hash"), str) or not receipt["descriptor_hash"].startswith("sha256:")
             or not isinstance(receipt.get("candidate_hash"), str) or not receipt["candidate_hash"].startswith("sha256:")):
@@ -20,6 +24,8 @@ def validate_judge(receipt: dict[str, Any], observation: dict[str, Any]) -> tupl
     if receipt.get("actual_argv") != observation.get("descriptor_argv"):
         return False, "JUDGE-INDEPENDENCE-RED"
     if observation.get("descriptor_hash") != receipt.get("descriptor_hash"):
+        return False, "JUDGE-INDEPENDENCE-UNPROVEN"
+    if observation.get("candidate_hash") != receipt.get("candidate_hash"):
         return False, "JUDGE-INDEPENDENCE-UNPROVEN"
     if observation.get("executions", 0) < 1:
         return False, "JUDGE-INDEPENDENCE-UNPROVEN"

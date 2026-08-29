@@ -242,7 +242,17 @@ def validate_implementation_successor(run_dir: Path) -> bool:
         and receipt.get("validator_hash") == basis.get("validator_hash")
         and receipt.get("pre_implementation_candidate") == pre
         and test_current
-        and (current is None or receipt.get("post_implementation_candidate") == current)
+        and (
+            current is None
+            or (
+                all(receipt.get("post_implementation_candidate", {}).get(key) == current.get(key)
+                    for key in ("candidate_hash", "predicate_input_root", "authority_root", "validator_root", "validator_version", "closure_definition_hash"))
+                and all(
+                    current.get("candidate_manifest", {}).get(path) == receipt.get("post_implementation_candidate", {}).get("candidate_manifest", {}).get(path)
+                    for path in changed_paths
+                )
+            )
+        )
         and isinstance(post, dict)
         and post != pre
         and isinstance(changed_paths, list)

@@ -9,7 +9,8 @@ def validate_many_to_many_cover(edges: list[dict[str, Any]], manifest: set[str],
     for edge in edges:
         if not isinstance(edge, dict) or not {"acceptance_id", "case_id", "observation_id", "assertion"}.issubset(edge):
             return False, "COVERAGE-EXACT-COVER-RED"
-        if not isinstance(edge.get("assertion"), str) or not edge["assertion"].strip():
+        if (not isinstance(edge.get("assertion"), str)
+                or not edge["assertion"].strip().startswith("receipt.")):
             return False, "COVERAGE-EVIDENCE-LINEAGE-UNBOUND"
         if not isinstance(edge.get("case_id"), str) or not edge["case_id"].strip():
             return False, "COVERAGE-EVIDENCE-LINEAGE-UNBOUND"

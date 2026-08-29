@@ -73,11 +73,15 @@ def build(plan_dir: Path, run_root: Path, slice_id: str) -> dict[str, object]:
             "minimum_executed_cases": 3, "independent_judge_required": True, "case_source_refs": ["SPEC:FR-1", "SPEC:FR-2", "SPEC:FR-10"],
             "case_producer_ref": "vdd-semantic-fixture-owner", "complexity_class": "complex", "verification_lane": "self-hosted",
             "context_lookup_required": False, "context_lookup_reason": "repository-owned", "minimum_red_scope": "semantic", "upgrade_conditions": [],
-        }}
+        },
+        "active-acceptance-manifest.v1.json": json.loads((plan / "active-acceptance-manifest.v1.json").read_text(encoding="utf-8")),
+        "semantic-verification-input.v1.json": json.loads((plan / "semantic-verification.v1.json").read_text(encoding="utf-8")),
+        }
     elif slice_id == "S2":
+        semantic_ref = refs("S1", "semantic-artifacts.v1.json")["artifact_ref"]
         inputs = {
-            "descriptor-input.v1.json": {"descriptor": {"target": "semantic-oracle", "argv": [sys.executable, "-m", "pytest", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_semantic_negative.py", "-q"], "cwd": ".", "timeout_seconds": 30, "shell": False, "case_source_refs": ["active-acceptance-manifest"], "case_producer_ref": "vdd"}},
-            "semantic-artifacts.v1.json": refs("S1", "semantic-artifacts.v1.json"),
+            "descriptor-input.v1.json": {"descriptor": {"target": "semantic-oracle", "argv": [sys.executable, "-m", "pytest", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_semantic_negative.py", "-q"], "cwd": ".", "timeout_seconds": 30, "shell": False, "case_source_refs": ["active-acceptance-manifest"], "case_producer_ref": "vdd", "semantic_artifact_ref": semantic_ref}},
+            "semantic-artifacts.v1.json": {"artifact_ref": semantic_ref},
         }
     elif slice_id == "S3":
         inputs = {

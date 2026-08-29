@@ -14,7 +14,7 @@ TOOLS = Path(__file__).resolve().parent
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-from route_plan_directory import route, _validation_snapshot
+from route_plan_directory import route, _validation_snapshot, _tdd_slice_ready_current
 from stage_lifecycle_runner import (
     LifecycleRunner,
     derive_run_state,
@@ -321,15 +321,38 @@ def _current_bridge_handoff(root: Path, plan: Path, contract: dict[str, object],
     return current_red_handoff(root, plan, slice_id)
 
 
-def _active_slice_run(root: Path, plan_id: str, slice_id: str) -> tuple[Path, str] | None:
+def _active_slice_run(root: Path, plan: Path, slice_id: str) -> tuple[Path, str] | None:
+    contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+    plan_id = str(contract["plan_id"])
     evidence_root = root / "logs" / "tdd-adapter" / plan_id / slice_id
+    plan_dir = plan
+    contract_path = plan_dir / "implementation-contract.v1.json"
+    try:
+        current_contract_hash = _sha(contract_path)
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        selected = next(item for item in contract.get("slices", []) if item.get("slice_id") == slice_id)
+        current_selector = selected.get("tdd", {}).get("red", {}).get("test_selector")
+    except (OSError, UnicodeError, json.JSONDecodeError, StopIteration, TypeError, AttributeError):
+        return None
     candidates = sorted((path for path in evidence_root.glob("RUN-*") if path.is_dir()), key=lambda path: path.name, reverse=True)
     # A recovery retry may leave a newer GREEN-only successor beside an older
     # successor that already has a complete REFACTOR. Prefer the furthest
     # verified lifecycle evidence so retries do not regress the route.
     ranked: list[tuple[Path, str]] = []
     for run_dir in candidates:
+        # Runs bound to an earlier contract or RED selector are immutable
+        # history and cannot mask a fresh lifecycle after a plan repair.
+        try:
+            basis = json.loads((run_dir / "red-basis.v1.json").read_text(encoding="utf-8"))
+            if basis.get("contract_hash") != current_contract_hash or basis.get("test_selector") != current_selector:
+                continue
+        except (OSError, UnicodeError, json.JSONDecodeError, AttributeError):
+            continue
         action = route_staged_run(run_dir)
+        if (action in {"implement", "green", "refactor"}
+                and (run_dir / "implementation-successor.v1.json").is_file()
+                and not validate_implementation_successor(run_dir)):
+            continue
         if action is None and (run_dir / "slice-ready-result.json").is_file() and validate_implementation_successor(run_dir):
             action = "slice-terminal"
         if action is not None:
@@ -411,7 +434,7 @@ def route_staged_run(run_dir: Path) -> str | None:
 def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> None:
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
     bridge = contract.get("adapter_bridge")
-    active = _active_slice_run(root, str(contract["plan_id"]), slice_id)
+    active = _active_slice_run(root, plan, slice_id)
     stage = active[1] if active else "red"
     reusable_handoff = _current_bridge_handoff(root, plan, contract, slice_id)
     if active is not None and reusable_handoff is not None and not _has_execution_fingerprint(active[0]):
@@ -447,9 +470,21 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
         # builders consume this immutable path/hash and never scan RUN-*.
         predecessor_id = dependencies[-1]
         base = evidence / predecessor_id
-        candidates = [path / "slice-ready-result.json" for path in base.glob("RUN-*")
-                      if path.is_dir() and "DIAGNOSTIC" not in path.name.upper()
-                      and (path / "slice-ready-result.json").is_file()]
+        candidates = []
+        for path in base.glob("RUN-*"):
+            result_path = path / "slice-ready-result.json"
+            if not path.is_dir() or "DIAGNOSTIC" in path.name.upper() or not result_path.is_file():
+                continue
+            try:
+                result = json.loads(result_path.read_text(encoding="utf-8"))
+                current = _tdd_slice_ready_current(
+                    root, plan, str(contract["plan_id"]), predecessor_id,
+                    _sha(plan / "implementation-contract.v1.json"), result_path, result,
+                )
+            except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+                current = False
+            if current:
+                candidates.append(result_path)
         if len(candidates) != 1:
             raise RuntimeError("direct predecessor slice-ready result is ambiguous or missing")
         predecessor_result = candidates[0]
@@ -507,7 +542,7 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
             "--slice", slice_id, "--out", str(output),
         ], timeout_seconds=7200)
         return
-    active = _active_slice_run(root, str(contract["plan_id"]), slice_id)
+    active = _active_slice_run(root, plan, slice_id)
     if active is None or active[1] != "slice-terminal":
         raise RuntimeError("slice terminal requires a completed refactor observation")
     # A normal TDD lifecycle has one canonical run.  A successor is recovery

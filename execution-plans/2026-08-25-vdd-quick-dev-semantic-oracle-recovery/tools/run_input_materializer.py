@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 INPUTS = {
-    "S1": ("semantic-intent-input.v1.json",),
+    "S1": ("semantic-intent-input.v1.json", "active-acceptance-manifest.v1.json", "semantic-verification-input.v1.json"),
     "S2": ("descriptor-input.v1.json", "semantic-artifacts.v1.json"),
     "S3": ("execution-input.v1.json", "execution-descriptor.v1.json"),
     "S4": ("coverage-input.v1.json", "process-receipt.v1.json"),

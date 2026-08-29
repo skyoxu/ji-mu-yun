@@ -101,7 +101,7 @@ def produce_receipt(run_root: Path) -> dict:
     assertions = source.get("acceptance_assertions", {})
     if not isinstance(assertions, dict) or not assertions or any(not isinstance(key, str) or not isinstance(value, str) or not value for key, value in assertions.items()):
         raise ValueError("JUDGE-INDEPENDENCE-UNPROVEN")
-    observation = {"run_id":run_root.name, "stdout":completed.stdout, "stderr":completed.stderr, "observation_id":source.get("observation_id", "OBS-S3"), "descriptor_argv":argv, "descriptor_hash":descriptor["evidence_sha256"], "expected_exit":expected_exit, "executions":1, "acceptance_assertions":assertions}
+    observation = {"run_id":run_root.name, "stdout":completed.stdout, "stderr":completed.stderr, "observation_id":source.get("observation_id", "OBS-S3"), "descriptor_argv":argv, "descriptor_hash":descriptor["evidence_sha256"], "candidate_hash":candidate_hash, "expected_exit":expected_exit, "executions":1, "acceptance_assertions":assertions}
     receipt["actual_argv"] = argv
     valid, failure = validate_judge(receipt, observation)
     if not valid:

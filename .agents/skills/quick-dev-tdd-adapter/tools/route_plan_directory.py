@@ -126,9 +126,10 @@ def _tdd_slice_ready_current(
         or result.get("contract_hash") != contract_hash
     ):
         return False
+    if not validate_implementation_successor(run_dir):
+        return False
     return (
-        validate_implementation_successor(run_dir)
-        and _successful_stage_observation(run_dir, "green")
+        _successful_stage_observation(run_dir, "green")
         and _successful_stage_observation(run_dir, "refactor")
         and _planned_files_exist(repository_root, plan_dir, slice_id)
         and _implementation_candidate_current(result, _validation_snapshot(plan_dir, slice_id))
@@ -804,12 +805,37 @@ def _terminal_completion_current(repository_root: Path, plan_dir: Path, contract
     return False
 
 
-def _active_slice_action(repository_root: Path, plan_id: str, slice_id: str) -> str | None:
+def _active_slice_action(repository_root: Path, plan_dir: Path, slice_id: str) -> str | None:
+    contract = json.loads((plan_dir / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+    plan_id = str(contract["plan_id"])
     evidence_root = repository_root / "logs" / "tdd-adapter" / plan_id / slice_id
+    contract_path = plan_dir / "implementation-contract.v1.json"
+    try:
+        current_contract_hash = _sha(contract_path.read_bytes())
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        selected = next(item for item in contract.get("slices", []) if item.get("slice_id") == slice_id)
+        current_selector = selected.get("tdd", {}).get("red", {}).get("test_selector")
+    except (OSError, UnicodeError, json.JSONDecodeError, StopIteration, TypeError, AttributeError):
+        return None
     candidates = sorted((path for path in evidence_root.glob("RUN-*") if path.is_dir()), key=lambda path: path.name, reverse=True)
     actions: list[str] = []
     for run_dir in candidates:
+        # A historical run whose RED was bound to a different contract or
+        # selector is immutable evidence, not an active continuation. It must
+        # not mask a newer run after a dependency or contract repair.
+        try:
+            basis = json.loads((run_dir / "red-basis.v1.json").read_text(encoding="utf-8"))
+            if basis.get("contract_hash") != current_contract_hash or basis.get("test_selector") != current_selector:
+                continue
+        except (OSError, UnicodeError, json.JSONDecodeError, AttributeError):
+            continue
         action = derive_run_state(run_dir)
+        if (action in {"implement", "green", "refactor"}
+                and (run_dir / "implementation-successor.v1.json").is_file()
+                and not validate_implementation_successor(run_dir)):
+            # A successor that no longer matches the current candidate is
+            # immutable stale history; do not block a fresh RED-bound run.
+            continue
         if action is None and (run_dir / "slice-ready-result.json").is_file() and validate_implementation_successor(run_dir):
             action = "slice-terminal"
         if action == "slice-terminal":
@@ -1160,7 +1186,7 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
             # wait from a wait before the next slice.
             authorization_gate["slice_id"] = slice_id
             return authorization_gate
-        active_action = _active_slice_action(repository_root, contract["plan_id"], slice_id)
+        active_action = _active_slice_action(repository_root, target, slice_id)
         if active_action == "validate-slice":
             return {"next_action": "validate-slice", "slice_id": slice_id, "authorizes": []}
         if active_action == "implement":

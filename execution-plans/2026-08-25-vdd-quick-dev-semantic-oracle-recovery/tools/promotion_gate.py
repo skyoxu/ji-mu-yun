@@ -26,7 +26,9 @@ def validate_fixture_observation(observation: dict[str, Any], predecessor_judge:
         if observation.get("mutation_applied") is not True or observation.get("failure_id") != spec["failure_id"]:
             return False, "PROMOTION-FALSE-GREEN-RED"
         return False, spec["failure_id"]
-    return observation.get("failure_id") is None, "" if observation.get("failure_id") is None else "PROMOTION-FALSE-GREEN-RED"
+    if observation.get("mutation_applied") is not False or observation.get("failure_id") is not None:
+        return False, "PROMOTION-FALSE-GREEN-RED"
+    return True, ""
 
 
 def validate_promotion(fixtures: list[dict[str, Any]], predecessor_judge: str | None, writer: str) -> tuple[bool, str]:

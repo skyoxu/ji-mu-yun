@@ -58,7 +58,11 @@ def validate_semantic_verification_coverage(verification: dict[str, Any], active
     if not isinstance(verification, dict):
         return False, "VDD-SEMANTIC-COVERAGE-MISMATCH"
     covered = verification.get("covers_acceptance_ids")
-    if not isinstance(covered, list) or set(covered) != set(active_acceptance_ids):
+    if (not isinstance(covered, list)
+            or not covered
+            or any(not isinstance(item, str) or not item.strip() for item in covered)
+            or len(covered) != len(set(covered))
+            or set(covered) != set(active_acceptance_ids)):
         return False, "VDD-SEMANTIC-COVERAGE-MISMATCH"
     return True, ""
 
@@ -137,7 +141,30 @@ def compile_run_local_semantic_artifacts(run_root: Path) -> dict[str, Any]:
     input_path = run_root / "semantic-intent-input.v1.json"
     if not input_path.is_file():
         raise FileNotFoundError("semantic-intent-input.v1.json")
+    acceptance_path = run_root / "active-acceptance-manifest.v1.json"
+    verification_path = run_root / "semantic-verification-input.v1.json"
+    if not acceptance_path.is_file() or not verification_path.is_file():
+        raise ValueError("VDD-SEMANTIC-MANIFEST-INCOMPLETE")
     value = json.loads(input_path.read_text(encoding="utf-8"))
+    acceptance = json.loads(acceptance_path.read_text(encoding="utf-8"))
+    verification = json.loads(verification_path.read_text(encoding="utf-8"))
+    active_acceptance_ids = acceptance.get("acceptance_ids") if isinstance(acceptance, dict) else None
+    if (not isinstance(acceptance, dict)
+            or acceptance.get("schema_version") != "active-acceptance-manifest.v1"
+            or acceptance.get("producer") != "vdd-manifest-owner"
+            or acceptance.get("immutable") is not True
+            or not isinstance(active_acceptance_ids, list)
+            or not active_acceptance_ids
+            or len(active_acceptance_ids) != len(set(active_acceptance_ids))
+            or any(not isinstance(item, str) or not item for item in active_acceptance_ids)):
+        raise ValueError("VDD-SEMANTIC-MANIFEST-INCOMPLETE")
+    if (not isinstance(verification, dict)
+            or verification.get("schema_version") != "semantic-verification.v1"
+            or verification.get("oracle_id") != "active-acceptance-manifest"):
+        raise ValueError("VDD-SEMANTIC-MANIFEST-INCOMPLETE")
+    covered, coverage_failure = validate_semantic_verification_coverage(verification, set(active_acceptance_ids))
+    if not covered:
+        raise ValueError(coverage_failure)
     accepted, failure_id = validate_semantic_intent(value)
     if not accepted:
         raise ValueError(failure_id)
@@ -149,11 +176,11 @@ def compile_run_local_semantic_artifacts(run_root: Path) -> dict[str, Any]:
         "run_id": run_root.name,
         "semantic_intent": value,
         "semantic_verification": {
-            "acceptance_ids": ["A-SEMANTIC", "A-DESCRIPTOR", "A-JUDGE", "A-COVER", "A-PROMOTION", "A-TERMINAL", "A-BOUNDARY"],
+            "acceptance_ids": sorted(active_acceptance_ids),
             "case_source_refs": value.get("case_source_refs", []),
             "case_producer_ref": value.get("case_producer_ref"),
             "required_case_roles": ["positive", "negative", "mutation"],
-            "evidence_path_requirements": {aid: {"producer": "downstream", "runtime_evidence": True} for aid in ["A-SEMANTIC", "A-DESCRIPTOR", "A-JUDGE", "A-COVER", "A-PROMOTION", "A-TERMINAL", "A-BOUNDARY"]},
+            "evidence_path_requirements": {aid: {"producer": "downstream", "runtime_evidence": True} for aid in sorted(active_acceptance_ids)},
         },
         "verification_cases": [
             {"case_id": "S1-positive", "fixture_class": "positive", "outcome": "accepted", "evidence_state": "observed", "failure_family": None, "failure_id": None},
