@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import pytest
 from write_predecessor_judge_freeze import write
+from build_run_inputs import _predecessor_freeze_hashes
 
 
 def _receipt(path: Path, valid: bool = True) -> None:
@@ -36,3 +37,17 @@ def test_freeze_writer_rejects_non_run_or_sut_identity(tmp_path: Path) -> None:
     receipt.write_text(json.dumps(value, sort_keys=True, separators=(",", ":")), encoding="utf-8")
     with pytest.raises(ValueError):
         write(receipt, tmp_path / "freeze.json")
+
+
+def test_builder_distinguishes_receipt_and_freeze_hashes(tmp_path: Path) -> None:
+    freeze = tmp_path / "predecessor-judge-freeze.v1.json"
+    freeze.write_text(json.dumps({
+        "schema_version": "predecessor-judge-freeze.v1",
+        "producer": "independent-judge",
+        "status": "pass",
+        "slice_id": "S3",
+        "receipt_sha256": "sha256:receipt",
+    }), encoding="utf-8")
+    receipt_hash, freeze_hash = _predecessor_freeze_hashes(freeze)
+    assert receipt_hash == "sha256:receipt"
+    assert freeze_hash != receipt_hash

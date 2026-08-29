@@ -551,7 +551,7 @@ def current_red_handoff(repository_root: Path, plan_dir: Path, slice_id: str) ->
                 and observed["exit_code"] != 0
                 and test_path.is_file()
             ):
-                return {"path": observation.relative_to(root).as_posix(), "sha256": _sha(observation)}
+                return {"path": observation.relative_to(root).as_posix(), "sha256": _sha(observation.read_bytes())}
         except (OSError, UnicodeError, json.JSONDecodeError, TypeError, AttributeError):
             continue
     artifacts = sorted(evidence_root.glob("*/implementation-needed-result.json")) if evidence_root.is_dir() else []
@@ -883,32 +883,46 @@ def _terminal_completion_current(repository_root: Path, plan_dir: Path, contract
 
 
 def _active_slice_action(repository_root: Path, plan_dir: Path, slice_id: str) -> str | None:
-    contract = json.loads((plan_dir / "implementation-contract.v1.json").read_text(encoding="utf-8"))
-    plan_id = str(contract["plan_id"])
-    evidence_root = repository_root / "logs" / "tdd-adapter" / plan_id / slice_id
+    plan_dir = Path(plan_dir)
     contract_path = plan_dir / "implementation-contract.v1.json"
+    if not contract_path.is_file() and not plan_dir.is_absolute():
+        plan_dir = repository_root / "execution-plans" / plan_dir
+        contract_path = plan_dir / "implementation-contract.v1.json"
     try:
-        current_contract_hash = _sha(contract_path.read_bytes())
         contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        plan_id = str(contract["plan_id"])
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError):
+        # Preserve the legacy isolated-test helper. The public router always
+        # supplies a materialized plan directory and therefore never uses it.
+        plan_id = Path(plan_dir).name
+        contract = None
+    evidence_root = repository_root / "logs" / "tdd-adapter" / plan_id / slice_id
+    try:
+        if contract is None:
+            raise OSError("legacy helper has no contract")
+        current_contract_hash = _sha(contract_path)
         selected = next(item for item in contract.get("slices", []) if item.get("slice_id") == slice_id)
         current_selector = selected.get("tdd", {}).get("red", {}).get("test_selector")
     except (OSError, UnicodeError, json.JSONDecodeError, StopIteration, TypeError, AttributeError):
-        return None
+        current_contract_hash = None
+        current_selector = None
     candidates = sorted((path for path in evidence_root.glob("RUN-*") if path.is_dir()), key=lambda path: path.name, reverse=True)
     actions: list[str] = []
     for run_dir in candidates:
         # A historical run whose RED was bound to a different contract or
         # selector is immutable evidence, not an active continuation. It must
         # not mask a newer run after a dependency or contract repair.
+        prior_red_handoff = (run_dir / "prior-red-handoff.v2.json").is_file()
         try:
             basis = json.loads((run_dir / "red-basis.v1.json").read_text(encoding="utf-8"))
-            if basis.get("contract_hash") != current_contract_hash or basis.get("test_selector") != current_selector:
+            if current_contract_hash is not None and (basis.get("contract_hash") != current_contract_hash or basis.get("test_selector") != current_selector):
                 continue
         except (OSError, UnicodeError, json.JSONDecodeError, AttributeError):
-            continue
+            if not prior_red_handoff or not validate_implementation_successor(run_dir):
+                continue
         action = derive_run_state(run_dir)
         if (action in {"implement", "green", "refactor"}
-                and (run_dir / "implementation-successor.v1.json").is_file()
+                and ((run_dir / "implementation-successor.v1.json").is_file() or prior_red_handoff)
                 and not validate_implementation_successor(run_dir)):
             # A successor that no longer matches the current candidate is
             # immutable stale history; do not block a fresh RED-bound run.

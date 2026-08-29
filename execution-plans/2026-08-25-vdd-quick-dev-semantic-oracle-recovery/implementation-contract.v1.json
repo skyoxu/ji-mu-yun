@@ -412,6 +412,7 @@
                 ],
                 "production": [
                     ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+                    ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_fixture_runner.py",
@@ -423,7 +424,8 @@
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s5_promotion_producer.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_s5_owner_red.py",
                     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_s5_promotion_negative.py",
-                    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_predecessor_freeze.py"
+                    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/test_predecessor_freeze.py",
+                    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_recovery.py"
                 ]
             },
             "dependency_closure": [
@@ -453,6 +455,7 @@
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_fixture_runner.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_registry.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/promotion_gate.py",
+                ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/write_predecessor_judge_freeze.py"
             ],
             "exit_predicate": "slice-ready",

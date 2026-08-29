@@ -65,7 +65,7 @@ def prior_red_observation_path(run_dir: Path) -> Path | None:
         (run_dir / "prior-red-handoff.v2.json", "red_observation"),
         (run_dir / "prior-red-successor-evidence.v1.json", "prior_red"),
     )
-    root = next((parent.parent for parent in run_dir.parents if parent.name == "logs"), None)
+    root = next((parent.parent.resolve() for parent in run_dir.parents if parent.name == "logs"), None)
     if root is None:
         return None
     for document, key in documents:
@@ -102,7 +102,8 @@ def derive_run_state(run_dir: Path) -> str | None:
             return None
         if result.get("predicate") == "slice-ready" and result.get("status") == "pass":
             return None
-        return None
+        if result.get("predicate") != "slice-ready" or result.get("status") != "blocked":
+            return None
     local_red_lineage = (
         red.is_file()
         and (run_dir / "red-basis.v1.json").is_file()
@@ -153,7 +154,7 @@ def validate_implementation_successor(run_dir: Path) -> bool:
             return False
         try:
             value = json.loads(handoff.read_text(encoding="utf-8"))
-            root = next((parent.parent for parent in run_dir.parents if parent.name == "logs"), None)
+            root = next((parent.parent.resolve() for parent in run_dir.parents if parent.name == "logs"), None)
             if root is None:
                 return False
             if (
@@ -161,15 +162,36 @@ def validate_implementation_successor(run_dir: Path) -> bool:
                 or value.get("plan_id") != run_dir.parents[1].name
                 or value.get("slice_id") != run_dir.parent.name
                 or value.get("run_id") != run_dir.name
-                or not isinstance(value.get("execution_fingerprint"), str)
-                or not value["execution_fingerprint"]
                 or not isinstance(value.get("test_selector"), str)
                 or not isinstance(value.get("test_sha256"), str)
                 or not isinstance(value.get("expected_failure_ids"), list)
             ):
                 return False
+            plan = root / "execution-plans" / value["plan_id"]
+            contract_path = plan / "implementation-contract.v1.json"
+            contract = json.loads(contract_path.read_text(encoding="utf-8"))
+            selected = next(item for item in contract.get("slices", []) if item.get("slice_id") == value["slice_id"])
+            expected_selector = selected.get("tdd", {}).get("red", {}).get("test_selector")
+            expected_failure_ids = selected.get("tdd", {}).get("red", {}).get("expected_failure_ids")
+            compatibility = contract.get("slice_ready_repair_compatibility", {})
+            if (
+                value.get("current_contract_hash") != _sha(contract_path)
+                or value["test_selector"] != expected_selector
+                or value["expected_failure_ids"] != expected_failure_ids
+                or not isinstance(expected_selector, str)
+                or not isinstance(expected_failure_ids, list)
+                or _sha(root / expected_selector) != value["test_sha256"]
+                or not isinstance(compatibility, dict)
+            ):
+                return False
             reference = value.get("red_observation")
-            if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+            basis_reference = value.get("red_basis")
+            if (
+                not isinstance(reference, dict)
+                or set(reference) != {"path", "sha256"}
+                or not isinstance(basis_reference, dict)
+                or set(basis_reference) != {"path", "sha256"}
+            ):
                 return False
             raw_path, expected_hash = reference["path"], reference["sha256"]
             if not isinstance(raw_path, str) or not isinstance(expected_hash, str) or not expected_hash.startswith("sha256:"):
@@ -186,19 +208,36 @@ def validate_implementation_successor(run_dir: Path) -> bool:
                 return False
             predecessor_run = predecessor.parent.parent
             predecessor_basis = predecessor_run / "red-basis.v1.json"
-            if not predecessor_basis.is_file():
-                return False
-            basis = json.loads(predecessor_basis.read_text(encoding="utf-8"))
+            predecessor_receipt = _implementation_successor_path(predecessor_run)
             if (
-                basis.get("execution_fingerprint") != value["execution_fingerprint"]
-                or basis.get("test_selector") != value["test_selector"]
-                or basis.get("test_sha256") != value["test_sha256"]
-                or basis.get("failure_intent", {}).get("expected_failure_ids") != value["expected_failure_ids"]
+                not predecessor_basis.is_file()
+                or not predecessor_receipt.is_file()
+                or basis_reference.get("path") != predecessor_basis.relative_to(root).as_posix()
+                or basis_reference.get("sha256") != _sha(predecessor_basis)
             ):
                 return False
-            return validate_implementation_successor(predecessor_run)
+            basis = json.loads(predecessor_basis.read_text(encoding="utf-8"))
+            receipt = json.loads(predecessor_receipt.read_text(encoding="utf-8"))
+            if (
+                basis.get("test_selector") != value["test_selector"]
+                or basis.get("test_sha256") != value["test_sha256"]
+                or basis.get("failure_intent", {}).get("expected_failure_ids") != value["expected_failure_ids"]
+                or basis.get("contract_hash") not in compatibility.get("predecessor_contract_hashes", [])
+                or receipt.get("schema_version") != "quick-dev-tdd-adapter.implementation-successor.v1"
+                or receipt.get("status") != "implementation-observed"
+                or receipt.get("red_basis_sha256") != _sha(predecessor_basis)
+                or receipt.get("contract_hash") != basis.get("contract_hash")
+                or receipt.get("validator_hash") != basis.get("validator_hash")
+                or receipt.get("pre_implementation_candidate") == receipt.get("post_implementation_candidate")
+                or not isinstance(receipt.get("changed_paths"), list)
+                or not receipt.get("changed_paths")
+                or not all(isinstance(path, str) and path for path in receipt["changed_paths"])
+                or receipt.get("authorizes") != []
+            ):
+                return False
         except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError, ValueError):
             return False
+        return True
     try:
         basis = json.loads(basis_path.read_text(encoding="utf-8"))
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))

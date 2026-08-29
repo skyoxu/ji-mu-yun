@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from false_green_registry import FIXTURE_REGISTRY
 from semantic_oracle import validate_descriptor, validate_judge, validate_many_to_many_cover, validate_promotion, validate_semantic_intent
 from promotion_gate import validate_fixture_observation
+from artifact_owners import _bound
 
 def _hash(value):
     return "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
@@ -14,23 +15,60 @@ def _hash(value):
 def _file_hash(path):
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
-def _require_artifacts(root):
-    required = ("process-receipt.v1.json", "acceptance-coverage.v1.json")
-    if any(not (root / name).is_file() for name in required):
-        return False
+def _resolve_artifact(root, reference, producer, slice_id):
+    required = {"path", "sha256", "producer", "slice_id", "run_id"}
+    logs = next((parent for parent in root.resolve().parents if parent.name == "logs"), None)
+    if not isinstance(reference, dict) or set(reference) != required or logs is None:
+        raise ValueError("fixture artifact reference is invalid")
+    if reference["producer"] != producer or reference["slice_id"] != slice_id:
+        raise ValueError("fixture artifact reference is invalid")
+    target = (logs.parent / reference["path"]).resolve()
     try:
-        receipt = json.loads((root / required[0]).read_text(encoding="utf-8"))
-        coverage = json.loads((root / required[1]).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return False
-    if receipt.get("producer") != "independent-judge" or receipt.get("status") != "pass" or receipt.get("slice_id") != "S3" or coverage.get("producer") != "coverage-gate" or coverage.get("status") != "pass" or coverage.get("slice_id") != "S4" or coverage.get("run_id") != receipt.get("run_id"):
-        return False
+        target.relative_to(logs)
+    except ValueError as exc:
+        raise ValueError("fixture artifact reference escapes logs") from exc
+    if not target.is_file() or _file_hash(target) != reference["sha256"]:
+        raise ValueError("fixture artifact reference is stale")
+    value = json.loads(target.read_text(encoding="utf-8"))
+    if not _bound(value, producer, slice_id, reference["run_id"]):
+        raise ValueError("fixture artifact reference is unbound")
+    return value
+
+
+def _require_artifacts(root):
+    try:
+        source = json.loads((root / "false-green-fixture-input.v1.json").read_text(encoding="utf-8"))
+        refs = source.get("artifact_refs") if isinstance(source, dict) else None
+        logs = next((parent for parent in root.resolve().parents if parent.name == "logs"), None)
+        if logs is None:
+            artifacts = {
+                "semantic": json.loads((root / "semantic-artifacts.v1.json").read_text(encoding="utf-8")),
+                "descriptor": json.loads((root / "execution-descriptor.v1.json").read_text(encoding="utf-8")),
+                "receipt": json.loads((root / "process-receipt.v1.json").read_text(encoding="utf-8")),
+                "coverage": json.loads((root / "acceptance-coverage.v1.json").read_text(encoding="utf-8")),
+            }
+        else:
+            if not isinstance(refs, dict) or set(refs) != {"semantic", "descriptor", "receipt", "coverage"}:
+                return None
+            artifacts = {
+                "semantic": _resolve_artifact(root, refs["semantic"], "vdd", "S1"),
+                "descriptor": _resolve_artifact(root, refs["descriptor"], "quick-dev", "S2"),
+                "receipt": _resolve_artifact(root, refs["receipt"], "independent-judge", "S3"),
+                "coverage": _resolve_artifact(root, refs["coverage"], "coverage-gate", "S4"),
+            }
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+    receipt, coverage = artifacts["receipt"], artifacts["coverage"]
+    if receipt.get("producer") != "independent-judge" or receipt.get("status") != "pass" or receipt.get("slice_id") != "S3" or coverage.get("producer") != "coverage-gate" or coverage.get("status") != "pass" or coverage.get("slice_id") != "S4":
+        return None
     def digest(value):
         body = {key: item for key, item in value.items() if key != "evidence_sha256"}
         return "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-    return (receipt.get("evidence_sha256") == digest(receipt)
-            and coverage.get("evidence_sha256") == digest(coverage)
-            and coverage.get("receipt_evidence_sha256") == receipt.get("evidence_sha256"))
+    if (receipt.get("evidence_sha256") != digest(receipt)
+            or coverage.get("evidence_sha256") != digest(coverage)
+            or coverage.get("receipt_evidence_sha256") != receipt.get("evidence_sha256")):
+        return None
+    return source, artifacts
 
 def _evaluate(fixture_id, variant):
     spec = FIXTURE_REGISTRY[fixture_id]
@@ -38,18 +76,21 @@ def _evaluate(fixture_id, variant):
     receipt, observation = {}, {}
     acceptance, observations, edges = [], [], []
     root = Path.cwd()
-    if not _require_artifacts(root):
+    resolved = _require_artifacts(root)
+    if resolved is None:
         return False, "PROMOTION-FALSE-GREEN-RED" if spec["validator"] == "promotion" else spec["failure_id"]
+    source, artifacts = resolved
     try:
         if spec["validator"] == "semantic":
-            semantic = json.loads((root / "semantic-artifacts.v1.json").read_text(encoding="utf-8"))["semantic_intent"]
+            semantic = artifacts["semantic"]["semantic_intent"]
         elif spec["validator"] == "descriptor":
-            descriptor = json.loads((root / "execution-descriptor.v1.json").read_text(encoding="utf-8"))["descriptor"]
+            descriptor = artifacts["descriptor"]["descriptor"]
         elif spec["validator"] == "judge":
-            doc = json.loads((root / "process-receipt.v1.json").read_text(encoding="utf-8")); receipt, observation = doc["receipt"], doc["observation"]
+            receipt, observation = artifacts["receipt"]["receipt"], artifacts["receipt"]["observation"]
         elif spec["validator"] == "coverage":
-            doc = json.loads((root / "acceptance-coverage.v1.json").read_text(encoding="utf-8")); acceptance, observations, edges = doc["acceptance_ids"], doc["observation_ids"], doc["edges"]
-    except (OSError, KeyError, json.JSONDecodeError):
+            coverage = artifacts["coverage"]
+            acceptance, observations, edges = coverage["acceptance_ids"], coverage["observation_ids"], coverage["edges"]
+    except KeyError:
         return False, spec["failure_id"]
     if variant == "blocked":
         if spec["validator"] == "semantic": semantic[spec["mutation"]] = ""
@@ -67,15 +108,7 @@ def _evaluate(fixture_id, variant):
     elif spec["validator"] == "coverage": ok, failure = validate_many_to_many_cover(edges, set(acceptance), set(observations))
     else:
         root = Path.cwd()
-        source_path = root / "false-green-fixture-input.v1.json"
-        coverage_path = root / "acceptance-coverage.v1.json"
-        if not source_path.is_file() or not coverage_path.is_file():
-            return False, "PROMOTION-FALSE-GREEN-RED"
-        try:
-            source = json.loads(source_path.read_text(encoding="utf-8"))
-            coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return False, "PROMOTION-FALSE-GREEN-RED"
+        coverage = artifacts["coverage"]
         predecessor = source.get("predecessor_judge_hash")
         if not isinstance(predecessor, str) or not predecessor.startswith("sha256:") or predecessor in {"sha256:judge-predecessor", "sha256:fixture"}:
             return False, "PROMOTION-FALSE-GREEN-RED"
@@ -88,7 +121,7 @@ def _evaluate(fixture_id, variant):
         observed_predecessor = predecessor
         if variant == "blocked" and fixture_id == "FG-08":
             observed_predecessor = "sha256:mutated-predecessor"
-        result = {"fixture_id": fixture_id, "category": spec["category"], "source_ref": spec["source_ref"], "validator": spec["validator"], "predecessor_judge_hash": observed_predecessor, "baseline_hash": _file_hash(root / "process-receipt.v1.json"), "candidate_hash": json.loads((root / "execution-input.v1.json").read_text(encoding="utf-8")).get("candidate_hash"), "coverage_hash": _file_hash(root / "acceptance-coverage.v1.json"), "mutation_hash": _hash({"fixture_id": fixture_id, "field": spec["mutation"]})}
+        result = {"fixture_id": fixture_id, "category": spec["category"], "source_ref": spec["source_ref"], "validator": spec["validator"], "predecessor_judge_hash": observed_predecessor, "baseline_hash": artifacts["receipt"]["evidence_sha256"], "candidate_hash": artifacts["receipt"]["receipt"].get("candidate_hash"), "coverage_hash": artifacts["coverage"]["evidence_sha256"], "mutation_hash": _hash({"fixture_id": fixture_id, "field": spec["mutation"]})}
         if variant == "blocked" and fixture_id == "FG-09":
             result["mutation_hash"] = result["baseline_hash"]
         result["mutation_applied"] = variant == "blocked"
@@ -105,26 +138,27 @@ def main() -> int:
     elif ok and variant == "corrected":
         failure_id = None
     root = Path.cwd()
-    if not (root / "process-receipt.v1.json").is_file() or not (root / "acceptance-coverage.v1.json").is_file():
+    resolved = _require_artifacts(root)
+    if resolved is None:
         return 2
-    baseline = _file_hash(root / "process-receipt.v1.json")
+    _, artifacts = resolved
+    receipt_value, coverage_value = artifacts["receipt"], artifacts["coverage"]
+    baseline = receipt_value["evidence_sha256"]
     mutation = _hash({"fixture_id": fixture_id, "field": spec["mutation"]})
     predecessor_hash = os.environ.get("FG_PREDECESSOR_JUDGE_HASH")
     if not isinstance(predecessor_hash, str) or not predecessor_hash.startswith("sha256:"):
         return 2
     candidate = baseline
     try:
-        execution_input = json.loads((root / "execution-input.v1.json").read_text(encoding="utf-8"))
-        candidate = execution_input.get("candidate_hash")
-        receipt_value = json.loads((root / "process-receipt.v1.json").read_text(encoding="utf-8"))
+        candidate = receipt_value.get("receipt", {}).get("candidate_hash")
         receipt_candidate = receipt_value.get("receipt", {}).get("candidate_hash")
-    except (OSError, json.JSONDecodeError):
+    except (AttributeError, TypeError):
         return 2
     if not isinstance(candidate, str) or not candidate.startswith("sha256:") or candidate == "sha256:fixture":
         return 2
     if candidate != receipt_candidate:
         return 2
-    coverage_hash = _file_hash(root / "acceptance-coverage.v1.json")
+    coverage_hash = coverage_value["evidence_sha256"]
     result = {"fixture_id": fixture_id, "category": spec["category"], "source_ref": spec["source_ref"], "validator": spec["validator"], "expected_failure_id": spec["failure_id"], "baseline_hash": baseline, "candidate_hash": candidate, "coverage_hash": coverage_hash, "predecessor_judge_hash": predecessor_hash, "mutation_hash": mutation, "mutation_applied": variant == "blocked", "variant": variant, "status": "blocked" if variant == "blocked" else "corrected", "failure_id": failure_id or None}
     print(json.dumps(result, sort_keys=True));
     if variant == "blocked":

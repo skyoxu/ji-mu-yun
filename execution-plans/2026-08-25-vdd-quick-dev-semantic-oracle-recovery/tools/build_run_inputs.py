@@ -15,11 +15,48 @@ def _sha(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _predecessor_freeze_hashes(path: Path) -> tuple[str, str]:
+    """Return the immutable S3 receipt hash and the freeze-document hash."""
+    try:
+        freeze = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError("predecessor judge freeze is invalid") from exc
+    receipt_hash = freeze.get("receipt_sha256") if isinstance(freeze, dict) else None
+    if (
+        not isinstance(freeze, dict)
+        or freeze.get("schema_version") != "predecessor-judge-freeze.v1"
+        or freeze.get("producer") != "independent-judge"
+        or freeze.get("status") != "pass"
+        or freeze.get("slice_id") != "S3"
+        or not isinstance(receipt_hash, str)
+        or not receipt_hash.startswith("sha256:")
+    ):
+        raise ValueError("predecessor judge freeze is invalid")
+    return receipt_hash, _sha(path)
+
+
 def _repository_root(run_root: Path) -> Path:
     logs = next((parent for parent in run_root.resolve().parents if parent.name == "logs"), None)
     if logs is None:
         raise ValueError("run root is outside formal logs")
     return logs.parent
+
+
+def _formal_predecessor_result(root: Path, run_root: Path, slice_id: str) -> Path:
+    """Resolve one explicit predecessor result without historical discovery."""
+    pointer = run_root / "predecessor-slice-ready-ref.v1.json"
+    try:
+        reference = json.loads(pointer.read_text(encoding="utf-8"))["result"]
+        result = (root / reference["path"]).resolve()
+        result.relative_to(root / "logs" / "tdd-adapter")
+        if not result.is_file() or _sha(result) != reference["sha256"]:
+            raise ValueError("predecessor result is stale")
+        value = json.loads(result.read_text(encoding="utf-8"))
+        if value.get("slice_id") != slice_id or value.get("run_id") != result.parent.name:
+            raise ValueError("predecessor result identity is invalid")
+        return result
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        raise ValueError("formal predecessor result is invalid") from exc
 
 
 def _formal_artifact(root: Path, run_root: Path, slice_id: str, name: str) -> dict[str, str]:
@@ -95,8 +132,18 @@ def build(plan_dir: Path, run_root: Path, slice_id: str) -> dict[str, object]:
         }
     elif slice_id == "S5":
         predecessor = plan / "predecessor-judge-freeze.v1.json"
+        receipt_hash, freeze_hash = _predecessor_freeze_hashes(predecessor)
+        s4_result = _formal_predecessor_result(root, run_root, "S4")
+        s3_result = _formal_predecessor_result(root, s4_result.parent, "S3")
+        s2_result = _formal_predecessor_result(root, s3_result.parent, "S2")
+        artifact_refs = {
+            "semantic": _formal_artifact(root, s2_result.parent, "S1", "semantic-artifacts.v1.json"),
+            "descriptor": _formal_artifact(root, s3_result.parent, "S2", "execution-descriptor.v1.json"),
+            "receipt": _formal_artifact(root, s4_result.parent, "S3", "process-receipt.v1.json"),
+            "coverage": _formal_artifact(root, run_root, "S4", "acceptance-coverage.v1.json"),
+        }
         inputs = {
-            "false-green-fixture-input.v1.json": {"predecessor_judge_hash": _sha(predecessor), "fixtures": [{"fixture_id": f"FG-{index:02d}", "blocked_argv": [sys.executable, str(plan / "tools" / "false_green_fixture_runner.py"), f"FG-{index:02d}", "blocked"], "corrected_argv": [sys.executable, str(plan / "tools" / "false_green_fixture_runner.py"), f"FG-{index:02d}", "corrected"]} for index in range(1, 10)]},
+            "false-green-fixture-input.v1.json": {"predecessor_judge_hash": receipt_hash, "predecessor_receipt_sha256": receipt_hash, "predecessor_freeze_sha256": freeze_hash, "artifact_refs": artifact_refs, "fixtures": [{"fixture_id": f"FG-{index:02d}", "blocked_argv": [sys.executable, str(plan / "tools" / "false_green_fixture_runner.py"), f"FG-{index:02d}", "blocked"], "corrected_argv": [sys.executable, str(plan / "tools" / "false_green_fixture_runner.py"), f"FG-{index:02d}", "corrected"]} for index in range(1, 10)]},
             "acceptance-coverage.v1.json": refs("S4", "acceptance-coverage.v1.json"),
         }
     else:

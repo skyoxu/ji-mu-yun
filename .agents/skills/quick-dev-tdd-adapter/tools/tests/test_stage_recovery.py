@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -118,3 +119,82 @@ def test_legacy_active_run_requires_successor_when_prior_red_is_reusable(tmp_pat
     assert driver._has_execution_fingerprint(run) is False
     (run / "red-basis.v1.json").write_text(json.dumps({"execution_fingerprint": "sha256:current"}), encoding="utf-8")
     assert driver._has_execution_fingerprint(run) is True
+
+
+def test_prior_red_handoff_requires_current_contract_and_historical_successor(tmp_path):
+    runner = _load("stage_lifecycle_runner")
+    root = tmp_path
+    plan_id, slice_id = "target", "S5"
+    selector = "execution-plans/target/tools/red.py"
+    test_path = root / selector
+    test_path.parent.mkdir(parents=True)
+    test_path.write_text("# RED selector\n", encoding="utf-8")
+    old_contract_hash = "sha256:historical-contract"
+    contract = {
+        "plan_id": plan_id,
+        "slices": [{"slice_id": slice_id, "tdd": {"red": {"test_selector": selector, "expected_failure_ids": ["EXPECTED-RED"]}}}],
+        "slice_ready_repair_compatibility": {"predecessor_contract_hashes": [old_contract_hash]},
+    }
+    contract_path = root / "execution-plans" / plan_id / "implementation-contract.v1.json"
+    contract_path.parent.mkdir(parents=True, exist_ok=True)
+    contract_path.write_text(json.dumps(contract, sort_keys=True), encoding="utf-8")
+    predecessor = root / "logs" / "tdd-adapter" / plan_id / slice_id / "RUN-OLD"
+    red = predecessor / "observations" / "red-observed.json"
+    red.parent.mkdir(parents=True)
+    red.write_text(json.dumps({"stage": "red", "exit_code": 1}), encoding="utf-8")
+    basis = {
+        "contract_hash": old_contract_hash,
+        "validator_hash": "sha256:validator",
+        "test_selector": selector,
+        "test_sha256": "sha256:" + hashlib.sha256(test_path.read_bytes()).hexdigest(),
+        "failure_intent": {"expected_failure_ids": ["EXPECTED-RED"]},
+    }
+    basis_path = predecessor / "red-basis.v1.json"
+    basis_path.write_text(json.dumps(basis, sort_keys=True), encoding="utf-8")
+    successor = {
+        "schema_version": "quick-dev-tdd-adapter.implementation-successor.v1",
+        "status": "implementation-observed",
+        "red_basis_sha256": "sha256:" + hashlib.sha256(basis_path.read_bytes()).hexdigest(),
+        "contract_hash": old_contract_hash,
+        "validator_hash": "sha256:validator",
+        "pre_implementation_candidate": {"candidate_hash": "sha256:before"},
+        "post_implementation_candidate": {"candidate_hash": "sha256:after"},
+        "changed_paths": ["execution-plans/target/tools/owner.py"],
+        "authorizes": [],
+    }
+    (predecessor / "implementation-successor.v1.json").write_text(json.dumps(successor, sort_keys=True), encoding="utf-8")
+    current = predecessor.parent / "RUN-NEW"
+    current.mkdir()
+    handoff = {
+        "schema_version": "quick-dev-tdd-adapter.prior-red-handoff.v2",
+        "plan_id": plan_id,
+        "slice_id": slice_id,
+        "run_id": current.name,
+        "current_contract_hash": "sha256:" + hashlib.sha256(contract_path.read_bytes()).hexdigest(),
+        "execution_fingerprint": "sha256:current-run",
+        "test_selector": selector,
+        "test_sha256": basis["test_sha256"],
+        "expected_failure_ids": ["EXPECTED-RED"],
+        "red_observation": {"path": red.relative_to(root).as_posix(), "sha256": "sha256:" + hashlib.sha256(red.read_bytes()).hexdigest()},
+        "red_basis": {"path": basis_path.relative_to(root).as_posix(), "sha256": "sha256:" + hashlib.sha256(basis_path.read_bytes()).hexdigest()},
+    }
+    handoff_path = current / "prior-red-handoff.v2.json"
+    handoff_path.write_text(json.dumps(handoff, sort_keys=True), encoding="utf-8")
+
+    assert runner.validate_implementation_successor(current) is True
+    observations = current / "observations"
+    observations.mkdir()
+    for stage in ("green", "refactor"):
+        (observations / f"{stage}-observed.json").write_text(
+            json.dumps({"stage": stage, "exit_code": 0}), encoding="utf-8"
+        )
+    (current / "slice-ready-result.json").write_text(
+        json.dumps({"predicate": "slice-ready", "status": "blocked"}), encoding="utf-8"
+    )
+    assert runner.derive_run_state(current) == "slice-terminal"
+    router = _load("route_plan_directory")
+    assert router._active_slice_action(root, contract_path.parent, slice_id) == "validate-slice"
+
+    handoff["expected_failure_ids"] = ["TAMPERED"]
+    handoff_path.write_text(json.dumps(handoff, sort_keys=True), encoding="utf-8")
+    assert runner.validate_implementation_successor(current) is False
