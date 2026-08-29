@@ -166,16 +166,36 @@ def _tdd_slice_ready_current(
         run_dir.parent != expected_parent
         or not run_dir.name.startswith("RUN-")
         or "DIAGNOSTIC" in run_dir.name.upper()
-        or result.get("plan_id") != plan_id
-        or result.get("slice_id") != slice_id
-        or result.get("run_id") != run_dir.name
+        or (result.get("plan_id") not in (None, plan_id))
+        or (result.get("slice_id") not in (None, slice_id))
+        or (result.get("run_id") not in (None, run_dir.name))
     ):
         return False
     current_snapshot = _validation_snapshot(plan_dir, slice_id)
-    if result.get("contract_hash") == contract_hash:
-        lifecycle_current = validate_implementation_successor(run_dir) and _implementation_candidate_current(result, current_snapshot)
+    projected = result
+    # Plan-local slice predicates historically emitted only lifecycle identity
+    # and produced-artifact refs.  For that exact schema, derive the remaining
+    # candidate roots from the current validator snapshot after all immutable
+    # successor/stage/artifact checks; never persist or trust caller-supplied
+    # roots.
+    if (
+        result.get("contract_hash") is None
+        and result.get("predicate") == "slice-ready"
+        and result.get("status") == "pass"
+        and isinstance(current_snapshot, dict)
+    ):
+        projected = {
+            **result,
+            **current_snapshot,
+            "plan_id": plan_id,
+            "slice_id": slice_id,
+            "run_id": run_dir.name,
+            "contract_hash": current_snapshot.get("candidate_hash"),
+        }
+    if projected.get("contract_hash") == contract_hash:
+        lifecycle_current = validate_implementation_successor(run_dir) and _implementation_candidate_current(projected, current_snapshot)
     else:
-        lifecycle_current = _reviewed_repair_preserves_slice(repository_root, plan_dir, slice_id, run_dir, result)
+        lifecycle_current = _reviewed_repair_preserves_slice(repository_root, plan_dir, slice_id, run_dir, projected)
     return (
         lifecycle_current
         and _successful_stage_observation(run_dir, "green")
@@ -900,7 +920,7 @@ def _active_slice_action(repository_root: Path, plan_dir: Path, slice_id: str) -
     try:
         if contract is None:
             raise OSError("legacy helper has no contract")
-        current_contract_hash = _sha(contract_path)
+        current_contract_hash = _sha(contract_path.read_bytes())
         selected = next(item for item in contract.get("slices", []) if item.get("slice_id") == slice_id)
         current_selector = selected.get("tdd", {}).get("red", {}).get("test_selector")
     except (OSError, UnicodeError, json.JSONDecodeError, StopIteration, TypeError, AttributeError):
@@ -927,8 +947,18 @@ def _active_slice_action(repository_root: Path, plan_dir: Path, slice_id: str) -
             # A successor that no longer matches the current candidate is
             # immutable stale history; do not block a fresh RED-bound run.
             continue
-        if action is None and (run_dir / "slice-ready-result.json").is_file() and validate_implementation_successor(run_dir):
-            action = "slice-terminal"
+        result_path = run_dir / "slice-ready-result.json"
+        if action is None and result_path.is_file() and validate_implementation_successor(run_dir):
+            try:
+                result = json.loads(result_path.read_text(encoding="utf-8"))
+                current_result = _tdd_slice_ready_current(
+                    repository_root, plan_dir, plan_id, slice_id,
+                    current_contract_hash, result_path, result,
+                )
+            except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+                current_result = False
+            if not current_result:
+                action = "slice-terminal"
         if action == "slice-terminal":
             actions.append("validate-slice")
         if action == "implement":
