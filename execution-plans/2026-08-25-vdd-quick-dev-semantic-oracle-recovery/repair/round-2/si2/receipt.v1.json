@@ -1,0 +1,260 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "request_binding": {
+    "request": {
+      "finding": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/repair/round-2/repair-finding.md",
+      "target_plan": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery"
+    },
+    "consumer": "vdd-execution-plan",
+    "operation": "repair",
+    "target": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery",
+    "route_identity": "vdd-repair-round-2",
+    "source_roles": {
+      "target_plan": [
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/repair-input-selection-round-2"
+      ],
+      "repair_finding": [
+        "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/repair/round-2/repair-finding.md"
+      ]
+    }
+  },
+  "request_hash": "sha256:16b95620041f69b9ec8a6f5b11557fd783474e3ed9df473889d0c587d47ff461",
+  "target": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery",
+  "route_identity": "vdd-repair-round-2",
+  "repository_identity": {
+    "head": "c80592ce311e5f461d421437ca7424bf19617400",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:69a85530b432c527a77ac53d4424064b67e1dcae6ae2e25a13cc55fae95c0d19",
+    "source_selection_hash": "sha256:59f80dbcaf605c44b6dedbef10c1d55d78d5117877b3064a64eb50f9b4887dea",
+    "selected_source_content_root": "sha256:d21622df11d83bb0c8f99f56f41b751ca3b653f9f20fed0bb846d15217edf024"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-29T06:55:07.035091Z",
+  "contract_hash": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+  "source_manifest": {
+    "path": "s/source-manifest.v1.json",
+    "sha256": "sha256:b25a17ed554fd9ed074803dd803edec6ce0496b1cabf062401842f9269f64fad"
+  },
+  "child_request": {
+    "path": "request.v1.json",
+    "sha256": "sha256:f34a7ce33aed469641d3d93703c198d4d968c6a951ba482ac44b9e8cf3998291"
+  },
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/active-acceptance-manifest.v1.json",
+      "required": false,
+      "sha256_before": "sha256:71827a1fff1d273737197cfea2365e651c1cf67dac389477d67d9e55325b0a01",
+      "sha256_after": "sha256:71827a1fff1d273737197cfea2365e651c1cf67dac389477d67d9e55325b0a01",
+      "size_bytes": 230,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:fa85f3f351e58bc1747dee05716ca095fe2160c35ec0be1b9db4bf94de7f3a46",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/command-registry.v1.json",
+      "required": false,
+      "sha256_before": "sha256:bd5d8b32cad999fb652565449c656723d502596febc7b84483cf2f6fd936b1c9",
+      "sha256_after": "sha256:bd5d8b32cad999fb652565449c656723d502596febc7b84483cf2f6fd936b1c9",
+      "size_bytes": 6975,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:81a7dd90359ebd9d8955152d4ae38223c6045ae8a02eb21304672fb21164ca4f",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/implementation-contract.v1.json",
+      "required": false,
+      "sha256_before": "sha256:37d3c37bebb96c4e8000fe1f4f355cd48ae901a8f0b8a93c338173371dba9f97",
+      "sha256_after": "sha256:37d3c37bebb96c4e8000fe1f4f355cd48ae901a8f0b8a93c338173371dba9f97",
+      "size_bytes": 30875,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:7ac95523b88180245a52fa999921b8dcc7a65df555544c4fd323ce86da45402c",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/repair-input-selection-round-2/plan-sources.md",
+      "required": true,
+      "sha256_before": "sha256:493721dbb8874e53e43a5ad7948b44607be960ae060746a84947f62c28e929e5",
+      "sha256_after": "sha256:493721dbb8874e53e43a5ad7948b44607be960ae060746a84947f62c28e929e5",
+      "size_bytes": 589,
+      "line_count": 11,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:493721dbb8874e53e43a5ad7948b44607be960ae060746a84947f62c28e929e5",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 11
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/requirements-and-acceptance.md",
+      "required": false,
+      "sha256_before": "sha256:ccf3efd2a4a2f5158c1d649a62f7703f05586065c930642fcc083d7abfd5f5cb",
+      "sha256_after": "sha256:ccf3efd2a4a2f5158c1d649a62f7703f05586065c930642fcc083d7abfd5f5cb",
+      "size_bytes": 2045,
+      "line_count": 20,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:ccf3efd2a4a2f5158c1d649a62f7703f05586065c930642fcc083d7abfd5f5cb",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 20
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/semantic-verification.v1.json",
+      "required": false,
+      "sha256_before": "sha256:046836c7bc30d642cbc1c68a075b9101924a207f409d772db972a6ce9463df8b",
+      "sha256_after": "sha256:046836c7bc30d642cbc1c68a075b9101924a207f409d772db972a6ce9463df8b",
+      "size_bytes": 845,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:c0002e4f1eb47cd4b1c3b536b28688ee9e3317a6f49f92940ed5c041580fcbc9",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py",
+      "required": false,
+      "sha256_before": "sha256:010299559ab53e83b8a4a779bd3efc62b9a116ac89b31e7f2454c1c47a7ec627",
+      "sha256_after": "sha256:010299559ab53e83b8a4a779bd3efc62b9a116ac89b31e7f2454c1c47a7ec627",
+      "size_bytes": 7748,
+      "line_count": 123,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:010299559ab53e83b8a4a779bd3efc62b9a116ac89b31e7f2454c1c47a7ec627",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 123
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/run_input_materializer.py",
+      "required": false,
+      "sha256_before": "sha256:8302655abfc52d7a8d9f14d270d64160a98be5a122abd65017245cd61815cc9b",
+      "sha256_after": "sha256:8302655abfc52d7a8d9f14d270d64160a98be5a122abd65017245cd61815cc9b",
+      "size_bytes": 1632,
+      "line_count": 37,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:8302655abfc52d7a8d9f14d270d64160a98be5a122abd65017245cd61815cc9b",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 37
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_oracle.py",
+      "required": false,
+      "sha256_before": "sha256:51eea42c31d6df2cbcddd3aaaf5c9785a48593c8cd6f7d494e4d5d00190e790b",
+      "sha256_after": "sha256:51eea42c31d6df2cbcddd3aaaf5c9785a48593c8cd6f7d494e4d5d00190e790b",
+      "size_bytes": 9406,
+      "line_count": 167,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:51eea42c31d6df2cbcddd3aaaf5c9785a48593c8cd6f7d494e4d5d00190e790b",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 167
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "scripts/python/skill_input_consumption.py",
+      "required": false,
+      "sha256_before": "sha256:921f57f6c63ae2f4bc0766855870eee13c4ccf2c88281ff332444cf0b26c3718",
+      "sha256_after": "sha256:921f57f6c63ae2f4bc0766855870eee13c4ccf2c88281ff332444cf0b26c3718",
+      "size_bytes": 46836,
+      "line_count": 1014,
+      "sensitivity": "credential-bearing",
+      "semantic_snapshot_sha256": "sha256:7f67e07770701eab464227338901c1b18d537846c56e9a7d80fa8ce367c820d1",
+      "redaction_status": "complete",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1014
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "o/semantic-decision.v1.json",
+    "sha256": "sha256:e0bccde505dab4547731613e9304c73a928062f843c10f540519f56ff1335378"
+  },
+  "context_artifact": {
+    "path": "o/skill-input-context.v1.json",
+    "sha256": "sha256:71d2ef3ec904c6acd05747bb1da70e2dc2582730a77628294c69051b612bdec9"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:0a79cba2b977a01d34569629d7376bbd16e833aeaeac1d6e0d41041b12e09013"
+}

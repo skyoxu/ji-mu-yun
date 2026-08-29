@@ -108,6 +108,19 @@ class SkillInputConsumptionTests(unittest.TestCase):
 
         self.assertEqual(["requirements.md"], [relative for _path, relative in expanded])
 
+    def test_planned_file_metadata_is_not_a_source_dependency(self):
+        temporary, root, contract_path, _receipt, _args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        source = root / "requirements.md"
+        source.write_text('{"planned_files":["future/predecessor-judge-freeze.v1.json"]}\n', encoding="utf-8")
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        contract["source_roles"]["requirements"]["reference_kinds"] = ["json-path-field"]
+        contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+        expanded = expand_source_graph(root, contract, "create", {"requirements": ["requirements.md"]})
+
+        self.assertEqual(["requirements.md"], [relative for _path, relative in expanded])
+
     def test_opaque_reference_path_is_hashed_without_recursive_expansion(self):
         temporary, root, contract_path, _receipt, _args = self._fixture()
         self.addCleanup(temporary.cleanup)

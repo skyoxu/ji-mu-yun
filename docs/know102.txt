@@ -1,0 +1,472 @@
+你现在要在 Windows 本地 Codex 环境中，正式执行 Quick Dev TDD，完成以下需求目录的 S1–S6 生产实现：
+
+execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery
+
+一、开始前状态
+
+使用仓库现有 Quick Dev TDD skill、router、lifecycle runner 和 plan-local command registry
+不要使用 bash-only 命令作为正式证明
+
+当前 main 至少应包含：
+
+RED repair candidate：2256bb91e33975fa44698e9bd3e2d112a51aaf1c
+implementation-authorized state：c80592ce311e5f461d421437ca7424bf19617400
+
+开始前确认：
+
+c80592ce311e5f461d421437ca7424bf19617400
+
+是当前 HEAD 的祖先。
+
+先完整读取：
+
+.agents/skills/quick-dev-tdd-adapter/SKILL.md
+需求目录下的：
+implementation-contract.v1.json
+command-registry.v1.json
+plan-state.v1.json
+requirements-and-acceptance.md
+六个 red_s*_*.py
+相关 regression selectors
+
+当前已经完成：
+
+六个真实 RED selector
+external review accepted
+candidate binding
+maintainer authorization
+plan state implementation-authorized
+
+不要重新执行 VDD repair，不要重新创建 RED，不要重新申请 external review，也不要修改 review、authorization 或 governance artifacts。
+
+v4 receipt 是进入实施前的 candidate-bound 证明；实施开始后，授权范围由 v3 whole_plan/high_velocity_tdd receipt 和 implementation-authorized plan state承载。不要因为正常的目标生产代码修改而在每个 slice 后重新触发 external review/authorization 循环。
+
+二、总执行规则
+
+必须使用正式 Quick Dev TDD lifecycle，按以下顺序实施：
+
+S1 → S2 → S3 → S4 → S5 → S6
+
+每个 slice 都必须遵循：
+
+在生产修改前正式运行现有 RED selector。
+确认它以合同规定的 failure ID 失败。
+保存正式 RED observation/evidence。
+创建 implementation successor。
+只修改该 slice allowed_changes.production 允许的生产路径。
+不修改或削弱现有 RED selector。
+GREEN 必须重跑完全相同的 RED selector。
+同时运行该 slice 的 regression selectors。
+REFACTOR 再次运行完全相同的 selector 集合。
+运行该 slice terminal command，形成 slice-ready；S6 最终形成 implementation-complete。
+一个 slice 未达到 slice-ready，不得进入下一个 slice。
+
+禁止：
+
+为了通过测试回滚已有正确行为。
+在测试中绕过真实生产入口。
+根据 selector 文件名、测试名称或环境变量硬编码通过。
+直接把 expected failure ID 填成 observed failure。
+伪造 receipt、coverage、fixture observation 或 terminal evidence。
+使用 glob、mtime 或“唯一历史成功 run”猜测 predecessor。
+提前在 S4 声明 S5/S6 acceptance coverage。
+只修到单元 RED 通过而不完成该 slice 的正式 GREEN/REFACTOR/terminal lifecycle。
+三、S1：真实 semantic manifest 绑定
+
+当前 RED：
+
+tools/red_s1_semantic_behavior.py
+
+预期初始 failure ID：
+
+VDD-SEMANTIC-COVERAGE-MISMATCH
+
+修改 semantic_oracle.py、semantic_artifact_compiler.py 以及合同允许的必要 S1 owner。
+
+实现：
+
+从真实 active-acceptance-manifest.v1.json 读取 acceptance IDs。
+禁止在 compiler 中硬编码七个 acceptance IDs。
+读取真实 semantic-verification-input.v1.json。
+verification 必须精确覆盖 active manifest：
+不缺失。
+不多出。
+不重复。
+case_source_refs 必须：
+为非空字符串列表。
+能通过仓库现有 source-ref 解析规则解析。
+绑定实际来源。
+计算并保存每个 case source 的真实 hash。
+positive、negative、mutation case 必须来自实际 case source/producer 输入。
+禁止 compiler 静态生成固定的三个 verification case。
+semantic artifact 至少保存：
+active_manifest_ref
+active_manifest_sha256
+semantic_verification_ref
+semantic_verification_sha256
+case_source_refs
+case_source_hashes
+case_producer_ref
+acceptance_ids
+verification_cases
+evidence_sha256
+artifact 声明的 acceptance 集合必须能够追溯到 active manifest，不能自我声明。
+
+完成后：
+
+原 S1 RED selector 转绿。
+S1 positive/regression tests 通过。
+正式 S1 lifecycle 达到 slice-ready。
+四、S2：descriptor 强绑定
+
+当前 RED：
+
+tools/red_s2_descriptor_producer.py
+
+预期初始 failure ID：
+
+QD-DESCRIPTOR-BINDING-INCOMPLETE
+
+修改 descriptor_compiler.py、semantic_oracle.validate_descriptor()、S2 input builder/owner 等合同允许路径。
+
+实现：
+
+case_source_refs 必须是非空字符串列表。
+case_producer_ref 必须是非空字符串。
+descriptor 必须包含并验证：
+S1 semantic artifact ref
+S1 semantic artifact SHA-256
+semantic evidence SHA-256
+必须重新读取 semantic artifact，不能只相信 descriptor 中的字符串。
+argv 必须是非空字符串数组。
+shell 必须严格为 False。
+timeout_seconds 必须是正整数。
+cwd 必须：
+是安全的仓库内相对路径。
+解析后仍位于 repository root。
+拒绝绝对路径和目录逃逸。
+descriptor 的：
+run_id
+slice_id
+candidate_hash
+plan identity
+必须与正式 run context 一致。
+owner 只能消费显式 run-local input/ref。
+禁止从仓库日志根目录扫描或猜测输入。
+
+完成后：
+
+原 S2 RED selector 转绿。
+regression selectors 通过。
+正式 S2 lifecycle 达到 slice-ready。
+五、S3：严格的双向 exit 和 candidate 语义
+
+当前 RED：
+
+tools/red_s3_judge_producer.py
+
+预期初始 failure ID：
+
+JUDGE-INDEPENDENCE-UNPROVEN
+
+修改 independent_judge.py、S3 producer/owner 和合同允许的 adapter 路径。
+
+validate_judge() 必须实现：
+
+if executions < 1:
+    reject
+
+if expected_exit == "zero" and exit_code != 0:
+    reject
+
+if expected_exit == "nonzero" and exit_code == 0:
+    reject
+
+同时：
+
+删除当前重复的 exit 判断。
+exit_code 必须是整数，不能接受布尔值。
+executions 必须是正整数。
+expected_exit 只能为 zero 或 nonzero。
+actual_argv == descriptor_argv。
+receipt 和 observation 的以下字段必须一致：
+run_id
+candidate_hash
+descriptor_hash
+descriptor hash 必须绑定真实 S2 artifact。
+executor 和 judge identity 必须独立。
+receipt status 必须根据验证结果派生，不能在验证前写死为 pass。
+S3 只直接证明 A-JUDGE。
+S1/S2 通过 predecessor evidence 引用，不得由 S3 自行宣称已证明全部七个 acceptance IDs。
+
+完成后：
+
+原 S3 RED selector 转绿。
+所有 zero/nonzero、candidate mismatch、argv mismatch 和 identity negative tests 通过。
+正式 S3 lifecycle 达到 slice-ready。
+六、S4：证据级 through-S4 exact cover
+
+当前 RED：
+
+tools/red_s4_coverage_producer.py
+
+预期初始 failure ID：
+
+COVERAGE-EVIDENCE-LINEAGE-UNBOUND
+
+修改 coverage_gate.py、S4 input builder/owner 和相关合同允许路径。
+
+S4 scope 只能是：
+
+A-SEMANTIC
+A-DESCRIPTOR
+A-JUDGE
+A-COVER
+
+不得提前加入：
+
+A-PROMOTION
+A-TERMINAL
+A-BOUNDARY
+
+每条 coverage edge 至少绑定：
+
+{
+  "acceptance_id": "A-JUDGE",
+  "case_id": "CASE-S3-JUDGE-EXIT",
+  "case_source_ref": "...",
+  "producer": "independent-judge",
+  "artifact_ref": ".../process-receipt.v1.json",
+  "artifact_sha256": "sha256:...",
+  "observation_id": "OBS-S3-JUDGE-EXIT",
+  "assertion_id": "ASSERT-JUDGE-EXIT",
+  "assertion_result": true
+}
+
+coverage gate 必须：
+
+安全解析 artifact_ref。
+防止路径逃逸。
+重新读取 artifact。
+重算并比较 artifact_sha256。
+验证 producer、slice、run、candidate 和 predecessor lineage。
+验证 observation 确实存在于 artifact。
+验证 assertion ID 对应实际验证结果。
+只接受 assertion_result is True。
+验证 through-S4 exact cover：
+不缺 edge。
+不多出未来 acceptance。
+不接受重复或无法追溯的 edge。
+
+完成后：
+
+原 S4 RED selector 转绿。
+S4 coverage 只覆盖 through-S4 四个 ID。
+regression selectors 通过。
+正式 S4 lifecycle 达到 slice-ready。
+七、S5：真实九类 false-green mutation
+
+当前 RED：
+
+tools/red_s5_promotion_producer.py
+
+预期初始 failure ID：
+
+PROMOTION-FALSE-GREEN-RED
+
+保留现有九类 registry 和真实 subprocess 执行基础，不要重写已经正确的 subprocess 模型。
+
+修改 fixture runner、promotion gate、owner、freeze producer 和合同允许路径。
+
+实现：
+
+九个 fixture 的 blocked/corrected 必须分别启动真实 validator。
+blocked 必须非零退出。
+corrected 必须零退出。
+observed failure ID 必须来自真实 validator 返回、异常或进程输出。
+禁止把 registry 中的 expected failure ID直接复制成 observed failure。
+corrected observation 必须满足：
+mutation_applied == false
+failure_id is None
+blocked observation 必须满足：
+mutation_applied == true
+observed failure ID 等于该 mutation 的 expected failure ID
+promotion gate 必须读取并验证实际 fixture observation 文件。
+blocked/corrected argv 必须不同。
+同一 pair 的 mutation_spec_hash 应相同。
+blocked/corrected 的 artifact/observation hash 必须不同。
+如当前只有 mutation_hash，明确拆分：
+mutation_spec_hash
+observed_artifact_sha256
+predecessor 必须绑定真实 S3 process receipt hash。
+freeze artifact 明确区分：
+predecessor_receipt_sha256
+predecessor_freeze_sha256
+candidate_hash
+不得把 freeze 文件 hash 命名为 judge/receipt hash。
+聚合前重新执行 S3 receipt 的真实 exit/candidate/descriptor 验证。
+聚合前重新验证 S4 through-S4 coverage 的 edge 和 artifact lineage。
+S5 成功后才加入 A-PROMOTION。
+
+完成后：
+
+原 S5 RED selector 转绿。
+九个 blocked/corrected pair 全部真实执行。
+九个 blocked 全部被正确阻断。
+九个 corrected 全部通过。
+regression selectors 通过。
+正式 S5 lifecycle 达到 slice-ready。
+八、S6：显式 lineage 和可达 terminal lifecycle
+
+当前 RED：
+
+tools/red_s6_terminal_producer.py
+
+预期初始 failure ID：
+
+TERMINAL-LINEAGE-NOT-CLOSED
+
+当前 stage_command.py 中固定阻断 S6 的逻辑已经删除，不要恢复。
+
+S6 必须正常经历：
+
+RED
+implementation successor
+GREEN
+REFACTOR
+terminal
+
+GREEN 和 REFACTOR 必须重跑相同的 S6 RED selector及 regression selectors。
+
+显式 predecessor lineage
+
+由 adapter/plan-local builder 根据正式依赖链生成：
+
+terminal-lineage-input.v1.json
+
+其中：
+
+S1–S5 每个 slice 必须恰好出现一次。
+不允许重复 slice。
+不允许缺失 slice。
+不允许未知 slice。
+每项显式记录：
+slice_id
+run_id
+result_ref 或 result_path
+result_sha256
+顶层绑定：
+S6 run ID
+S6 refactor observation ref/hash
+candidate hash
+implementation contract hash
+command registry hash
+authority hash
+
+terminal_validator 只能消费这些显式引用：
+
+不使用 glob 选 run。
+不使用 mtime。
+不要求历史目录中只有一个成功 run。
+不扫描或猜测历史 run。
+每个引用必须验证 path、slice ID、run ID、status、predicate 和 SHA-256。
+
+删除或重构 write_manifest() 中扫描 S1–S5 历史目录并要求唯一成功 run 的逻辑。
+
+拆分 terminal input 与 closure result
+
+使用以下方向：
+
+terminal-lineage-input.v1.json 绑定 S1–S5 slice-ready、S6 refactor、candidate、contract、registry、authority。
+terminal producer 根据显式 lineage 生成六个 slice 的 terminal evidence。
+terminal predicate 验证：
+六个 slice evidence
+七个 acceptance IDs 的 whole-plan exact cover
+九个 S5 blocked/corrected pair
+candidate/contract/registry/authority 一致性
+predicate 最后写：
+implementation-complete-result.json
+引用 lineage input hash
+引用 terminal evidence root/hash
+
+禁止让较早生成的 manifest 反向绑定尚未产生的 implementation-complete-result.json。
+
+S6 必须增加的测试
+
+成功路径：
+
+complete explicit lineage
+→ publish terminal evidence
+→ validate terminal
+→ implementation-complete/pass
+
+负例至少包括：
+
+predecessor 重复
+predecessor 缺失
+predecessor hash 被篡改
+run ID 不匹配
+candidate hash 过期
+contract hash 过期
+registry hash 过期
+S3 receipt exit 语义无效
+S4 coverage 缺 edge
+S5 fixture 缺 blocked/corrected pair
+S6 refactor observation 缺失
+
+完成后：
+
+原 S6 RED selector 转绿。
+所有 terminal negative tests fail closed。
+terminal success-path test 通过。
+正式 S6 GREEN、REFACTOR、terminal 全部通过。
+最终 predicate 为：
+status=pass
+predicate=implementation-complete
+九、最终自证要求
+
+完成全部 S1–S6 后，给出完整执行证明，不要只报告“已完成”。
+
+至少提供以下表格：
+
+Slice	初始 RED selector	初始 failure ID	GREEN 同 selector	Regression	REFACTOR	Terminal
+
+还必须证明：
+
+六个 RED selector 在生产修改前真实失败。
+failure ID 与合同完全一致。
+六个 selector 文件在整个实施过程中没有被修改。
+GREEN/REFACTOR 重跑完全相同的 selector。
+所有 regression selectors 通过。
+S4 只覆盖 through-S4 四个 ID。
+S5 九个 blocked/corrected pair 全部是真实进程执行结果。
+S6 使用显式 predecessor lineage，不依赖历史扫描。
+最终 acceptance exact cover 恰好是：
+A-SEMANTIC
+A-DESCRIPTOR
+A-JUDGE
+A-COVER
+A-PROMOTION
+A-TERMINAL
+A-BOUNDARY
+最终 implementation-complete-result.json 为 pass。
+所有修改都位于对应 slice 的 allowed_changes 范围内。
+没有修改 external review、authorization 或 governance artifacts。
+没有提前伪造未来 slice evidence。
+没有为了制造或消除 RED 回滚已有正确行为。
+给出最终：
+HEAD commit
+修改文件清单
+每个正式 run ID
+每个 slice-ready result 路径/hash
+implementation-complete result 路径/hash
+
+如果某一步失败：
+
+继续诊断并在当前 slice 的允许范围内修复。
+不要跳过 slice。
+不要修改 RED selector规避问题。
+不要退回 VDD repair 或重新申请 review。
+只有发现 implementation contract 本身无法允许必要生产修改，或发现真实语义矛盾时才停止；停止时必须给出具体文件、字段、命令、failure ID 和最小修复建议。
+
+现在开始正式执行 Quick Dev TDD，不要只输出计划或分析。

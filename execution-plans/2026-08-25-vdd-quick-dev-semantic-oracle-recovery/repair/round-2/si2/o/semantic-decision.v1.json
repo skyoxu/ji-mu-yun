@@ -1,0 +1,24 @@
+{
+  "authorizes": [],
+  "context_artifact_hash": "sha256:71d2ef3ec904c6acd05747bb1da70e2dc2582730a77628294c69051b612bdec9",
+  "execution_identity": "sha256:e72ddbe5b5c630aaa536e2ead87c22a8c2e22e7378b4e08a4b6ce96beb3b9d8e",
+  "producer_role": "semantic-child",
+  "rationale": "Frozen inputs were reviewed.",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "redaction_status": "complete",
+  "schema_version": "skill-semantic-decision.v1",
+  "source_manifest_hash": "sha256:b25a17ed554fd9ed074803dd803edec6ce0496b1cabf062401842f9269f64fad",
+  "source_statuses": {
+    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/active-acceptance-manifest.v1.json": "accepted",
+    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/command-registry.v1.json": "accepted",
+    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/implementation-contract.v1.json": "accepted",
+    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/repair-input-selection-round-2/plan-sources.md": "accepted",
+    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/requirements-and-acceptance.md": "accepted",
+    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/semantic-verification.v1.json": "accepted",
+    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py": "accepted",
+    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/run_input_materializer.py": "accepted",
+    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/semantic_oracle.py": "accepted",
+    "scripts/python/skill_input_consumption.py": "accepted"
+  },
+  "status": "accepted"
+}

@@ -474,7 +474,11 @@ _JSON_REFERENCE_SUFFIXES = {
 def _is_json_reference_field(key: str) -> bool:
     # Diagnostic inventories bind names for audit, not semantic dependencies.
     # Treating them as source edges recursively imports every historical path.
-    if key.casefold() == "affected_paths":
+    # Planned/future file declarations are also metadata: they describe files
+    # that a later lifecycle slice may create, not sources consumed by the
+    # current Skill-input operation. Following them makes a repair fail on
+    # intentionally absent runtime artifacts (for example predecessor freezes).
+    if key.casefold() in {"affected_paths", "planned_files", "planned_new_files"}:
         return False
     if key.casefold() == "$ref":
         return True

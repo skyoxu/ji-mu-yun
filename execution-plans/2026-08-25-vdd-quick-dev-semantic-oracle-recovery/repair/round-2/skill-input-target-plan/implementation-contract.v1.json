@@ -84,8 +84,6 @@
                 "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-vdd-quick-dev-semantic-oracle-recovery.json",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/active-acceptance-manifest.v1.json",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/semantic-verification.v1.json",
-                "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py",
-                "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/run_input_materializer.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/acceptance-coverage.v1.json",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/evidence-snapshot.v1.json",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/execution-descriptor.v1.json",

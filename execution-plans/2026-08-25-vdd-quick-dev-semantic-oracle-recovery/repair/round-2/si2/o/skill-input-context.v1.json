@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-29T06:55:06.956314Z",
+  "omitted_items": 0,
+  "schema_version": "skill-input-context.v1",
+  "sections": [
+    {
+      "content": "The frozen repair plan is vdd-quick-dev-semantic-oracle-recovery. Its immutable acceptance manifest covers A-SEMANTIC, A-DESCRIPTOR, A-JUDGE, A-COVER, A-PROMOTION, A-TERMINAL, and A-BOUNDARY. The implementation contract defines plan-ready lifecycle state, six slices, ownership boundaries, dependencies, and terminal completion criteria.",
+      "title": "Authority and Scope"
+    },
+    {
+      "content": "The command registry defines green, refactor, and terminal invocations for slices S1 through S6. Run-input construction and materialization bind each slice to explicit predecessor artifacts and hashes. The semantic oracle validates semantic intent, descriptor boundaries, independent judging, many-to-many coverage, promotion fixtures, and local artifact compilation.",
+      "title": "Execution Flow"
+    },
+    {
+      "content": "Requirements map each acceptance to observable evidence and requires a closed path from manifest through oracle, descriptor, receipt, observation, and coverage. Semantic verification requires positive, negative, and mutation cases with an independent judge. Shared input helpers enforce contained sources, bounded reference expansion, immutable identities, and redacted summaries.",
+      "title": "Acceptance and Safeguards"
+    }
+  ],
+  "source_manifest_hash": "sha256:b25a17ed554fd9ed074803dd803edec6ce0496b1cabf062401842f9269f64fad",
+  "truncated": false
+}
