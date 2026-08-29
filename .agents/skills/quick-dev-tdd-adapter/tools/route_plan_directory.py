@@ -256,6 +256,61 @@ def _minimal_authorization_binding_is_current(root: Path, binding: object) -> bo
     return binding["sha256"] in {raw, repository_text, canonical}
 
 
+def _repair_successor_review_lineage_is_valid(
+    root: Path,
+    review_input: dict[str, object],
+    review: dict[str, object],
+    conformance: dict[str, object],
+    binding: dict[str, object],
+    receipt: dict[str, object],
+) -> bool:
+    """Accept only the exact reviewed semantic-repair predecessor/successor chain."""
+    try:
+        predecessor_freeze = review_input["source_freeze"]
+        predecessor_mapping = review_input["requirements_mapping"]
+        successor_freeze = receipt["source_freeze"]
+        successor_mapping = receipt["requirements_mapping"]
+        if not all(
+            _minimal_authorization_binding_is_current(root, value)
+            for value in (predecessor_freeze, predecessor_mapping, successor_freeze, successor_mapping)
+        ):
+            return False
+        successor = json.loads((root / successor_freeze["path"]).read_text(encoding="utf-8"))
+        repair_ref = successor.get("repair_input")
+        if (
+            successor.get("schema_version") != "vdd-source-freeze-manifest.v1"
+            or successor.get("authorizes") != []
+            or successor.get("requirements_manifest") != successor_mapping
+            or not _minimal_authorization_binding_is_current(root, repair_ref)
+        ):
+            return False
+        repair = json.loads((root / repair_ref["path"]).read_text(encoding="utf-8"))
+        frozen = repair.get("frozen_authority")
+        handoff = repair.get("semantic_handoff")
+        if (
+            repair.get("schema_version") != "vdd-repair-input.v1"
+            or repair.get("authorizes") != []
+            or not isinstance(frozen, dict)
+            or not isinstance(handoff, dict)
+            or frozen.get("source_manifest") != predecessor_freeze
+            or repair.get("prior_requirements_manifest") != predecessor_mapping
+            or repair.get("repaired_requirements_manifest") != successor_mapping
+            or repair.get("review_run") != receipt.get("review_run")
+            or repair.get("semantic_handoff_hash") != review.get("semantic_handoff_hash")
+            or handoff.get("frozen_authority", {}).get("source_manifest_hash") != predecessor_freeze.get("sha256")
+            or handoff.get("requirements_manifest_hash") != predecessor_mapping.get("sha256")
+            or conformance.get("source_manifest_hash") != successor_freeze.get("sha256")
+            or conformance.get("requirements_manifest_hash") != successor_mapping.get("sha256")
+        ):
+            return False
+        return (
+            binding.get("source_freeze") == successor_freeze
+            and binding.get("requirements_mapping") == successor_mapping
+        )
+    except (KeyError, OSError, UnicodeError, json.JSONDecodeError, TypeError):
+        return False
+
+
 def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) -> bool:
     """Authorization requires an exact accepted review and conformant mapping."""
     try:
@@ -300,7 +355,7 @@ def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) ->
             "ambiguity_ids",
             "affected_requirement_ids",
         )
-        if (
+        direct_authority_match = (
             review.get("schema_version") != "vdd-review-run.v1"
             or review.get("status") != "accepted"
             or review.get("decision") != "accepted"
@@ -310,8 +365,6 @@ def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) ->
             or conformance.get("status") != "conformant"
             or conformance.get("errors") != []
             or conformance.get("authorizes") != []
-            or conformance.get("source_manifest_hash") != required_bindings.get("source_manifest_hash")
-            or conformance.get("requirements_manifest_hash") != required_bindings.get("requirements_manifest_hash")
             or binding.get("schema_version") != "vdd-review-candidate-binding.v1"
             or binding.get("status") != "accepted"
             or binding.get("decision") != "accepted"
@@ -319,9 +372,18 @@ def _review_and_conformance_authorize(root: Path, receipt: dict[str, object]) ->
             or binding.get("review_run") != review_ref
             or binding.get("conformance_result") != conformance_ref
             or binding.get("source_freeze") != receipt.get("source_freeze")
-            or binding.get("source_freeze") != review_input.get("source_freeze")
             or binding.get("requirements_mapping") != receipt.get("requirements_mapping")
-            or binding.get("requirements_mapping") != review_input.get("requirements_mapping")
+        )
+        if direct_authority_match:
+            return False
+        same_reviewed_identity = (
+            conformance.get("source_manifest_hash") == required_bindings.get("source_manifest_hash")
+            and conformance.get("requirements_manifest_hash") == required_bindings.get("requirements_manifest_hash")
+            and binding.get("source_freeze") == review_input.get("source_freeze")
+            and binding.get("requirements_mapping") == review_input.get("requirements_mapping")
+        )
+        if not same_reviewed_identity and not _repair_successor_review_lineage_is_valid(
+            root, review_input, review, conformance, binding, receipt
         ):
             return False
 
