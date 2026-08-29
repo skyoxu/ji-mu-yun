@@ -30,7 +30,14 @@ def prepare_terminal_observation(plan_dir: Path, s6_run: Path) -> dict[str, obje
     if lineage.get("schema_version") != "quick-dev-tdd-adapter.terminal-lineage-input.v1" or lineage.get("plan_id") != expected_plan_id or lineage.get("slice_id") != "S6" or lineage.get("run_id") != s6_run.name:
         raise ValueError("terminal lineage input identity is invalid")
     supplied = lineage.get("entries")
-    if not isinstance(supplied, list) or {item.get("slice_id") for item in supplied if isinstance(item, dict)} != {f"S{index}" for index in range(1, 6)}:
+    expected_slice_ids = {f"S{index}" for index in range(1, 6)}
+    supplied_slice_ids = [item.get("slice_id") for item in supplied if isinstance(item, dict)] if isinstance(supplied, list) else []
+    if (
+        not isinstance(supplied, list)
+        or len(supplied) != len(expected_slice_ids)
+        or set(supplied_slice_ids) != expected_slice_ids
+        or len(set(supplied_slice_ids)) != len(supplied_slice_ids)
+    ):
         raise ValueError("terminal lineage input must name S1-S5 exactly")
     entries = []
     for item in supplied:

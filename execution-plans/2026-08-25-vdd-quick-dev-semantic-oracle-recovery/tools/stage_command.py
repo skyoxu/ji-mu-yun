@@ -72,6 +72,10 @@ def main() -> int:
     regression_result = subprocess.run([sys.executable, "-m", "pytest", *selectors], cwd=repository_root, env=red_env, check=False)
     if regression_result.returncode != 0:
         return regression_result.returncode
+    # S6 has no GREEN/REFACTOR artifact producer. Its only producer is the
+    # terminal validator, invoked by the registered terminal command above.
+    if args.slice == "S6":
+        return 0
     owner_result = subprocess.run(command, cwd=repository_root.parent, check=False)
     return owner_result.returncode
 
