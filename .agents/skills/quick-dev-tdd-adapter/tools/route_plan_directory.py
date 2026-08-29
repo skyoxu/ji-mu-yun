@@ -351,6 +351,35 @@ def _high_velocity_plan_authorize(root: Path, receipt: dict[str, object]) -> boo
     return _review_and_conformance_authorize(root, receipt)
 
 
+def _candidate_bound_plan_authorize(root: Path, plan_dir: Path, receipt: dict[str, object]) -> bool:
+    """Validate a reviewed candidate-bound v4 authorization and its evidence chain."""
+    required = (
+        "implementation_contract", "command_registry", "authority_manifest",
+        "review_candidate_binding", "source_freeze", "requirements_mapping",
+    )
+    if (
+        receipt.get("schema_version") != "quick-dev-tdd-adapter.implementation-authorization.v4"
+        or receipt.get("plan_id") != plan_dir.name.removeprefix("2026-08-25-")
+        or receipt.get("owner") != "maintainer"
+        or receipt.get("mode") != "high_velocity_tdd"
+        or receipt.get("authorizes") != ["implementation-authorized"]
+        or not all(_minimal_authorization_binding_is_current(root, receipt.get(field)) for field in required)
+    ):
+        return False
+    try:
+        binding_ref = receipt["review_candidate_binding"]
+        binding = json.loads((root / binding_ref["path"]).read_text(encoding="utf-8"))
+        augmented = dict(receipt)
+        for field in ("review_input", "review_run", "conformance_result"):
+            augmented[field] = binding.get(field)
+    except (KeyError, OSError, UnicodeError, json.JSONDecodeError, TypeError):
+        return False
+    return (
+        _review_and_conformance_authorize(root, augmented)
+        and _candidate_commit_is_current(root, plan_dir, receipt)
+    )
+
+
 def _candidate_commit_is_current(root: Path, plan_dir: Path, receipt: dict[str, object]) -> bool:
     """Validate candidate commit/tree for the normative closure only.
 
@@ -964,6 +993,19 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
     if lifecycle_state == "implementation-authorized":
         if document["authorizes"] in (["implementation-authorized"], ["plan-ready", "implementation-authorized"]):
             root = plan_dir.resolve().parents[1]
+            candidate_receipts = sorted(plan_dir.glob("implementation-authorization-receipt.v4.json"))
+            if candidate_receipts:
+                try:
+                    candidate_receipt = json.loads(candidate_receipts[-1].read_text(encoding="utf-8"))
+                    if _candidate_bound_plan_authorize(root, plan_dir, candidate_receipt):
+                        return None
+                except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+                    pass
+                return {
+                    "next_action": "external-repair-required",
+                    "reason": "candidate-bound-authorization-stale",
+                    "authorizes": [],
+                }
             velocity_receipts = sorted(plan_dir.glob("implementation-authorization-receipt.v3.json"))
             if velocity_receipts:
                 try:
