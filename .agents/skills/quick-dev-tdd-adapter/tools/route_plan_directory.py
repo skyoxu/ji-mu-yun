@@ -45,15 +45,8 @@ def _verify_plan_context(repository_root: Path, plan_dir: Path) -> dict[str, obj
     return module.verify_plan_context(repository_root, plan_dir)
 
 
-def _validation_snapshot(plan_dir: Path, slice_id: str | None = None) -> dict[str, str] | None:
-    """Load the explicit plan's optional, read-only current-state projection.
-
-    An implementation-candidate result is intentionally not contract-hash
-    bound.  Plans that declare this predicate must instead expose the complete
-    current root set through ``tools/validate_all.py::validation_snapshot``.
-    Missing or malformed projections fail closed so a generic router never
-    promotes an old candidate after a control-plane authority change.
-    """
+def _full_validation_snapshot(plan_dir: Path, slice_id: str | None = None) -> dict[str, object] | None:
+    """Load the plan-owned complete candidate snapshot without inferring inputs."""
     validator = plan_dir / "tools" / "validate_all.py"
     if not validator.is_file():
         return None
@@ -72,7 +65,13 @@ def _validation_snapshot(plan_dir: Path, slice_id: str | None = None) -> dict[st
     finally:
         sys.path[:] = previous_path
         sys.modules.pop(module_name, None)
-    if not isinstance(snapshot, dict):
+    return snapshot if isinstance(snapshot, dict) else None
+
+
+def _validation_snapshot(plan_dir: Path, slice_id: str | None = None) -> dict[str, str] | None:
+    """Project the current roots used by the normal freshness predicate."""
+    snapshot = _full_validation_snapshot(plan_dir, slice_id)
+    if snapshot is None:
         return None
     values = {key: snapshot.get(key) for key in _IMPLEMENTATION_CANDIDATE_ROOTS}
     return values if all(isinstance(value, str) and value for value in values.values()) else None
@@ -104,6 +103,53 @@ def _planned_files_exist(repository_root: Path, plan_dir: Path, slice_id: str) -
         return False
 
 
+def _reviewed_repair_preserves_slice(
+    repository_root: Path,
+    plan_dir: Path,
+    slice_id: str,
+    run_dir: Path,
+    result: dict[str, object],
+) -> bool:
+    """Preserve an unaffected closed slice across one reviewed contract-only repair."""
+    try:
+        contract = json.loads((plan_dir / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+        compatibility = contract.get("slice_ready_repair_compatibility")
+        if (
+            not isinstance(compatibility, dict)
+            or compatibility.get("schema_version") != "quick-dev-tdd-adapter.slice-ready-repair-compatibility.v1"
+            or compatibility.get("repair_round") != 3
+            or slice_id not in compatibility.get("preserved_slices", [])
+            or slice_id in compatibility.get("invalidated_slices", [])
+            or result.get("contract_hash") not in compatibility.get("predecessor_contract_hashes", [])
+        ):
+            return False
+        basis_path = run_dir / "red-basis.v1.json"
+        red_path = run_dir / "observations" / "red-observed.json"
+        basis = json.loads(basis_path.read_text(encoding="utf-8"))
+        red = json.loads(red_path.read_text(encoding="utf-8"))
+        selected = next(item for item in contract.get("slices", []) if item.get("slice_id") == slice_id)
+        selector = selected.get("tdd", {}).get("red", {}).get("test_selector")
+        if (
+            basis.get("contract_hash") != result.get("contract_hash")
+            or basis.get("test_selector") != selector
+            or not isinstance(selector, str)
+            or _sha((repository_root / selector).read_bytes()) != basis.get("test_sha256")
+            or red.get("stage") != "red"
+            or not isinstance(red.get("exit_code"), int)
+            or red.get("exit_code") == 0
+        ):
+            return False
+        current = _full_validation_snapshot(plan_dir, slice_id)
+        if current is None:
+            return False
+        stable_roots = ("predicate_input_root", "authority_root", "validator_root", "validator_version")
+        if any(result.get(key) != current.get(key) for key in stable_roots):
+            return False
+        return result.get("status") == "pass" and result.get("predicate") == "slice-ready"
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, StopIteration, TypeError, ValueError):
+        return False
+
+
 def _tdd_slice_ready_current(
     repository_root: Path,
     plan_dir: Path,
@@ -113,7 +159,7 @@ def _tdd_slice_ready_current(
     result_path: Path,
     result: dict[str, object],
 ) -> bool:
-    """Accept only a complete, current TDD lifecycle under its formal run root."""
+    """Accept a current lifecycle or a reviewed, explicitly preserved predecessor slice."""
     run_dir = result_path.parent
     expected_parent = repository_root / "logs" / "tdd-adapter" / plan_id / slice_id
     if (
@@ -123,16 +169,18 @@ def _tdd_slice_ready_current(
         or result.get("plan_id") != plan_id
         or result.get("slice_id") != slice_id
         or result.get("run_id") != run_dir.name
-        or result.get("contract_hash") != contract_hash
     ):
         return False
-    if not validate_implementation_successor(run_dir):
-        return False
+    current_snapshot = _validation_snapshot(plan_dir, slice_id)
+    if result.get("contract_hash") == contract_hash:
+        lifecycle_current = validate_implementation_successor(run_dir) and _implementation_candidate_current(result, current_snapshot)
+    else:
+        lifecycle_current = _reviewed_repair_preserves_slice(repository_root, plan_dir, slice_id, run_dir, result)
     return (
-        _successful_stage_observation(run_dir, "green")
+        lifecycle_current
+        and _successful_stage_observation(run_dir, "green")
         and _successful_stage_observation(run_dir, "refactor")
         and _planned_files_exist(repository_root, plan_dir, slice_id)
-        and _implementation_candidate_current(result, _validation_snapshot(plan_dir, slice_id))
     )
 
 

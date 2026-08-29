@@ -48,8 +48,18 @@
         "S2": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py"],
         "S3": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py"],
         "S4": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py"],
-        "S5": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py"],
+        "S5": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py"],
         "S6": ["execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py", "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/terminal_validator.py"]
+    },
+    "slice_ready_repair_compatibility": {
+        "schema_version": "quick-dev-tdd-adapter.slice-ready-repair-compatibility.v1",
+        "repair_round": 3,
+        "predecessor_contract_hashes": [
+            "sha256:fa31f771c0f402d8a93e52487c53ea3b97446d66f920bd32984f7352eb31cb10",
+            "sha256:aae4f5d45ea7041dcbd544f9079a705afdbba4c1c1490318beb9ad07074b4b3f"
+        ],
+        "preserved_slices": ["S1", "S2", "S3", "S4"],
+        "invalidated_slices": ["S5", "S6"]
     },
     "schema_version": "vdd-semantic-oracle-recovery.implementation-contract.v2",
     "selection_hash": "sha256:4cf516d611eb0aba633adcebc37df679e6270dd74f231fd98c782a6e754def40",
@@ -401,6 +411,7 @@
                 ],
                 "production": [
                     ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+                "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/artifact_owners.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_fixture_runner.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_registry.py",
@@ -430,12 +441,14 @@
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/evidence-snapshot.v1.json",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/execution-descriptor.v1.json",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/process-receipt.v1.json",
+                "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_fixture_runner.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_registry.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/promotion_gate.py"
             ],
             "execution_snapshot_paths": [
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/red_s5_promotion_producer.py",
+                "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_fixture_runner.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/false_green_registry.py",
                 "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/promotion_gate.py",

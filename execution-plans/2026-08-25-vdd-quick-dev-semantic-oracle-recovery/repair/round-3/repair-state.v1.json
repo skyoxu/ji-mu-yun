@@ -1,0 +1,22 @@
+{
+  "schema_version": "vdd-repair-state.v1",
+  "plan_id": "vdd-quick-dev-semantic-oracle-recovery",
+  "round": 3,
+  "status": "repair-complete-review-required",
+  "round_three_trigger": "high_risk_boundary_changed",
+  "blocks_execution": true,
+  "affected_slices": [
+    "S5",
+    "S6"
+  ],
+  "preserved_slices": [
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+  ],
+  "finding": "repair/round-3/repair-finding.md",
+  "authorizes": [
+    "plan-ready"
+  ]
+}
