@@ -6,11 +6,12 @@
   "round_three_trigger": "high_risk_boundary_changed",
   "predecessor_contract_hashes": [
     "sha256:fa31f771c0f402d8a93e52487c53ea3b97446d66f920bd32984f7352eb31cb10",
-    "sha256:aae4f5d45ea7041dcbd544f9079a705afdbba4c1c1490318beb9ad07074b4b3f"
+    "sha256:aae4f5d45ea7041dcbd544f9079a705afdbba4c1c1490318beb9ad07074b4b3f",
+    "sha256:4f7f118320a5026847e682d06ca8cef80e5c2a898b52373c74bbb8cb460780eb"
   ],
   "repaired_contract_hashes": [
-    "sha256:c6516a4700f77276feb263e8e387f3fdc544700670acf1d27e8fe5162abd0601",
-    "sha256:e5eaa93a6e3558ba213cd19934081eb7fd1637f7a5776783780eb4463924d63d"
+    "sha256:ef13c4ac8879fab2a22b1ecb8abc40fe3f8e6144104e7589dd6602df22259d56",
+    "sha256:b15f1e878d93479b90c3115c5c46e9e37f747ef45438aa84d8f4698452a99fb4"
   ],
   "changed_paths": [
     ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
@@ -19,7 +20,8 @@
     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/governance/implementation-authorization-invalidation.v3.s5-write-set.json",
     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/repair/round-3/repair-finding.md",
     "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/repair/round-3/repair-state.v1.json",
-    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/repair/round-3/repair-closure.json"
+    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/repair/round-3/repair-closure.json",
+    "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/governance/implementation-authorization-invalidation.v4.s1-s4-predecessor-hash.json"
   ],
   "allowed_repair_scope": [
     "S5",

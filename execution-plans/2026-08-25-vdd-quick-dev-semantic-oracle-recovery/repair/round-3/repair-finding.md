@@ -8,3 +8,4 @@
 - Contract gap: `execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/tools/build_run_inputs.py` is not in the S5 production write set.
 - Bounded repair: add that path to the S5 production owner/read/snapshot sets and preserve only S1-S4 results bound to the predecessor contract. S5/S6 remain invalidated.
 - Historical evidence: the failed S5 GREEN run remains immutable and non-promotable.
+- Compatibility correction: the formal S1-S4 slice-ready results are bound to `sha256:4f7f118320a5026847e682d06ca8cef80e5c2a898b52373c74bbb8cb460780eb`; add that immutable predecessor contract to the reviewed preservation allow-list. S5 and S6 remain invalidated.

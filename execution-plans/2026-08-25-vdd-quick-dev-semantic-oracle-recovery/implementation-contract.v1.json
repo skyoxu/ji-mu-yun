@@ -56,7 +56,8 @@
         "repair_round": 3,
         "predecessor_contract_hashes": [
             "sha256:fa31f771c0f402d8a93e52487c53ea3b97446d66f920bd32984f7352eb31cb10",
-            "sha256:aae4f5d45ea7041dcbd544f9079a705afdbba4c1c1490318beb9ad07074b4b3f"
+            "sha256:aae4f5d45ea7041dcbd544f9079a705afdbba4c1c1490318beb9ad07074b4b3f",
+            "sha256:4f7f118320a5026847e682d06ca8cef80e5c2a898b52373c74bbb8cb460780eb"
         ],
         "preserved_slices": ["S1", "S2", "S3", "S4"],
         "invalidated_slices": ["S5", "S6"]
