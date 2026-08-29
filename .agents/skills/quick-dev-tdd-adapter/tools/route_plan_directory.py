@@ -351,7 +351,7 @@ def _high_velocity_plan_authorize(root: Path, receipt: dict[str, object]) -> boo
     return _review_and_conformance_authorize(root, receipt)
 
 
-def _candidate_bound_plan_authorize(root: Path, plan_dir: Path, receipt: dict[str, object]) -> bool:
+def _candidate_bound_plan_authorize(root: Path, plan_dir: Path, plan_id: str, receipt: dict[str, object]) -> bool:
     """Validate a reviewed candidate-bound v4 authorization and its evidence chain."""
     required = (
         "implementation_contract", "command_registry", "authority_manifest",
@@ -359,7 +359,7 @@ def _candidate_bound_plan_authorize(root: Path, plan_dir: Path, receipt: dict[st
     )
     if (
         receipt.get("schema_version") != "quick-dev-tdd-adapter.implementation-authorization.v4"
-        or receipt.get("plan_id") != plan_dir.name.removeprefix("2026-08-25-")
+        or receipt.get("plan_id") != plan_id
         or receipt.get("owner") != "maintainer"
         or receipt.get("mode") != "high_velocity_tdd"
         or receipt.get("authorizes") != ["implementation-authorized"]
@@ -997,7 +997,7 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
             if candidate_receipts:
                 try:
                     candidate_receipt = json.loads(candidate_receipts[-1].read_text(encoding="utf-8"))
-                    if _candidate_bound_plan_authorize(root, plan_dir, candidate_receipt):
+                    if _candidate_bound_plan_authorize(root, plan_dir, plan_id, candidate_receipt):
                         return None
                 except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
                     pass
