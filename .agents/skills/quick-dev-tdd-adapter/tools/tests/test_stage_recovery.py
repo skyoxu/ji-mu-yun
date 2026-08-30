@@ -131,6 +131,21 @@ def test_prior_red_handoff_execution_fingerprint_reuses_green_only_run(tmp_path)
     assert driver._has_execution_fingerprint(run) is True
 
 
+def test_terminal_accepts_prior_red_handoff_with_green_and_refactor(tmp_path):
+    driver = _load("loop_plan_directory")
+    run = tmp_path / "logs" / "tdd-adapter" / "target" / "S5" / "RUN-HANDOFF"
+    observations = run / "observations"
+    observations.mkdir(parents=True)
+    prior = run.parent / "RUN-RED" / "observations" / "red-observed.json"
+    prior.parent.mkdir(parents=True)
+    prior.write_text(json.dumps({"stage": "red", "exit_code": 1}), encoding="utf-8")
+    digest = "sha256:" + __import__("hashlib").sha256(prior.read_bytes()).hexdigest()
+    (run / "prior-red-handoff.v2.json").write_text(json.dumps({"red_observation": {"path": prior.relative_to(tmp_path).as_posix(), "sha256": digest}}), encoding="utf-8")
+    (observations / "green-observed.json").write_text(json.dumps({"stage": "green", "exit_code": 0}), encoding="utf-8")
+    (observations / "refactor-observed.json").write_text(json.dumps({"stage": "refactor", "exit_code": 0}), encoding="utf-8")
+    assert driver.prior_red_observation_path(run) is not None
+
+
 def test_prior_red_handoff_requires_current_contract_and_historical_successor(tmp_path):
     runner = _load("stage_lifecycle_runner")
     root = tmp_path

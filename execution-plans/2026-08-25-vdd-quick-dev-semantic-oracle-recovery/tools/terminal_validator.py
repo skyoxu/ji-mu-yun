@@ -56,6 +56,14 @@ def prepare_terminal_observation(plan_dir: Path, s6_run: Path) -> dict[str, obje
     fingerprint = "sha256:" + hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
     observation = {"stage": "terminal", "run_id": s6_run.name, "command_id": "s6-terminal", "exit_code": 0, "execution_fingerprint": fingerprint, "inputs_hash": fingerprint}
     destination = s6_run / "observations" / "terminal-observed.json"
+    if destination.is_file():
+        try:
+            existing = json.loads(destination.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError("existing terminal observation is invalid") from exc
+        if existing != observation:
+            raise ValueError("existing terminal observation is stale")
+        return observation
     _create(destination, (json.dumps(observation, sort_keys=True) + "\n").encode("utf-8"))
     return observation
 
@@ -79,25 +87,76 @@ def _create(path: Path, payload: bytes) -> None:
 def write_manifest(plan_dir: Path, s6_run: Path) -> Path:
     root = plan_dir.resolve().parents[1]
     plan_id = json.loads((plan_dir / "implementation-contract.v1.json").read_text(encoding="utf-8"))["plan_id"]
+    # The lifecycle runner freezes the exact predecessor results in this
+    # run-local input.  Never infer lineage by scanning RUN-* directories:
+    # historical retries are valid evidence but must not make selection
+    # ambiguous or silently change the terminal candidate.
+    lineage_path = s6_run / "terminal-lineage-input.v1.json"
+    try:
+        lineage = json.loads(lineage_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError("explicit terminal lineage input is missing or invalid") from exc
+    expected_ids = [f"S{index}" for index in range(1, 6)]
+    supplied = lineage.get("entries") if isinstance(lineage, dict) else None
+    if (
+        lineage.get("schema_version") != "quick-dev-tdd-adapter.terminal-lineage-input.v1"
+        or lineage.get("plan_id") != plan_id
+        or lineage.get("slice_id") != "S6"
+        or lineage.get("run_id") != s6_run.name
+        or not isinstance(supplied, list)
+        or [item.get("slice_id") for item in supplied if isinstance(item, dict)] != expected_ids
+    ):
+        raise ValueError("terminal lineage input identity is invalid")
     entries = []
-    for index in range(1, 7):
-        slice_id = f"S{index}"
-        if slice_id == "S6":
-            run = s6_run.resolve()
-        else:
-            base = root / "logs" / "tdd-adapter" / plan_id / slice_id
-            candidates = [
-                path for path in base.glob("RUN-*") if path.is_dir() and "DIAGNOSTIC" not in path.name.upper()
-                and (path / "slice-ready-result.json").is_file()
-            ]
-            if len(candidates) != 1:
-                raise ValueError(f"terminal lineage for {slice_id} is ambiguous or missing")
-            run = candidates[0]
-        result = run / ("implementation-complete-result.json" if slice_id == "S6" else "slice-ready-result.json")
-        entries.append({"slice_id": slice_id, "run_id": run.name, "run_path": run.relative_to(root).as_posix(), "result_path": result.relative_to(root).as_posix(), "result_sha256": _sha(result) if result.is_file() else None})
+    for item in supplied:
+        if (
+            not isinstance(item, dict)
+            or not isinstance(item.get("run_id"), str)
+            or not isinstance(item.get("result_path"), str)
+            or not isinstance(item.get("result_sha256"), str)
+        ):
+            raise ValueError("terminal lineage entry is invalid")
+        result = (root / item["result_path"]).resolve()
+        try:
+            result.relative_to(root / "logs" / "tdd-adapter")
+        except ValueError as exc:
+            raise ValueError("terminal lineage result escapes logs") from exc
+        run = result.parent
+        if (
+            run.name != item["run_id"]
+            or not run.name.startswith("RUN-")
+            or "DIAGNOSTIC" in run.name.upper()
+            or not result.is_file()
+            or _sha(result) != item["result_sha256"]
+        ):
+            raise ValueError(f"terminal lineage result is stale: {item.get('slice_id')}")
+        value = json.loads(result.read_text(encoding="utf-8"))
+        if (
+            value.get("status") != "pass"
+            or value.get("predicate") != "slice-ready"
+            or value.get("slice_id") != item["slice_id"]
+            or value.get("run_id") != item["run_id"]
+        ):
+            raise ValueError(f"slice-ready result for {item.get('slice_id')} is invalid")
+        entries.append({"slice_id": item["slice_id"], "run_id": run.name, "run_path": run.relative_to(root).as_posix(), "result_path": result.relative_to(root).as_posix(), "result_sha256": item["result_sha256"]})
+    run = s6_run.resolve()
+    result = run / "implementation-complete-result.json"
+    # The terminal predicate writes this result after the manifest is frozen.
+    # Hashing it here would make a replay change its own manifest and create a
+    # circular, non-idempotent terminal contract. Validation binds the S6 run
+    # path and independently validates the result instead.
+    entries.append({"slice_id": "S6", "run_id": run.name, "run_path": run.relative_to(root).as_posix(), "result_path": result.relative_to(root).as_posix(), "result_sha256": None})
     value = {"schema_version": "quick-dev-tdd-adapter.terminal-lineage-manifest.v1", "plan_id": plan_id, "entries": entries, "authorizes": []}
     value["manifest_sha256"] = "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
     output = s6_run / "terminal-lineage-manifest.v1.json"
+    if output.is_file():
+        try:
+            existing = json.loads(output.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError("existing terminal lineage manifest is invalid") from exc
+        if existing != value:
+            raise ValueError("existing terminal lineage manifest is stale")
+        return output
     _create(output, (json.dumps(value, sort_keys=True) + "\n").encode("utf-8"))
     return output
 
@@ -107,6 +166,14 @@ def _write(path: Path, value: dict[str, object]) -> None:
     value["evidence_sha256"] = "sha256:" + hashlib.sha256(
         json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
+    if path.is_file():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError(f"existing evidence is invalid: {path.name}") from exc
+        if existing != value:
+            raise ValueError(f"existing evidence is stale: {path.name}")
+        return
     _create(path, (json.dumps(value, sort_keys=True) + "\n").encode("utf-8"))
 
 
@@ -156,21 +223,56 @@ def publish_terminal_evidence(plan_dir: Path, s6_run: Path) -> None:
         receipt = run / "implementation-successor.v1.json"
         receipt_ref = "implementation-successor.v1.json"
         if not receipt.is_file():
+            # A preserved slice may have been resumed through prior-red
+            # handoff. Resolve the immutable predecessor successor instead of
+            # guessing from other RUN-* directories.
             prior = run / "prior-implementation-successor.v1.json"
             try:
-                reference = json.loads(prior.read_text(encoding="utf-8"))["receipt"]
-                candidate = (root / reference["path"]).resolve()
-                candidate.relative_to(root)
-                if not candidate.is_file() or _sha(candidate) != reference["sha256"]:
-                    raise ValueError("prior implementation successor is stale")
-                receipt = prior
-                receipt_ref = "prior-implementation-successor.v1.json"
+                if prior.is_file():
+                    reference = json.loads(prior.read_text(encoding="utf-8"))["receipt"]
+                    candidate = (root / reference["path"]).resolve()
+                    candidate.relative_to(root)
+                    if not candidate.is_file() or _sha(candidate) != reference["sha256"]:
+                        raise ValueError("prior implementation successor is stale")
+                    receipt = candidate
+                    receipt_ref = "prior-implementation-successor.v1.json"
+                else:
+                    handoff = json.loads((run / "prior-red-handoff.v2.json").read_text(encoding="utf-8"))
+                    basis_ref = handoff["red_basis"]
+                    basis = (root / basis_ref["path"]).resolve()
+                    basis.relative_to(root)
+                    predecessor = basis.parent
+                    candidate = predecessor / "implementation-successor.v1.json"
+                    if not candidate.is_file():
+                        raise ValueError("predecessor implementation successor is missing")
+                    # Materialize only a pointer in the continuation run;
+                    # the immutable predecessor receipt remains the authority.
+                    pointer = {
+                        "schema_version": "quick-dev-tdd-adapter.prior-implementation-successor.v1",
+                        "receipt": {"path": candidate.relative_to(root).as_posix(), "sha256": _sha(candidate)},
+                    }
+                    pointer_path = run / "prior-implementation-successor.v1.json"
+                    if pointer_path.is_file():
+                        existing = json.loads(pointer_path.read_text(encoding="utf-8"))
+                        if existing != pointer:
+                            raise ValueError("prior implementation successor pointer is stale")
+                    else:
+                        _create(pointer_path, (json.dumps(pointer, sort_keys=True) + "\n").encode("utf-8"))
+                    receipt = candidate
+                    receipt_ref = "prior-implementation-successor.v1.json"
             except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError, ValueError):
                 raise ValueError("terminal replay predecessor receipt is invalid")
         if not observation.is_file():
             raise ValueError("terminal replay source is missing")
         observation_value = json.loads(observation.read_text(encoding="utf-8"))
-        if observation_value.get("stage") != "refactor" or observation_value.get("exit_code") != 0 or observation_value.get("run_id") != entry["run_id"]:
+        if (
+            observation_value.get("stage") != "refactor"
+            or observation_value.get("exit_code") != 0
+            # Older lifecycle observations omitted run_id; the immutable
+            # manifest already binds this file to the run directory. New
+            # observations must still agree when the field is present.
+            or observation_value.get("run_id") not in (None, entry["run_id"])
+        ):
             raise ValueError("terminal replay observation is not a successful refactor")
         slice_id = entry["slice_id"]
         evidence = {

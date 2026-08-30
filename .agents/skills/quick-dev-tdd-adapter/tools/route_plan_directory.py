@@ -979,6 +979,7 @@ def _active_slice_action(repository_root: Path, plan_dir: Path, slice_id: str) -
         plan_id = Path(plan_dir).name
         contract = None
     evidence_root = repository_root / "logs" / "tdd-adapter" / plan_id / slice_id
+    selected = None
     try:
         if contract is None:
             raise OSError("legacy helper has no contract")
@@ -1009,6 +1010,28 @@ def _active_slice_action(repository_root: Path, plan_dir: Path, slice_id: str) -
             # A successor that no longer matches the current candidate is
             # immutable stale history; do not block a fresh RED-bound run.
             continue
+        # S6 binds implementation completion to its slice terminal. Once the
+        # registered terminal predicate has produced a fully bound result,
+        # do not route the run back through validate-slice.
+        selected_exit = selected.get("exit_predicate") if isinstance(selected, dict) else None
+        complete_path = run_dir / "implementation-complete-result.json"
+        if selected_exit == "implementation-complete" and complete_path.is_file():
+            try:
+                complete = json.loads(complete_path.read_text(encoding="utf-8"))
+                if (
+                    complete.get("schema_version") == "quick-dev-implementation-complete.v1"
+                    and complete.get("predicate") == "implementation-complete"
+                    and complete.get("status") == "pass"
+                    and complete.get("plan_id") == plan_id
+                    and complete.get("slice_id") == slice_id
+                    and complete.get("run_id") == run_dir.name
+                    and complete.get("contract_hash") == current_contract_hash
+                    and complete.get("terminal_command_id") == contract.get("terminal", {}).get("command_id")
+                    and complete.get("authorizes") == ["implementation-complete"]
+                ):
+                    continue
+            except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+                pass
         result_path = run_dir / "slice-ready-result.json"
         if action is None and result_path.is_file() and validate_implementation_successor(run_dir):
             try:

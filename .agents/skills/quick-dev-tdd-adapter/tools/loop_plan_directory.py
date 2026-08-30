@@ -569,11 +569,49 @@ def _run_slice_terminal(root: Path, plan: Path, slice_id: str, snapshots: list[s
         return invocation, context
 
     snapshots = _workspace_snapshot_paths(root, plan, snapshots)
-    for stage in ("red", "green", "refactor"):
+    if not (run_dir / "observations" / "red-observed.json").is_file() and prior_red_observation_path(run_dir) is None:
+        raise RuntimeError("canonical run requires complete RED observation or prior-red handoff")
+    for stage in ("green", "refactor"):
         if not (run_dir / "observations" / f"{stage}-observed.json").is_file():
             raise RuntimeError("canonical run requires complete lifecycle observations")
     if not validate_implementation_successor(run_dir):
         raise RuntimeError("canonical run implementation successor is invalid")
+    if slice_id == "S6":
+        lineage_path = run_dir / "terminal-lineage-input.v1.json"
+        if not lineage_path.exists():
+            entries: list[dict[str, str]] = []
+            evidence_root = root / "logs" / "tdd-adapter" / str(contract["plan_id"])
+            contract_hash = _sha(plan / "implementation-contract.v1.json")
+            for predecessor_id in ("S1", "S2", "S3", "S4", "S5"):
+                candidates: list[Path] = []
+                for candidate_run in (evidence_root / predecessor_id).glob("RUN-*"):
+                    result_path = candidate_run / "slice-ready-result.json"
+                    if not result_path.is_file() or "DIAGNOSTIC" in candidate_run.name.upper():
+                        continue
+                    try:
+                        result = json.loads(result_path.read_text(encoding="utf-8"))
+                        if _tdd_slice_ready_current(root, plan, str(contract["plan_id"]), predecessor_id, contract_hash, result_path, result):
+                            candidates.append(result_path)
+                    except (OSError, UnicodeError, json.JSONDecodeError, TypeError):
+                        continue
+                if len(candidates) != 1:
+                    raise RuntimeError(f"terminal lineage for {predecessor_id} is ambiguous or missing")
+                result_path = candidates[0]
+                entries.append({
+                    "slice_id": predecessor_id,
+                    "run_id": result_path.parent.name,
+                    "result_path": result_path.relative_to(root).as_posix(),
+                    "result_sha256": _sha(result_path),
+                })
+            payload = {
+                "schema_version": "quick-dev-tdd-adapter.terminal-lineage-input.v1",
+                "plan_id": contract["plan_id"],
+                "slice_id": "S6",
+                "run_id": run_dir.name,
+                "entries": entries,
+            }
+            lineage_path.parent.mkdir(parents=True, exist_ok=True)
+            lineage_path.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     invocation, context = build_terminal_context(run_dir)
     expected_predicate = _slice_terminal_predicate(plan, slice_id)
     command = json.loads((invocation / "terminal-command.json").read_text(encoding="utf-8"))
