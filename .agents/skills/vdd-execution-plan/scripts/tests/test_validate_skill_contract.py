@@ -37,6 +37,20 @@ class SkillContractTests(unittest.TestCase):
         self.assertTrue(standard < resumable < hosted)
         self.assertNotIn("implementation_report", standard)
 
+    def test_governance_default_mutation_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            copied = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, copied)
+            path = copied / "scripts" / "skill-contract.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["governance_policy"]["default_phase_state"] = "production"
+            path.write_text(json.dumps(data), encoding="utf-8", newline="\n")
+            result = self.validator.validate_skill(copied)
+            self.assertIn(
+                "VDD-GOVERNANCE-POLICY",
+                {item["rule_id"] for item in result["findings"]},
+            )
+
     def test_route_outcome_mutation_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             copied = Path(tmp) / "skill"

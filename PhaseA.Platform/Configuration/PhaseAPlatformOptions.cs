@@ -46,4 +46,20 @@ public sealed record PhaseAPlatformOptions(
     string? AiCodeMirrorCookie,
     string? AiCodeMirrorApiKeyName,
     string AiCodeMirrorCodexHomeRoot,
-    IReadOnlyList<string> AssetAllowedUrlPrefixes);
+    IReadOnlyList<string> AssetAllowedUrlPrefixes)
+{
+    public string PhaseServiceState { get; init; } = PhaseServiceStates.Development;
+
+    public bool GovernanceChecksEnabled =>
+        PhaseServiceStates.GovernanceChecksEnabled(PhaseServiceState);
+}
+
+public static class PhaseServiceStates
+{
+    public const string Development = "development";
+    public const string Test = "test";
+    public const string Production = "production";
+
+    public static bool GovernanceChecksEnabled(string state) =>
+        state == Test || state == Production;
+}

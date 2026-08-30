@@ -37,6 +37,8 @@ public static class PhaseAPlatformOptionsLoader
         var pythonCommand = GetString(get, "PHASEA_PYTHON_COMMAND", "py");
         var godotBin = GetOptionalString(get, "GODOT_BIN");
         var deliveryProfile = GetString(get, "DELIVERY_PROFILE", "fast-ship");
+        var phaseServiceState = ValidatePhaseServiceState(
+            GetString(get, "PHASEA_SERVICE_STATE", PhaseServiceStates.Development));
         var adminUsername = GetString(get, "PHASEA_ADMIN_USERNAME", "admin");
         var adminPasswordHash = GetOptionalString(get, "PHASEA_ADMIN_PASSWORD_HASH");
         var adminTokenHash = GetOptionalString(get, "PHASEA_ADMIN_TOKEN_HASH");
@@ -111,7 +113,10 @@ public static class PhaseAPlatformOptionsLoader
             aiCodeMirrorCookie,
             aiCodeMirrorApiKeyName,
             aiCodeMirrorCodexHomeRoot,
-            assetAllowedUrlPrefixes);
+            assetAllowedUrlPrefixes)
+        {
+            PhaseServiceState = phaseServiceState
+        };
     }
 
     private static string GetString(Func<string, string?> get, string name, string defaultValue)
@@ -123,6 +128,19 @@ public static class PhaseAPlatformOptionsLoader
         }
 
         return value.Trim();
+    }
+
+    private static string ValidatePhaseServiceState(string value)
+    {
+        var normalized = value.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            PhaseServiceStates.Development => PhaseServiceStates.Development,
+            PhaseServiceStates.Test => PhaseServiceStates.Test,
+            PhaseServiceStates.Production => PhaseServiceStates.Production,
+            _ => throw new PhaseAPlatformConfigException(
+                "PHASEA_SERVICE_STATE must be development, test, or production.")
+        };
     }
 
     private static string? GetOptionalString(Func<string, string?> get, string name)

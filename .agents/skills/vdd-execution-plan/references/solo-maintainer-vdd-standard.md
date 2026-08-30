@@ -2,6 +2,18 @@
 
 Verification-driven planning means a plan names observable behavior, current validation commands, and the distinct lifecycle state those commands support. It does not require a proof system larger than the change.
 
+## Governance Activation
+
+`PHASEA_SERVICE_STATE` defaults to `development`. In `auto`, governance is
+off for development and on for `test` and `production`; an explicit
+`--governance-mode on|off|auto` or `JIMUYUN_GOVERNANCE_MODE` may override
+that state. Governance-off plans omit external review, candidate binding,
+maintainer authorization, source-freeze/conformance, knowledge/Skill-input
+attestations, review lineage and `95-*.md` reports. They still require complete
+behavior-to-acceptance coverage, dependency-scoped slices, runnable failure
+intents and validation commands, write boundaries, current Git scope, and one
+terminal full validation.
+
 ## Required Controls
 
 - Route one standalone requirements Markdown file to direct implementation. Enter VDD `create` or `repair` only for an explicit request concerning a complete execution-plan directory.
@@ -24,11 +36,13 @@ Use Git baseline/range or a scoped dirty-worktree identity. Bind current contrac
 
 Repairs first run the smallest targeted checks for the affected layer. A local slice change invalidates only that slice and declared downstream dependents. One final full replay follows stabilization; replay all slices only after a shared lifecycle contract, global validator semantic, baseline identity, or all-slice dependency changes.
 
-Repairs stay in the original execution-plan directory by default. Append
-`repair/round-<n>/` with the finalized finding set, predecessor identity,
-bounded repair slices, and hash-bound closure. Validators must accept ordered
-repair rounds without rewriting completed initial slices. A successor requires
-an explicit supersede or incompatible-scope decision.
+Repairs stay in the original execution-plan directory by default. With
+governance enabled, append `repair/round-<n>/` with the finalized finding set,
+predecessor identity, bounded repair slices, and hash-bound closure. Validators
+must accept ordered repair rounds without rewriting completed initial slices.
+A successor requires an explicit supersede or incompatible-scope decision.
+With governance disabled, update the current plan in place and preserve actual
+historical TDD evidence without creating a review successor.
 
 If Bootstrap implementation review is selected, record one stable lineage family derived from the original plan target and retain it across in-place
 repairs and successor history for that target. The default full-review budget is two semantic rounds and the hard limit is three. A successor never resets
@@ -65,7 +79,12 @@ automatic complete semantic review.
 
 ## Optional Controls
 
-`resumable` adds compact state and a 95 report only for cross-session or dependent work. `self-hosted` adds only protocol fixtures and migration checks consumed by workflow-control changes. Filesystem edge fixtures, recovery ledgers, review, Bootstrap evidence, external trust roots, signatures, verifier separation, and distributed publication are not defaults.
+`resumable` adds compact state for cross-session or dependent work and adds a
+95 report only when governance is enabled. `self-hosted` adds only protocol
+fixtures and migration checks consumed by workflow-control changes. Filesystem
+edge fixtures, recovery ledgers, review, Bootstrap evidence, external trust
+roots, signatures, verifier separation, and distributed publication are not
+defaults.
 
 Optional clarification state is one atomic, single-writer current file. Current decisions have one material classification and an acyclic dependency list. Hash drift is observed without mutation; invalidate and reopen are explicit. Legacy bytes are inspected only against a caller-supplied digest, and sensitive current state is replaced by a sanitized terminal quarantine envelope.
 

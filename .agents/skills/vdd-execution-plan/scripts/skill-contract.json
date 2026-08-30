@@ -1,5 +1,13 @@
 {
   "schema_version": "vdd.skill-contract.v2",
+  "governance_policy": {
+    "phase_state_env": "PHASEA_SERVICE_STATE",
+    "mode_env": "JIMUYUN_GOVERNANCE_MODE",
+    "default_phase_state": "development",
+    "auto_disabled_states": ["development"],
+    "auto_enabled_states": ["test", "production"],
+    "modes": ["auto", "on", "off"]
+  },
   "profiles": {
     "standard": ["plan", "lifecycle", "git_identity", "slice_validation", "terminal_validation"],
     "resumable": ["plan", "lifecycle", "git_identity", "slice_validation", "terminal_validation", "resume_state", "dependency_status", "recovery", "implementation_report"],

@@ -35,12 +35,13 @@ def main() -> int:
     parser.add_argument("--plan-dir", type=Path, required=True)
     parser.add_argument("--state-file", type=Path, required=True)
     parser.add_argument("--poll-seconds", type=int, default=15)
+    parser.add_argument("--governance-mode", choices=("auto", "on", "off"), default="auto")
     args = parser.parse_args(); root, plan = args.repository_root.resolve(), args.plan_dir.resolve()
     while True:
         routed = json.loads(subprocess.check_output([
             sys.executable, str(TOOLS / "route_plan_directory.py"),
             "--repository-root", str(root), "--plan-dir", str(plan),
-            "--caller", "quick-dev-tdd-adapter",
+            "--caller", "quick-dev-tdd-adapter", "--governance-mode", args.governance_mode,
         ], text=True))
         action = routed["next_action"]
         _write(args.state_file, {"observed_at": datetime.now(timezone.utc).isoformat(), "action": action, "slice_id": routed.get("slice_id"), "authorizes": []})
@@ -48,7 +49,7 @@ def main() -> int:
             return 0
         if action in {"run-slice", "validate-slice", "validate-terminal", "refresh-knowledge-context"}:
             snapshots = _snapshot_paths(plan, str(routed["slice_id"])) if routed.get("slice_id") else []
-            command = [sys.executable, str(TOOLS / "loop_plan_directory.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--max-actions", "1"]
+            command = [sys.executable, str(TOOLS / "loop_plan_directory.py"), "--repository-root", str(root), "--plan-dir", str(plan), "--max-actions", "1", "--governance-mode", args.governance_mode]
             for snapshot in snapshots:
                 command.extend(["--snapshot-path", snapshot])
             completed = subprocess.run(command, cwd=root)

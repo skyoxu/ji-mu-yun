@@ -1,6 +1,7 @@
 import importlib.util
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -39,6 +40,17 @@ MIGRATION_BRIDGE = load_path("stage_recovery_migration_bridge", STAGE_RECOVERY_P
 
 
 class PlanDirectoryLoopTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._governance_environment = mock.patch.dict(
+            os.environ,
+            {"PHASEA_SERVICE_STATE": "test", "JIMUYUN_GOVERNANCE_MODE": "auto"},
+            clear=False,
+        )
+        self._governance_environment.start()
+
+    def tearDown(self) -> None:
+        self._governance_environment.stop()
+
     def _plan(self, root: Path, slices: list[dict]) -> Path:
         plan = root / "execution-plans" / "target"
         plan.mkdir(parents=True)
@@ -406,6 +418,28 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 routed = ROUTER.route(root, plan)
 
             self.assertEqual("run-slice", routed["next_action"])
+
+    def test_router_development_mode_bypasses_governance_only_gates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
+            (plan / "95-first.md").write_text("first\n", encoding="utf-8")
+            (plan / "95-second.md").write_text("second\n", encoding="utf-8")
+            (plan / "plan-state.v1.json").write_text(json.dumps({
+                "schema_version": "vdd.plan-state.v2",
+                "plan_id": "target",
+                "status": "plan-ready",
+                "authorizes": ["plan-ready"],
+            }), encoding="utf-8")
+
+            with mock.patch.object(ROUTER, "_verify_plan_context") as verify:
+                result = ROUTER.route(root, plan, governance_mode="off")
+
+            verify.assert_not_called()
+            self.assertEqual(
+                {"next_action": "run-slice", "slice_id": "S0", "authorizes": []},
+                result,
+            )
 
     def test_router_requires_implementation_authorization_before_run_slice(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

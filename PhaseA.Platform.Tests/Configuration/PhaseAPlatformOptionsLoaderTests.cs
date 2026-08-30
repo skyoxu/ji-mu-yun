@@ -26,6 +26,8 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.RepositoryRoot.Should().Be(Path.GetFullPath(AppContext.BaseDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         options.PythonCommand.Should().Be("py");
         options.DeliveryProfile.Should().Be("fast-ship");
+        options.PhaseServiceState.Should().Be(PhaseServiceStates.Development);
+        options.GovernanceChecksEnabled.Should().BeFalse();
         options.AdminUsername.Should().Be("admin");
         options.WebPreviewSigningSecret.Should().BeNull();
         options.HostedContextSigningKeyRing.Should().BeNull();
@@ -66,6 +68,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
             ["PHASEA_PYTHON_COMMAND"] = "python",
             ["GODOT_BIN"] = @"D:\Godot\Godot.exe",
             ["DELIVERY_PROFILE"] = "playable-ea",
+            ["PHASEA_SERVICE_STATE"] = "production",
             ["PHASEA_ADMIN_USERNAME"] = "root",
             ["PHASEA_ADMIN_PASSWORD_HASH"] = "password-hash",
             ["PHASEA_ADMIN_TOKEN_HASH"] = "token-hash",
@@ -103,6 +106,8 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.PythonCommand.Should().Be("python");
         options.GodotBin.Should().Be(@"D:\Godot\Godot.exe");
         options.DeliveryProfile.Should().Be("playable-ea");
+        options.PhaseServiceState.Should().Be(PhaseServiceStates.Production);
+        options.GovernanceChecksEnabled.Should().BeTrue();
         options.AdminUsername.Should().Be("root");
         options.AdminPasswordHash.Should().Be("password-hash");
         options.AdminTokenHash.Should().Be("token-hash");
@@ -129,6 +134,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
     }
 
     [Theory]
+    [InlineData("PHASEA_SERVICE_STATE", "staging")]
     [InlineData("HOSTED_WORKSPACE_ROOT", "relative\\path")]
     [InlineData("HOSTED_PROJECT_LIMIT", "0")]
     [InlineData("PUBLIC_BASE_URL", "http://phase-a.example.com")]

@@ -72,6 +72,13 @@ The canonical live values and secret-resolution path are owned by
 `../runtime/phase-a/start-phasea.ps1` and the host environment. Never commit
 real tokens, signing secrets, provider credentials, or live hashes.
 
+`PHASEA_SERVICE_STATE` accepts `development`, `test`, or `production`.
+It defaults to `development`. Quick Dev governance checks are disabled in
+development and enabled automatically in test and production; callers may
+override that decision with `--governance-mode on|off|auto` or
+`JIMUYUN_GOVERNANCE_MODE`. This switch does not disable authentication,
+runtime safety, TDD stages, declared write sets, or semantic predicates.
+
 The metadata database and Hosted workspace roots are protected live state.
 Unit and integration tests must use temporary roots and temporary SQLite files.
 

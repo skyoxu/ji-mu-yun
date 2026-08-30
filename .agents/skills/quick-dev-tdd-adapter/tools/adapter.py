@@ -7,12 +7,16 @@ import sys
 from pathlib import Path
 from typing import Any
 
+TOOLS_ROOT = Path(__file__).resolve().parent
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(TOOLS_ROOT) not in sys.path:
+    sys.path.insert(0, str(TOOLS_ROOT))
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
 
+from governance_policy import resolve_governance_policy  # noqa: E402
 from skill_input_gate import require_ready_skill_input  # noqa: E402
 from scripts.toolchain.canonical_evidence import canonical_bytes  # noqa: E402
 
@@ -89,19 +93,29 @@ def prepare(
     slice_id: str,
     identities: dict[str, str],
     *,
-    receipt_path: Path,
+    receipt_path: Path | None = None,
     repository_root: Path = REPOSITORY_ROOT,
     skill_contract_path: Path = REPOSITORY_ROOT / ".agents" / "skills" / "quick-dev-tdd-adapter" / "references" / "skill-input-contract.v1.json",
+    governance_mode: str | None = None,
 ) -> dict[str, Any]:
-    """Prepare one slice through the mandatory Skill input gate."""
-    return prepare_with_skill_input(
-        contract,
-        slice_id,
-        identities,
-        receipt_path=receipt_path,
-        repository_root=repository_root,
-        skill_contract_path=skill_contract_path,
-    )
+    """Prepare one slice with governance attestation only when policy enables it."""
+
+    governance = resolve_governance_policy(governance_mode)
+    if governance["enabled"]:
+        if receipt_path is None:
+            raise ValueError("enabled governance requires a Skill input receipt")
+        result = prepare_with_skill_input(
+            contract,
+            slice_id,
+            identities,
+            receipt_path=receipt_path,
+            repository_root=repository_root,
+            skill_contract_path=skill_contract_path,
+        )
+    else:
+        result = _prepare_core(contract, slice_id, identities)
+    result["governance_policy"] = governance
+    return result
 
 
 def transition(run: dict[str, Any], stage: str, event: dict[str, Any]) -> dict[str, Any]:
@@ -311,9 +325,10 @@ def execute(
     identities: dict[str, str],
     events: list[dict[str, Any]],
     *,
-    receipt_path: Path,
+    receipt_path: Path | None = None,
     repository_root: Path = REPOSITORY_ROOT,
     skill_contract_path: Path = REPOSITORY_ROOT / ".agents" / "skills" / "quick-dev-tdd-adapter" / "references" / "skill-input-contract.v1.json",
+    governance_mode: str | None = None,
     protocol_bundle: dict[str, Any] | None = None,
     artifact_store: dict[tuple[str, str], bytes] | None = None,
 ) -> dict[str, Any]:
@@ -324,13 +339,14 @@ def execute(
     state_path = run_dir / "recovery-state.json"
     if state_path.exists():
         return _blocked({}, "RMAP-RECOVERY-NEW-RUN-STATE", "existing run requires an explicit successor")
-    run = prepare_with_skill_input(
+    run = prepare(
         contract,
         slice_id,
         identities,
         receipt_path=receipt_path,
         repository_root=repository_root,
         skill_contract_path=skill_contract_path,
+        governance_mode=governance_mode,
     )
     for event in events:
         stage = event.get("stage")
@@ -350,6 +366,7 @@ def execute(
         "schema_version": "rmap.recovery-state.v1", "run_id": run_dir.name, "state": run["state"],
         "slice_id": slice_id, "contract_hash": identities["contract_hash"], "validator_hash": identities["validator_hash"],
         "predecessor_run_id": None, "supersedes_run_id": None, "stages": run["stages"], "authorizes": [],
+        "governance_policy": run["governance_policy"],
     }
     if isinstance(run.get("skill_input"), dict):
         document["skill_input"] = {

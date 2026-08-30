@@ -14,6 +14,7 @@ TOOLS = Path(__file__).resolve().parent
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
+from governance_policy import resolve_governance_policy
 from route_plan_directory import route, _validation_snapshot, _tdd_slice_ready_current
 from stage_lifecycle_runner import (
     LifecycleRunner,
@@ -678,14 +679,17 @@ def main() -> int:
     parser.add_argument("--plan-dir", type=Path, required=True)
     parser.add_argument("--snapshot-path", action="append", default=[])
     parser.add_argument("--max-actions", type=int, default=1)
+    parser.add_argument("--governance-mode", choices=("auto", "on", "off"), default=None)
     args = parser.parse_args()
     root, plan = args.repository_root.resolve(), args.plan_dir.resolve()
     if args.max_actions < 1:
         raise ValueError("max actions must be positive")
     actions: list[dict[str, object]] = []
+    governance = resolve_governance_policy(args.governance_mode)
     for _ in range(args.max_actions):
-        result = route(root, plan)
+        result = route(root, plan, governance_mode=args.governance_mode)
         result["authorizes"] = []
+        result["governance_policy"] = governance
         actions.append(result)
         if result["next_action"] == "validate-terminal":
             _run_terminal(root, plan)

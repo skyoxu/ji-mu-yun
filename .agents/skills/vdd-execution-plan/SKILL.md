@@ -9,6 +9,23 @@ Create plans that make observable behavior and current validation decide complet
 
 Before acting, read [references/solo-maintainer-vdd-standard.md](references/solo-maintainer-vdd-standard.md), [references/clarification-gate.md](references/clarification-gate.md), and [references/lifecycle-state-contract.md](references/lifecycle-state-contract.md). When maintaining this Skill, also run `py -3 scripts/validate_skill_contract.py --skill-root <skill-root>` and its unit tests.
 
+## Phase Service State And Governance Mode
+
+Resolve governance from `PHASEA_SERVICE_STATE=development|test|production`;
+an unset state is `development`. `auto` disables governance in development
+and enables it in test and production. An explicit `--governance-mode
+on|off|auto` overrides `JIMUYUN_GOVERNANCE_MODE`, which overrides the phase
+state.
+
+With governance disabled, do not create frozen knowledge or Skill-input
+attestations, source-freeze/conformance, external review, candidate binding,
+maintainer authorization, review lineage, custody, signature, or `95-*.md`
+governance artifacts. Inspect the current repository sources directly and keep
+the plan compact. This never removes behavior/acceptance coverage, dependency-
+scoped implementation slices, one failure intent per active behavior, runnable
+targeted commands, RED ownership by Quick Dev, declared write boundaries, or
+the terminal full validation command.
+
 ## Route Input Before Profile
 
 One standalone requirements Markdown file routes to direct implementation and creates no VDD directory, lifecycle bundle, 95 report, or Bootstrap run. Only an explicit request to create a complete execution-plan directory routes to VDD `create`; only an explicit request to repair a complete existing directory routes to VDD `repair`. Never infer either VDD route from file contents or growing task complexity.
@@ -60,7 +77,14 @@ Use the static transition contract in [references/lifecycle-state-contract.json]
 
 `draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived`
 
-VDD owns `draft` and `plan-ready`. The maintainer may explicitly publish `implementation-authorized` without Bootstrap evidence. Bootstrap Review is optional supplemental evidence and never publishes a lifecycle state. Quick Dev may publish only `implementation-complete`; acceptance and archive are separately owned. New plans emit no old state names; repair plans may read them only through the documented compatibility adapter.
+VDD owns `draft` and `plan-ready`. With governance enabled, the maintainer
+may explicitly publish `implementation-authorized` without Bootstrap evidence;
+Bootstrap Review is optional supplemental evidence and never publishes a
+lifecycle state. With governance disabled, `plan-ready` routes directly to
+Quick Dev and no authorization receipt is created. Quick Dev may publish only
+`implementation-complete`; acceptance and archive are separately owned. New
+plans emit no old state names; repair plans may read them only through the
+documented compatibility adapter.
 
 For each slice, name its intended behavior, failure intent (the test selector and
 expected observable failure before the change), GREEN/acceptance target,
@@ -78,6 +102,12 @@ artifact that a newly created or repaired VDD plan may publish.
 During repair, first stabilize the smallest affected layer. A slice-local change invalidates that slice and its declared downstream dependents only. A shared lifecycle contract, global validator semantic, baseline identity, or dependency used by every slice requires one terminal full replay after targeted stabilization. Targeted validation never authorizes completion. Before publishing `implementation-complete`, run one current terminal full validation.
 
 ## In-Place Repair Rounds
+
+The review lineage, semantic-round, callsite-attestation, and repair-closure
+rules in this section apply only when governance is enabled. In development,
+repair the current plan in place, preserve actual historical TDD evidence, and
+invalidate only affected slices and declared downstream dependents; do not
+materialize governance successors.
 
 An explicit VDD `repair` updates the original execution-plan directory. Append
 each repair under `repair/round-<n>/`, binding the exact finalized finding set,
@@ -114,8 +144,8 @@ reference; keep consumers and tests in their named context classes.
 
 ## Knowledge Preflight
 
-After mandatory authority reads and before freezing plan sources, run the
-mandatory knowledge-consumption sequence in
+When governance is enabled, after mandatory authority reads and before freezing
+plan sources, run the mandatory knowledge-consumption sequence in
 `references/knowledge-consumption.md`. The sequence invokes
 `scripts/python/knowledge_locator.py` through JSON stdin, then invokes this
 Skill's `scripts/vdd_knowledge_preflight.py` with the request, result, and
@@ -139,11 +169,13 @@ that exact directory, and never promotes a search result automatically. Run
 The producer writes no formal context or receipt when preflight is blocked.
 Ready output is restricted to one `execution-plans/<plan>/` directory, stages
 complete bytes before publication, and can finish an identical orphan context
-by publishing its missing receipt after an interrupted first attempt.
+by publishing its missing receipt after an interrupted first attempt. When
+governance is disabled, do not run this receipt/freeze protocol; read only the
+explicit current sources required by the plan.
 
 ## Skill Input Gate
 
-After route selection and authority reads, load
+When governance is enabled, after route selection and authority reads, load
 `references/skill-input-contract.v1.json` and run the shared adapter
 `scripts/python/prepare_skill_input_consumption.py` for `create` or `repair`.
 The adapter must receive the explicit requirements/target-plan/finding paths;
@@ -160,9 +192,18 @@ When using `vdd_knowledge_preflight.py`, pass the same receipt with
 
 ## Candidate, Review, And Reports
 
-Use a declared Git baseline plus either a frozen commit range or a complete scoped worktree identity. A dirty identity binds `HEAD`, canonical scoped tracked/index diff hash, and a manifest of relevant untracked paths and content hashes. Bind current contracts, implementation, and validators; exclude append-only logs and explanatory reports from normative hashes. Preserve old evidence as historical after invalidation.
+Use a declared Git baseline plus current scoped worktree identity for functional
+TDD freshness. When governance is enabled, freeze the commit range or complete
+scoped identity, bind current contracts, implementation, and validators, and
+exclude append-only logs and explanatory reports from normative hashes.
+Preserve old evidence as historical after invalidation.
 
-Review is optional unless requested by the maintainer or a protected-path rule requires it. Batch accepted findings, run deterministic targeted checks, and do not rerun a complete semantic review for P2-only findings automatically. Review validates the supplied requirements or implementation; it is not an unbounded discovery loop.
+Review exists only when governance is enabled and is then optional unless
+requested by the maintainer or a protected-path rule requires it. Batch
+accepted findings, run deterministic targeted checks, and do not rerun a
+complete semantic review for P2-only findings automatically. Review validates
+the supplied requirements or implementation; it is not an unbounded discovery
+loop.
 
 Bootstrap history indexes, cost-calibration candidates, and synthetic shadow
 corpora are non-authorizing operational inputs. VDD may use their cost signal
@@ -196,7 +237,13 @@ completeness audit with no typed Round 3 trigger routes to deterministic
 closure instead of another full review. P2-only repair never opens a new
 semantic round.
 
-`resumable` and `self-hosted` plans create `95-*.md` before implementation and add its entry to `execution-plans/95-implementation-report-index.v1.json` in the same change. The report is append-only, non-authorizing, records corrections and the final implementation result, and is excluded from candidate hashes. `standard` may omit it unless requested.
+When governance is enabled, `resumable` and `self-hosted` plans create
+`95-*.md` before implementation and add its entry to
+`execution-plans/95-implementation-report-index.v1.json` in the same change.
+The report is append-only, non-authorizing, records corrections and the final
+implementation result, and is excluded from candidate hashes. `standard` may
+omit it unless requested. When governance is disabled, every profile omits this
+report and index entry.
 
 Keep the package generic. Never read a mutable live execution-plan directory or embed dated plan names, plan-local paths, RMAP IDs, live plan hashes, user-profile paths, or machine-specific paths. Detached fixtures prove package behavior; repository-level tools own live 95-index containment and existence checks.
 

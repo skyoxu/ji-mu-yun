@@ -19,9 +19,11 @@ except ImportError:
 
 try:
     from stage_lifecycle_runner import derive_run_state, validate_implementation_successor
+    from governance_policy import resolve_governance_policy
 except ModuleNotFoundError:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from stage_lifecycle_runner import derive_run_state, validate_implementation_successor
+    from governance_policy import resolve_governance_policy
 
 
 _IMPLEMENTATION_CANDIDATE_ROOTS = (
@@ -1280,18 +1282,24 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
     }
 
 
-def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
+def route(
+    repository_root: Path,
+    plan_dir: Path,
+    governance_mode: str | None = None,
+) -> dict[str, object]:
     execution_root = (repository_root / "execution-plans").resolve()
     target = plan_dir.resolve()
     try:
         target.relative_to(execution_root)
     except ValueError as exc:
         raise ValueError("plan directory must stay under execution-plans") from exc
-    knowledge = _verify_plan_context(repository_root, target)
-    if knowledge["status"] == "successor-required":
-        return {"next_action": "refresh-knowledge-context", "reason": knowledge["failure_code"], "authorizes": []}
-    if knowledge["status"] == "vdd-repair":
-        return {"next_action": "external-repair-required", "reason": knowledge["failure_code"], "authorizes": []}
+    governance = resolve_governance_policy(governance_mode)
+    if governance["enabled"]:
+        knowledge = _verify_plan_context(repository_root, target)
+        if knowledge["status"] == "successor-required":
+            return {"next_action": "refresh-knowledge-context", "reason": knowledge["failure_code"], "authorizes": []}
+        if knowledge["status"] == "vdd-repair":
+            return {"next_action": "external-repair-required", "reason": knowledge["failure_code"], "authorizes": []}
     contract_path = target / "implementation-contract.v1.json"
     contract_bytes = contract_path.read_bytes()
     contract = json.loads(contract_bytes.decode("utf-8"))
@@ -1302,9 +1310,10 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
     contract_hash = "sha256:" + hashlib.sha256(contract_bytes).hexdigest()
     if not isinstance(contract.get("plan_id"), str) or not isinstance(contract.get("slices"), list):
         raise ValueError("implementation contract is invalid")
-    reports = sorted(target.glob("95-*.md"), key=lambda item: item.name.casefold())
-    if len(reports) > 1:
-        return {"next_action": "external-repair-required", "reason": "ambiguous-plan-report", "authorizes": []}
+    if governance["enabled"]:
+        reports = sorted(target.glob("95-*.md"), key=lambda item: item.name.casefold())
+        if len(reports) > 1:
+            return {"next_action": "external-repair-required", "reason": "ambiguous-plan-report", "authorizes": []}
     evidence_root = repository_root / "logs" / "tdd-adapter" / contract["plan_id"]
     state = evidence_root / "run-state.v1.json"
     if state.is_file():
@@ -1398,13 +1407,14 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
             continue
         if not set(slice_item.get("depends_on", [])).issubset(completed):
             continue
-        authorization_gate = _slice_authorization_gate(target, contract["plan_id"])
-        if authorization_gate is not None:
-            # Authorization is evaluated after dependency closure.  Preserve
-            # the first unlocked slice so callers can distinguish an initial
-            # wait from a wait before the next slice.
-            authorization_gate["slice_id"] = slice_id
-            return authorization_gate
+        if governance["enabled"]:
+            authorization_gate = _slice_authorization_gate(target, contract["plan_id"])
+            if authorization_gate is not None:
+                # Authorization is evaluated after dependency closure. Preserve
+                # the first unlocked slice so callers can distinguish an initial
+                # wait from a wait before the next slice.
+                authorization_gate["slice_id"] = slice_id
+                return authorization_gate
         active_action = _active_slice_action(repository_root, target, slice_id)
         if active_action == "validate-slice":
             return {"next_action": "validate-slice", "slice_id": slice_id, "authorizes": []}
@@ -1423,10 +1433,17 @@ def main() -> int:
     parser.add_argument("--repository-root", type=Path, required=True)
     parser.add_argument("--plan-dir", type=Path, required=True)
     parser.add_argument("--caller", required=True)
+    parser.add_argument("--governance-mode", choices=("auto", "on", "off"), default=None)
     args = parser.parse_args()
     if args.caller != "quick-dev-tdd-adapter":
         parser.error("--caller must be quick-dev-tdd-adapter")
-    print(json.dumps(route(args.repository_root.resolve(), args.plan_dir.resolve()), sort_keys=True))
+    result = route(
+        args.repository_root.resolve(),
+        args.plan_dir.resolve(),
+        governance_mode=args.governance_mode,
+    )
+    result["governance_policy"] = resolve_governance_policy(args.governance_mode)
+    print(json.dumps(result, sort_keys=True))
     return 0
 
 

@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import base64
+import os
 import sys
 from pathlib import Path
 import tempfile
@@ -41,6 +42,31 @@ from skill_input_composition_support import publish_ready_receipt  # noqa: E402
 
 
 class AdapterTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._governance_environment = mock.patch.dict(
+            os.environ,
+            {"PHASEA_SERVICE_STATE": "test", "JIMUYUN_GOVERNANCE_MODE": "auto"},
+            clear=False,
+        )
+        self._governance_environment.start()
+
+    def tearDown(self) -> None:
+        self._governance_environment.stop()
+
+    def test_prepare_defaults_to_development_without_skill_input_receipt(self) -> None:
+        contract = {
+            "backend": {"hidden_state": False},
+            "slices": [{"slice_id": "S1", "allowed_changes": {}}],
+        }
+        identities = {"contract_hash": "sha256:contract", "validator_hash": "sha256:validator"}
+        with mock.patch.dict(os.environ, {}, clear=True):
+            prepared = ADAPTER.prepare(contract, "S1", identities)
+
+        self.assertEqual("prepared", prepared["state"])
+        self.assertNotIn("skill_input", prepared)
+        self.assertEqual("development", prepared["governance_policy"]["phase_service_state"])
+        self.assertFalse(prepared["governance_policy"]["enabled"])
+
     def test_prepare_consumes_real_ready_skill_input_context(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repository = Path(directory) / "repo"

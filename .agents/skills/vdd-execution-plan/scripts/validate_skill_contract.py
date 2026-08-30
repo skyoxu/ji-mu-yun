@@ -10,6 +10,28 @@ from pathlib import Path
 from typing import Any
 
 
+EXPECTED_GOVERNANCE_POLICY = {
+    "phase_state_env": "PHASEA_SERVICE_STATE",
+    "mode_env": "JIMUYUN_GOVERNANCE_MODE",
+    "default_phase_state": "development",
+    "auto_disabled_states": ["development"],
+    "auto_enabled_states": ["test", "production"],
+    "modes": ["auto", "on", "off"],
+}
+
+EXPECTED_GOVERNANCE_TEXT = {
+    "SKILL.md": (
+        "an unset state is `development`",
+        "With governance disabled, do not create",
+        "With governance disabled, `plan-ready` routes directly to",
+    ),
+    "references/solo-maintainer-vdd-standard.md": (
+        "`PHASEA_SERVICE_STATE` defaults to `development`",
+        "Governance-off plans omit external review",
+    ),
+}
+
+
 EXPECTED_INPUT_ROUTES = {
     "single-requirements-markdown": {
         "outcome": "direct-implementation",
@@ -155,6 +177,35 @@ def validate_lifecycle(skill_root: Path, contract: dict[str, Any]) -> list[dict[
     compatibility = lifecycle.get("compatibility_adapter")
     if not isinstance(compatibility, dict) or compatibility.get("accepts_legacy_input") is not True or compatibility.get("emits_legacy_output") is not False:
         findings.append(finding("VDD-LIFECYCLE-COMPATIBILITY", str(path), "legacy compatibility must be read-only"))
+    return findings
+
+
+def validate_governance_policy(skill_root: Path, contract: dict[str, Any]) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    if contract.get("governance_policy") != EXPECTED_GOVERNANCE_POLICY:
+        findings.append(
+            finding(
+                "VDD-GOVERNANCE-POLICY",
+                "scripts/skill-contract.json",
+                "development must default governance off and test/production must enable auto",
+            )
+        )
+    for relative, phrases in EXPECTED_GOVERNANCE_TEXT.items():
+        path = skill_root / relative
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            findings.append(finding("VDD-GOVERNANCE-POLICY", relative, str(exc)))
+            continue
+        for phrase in phrases:
+            if phrase not in text:
+                findings.append(
+                    finding(
+                        "VDD-GOVERNANCE-POLICY",
+                        relative,
+                        f"missing governance statement: {phrase}",
+                    )
+                )
     return findings
 
 
@@ -328,7 +379,7 @@ def validate_generic_source(skill_root: Path, contract: dict[str, Any]) -> list[
 
 
 def validate_skill(skill_root: Path) -> dict[str, Any]:
-    checks = ["required-files", "required-headings", "input-routing", "static-lifecycle", "review-reentry", "profile-cases", "clarification-fixtures", "generic-source"]
+    checks = ["required-files", "required-headings", "governance-policy", "input-routing", "static-lifecycle", "review-reentry", "profile-cases", "clarification-fixtures", "generic-source"]
     findings: list[dict[str, str]] = []
     try:
         contract = load_contract(skill_root)
@@ -342,6 +393,7 @@ def validate_skill(skill_root: Path) -> dict[str, Any]:
             "scripts/skill-contract.json",
             "review re-entry policy must preserve minimal scope, transport retry, P2, and original target rules",
         ))
+    findings.extend(validate_governance_policy(skill_root, contract))
     findings.extend(validate_input_routes(skill_root, contract))
     findings.extend(validate_review_reentry_text(skill_root))
     for relative in contract["required_files"]:
