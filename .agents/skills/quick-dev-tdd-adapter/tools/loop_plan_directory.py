@@ -417,11 +417,14 @@ def _active_prior_red_handoff(run_dir: Path) -> dict[str, str] | None:
 
 
 def _has_execution_fingerprint(run_dir: Path) -> bool:
-    try:
-        basis = json.loads((run_dir / "red-basis.v1.json").read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError):
-        return False
-    return isinstance(basis.get("execution_fingerprint"), str) and bool(basis["execution_fingerprint"])
+    for name in ("red-basis.v1.json", "prior-red-handoff.v2.json"):
+        try:
+            basis = json.loads((run_dir / name).read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        if isinstance(basis.get("execution_fingerprint"), str) and bool(basis["execution_fingerprint"]):
+            return True
+    return False
 
 
 def route_staged_run(run_dir: Path) -> str | None:

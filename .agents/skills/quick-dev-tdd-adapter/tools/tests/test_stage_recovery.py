@@ -121,6 +121,16 @@ def test_legacy_active_run_requires_successor_when_prior_red_is_reusable(tmp_pat
     assert driver._has_execution_fingerprint(run) is True
 
 
+def test_prior_red_handoff_execution_fingerprint_reuses_green_only_run(tmp_path):
+    driver = _load("loop_plan_directory")
+    run = tmp_path / "RUN-HANDOFF"
+    run.mkdir()
+    (run / "prior-red-handoff.v2.json").write_text(
+        json.dumps({"execution_fingerprint": "sha256:prior-red"}), encoding="utf-8"
+    )
+    assert driver._has_execution_fingerprint(run) is True
+
+
 def test_prior_red_handoff_requires_current_contract_and_historical_successor(tmp_path):
     runner = _load("stage_lifecycle_runner")
     root = tmp_path
