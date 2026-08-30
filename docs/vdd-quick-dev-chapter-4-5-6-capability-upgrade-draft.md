@@ -1,6 +1,6 @@
 ---
 status: draft
-revision: 2
+revision: 3
 purpose: bmad-prd-bmad-spec-bmad-architect-input
 baseline_commit: 20bb2e939dc63cf01f4a8b031050cd494c18a10e
 scope: vdd-execution-plan-and-quick-dev-tdd-adapter
@@ -26,6 +26,8 @@ scope: vdd-execution-plan-and-quick-dev-tdd-adapter
 - `execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery/` 在规划、修复、执行与复核过程中暴露的系统性问题。
 
 开发环境中的 external review、candidate binding、maintainer authorization、source-freeze/conformance、Skill-input attestation 和报告治理已由 phase-aware governance mode 默认关闭；本文不重新引入这些治理负担。
+
+术语说明：当前工具链已经移除 Taskmaster MCP，任务生成、triplet 编译、overlay 和 Chapter 4/5/6 编排由本地脚本及 Chapter Skills 承担。不过原工作流仍保留 `.taskmaster/tasks`、task triplet、task ID 和 overlay refs 等 legacy Taskmaster-compatible 数据模型。本文只学习其中可泛化的拆解、语义稳定化与执行能力，不把这套兼容数据模型带入 VDD 或 Quick Dev。
 
 ## 2. 核心结论
 
@@ -75,7 +77,7 @@ scope: vdd-execution-plan-and-quick-dev-tdd-adapter
 
 - 补写缺失的上游需求。
 - 临时发明 Acceptance 或把模糊需求解释成实现。
-- 执行 Chapter 6 的 6.7 LLM Review、6.8 多 reviewer Needs Fix 或 6.9 commit authority。
+- 执行 Chapter 6 的 6.7 LLM Review、6.8 多 reviewer Needs Fix，或拥有 commit、PR、release authority。Quick Dev 仍必须保留从 6.9 泛化出的 plan-local terminal deterministic full validation，但不复制游戏仓专用的 pre-commit hard-check pipeline。
 - 把 timeout、repo noise、harness failure 或 artifact existence 当成 RED/GREEN 证据。
 
 ## 4. 从 Chapter 4 吸收的能力：先建立可实施基线，再生成 slice
@@ -256,7 +258,7 @@ BMAD spec 应设计一个紧凑的 machine-readable semantic plan，至少能回
 
 ## 6. 从 Chapter 6 吸收的能力：通用 TDD 实施内核
 
-Quick Dev 应学习 6.3～6.6，而不是吸收 6.7～6.9 的 review/commit 权限。
+Quick Dev 应学习 6.3～6.6，并保留 6.9 中“完成前运行一次当前版本确定性完整验证”的通用原则；不吸收 6.7 LLM Review、6.8 多 reviewer Needs Fix、游戏仓专用 pre-commit pipeline，或 commit/PR/release 权限。
 
 ### 6.1 Recommendation-only 路由
 
@@ -597,8 +599,8 @@ BMAD spec 应决定最终 schema，但至少需要表达四类数据：
 
 - 不重写 8-25 历史 evidence。
 - 不重新启用开发态 external review、authorization 或签名治理。
-- 不把 Chapter 6 的 6.7、6.8、6.9 收进 Quick Dev。
-- 不照搬 Taskmaster、Godot、GdUnit、overlay 的业务仓细节。
+- 不把 Chapter 6 的 6.7 LLM Review、6.8 多 reviewer Needs Fix、游戏仓专用 6.9 pre-commit pipeline 或 commit/PR/release authority 收进 Quick Dev；只保留通用 terminal deterministic full validation。
+- 不照搬已经移除的 Taskmaster MCP，也不把 legacy Taskmaster-compatible triplet/task-id/overlay 数据模型、Godot 或 GdUnit 业务仓细节带入 VDD/Quick Dev。
 - 不以增加 hash、schema、receipt 数量作为成功指标。
 - 不要求一次大提交完成全部改造。
 - 不让现有 VDD/Quick Dev 独立规划、实施并验收自己的全部改造。
@@ -1012,7 +1014,7 @@ Acceptance
 
 ## 16. 可直接实现的 Quick Dev TDD Chapter 6 协议
 
-本节对应 Chapter 6 的 6.3～6.6，以及恢复、recommendation 和止损。6.7 LLM Review、6.8 多 reviewer、6.9 commit authority 仍属于外层。
+本节对应 Chapter 6 的 6.3～6.6，以及恢复、recommendation 和止损，并吸收 6.9 中 terminal deterministic full validation 的通用原则。6.7 LLM Review、6.8 多 reviewer Needs Fix、游戏仓专用 pre-commit hard checks，以及 commit/PR/release authority 仍属于外层。
 
 ### 16.1 Quick Dev 顶层入口
 
@@ -1436,7 +1438,7 @@ recovered-run 仅可从显式 ref 恢复。验证失败则标记 invalid-run，�
 
 ### 18.1 必须先定义比较范围
 
-如果比较 Chapter 4/5/6 的全部仓库专用能力，包括 Taskmaster overlay、Godot/GdUnit、批量 jitter/shard/quarantine、6.7 LLM Review、6.8 多 reviewer 和 6.9 commit authority，则 VDD + Quick Dev 不应追求 90%，因为这些能力被有意留在外层或属于其他业务仓。
+如果比较 Chapter 4/5/6 的全部仓库专用能力，包括 legacy Taskmaster-compatible triplet/task-id/overlay 数据模型、Godot/GdUnit、批量 jitter/shard/quarantine、6.7 LLM Review、6.8 多 reviewer、游戏仓专用 6.9 pre-commit hard checks，以及 commit/PR/release authority，则 VDD + Quick Dev 不应追求 90%，因为这些能力被有意留在外层或属于其他业务仓。这里的 Taskmaster 仅指仍被兼容的数据模型；Taskmaster MCP 已经移除。
 
 本项目的合理分母是“可泛化且属于 VDD/Quick Dev 职责的能力”：
 
@@ -1450,9 +1452,9 @@ recovered-run 仅可从显式 ref 恢复。验证失败则标记 invalid-run，�
 
 | 能力组 | 权重 | 实施后目标 | 允许保留的差距 |
 | --- | ---: | ---: | --- |
-| Chapter 4 泛化基线与 slice feasibility | 25 | 22 | 不复制 overlay/Taskmaster 专用 apply |
+| Chapter 4 泛化基线与 slice feasibility | 25 | 22 | 不复制 legacy Taskmaster-compatible triplet/overlay apply |
 | Chapter 5 obligation/Acceptance/ref 稳定化 | 35 | 32 | 不复制长批次 jitter/quarantine 全套 |
-| Chapter 6 Quick Dev 执行内核 | 40 | 37 | 不包含 6.7～6.9 |
+| Chapter 6 Quick Dev 执行内核 | 40 | 37 | 不包含 6.7/6.8、游戏仓专用 6.9 pipeline 与 commit/PR/release authority；保留通用 terminal full validation |
 | 合计 | 100 | 91 | 仅限明确排除项 |
 
 因此：
@@ -1512,3 +1514,21 @@ recovered-run 仅可从显式 ref 恢复。验证失败则标记 invalid-run，�
 - 任何 false-green、hard-uncovered 被放行、planned-only 被计为 observed，均直接取消 90% 结论。
 
 如果只完成 BMAD 文档和代码 happy path，没有 detached mutation 与新任务盲测，合理结论只能是 80%～85%，不能宣称 90%。
+
+### 18.5 最终责任链
+
+Quick Dev 的 terminal result 只能是 `implementation-complete`。它不能自行发布 `acceptance-passed`，也不能把内部模型评价当成最终语义裁决。
+
+最终流程固定为：
+
+~~~text
+VDD
+→ Quick Dev TDD
+→ plan-local terminal deterministic full validation
+→ implementation-complete
+→ 外部独立语义验收
+→ acceptance-passed 或返回 VDD/Quick Dev 修复
+→ maintainer 决定 commit、PR 或 release
+~~~
+
+外部独立语义验收由 Quick Dev 之外的主体执行，直接比较原始 requirements、obligations、Acceptance、当前代码现实和真实测试 evidence。对于当前 AI 主导、单人维护的 development 场景，可由本助手承担该语义把关；不需要为此把 Chapter 6 的 6.7/6.8 重型多 reviewer pipeline 内嵌进 Quick Dev。
