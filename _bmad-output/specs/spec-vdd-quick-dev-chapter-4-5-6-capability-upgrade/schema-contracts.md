@@ -1,8 +1,35 @@
 # Normative Schema and Invalidation Contracts
 
-## Assertion edge
+## Plan coverage edge and runtime assertion edge
 
-每个 Acceptance 的每条 observation edge 使用以下语义字段：
+VDD V5 只生成计划期 `plan_coverage_edge`；Quick Dev Q3–Q8 才能生成运行期 `runtime_assertion_edge`。两者不可互换。
+
+### Plan coverage edge
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["requirement_id", "obligation_id", "acceptance_id", "source_ref", "failure_intent_id", "slice_id", "verification_lane", "terminal_predicate", "stage_scope"],
+  "properties": {
+    "requirement_id": "...",
+    "obligation_id": "...",
+    "acceptance_id": "A-...",
+    "source_ref": "...",
+    "failure_intent_id": "FI-...",
+    "slice_id": "S...",
+    "verification_lane": "unit|integration|matrix|runtime",
+    "terminal_predicate": "...",
+    "stage_scope": ["red", "green", "refactor", "terminal"]
+  }
+}
+```
+
+Plan coverage edge 禁止出现 `candidate_hash`、`run_id`、`observation_id`、`result_ref`、`result_sha256`、实际 outcome 或 producer/validator identity。
+
+### Runtime assertion edge
+
+每个 Acceptance 的每条运行期 observation edge 使用以下语义字段：
 
 ```json
 {
@@ -52,4 +79,4 @@
 
 ## Execution profile truth floor
 
-`fast-ship` 可减少受影响范围，`standard` 执行完整 slice terminal/负例/mutation，`self-hosted` 增加冻结 predecessor judge 和完整反假绿套件。所有 profile 必须真实执行、executions≥1、保留 RED→GREEN→REFACTOR 顺序、exact cover、selector binding、receipt 中的 profile identity 和同输入同 profile 的确定性重放；任何 profile 不得用静态检查替代动态执行。
+`fast-ship` 可减少受影响范围，`standard` 执行完整 slice terminal/负例/mutation，`self-hosted` 增加冻结 predecessor judge 和完整反假绿套件。所有 profile 必须真实执行；成功 RED/GREEN/REFACTOR/terminal 要求 `process_attempts>=1`、`test_executions>=1`、`cases>=1`，保留 RED→GREEN→REFACTOR 顺序、exact cover、selector binding、receipt 中的 profile identity 和同输入同 profile 的确定性重放；任何 profile 不得用静态检查替代动态执行。

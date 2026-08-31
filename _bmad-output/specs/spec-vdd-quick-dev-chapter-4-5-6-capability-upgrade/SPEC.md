@@ -29,6 +29,8 @@ sources:
     role: provenance
   - path: docs/know107.txt
     role: provenance
+  - path: docs/know108.txt
+    role: provenance
 ---
 
 > **Canonical contract.** 本 SPEC 与 `companions:` 中的文件共同构成 VDD 与 Quick Dev Chapter 4/5/6 通用能力升级的完整机器合同。`sources:` 仅用于追溯；原始能力草案第 15、16、18.5 节的承重内容已提取到规范性 companions，不再把整份草案作为 adopted contract。
@@ -55,7 +57,7 @@ sources:
   - **success:** recommendation-only 不运行测试、不创建 run、不改状态；`planned-only`、`observed-run`、`recovered-run`、`invalid-run` 可区分且只有真实 observed lineage 才能推进。
 - **CAP-5**
   - **intent:** Quick Dev 能从 VDD intent 物化并执行真实 RED，按实际 observation 分类失败。
-  - **success:** descriptor 使用 shell-free 参数数组和安全 cwd；executions≥1，observed failure 来自进程输出/断言；harness、repo-noise、timeout、zero-case 和 unexpected-green 均不能成为 expected-red。
+  - **success:** descriptor 使用 shell-free 参数数组和安全 cwd；成功的 RED/GREEN/REFACTOR 要求 `process_attempts>=1`、`test_executions>=1`、`cases>=1`，observed failure 来自进程输出/断言；harness、repo-noise、timeout、zero-case 和 unexpected-green 均不能成为 expected-red。
 - **CAP-6**
   - **intent:** Quick Dev 能在同一 selector 语义上完成受写集约束的 GREEN 与 REFACTOR。
   - **success:** target、fixture、assertion、cwd 和 selector identity 与 RED 相同；changed paths 全部在合法 production write set，删 case、换入口、复制 expected 值或越界写入均失败。
@@ -78,6 +80,7 @@ sources:
 - Quick Dev 物化并执行 descriptor，维护 run state；terminal 只产生 `implementation-complete`。外部独立语义验收产生 `acceptance-passed` 或 repair，maintainer 才决定 commit、PR、release。
 - 所有命令必须使用参数数组、`shell=False`、仓库内安全 cwd、显式 target/fixture identity 和 declared write set。
 - Assertion edge 必须绑定当前 plan、slice、candidate、observation、producer/validator identity、selector、target、fixture 和 case source；多 Acceptance 共享 selector 时每个 Acceptance 必须有独立 assertion edge。
+- VDD V5 仅生成不含 candidate/run/observation/result hash 的 `plan_coverage_edge`；Quick Dev Q3–Q8 才能生成带运行期 lineage 的 `runtime_assertion_edge`，两者不得混用。
 - Invalidation 按 `schema-contracts.md` 的矩阵传递计算；selector/fixture/target/source 变化从 RED 重跑，production owner 变化在语义变化时回 RED，不确定时采用更严格重跑。
 - 模型 worker 只可在只读语义提取/对齐或受限写集内工作，不能写 plan-ready、pass 或 observed evidence；确定性 validator 拥有最终 predicate。
 - Development 默认关闭 external review、candidate binding 和 authorization 阻塞；认证、TDD、语义 predicate、写集安全和运行安全不关闭。Test/production 可开启治理而不降低真实性。

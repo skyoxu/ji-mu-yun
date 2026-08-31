@@ -304,16 +304,16 @@ fingerprint 由 selector identity、target/fixture hash、stage、exit semantics
     "actual_stage_outcome": {"enum": ["pass", "fail"]},
     "predicate_result": {"type": "boolean"},
     "recommended_action": {"enum": ["run-preflight", "author-red", "run-red", "implement", "run-green", "run-refactor", "validate-slice", "run-terminal", "repair-vdd", "stop", "environment-blocked"]},
-    "assertion_edges": {"type": "array", "minItems": 0, "items": {"$ref": "#/definitions/assertion_edge"}}
+    "assertion_edges": {"type": "array", "minItems": 0, "items": {"$ref": "#/definitions/runtime_assertion_edge"}}
   }
 }
 ```
 
-`schema-contracts.md` 第 3 节的字段集合即为每条 assertion edge 的 canonical schema；observation 只能由 validator 从 receipt 派生。`observed=true`、`expected_stage_outcome`、`actual_stage_outcome`、`predicate_result` 不得由 descriptor、producer 或模型写入。每个 edge 必须满足上述完整绑定字段及当前字节重读约束。
+`runtime_assertion_edge`（定义见下文）只能由 Quick Dev Q3–Q8 在运行后生成；observation 只能由 validator 从 receipt 派生。`observed=true`、`expected_stage_outcome`、`actual_stage_outcome`、`predicate_result` 不得由 descriptor、producer 或模型写入。每个 runtime edge 必须满足上述完整绑定字段及当前字节重读约束。VDD V5 仅生成不含运行期字段的 `plan_coverage_edge`。
 
 Cross-field predicates：`process_attempts>=1`；`timed_out=true` 时 `exit_code=null` 且 classification=`timeout-no-observation`；`expected-red` 必须 `test_executions>=1`、cases≥1、非零 exit 且至少一条匹配 assertion edge；GREEN/REFACTOR/terminal 的 pass 必须 `test_executions>=1`、cases≥1、零 exit 且所有 bound assertions 为真。artifact-integrity、target-binding-failure、test-harness-failure、timeout-no-observation 可有 `test_executions=0`、cases=0、空 assertion edges，但 `predicate_result=false` 且 `recommended_action` 不得为 implement/run-green/run-refactor/validate-slice/run-terminal。诊断用途的 unconstrained exit expectation 只能进入独立非授权 diagnostic schema，不得进入 descriptor、receipt、observation 或授权 evidence。
 
-`#/definitions/assertion_edge` 定义如下：
+`#/definitions/runtime_assertion_edge` 定义如下：
 
 ```json
 {
@@ -322,6 +322,27 @@ Cross-field predicates：`process_attempts>=1`；`timed_out=true` 时 `exit_code
   "required": ["plan_id", "plan_hash", "slice_id", "candidate_hash", "observation_id", "acceptance_id", "assertion_id", "selector_identity", "stage", "run_id", "result_ref", "result_sha256", "observed", "expected_stage_outcome", "actual_stage_outcome", "predicate_result", "target_ref", "fixture_ref", "case_source_ref", "producer_identity", "validator_identity", "derived_by"],
   "properties": {
     "plan_id": {"type": "string"}, "plan_hash": {"type": "string"}, "slice_id": {"type": "string"}, "candidate_hash": {"type": "string"}, "observation_id": {"type": "string"}, "acceptance_id": {"type": "string"}, "assertion_id": {"type": "string"}, "selector_identity": {"type": "string"}, "stage": {"enum": ["red", "green", "refactor", "terminal"]}, "run_id": {"type": "string"}, "result_ref": {"type": "string"}, "result_sha256": {"type": "string"}, "observed": {"type": "boolean"}, "expected_stage_outcome": {"enum": ["pass", "fail"]}, "actual_stage_outcome": {"enum": ["pass", "fail"]}, "predicate_result": {"type": "boolean"}, "target_ref": {"type": "string"}, "fixture_ref": {"type": "string"}, "case_source_ref": {"type": "string"}, "producer_identity": {"type": "string"}, "validator_identity": {"type": "string"}, "derived_by": {"const": "deterministic-validator"}
+  }
+}
+```
+
+`#/definitions/plan_coverage_edge` 定义如下；它只服务于 VDD V5 规划期 exact-cover，禁止运行期字段：
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["requirement_id", "obligation_id", "acceptance_id", "source_ref", "failure_intent_id", "slice_id", "verification_lane", "terminal_predicate", "stage_scope"],
+  "properties": {
+    "requirement_id": {"type": "string"},
+    "obligation_id": {"type": "string"},
+    "acceptance_id": {"type": "string"},
+    "source_ref": {"type": "string"},
+    "failure_intent_id": {"type": "string"},
+    "slice_id": {"type": "string", "pattern": "^S[0-9]+$"},
+    "verification_lane": {"enum": ["unit", "integration", "matrix", "runtime"]},
+    "terminal_predicate": {"type": "string", "minLength": 1},
+    "stage_scope": {"type": "array", "items": {"enum": ["red", "green", "refactor", "terminal"]}, "minItems": 1}
   }
 }
 ```
@@ -393,7 +414,7 @@ Cross-schema constraints: all hashes must be recomputed from current bytes; a te
 {
   "source_index": {"type": "object", "additionalProperties": false, "required": ["sources"], "properties": {"sources": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["requirement_id", "path", "anchor", "source_text", "source_hash", "text_hash", "order"], "properties": {"requirement_id": {"type": "string"}, "path": {"type": "string"}, "anchor": {"type": "string"}, "source_text": {"type": "string", "minLength": 1}, "source_hash": {"type": "string"}, "text_hash": {"type": "string"}, "order": {"type": "integer", "minimum": 0}}}}}},
   "semantic_align_result": {"type": "object", "additionalProperties": false, "required": ["covered_ids", "missing_ids", "invented_semantics", "oracle_alignment", "repairs"], "properties": {"covered_ids": {"type": "array", "items": {"type": "string"}}, "missing_ids": {"type": "array", "items": {"type": "string"}}, "invented_semantics": {"type": "array", "items": {"type": "string"}}, "oracle_alignment": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["acceptance_id", "observable", "expected", "forbidden"], "properties": {"acceptance_id": {"type": "string"}, "observable": {"type": "string"}, "expected": {"type": "string"}, "forbidden": {"type": "array", "items": {"type": "string"}}}}}, "repairs": {"type": "array", "items": {"type": "string"}}}},
-  "coverage_result": {"type": "object", "additionalProperties": false, "required": ["active_acceptance_ids", "edges", "orphan_ids", "hard_uncovered"], "properties": {"active_acceptance_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1}, "edges": {"type": "array", "items": {"$ref": "#/definitions/assertion_edge"}, "minItems": 1}, "orphan_ids": {"type": "array", "items": {"type": "string"}}, "hard_uncovered": {"type": "array", "items": {"type": "string"}}}},
+  "coverage_result": {"type": "object", "additionalProperties": false, "required": ["active_acceptance_ids", "edges", "orphan_ids", "hard_uncovered"], "properties": {"active_acceptance_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1}, "edges": {"type": "array", "items": {"$ref": "#/definitions/plan_coverage_edge"}, "minItems": 1}, "orphan_ids": {"type": "array", "items": {"type": "string"}}, "hard_uncovered": {"type": "array", "items": {"type": "string"}}}},
   "feasibility_result": {"type": "object", "additionalProperties": false, "required": ["slice_id", "selector_target", "real_production_entry", "allowed_paths", "planned_new_files", "green_owner", "refactor_selector", "valid"], "properties": {"slice_id": {"type": "string"}, "selector_target": {"type": "string"}, "real_production_entry": {"type": "string"}, "allowed_paths": {"type": "array", "items": {"type": "string"}}, "planned_new_files": {"type": "array", "items": {"type": "string"}}, "green_owner": {"type": "string"}, "refactor_selector": {"type": "string"}, "valid": {"type": "boolean"}}},
   "slice_ready_result": {"type": "object", "additionalProperties": false, "required": ["plan_id", "plan_hash", "slice_id", "candidate_hash", "red_observation", "green_observation", "refactor_observation", "assertion_edge_refs", "predecessor_refs", "dependency_closure_hash", "selector_identity", "validator_identity", "status"], "properties": {"plan_id": {"type": "string"}, "plan_hash": {"type": "string"}, "slice_id": {"type": "string"}, "candidate_hash": {"type": "string"}, "red_observation": {"type": "object", "additionalProperties": false, "required": ["run_id", "ref", "sha256"], "properties": {"run_id": {"type": "string"}, "ref": {"type": "string"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}, "green_observation": {"type": "object", "additionalProperties": false, "required": ["run_id", "ref", "sha256"], "properties": {"run_id": {"type": "string"}, "ref": {"type": "string"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}, "refactor_observation": {"type": "object", "additionalProperties": false, "required": ["run_id", "ref", "sha256"], "properties": {"run_id": {"type": "string"}, "ref": {"type": "string"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}, "assertion_edge_refs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["ref", "sha256"], "properties": {"ref": {"type": "string"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}, "minItems": 1}, "predecessor_refs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["slice_id", "run_id", "ref", "sha256"], "properties": {"slice_id": {"type": "string"}, "run_id": {"type": "string"}, "ref": {"type": "string"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}}, "dependency_closure_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "selector_identity": {"type": "string"}, "validator_identity": {"type": "string", "minLength": 1}, "status": {"const": "slice-ready"}}},
   "terminal_failure_result": {"type": "object", "additionalProperties": false, "required": ["plan_id", "run_id", "candidate_hash", "classification", "failure_family", "failed_predecessors", "recommended_action"], "properties": {"plan_id": {"type": "string"}, "run_id": {"type": "string"}, "candidate_hash": {"type": "string"}, "classification": {"enum": ["semantic-contract-gap", "artifact-integrity", "target-binding-failure", "test-harness-failure", "timeout-no-observation", "repo-noise", "unexpected-green", "task-implementation-failure", "repeated-deterministic-failure", "terminal-failure"]}, "failure_family": {"type": "string"}, "failed_predecessors": {"type": "array", "items": {"type": "string"}}, "recommended_action": {"enum": ["repair-vdd", "repair-quick-dev", "stop"]}}}
@@ -426,8 +447,8 @@ Cross-schema constraints: all hashes must be recomputed from current bytes; a te
 | Q4 production implementation | clean red-observed + write set | changed paths confined; selector/fixtures/contracts/evidence untouched | `implementation-successor` → Q5 | remain Q4; invalidate successor | successor snapshot | production owner |
 | Q5 GREEN | red-observed + successor | same selector identity and target/fixture/assertions; test_executions≥1; cases≥1; exit 0; all bound assertions true | `green-observed` → Q6 | remain Q5; task failure/invalidate | GREEN receipt/observation | Quick Dev |
 | Q6 REFACTOR | green-observed | same selector; production-only writes; regression/schema validators pass | `refactor-observed` → Q7 | remain Q6; invalidate from GREEN or RED as required | REFACTOR receipt/observation | Quick Dev |
-| Q7 slice-ready | refactor-observed | all local Acceptance edges and hashes/lineage valid | `slice-ready` → next slice or Q8 | remain Q7; invalidate affected stage only | slice-ready result | deterministic validator |
-| Q8 terminal | all slice-ready predecessors + terminal input | exact cover, explicit predecessor mapping, current hashes, terminal/regression/mutation pass | `whole-plan-terminal` | terminal failure result; never pass | terminal result/failure | deterministic terminal validator |
+| Q7 slice-ready | refactor-observed | all local `runtime_assertion_edge` refs and hashes/lineage valid | `slice-ready` → next slice or Q8 | remain Q7; invalidate affected stage only | slice-ready result | deterministic validator |
+| Q8 terminal | all slice-ready predecessors + terminal input | plan coverage exact cover plus runtime assertion edges, explicit predecessor mapping, current hashes, terminal/regression/mutation pass | `whole-plan-terminal` | terminal failure result; never pass | terminal result/failure | deterministic terminal validator |
 
 No transition may be inferred from file existence, self-reported status, stale hashes, or a producer-generated outcome. Q2–Q8 append evidence; historical invalid runs remain immutable and cannot serve as current predecessors. A Q7 failure does not destroy valid RED/GREEN lineage unless the invalidation matrix marks those predecessors affected.
 
@@ -437,18 +458,18 @@ obligation extract、Acceptance compile 和 semantic align 的 worker 必须 rea
 
 ## Detached fixture and mutation matrix
 
-| failure family | blocked fixture | blocked command | blocked subject exit | blocked validator exit | blocked classification | corrected fixture | corrected command | corrected subject exit | corrected validator exit | corrected classification | 禁止后继状态 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| semantic-contract-gap | 缺字段/冲突 schema manifest | `py -3 scripts/quick_dev/run.py --plan <plan> --slice <slice>` | nonzero | nonzero | semantic-contract-gap | 完整 schema-valid manifest | same command | zero | zero | pass | implementation-successor/green |
-| artifact-integrity | 篡改 descriptor/receipt/result hash | `py -3 scripts/quick_dev/validate_artifacts.py --run <run>` | zero/any | nonzero | artifact-integrity | 当前字节可重算且匹配 | same command | zero | zero | pass | slice-ready/terminal |
-| target-binding-failure | target 或 fixture ref 错误 | `py -3 scripts/quick_dev/run.py --plan <plan> --slice <slice>` | zero/any | nonzero | target-binding-failure | 冻结 target/fixture refs | same command | zero | zero | pass | implementation-successor/green |
-| test-harness-failure | 缺 runner、导入错误、零 executions | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | nonzero/any | nonzero | test-harness-failure | 可执行真实 runner | same command | nonzero | zero | pass | expected-red/implementation |
-| timeout-no-observation | 进程超时或无 observation | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | timeout/null | nonzero | timeout-no-observation | 在 timeout 内产生 receipt/observation | same command | nonzero | zero | expected-red | expected-red/implementation |
-| repo-noise | 与目标无关的预存/并发仓库失败或噪声污染观察 | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | nonzero/any | nonzero | repo-noise | 隔离干净 snapshot 中仅目标行为执行 | same command | nonzero | zero | expected-red/pass | slice-ready/terminal |
-| unexpected-green | RED selector 零退出或无 expected failure ID | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | zero | nonzero | unexpected-green | 同 selector 真实行为缺口 | same command | nonzero | zero | expected-red | implementation-successor |
-| expected-red | 真实行为缺口且精确 failure ID | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | nonzero | zero | expected-red | 实现后同 selector 通过 | same command | zero | zero | pass | green-before-red |
-| task-implementation-failure | GREEN/REFACTOR 非零或断言失败 | `py -3 scripts/quick_dev/stage_command.py --stage green --slice <slice>` | nonzero | zero | task-implementation-failure | 生产实现满足 assertions | same command | zero | zero | pass | refactor/slice-ready |
-| repeated-deterministic-failure | 相同 fingerprint 连续失败两次 | `py -3 scripts/quick_dev/run.py --plan <plan> --slice <slice> --profile standard`（相同命令执行两次） | nonzero | nonzero | repeated-deterministic-failure | 修复输入或明确 repair 路由 | same command（不得第三次原参数重跑） | zero/repair | zero | pass/repair | 原参数第三次重跑 |
+| failure family | blocked fixture | blocked command | blocked subject exit | blocked lifecycle gate exit | blocked fixture assertion exit | blocked classification | corrected fixture | corrected command | corrected subject exit | corrected lifecycle gate exit | corrected fixture assertion exit | corrected classification | 禁止后继状态 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| semantic-contract-gap | 缺字段/冲突 schema manifest | `py -3 scripts/quick_dev/run.py --plan <plan> --slice <slice>` | nonzero | nonzero | zero/none | semantic-contract-gap | 完整 schema-valid manifest | same command | zero | zero | zero | pass | implementation-successor/green |
+| artifact-integrity | 篡改 descriptor/receipt/result hash | `py -3 scripts/quick_dev/validate_artifacts.py --run <run>` | zero/any | nonzero | zero/none | artifact-integrity | 当前字节可重算且匹配 | same command | zero | zero | zero | pass | slice-ready/terminal |
+| target-binding-failure | target 或 fixture ref 错误 | `py -3 scripts/quick_dev/run.py --plan <plan> --slice <slice>` | zero/any | nonzero | zero/none | target-binding-failure | 冻结 target/fixture refs | same command | zero | zero | zero | pass | implementation-successor/green |
+| test-harness-failure | 缺 runner、导入错误、零 executions | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | nonzero/any | nonzero | zero/none | test-harness-failure | 可执行真实 runner | same command | nonzero | zero | zero | pass | expected-red/implementation |
+| timeout-no-observation | 进程超时或无 observation | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | timeout/null | nonzero | zero/none | timeout-no-observation | 在 timeout 内产生 receipt/observation | same command | nonzero | zero | zero | expected-red | expected-red/implementation |
+| repo-noise | 无关测试失败或噪声污染观察 | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | nonzero/any | nonzero | zero/none | repo-noise | 隔离干净 snapshot 中仅目标行为执行 | same command | nonzero | zero | zero | expected-red/pass | slice-ready/terminal |
+| unexpected-green | RED selector 零退出或无 expected failure ID | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | zero | nonzero | zero/none | unexpected-green | 同 selector 真实行为缺口 | same command | nonzero | zero | zero | expected-red | implementation-successor |
+| expected-red | 真实行为缺口且精确 failure ID | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | nonzero | zero | zero | expected-red | 实现后同 selector 通过 | `py -3 scripts/quick_dev/stage_command.py --stage green --slice <slice>`（selector identity 完全相同） | zero | zero | zero | pass | green-before-red |
+| task-implementation-failure | GREEN/REFACTOR 非零或断言失败 | `py -3 scripts/quick_dev/stage_command.py --stage green --slice <slice>` | nonzero | nonzero | zero/none | task-implementation-failure | 生产实现满足 assertions | same command | zero | zero | zero | pass | refactor/slice-ready |
+| repeated-deterministic-failure | 相同 fingerprint 连续失败两次 | `py -3 scripts/quick_dev/run.py --plan <plan> --slice <slice> --profile standard`（相同命令执行两次） | nonzero | nonzero | zero/none | repeated-deterministic-failure | 修复输入或明确 repair 路由 | same command（不得第三次原参数重跑） | zero/repair | zero | zero | pass/repair | 原参数第三次重跑 |
 
 另外必须覆盖以下反假绿变异：复制 registry expected failure/outcome、producer 自报 pass/status、缩小 case 集或替换 selector、缺 predecessor/错 run/hash/历史 glob 或 mtime 扫描、删除 assertion edge 或 terminal 吞并 Acceptance、profile 跳过动态执行或复用错误 selector。所有变异均须由独立只读 validator 拒绝。`expected-red` 行表示合法的 pre-implementation RED，不是被 validator 拒绝的 blocked fixture；其 corrected 侧必须是同 selector 的实现后通过。
 

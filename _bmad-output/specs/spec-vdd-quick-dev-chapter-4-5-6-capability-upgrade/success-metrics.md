@@ -14,7 +14,7 @@
 
 - owner/lane/state-transition 不兼容时 100% 拆分；兼容的 Acceptance 可在合法 write set 内合并。
 - 固定失败、无法调用生产入口、依赖未来 evidence 的 RED intent 在 plan-ready 阶段 100% 阻断。
-- 所有 RED/GREEN/REFACTOR observation 的 `executions >= 1`。
+- 所有成功的 RED/GREEN/REFACTOR observation 均满足 `process_attempts >= 1`、`test_executions >= 1` 和 `cases >= 1`；失败分类允许零 test executions/cases。
 - planned-only、timeout、repo-noise、harness failure、zero-case、unexpected-green 不得成为 pass。
 - GREEN/REFACTOR selector identity 与 RED 相同；observed failure 不得复制 registry expected 值。
 - selector/fixture/target 变化使对应生命周期全部失效；多个历史成功 run 不得造成当前 lineage 歧义。
@@ -32,4 +32,3 @@
 
 - 不得通过降低 assertion、缩小 case 集、增加 receipt/hash 文件或增加模型调用次数提升完成率。
 - 文档、schema、happy-path 单测不能单独证明约 90% 能力；必须同时通过 detached mutation、8-25 replay 和新任务盲测。
-

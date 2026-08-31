@@ -1,0 +1,59 @@
+唯一硬阻断
+
+implementation-contracts.md 中的 VDD coverage_result.edges 仍引用 assertion_edge。
+
+但当前 assertion_edge 强制包含：
+
+candidate_hash
+run_id
+observation_id
+result_ref/result_hash
+actual/expected outcome
+producer/validator identity
+
+这些都是 Quick Dev 执行后才存在的运行期证据。VDD V5 在 Quick Dev 前执行，不可能合法提供这些字段；否则只能提前伪造未来 evidence，重现 8-25 的循环绑定问题。
+
+必须拆成两个类型：
+
+plan_coverage_edge
+
+供 VDD 使用，只描述需求规划图，例如：
+
+requirement/obligation/Acceptance
+source ref
+failure intent
+slice
+verification lane
+terminal predicate
+stage scope
+
+不得包含 run、candidate、observation 或 result hash。
+
+runtime_assertion_edge
+
+供 Quick Dev Q3–Q8 使用，保留现在的运行期证据字段。
+
+然后修改引用：
+
+V5 coverage_result.edges → plan_coverage_edge
+Q7/Q8 slice-ready、terminal evidence → runtime_assertion_edge
+
+这是进入 Architecture 前必须消除的 Spec 内部矛盾。
+
+两处执行表语义修正
+
+在 fixture blocked/corrected 合同中还应修正：
+
+expected-red 的 corrected command 不能继续是 --stage red 并返回 pass。
+应改为 --stage green，但保持完全相同的 selector identity。
+task-implementation-failure 的生命周期 validator exit 应为非零。
+如果表中的 validator exit=zero 指 fixture 测试成功识别负例，则需要把字段拆成：
+subject_exit
+lifecycle_gate_exit
+fixture_assertion_exit
+
+否则 Architecture 无法判断这个 zero 究竟代表放行还是负例测试成功。
+
+另外建议顺手把 SPEC.md 和 schema-contracts.md 中遗留的泛化 executions >= 1 统一成新的 process_attempts/test_executions/cases 术语。这不是单独硬阻断。
+
+最终判断：当前 Spec 完成度约 95%，尚不能正式进入 Architecture。完成上述一次小范围修复、重新发布 canonical selection 后即可进入，不需要增加新的治理文档或扩大评审范围。
