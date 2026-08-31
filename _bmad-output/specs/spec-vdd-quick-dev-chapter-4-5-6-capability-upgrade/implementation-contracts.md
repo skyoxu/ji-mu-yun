@@ -254,7 +254,7 @@ fingerprint 由 selector identity、target/fixture hash、stage、exit semantics
 {
   "type": "object",
   "additionalProperties": false,
-  "required": ["receipt_id", "descriptor_ref", "argv", "cwd", "started_at", "ended_at", "process_attempts", "test_executions", "cases", "exit_code", "timed_out", "stdout_sha256", "stderr_sha256", "candidate_hash", "descriptor_sha256", "target_hashes", "fixture_hashes", "observed_assertion_ids", "observed_failure_ids", "profile_identity", "executor_identity"],
+  "required": ["receipt_id", "descriptor_ref", "argv", "cwd", "started_at", "ended_at", "process_attempts", "test_executions", "cases", "exit_code", "timed_out", "stdout_sha256", "stderr_sha256", "candidate_hash", "descriptor_sha256", "target_hashes", "fixture_hashes", "profile_identity", "executor_identity"],
   "properties": {
     "receipt_id": {"type": "string", "pattern": "^RECEIPT-[A-Z0-9-]+$"},
     "descriptor_ref": {"type": "string"},
@@ -271,10 +271,8 @@ fingerprint 由 selector identity、target/fixture hash、stage、exit semantics
     "stderr_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "candidate_hash": {"type": "string"},
     "descriptor_sha256": {"type": "string"},
-    "target_hashes": {"type": "object"},
-    "fixture_hashes": {"type": "object"},
-    "observed_assertion_ids": {"type": "array", "items": {"type": "string"}},
-    "observed_failure_ids": {"type": "array", "items": {"type": "string"}},
+    "target_hashes": {"type": "object", "additionalProperties": false},
+    "fixture_hashes": {"type": "object", "additionalProperties": false},
     "profile_identity": {"type": "string"},
     "executor_identity": {"type": "string"}
   }
@@ -287,10 +285,10 @@ fingerprint 由 selector identity、target/fixture hash、stage、exit semantics
 {
   "type": "object",
   "additionalProperties": false,
-  "required": ["observation_id", "receipt_ref", "stage", "exit_code", "process_attempts", "test_executions", "cases", "timed_out", "classification", "failure_family", "expected_exit", "expected_stage_outcome", "actual_stage_outcome", "predicate_result", "recommended_action", "assertion_edges"],
+  "required": ["observation_id", "receipt_ref", "receipt_sha256", "stage", "exit_code", "process_attempts", "test_executions", "cases", "timed_out", "classification", "failure_family", "failure_id", "expected_exit", "expected_stage_outcome", "actual_stage_outcome", "predicate_result", "recommended_action", "assertion_edges"],
   "properties": {
     "observation_id": {"type": "string", "pattern": "^OBS-[A-Z0-9-]+$"},
-    "receipt_ref": {"type": "string", "minLength": 1},
+    "receipt_ref": {"type": "string", "minLength": 1}, "receipt_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "stage": {"enum": ["red", "green", "refactor", "terminal"]},
     "process_attempts": {"type": "integer", "minimum": 1},
     "test_executions": {"type": "integer", "minimum": 0},
@@ -298,7 +296,7 @@ fingerprint 由 selector identity、target/fixture hash、stage、exit semantics
     "exit_code": {"type": ["integer", "null"]},
     "timed_out": {"type": "boolean"},
     "classification": {"enum": ["expected-red", "unexpected-green", "task-implementation-failure", "semantic-contract-gap", "artifact-integrity", "target-binding-failure", "test-harness-failure", "timeout-no-observation", "repo-noise", "repeated-deterministic-failure", "terminal-failure", "pass"]},
-    "failure_family": {"type": ["string", "null"]},
+    "failure_family": {"type": ["string", "null"]}, "failure_id": {"type": ["string", "null"]},
     "expected_exit": {"enum": ["zero", "nonzero"]},
     "expected_stage_outcome": {"enum": ["pass", "fail"]},
     "actual_stage_outcome": {"enum": ["pass", "fail"]},
@@ -319,9 +317,9 @@ Cross-field predicates：`process_attempts>=1`；`timed_out=true` 时 `exit_code
 {
   "type": "object",
   "additionalProperties": false,
-  "required": ["plan_id", "plan_hash", "slice_id", "candidate_hash", "observation_id", "acceptance_id", "assertion_id", "selector_identity", "stage", "run_id", "result_ref", "result_sha256", "observed", "expected_stage_outcome", "actual_stage_outcome", "predicate_result", "target_ref", "fixture_ref", "case_source_ref", "producer_identity", "validator_identity", "derived_by"],
+  "required": ["plan_id", "plan_hash", "slice_id", "candidate_hash", "observation_id", "acceptance_id", "assertion_id", "selector_identity", "stage", "run_id", "result_ref", "result_sha256", "receipt_ref", "receipt_sha256", "observation_ref", "observation_sha256", "descriptor_sha256", "target_sha256", "fixture_sha256", "observed", "expected_stage_outcome", "actual_stage_outcome", "predicate_result", "verification_outcome", "failure_family", "failure_id", "target_ref", "fixture_ref", "case_source_ref", "producer_identity", "validator_identity", "derived_by"],
   "properties": {
-    "plan_id": {"type": "string"}, "plan_hash": {"type": "string"}, "slice_id": {"type": "string"}, "candidate_hash": {"type": "string"}, "observation_id": {"type": "string"}, "acceptance_id": {"type": "string"}, "assertion_id": {"type": "string"}, "selector_identity": {"type": "string"}, "stage": {"enum": ["red", "green", "refactor", "terminal"]}, "run_id": {"type": "string"}, "result_ref": {"type": "string"}, "result_sha256": {"type": "string"}, "observed": {"type": "boolean"}, "expected_stage_outcome": {"enum": ["pass", "fail"]}, "actual_stage_outcome": {"enum": ["pass", "fail"]}, "predicate_result": {"type": "boolean"}, "target_ref": {"type": "string"}, "fixture_ref": {"type": "string"}, "case_source_ref": {"type": "string"}, "producer_identity": {"type": "string"}, "validator_identity": {"type": "string"}, "derived_by": {"const": "deterministic-validator"}
+    "plan_id": {"type": "string"}, "plan_hash": {"type": "string"}, "slice_id": {"type": "string"}, "candidate_hash": {"type": "string"}, "observation_id": {"type": "string"}, "acceptance_id": {"type": "string"}, "assertion_id": {"type": "string"}, "selector_identity": {"type": "string"}, "stage": {"enum": ["red", "green", "refactor", "terminal"]}, "run_id": {"type": "string"}, "result_ref": {"type": "string"}, "result_sha256": {"type": "string"}, "receipt_ref": {"type": "string"}, "receipt_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "observation_ref": {"type": "string"}, "observation_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "descriptor_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "target_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "fixture_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "observed": {"type": "boolean"}, "expected_stage_outcome": {"enum": ["pass", "fail"]}, "actual_stage_outcome": {"enum": ["pass", "fail"]}, "predicate_result": {"type": "boolean"}, "verification_outcome": {"enum": ["pass", "fail", "blocked", "incomplete", "not-applicable"]}, "failure_family": {"type": ["string", "null"]}, "failure_id": {"type": ["string", "null"]}, "target_ref": {"type": "string"}, "fixture_ref": {"type": "string"}, "case_source_ref": {"type": "string"}, "producer_identity": {"type": "string"}, "validator_identity": {"type": "string"}, "derived_by": {"const": "deterministic-validator"}
   }
 }
 ```
@@ -393,16 +391,16 @@ Cross-field predicates：`process_attempts>=1`；`timed_out=true` 时 `exit_code
   "terminal_input": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["plan_id", "plan_hash", "candidate_hash", "run_id", "predecessors", "active_acceptance_ids", "terminal_selector_ref", "assertion_edge_refs", "profile_identity"],
+    "required": ["plan_id", "plan_hash", "candidate_hash", "run_id", "partition_manifest_sha256", "terminal_predicate_sha256", "terminal_descriptor_sha256", "terminal_evaluator_identity", "current_snapshot_sha256", "predecessors", "active_acceptance_ids", "terminal_selector_ref", "runtime_closure_tuples", "profile_identity"],
     "properties": {
       "plan_id": {"type": "string"},
       "plan_hash": {"type": "string"},
-      "candidate_hash": {"type": "string"},
+      "candidate_hash": {"type": "string"}, "partition_manifest_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "terminal_predicate_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "terminal_descriptor_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "terminal_evaluator_identity": {"type": "string", "minLength": 1}, "current_snapshot_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
       "run_id": {"type": "string"},
       "predecessors": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["slice_id", "run_id", "result_ref", "result_sha256"], "properties": {"slice_id": {"type": "string", "pattern": "^S[0-9]+$"}, "run_id": {"type": "string"}, "result_ref": {"type": "string"}, "result_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}},
       "active_acceptance_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1},
       "terminal_selector_ref": {"type": "string", "minLength": 1},
-      "assertion_edge_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+      "runtime_closure_tuples": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "object", "additionalProperties": false, "required": ["tuple_key", "slice_id", "acceptance_id", "stage", "runtime_edge_ref", "runtime_edge_sha256", "selector_identity", "current_snapshot_sha256"], "properties": {"tuple_key": {"type": "string", "pattern": "^S[0-9]+\\|A-[^|]+\\|(red|green|refactor|terminal)$"}, "slice_id": {"type": "string", "pattern": "^S[0-9]+$"}, "acceptance_id": {"type": "string", "minLength": 1}, "stage": {"enum": ["red", "green", "refactor", "terminal"]}, "runtime_edge_ref": {"type": "string", "minLength": 1}, "runtime_edge_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "selector_identity": {"type": "string", "minLength": 1}, "current_snapshot_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}},
       "profile_identity": {"type": "string"}
     }
   },
@@ -421,17 +419,70 @@ Cross-field predicates：`process_attempts>=1`；`timed_out=true` 时 `exit_code
       "evidence_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
       "validator_identity": {"type": "string", "minLength": 1}
     }
+  },
+  "current_snapshot_manifest": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["schema", "roots", "git_delta", "excluded_roots", "sha256"],
+    "properties": {
+      "schema": {"const": "current-snapshot-resolver.v1"},
+      "roots": {"type": "array", "minItems": 9, "maxItems": 9, "uniqueItems": true, "allOf": [{"contains": {"type": "object", "properties": {"root_kind": {"const": "candidate_tree"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "plan"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "contract"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "registry"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "descriptor"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "fixture"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "source"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "validator_judge"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "plan_state_transition"}}}}], "items": {"type": "object", "additionalProperties": false, "required": ["root_kind", "repository_relative_posix_path", "content_sha256", "source_commit", "inclusion_reason"], "properties": {"root_kind": {"enum": ["candidate_tree", "plan", "contract", "registry", "descriptor", "fixture", "source", "validator_judge", "plan_state_transition"]}, "repository_relative_posix_path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "content_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "source_commit": {"type": "string", "minLength": 1}, "inclusion_reason": {"type": "string", "minLength": 1}}}},
+      "git_delta": {"type": "object", "additionalProperties": false, "required": ["base_commit", "additions", "deletions", "renames"], "properties": {"base_commit": {"type": "string", "minLength": 1}, "additions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "after_sha256"], "properties": {"path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "after_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}}, "deletions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "before_sha256"], "properties": {"path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "before_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}}, "renames": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["from_path", "to_path", "before_sha256", "after_sha256"], "properties": {"from_path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "to_path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "before_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "after_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}}}},
+      "excluded_roots": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+      "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+    }
+  },
+  "detached_judge_bundle": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["schema", "source_commit", "source_tree", "judge", "oracle", "fixtures", "read_only_open", "revalidated_at_promotion"],
+    "properties": {
+      "schema": {"const": "detached-judge-bundle.v1"},
+      "source_commit": {"type": "string"},
+      "source_tree": {"type": "string"},
+      "judge": {"type": "object", "additionalProperties": false, "required": ["path", "sha256", "identity"], "properties": {"path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "identity": {"type": "string"}}},
+      "oracle": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}},
+      "fixtures": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}},
+      "read_only_open": {"type": "boolean", "const": true},
+      "revalidated_at_promotion": {"type": "boolean", "const": true}
+    }
+  },
+  "runtime_closure_tuple": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["tuple_key", "slice_id", "acceptance_id", "stage", "runtime_edge_ref", "runtime_edge_sha256", "selector_identity", "current_snapshot_sha256"],
+    "properties": {
+      "tuple_key": {"type": "string", "pattern": "^S[0-9]+\\|A-[^|]+\\|(red|green|refactor|terminal)$"},
+      "slice_id": {"type": "string", "pattern": "^S[0-9]+$"},
+      "acceptance_id": {"type": "string", "minLength": 1},
+      "stage": {"enum": ["red", "green", "refactor", "terminal"]},
+      "runtime_edge_ref": {"type": "string", "minLength": 1},
+      "runtime_edge_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+      "selector_identity": {"type": "string", "minLength": 1},
+      "current_snapshot_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+    }
+  },
+  "architecture_decision_registry": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["schema", "registry_id", "bindings", "entries"],
+    "properties": {
+      "schema": {"const": "architecture-decision-registry.v1"},
+      "registry_id": {"type": "string", "pattern": "^ADR-REG-[0-9]+$"},
+      "bindings": {"type": "object", "additionalProperties": false, "required": ["canonical_selection_path", "canonical_selection_sha256", "spine_path", "spine_sha256"], "properties": {"canonical_selection_path": {"type": "string"}, "canonical_selection_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "spine_path": {"type": "string"}, "spine_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}},
+      "entries": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "object", "additionalProperties": false, "required": ["memlog_ordinal", "decision_id", "topic", "status"], "properties": {"memlog_ordinal": {"type": "integer", "minimum": 1}, "decision_id": {"type": "string", "pattern": "^AD-[0-9]+$"}, "topic": {"type": "string", "minLength": 1}, "status": {"enum": ["current", "superseded"]}, "supersedes": {"type": "string", "pattern": "^AD-[0-9]+$"}}}}
+    }
   }
 }
 ```
 
-Cross-schema constraints: all hashes must be recomputed from current bytes; a terminal result is valid only when its Acceptance set equals the active exact-cover set, every predecessor is observed, and all referenced run IDs share the same plan/candidate lineage.
+Cross-schema constraints: all hashes must be recomputed from current bytes; a terminal result is valid only when its Acceptance set equals the active exact-cover set, every predecessor is observed, all referenced run IDs share the same plan/candidate lineage, and `runtime_closure_tuples` is an exact one-to-one enumeration of the V6A `(slice_id, acceptance_id, stage)` universe with matching current-snapshot hashes.
 
 ### Source index, semantic alignment, coverage, feasibility, slice-ready and terminal-failure results
 
 ```json
 {
-  "source_index": {"type": "object", "additionalProperties": false, "required": ["sources"], "properties": {"sources": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["requirement_id", "path", "anchor", "source_text", "source_hash", "text_hash", "order"], "properties": {"requirement_id": {"type": "string"}, "path": {"type": "string"}, "anchor": {"type": "string"}, "source_text": {"type": "string", "minLength": 1}, "source_hash": {"type": "string"}, "text_hash": {"type": "string"}, "order": {"type": "integer", "minimum": 0}}}}}},
+  "source_index": {"type": "object", "additionalProperties": false, "required": ["sources"], "properties": {"sources": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["requirement_id", "path", "anchor", "source_text", "source_hash", "text_hash", "order"], "properties": {"requirement_id": {"type": "string"}, "path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "anchor": {"type": "string"}, "source_text": {"type": "string", "minLength": 1}, "source_hash": {"type": "string"}, "text_hash": {"type": "string"}, "order": {"type": "integer", "minimum": 0}}}}}},
   "semantic_align_result": {"type": "object", "additionalProperties": false, "required": ["covered_ids", "missing_ids", "invented_semantics", "oracle_alignment", "repairs"], "properties": {"covered_ids": {"type": "array", "items": {"type": "string"}}, "missing_ids": {"type": "array", "items": {"type": "string"}}, "invented_semantics": {"type": "array", "items": {"type": "string"}}, "oracle_alignment": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["acceptance_id", "observable", "expected", "forbidden"], "properties": {"acceptance_id": {"type": "string"}, "observable": {"type": "string"}, "expected": {"type": "string"}, "forbidden": {"type": "array", "items": {"type": "string"}}}}}, "repairs": {"type": "array", "items": {"type": "string"}}}},
   "pre_slice_coverage_result": {"type": "object", "additionalProperties": false, "required": ["active_acceptance_ids", "edges", "orphan_ids", "hard_uncovered"], "properties": {"active_acceptance_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1}, "edges": {"type": "array", "items": {"$ref": "#/definitions/pre_slice_coverage_edge"}, "minItems": 1}, "orphan_ids": {"type": "array", "items": {"type": "string"}}, "hard_uncovered": {"type": "array", "items": {"type": "string"}}}},
   "coverage_result": {"type": "object", "additionalProperties": false, "required": ["active_acceptance_ids", "edges", "orphan_ids", "hard_uncovered"], "properties": {"active_acceptance_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1}, "edges": {"type": "array", "items": {"$ref": "#/definitions/plan_coverage_edge"}, "minItems": 1}, "orphan_ids": {"type": "array", "items": {"type": "string"}}, "hard_uncovered": {"type": "array", "items": {"type": "string"}}}},
@@ -464,10 +515,10 @@ Cross-schema constraints: all hashes must be recomputed from current bytes; a te
 | Q0 recommendation | current plan/slice/candidate/run refs | recommendation-only side-effect-free read and reusable/invalidated observation calculation | `recommended_action` → corresponding Q1/Q2/Q3/Q4/Q5/Q6/Q7/Q8 action or repair/stop | remain Q0; no execution | recommendation result only | Quick Dev |
 | Q1 preflight | plan + slice contract + environment | schema, refs, failure intent, target/fixture/cwd, argv, timeout, write-set and probe valid | `preflight-passed` → Q2 | `repair-vdd`, `author-red` or `environment-blocked` | preflight result | Quick Dev |
 | Q2 RED author/materialize | slice contract + RED intent | test write set only; real production entry; descriptor schema-valid | `red-materialized` → Q3 | remain Q2; no implementation | descriptor | Quick Dev |
-| Q3 RED execute/classify | red descriptor | process executes; expected nonzero and exact failure ID; no harness/noise/timeout | `red-observed` → Q4 | `invalid-run`/`unexpected-green`/failure route | run, receipt, observation | executor + deterministic validator |
+| Q3 RED execute/classify | red descriptor | executor performs process; judge derives expected nonzero and exact failure ID; no harness/noise/timeout | `red-observed` → Q4 | `invalid-run`/`unexpected-green`/failure route | run, receipt, observation | executor (receipt) + independent judge (observation) |
 | Q4 production implementation | clean red-observed + write set | changed paths confined; selector/fixtures/contracts/evidence untouched | `implementation-successor` → Q5 | remain Q4; invalidate successor | successor snapshot | production owner |
-| Q5 GREEN | red-observed + successor | same selector identity and target/fixture/assertions; test_executions≥1; cases≥1; exit 0; all bound assertions true | `green-observed` → Q6 | remain Q5; task failure/invalidate | GREEN receipt/observation | Quick Dev |
-| Q6 REFACTOR | green-observed | same selector; production-only writes; regression/schema validators pass | `refactor-observed` → Q7 | remain Q6; invalidate from GREEN or RED as required | REFACTOR receipt/observation | Quick Dev |
+| Q5 GREEN | red-observed + successor | same selector identity and target/fixture/assertions; test_executions≥1; cases≥1; exit 0; all bound assertions true | `green-observed` → Q6 | remain Q5; task failure/invalidate | GREEN receipt/observation | Quick Dev dispatch; executor receipt; judge observation |
+| Q6 REFACTOR | green-observed | same selector; production-only writes; regression/schema validators pass | `refactor-observed` → Q7 | remain Q6; invalidate from GREEN or RED as required | REFACTOR receipt/observation | Quick Dev dispatch; executor receipt; judge observation |
 | Q7 slice-ready | refactor-observed | all local `runtime_assertion_edge` refs and hashes/lineage valid | `slice-ready` → next slice or Q8 | remain Q7; invalidate affected stage only | slice-ready result | deterministic validator |
 | Q8 terminal | all slice-ready predecessors + terminal input | plan coverage exact cover plus runtime assertion edges, explicit predecessor mapping, current hashes, terminal/regression/mutation pass | `whole-plan-terminal` | terminal failure result; never pass | terminal result/failure | deterministic terminal validator |
 

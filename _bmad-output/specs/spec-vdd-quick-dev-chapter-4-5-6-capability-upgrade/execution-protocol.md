@@ -56,7 +56,7 @@
 
 ### Q0 recommendation-only
 
-只读取当前 plan/slice、candidate、显式 run refs、changed paths 和 observation index，输出 `recommended_action`、`forbidden_actions`、`reason_code`、`blocked_by`、`reusable_observations` 和 `invalidated_observations`。`recommended_action` 必须从 `run-preflight`、`author-red`、`run-red`、`implement`、`run-green`、`run-refactor`、`validate-slice`、`run-terminal`、`repair-vdd`、`stop`、`environment-blocked` 中选择，并指向对应 Q-stage；不得启动模型、运行测试、创建 run 或修改状态。
+只读取当前 plan/slice、candidate、显式 run refs、changed paths 和 observation index，并调用唯一的 versioned current-snapshot/change-impact resolver，输出 `recommended_action`、`forbidden_actions`、`reason_code`、`blocked_by`、`reusable_observations` 和 `invalidated_observations`。`recommended_action` 必须从 `run-preflight`、`author-red`、`run-red`、`implement`、`run-green`、`run-refactor`、`validate-slice`、`run-terminal`、`repair-vdd`、`stop`、`environment-blocked` 中选择，并指向对应 Q-stage；不得启动模型、运行测试、创建 run 或修改状态。
 
 ### Q1 preflight
 
@@ -72,23 +72,23 @@
 
 ### Q4 production implementation
 
-只有 clean `expected-red` 才能调用 implementation worker。调用前后计算 changed paths；必须全在 production write set，不能改 selector、fixture、Acceptance、plan 或历史 evidence；不能直接写 GREEN receipt/status。若修改测试合同，当前 RED 立即失效并回到 Q2/Q3。
+只有 clean `expected-red` 才能调用 implementation worker。调用前由 current-snapshot resolver 固定 candidate/dependency roots；调用后按 exact Git delta 计算 changed paths，必须全在 production write set，不能改 selector、fixture、Acceptance、plan 或历史 evidence；不能直接写 GREEN receipt/status。若修改测试合同，当前 RED 立即失效并回到 Q2/Q3。
 
 ### Q5 GREEN
 
-GREEN descriptor 复用 RED selector identity、target、fixture、assertion 集合和 cwd，只允许 successor/run identity 变化。必须 `test_executions>=1`、cases≥1、selector identity 完全相同、exit=0、所有 bound assertions 为真且无 harness/repo-noise/timeout；失败保持 successor 并按 failure family 路由。
+GREEN descriptor 复用 RED selector identity、target、fixture、assertion 集合和 cwd，只允许 successor/run identity 变化。Quick Dev 仅负责 dispatch；executor 写 receipt，independent judge 写 observation/classification。必须 `test_executions>=1`、cases≥1、selector identity 完全相同、exit=0、所有 bound assertions 为真且无 harness/repo-noise/timeout；失败保持 successor 并按 failure family 路由。
 
 ### Q6 REFACTOR
 
-前置要求是当前 lineage 中真实 observed GREEN，且 selector identity 未变。refactor worker 只能写 production paths；随后重跑同一 slice selector 及必要 regression/schema validators。任何新增失败都阻断 slice-ready。
+前置要求是当前 lineage 中真实 observed GREEN，且 selector identity 未变。Quick Dev 仅 dispatch；executor/judge 继续分别写 receipt/observation。refactor worker 只能写 production paths；随后重跑同一 slice selector 及必要 regression/schema validators。任何新增失败都阻断 slice-ready。
 
 ### Q7 slice-ready
 
-对每个 Acceptance 验证真实 RED/GREEN/REFACTOR assertion edge、artifact ref/hash/run/candidate/selector identity 可重读匹配、result/status 由 validator 派生、coverage 只来自 dependency closure、predecessor 语义有效且无 hard-uncovered/未来 evidence。输出只能由 validator 写入。
+对每个 Acceptance 调用 current-snapshot resolver，并验证真实 RED/GREEN/REFACTOR assertion edge、artifact ref/hash/run/candidate/selector identity 可重读匹配、result/status 由 validator 派生、coverage 只来自 dependency closure、predecessor 语义有效且无 hard-uncovered/未来 evidence。输出只能由 validator 写入。
 
 ### Q8 whole-plan terminal
 
-terminal input 显式列出 candidate、plan、`predecessors[]`（每项含 `slice_id`、`run_id`、`result_ref`、`result_sha256`）、`active_acceptance_ids`、`terminal_selector_ref` 和 assertion edge refs。每个 predecessor 与 slice 一一映射且 run-local；aggregator 逐项重读独立 artifact，验证 lineage/hash，重算 exact cover，执行 terminal、regression、mutation 和全部 active Acceptance，最后才写 `implementation-complete`。禁止 glob/mtime 选历史结果、绑定未来 completion 或 producer 自报完成；edge 的 result ref 不得回指包含自身的 observation 文件。
+terminal input 显式列出 candidate、plan、V6 partition manifest、VDD terminal predicate、terminal descriptor、evaluator identity、current snapshot、`predecessors[]`（每项含 `slice_id`、`run_id`、`result_ref`、`result_sha256`）、`active_acceptance_ids`、`terminal_selector_ref` 和 typed `runtime_closure_tuples[]`。每个 closure tuple 必须含 `tuple_key`（`slice_id|acceptance_id|stage`）、runtime edge ref/hash、selector identity 和 current snapshot hash；其键集合必须与 V6A 的 `(slice, Acceptance, stage)` 闭集逐项相等。Q8 必须调用 current-snapshot resolver，在 terminal evidence 写入后、terminal result 发布前再次重读所有根。每个 predecessor 与 slice 一一映射且 run-local；aggregator 逐项重读独立 artifact，验证 lineage/hash，并要求每个 partitioned slice 与每个 active Acceptance 对应的 RED/GREEN/REFACTOR/terminal tuple 恰好一条当前 runtime edge，重算 exact cover，执行 terminal、regression、mutation 和全部 active Acceptance，最后在发布前再次重算 current snapshot 才写 `implementation-complete`。禁止 glob/mtime 选历史结果、绑定未来 completion 或 producer 自报完成；edge 的 result ref 不得回指包含自身的 observation 文件。
 
 ## 3. Failure, replay and responsibility
 

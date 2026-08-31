@@ -1,0 +1,33 @@
+{
+  "schema": "architecture-decision-registry.v1",
+  "registry_id": "ADR-REG-1",
+  "bindings": {
+    "canonical_selection_path": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-vdd-quick-dev-chapter-4-5-6-capability-upgrade.json",
+    "canonical_selection_sha256": "sha256:831be5a854854ca61beb4c7d11dc5ad1a982a630ff307d8315bc1f44ecde4087",
+    "spine_path": "_bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-31/ARCHITECTURE-SPINE.md",
+    "spine_sha256": "sha256:63f24eb1b755cfd0ba682363183bb403c79d2753efe4e571be7928fd0b117ce2"
+  },
+  "entries": [
+    {"memlog_ordinal": 1, "decision_id": "AD-1", "topic": "trust-boundaries", "status": "current"},
+    {"memlog_ordinal": 2, "decision_id": "AD-2", "topic": "vdd-staged-cover", "status": "current"},
+    {"memlog_ordinal": 3, "decision_id": "AD-3", "topic": "quick-dev-lifecycle", "status": "current"},
+    {"memlog_ordinal": 4, "decision_id": "AD-4", "topic": "process-semantic-writers", "status": "current"},
+    {"memlog_ordinal": 5, "decision_id": "AD-5", "topic": "layered-result-legality", "status": "current"},
+    {"memlog_ordinal": 6, "decision_id": "AD-6", "topic": "single-writer-artifact-graph", "status": "current"},
+    {"memlog_ordinal": 7, "decision_id": "AD-7", "topic": "exact-cover-completion", "status": "current"},
+    {"memlog_ordinal": 8, "decision_id": "AD-8", "topic": "runtime-edge-selector-identity", "status": "current"},
+    {"memlog_ordinal": 9, "decision_id": "AD-9", "topic": "tdd-gates-write-set", "status": "current"},
+    {"memlog_ordinal": 10, "decision_id": "AD-10", "topic": "nn-plus-one-promotion", "status": "current"},
+    {"memlog_ordinal": 11, "decision_id": "AD-11", "topic": "reuse-invalidation-recovery", "status": "current"},
+    {"memlog_ordinal": 12, "decision_id": "AD-12", "topic": "profiles-stop-loss", "status": "current"},
+    {"memlog_ordinal": 14, "decision_id": "AD-13", "topic": "brownfield-execution-envelope", "status": "current"},
+    {"memlog_ordinal": 15, "decision_id": "AD-14", "topic": "compatibility-enforcement-seam", "status": "current"},
+    {"memlog_ordinal": 16, "decision_id": "AD-15", "topic": "brownfield-conformance-gate", "status": "current"},
+    {"memlog_ordinal": 17, "decision_id": "AD-16", "topic": "decision-supersession", "status": "current"},
+    {"memlog_ordinal": 18, "decision_id": "AD-17", "topic": "snapshot-path-resolver", "status": "current"},
+    {"memlog_ordinal": 19, "decision_id": "AD-18", "topic": "detached-judge-envelope", "status": "current"},
+    {"memlog_ordinal": 39, "decision_id": "AD-19", "topic": "typed-runtime-closure", "status": "current"},
+    {"memlog_ordinal": 40, "decision_id": "AD-20", "topic": "typed-snapshot-git-delta", "status": "current"},
+    {"memlog_ordinal": 41, "decision_id": "AD-21", "topic": "stable-decision-registry", "status": "current"}
+  ]
+}
