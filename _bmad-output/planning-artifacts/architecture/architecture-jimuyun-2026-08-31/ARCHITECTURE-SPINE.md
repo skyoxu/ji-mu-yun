@@ -5,12 +5,13 @@ purpose: build-substrate
 altitude: feature
 paradigm: hexagonal evidence pipeline with append-only artifact authority
 scope: VDD compilation, Quick Dev TDD lifecycle, evidence lineage, coverage completion, replay and recovery
-status: draft
+status: final
 created: 2026-08-31
 updated: 2026-08-31
 binds: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, CAP-10]
 sources:
   - _bmad-output/specs/spec-vdd-quick-dev-chapter-4-5-6-capability-upgrade/SPEC.md
+  - docs/know109.txt
 companions:
   - _bmad-output/specs/spec-vdd-quick-dev-chapter-4-5-6-capability-upgrade/execution-protocol.md
   - _bmad-output/specs/spec-vdd-quick-dev-chapter-4-5-6-capability-upgrade/schema-contracts.md
@@ -124,7 +125,7 @@ flowchart TB
 
 - **Binds:** CAP-9, CAP-10
 - **Prevents:** a candidate validating itself, mutable predecessor judges, and false-green promotion.
-- **Rule:** For self-hosted/toolchain acceptance, promotion is blocked until an external/maintainer evidence bundle proves independent origin, detached read-only bytes, judge identity and fixture/oracle hashes. Freeze predecessor judge bytes, detached positive/negative/mutation fixtures, oracle identities and expected failure IDs before implementation. The candidate remains SUT. Only a frozen predecessor or separately provisioned independent judge may execute it; coverage gate writes the NN+1 promotion record after one closed evidence snapshot passes. Frozen judge and fixture artifacts are read-only and revalidated at promotion.
+- **Rule:** When the self-hosted/toolchain profile is selected, promotion is blocked until a detached evidence bundle proves independent origin, read-only judge/oracle/fixture bytes, identities and hashes. Ordinary development does not require external review, candidate binding or maintainer authorization. Freeze predecessor judge bytes, detached positive/negative/mutation fixtures, oracle identities and expected failure IDs before implementation; the candidate remains SUT and coverage gate writes the NN+1 promotion record only after one closed evidence snapshot passes.
 
 ```mermaid
 sequenceDiagram
@@ -146,7 +147,7 @@ sequenceDiagram
 
 - **Binds:** CAP-4, CAP-7, CAP-8
 - **Prevents:** stale green reuse, historical glob/mtime selection, and recovery fabricating evidence.
-- **Rule:** A repository-owned, versioned `change-impact-matrix` and resolver is the sole authority for reuse/invalidation; its canonical root set includes candidate tree, plan, contract, registry, descriptor, fixture, validator/judge, source and explicit plan-state transition bytes, while logs, review reports, recovery projections and unrelated documentation are excluded unless named by a dependency edge. Recommendation and recovery consumers call this resolver rather than recomputing reachability. Requirement/Acceptance/plan changes force coverage recomputation; selector/fixture/target/case-source changes invalidate RED→GREEN→REFACTOR→terminal; owner/compiler/validator/judge changes invalidate the affected evidence; ordinary non-semantic documentation may reuse identity-valid observations. A `recovered-run` must reference a complete prior receipt, observation and runtime-edge set for the same slice plus their hashes; it cannot promote a receipt-only or planned artifact. Recovery references explicit run-local predecessors and copies identities without reclassifying results; no glob, mtime or latest-success scan is allowed.
+- **Rule:** A repository-owned, versioned `change-impact-matrix` and resolver is the sole authority for reuse/invalidation; its canonical root set includes candidate tree, plan, contract, descriptor, fixture, validator/judge, source and explicit plan-state transition bytes. Architecture registries, memlogs, spine hashes, review/binding/authorization records and ordinary governance documentation are excluded unless a named product or execution dependency explicitly adopts their semantics. Recommendation and recovery consumers call this resolver rather than recomputing reachability. Requirement/Acceptance/plan changes force coverage recomputation; selector/fixture/target/case-source changes invalidate RED→GREEN→REFACTOR→terminal; owner/compiler/validator/judge changes invalidate the affected evidence; ordinary non-semantic documentation may reuse identity-valid observations. A `recovered-run` must reference a complete prior receipt, observation and runtime-edge set for the same slice plus their hashes; it cannot promote a receipt-only or planned artifact. Recovery references explicit run-local predecessors and copies identities without reclassifying results; no glob, mtime or latest-success scan is allowed.
 
 ### AD-12 — Profiles and stop-loss preserve the truth floor
 
@@ -158,7 +159,7 @@ sequenceDiagram
 
 - **Binds:** CAP-4, CAP-5, CAP-8, CAP-10
 - **Prevents:** different launchers, cwd roots, path normalization, timeout and persistence behavior across independently built adapters.
-- **Rule:** The initial brownfield host is Windows with repository-contained temporary run roots, `py -3` Python 3.12.10 and pytest 9.1.1 as the verified local baseline. Before V0/Q1, the adapter records the resolved launcher, interpreter/test-runner versions, repository-root cwd and path-containment result. Every owner subprocess uses that same resolved cwd and shell-free argv. Evidence writes are atomic create-if-absent under `logs/tdd-adapter/`; concurrent-run locking, resource quotas, retention and cross-platform normalization remain explicit Deferred decisions.
+- **Rule:** The initial brownfield host is Windows with repository-contained temporary run roots and the currently verified `py -3`/pytest environment as a baseline, not a universal version gate. Before V0/Q1, the adapter resolves and records the launcher, interpreter and test-runner versions, repository-root cwd and path-containment result; compatibility is decided by observed contract behavior. Every owner subprocess uses that same resolved cwd and shell-free argv. Evidence writes are atomic create-if-absent under `logs/tdd-adapter/`; concurrent-run locking, resource quotas, retention and cross-platform normalization remain explicit Deferred decisions.
 
 ### AD-14 — Canonical compatibility and enforcement seam
 
@@ -166,11 +167,11 @@ sequenceDiagram
 - **Prevents:** legacy artifacts silently becoming current authority, stage shortcuts bypassing identity checks, and two implementations choosing different lineage or failure semantics.
 - **Rule:** The repository-owned current-snapshot/change-impact resolver is the sole consumer-facing resolver for candidate bytes, dependency closure and invalidation. When recovering from memlog, the latest non-superseded ownership decision wins; earlier combined-writer entries are historical and cannot be selected as current authority. Legacy `artifact_owners.py`/`semantic_oracle.py` outputs (`observed`, aggregate `executions`, combined receipt/observation) are read-only compatibility inputs and must be projected or rejected before entering the canonical graph. Q3/Q5/Q6 process-bearing actions dispatch the frozen descriptor through the executor seam; direct pytest or owner shortcuts are diagnostic-only. The runtime-edge validator mechanically enforces the complete receipt/observation/hash/failure identity shape before coverage accepts an edge. Any compatibility projection is versioned, content-addressed and cannot write current evidence.
 
-### AD-15 — Brownfield conformance gate before handoff
+### AD-15 — Brownfield conformance diagnostic and migration gate
 
 - **Binds:** CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9
 - **Prevents:** declaring the architecture implemented while legacy plan-local tools still bypass its authority seams.
-- **Rule:** Architecture handoff is blocked until the brownfield adapter proves all of the following in a fresh run: (a) executor-only receipt writes and judge-only observation/classification writes; (b) canonical projection of legacy `observed`/`executions` fields into the four-state and separated-counter schema; (c) runtime-edge validator rejection of any edge missing receipt/observation/descriptor/target/fixture hashes, verification outcome, or required failure identity; (d) Q3/Q5/Q6 process stages consume the frozen descriptor through one executor seam, with direct pytest/owner paths marked diagnostic-only; (e) terminal preparation never pre-writes a pass and Q8 validates every slice and Acceptance edge; (f) all declared paths are normalized repository-relative paths with symlink/junction containment checks; (g) current-snapshot/change-impact resolver is versioned, content-addressed, and invoked by Q0, Q4, Q7, Q8 and recovery. The gate emits a non-authoritative conformance report; it cannot manufacture receipts, observations, coverage or completion.
+- **Rule:** A fresh brownfield conformance run diagnoses and gates implementation/migration readiness against all of the following: (a) executor-only receipt writes and judge-only observation/classification writes; (b) canonical projection of legacy `observed`/`executions` fields into the four-state and separated-counter schema; (c) runtime-edge validator rejection of any edge missing receipt/observation/descriptor/target/fixture hashes, verification outcome, or required failure identity; (d) Q3/Q5/Q6 process stages consume the frozen descriptor through one executor seam, with direct pytest/owner paths marked diagnostic-only; (e) terminal preparation never pre-writes a pass and Q8 validates every slice and Acceptance edge; (f) all declared paths are normalized repository-relative paths with symlink/junction containment checks; (g) current-snapshot/change-impact resolver is versioned, content-addressed, and invoked by Q0, Q4, Q7, Q8 and recovery. The gate emits a non-authoritative conformance report; it cannot manufacture receipts, observations, coverage or completion. A blocked report identifies implementation work still required but does not invalidate this architecture or prevent ordinary TDD truth-floor execution.
 
 #### Brownfield conformance matrix
 
@@ -179,11 +180,11 @@ sequenceDiagram
 | Q3 RED | frozen descriptor + process result | executor writes receipt; judge writes observation | missing receipt hash, `process_attempts/test_executions/cases`, exact selector or deterministic failure family/ID |
 | Q5 GREEN / Q6 REFACTOR | same descriptor selector identity + successor diff | Quick Dev dispatches; executor and judge write evidence | direct pytest/owner shortcut, changed selector/target/fixture/assertions/cwd, or write outside closed allow-list |
 | Runtime edge | receipt hash, observation hash, descriptor/target/fixture hashes, plan/slice/candidate/run IDs, Acceptance/assertion/case-source, selector, outcome, family/ID, producer/validator | runtime-edge validator | any missing field, stale hash, family/ID mismatch, self-reference or edge not attributable to current observation |
-| Current snapshot | candidate tree, plan/contract/registry/descriptor/fixture/validator/judge roots and explicit plan-state transition | versioned change-impact resolver | unlisted root, unrelated write, glob/mtime/latest-success selection, or stale resolver hash |
+| Current snapshot | candidate tree, plan/contract/descriptor/fixture/source/validator-judge roots and explicit plan-state transition | versioned change-impact resolver | unlisted root, unrelated write, glob/mtime/latest-success selection, or stale resolver hash |
 | Q8 terminal | predicate hash + evaluator identity, plan hash, V6 partition hash, every slice-ready ref, active Acceptance manifest, runtime edge refs and current snapshot | terminal evidence producer then terminal result predicate | any partitioned slice or active Acceptance lacks RED/GREEN/REFACTOR/runtime closure; terminal selector/result not bound to all hashes |
 | Paths and new files | repository-relative normalized paths, declared write set, `planned_new_files` | successor diff validator | absolute path, symlink/junction escape, undeclared file, or evidence/contract mutation |
 
-The matrix is a handoff gate, not a claim that legacy modules already satisfy it. A fresh conformance report must identify each row as `pass` or `blocked`; `blocked` keeps the plan out of implementation handoff.
+The matrix is an implementation/migration diagnostic gate, not a claim that legacy modules already satisfy it. A fresh conformance report must identify each row as `pass` or `blocked`; `blocked` keeps the affected implementation path in repair, but does not block Architecture handoff or the development truth floor.
 
 ### AD-16 — Decision supersession and current authority
 
@@ -195,7 +196,7 @@ The matrix is a handoff gate, not a claim that legacy modules already satisfy it
 
 - **Binds:** CAP-4, CAP-6, CAP-7, CAP-8
 - **Prevents:** divergent Git-delta interpretation, evidence-only churn invalidating candidates, and path escape through symlink/junction or undeclared files.
-- **Rule:** The current-snapshot resolver is a versioned repository-owned component with a content-addressed `current-snapshot-manifest.v1`. The manifest is a closed typed set of roots, each carrying `root_kind`, normalized repository-relative POSIX path, `content_sha256`, source commit and inclusion reason. Its include set is exactly candidate tree, plan, contract, registry, descriptor, fixture, source, validator/judge and explicit plan-state transition bytes; logs, review records and recovery projections are excluded unless a named dependency edge includes them. It resolves normalized repository-relative POSIX paths, rejects absolute paths and symlink/junction escapes, and computes a typed exact Git-delta set of additions/deletions/renames against the frozen candidate. Any path outside the declared root set or plan-state-only transition is invalid; unknown roots, ambiguous normalization, glob/mtime/latest-success selection and unrelated writes are never ignored. The resolver is invoked read-only at Q0, Q4, Q7, Q8, terminal publication and recovery.
+- **Rule:** The current-snapshot resolver is a versioned repository-owned component with a content-addressed `current-snapshot-manifest.v1`. The manifest is a closed typed set of roots, each carrying `root_kind`, normalized repository-relative POSIX path, `content_sha256`, source commit and inclusion reason. Its include set is exactly candidate tree, plan, contract, descriptor, fixture, source, validator/judge and explicit plan-state transition bytes; architecture registries, memlogs, spine hashes, review records, bindings, authorizations and ordinary governance documentation are excluded unless a named dependency edge explicitly adopts their semantics. It resolves normalized repository-relative POSIX paths, rejects absolute paths and symlink/junction escapes, and computes a typed exact Git-delta set of additions/deletions/renames against the frozen candidate. Any path outside the declared root set or plan-state-only transition is invalid; unknown roots, ambiguous normalization, glob/mtime/latest-success selection and unrelated writes are never ignored. The resolver is invoked read-only at Q0, Q4, Q7, Q8, terminal publication and recovery.
 
 ### AD-18 — Detached judge/fixture evidence envelope
 
@@ -215,11 +216,11 @@ The matrix is a handoff gate, not a claim that legacy modules already satisfy it
 - **Prevents:** unlisted roots, ambiguous path normalization, and unrelated writes being hidden from candidate closure.
 - **Rule:** `current-snapshot-manifest.v1` is a closed typed root set. Each root records `root_kind`, normalized repository-relative POSIX path, `content_sha256`, source commit and inclusion reason. The resolver emits typed additions/deletions/renames over that set and rejects every path outside it, every symlink/junction escape and every post-candidate change except the explicitly permitted plan-state transition.
 
-### AD-21 — Stable decision identity registry
+### AD-21 — Stable decision identity registry (recovery-only)
 
 - **Binds:** AD-16 and memlog recovery
 - **Prevents:** supersession ambiguity when historical memlog entries predate explicit decision labels.
-- **Rule:** The append-only memlog is paired with the repository-owned `architecture-decision-registry.v1.json` artifact. The registry is immutable and content-addressed by the `registry` root hash; its bindings include the canonical selection path/hash and spine path/hash, and it maps each historical decision ordinal to one stable `AD-*` identity, topic and supersession status. An amendment must name `supersedes: AD-*`; the resolver selects only the latest non-superseded identity per topic and records the registry hash plus selected IDs in the current snapshot. Historical entries remain immutable evidence and cannot become current authority by position alone.
+- **Rule:** The append-only memlog is paired with the repository-owned `architecture-decision-registry.v1.json` artifact for recovery and audit only. The registry is immutable and content-addressed; its bindings may identify canonical selection and spine bytes, and it maps each historical decision ordinal to one stable `AD-*` identity, topic and supersession status. An amendment must name `supersedes: AD-*`; recovery selects only the latest non-superseded identity per topic. The registry, memlog and spine hashes are not runtime snapshot roots and their byte changes do not invalidate TDD evidence unless a named product or execution contract explicitly adopts them.
 
 ## Consistency Conventions
 
@@ -234,8 +235,8 @@ The matrix is a handoff gate, not a claim that legacy modules already satisfy it
 
 | Name | Version |
 | --- | --- |
-| Python toolchain | 3.12.10 (`py -3`, verified 2026-08-31) |
-| Test runner | pytest 9.1.1 (verified 2026-08-31) |
+| Python toolchain | Runtime-resolved `py -3` launcher/interpreter (current host baseline recorded at preflight) |
+| Test runner | Runtime-resolved pytest/test-runner version (recorded at preflight; exact version not a universal gate) |
 | Identity format | repository canonical JSON/hash helpers |
 
 ## Structural Seed

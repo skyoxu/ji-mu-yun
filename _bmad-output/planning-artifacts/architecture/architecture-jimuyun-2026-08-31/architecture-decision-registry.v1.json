@@ -3,9 +3,9 @@
   "registry_id": "ADR-REG-1",
   "bindings": {
     "canonical_selection_path": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-vdd-quick-dev-chapter-4-5-6-capability-upgrade.json",
-    "canonical_selection_sha256": "sha256:831be5a854854ca61beb4c7d11dc5ad1a982a630ff307d8315bc1f44ecde4087",
+    "canonical_selection_sha256": "sha256:acb8cefc35f1addb8cb5c92eee3b8a188b106ab4ccc1406b44ac0a30a13117be",
     "spine_path": "_bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-31/ARCHITECTURE-SPINE.md",
-    "spine_sha256": "sha256:63f24eb1b755cfd0ba682363183bb403c79d2753efe4e571be7928fd0b117ce2"
+    "spine_sha256": "sha256:592abfcde6c1099bba7f56202d638fe423458a68eeb0e8ef8c9683318cedbb82"
   },
   "entries": [
     {"memlog_ordinal": 1, "decision_id": "AD-1", "topic": "trust-boundaries", "status": "current"},
