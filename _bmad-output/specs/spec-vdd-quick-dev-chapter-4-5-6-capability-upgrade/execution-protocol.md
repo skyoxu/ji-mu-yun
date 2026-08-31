@@ -36,13 +36,17 @@
 
 ### V5 exact-cover
 
-确定性构建双向多对多图：requirement ↔ obligation ↔ Acceptance ↔ source ref ↔ RED intent ↔ slice ↔ verification lane ↔ terminal aggregation。必须无 orphan、无无源 RED intent、无 hard-uncovered；不要求 exclusive partition。
+确定性构建 pre-slice 双向多对多图：requirement ↔ obligation ↔ Acceptance ↔ source ref ↔ RED intent。V5 不读取或生成 slice、verification lane、terminal predicate、candidate、run、observation 或 result hash；必须无 orphan、无无源 RED intent、无 hard-uncovered；不要求 exclusive partition。
 
 ### V6 slice-partition
 
 先按依赖拓扑、production owner、verification lane、state transition、failure family、fixture/runtime 和 write-set 建 bucket。不同生命周期、独立失败机制、不相容 fixture/runtime 或无法共同 GREEN 的节点必须拆分。不同 owner 默认拆分，但允许 producer/consumer 原子修改跨 owner 合并，前提是同一最小变更不可分、共享 state transition/lane/write set，且保留独立 assertion edge。
 
 每个 slice contract 必须包含 `behavior_change`、`affected_subjects`、`state_transition`、`proof.acceptance_ids`、`proof.selector_intents`、`proof.assertion_ids`、`rollback_scope.production_paths` 和 `rollback_scope.state_or_schema_compatibility`。
+
+### V6A final plan exact-cover
+
+在 V6 slice partition 完成后，确定性地将每条 pre-slice edge 绑定到当前合法 slice、verification lane、terminal predicate 和完整唯一的 `stage_scope=["red","green","refactor","terminal"]`，生成最终 `coverage_result` 的 `plan_coverage_edge`。V6A 必须再次执行 sound-and-complete many-to-many 双向遍历并确认无 orphan/hard-uncovered；未完成 V6A 不得进入 V7 feasibility。
 
 ### V7 feasibility
 

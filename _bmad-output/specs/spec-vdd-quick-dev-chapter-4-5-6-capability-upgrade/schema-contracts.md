@@ -1,8 +1,27 @@
 # Normative Schema and Invalidation Contracts
 
-## Plan coverage edge and runtime assertion edge
+## Pre-slice coverage edge, plan coverage edge and runtime assertion edge
 
-VDD V5 只生成计划期 `plan_coverage_edge`；Quick Dev Q3–Q8 才能生成运行期 `runtime_assertion_edge`。两者不可互换。
+VDD V5 只生成 `pre_slice_coverage_edge`；V6A 在 slice partition 后生成最终 `plan_coverage_edge`；Quick Dev Q3–Q8 才能生成运行期 `runtime_assertion_edge`。三者不可互换。
+
+### Pre-slice coverage edge
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["requirement_id", "obligation_id", "acceptance_id", "source_ref", "failure_intent_id"],
+  "properties": {
+    "requirement_id": "...",
+    "obligation_id": "...",
+    "acceptance_id": "A-...",
+    "source_ref": "...",
+    "failure_intent_id": "FI-..."
+  }
+}
+```
+
+V5 的 pre-slice edge 禁止 `slice_id`、`verification_lane`、`terminal_predicate`、`stage_scope` 以及任何 candidate/run/observation/result hash 字段。
 
 ### Plan coverage edge
 
@@ -24,6 +43,8 @@ VDD V5 只生成计划期 `plan_coverage_edge`；Quick Dev Q3–Q8 才能生成�
   }
 }
 ```
+
+最终 `plan_coverage_edge.stage_scope` 必须严格为唯一且有序的 `["red", "green", "refactor", "terminal"]`；实现 schema validator 时应同时执行顺序相等检查，不能仅依赖 `minItems`。
 
 Plan coverage edge 禁止出现 `candidate_hash`、`run_id`、`observation_id`、`result_ref`、`result_sha256`、实际 outcome 或 producer/validator identity。
 

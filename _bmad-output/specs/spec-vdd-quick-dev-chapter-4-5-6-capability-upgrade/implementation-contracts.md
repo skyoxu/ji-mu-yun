@@ -309,7 +309,7 @@ fingerprint 由 selector identity、target/fixture hash、stage、exit semantics
 }
 ```
 
-`runtime_assertion_edge`（定义见下文）只能由 Quick Dev Q3–Q8 在运行后生成；observation 只能由 validator 从 receipt 派生。`observed=true`、`expected_stage_outcome`、`actual_stage_outcome`、`predicate_result` 不得由 descriptor、producer 或模型写入。每个 runtime edge 必须满足上述完整绑定字段及当前字节重读约束。VDD V5 仅生成不含运行期字段的 `plan_coverage_edge`。
+`runtime_assertion_edge`（定义见下文）只能由 Quick Dev Q3–Q8 在运行后生成；observation 只能由 validator 从 receipt 派生。`observed=true`、`expected_stage_outcome`、`actual_stage_outcome`、`predicate_result` 不得由 descriptor、producer 或模型写入。每个 runtime edge 必须满足上述完整绑定字段及当前字节重读约束。VDD V5 仅生成 `pre_slice_coverage_edge`；V6A 在 slice partition 完成后才生成不含运行期 lineage 的最终 `plan_coverage_edge`。
 
 Cross-field predicates：`process_attempts>=1`；`timed_out=true` 时 `exit_code=null` 且 classification=`timeout-no-observation`；`expected-red` 必须 `test_executions>=1`、cases≥1、非零 exit 且至少一条匹配 assertion edge；GREEN/REFACTOR/terminal 的 pass 必须 `test_executions>=1`、cases≥1、零 exit 且所有 bound assertions 为真。artifact-integrity、target-binding-failure、test-harness-failure、timeout-no-observation 可有 `test_executions=0`、cases=0、空 assertion edges，但 `predicate_result=false` 且 `recommended_action` 不得为 implement/run-green/run-refactor/validate-slice/run-terminal。诊断用途的 unconstrained exit expectation 只能进入独立非授权 diagnostic schema，不得进入 descriptor、receipt、observation 或授权 evidence。
 
@@ -326,7 +326,24 @@ Cross-field predicates：`process_attempts>=1`；`timed_out=true` 时 `exit_code
 }
 ```
 
-`#/definitions/plan_coverage_edge` 定义如下；它只服务于 VDD V5 规划期 exact-cover，禁止运行期字段：
+`#/definitions/pre_slice_coverage_edge` 定义如下；它只服务于 VDD V5 的 pre-slice semantic cover，不得包含 V6/V6A 才能确定的 slice、lane、terminal 或任何运行期字段：
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["requirement_id", "obligation_id", "acceptance_id", "source_ref", "failure_intent_id"],
+  "properties": {
+    "requirement_id": {"type": "string"},
+    "obligation_id": {"type": "string"},
+    "acceptance_id": {"type": "string"},
+    "source_ref": {"type": "string"},
+    "failure_intent_id": {"type": "string"}
+  }
+}
+```
+
+`#/definitions/plan_coverage_edge` 定义如下；它只由 V6A 在 slice partition 后生成最终 plan exact-cover，禁止运行期字段：
 
 ```json
 {
@@ -342,10 +359,12 @@ Cross-field predicates：`process_attempts>=1`；`timed_out=true` 时 `exit_code
     "slice_id": {"type": "string", "pattern": "^S[0-9]+$"},
     "verification_lane": {"enum": ["unit", "integration", "matrix", "runtime"]},
     "terminal_predicate": {"type": "string", "minLength": 1},
-    "stage_scope": {"type": "array", "items": {"enum": ["red", "green", "refactor", "terminal"]}, "minItems": 1}
+    "stage_scope": {"type": "array", "items": {"enum": ["red", "green", "refactor", "terminal"]}, "minItems": 4, "maxItems": 4, "uniqueItems": true}
   }
 }
 ```
+
+`stage_scope` 必须严格按唯一顺序 `["red", "green", "refactor", "terminal"]` 出现；不得省略、重复或重排阶段。
 
 ### Run state
 
@@ -414,6 +433,7 @@ Cross-schema constraints: all hashes must be recomputed from current bytes; a te
 {
   "source_index": {"type": "object", "additionalProperties": false, "required": ["sources"], "properties": {"sources": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["requirement_id", "path", "anchor", "source_text", "source_hash", "text_hash", "order"], "properties": {"requirement_id": {"type": "string"}, "path": {"type": "string"}, "anchor": {"type": "string"}, "source_text": {"type": "string", "minLength": 1}, "source_hash": {"type": "string"}, "text_hash": {"type": "string"}, "order": {"type": "integer", "minimum": 0}}}}}},
   "semantic_align_result": {"type": "object", "additionalProperties": false, "required": ["covered_ids", "missing_ids", "invented_semantics", "oracle_alignment", "repairs"], "properties": {"covered_ids": {"type": "array", "items": {"type": "string"}}, "missing_ids": {"type": "array", "items": {"type": "string"}}, "invented_semantics": {"type": "array", "items": {"type": "string"}}, "oracle_alignment": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["acceptance_id", "observable", "expected", "forbidden"], "properties": {"acceptance_id": {"type": "string"}, "observable": {"type": "string"}, "expected": {"type": "string"}, "forbidden": {"type": "array", "items": {"type": "string"}}}}}, "repairs": {"type": "array", "items": {"type": "string"}}}},
+  "pre_slice_coverage_result": {"type": "object", "additionalProperties": false, "required": ["active_acceptance_ids", "edges", "orphan_ids", "hard_uncovered"], "properties": {"active_acceptance_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1}, "edges": {"type": "array", "items": {"$ref": "#/definitions/pre_slice_coverage_edge"}, "minItems": 1}, "orphan_ids": {"type": "array", "items": {"type": "string"}}, "hard_uncovered": {"type": "array", "items": {"type": "string"}}}},
   "coverage_result": {"type": "object", "additionalProperties": false, "required": ["active_acceptance_ids", "edges", "orphan_ids", "hard_uncovered"], "properties": {"active_acceptance_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1}, "edges": {"type": "array", "items": {"$ref": "#/definitions/plan_coverage_edge"}, "minItems": 1}, "orphan_ids": {"type": "array", "items": {"type": "string"}}, "hard_uncovered": {"type": "array", "items": {"type": "string"}}}},
   "feasibility_result": {"type": "object", "additionalProperties": false, "required": ["slice_id", "selector_target", "real_production_entry", "allowed_paths", "planned_new_files", "green_owner", "refactor_selector", "valid"], "properties": {"slice_id": {"type": "string"}, "selector_target": {"type": "string"}, "real_production_entry": {"type": "string"}, "allowed_paths": {"type": "array", "items": {"type": "string"}}, "planned_new_files": {"type": "array", "items": {"type": "string"}}, "green_owner": {"type": "string"}, "refactor_selector": {"type": "string"}, "valid": {"type": "boolean"}}},
   "slice_ready_result": {"type": "object", "additionalProperties": false, "required": ["plan_id", "plan_hash", "slice_id", "candidate_hash", "red_observation", "green_observation", "refactor_observation", "assertion_edge_refs", "predecessor_refs", "dependency_closure_hash", "selector_identity", "validator_identity", "status"], "properties": {"plan_id": {"type": "string"}, "plan_hash": {"type": "string"}, "slice_id": {"type": "string"}, "candidate_hash": {"type": "string"}, "red_observation": {"type": "object", "additionalProperties": false, "required": ["run_id", "ref", "sha256"], "properties": {"run_id": {"type": "string"}, "ref": {"type": "string"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}, "green_observation": {"type": "object", "additionalProperties": false, "required": ["run_id", "ref", "sha256"], "properties": {"run_id": {"type": "string"}, "ref": {"type": "string"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}, "refactor_observation": {"type": "object", "additionalProperties": false, "required": ["run_id", "ref", "sha256"], "properties": {"run_id": {"type": "string"}, "ref": {"type": "string"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}, "assertion_edge_refs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["ref", "sha256"], "properties": {"ref": {"type": "string"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}, "minItems": 1}, "predecessor_refs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["slice_id", "run_id", "ref", "sha256"], "properties": {"slice_id": {"type": "string"}, "run_id": {"type": "string"}, "ref": {"type": "string"}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}}, "dependency_closure_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "selector_identity": {"type": "string"}, "validator_identity": {"type": "string", "minLength": 1}, "status": {"const": "slice-ready"}}},
@@ -432,8 +452,9 @@ Cross-schema constraints: all hashes must be recomputed from current bytes; a te
 | V3 acceptance-compile | guarded obligations | given/when/then/oracle、forbidden、assertion 与 RED intent 完整 | → V3A | `repair-vdd`（acceptance-incomplete） | Acceptance graph | VDD |
 | V3A semantic-plan preflight | Acceptance + RED candidates | observability、orphan、overbroad、lane mismatch、terminal swallowing 和 exact-cover 初检通过 | → V4 | `repair-vdd` | semantic-plan preflight | VDD |
 | V4 semantic-align | frozen sources + graph | 独立 worker 无 invented semantics，覆盖/冲突显式 | → V5 | `semantic_ambiguous`/`repair-vdd` | align result | VDD |
-| V5 exact-cover | aligned graph | sound-and-complete many-to-many 双向遍历、无 orphan/hard-uncovered | → V6 | `repair-vdd` | coverage result | VDD |
-| V6 slice-partition | cover + owners/lanes | deterministic bucket、write/snapshot/new-file 可行，必要时拆分 | → V7 | `repair-vdd` | slice contracts | VDD |
+| V5 pre-slice semantic cover | aligned graph | requirement ↔ obligation ↔ Acceptance ↔ source ref ↔ RED intent 双向覆盖、无 orphan/hard-uncovered；不要求 slice/lane/terminal | → V6 | `repair-vdd` | pre-slice coverage result | VDD |
+| V6 slice-partition | pre-slice cover + owners/lanes | deterministic bucket、write/snapshot/new-file 可行，必要时拆分 | → V6A | `repair-vdd` | slice contracts | VDD |
+| V6A final plan exact-cover | slice contracts + pre-slice cover | 将每条 pre-slice edge 绑定到合法 slice、verification lane、terminal predicate 与完整唯一 stage scope；sound-and-complete many-to-many、无 orphan/hard-uncovered | → V7 | `repair-vdd` | final coverage result (`plan_coverage_edge`) | VDD |
 | V7 feasibility | slices + real entries | selector 可达、真实 production entry、GREEN/REFACTOR 可行 | `plan-ready` | `repair-vdd` | feasibility result | VDD |
 
 ## Quick Dev Q0–Q8 transition matrix
@@ -463,14 +484,16 @@ obligation extract、Acceptance compile 和 semantic align 的 worker 必须 rea
 | semantic-contract-gap | 缺字段/冲突 schema manifest | `py -3 scripts/quick_dev/run.py --plan <plan> --slice <slice>` | nonzero | nonzero | zero/none | semantic-contract-gap | 完整 schema-valid manifest | same command | zero | zero | zero | pass | implementation-successor/green |
 | artifact-integrity | 篡改 descriptor/receipt/result hash | `py -3 scripts/quick_dev/validate_artifacts.py --run <run>` | zero/any | nonzero | zero/none | artifact-integrity | 当前字节可重算且匹配 | same command | zero | zero | zero | pass | slice-ready/terminal |
 | target-binding-failure | target 或 fixture ref 错误 | `py -3 scripts/quick_dev/run.py --plan <plan> --slice <slice>` | zero/any | nonzero | zero/none | target-binding-failure | 冻结 target/fixture refs | same command | zero | zero | zero | pass | implementation-successor/green |
-| test-harness-failure | 缺 runner、导入错误、零 executions | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | nonzero/any | nonzero | zero/none | test-harness-failure | 可执行真实 runner | same command | nonzero | zero | zero | pass | expected-red/implementation |
+| test-harness-failure | 缺 runner、导入错误、零 executions | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | nonzero/any | nonzero | zero/none | test-harness-failure | 可执行真实 runner但行为缺口仍在 | same command | nonzero | zero | zero | expected-red | expected-red/implementation |
 | timeout-no-observation | 进程超时或无 observation | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | timeout/null | nonzero | zero/none | timeout-no-observation | 在 timeout 内产生 receipt/observation | same command | nonzero | zero | zero | expected-red | expected-red/implementation |
-| repo-noise | 无关测试失败或噪声污染观察 | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | nonzero/any | nonzero | zero/none | repo-noise | 隔离干净 snapshot 中仅目标行为执行 | same command | nonzero | zero | zero | expected-red/pass | slice-ready/terminal |
+| repo-noise | 无关测试失败或噪声污染观察 | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | nonzero/any | nonzero | zero/none | repo-noise | 隔离干净 snapshot 中仅目标行为执行且行为缺口仍在 | same command | nonzero | zero | zero | expected-red | slice-ready/terminal |
 | unexpected-green | RED selector 零退出或无 expected failure ID | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | zero | nonzero | zero/none | unexpected-green | 同 selector 真实行为缺口 | same command | nonzero | zero | zero | expected-red | implementation-successor |
 | expected-red | 真实行为缺口且精确 failure ID | `py -3 scripts/quick_dev/stage_command.py --stage red --slice <slice>` | nonzero | zero | zero | expected-red | 实现后同 selector 通过 | `py -3 scripts/quick_dev/stage_command.py --stage green --slice <slice>`（selector identity 完全相同） | zero | zero | zero | pass | green-before-red |
 | task-implementation-failure | GREEN/REFACTOR 非零或断言失败 | `py -3 scripts/quick_dev/stage_command.py --stage green --slice <slice>` | nonzero | nonzero | zero/none | task-implementation-failure | 生产实现满足 assertions | same command | zero | zero | zero | pass | refactor/slice-ready |
-| repeated-deterministic-failure | 相同 fingerprint 连续失败两次 | `py -3 scripts/quick_dev/run.py --plan <plan> --slice <slice> --profile standard`（相同命令执行两次） | nonzero | nonzero | zero/none | repeated-deterministic-failure | 修复输入或明确 repair 路由 | same command（不得第三次原参数重跑） | zero/repair | zero | zero | pass/repair | 原参数第三次重跑 |
+| repeated-deterministic-failure | 相同 fingerprint 连续失败两次 | `py -3 scripts/quick_dev/run.py --plan <plan> --slice <slice> --profile standard`（相同命令执行两次） | nonzero | nonzero | zero/none | repeated-deterministic-failure | 修复输入或明确 repair 路由 | 输入变化后以新 fingerprint 重跑；输入未变化不得第三次执行原参数 | zero/repair | zero | zero | pass/repair | 原参数第三次重跑 |
 
 另外必须覆盖以下反假绿变异：复制 registry expected failure/outcome、producer 自报 pass/status、缩小 case 集或替换 selector、缺 predecessor/错 run/hash/历史 glob 或 mtime 扫描、删除 assertion edge 或 terminal 吞并 Acceptance、profile 跳过动态执行或复用错误 selector。所有变异均须由独立只读 validator 拒绝。`expected-red` 行表示合法的 pre-implementation RED，不是被 validator 拒绝的 blocked fixture；其 corrected 侧必须是同 selector 的实现后通过。
+
+`repeated-deterministic-failure` 的 corrected 侧只有在输入确实变化并产生新 fingerprint 时才允许重跑；输入字节、selector、profile 与依赖均未变化时，生命周期必须直接输出 `repair-vdd` 或 `stop`，不得执行第三次原参数命令。
 
 detached fixtures 与被测 Quick Dev 使用独立目录/提交和只读 judge；独立 judge 只在 `self-hosted`/toolchain acceptance profile 强制，普通 fast-ship/standard 任务仍必须满足同一 truth floor。
