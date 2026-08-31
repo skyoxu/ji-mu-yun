@@ -1,0 +1,58 @@
+必须重新 Spec 的原因
+
+Architecture 反向修改了三份 normative Spec companion：
+
+execution-protocol.md
+implementation-contracts.md
+schema-contracts.md
+
+随后的 r16 review 又以这些被 Architecture 自己修改过的文件为输入，因此只能证明“与自身修改后的 Spec 一致”，不能证明忠实消费了 b3334eac 的冻结 Spec。
+
+ARCHITECTURE-SPINE.md 仍是 status: draft，并通过 AD-15 规定：
+
+旧代码未满足新架构前，阻止 Architecture handoff。
+
+这是阶段倒置。旧代码不符合新架构正是实施阶段要修复的事情，不能要求实施完成后才允许把 Architecture 交给实施。
+
+Architecture 把 architecture-decision-registry、memlog ordinal 和 spine hash 接入了运行期 current snapshot。
+这会让架构文档或决策登记变化失效 TDD evidence，违反已冻结的：
+
+development governance 默认关闭；
+普通文档和治理 artifact 不影响 TDD 路由。
+
+这不是普通文档治理问题，因为它现在直接参与运行期 predicate。
+
+implementation-contracts.md 有真实 schema 错误：
+"target_hashes": {
+  "type": "object",
+  "additionalProperties": false
+}
+
+没有 properties 或 patternProperties，因此只允许空对象。fixture_hashes 同样如此，无法记录实际 hash。
+
+runtime_closure_tuples 声称 uniqueItems=true 能保证 tuple_key 唯一，这是错误的。两个对象拥有相同 tuple_key、不同 edge ref 时仍是两个不同对象。必须由确定性 validator 显式校验：
+unique(tuple_key)
+tuple_key == slice_id|acceptance_id|stage
+actual key set == V6A expected key set
+decision registry 与 memlog 自己声明的映射不一致。由于该 registry 被接入 runtime snapshot，这个问题不能作为无关文档瑕疵忽略。
+重新 Spec 时应保留的 Architecture 内容
+
+以下设计是有价值的，应吸收到新版 Spec：
+
+V5→V6→V6A→V7。
+executor 写 receipt、judge 写 observation、runtime-edge validator 写 edge。
+完整 runtime edge lineage。
+selector identity 与 RED/GREEN/REFACTOR 强绑定。
+显式 predecessor、禁止 glob/mtime/latest-success。
+current-snapshot/change-impact resolver。
+typed terminal closure。
+
+但应删除或降级：
+
+architecture decision registry 参与运行期 snapshot。
+memlog/spine hash 影响 TDD evidence。
+AD-15 作为 Architecture handoff 前置条件。
+普通 development 强制外部 reviewer/maintainer bundle。
+固定 Python/pytest 精确版本作为通用能力硬门；应改为运行时探测并记录版本。
+
+重新 Spec 完成后，应重新冻结 canonical package，再让 Architecture 基于不可修改的 Spec 做一次收敛修订。不需要再产生十几轮重型 review；一次 Spec consistency check 加一次 Architecture reality check 就够了。

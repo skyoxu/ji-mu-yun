@@ -31,6 +31,12 @@ sources:
     role: provenance
   - path: docs/know108.txt
     role: provenance
+  - path: docs/know109.txt
+    role: provenance
+  - path: _bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-31/ARCHITECTURE-SPINE.md
+    role: provenance
+  - path: _bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-31/architecture-decision-registry.v1.json
+    role: provenance
 ---
 
 > **Canonical contract.** 本 SPEC 与 `companions:` 中的文件共同构成 VDD 与 Quick Dev Chapter 4/5/6 通用能力升级的完整机器合同。`sources:` 仅用于追溯；原始能力草案第 15、16、18.5 节的承重内容已提取到规范性 companions，不再把整份草案作为 adopted contract。
@@ -77,13 +83,14 @@ sources:
 ## Constraints
 
 - VDD 只声明 intent、source、Acceptance、slice、failure intent、write set 和 terminal predicate；不生成 descriptor、run ID、receipt、exit code、observation 或 pass。
-- Quick Dev 物化并执行 descriptor，维护 run state；terminal 只产生 `implementation-complete`。外部独立语义验收产生 `acceptance-passed` 或 repair，maintainer 才决定 commit、PR、release。
+- Quick Dev 物化并执行 descriptor，维护 run state；terminal 只产生 `implementation-complete`。外部独立语义验收、review、candidate binding、authorization 与 maintainer commit/PR/release 是可选治理能力，不得成为普通开发 TDD 的真实性前置条件。
 - 所有命令必须使用参数数组、`shell=False`、仓库内安全 cwd、显式 target/fixture identity 和 declared write set。
 - Assertion edge 必须绑定当前 plan、slice、candidate、observation、producer/validator identity、selector、target、fixture 和 case source；多 Acceptance 共享 selector 时每个 Acceptance 必须有独立 assertion edge。
+- Runtime closure 必须以 typed `runtime_closure_tuples` 闭集表达，每个 `(slice, Acceptance, stage)` 恰好一个 tuple；current-snapshot resolver 只纳入产品与执行依赖，不纳入 architecture registry、memlog、spine hash 或普通治理文档。
 - VDD V5 仅生成 pre-slice semantic cover；V6A 在 slice partition 后生成不含运行期 lineage 的 `plan_coverage_edge`（完整唯一 `stage_scope`）；Quick Dev Q3–Q8 才能生成带运行期 lineage 的 `runtime_assertion_edge`，三者不得混用。
 - Invalidation 按 `schema-contracts.md` 的矩阵传递计算；selector/fixture/target/source 变化从 RED 重跑，production owner 变化在语义变化时回 RED，不确定时采用更严格重跑。
 - 模型 worker 只可在只读语义提取/对齐或受限写集内工作，不能写 plan-ready、pass 或 observed evidence；确定性 validator 拥有最终 predicate。
-- Development 默认关闭 external review、candidate binding 和 authorization 阻塞；认证、TDD、语义 predicate、写集安全和运行安全不关闭。Test/production 可开启治理而不降低真实性。
+- Development 默认关闭 external review、candidate binding 和 authorization 阻塞；认证、TDD、语义 predicate、写集安全和运行安全不关闭。Test/production 可开启治理而不降低真实性；治理或架构文档字节默认不使 TDD evidence 失效。
 - 旧 v1 计划只读兼容，历史 evidence append-only 保留；不得把 8-25 计划 ID 特判写入通用 router。
 
 ## Non-goals
@@ -99,7 +106,7 @@ sources:
 ## Assumptions
 
 - 历史 v1 计划通过只读 compatibility adapter 投影；无法映射 source、selector、write set 或 lineage 时返回 repair recommendation。
-- 目标使用 Windows、`py -3`、pytest 和临时 workspace；远程执行不是 v1 必需能力。
+- 初始实现支持 Windows、`py -3`、pytest 和临时 workspace；运行时必须探测并记录实际 launcher/interpreter/test-runner 版本，不能把某个精确版本当作通用能力硬门；远程执行不是 v1 必需能力。
 
 ## Open Questions
 

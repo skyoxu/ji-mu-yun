@@ -271,8 +271,8 @@ fingerprint 由 selector identity、target/fixture hash、stage、exit semantics
     "stderr_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "candidate_hash": {"type": "string"},
     "descriptor_sha256": {"type": "string"},
-    "target_hashes": {"type": "object", "additionalProperties": false},
-    "fixture_hashes": {"type": "object", "additionalProperties": false},
+    "target_hashes": {"type": "object", "additionalProperties": false, "minProperties": 1, "patternProperties": {"^[A-Za-z0-9._/-]+$": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}},
+    "fixture_hashes": {"type": "object", "additionalProperties": false, "minProperties": 1, "patternProperties": {"^[A-Za-z0-9._/-]+$": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}},
     "profile_identity": {"type": "string"},
     "executor_identity": {"type": "string"}
   }
@@ -426,7 +426,7 @@ Cross-field predicates：`process_attempts>=1`；`timed_out=true` 时 `exit_code
     "required": ["schema", "roots", "git_delta", "excluded_roots", "sha256"],
     "properties": {
       "schema": {"const": "current-snapshot-resolver.v1"},
-      "roots": {"type": "array", "minItems": 9, "maxItems": 9, "uniqueItems": true, "allOf": [{"contains": {"type": "object", "properties": {"root_kind": {"const": "candidate_tree"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "plan"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "contract"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "registry"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "descriptor"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "fixture"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "source"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "validator_judge"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "plan_state_transition"}}}}], "items": {"type": "object", "additionalProperties": false, "required": ["root_kind", "repository_relative_posix_path", "content_sha256", "source_commit", "inclusion_reason"], "properties": {"root_kind": {"enum": ["candidate_tree", "plan", "contract", "registry", "descriptor", "fixture", "source", "validator_judge", "plan_state_transition"]}, "repository_relative_posix_path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "content_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "source_commit": {"type": "string", "minLength": 1}, "inclusion_reason": {"type": "string", "minLength": 1}}}},
+      "roots": {"type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true, "allOf": [{"contains": {"type": "object", "properties": {"root_kind": {"const": "candidate_tree"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "plan"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "contract"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "descriptor"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "fixture"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "source"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "validator_judge"}}}}, {"contains": {"type": "object", "properties": {"root_kind": {"const": "plan_state_transition"}}}}], "items": {"type": "object", "additionalProperties": false, "required": ["root_kind", "repository_relative_posix_path", "content_sha256", "source_commit", "inclusion_reason"], "properties": {"root_kind": {"enum": ["candidate_tree", "plan", "contract", "descriptor", "fixture", "source", "validator_judge", "plan_state_transition"]}, "repository_relative_posix_path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "content_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "source_commit": {"type": "string", "minLength": 1}, "inclusion_reason": {"type": "string", "minLength": 1}}}},
       "git_delta": {"type": "object", "additionalProperties": false, "required": ["base_commit", "additions", "deletions", "renames"], "properties": {"base_commit": {"type": "string", "minLength": 1}, "additions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "after_sha256"], "properties": {"path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "after_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}}, "deletions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "before_sha256"], "properties": {"path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "before_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}}, "renames": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["from_path", "to_path", "before_sha256", "after_sha256"], "properties": {"from_path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "to_path": {"type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"}, "before_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "after_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}}}},
       "excluded_roots": {"type": "array", "items": {"type": "string"}, "minItems": 1},
       "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
@@ -462,17 +462,6 @@ Cross-field predicates：`process_attempts>=1`；`timed_out=true` 时 `exit_code
       "current_snapshot_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
     }
   },
-  "architecture_decision_registry": {
-    "type": "object",
-    "additionalProperties": false,
-    "required": ["schema", "registry_id", "bindings", "entries"],
-    "properties": {
-      "schema": {"const": "architecture-decision-registry.v1"},
-      "registry_id": {"type": "string", "pattern": "^ADR-REG-[0-9]+$"},
-      "bindings": {"type": "object", "additionalProperties": false, "required": ["canonical_selection_path", "canonical_selection_sha256", "spine_path", "spine_sha256"], "properties": {"canonical_selection_path": {"type": "string"}, "canonical_selection_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "spine_path": {"type": "string"}, "spine_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}},
-      "entries": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "object", "additionalProperties": false, "required": ["memlog_ordinal", "decision_id", "topic", "status"], "properties": {"memlog_ordinal": {"type": "integer", "minimum": 1}, "decision_id": {"type": "string", "pattern": "^AD-[0-9]+$"}, "topic": {"type": "string", "minLength": 1}, "status": {"enum": ["current", "superseded"]}, "supersedes": {"type": "string", "pattern": "^AD-[0-9]+$"}}}}
-    }
-  }
 }
 ```
 
