@@ -1,211 +1,125 @@
 ---
 name: quick-dev-tdd-adapter
-description: Resume or implement one explicit Repository Maintenance execution-plan directory containing a schema-valid implementation-contract.v1.json through hash-bound TDD slices, observed RED, minimal GREEN, refactor, evidence capture, and its plan-local terminal predicate. Use this Skill instead of bmad-quick-dev whenever that contract exists.
+description: Implement or resume an explicit VDD execution plan through real RED, bounded GREEN, REFACTOR, deterministic slice-ready coverage, and whole-plan terminal validation. New Chapter 4/5/6 plans use the canonical evidence pipeline; historical implementation-contract.v1 plans are compatibility inputs only.
 ---
 
 # Repository Maintenance TDD Adapter
 
-Use this Skill only with an explicit plan file or plan directory containing a valid `implementation-contract.v1.json`. It is a plan-directory execution loop; it is not a review authority, commit authority, or release authority.
+Use this Skill only for an explicit plan file or plan directory routed to `strict_tdd_plan`. It is implementation authority for the TDD lifecycle only; it is not review, acceptance, commit, PR, release, or archive authority.
 
-The parent Quick Dev input router owns lane selection. This strict adapter must
-reject standalone requirements, compact VDD inputs, missing contracts, and
-schema-invalid contracts. It must never infer a compact lane or synthesize a
-contract. All lanes reuse the same four-class model classification, but only a
-`strict_tdd_plan` may enter this adapter.
+The parent Quick Dev router owns lane selection. Reject standalone requirements, compact inputs, missing plan contracts, schema-invalid inputs, and any attempt to fall back to Stock BMAD Quick Dev after this adapter has been selected.
 
-Before reading plan state or selecting an action, run the parent router with
-`--caller quick-dev-tdd-adapter`. A nonzero result is a hard routing failure:
-do not enter this adapter, create run evidence, or fall back to Stock BMAD
-Quick Dev. The successful route must name both `lane: strict_tdd_plan` and
-`backend: quick-dev-tdd-adapter`.
+## Current And Legacy Plan Routes
 
-The parent CLI requires caller identity. For this Skill the only valid caller
-value is `quick-dev-tdd-adapter`; omitting it or substituting
-`bmad-quick-dev` must fail before any BMAD spec or adapter evidence is created.
+Determine the plan generation before executing anything:
+
+| Input | Route | Runtime authority |
+| --- | --- | --- |
+| `vdd.semantic-plan-bundle.v1` / Chapter 4/5/6 current plan | current | `tools/current_lifecycle.py` + `tools/coverage_predicates.py` |
+| historical `implementation-contract.v1.json` without the current semantic bundle | compatibility | legacy router/loop may inspect, project, or route repair only |
+| standalone requirements or missing contract | reject | none |
+
+For a current plan, never use `loop_plan_directory.py`, `run_slice_lifecycle.py`, `stage_command.py`, a plan-local combined writer, `canonical_lifecycle.py`, or `evidence_pipeline.py` as completion authority. Historical evidence is append-only compatibility input and may be reused only after an explicit current projection proves all required identities.
+
+Before current execution, read [tdd-run-protocol.md](references/tdd-run-protocol.md), [implementation-backend-contract.md](references/implementation-backend-contract.md), and [evidence-and-freshness.md](references/evidence-and-freshness.md).
 
 ## Phase Service State And Governance Mode
 
-Resolve governance before reading governance-owned plan state. The canonical
-phase service state is `PHASEA_SERVICE_STATE=development|test|production`;
-an unset value is `development`. `auto` disables governance in development
-and enables it in test and production. A caller may explicitly select
-`--governance-mode on|off|auto`, or set `JIMUYUN_GOVERNANCE_MODE`; the CLI
-parameter has highest precedence.
+Resolve governance before reading governance-owned state. `PHASEA_SERVICE_STATE` is `development|test|production`; unset means `development`. `JIMUYUN_GOVERNANCE_MODE` is `auto|on|off`; an explicit CLI mode wins.
 
-When governance is disabled, do not require or create plan reports, frozen
-knowledge lineage, Skill-input attestations, source-freeze/conformance,
-external semantic review, candidate binding, implementation authorization, or
-repair-review handoff artifacts. This is a velocity policy for a trusted
-single-maintainer development environment. It never disables the explicit
-plan contract, shell-free commands, allowed write sets, observed RED,
-GREEN/REFACTOR reruns, semantic predicates, candidate/validator freshness,
-append-only failed evidence, or repeated-failure stop-loss.
+`auto` disables heavy governance in development and enables it in test/production. When disabled, do not require or create plan reports, frozen knowledge lineage, Skill-input attestations, source-freeze/conformance, external semantic review, candidate binding, or implementation authorization merely to enter TDD.
 
-## Target Plan Report Lifecycle
+Governance mode never disables the truth floor: explicit plan semantics, safe paths, shell-free execution, real RED, same-selector GREEN/REFACTOR, exact assertion coverage, current-byte lineage, current snapshot, append-only evidence, deterministic failure classification, stop-loss, or terminal validation.
 
-When governance is enabled, complete this lifecycle before `prepare` or any
-implementation identity freeze. When governance is disabled, skip this entire
-report lifecycle and do not create or update a `95-*.md` report solely to
-enter Quick Dev:
+## Current Required Order
 
-1. Require `--plan-dir execution-plans/<plan-dir>` or one plan file inside that directory. Reject paths outside `execution-plans/`.
-2. Read only the supplied file and its containing target directory. Do not enumerate, index, or infer state from any other execution-plan directory.
-3. Resolve at most one `95-*.md` inside the target directory. A duplicate, stale, escaping, or ambiguous report fails closed and routes to VDD repair.
-4. Treat the report and `logs/tdd-adapter/<plan-id>/run-state.v1.json` as non-authoritative continuity data. Both carry `authorizes: []` and cannot authorize acceptance, commit, handoff, release, or completion.
-5. Audit the target plan, route material defects through the target directory's declared repair gate, validate the repaired plan, and refreeze every affected identity before observing RED.
+For every new Chapter 4/5/6 plan, use this order:
 
-When governance is enabled and the target plan's current declared terminal
-predicate passes, append its overall implementation result to the same report.
-Never use report text or an index entry to satisfy that predicate.
+1. Validate the VDD semantic-plan bundle before any expensive action. V5 must contain only pre-slice semantic cover; V6 partitions slices; V6A binds the exact ordered `stage_scope=["red","green","refactor","terminal"]`. Runtime facts in VDD output route `repair-vdd`.
+2. Run Q0 recommendation/preflight without process execution or state mutation. Resolve and record the actual launcher/interpreter/test-runner environment; exact Python/pytest versions are not universal gates.
+3. Materialize a shell-free RED descriptor from the VDD failure intent. Target refs, fixture refs, assertions, cwd, timeout, candidate identity, and selector must be explicit.
+4. Execute RED through `tools/current_lifecycle.py`. The executor writes only `process-receipt.v2`; the independent judge writes only `observation.v2`; the runtime-edge validator writes only runtime assertion edges. A timeout, zero-case/harness result, repo noise, wrong failure, or unexpected green cannot satisfy RED.
+5. Only after clean expected RED, allow implementation changes inside the declared production write set. Recompute exact Git delta; a selector/test/fixture/plan/evidence mutation invalidates the RED lineage.
+6. Execute GREEN and REFACTOR through the same current lifecycle. They must reuse RED selector identity, target refs, fixture refs, assertion IDs, and cwd. Only successor/run/stage identity may change.
+7. Run Q7 through `tools/coverage_predicates.py`. `slice-ready` must re-read RED/GREEN/REFACTOR edge→observation→receipt lineage, current target/fixture bytes, and prove the complete assertion-ID set for every active Acceptance. Extras, duplicates, missing assertions, selector drift, candidate drift, or stale snapshot fail closed.
+8. Execute the terminal descriptor through the current lifecycle. Terminal process success alone is not completion.
+9. Run Q8 through `tools/coverage_predicates.py`. Supply one explicit hash-bound `slice-ready` predecessor per partitioned slice. Q8 verifies terminal assertion coverage, same-selector identity, the exact `(slice, Acceptance, stage)` tuple universe, current edge lineage, and the current snapshot again before writing `implementation-complete`.
+10. Stop at `implementation-complete`, `repair-vdd`, `environment-blocked`, or repeated deterministic failure. Never publish `acceptance-passed` here.
 
-## Required Order
+## Evidence Ownership
 
-1. Run `tools/loop_plan_directory.py` before every expensive action. It reads only the explicit target directory and its plan-local evidence and emits one next action.
-2. For `run-slice`, generate a plan-local `run_context` and invoke `tools/run_slice_lifecycle.py`; it uses the shared `LifecycleRunner` and `stage_artifact_composer`. Never handwrite stage, Capsule, attempt, or ledger JSON.
-3. After freezing the current candidate, resolve the VDD-declared failure intent
-   into a shell-free RED command, run it, and require its expected nonzero
-   failure before a production write; then run GREEN, REFACTOR, and the
-   plan-local slice predicate. RED command descriptors and RED observations are
-   Quick Dev run artifacts, not VDD artifacts. Reject a newly produced VDD plan
-   that contains a RED receipt, run ID, hash, predecessor, imported historical
-   RED, or a pre-bound RED command descriptor. Historical plans may be read
-   only through an explicit compatibility adapter and cannot be refreshed into
-   new evidence.
-4. After `slice-ready`, route the next unlocked slice automatically. When a
-   previous terminal receipt is stale only because a declared candidate binding
-   changed, rerun the controlled terminal path and publish a successor receipt;
-   do not stop for manual evidence repair. Stop only at the plan-local terminal
-   predicate, `external-repair-required`, or a repeated failure fingerprint.
-5. When governance is enabled, a plan may consume an already-published implementation authorization before its first implementation slice. When governance is disabled, neither require nor generate that authorization. This Skill never launches Bootstrap Review, changes review evidence, or creates a successor policy. Its terminal result may only be `implementation-complete`; acceptance remains external.
-6. When governance is enabled and a P0/P1 repair reaches the plan-local terminal predicate, read
-   [repair-review-handoff.md](references/repair-review-handoff.md), generate the
-   standard Acceptance request, and immediately run the Acceptance-owned
-   `audit-repair-completeness` command. Preserve the current predecessor,
-   hash-bound baseline and complete candidate manifests, changed files, direct
-   consumers, targeted tests, validation references, the generated root-cause callsite inventory, and controlled producer/consumer composition receipts.
-   The Acceptance audit derives the exact changed set from the candidate
-   manifest, binds present paths by current content hash, and binds deleted
-   paths by their baseline hash before routing continues. Run each registered
-   composition command with every producer and consumer supplied as an
-   `--input-path`. Supply every
-   preserved repair and composition artifact to the same minimal review closure;
-   do not let the handoff and Bootstrap scope describe different file sets.
-   Do not select an acceptance route, launch Bootstrap, create a review
-   successor, or change the stable lineage family.
+| Artifact | Sole current writer |
+| --- | --- |
+| descriptor/run orchestration | Quick Dev |
+| process receipt | executor trust zone |
+| observation/classification | independent judge |
+| runtime assertion edge | runtime-edge validator |
+| slice-ready | Q7 coverage predicate |
+| implementation-complete | Q8 terminal predicate |
+| acceptance-passed | external Acceptance Skill |
 
-## Skill Input Gate
+Evidence writes are immutable create-if-absent. A current writer must never overwrite an existing different artifact, infer a predecessor from filename order, or search for the latest successful run.
 
-When governance is disabled, call `tools/adapter.py`'s policy-aware `prepare`
-entry point without a receipt; consume the explicit plan contract and registered
-commands directly. Do not invoke the attestation producer merely to satisfy a
-development run.
+Process receipts contain process facts only: actual argv/cwd, timestamps, attempts, test executions, cases, exit/timeout, output hashes, candidate/descriptor/target/fixture hashes, profile identity, and executor identity. Producers do not pre-fill semantic pass/fail.
 
-When governance is enabled, after the parent route and minimum target discovery, load
-`references/skill-input-contract.v1.json` and prepare a strict receipt with
-`scripts/python/prepare_skill_input_consumption.py --operation execute`.
-Pass the explicit plan directory and target file paths as source roles. Use
-`scripts/python/launch_skill_input_consumer.py --create-request` with the
-candidate receipt and actual backend/model, then run the typed semantic child
-with that generated request. Never hand-author its execution identity. Require
-`validate_skill_input_consumption.py --require-ready` before action selection,
-`prepare`, or RED. A stale but reconstructible Skill input is regenerated
-through the same typed workflow before the next action. `ready=false`, an
-unverifiable source mismatch, or a missing sidecar is a hard stop and must
-route to plan repair; no raw snapshot or log is fallback input. In the Python adapter, use `tools/adapter.py`'s policy-aware `prepare`
-wrapper so the enabled gate result and context artifact are bound into the
-prepared slice.
+Observations separate `evidence_state`, `verification_outcome`, `failure_family`, and deterministic `failure_id`. `expected-red` is a failed process observation that authorizes implementation only when it matches the declared failure intent and all truth-floor predicates.
 
-## Model Route Decision
+## Snapshot And Invalidation
 
-Before a slice backend is selected, derive the closed typed fact set consumed
-by `tools/model_routing.py` from the explicit plan, protected-path rules,
-declared write roots, consumers, tests, and unresolved boundaries. Select the
-highest matching class:
+The current snapshot has exactly eight runtime root kinds:
 
-- `architectural`: an ADR or invariant, public API, database schema,
-  auth/security, runtime/deployment, shared LLM entrypoint, protected path, or
-  workflow control-plane ownership changes.
-- `complex`: no architectural trigger, but cross-module consumers, state or
-  recovery semantics, concurrency/idempotency, multiple production write
-  roots, or an unresolved behavioral boundary exists.
-- `small_mechanical`: no higher trigger, the transform and behavior are fully
-  specified, at most one production root and one matching test root change,
-  and no contract or dependency is introduced.
-- `normal`: every other bounded implementation task.
+`candidate_tree`, `plan`, `contract`, `descriptor`, `fixture`, `source`, `validator_judge`, `plan_state_transition`.
 
-Unknown or contradictory facts route to blocked `complex`. An explicit user
-override may upgrade the class; it cannot downgrade the highest matched class.
-Emit the hash-bound decision as non-authorizing evidence. The adapter must not
-select a provider or invoke a model process. The shared workflow launcher owns
-child execution. In `observe_only`, continue with the current caller session;
-the decision neither launches a child nor replaces that session's model.
+Architecture registries, memlogs, spine hashes, review records, candidate bindings, authorizations, and ordinary governance documentation are excluded unless a named product/execution contract explicitly adopts their semantics.
 
-The canonical policy owns Quick Dev's independent consumer enablement. When it
-is disabled, classification evidence remains deterministic but the route
-status is `disabled`; VDD and Refactor Acceptance controls are unaffected.
-Only the canonical policy may authorize execution, so a caller-supplied policy
-or capability assertion cannot turn a non-authorizing decision into a launch.
+Reject absolute/escaping paths, symlink/junction escape, unknown roots, stale hashes, and changed or untracked files outside the declared runtime roots. Do not use glob, mtime, or latest-success inference for current authority.
 
-The adapter does not read Bootstrap history baselines, promote cost
-calibration, or select a finalized run for reuse. Refactor Acceptance alone may
-reuse a run after revalidating the prepared Acceptance candidate, custody,
-Bootstrap candidate binding, scope, profile, policy, authority, and clean
-status. A historical match never changes this adapter's terminal predicate or
-its non-authorizing handoff.
+Invalidation follows semantic impact: selector/fixture/target/source changes restart from RED; production-owner changes rerun at least GREEN/REFACTOR and restart RED if failure semantics changed; compiler/validator/judge/predecessor changes invalidate their dependent evidence. When uncertain, rerun the stricter closure.
+
+## Failure And Stop-Loss
+
+At minimum distinguish `semantic-contract-gap`, `expected-red`, `unexpected-green`, `task-implementation-failure`, `test-harness-failure`, `target-binding-failure`, `repo-noise`, `timeout-no-observation`, `repeated-deterministic-failure`, and `artifact-integrity`.
+
+Classification comes from current process evidence. Repeating an unchanged deterministic fingerprint twice routes `repair-vdd` or `stop`; do not keep retrying the same inputs. Unexpected green requires regression/current-behavior proof or VDD repair, never direct implementation.
+
+## Implementation Backend Boundary
+
+The implementation worker may change only declared production paths after expected RED. It must not modify the selector, fixture, Acceptance, plan contract, historical evidence, or terminal predicate to manufacture GREEN.
+
+Model routing remains deterministic and non-authorizing. Select the highest applicable class: `architectural`, `complex`, `normal`, or `small_mechanical`. Unknown/contradictory facts are blocked `complex`. A user override may upgrade but not downgrade the detected class. The adapter does not select a provider or make backend text authoritative evidence.
+
+## Governance-Enabled Extras
+
+When governance is enabled, existing repository policy may additionally require target-plan reports, frozen knowledge verification, Skill-input receipts, external review, candidate binding, or implementation authorization. These are supplemental governance inputs and must never replace RED/GREEN/REFACTOR/current-snapshot predicates.
+
+For P0/P1 repair handoff, preserve the exact baseline/candidate manifests, changed files, direct consumers, targeted tests, validation refs, root-cause callsite inventory, and composition receipts required by [repair-review-handoff.md](references/repair-review-handoff.md). This Skill does not launch Bootstrap Review or decide Acceptance scope.
 
 ## Knowledge Consumption
 
-When governance is enabled and a VDD plan contains frozen knowledge context,
-verify its accepted decisions and source hashes before RED. Do not issue a new
-Locator query or expand its paths, candidates, classifications, or satisfied
-modules. Any difference routes to VDD repair. See
-`references/knowledge-consumption.md`. When governance is disabled, skip the
-freeze/receipt freshness gate and consume only the plan's explicit source paths;
-a governance-only lineage mismatch must not route to VDD repair.
+When governance is enabled and the plan declares frozen knowledge context, verify its accepted paths and hashes before RED. Do not expand the read set or silently replace a stale source. A reconstructible freshness change routes through the VDD-owned refresh path; an unreconstructible mismatch routes `repair-vdd`.
 
-When governance is enabled, `tools/route_plan_directory.py` verifies a
-declared `knowledge-context.v1.json` and its VDD-owned
-`knowledge-context.freeze.v1.json` receipt before any slice can start. An
-authority, selection, receipt, or unreconstructible mismatch routes to VDD
-repair. A source-byte or catalog freshness mismatch with the same accepted
-path/module selection routes to a controlled VDD-owned successor refresh; the
-adapter never writes that authority itself and resumes the same logical TDD
-lineage after verification. The shared context validator must byte-match
-current main, and every accepted Locator read-set path must still match its
-hash in the worktree before RED. When governance is disabled, the router does
-not load or refresh either knowledge-governance receipt.
+When governance is disabled, skip governance-only freshness receipts and consume only explicit plan source paths. Governance-byte drift alone must not invalidate runtime TDD evidence.
 
-Use `tools/persistent_plan_loop.py` for unattended execution. It re-routes after every completed slice and consumes only the slice's explicit, no-wildcard `execution_snapshot_paths` declaration. The plan validator requires that declaration to name an existing repository file covered by that slice's allowed write set; a missing or invalid declaration fails closed. A plan-owned contract may explicitly declare `planned_new_files` for files intentionally created by its current-session bridge. Only those exact paths may be absent at preparation; the bridge must require test files before RED, production files before GREEN, and every planned path before REFACTOR. Its state file belongs under `logs/tdd-adapter/<plan-id>/controller/`.
+## Legacy Compatibility
 
-Use the bounded driver for one declared slice write set:
+Legacy plan tools may inspect historical v1 state to decide whether it can be projected or must be repaired. They may not emit current `process-receipt.v2`, `observation.v2`, runtime-edge v2, `slice-ready-result.v2`, or `implementation-complete-result.v2` unless execution has actually entered the current pipeline and revalidated all current identities.
 
-```powershell
-py -3 .agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py `
-  --repository-root C:\jimuyun `
-  --plan-dir C:\jimuyun\execution-plans\<target-plan> `
-  --snapshot-path <declared-write-path> `
-  --max-actions 8
-```
-
-The caller supplies explicit snapshot paths from the current slice's declared write set. The driver creates a new append-only run, compiles only the target plan's registered commands, executes all declared refactor invocations, and re-routes after a current terminal predicate. It must not guess a write set or create implementation changes absent from the backend's declared allowed writes.
-
-The adapter never treats backend text, a Capsule, an adapter decision, run state, a clean process exit, a repair review handoff, or this Skill as acceptance authority. Only the plan-local registered predicate may authorize its declared state.
+Never update historical failed/review evidence in place. Preserve it and create a new successor or compatibility projection with explicit predecessor refs.
 
 ## Version Currency Commit Gate
 
-The adapter is not commit authority. Before a caller commits a completed slice, inspect the staged diff and its declared target runtime or dependency versions.
+This Skill is not commit authority. If implementation changes a version-sensitive external SDK/framework/CLI/language API, verify documentation for the repository-pinned target version before proposing a commit. Repository-owned code, fixtures, documents, or stable standard-library behavior do not require a network lookup solely for this gate.
 
-1. If the diff changes a version-sensitive external SDK, framework, CLI, or language API, resolve the library with Context7 and query documentation for the exact target version before proposing the commit.
-2. Compare the documentation with the repository-pinned version and local contract. Missing, ambiguous, or version-mismatched documentation blocks the commit until the caller resolves the discrepancy.
-3. Treat Context7 output as read-only implementation context, never as acceptance proof or a replacement for declared RED, GREEN, REFACTOR, or plan-local predicates. Preserve the version and source reference in existing slice evidence when the protocol already requires candidate evidence.
-4. If the diff changes only repository-owned code, fixtures, documents, or stable standard-library behavior, record the gate as not applicable and do not create a network dependency merely to commit.
+Documentation lookup is implementation context only; it never replaces TDD evidence or Acceptance.
 
 ## Boundaries
 
-- Use structured command descriptors with `shell: false`; do not accept raw shell commands.
-- Always reject command, validator, contract, write-set, read-set, dependency, baseline, or predecessor drift.
-- When governance is enabled, also reject authority, review, source-freeze, conformance, and attestation drift.
-- Preserve failed evidence and create a stale-linked successor instead of overwriting a run.
-- Do not invoke Stock BMAD Quick Dev as an authoritative backend or consume its review/done state.
-
-Read [implementation-backend-contract.md](references/implementation-backend-contract.md), [tdd-run-protocol.md](references/tdd-run-protocol.md), and [evidence-and-freshness.md](references/evidence-and-freshness.md) before implementing a slice.
+- Use structured argv with `shell=false`; reject raw shell commands.
+- Require real target/fixture files and repository-contained cwd.
+- Preserve same selector semantics through RED→GREEN→REFACTOR→terminal.
+- Require nonzero executed cases for successful lifecycle stages.
+- Never let SUT/backend/model text write or authorize evidence.
+- Never let governance artifacts become runtime truth by default.
+- Never use plan status strings or artifact existence as completion proof.
+- Never invoke Stock BMAD Quick Dev as authoritative fallback after strict routing.
+- Never publish acceptance, commit, PR, release, or archive authority.
