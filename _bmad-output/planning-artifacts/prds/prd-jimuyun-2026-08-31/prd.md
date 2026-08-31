@@ -5,13 +5,14 @@ created: 2026-08-31
 updated: 2026-08-31
 source_input: docs/vdd-quick-dev-chapter-4-5-6-capability-upgrade-draft.md
 source_update: docs/know103.txt
+adopted_companion: docs/vdd-quick-dev-chapter-4-5-6-capability-upgrade-draft.md#15-16
 ---
 
 # PRD：VDD 与 Quick Dev Chapter 4/5/6 通用能力升级
 
 ## 0. 文档目的
 
-本 PRD 将 Chapter 4/5/6 能力补强草案提炼为面向 VDD、Quick Dev TDD 和工具链维护者的正式产品合同。它定义可观察的能力、边界、成功指标和验收口径；协议字段、执行阶段和模块落点保存在同目录 `addendum.md`。本文不把文档、计划状态或治理 receipt 当作实现证据，也不重写历史计划证据。
+本 PRD 将 Chapter 4/5/6 能力补强草案提炼为面向 VDD、Quick Dev TDD 和工具链维护者的正式产品合同。它定义可观察的能力、边界、成功指标和验收口径；协议字段、执行阶段和模块落点保存在同目录 `addendum.md`，而原始草案第 15、16 节作为必须读取的 adopted companion 保留完整协议细节。本文不把文档、计划状态或治理 receipt 当作实现证据，也不重写历史计划证据。
 
 ## 1. 愿景
 

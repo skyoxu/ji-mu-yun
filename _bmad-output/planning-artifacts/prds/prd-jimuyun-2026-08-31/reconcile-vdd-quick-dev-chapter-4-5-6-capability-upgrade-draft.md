@@ -2,7 +2,7 @@
 
 ## 结论
 
-草案中的产品范围、职责边界、强制真实性约束、能力分母、非目标、成功证据和待决问题已进入 `prd.md` 或 `addendum.md`。`docs/know103.txt` 指出的初版对账错误和 8 项语义遗漏已修复：命令、JSON、V0–V7/Q0–Q8、wrapper 细节及其承重规则均已逐项补入 `addendum.md`，并保留其作为 Spec/Architecture 输入。
+草案中的产品范围、职责边界、强制真实性约束、能力分母、非目标、成功证据和待决问题已进入 `prd.md` 或 `addendum.md`。`docs/know103.txt` 指出的 8 项语义遗漏已修复；对于具体命令、V0–V7/Q0–Q8 和 wrapper 协议，本次不再错误声称它们已逐项复制到 `addendum.md`，而是将原始草案第 15、16 节登记为必须读取的规范性 adopted companion，并在 addendum §H 逐项列出其保留范围。
 
 ## 映射摘要
 
@@ -17,4 +17,4 @@
 
 ## 有意下沉到补充的内容
 
-具体命令形式、JSON 字段示例、阶段 V0-V7/Q0-Q8、`codex exec` wrapper 细节和迁移投影放入 `addendum.md`。这些是后续 Spec/Architecture 的设计输入，不改变 PRD 的功能范围；对账只在文件确实包含对应内容后声明完成。
+具体命令形式、JSON 字段示例、阶段 V0-V7/Q0-Q8、`codex exec` wrapper 细节和迁移投影仍以原始草案第 15、16 节为规范性 adopted companion；addendum §H 记录必须读取的范围和冲突处理规则，不声称正文已复制全部细节。这些是后续 Spec/Architecture 的设计输入，不改变 PRD 的功能范围。

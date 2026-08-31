@@ -116,3 +116,16 @@ detached fixture 至少覆盖 positive、negative、mutation 以及所有 failur
 ## G. 验收分母
 
 “约 90% 能力”只计算属于 VDD/Quick Dev 的可泛化能力：Chapter 4 基线与 feasibility、Chapter 5 obligation/Acceptance/ref 稳定化、Chapter 6.3-6.6 TDD/recommendation/recovery，并保留 Chapter 6.9 的通用 terminal deterministic full validation。排除 Taskmaster-compatible overlay 数据模型、Godot/GdUnit、6.7/6.8、多节点治理、游戏仓 pre-commit pipeline 和 commit/PR/release authority。文档或 happy path 单测不能单独证明 90%；必须加 detached mutation、8-25 replay 和新任务盲测。
+
+## H. 规范性 adopted companion：原始协议细节
+
+以下内容不在本补充中复制；它们以原始草案 `docs/vdd-quick-dev-chapter-4-5-6-capability-upgrade-draft.md` 的第 15、16 节作为规范性 adopted companion，后续 `bmad-spec` 与 `bmad-architecture` 必须连同本 PRD 和本补充一并读取：
+
+- VDD V0–V7 阶段编号、每阶段输入/输出、硬门和恢复协议（原始草案 §15）。
+- Quick Dev Q0–Q8 阶段编号、状态转换、禁止跳转和各阶段 predicate（原始草案 §16）。
+- 顶层接口示例：`py -3 scripts/vdd/compile_plan.py` 与 `py -3 scripts/quick_dev/run.py`，包括 `--recommendation-only` 和 `--resume-from`。
+- `codex exec` wrapper 合同：只读 sandbox、`shell=False`、结构化 JSON Schema 输出、stdin/临时只读 prompt、输入与 prompt hash、模型/版本/耗时记录、单次 schema repair、重复 deterministic fingerprint 止损，以及 worker 不得写 plan-ready/pass/evidence。
+- VDD 的 source-index、obligation guard、Acceptance compile、semantic align、exact-cover、slice partition 和 feasibility 的完整字段与流程。
+- Quick Dev 的 descriptor materialization、真实 subprocess receipt、failure classification、same-selector GREEN/REFACTOR、slice-ready 和 terminal aggregator 的完整字段与 predicate。
+
+若 adopted companion 与本补充出现字段或阶段冲突，必须在 Spec 阶段显式记录冲突并作出决策；不得以“补充未复制”为理由删除或弱化上述协议。
