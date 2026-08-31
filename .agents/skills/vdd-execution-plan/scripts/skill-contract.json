@@ -4,21 +4,81 @@
     "phase_state_env": "PHASEA_SERVICE_STATE",
     "mode_env": "JIMUYUN_GOVERNANCE_MODE",
     "default_phase_state": "development",
-    "auto_disabled_states": ["development"],
-    "auto_enabled_states": ["test", "production"],
-    "modes": ["auto", "on", "off"]
+    "auto_disabled_states": [
+      "development"
+    ],
+    "auto_enabled_states": [
+      "test",
+      "production"
+    ],
+    "modes": [
+      "auto",
+      "on",
+      "off"
+    ]
   },
   "profiles": {
-    "standard": ["plan", "lifecycle", "git_identity", "slice_validation", "terminal_validation"],
-    "resumable": ["plan", "lifecycle", "git_identity", "slice_validation", "terminal_validation", "resume_state", "dependency_status", "recovery", "implementation_report"],
-    "self-hosted": ["plan", "lifecycle", "git_identity", "slice_validation", "terminal_validation", "resume_state", "dependency_status", "recovery", "implementation_report", "protocol_fixture", "migration_check"]
+    "standard": [
+      "plan",
+      "lifecycle",
+      "git_identity",
+      "slice_validation",
+      "terminal_validation"
+    ],
+    "resumable": [
+      "plan",
+      "lifecycle",
+      "git_identity",
+      "slice_validation",
+      "terminal_validation",
+      "resume_state",
+      "dependency_status",
+      "recovery",
+      "implementation_report"
+    ],
+    "self-hosted": [
+      "plan",
+      "lifecycle",
+      "git_identity",
+      "slice_validation",
+      "terminal_validation",
+      "resume_state",
+      "dependency_status",
+      "recovery",
+      "implementation_report",
+      "protocol_fixture",
+      "migration_check"
+    ]
   },
   "input_routes": {
-    "single-requirements-markdown": {"outcome": "direct-implementation", "vdd_mode": null, "creates_vdd_directory": false, "requires_explicit_vdd_request": false, "implicit_artifacts": []},
-    "explicit-complete-directory-create": {"outcome": "vdd-create", "vdd_mode": "create", "creates_vdd_directory": true, "requires_explicit_vdd_request": true},
-    "explicit-complete-directory-repair": {"outcome": "vdd-repair", "vdd_mode": "repair", "creates_vdd_directory": false, "requires_explicit_vdd_request": true}
+    "single-requirements-markdown": {
+      "outcome": "direct-implementation",
+      "vdd_mode": null,
+      "creates_vdd_directory": false,
+      "requires_explicit_vdd_request": false,
+      "implicit_artifacts": []
+    },
+    "explicit-complete-directory-create": {
+      "outcome": "vdd-create",
+      "vdd_mode": "create",
+      "creates_vdd_directory": true,
+      "requires_explicit_vdd_request": true
+    },
+    "explicit-complete-directory-repair": {
+      "outcome": "vdd-repair",
+      "vdd_mode": "repair",
+      "creates_vdd_directory": false,
+      "requires_explicit_vdd_request": true
+    }
   },
-  "lifecycle_states": ["draft", "plan-ready", "implementation-authorized", "implementation-complete", "acceptance-passed", "archived"],
+  "lifecycle_states": [
+    "draft",
+    "plan-ready",
+    "implementation-authorized",
+    "implementation-complete",
+    "acceptance-passed",
+    "archived"
+  ],
   "review_reentry_policy": {
     "scope_strategy": "minimal-complete-closure",
     "transport_failure": "retry-same-run-without-semantic-round",
@@ -29,7 +89,11 @@
     "default_full_review_rounds": 2,
     "hard_full_review_rounds": 3,
     "successor_resets_round_budget": false,
-    "round_three_entry_reasons": ["novel_p0_p1", "authority_context_graph_changed", "high_risk_boundary_changed"],
+    "round_three_entry_reasons": [
+      "novel_p0_p1",
+      "authority_context_graph_changed",
+      "high_risk_boundary_changed"
+    ],
     "repair_delta": "changed-files-direct-consumers-targeted-tests-validation-refs",
     "changed_path_binding": "content-hash-or-deletion-tombstone",
     "root_cause_inventory": "all-discovered-callsites-addressed-or-excluded",
@@ -57,14 +121,64 @@
     "scripts/tests/test_clarification_state_review_regressions.py",
     "scripts/tests/test_vdd_knowledge_preflight.py",
     "scripts/tests/test_model_routing.py",
-    "scripts/tests/test_validate_skill_contract.py"
+    "scripts/tests/test_validate_skill_contract.py",
+    "scripts/semantic_plan_contract.py",
+    "scripts/tests/test_semantic_plan_contract.py"
   ],
   "required_headings": {
-    "SKILL.md": ["# VDD Execution Plan", "## Route Input Before Profile", "## Choose The Profile First", "## Clarify Only Material Boundaries", "## Lifecycle And Implementation", "## Candidate, Review, And Reports", "## Completion"],
-    "references/solo-maintainer-vdd-standard.md": ["# Solo-Maintainer VDD Standard", "## Required Controls", "## Freshness And Repair", "## Optional Controls"]
+    "SKILL.md": [
+      "# VDD Execution Plan",
+      "## Route Input Before Profile",
+      "## Choose The Profile First",
+      "## Clarify Only Material Boundaries",
+      "## Lifecycle And Implementation",
+      "## Candidate, Review, And Reports",
+      "## Completion"
+    ],
+    "references/solo-maintainer-vdd-standard.md": [
+      "# Solo-Maintainer VDD Standard",
+      "## Required Controls",
+      "## Freshness And Repair",
+      "## Optional Controls"
+    ]
   },
-  "forbidden_default_terms": ["requires at least five questions", "requires three Bootstrap rounds", "requires a cross-process lock", "requires reviewer identity attestation"],
-  "forbidden_fixture_names": ["clarification-cases.json", "clarification-state-pass.json", "compliance-scenarios.json", "compliance-trace-pass.jsonl", "compliance-trace-write-before-clarification.jsonl", "compliance-trace-implementation-first.jsonl"],
-  "forbidden_live_plan_patterns": ["execution-plans[\\\\/]+20[0-9]{2}-[0-9]{2}-[0-9]{2}", "RMAP-", "C:\\\\Users\\\\", "/Users/"],
-  "required_profile_case_ids": ["standard-clear", "resumable-interrupted", "self-hosted-routing", "slice-local-stale", "shared-contract-replay", "red-evidence-boundary", "optional-review", "standard-no-report", "self-hosted-competing-pressure", "in-place-repair-round", "minimal-review-closure", "transport-attempt-retry", "p2-only-disposition", "bounded-review-family", "repair-completeness", "round-three-exception", "exhausted-review-family"]
+  "forbidden_default_terms": [
+    "requires at least five questions",
+    "requires three Bootstrap rounds",
+    "requires a cross-process lock",
+    "requires reviewer identity attestation"
+  ],
+  "forbidden_fixture_names": [
+    "clarification-cases.json",
+    "clarification-state-pass.json",
+    "compliance-scenarios.json",
+    "compliance-trace-pass.jsonl",
+    "compliance-trace-write-before-clarification.jsonl",
+    "compliance-trace-implementation-first.jsonl"
+  ],
+  "forbidden_live_plan_patterns": [
+    "execution-plans[\\\\/]+20[0-9]{2}-[0-9]{2}-[0-9]{2}",
+    "RMAP-",
+    "C:\\\\Users\\\\",
+    "/Users/"
+  ],
+  "required_profile_case_ids": [
+    "standard-clear",
+    "resumable-interrupted",
+    "self-hosted-routing",
+    "slice-local-stale",
+    "shared-contract-replay",
+    "red-evidence-boundary",
+    "optional-review",
+    "standard-no-report",
+    "self-hosted-competing-pressure",
+    "in-place-repair-round",
+    "minimal-review-closure",
+    "transport-attempt-retry",
+    "p2-only-disposition",
+    "bounded-review-family",
+    "repair-completeness",
+    "round-three-exception",
+    "exhausted-review-family"
+  ]
 }
