@@ -84,7 +84,7 @@ GREEN descriptor 复用 RED selector identity、target、fixture、assertion 集
 
 ### Q8 whole-plan terminal
 
-terminal input 显式列出 candidate、plan、每个 slice 的 run-local predecessor/result ref/hash、terminal selector 和 active Acceptance IDs。aggregator 逐项重读 artifact，验证 lineage/hash，重算 exact cover，执行 terminal、regression、mutation 和全部 active Acceptance，最后才写 `implementation-complete`。禁止 glob/mtime 选历史结果、绑定未来 completion 或 producer 自报完成。
+terminal input 显式列出 candidate、plan、`predecessors[]`（每项含 `slice_id`、`run_id`、`result_ref`、`result_sha256`）、`active_acceptance_ids`、`terminal_selector_ref` 和 assertion edge refs。每个 predecessor 与 slice 一一映射且 run-local；aggregator 逐项重读独立 artifact，验证 lineage/hash，重算 exact cover，执行 terminal、regression、mutation 和全部 active Acceptance，最后才写 `implementation-complete`。禁止 glob/mtime 选历史结果、绑定未来 completion 或 producer 自报完成；edge 的 result ref 不得回指包含自身的 observation 文件。
 
 ## 3. Failure, replay and responsibility
 

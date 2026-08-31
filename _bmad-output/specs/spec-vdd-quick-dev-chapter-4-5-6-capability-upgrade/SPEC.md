@@ -25,6 +25,8 @@ sources:
     role: provenance
   - path: docs/know105.txt
     role: provenance
+  - path: docs/know106.txt
+    role: provenance
 ---
 
 > **Canonical contract.** 本 SPEC 与 `companions:` 中的文件共同构成 VDD 与 Quick Dev Chapter 4/5/6 通用能力升级的完整机器合同。`sources:` 仅用于追溯；原始能力草案第 15、16、18.5 节的承重内容已提取到规范性 companions，不再把整份草案作为 adopted contract。

@@ -1,0 +1,292 @@
+一、严重问题：Q0–Q8 被重新定义了两次
+
+execution-protocol.md 中正确的 Quick Dev 定义是：
+
+Q0 recommendation
+Q1 preflight
+Q2 RED author/materialize
+Q3 RED execute/classify
+Q4 production implementation
+Q5 GREEN
+Q6 REFACTOR
+Q7 slice-ready
+Q8 terminal
+
+但新 implementation-contracts.md 又定义成：
+
+Q0 source intake
+Q1 obligation extraction
+Q2 Acceptance compile
+Q3 slice planning
+Q4 recommendation/preflight
+Q5 RED
+Q6 implementation/GREEN
+Q7 REFACTOR/slice-ready
+Q8 terminal
+
+这会导致 Architect 无法判断：
+
+Q1 是 VDD obligation extraction 还是 Quick Dev preflight；
+Q4 是 recommendation 还是 production implementation；
+GREEN 是 Q5 还是被合并进 Q6；
+slice-ready 是 Q7 还是被合并进 REFACTOR。
+
+而且新矩阵错误地把：
+
+implementation 与 GREEN 合并；
+REFACTOR 与 slice-ready 合并；
+Q7 失败写成“从 RED 失效”，这会无必要地销毁合法 RED/GREEN lineage。
+
+必须删除这个重编号矩阵，分别建立：
+
+VDD：V0 → V0A → V1 → V2 → V3 → V3A → V4 → V5 → V6 → V7
+Quick Dev：严格保持原来的 Q0 → Q8
+二、所谓“完整 schema”与规范正文不兼容
+1. Obligation schema 会拒绝规范要求的字段
+
+正文要求 obligation 包含：
+
+subject
+trigger
+state before/after
+expected behavior
+observable result
+forbidden result
+requirement type
+unresolved fragments
+
+但新 schema 全部没有这些字段。文件又声明 additionalProperties=false，因此实现按该 schema 编写后，反而必须拒绝正文要求的字段。
+
+此外：
+
+"obligation_id": {
+  "pattern": "^O-[A-Z0-9-]+$"
+}
+
+会拒绝原协议使用的 FR-13.O1、FR-13.O5 形式。
+
+2. Acceptance schema 丢失行为判定字段
+
+正文要求：
+
+given
+when
+then
+oracle
+独立 assertion 语义
+
+但 schema 只有 observable/expected/forbidden，没有 given/when/then 和 assertion IDs。
+
+3. Slice schema 丢失此前反复强调的五项合同
+
+正文明确要求：
+
+behavior_change
+affected_subjects
+state_transition
+proof
+rollback_scope
+
+新 Slice schema 一个都没有。
+
+此外：
+
+schema 使用单数 production_owner；
+V6 却允许 producer/consumer 跨 owner 原子合并，需要 production_owners[]；
+schema 的 verification lane 是 pytest/semantic-oracle/...；
+PRD addendum 的 lane 是 unit/integration/matrix/runtime。
+
+两套枚举没有统一。
+
+4. Recommendation schema 与 Q0 输出不一致
+
+Q0 正文要求：
+
+recommended_action
+forbidden_actions
+reason_code
+blocked_by
+reusable_observations
+invalidated_observations
+
+新 schema 却是：
+
+recommendation
+reasons
+created_at
+
+实现无法同时满足两者。
+
+5. Descriptor assertion 类型错误
+
+当前写成：
+
+"acceptance_assertions": {
+  "items": {"type": "string"}
+}
+
+但原协议要求每项至少是：
+
+{
+  "acceptance_id": "A-...",
+  "assertion_id": "ASSERT-...",
+  "expected_exit": "nonzero",
+  "expected_failure_family": "..."
+}
+
+字符串数组无法提供每个 Acceptance 的独立 assertion edge。
+
+6. Observation schema没有 failure classification
+
+Observation schema 只有：
+
+receipt
+stage
+exit code
+executions/cases
+assertion edges
+
+但没有：
+
+classification
+failure_family
+expected_exit
+actual_outcome
+predicate_result
+recommended_action
+
+因此它不能支撑 Quick Dev 的失败分类和路由。memlog 中声称“observation schema 已闭合”，与实际内容不符。
+
+7. Terminal input 又退回了字符串 ref
+
+当前：
+
+"predecessor_refs": ["..."]
+
+但 Q8 要求每个 predecessor 显式包含：
+
+{
+  "slice_id": "S1",
+  "run_id": "RUN-...",
+  "result_ref": "...",
+  "result_sha256": "sha256:..."
+}
+
+另外 terminal input 还缺：
+
+active_acceptance_ids
+terminal_selector_ref
+predecessor 与 slice 的确定映射。
+三、Assertion edge 仍有两个执行风险
+
+schema-contracts.md 的 lineage 字段已经补齐，这是进步。但还有两个问题。
+
+1. 三个 outcome 字段没有定义关系
+
+现在同时有：
+
+outcome
+expected_outcome
+actual_outcome
+
+没有说明 RED 阶段应如何解释。
+
+建议明确分成：
+
+{
+  "expected_stage_outcome": "fail",
+  "actual_stage_outcome": "fail",
+  "predicate_result": true
+}
+
+否则 outcome=pass 究竟代表“被测行为通过”，还是“RED 判定成功”，会产生假绿空间。
+
+2. 可能产生自哈希循环
+
+Observation 内包含 assertion edges；edge 又包含：
+
+result_ref
+result_sha256
+
+如果 result_ref 指向包含该 edge 的同一个 observation 文件，就无法计算稳定 hash。
+
+必须明确：
+
+edge 引用独立、已经物化的 process receipt/observation input；或
+coverage edge 位于 observation 之外，再引用 immutable observation。
+
+不能让 artifact 通过内部字段绑定自己的最终 hash。
+
+四、确定性算法还有两个矛盾
+Stable slice ID
+
+算法说 slice ID 来自内容 hash，但 schema 只允许：
+
+^S[0-9]+$
+
+必须明确是：
+
+S-<hash-prefix>；或
+从规范排序得到稳定序号 S1/S2。
+
+现在两者不兼容。
+
+Failure classification precedence
+
+当前是一个全局顺序：
+
+... unexpected-green → expected-red → task-implementation-failure
+
+但分类必须依赖 stage：
+
+RED 非零且匹配 assertion 才是 expected-red；
+GREEN/REFACTOR 非零通常是 task-implementation-failure；
+terminal 非零可能是 semantic/terminal failure。
+
+不能使用不区分阶段的统一顺序。
+
+五、Fixture matrix 还没有覆盖“全部 failure family”
+
+现在矩阵主要覆盖 mutation 类型，但没有逐项列出：
+
+semantic-contract-gap
+artifact-integrity
+target-binding-failure
+test-harness-failure
+timeout-no-observation
+repo-noise
+unexpected-green
+expected-red
+task-implementation-failure
+repeated-deterministic-failure
+
+应为每个 failure family 至少提供：
+
+blocked fixture；
+corrected fixture；
+真实命令；
+expected exit；
+expected classification；
+禁止进入的后继状态。
+最终判断
+
+当前提交已经正确完成：
+
+agent context；
+CLI；
+-基础算法；
+assertion lineage 字段；
+-图示 repair 路由；
+canonical selection 更新。
+
+但新 implementation-contracts.md 同时引入了 Q 阶段重编号和多处 schema/正文冲突。因此：
+
+Spec 仍未通过，不能进入 Architecture。
+
+下一轮只需要集中修复三组内容：
+
+删除错误的混合 Q0–Q8 表，分别建立 VDD V-stage 和 Quick Dev Q-stage 表。
+逐项让 schema 与 execution protocol 字段完全一致，并补齐 source-index、align、coverage、feasibility、slice-ready、terminal failure 等缺失 schema。
+修正 assertion outcome/self-hash、slice ID、stage-aware classification 和完整 fixture-family matrix。
+
+修完后重新发布 canonical selection，即可再次作最终 Architecture 入口检查。

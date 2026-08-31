@@ -19,9 +19,9 @@
   "result_ref": "...",
   "result_sha256": "sha256:...",
   "observed": true,
-  "outcome": "pass|fail",
-  "expected_outcome": "pass|fail",
-  "actual_outcome": "pass|fail",
+  "expected_stage_outcome": "pass|fail",
+  "actual_stage_outcome": "pass|fail",
+  "predicate_result": true,
   "target_ref": "...",
   "fixture_ref": "...",
   "case_source_ref": "...",
@@ -31,7 +31,9 @@
 }
 ```
 
-硬规则：`plan_id`/`plan_hash`、`slice_id`、`candidate_hash`、`observation_id`、`acceptance_id`、`assertion_id`、`selector_identity`、`run_id`、`result_ref`、`result_sha256`、producer/validator identity 必须可重读匹配当前 artifact；`outcome`、`observed` 只能由真实 observation validator 派生，且 `expected_outcome` 与 `actual_outcome` 必须同时记录；target、fixture、case source 必须直接绑定或引用其 receipt；同一 selector 覆盖多个 Acceptance 时每个 Acceptance 必须有独立 assertion edge。
+硬规则：`plan_id`/`plan_hash`、`slice_id`、`candidate_hash`、`observation_id`、`acceptance_id`、`assertion_id`、`selector_identity`、`run_id`、`result_ref`、`result_sha256`、producer/validator identity 必须可重读匹配当前 artifact。`expected_stage_outcome` 是该 stage 合同预期（RED 通常为 fail，GREEN/REFACTOR/terminal 通常为 pass），`actual_stage_outcome` 是 receipt/断言实际结果，`predicate_result` 是 validator 对二者及其余约束的确定性判定；三者不得混用。`observed`、`actual_stage_outcome`、`predicate_result` 只能由真实 observation validator 派生。target、fixture、case source 必须直接绑定或引用独立 receipt；同一 selector 覆盖多个 Acceptance 时每个 Acceptance 必须有独立 assertion edge。
+
+`result_ref` 必须指向已物化且不可变的 process receipt 或独立 observation input。assertion edge 不得嵌入它所 hash 的 observation/receipt 本体，也不得通过自引用计算 `result_sha256`；coverage edge 位于 observation 外部时只能引用 immutable observation。
 
 ## Invalidation matrix
 
