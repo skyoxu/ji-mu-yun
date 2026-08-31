@@ -1,0 +1,202 @@
+仍然阻断 Architecture 的问题
+1. Receipt/Observation 无法表示需要分类的失败
+
+implementation-contracts.md 当前要求：
+
+"executions": {"minimum": 1}
+"exit_code": {"type": "integer"}
+"assertion_edges": {"minItems": 1}
+
+但必须分类的情况包括：
+
+zero-case；
+collection/import/harness failure；
+target-binding failure；
+timeout-no-observation；
+assertion 尚未执行前的 artifact failure。
+
+这些情况可能出现：
+
+test executions = 0
+assertion edges = []
+exit_code = null（TimeoutExpired）
+
+当前 schema 会在分类前先拒绝这些 observation，导致这些 failure family 无法被合法记录。
+
+应改为区分：
+
+process_attempts >= 1
+test_executions >= 0
+cases >= 0
+exit_code = integer|null
+timed_out = boolean
+assertion_edges 可为空
+
+随后由 cross-field predicate 规定：
+
+expected-red、GREEN、REFACTOR 成功必须 test_executions>=1、cases>=1；
+harness/target/timeout 可以零 case、零 assertion，但绝不能进入 implementation。
+
+另外，descriptor 的 expected_exit 仍允许 any。对 RED/GREEN/REFACTOR/terminal 的授权证据只能允许 zero|nonzero；any 如有诊断用途，应放入非授权诊断 schema。
+
+2. Q0 recommendation 仍被错误地限制为进入 Q1
+
+新 Q0 transition 写的是：
+
+recommended_action → Q1 or repair
+
+但 Q0 是任何生命周期位置都能调用的 recommendation-only router。它必须能根据现有 lineage 返回：
+
+run-preflight
+author-red
+run-red
+implement
+run-green
+run-refactor
+validate-slice
+run-terminal
+repair-vdd
+stop
+environment-blocked
+
+当前 Recommendation schema 只有：
+
+proceed
+repair-vdd
+repair-quick-dev
+author-red
+environment-blocked
+stop
+
+这会迫使中断恢复统一回到 Q1，削弱选择性恢复，并可能重复 RED/GREEN。
+
+应恢复完整的 action enum，并让 Q0 指向被推荐的 Q-stage，而不是固定 Q0→Q1。
+
+3. slice_ready_result 仍可通过布尔值自报闭合
+
+当前 schema 主要是：
+
+{
+  "red_observed": true,
+  "green_observed": true,
+  "refactor_observed": true,
+  "status": "slice-ready"
+}
+
+但没有强制绑定：
+
+RED/GREEN/REFACTOR observation ref/hash；
+assertion edge refs/hash；
+predecessor run/ref/hash；
+plan hash；
+validator identity；
+dependency-closure hash。
+
+这与 CAP-7 和 Q7“重读真实 assertion artifact”的要求不一致。即使规定 validator 才能写，schema 本身仍只是状态布尔值。
+
+应改成类似：
+
+{
+  "red_observation": {
+    "run_id": "...",
+    "ref": "...",
+    "sha256": "..."
+  },
+  "green_observation": {},
+  "refactor_observation": {},
+  "assertion_edge_refs": [],
+  "predecessor_refs": [],
+  "dependency_closure_hash": "sha256:...",
+  "validator_identity": "..."
+}
+
+状态只能从这些引用重读后派生。
+
+同类问题还存在于：
+
+coverage_result.edges：目前只是无字段约束的 object；
+semantic_align_result.oracle_alignment：也是无字段约束 object；
+terminal_result：有 evidence hash，但缺 evidence ref/root 的明确绑定。
+4. Requirement Type 仍与上游来源冲突
+
+Obligation schema 当前定义：
+
+functional
+non_functional
+success_metric
+constraint
+governance
+
+但原草案的 obligation 示例明确使用：
+
+"requirement_type": "Platform"
+
+此前确定的通用分类也是：
+
+Product
+Platform
+Governance
+
+当前 schema 会拒绝合法的 Platform。
+
+建议分开两个维度：
+
+{
+  "requirement_type": "Product|Platform|Governance",
+  "obligation_kind": "behavior|quality|constraint|governance"
+}
+
+不要用一个字段同时承担产品归属和语义种类。
+
+此外 Acceptance 的 oracle 当前是字符串，而来源协议将其定义为：
+
+{
+  "observable": "...",
+  "expected": "...",
+  "forbidden": "..."
+}
+
+应使用 object，或删除重复的 oracle 字段，只保留规范化的三个字段，避免两份值漂移。
+
+5. Fixture matrix 的 blocked/corrected 结果仍不完整
+
+当前表只有一个 expected exit 和一个 expected classification，不能同时描述 blocked 与 corrected 两次执行。
+
+至少应拆成：
+
+字段	含义
+blocked command	执行错误 fixture
+blocked subject exit	被测生产/selector 退出码
+blocked validator exit	validator 是否拒绝
+blocked classification	失败分类
+corrected command	执行修正 fixture
+corrected subject exit	修正后的退出码
+corrected validator exit	validator 通过
+corrected classification	pass/expected-red 等
+
+目前还有几个具体冲突：
+
+unexpected-green 的被测 RED selector 应为零退出，但表中统一写 nonzero。
+repo-noise 被写成“允许写集外文件变化”；这其实是 write-set violation，不是无关仓库测试失败。
+expected-red 是合法 RED 路径，不应被描述成普通 blocked failure。
+repeated failure 行使用 Quick Dev --resume-from，但 Stable CLI 没有声明 Quick Dev 支持该参数。
+
+这些需要统一，否则 fixture runner 不知道表中的 exit 是被测进程退出码还是 validator 退出码。
+
+非阻断小问题
+Quick Dev Q5 的 positive path 0 没有定义，应改成 all bound assertions == true。
+V0 matrix 仍写 adopted companions，当前已经全部降级为 provenance/source。
+additionalProperties=false 只写在 prose 中，标准 JSON Schema 默认仍为 true；后续若要直接生成 validator，需要在每个 object schema 中显式写入。
+最终判断
+检查面	结论
+上轮主要结构性修复	通过
+V/Q 生命周期一致性	通过
+Assertion lineage 与无自哈希	通过
+Canonical package	通过
+失败 observation 可表达性	不通过
+Q0 中断恢复路由	不通过
+Q7 evidence-derived closure	不通过
+Fixture blocked/corrected 执行合同	不通过
+是否进入 Architecture	暂不可以
+
+这次已经接近最终闭合。下一轮只需集中修复上述四个运行语义问题，不需要再扩充新的大篇章，也不需要重新处理治理内容。

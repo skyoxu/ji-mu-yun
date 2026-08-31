@@ -52,7 +52,7 @@
 
 ### Q0 recommendation-only
 
-只读取当前 plan/slice、candidate、显式 run refs、changed paths 和 observation index，输出 `recommended_action`、`forbidden_actions`、`reason_code`、`blocked_by`、`reusable_observations` 和 `invalidated_observations`。不得启动模型、运行测试、创建 run 或修改状态。
+只读取当前 plan/slice、candidate、显式 run refs、changed paths 和 observation index，输出 `recommended_action`、`forbidden_actions`、`reason_code`、`blocked_by`、`reusable_observations` 和 `invalidated_observations`。`recommended_action` 必须从 `run-preflight`、`author-red`、`run-red`、`implement`、`run-green`、`run-refactor`、`validate-slice`、`run-terminal`、`repair-vdd`、`stop`、`environment-blocked` 中选择，并指向对应 Q-stage；不得启动模型、运行测试、创建 run 或修改状态。
 
 ### Q1 preflight
 
@@ -64,7 +64,7 @@
 
 ### Q3 RED execute/classify
 
-用等价 `subprocess.run(argv, cwd, shell=False, timeout, capture_output=True, text=True)` 执行真实进程。receipt 记录 actual argv/cwd、时间、exit code、执行/收集计数、输出摘要 hash、candidate/descriptor/target/fixture hash、observed assertion/failure ID 和 executor identity。只有 executions≥1、target/fixture/argv 匹配、声明 assertion 真实失败、非 harness/repo-noise/timeout 且 exit 语义双向匹配时才是 `expected-red`。
+用等价 `subprocess.run(argv, cwd, shell=False, timeout, capture_output=True, text=True)` 执行真实进程。receipt 记录 actual argv/cwd、时间、`process_attempts`、`test_executions`、cases、exit code（超时可为 null）、`timed_out`、输出摘要 hash、candidate/descriptor/target/fixture hash、observed assertion/failure ID 和 executor identity。只有 `process_attempts>=1`、`test_executions>=1`、cases≥1、target/fixture/argv 匹配、声明 assertion 真实失败、非 harness/repo-noise/timeout 且 exit 语义双向匹配时才是 `expected-red`；失败分类本身允许零 executions、零 cases 和空 assertion edges。
 
 ### Q4 production implementation
 
@@ -72,7 +72,7 @@
 
 ### Q5 GREEN
 
-GREEN descriptor 复用 RED selector identity、target、fixture、assertion 集合和 cwd，只允许 successor/run identity 变化。必须 executions≥1、selector identity 完全相同、exit=0、所有 assertions 为真且无 harness/repo-noise/timeout；失败保持 successor 并按 failure family 路由。
+GREEN descriptor 复用 RED selector identity、target、fixture、assertion 集合和 cwd，只允许 successor/run identity 变化。必须 `test_executions>=1`、cases≥1、selector identity 完全相同、exit=0、所有 bound assertions 为真且无 harness/repo-noise/timeout；失败保持 successor 并按 failure family 路由。
 
 ### Q6 REFACTOR
 
