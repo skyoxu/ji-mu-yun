@@ -6,6 +6,11 @@
 
 ```json
 {
+  "plan_id": "PLAN-...",
+  "plan_hash": "sha256:...",
+  "slice_id": "S...",
+  "candidate_hash": "sha256:...",
+  "observation_id": "OBS-...",
   "acceptance_id": "A-...",
   "assertion_id": "ASSERT-...",
   "selector_identity": "sha256:...",
@@ -14,11 +19,19 @@
   "result_ref": "...",
   "result_sha256": "sha256:...",
   "observed": true,
+  "outcome": "pass|fail",
+  "expected_outcome": "pass|fail",
+  "actual_outcome": "pass|fail",
+  "target_ref": "...",
+  "fixture_ref": "...",
+  "case_source_ref": "...",
+  "producer_identity": "...",
+  "validator_identity": "...",
   "derived_by": "deterministic-validator"
 }
 ```
 
-硬规则：`acceptance_id`、`assertion_id`、`selector_identity`、`run_id`、`result_ref` 和 `result_sha256` 必须可重读匹配当前 artifact；`observed` 只能由真实 observation validator 派生；同一 selector 覆盖多个 Acceptance 时每个 Acceptance 必须有独立 assertion edge。
+硬规则：`plan_id`/`plan_hash`、`slice_id`、`candidate_hash`、`observation_id`、`acceptance_id`、`assertion_id`、`selector_identity`、`run_id`、`result_ref`、`result_sha256`、producer/validator identity 必须可重读匹配当前 artifact；`outcome`、`observed` 只能由真实 observation validator 派生，且 `expected_outcome` 与 `actual_outcome` 必须同时记录；target、fixture、case source 必须直接绑定或引用其 receipt；同一 selector 覆盖多个 Acceptance 时每个 Acceptance 必须有独立 assertion edge。
 
 ## Invalidation matrix
 

@@ -47,7 +47,9 @@ flowchart TB
   JUDGE -.->|profile-dependent toolchain acceptance| TERM
   QD -->|evidence| TERM
   TERM -->|implementation-complete only| EXT
-  EXT -->|acceptance-passed or repair| MAINT
+  EXT -->|acceptance-passed| MAINT
+  EXT -->|repair-required| REPAIR[VDD or Quick Dev repair]
+  REPAIR --> VDD
   QD -.cannot self-accept.- EXT
   SUT -.cannot self-judge.- JUDGE
 ```

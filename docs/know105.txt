@@ -1,0 +1,105 @@
+仍然阻断 Architecture 的问题
+1. 草案降级后，部分承重能力没有被提取
+
+这是当前最重要的问题。
+
+PRD addendum 明确要求 VDD 为每个 slice 确定性生成：
+
+{
+  "slice_id": "S...",
+  "requirement_ids": [],
+  "obligation_ids": [],
+  "acceptance_ids": [],
+  "source_refs": [],
+  "contracts": [],
+  "allowed_paths": [],
+  "forbidden_paths": [],
+  "selector_intents": [],
+  "validation_commands": []
+}
+
+但当前所有 normative Spec 文件中都没有 agent-context.json 的生成合同、schema 和缺失字段判定。
+
+此外，原草案 §§15–17 要求 Spec 提供的以下内容也没有完整提取：
+
+compile_plan.py、quick_dev/run.py 的稳定接口；
+--resume-from first-failed-stage；
+完整 Q0–Q8 状态转换表和禁止跳转；
+全部 machine-readable schema；
+slice hard-split/merge 与稳定 ID 算法；
+selector semantic identity 算法；
+failure fingerprint 及分类优先级；
+exact-cover、invalidation traversal、terminal predicate 伪代码；
+detached failure-family / mutation matrix；
+semantic worker 的 context limit、timeout、conflict protocol。
+
+因为原草案现在只是 provenance，Architecture 默认不能再把这些内容当规范合同，所以它们不能继续留在那里。
+
+2. Assertion edge schema 仍不满足 FR-15/CAP-7
+
+当前 schema-contracts.md 只有：
+
+{
+  "acceptance_id": "...",
+  "assertion_id": "...",
+  "selector_identity": "...",
+  "stage": "...",
+  "run_id": "...",
+  "result_ref": "...",
+  "result_sha256": "...",
+  "observed": true,
+  "derived_by": "deterministic-validator"
+}
+
+至少还缺少：
+
+plan_id/plan_hash
+slice_id
+candidate_hash
+observation_id
+validator/producer 的可绑定 identity
+assertion 的实际结果或 expected/actual outcome
+必要的 target/fixture/case-source 绑定或其 receipt 引用
+
+PRD FR-15 明确要求 candidate、artifact、run、selector identity 能重读匹配。当前 edge 无法单独证明它属于当前 candidate lineage。
+
+3. 第二张规范图仍然保留错误路由
+
+第一张图已正确改成：
+
+acceptance-passed → maintainer
+repair-required → VDD/Quick Dev
+
+但 architecture-diagrams.md 的 Trust and authority boundaries 仍然写着：
+
+EXT -->|acceptance-passed or repair| MAINT
+
+这与第一张图、SPEC Constraints 和 execution protocol 直接冲突。repair 不能进入 maintainer commit/release。
+
+一并修正的轻微不一致
+
+这些不单独阻断，但应和上述修复一起处理：
+
+execution-protocol.md 开头仍称旧草案为 adopted companion，实际已降级为 provenance。
+标题把流程写成 V0A/V0–V7，图中却是 V0 → V0A → V1。建议统一为 V0 source-index → V0A pre-model preflight → V1，或者重新编号。
+已经冻结的 assertion schema 和 invalidation matrix 仍放在 Open Questions 中；应移到 Constraints/Decisions，避免 Architect 误认为可以重新定义。
+.memlog.md 顶部仍写 adopted draft sections，与新 role graph 不一致。
+最终判断
+
+当前状态：
+
+canonical package 封装：通过；
+上轮修复方向：基本正确；
+Spec 语义闭合：未通过；
+是否进入 Architecture：暂不可以。
+
+需要最后一次 Spec repair：
+
+将 agent-context.json、CLI、状态转换和 worker 合同提取为 normative companion。
+补齐全部 machine-readable schema 和确定性算法合同。
+扩充 assertion edge，使其完整绑定当前 plan/slice/candidate/observation。
+加入 detached fixture/mutation matrix。
+修正第二张图和剩余术语矛盾。
+重新发布 canonical selection。
+
+也需要纠正我上一轮的判断：上一轮我重点核对了五个显性缺口，但没有把 addendum 的 agent-context.json 和原草案 §17.2 的 Spec 必须交付项逐条对账，因此“修完五项即可进入 Architecture”过于乐观。这次完整对账后，上述遗漏必须补齐。

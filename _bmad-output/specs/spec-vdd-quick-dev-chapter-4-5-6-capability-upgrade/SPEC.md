@@ -10,6 +10,8 @@ companions:
     role: normative_companion
   - path: _bmad-output/specs/spec-vdd-quick-dev-chapter-4-5-6-capability-upgrade/schema-contracts.md
     role: normative_companion
+  - path: _bmad-output/specs/spec-vdd-quick-dev-chapter-4-5-6-capability-upgrade/implementation-contracts.md
+    role: normative_companion
 sources:
   - path: _bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-31/prd.md
     role: provenance
@@ -20,6 +22,8 @@ sources:
   - path: docs/vdd-quick-dev-chapter-4-5-6-capability-upgrade-draft.md
     role: provenance
   - path: docs/know104.txt
+    role: provenance
+  - path: docs/know105.txt
     role: provenance
 ---
 
@@ -69,6 +73,8 @@ sources:
 - VDD 只声明 intent、source、Acceptance、slice、failure intent、write set 和 terminal predicate；不生成 descriptor、run ID、receipt、exit code、observation 或 pass。
 - Quick Dev 物化并执行 descriptor，维护 run state；terminal 只产生 `implementation-complete`。外部独立语义验收产生 `acceptance-passed` 或 repair，maintainer 才决定 commit、PR、release。
 - 所有命令必须使用参数数组、`shell=False`、仓库内安全 cwd、显式 target/fixture identity 和 declared write set。
+- Assertion edge 必须绑定当前 plan、slice、candidate、observation、producer/validator identity、selector、target、fixture 和 case source；多 Acceptance 共享 selector 时每个 Acceptance 必须有独立 assertion edge。
+- Invalidation 按 `schema-contracts.md` 的矩阵传递计算；selector/fixture/target/source 变化从 RED 重跑，production owner 变化在语义变化时回 RED，不确定时采用更严格重跑。
 - 模型 worker 只可在只读语义提取/对齐或受限写集内工作，不能写 plan-ready、pass 或 observed evidence；确定性 validator 拥有最终 predicate。
 - Development 默认关闭 external review、candidate binding 和 authorization 阻塞；认证、TDD、语义 predicate、写集安全和运行安全不关闭。Test/production 可开启治理而不降低真实性。
 - 旧 v1 计划只读兼容，历史 evidence append-only 保留；不得把 8-25 计划 ID 特判写入通用 router。
@@ -92,11 +98,9 @@ sources:
 
 - obligation 与 Acceptance 的规范化边界由 VDD 在 schema 冻结前决定。
 - slice split/merge 的确定性阈值由 VDD/Architecture 在首次编译器实现前决定。
-- 多 Acceptance 单 selector 的 assertion-edge schema 已在 `schema-contracts.md` 冻结；后续变更必须显式版本化并触发受影响 observation 失效。
 - lightweight semantic validator 的纯确定性边界由 Architecture 冻结；模型只能产生非阻断 warning。
 - v1 compatibility adapter 的字段投影和只读边界由 Architecture 在迁移试验前冻结。
 - unexpected-green 的 regression/current-behavior 最低证明由 Quick Dev 在 RED materializer 前定义。
 - 60 分钟目标的任务规模、环境和计时方法由 Product 在盲测前发布。
 - fast-ship、standard、self-hosted 的差异由 Architecture 在 profile schema 前冻结，均不得降低真实性硬门。
-- 变化何时只重算 coverage、何时必须重跑 RED 已在 `schema-contracts.md` 冻结；不确定时采用更严格重跑。
 - detached fixture 作者与被测 skill 的独立性由 Maintainer 在验收前以独立目录/提交和只读 judge 证明。
