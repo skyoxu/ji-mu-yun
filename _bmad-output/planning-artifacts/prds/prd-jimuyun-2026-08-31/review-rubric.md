@@ -2,7 +2,7 @@
 
 ## Overall verdict
 
-通过。PRD 将草案中可执行的产品承诺压缩为 22 条稳定 FR，保留了失败真实性、职责边界和可泛化验收的关键约束。十项技术决策仍明确开放，但均有 owner 和冻结条件，适合由后续 Spec 与 Architecture 收敛，而不应由实施阶段静默猜测。
+通过修复。PRD 保留 22 条稳定 FR、失败真实性、职责边界和可泛化验收约束；本轮补齐了承重协议字段、独立 semantic align、agent-context projection、producer/consumer 跨 owner 例外、RED 失效边界和完整外部责任链。十项技术决策仍明确开放，但均有 owner 和冻结条件，适合由后续 Spec 与 Architecture 收敛，而不应由实施阶段静默猜测。
 
 ## Decision-readiness — strong
 
@@ -32,7 +32,10 @@ FR、UJ、SM 和 counter-metric 编号连续；术语表已补齐 Verification l
 
 这是链顶的内部开发工具能力 PRD；以能力规范为主、以四条轻量用户旅程解释操作价值，适合下游 Spec 和 Architecture 消费。
 
+## Repair verification
+
+`know103.txt` 指出的 9 项缺口已逐项定位：对账修正（本文件）；preflight 字段、slice contract、agent-context、独立 align、跨 owner 例外、外部责任链、production owner 变化回 RED 均已补入 PRD/addendum。22 条 FR 未重编号或删除，原有非目标、指标、Open Questions 和治理边界保持不变。
+
 ## Mechanical notes
 
 无阻断项。FR-1 至 FR-22、UJ-1 至 UJ-4、SM-1 至 SM-7 和 SM-C1 至 SM-C3 均连续；唯一 `[ASSUMPTION]` 已被索引。
-

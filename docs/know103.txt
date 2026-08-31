@@ -1,0 +1,42 @@
+结论：暂时不建议直接进入 Spec。 PRD 主体已经成熟，约有 85%～88% 的 Spec readiness，但还需要一次小范围 source-preservation 修复，不需要重做 PRD。
+
+这不是文档治理问题，而是几个会直接改变 Spec schema、状态机和实现行为的语义遗漏。
+
+阻断问题
+问题	当前情况	影响
+对账结论不真实	对账文件 声称命令、JSON、V0–V7/Q0–Q8、wrapper 细节都进入了 addendum，但 addendum 中实际都没有	Spec 可能相信错误对账并静默丢失具体协议
+VDD 6.3 preflight 字段遗漏	缺少 complexity_class、context_lookup_required/reason、minimum_red_scope、upgrade_conditions	Spec 无法完整设计 verification lane 与升级算法
+Slice Contract 遗漏	缺少 behavior_change、affected_subjects、state_transition、proof、rollback_scope	slice schema 可能退化为 ID/路径集合
+Agent Context Projection 遗漏	缺少 agent-context.json 及 requirement/obligation/Acceptance、allowed/forbidden paths、selector/validation refs 投影	Quick Dev 仍可能重新猜测整个需求目录
+独立 semantic align 遗漏	原草案要求第二个独立只读 codex exec，不能看到首轮解释；PRD/addendum 未保留	语义拆解与语义核验可能由同一结果自证
+Slice 拆分语义发生变化	原草案允许明确的 producer/consumer 原子修改跨 owner；addendum 简化成 owner 硬拆分	可能产生过细、不可用的 slice
+最终责任链不完整	PRD 只说 Quick Dev 不能发布 acceptance-passed，没有完整保留“外部独立语义验收 → passed/repair → maintainer 决策”	Spec 可能缺少外部 Acceptance 接口
+重放边界遗漏	production owner 变化时，原草案要求 failure intent 语义变化则从 RED 重跑；addendum 只写至少重跑 GREEN/REFACTOR	可能错误复用旧 RED
+
+原始具体内容仍在能力升级草案中。
+
+不阻断的部分
+
+以下内容已经足够好，可以保留：
+
+22 条 FR 的总体划分。
+VDD/Quick Dev 职责边界。
+Taskmaster MCP、6.7/6.8、游戏仓 6.9 pipeline 的排除。
+measurable success metrics 和 counter-metrics。
+10 个 Open Questions 及 owner。
+Windows、py -3、pytest 和 development governance-off。
+detached fixtures、8-25 replay、新任务盲测与 90% 分母。
+
+这些 Open Questions 本来就应该交给 Spec/Architecture 收敛，不需要在 PRD 阶段全部回答。
+
+建议下一步
+
+先做一个小型 PRD repair commit：
+
+把上述 load-bearing 内容补进 addendum.md。
+在 PRD 中补充外部独立语义验收责任链。
+修正 producer/consumer 跨 owner 例外和 RED 失效规则。
+重写对账结论，使其逐项映射真实存在的内容。
+更新 review verdict 和 append-only memlog。
+
+完成后即可进入 bmad-spec，不需要重新运行完整 PRD 访谈或重写 22 条 FR

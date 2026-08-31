@@ -4,6 +4,7 @@ status: final
 created: 2026-08-31
 updated: 2026-08-31
 source_input: docs/vdd-quick-dev-chapter-4-5-6-capability-upgrade-draft.md
+source_update: docs/know103.txt
 ---
 
 # PRD：VDD 与 Quick Dev Chapter 4/5/6 通用能力升级
@@ -209,6 +210,7 @@ GREEN 和 REFACTOR 必须重跑与 RED 相同的 selector identity、target、fi
 - **运行兼容**：支持 Windows、`py -3`、pytest 和旧计划只读兼容；测试使用临时 workspace 和数据库，不修改 live state。
 - **隔离与恢复**：历史 run append-only；显式 lineage 优先于目录推断；invalid-run 永不成为 predecessor。
 - **阶段边界**：VDD 只声明 intent，不写执行 artifact；Quick Dev 物化并执行；terminal 只能产生 `implementation-complete`，不能发布外部 `acceptance-passed`。
+- **最终责任链**：Quick Dev 完成 plan-local terminal deterministic full validation 后，只能输出 `implementation-complete`；随后由 Quick Dev 之外的独立语义验收主体比较原始 requirements、obligations、Acceptance、当前代码与真实 evidence，结果为 `acceptance-passed` 或返回 VDD/Quick Dev repair，最后由 maintainer 决定 commit、PR 或 release。Quick Dev 不拥有这三类外部决策权限。
 
 ## 9. 风险与缓解
 
