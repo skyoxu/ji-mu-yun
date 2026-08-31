@@ -5,10 +5,12 @@
 ```mermaid
 flowchart LR
   SRC[Canonical requirements and adopted companion] --> V0[V0 source-index]
-  V0 --> V1[V1 obligation extract]
+  V0 --> V0A[V0A pre-model source preflight]
+  V0A --> V1[V1 obligation extract]
   V1 --> V2[V2 guard]
   V2 --> V3[V3 Acceptance compile]
-  V3 --> V4[V4 independent semantic align]
+  V3 --> V3A[V3A semantic-plan preflight]
+  V3A --> V4[V4 independent semantic align]
   V4 --> V5[V5 many-to-many exact cover]
   V5 --> V6[V6 deterministic slice partition]
   V6 --> V7[V7 write-set feasibility]
@@ -24,8 +26,9 @@ flowchart LR
   Q7 --> Q8[Q8 terminal]
   Q8 --> IC[implementation-complete]
   IC --> EXT[external semantic acceptance]
-  EXT --> AP[acceptance-passed or repair]
-  AP --> M[maintainer commit/PR/release]
+  EXT -->|acceptance-passed| M[maintainer commit/PR/release]
+  EXT -->|repair-required| REPAIR[VDD or Quick Dev repair]
+  REPAIR --> V0
 ```
 
 ## Trust and authority boundaries
@@ -35,13 +38,13 @@ flowchart TB
   VDD[VDD: intent, refs, Acceptance, slices, failure intent, write sets]
   QD[Quick Dev: descriptor, executor, observations, TDD routing]
   SUT[SUT / production implementation]
-  JUDGE[Independent judge and detached fixtures]
+  JUDGE[Independent judge and detached fixtures\nprofile-dependent self-hosted acceptance]
   TERM[Deterministic slice/terminal validators]
   EXT[External semantic acceptance]
   MAINT[Maintainer authority]
   VDD -->|intent only| QD
   QD -->|executes| SUT
-  JUDGE -->|independent observations| TERM
+  JUDGE -.->|profile-dependent toolchain acceptance| TERM
   QD -->|evidence| TERM
   TERM -->|implementation-complete only| EXT
   EXT -->|acceptance-passed or repair| MAINT

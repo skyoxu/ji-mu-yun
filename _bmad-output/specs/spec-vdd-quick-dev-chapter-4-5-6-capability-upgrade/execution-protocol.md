@@ -2,7 +2,11 @@
 
 本 companion 是规范性实现输入，承接 adopted companion `docs/vdd-quick-dev-chapter-4-5-6-capability-upgrade-draft.md` 第 15、16、18.5 节。它保留会改变 schema、状态机或执行行为的协议；纯 wrapper 叙述不改变合同。
 
-## 1. VDD compiler protocol (V0–V7)
+## 1. VDD compiler protocol (V0A/V0–V7)
+
+### V0A deterministic source preflight
+
+在任何 `codex exec` 或完整计划生成之前，确定性检查 active source 是否存在且路径/编码可读，source anchor 是否唯一，source text 是否非空，requirements 是否可定位，基础 observability 与 verification lane 条件是否具备。失败只输出结构化 `repair-vdd` recommendation，不调用模型、不生成完整计划。
 
 ### V0 source-index
 
@@ -21,6 +25,10 @@
 ### V3 acceptance-compile
 
 从通过 guard 的 obligations 生成 Acceptance：`acceptance_id`、obligation IDs、source refs、given/when/then、observable、expected、forbidden 和 assertion 语义。多 obligation 只有在 subject、生命周期、owner、oracle 和独立 assertion 均兼容时才可合并。
+
+### V3A semantic-plan preflight
+
+在 Acceptance、RED intent 候选形成后且 slice partition 之前，确定性检查 observability、orphan requirement/obligation/Acceptance、overbroad Acceptance、缺失 RED intent、verification-lane mismatch、terminal swallowing 和基础 exact-cover 边。失败输出 `repair-vdd`，不进入 slice partition 或 Quick Dev。
 
 ### V4 semantic-align
 

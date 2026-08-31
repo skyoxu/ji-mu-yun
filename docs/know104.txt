@@ -1,0 +1,147 @@
+三、Architecture 前必须修复的问题
+P1-1：PRD FR-4 的 VDD 前置检查没有被完整保留
+
+PRD 要求在昂贵模型调用或完整计划生成之前执行 preflight，检查：
+
+active source；
+observability；
+hard-uncovered；
+orphan；
+overbroad Acceptance；
+缺失 RED intent；
+lane mismatch；
+并给出 repair recommendation。
+
+但现在 Spec 的 VDD 顺序是：
+
+V0 source-index
+→ V1 model obligation extraction
+→ V2 output guard
+
+V0 只处理路径、来源和 anchor，没有建立 PRD 所要求的完整 pre-model preflight。CAP-4 和 Q1 是 Quick Dev preflight，不能代替 VDD preflight。
+
+而且 FR-4 本身混合了两类检查：
+
+Acceptance 产生前可检查：source、path、observability、lane 基础条件；
+Acceptance 产生后才能检查：orphan、overbroad、RED intent、exact cover。
+
+Spec 应明确拆成两个阶段，例如：
+
+V0A deterministic source preflight：在首次 Codex 调用前；
+V3A semantic-plan preflight：在 Acceptance/RED intent 形成后、slice 切分前。
+
+这是实质性能力缺失，不是文档治理问题。
+
+P1-2：Spec 自己负责的问题仍被写成 Open Question
+
+当前 Open Questions 仍然说：
+
+assertion-edge schema 由 Spec 在 schema 定稿前决定；
+coverage-only 与 rerun RED 的边界由 Spec 在 invalidation matrix 前冻结。
+
+但当前产物已经是正式 canonical Spec。也就是说，Spec 把本应由自己完成的决策继续留给未来的“Spec”。
+
+至少需要改成以下两种方式之一：
+
+在 Spec 中直接冻结机器字段、最小验证规则和 invalidation 决策表；或
+明确将其委派给 Architecture，并给出 Architecture 不得改变的语义不变量。
+
+当前表达会使 Architect 不知道自己是在“实现既定合同”，还是可以重新定义合同。
+
+P1-3：执行 profile 没有成为正式 capability
+
+PRD FR-21 要求存在 execution profile，并保证不同 profile 只能改变成本，不能降低 truth floor。
+
+现在 profile 主要出现在来源草案或 Open Question 中，没有形成独立 CAP，也没有明确的成功判定。建议增加：
+
+CAP-10 Execution Profile Truth Floor
+
+至少规定：
+
+profile 可以减少可选测试、模型轮次或重复分析；
+不能跳过真实 RED；
+不能跳过同 selector GREEN；
+不能跳过 exact cover；
+不能用静态检查替代动态执行；
+profile 必须写入 run receipt；
+-相同输入和 profile 可确定性重放。
+
+否则 Architect 很容易把 profile 实现成“快速模式放宽真实性”。
+
+P1-4：PRD 的部分可量化成功标准没有进入规范包
+
+最明显的是：
+
+replay accuracy ≥99% 没有出现在 SPEC.md、execution-protocol.md 或图示中；
+部分成功阈值只存在于被整体采纳的旧草案中；
+canonical Spec 对旧草案究竟采纳哪些章节并不统一。
+
+这些阈值如果不进入清晰的 normative companion，后续 Architecture 和实现阶段很可能不会消费。
+
+至少应增加一个规范化的 success-metrics.md，保留：
+
+obligation/Acceptance 保真阈值；
+replay accuracy；
+false-green 数量；
+detached/blind task 验证；
+60 分钟中等任务目标；
+失败重试及确定性停止要求；
+不把 artifact/hash/模型调用数量当交付成功指标。
+四、需要消除的规范歧义
+P2-1：adopted companion 的作用域不一致
+
+当前存在三种表达：
+
+PRD frontmatter：采纳 draft.md#15-16；
+addendum：采纳 §§15–16；
+Spec 正文：强调 §§15、16、18.5；
+canonical role graph：只能绑定整个 draft 文件。
+
+所以机器层面是“整个草案都是规范”，人工说明却是“只有部分章节强制”。
+
+这会造成两个相反风险：
+
+Architect 把草案全部章节都当成不可修改合同；
+Architect 只读 15/16/18.5，遗漏其他指标和 profile。
+
+推荐做法不是继续增加说明，而是：
+
+将需要保留的内容正式提取到 Spec 自己的 normative companions；
+execution-protocol.md 保留 V/Q 协议；
+新增 success-metrics.md；
+必要时新增 schema-contracts.md；
+原草案降级为 provenance/reference，不再整文件 adopted。
+P2-2：Architecture 图中的两处流向不准确
+
+第一张图目前把：
+
+acceptance-passed or repair
+→ maintainer commit/PR/release
+
+画成同一路径。
+
+正确含义应当是：
+
+acceptance-passed → maintainer；
+repair-required → 回到 VDD 或 Quick Dev 对应 slice。
+
+另外，trust diagram 中 independent judge 直接进入 terminal，容易被理解为每个普通任务都必须运行独立 judge。实际上 detached fixtures / independent judge 更接近工具链自托管验证，不必成为所有 execution profile 的单次任务强制门。
+
+应把它标记为：
+
+toolchain/self-hosted acceptance；或
+profile-dependent validation；
+
+同时仍明确普通任务不能弱化真实 RED/GREEN truth floor。
+
+整体上，这不是一个失败的 Spec，主体完成度大约在 88%～90%。但是剩余内容恰好涉及执行顺序、truth floor、重放和 schema 边界，直接进入 Architecture 会把这些未决问题固化成架构猜测。
+
+建议先做一次小范围 Spec repair，只处理以下五项：
+
+把 FR-4 拆成 pre-model 和 post-Acceptance 两级 VDD preflight。
+冻结 assertion-edge schema 与 invalidation matrix，或正式委派给 Architecture 并写出不变量。
+增加 execution profile capability 和 truth-floor 判定。
+将成功阈值集中到规范化 companion。
+修正 adopted companion 作用域和两处架构图流向。
+
+完成这五项后，可以进入 Architecture，不需要重新走一遍 PRD，也不需要扩大治理链。

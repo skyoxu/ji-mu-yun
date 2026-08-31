@@ -6,8 +6,10 @@ companions:
     role: normative_companion
   - path: _bmad-output/specs/spec-vdd-quick-dev-chapter-4-5-6-capability-upgrade/architecture-diagrams.md
     role: normative_companion
-  - path: docs/vdd-quick-dev-chapter-4-5-6-capability-upgrade-draft.md
-    role: adopted_companion
+  - path: _bmad-output/specs/spec-vdd-quick-dev-chapter-4-5-6-capability-upgrade/success-metrics.md
+    role: normative_companion
+  - path: _bmad-output/specs/spec-vdd-quick-dev-chapter-4-5-6-capability-upgrade/schema-contracts.md
+    role: normative_companion
 sources:
   - path: _bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-31/prd.md
     role: provenance
@@ -15,9 +17,13 @@ sources:
     role: provenance
   - path: docs/know103.txt
     role: provenance
+  - path: docs/vdd-quick-dev-chapter-4-5-6-capability-upgrade-draft.md
+    role: provenance
+  - path: docs/know104.txt
+    role: provenance
 ---
 
-> **Canonical contract.** 本 SPEC 与 `companions:` 中的文件共同构成 VDD 与 Quick Dev Chapter 4/5/6 通用能力升级的完整机器合同。`sources:` 仅用于追溯；原始能力草案第 15、16、18.5 节作为 adopted companion 必须继续读取。
+> **Canonical contract.** 本 SPEC 与 `companions:` 中的文件共同构成 VDD 与 Quick Dev Chapter 4/5/6 通用能力升级的完整机器合同。`sources:` 仅用于追溯；原始能力草案第 15、16、18.5 节的承重内容已提取到规范性 companions，不再把整份草案作为 adopted contract。
 
 # VDD 与 Quick Dev Chapter 4/5/6 通用能力升级
 
@@ -54,6 +60,9 @@ sources:
 - **CAP-9**
   - **intent:** 独立 judge 与 detached fixtures 能证明 Quick Dev 抵抗假绿并泛化到新任务。
   - **success:** positive/negative/mutation、8-25 replay 和一个未用于设计的新中等任务通过，错误 target、复制结果、自报 pass、未来 evidence 和历史扫描均被拒绝。
+- **CAP-10**
+  - **intent:** execution profile 能在不同成本预算下选择验证范围而不改变真实性底线。
+  - **success:** profile 可减少可选测试、模型轮次或重复分析，但不能跳过真实 RED、同 selector GREEN、exact cover 或动态执行；profile identity 写入 receipt，且同输入同 profile 可确定性重放。
 
 ## Constraints
 
@@ -83,11 +92,11 @@ sources:
 
 - obligation 与 Acceptance 的规范化边界由 VDD 在 schema 冻结前决定。
 - slice split/merge 的确定性阈值由 VDD/Architecture 在首次编译器实现前决定。
-- 多 Acceptance 单 selector 的 assertion-edge schema 由 Spec 在 schema 定稿前决定。
+- 多 Acceptance 单 selector 的 assertion-edge schema 已在 `schema-contracts.md` 冻结；后续变更必须显式版本化并触发受影响 observation 失效。
 - lightweight semantic validator 的纯确定性边界由 Architecture 冻结；模型只能产生非阻断 warning。
 - v1 compatibility adapter 的字段投影和只读边界由 Architecture 在迁移试验前冻结。
 - unexpected-green 的 regression/current-behavior 最低证明由 Quick Dev 在 RED materializer 前定义。
 - 60 分钟目标的任务规模、环境和计时方法由 Product 在盲测前发布。
 - fast-ship、standard、self-hosted 的差异由 Architecture 在 profile schema 前冻结，均不得降低真实性硬门。
-- 变化何时只重算 coverage、何时必须重跑 RED 由 Spec 在 invalidation matrix 前冻结；不确定时采用更严格重跑。
+- 变化何时只重算 coverage、何时必须重跑 RED 已在 `schema-contracts.md` 冻结；不确定时采用更严格重跑。
 - detached fixture 作者与被测 skill 的独立性由 Maintainer 在验收前以独立目录/提交和只读 judge 证明。
