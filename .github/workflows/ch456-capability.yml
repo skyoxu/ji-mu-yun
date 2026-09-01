@@ -28,6 +28,8 @@ jobs:
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py
       - name: Probe real semantic worker backend
         run: py -3 scripts/vdd/probe_real_worker.py --out ch456-real-worker-probe.json
+      - name: Evaluate real semantic worker quality when available
+        run: py -3 scripts/vdd/evaluate_real_semantic_quality.py --out ch456-real-semantic-quality.json
       - name: Quick Dev runtime contract tests
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py
       - name: Evaluate selective replay accuracy
@@ -46,6 +48,7 @@ jobs:
           name: ch456-capability-evidence
           path: |
             ch456-real-worker-probe.json
+            ch456-real-semantic-quality.json
             ch456-selective-replay.json
             ch456-8-25-replay.json
           if-no-files-found: ignore
