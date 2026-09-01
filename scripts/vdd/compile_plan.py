@@ -30,7 +30,15 @@ def main() -> int:
             raise SystemExit("worker cache must be a JSON object")
         cache = value
     try:
-        result = compile_plan(requirements=args.requirements, out_dir=args.out_dir, companions=args.companion, profile=args.profile, worker_cache=cache, recommendation_only=args.recommendation_only)
+        result = compile_plan(
+            requirements=args.requirements,
+            out_dir=args.out_dir,
+            companions=args.companion,
+            profile=args.profile,
+            worker_cache=cache,
+            recommendation_only=args.recommendation_only,
+            resume_from=args.resume_from,
+        )
     except (OSError, UnicodeError, json.JSONDecodeError, ValueError, RuntimeError) as exc:
         print(json.dumps({"status": "repair-vdd", "reason": str(exc)}, sort_keys=True))
         return 1
