@@ -11,11 +11,18 @@ Use this Skill only for an explicit plan file or plan directory routed to `stric
 
 | Input | Route | Runtime authority |
 | --- | --- | --- |
-| `vdd.semantic-plan-bundle.v1` / Chapter 4/5/6 current plan | current | stable `scripts/quick_dev/run.py` -> `tools/stable_runner.py`; predicates in `current_router.py`, execution in `stage_pipeline.py`, coverage in `coverage_predicates.py` |
+| `vdd.semantic-plan-bundle.v1` / Chapter 4/5/6 current plan | current | stable `scripts/quick_dev/run.py` -> `tools/stable_runner.py`; predicates in `current_router.py`, execution in `stage_pipeline.py`, Q6 regression in `regression_gate.py`, coverage in `coverage_predicates.py` |
 | historical `implementation-contract.v1.json` without the current semantic bundle | compatibility | `tools/legacy_compat.py` may inspect/project/route repair only |
 | standalone requirements or missing contract | reject | none |
 
-Current plans must never use `loop_plan_directory.py`, `run_slice_lifecycle.py`, `stage_command.py`, plan-local combined writers, `canonical_lifecycle.py`, or `evidence_pipeline.py` as completion authority.
+Current plans must never use `loop_plan_directory.py`, `run_slice_lifecycle.py`, `stage_command.py`, plan-local combined writers, `current_lifecycle.py`, `canonical_lifecycle.py`, or `evidence_pipeline.py` as completion authority.
+
+The current stable entry is:
+
+```text
+py -3 scripts/quick_dev/run.py --plan <plan-dir> --slice <slice-id> --profile standard
+py -3 scripts/quick_dev/run.py --plan <plan-dir> --slice <slice-id> --recommendation-only
+```
 
 The stable CLI defaults to deterministic Q1 preflight. `--recommendation-only` is strict Q0 and must not run tests, create a run, call a model, or write state. Advanced deterministic actions are exposed through `--action execute-stage|implementation-handoff|slice-ready|implementation-complete|recover`; model-backed RED authoring and production implementation remain agent/worker actions outside the evidence writers.
 
@@ -27,7 +34,7 @@ The stable CLI defaults to deterministic Q1 preflight. `--recommendation-only` i
 4. Q3 RED: dispatch the frozen descriptor through `tools/stage_pipeline.py`. `process_executor_v2.py` writes process facts; `independent_judge_v2.py` classifies those facts; runtime-edge code writes only assertion edges.
 5. Q4 implementation: only a current expected-red authorizes an implementation-worker handoff. Exact changed paths must stay inside production write paths; selector/test/fixture/plan/evidence changes invalidate RED. The worker never writes evidence authority.
 6. Q5 GREEN: before execution, re-read the explicit frozen RED descriptor and RED stage result; require their bound hash and selector identity to match. Then execute the same selector identity/target/fixture/assertion/cwd contract and require real nonzero test/case evidence with exit zero.
-7. Q6 REFACTOR: require the same frozen RED predecessor binding plus current GREEN, allow only production paths, rerun the same selector and required regression/schema validators.
+7. Q6 REFACTOR: require the same frozen RED predecessor binding plus current GREEN, allow only production paths, rerun the same selector, then apply `tools/regression_gate.py`. `standard` and `self-hosted` must consume the slice `agent-context.validation_commands`; missing context, an empty required command set, timeout, nonzero exit, or zero-case pytest regression blocks publication before REFACTOR runtime edges/stage result. `fast-ship` may omit extra regressions but never the primary selector truth floor.
 8. Q7 slice-ready: `tools/coverage_predicates.py` re-reads RED/GREEN/REFACTOR edge -> observation -> receipt -> descriptor -> target/fixture bytes and proves exact Acceptance assertion coverage.
 9. Execute the terminal descriptor through `tools/stage_pipeline.py`; terminal may have its own selector identity and process success alone is not completion.
 10. Q8 whole-plan terminal: `tools/coverage_predicates.py` verifies one explicit hash-bound predecessor per slice, exact `(slice, Acceptance, stage)` tuple closure, terminal assertions and a freshly recomputed current snapshot before writing `implementation-complete`.
@@ -41,6 +48,7 @@ Stop at `implementation-complete`, `repair-vdd`, `environment-blocked`, or repea
 | descriptor/run orchestration/recommendation/recovery | Quick Dev stable runner/current router |
 | process receipt/stdout/stderr facts | `process_executor_v2.py` |
 | observation/classification | `independent_judge_v2.py` |
+| Q6 regression receipt | `regression_gate.py` |
 | runtime assertion edge | runtime-edge validator |
 | slice-ready | Q7 coverage predicate |
 | implementation-complete | Q8 terminal predicate |
@@ -71,6 +79,8 @@ The implementation worker may change only declared production paths after expect
 ## Legacy Compatibility
 
 Historical v1 plans are read-only compatibility inputs. `tools/legacy_compat.py` may report reusable identities or required current projection, but legacy combined receipt/observation fields, aggregate execution counters and plan-local terminal status cannot directly become current v2 evidence or completion authority. `scripts/quick_dev/replay_legacy_tdd.py` is a regression harness only: it may prove a historical RED baseline and current GREEN with the same declared selector/failure identities, but it never authorizes current evidence.
+
+Legacy compatibility tests may load their explicitly named historical fixtures, Bootstrap helpers, or Acceptance helpers. Those dependencies remain test/replay inputs only; their existence never promotes a legacy loop, governance receipt, historical success, or acceptance route into current runtime authority.
 
 ## Boundaries
 
