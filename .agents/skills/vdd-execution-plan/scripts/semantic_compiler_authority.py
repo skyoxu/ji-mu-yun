@@ -1,18 +1,49 @@
 """Stable VDD Chapter 4/5/6 compiler authority.
 
 The lower-level semantic_compiler_gate supplies the normative worker envelope
-and preflight-bearing schema.  This layer owns stable publication semantics:
+and preflight-bearing schema. This layer owns stable publication semantics:
 failed semantic attempts are content-addressed diagnostics, while canonical
 plan artifacts are written only after the corresponding gate is valid.
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 import shutil
+import sys
 from typing import Any, Mapping, Sequence
 
 import semantic_compiler_gate as gate
+
+
+def _resolved_backend_metadata(root: Path, *, injected: bool) -> tuple[str, str]:
+    """Return a concrete runtime backend/model identity for worker receipts."""
+    if injected:
+        return "injected-worker-cache", "fixture-v1"
+    scripts = root / "scripts" / "sc"
+    if str(scripts) not in sys.path:
+        sys.path.insert(0, str(scripts))
+    try:
+        from _llm_backend import inspect_llm_backend, resolve_llm_backend
+
+        backend = resolve_llm_backend(None)
+        info = inspect_llm_backend(backend)
+        backend_name = str(info.get("backend") or backend or "unknown-backend")
+        model = str(info.get("model") or "runtime-default-model")
+        version = str(
+            info.get("sdk_version")
+            or info.get("executable_version")
+            or info.get("version")
+            or "runtime-resolved"
+        )
+        return f"{backend_name}:{model}", version
+    except Exception:
+        return "shared-llm-backend:runtime-default-model", "runtime-resolved"
+
+
+# The lower-level gate writes the receipt; stable authority supplies the
+# runtime-resolved backend metadata so a string backend is never misreported as
+# Python type `str`.
+gate._backend_metadata = _resolved_backend_metadata
 
 
 def _attempt(out_dir: Path, label: str, value: Mapping[str, Any]) -> None:
