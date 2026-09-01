@@ -7,6 +7,11 @@ It does not create `acceptance-passed` and has no release/merge authority.  It
 only reproduces the same deterministic + live evidence denominator used by the
 Chapter 4/5/6 capability workflow and then invokes the strict final completion
 predicate.
+
+Each invocation owns a fresh evidence directory. After all evidence producers
+run, a candidate-bound SHA-256 manifest is frozen and the final predicate must
+consume that exact set. Old local evidence can therefore never be silently
+reused by a later candidate.
 """
 from __future__ import annotations
 
@@ -14,6 +19,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 from typing import Any, Sequence
@@ -31,8 +37,6 @@ def _run(argv: Sequence[str], *, env: dict[str, str], label: str) -> dict[str, A
         capture_output=True,
         check=False,
     )
-    # Keep the summary bounded; full subprocess output remains visible when the
-    # user runs each underlying command directly and is not itself authority.
     return {
         "label": label,
         "argv": list(argv),
@@ -58,11 +62,12 @@ def main() -> int:
         evidence_dir.relative_to(ROOT.resolve())
     except ValueError as exc:
         raise SystemExit("--evidence-dir must remain inside the repository") from exc
-    evidence_dir.mkdir(parents=True, exist_ok=True)
+    if evidence_dir.exists():
+        shutil.rmtree(evidence_dir)
+    evidence_dir.mkdir(parents=True, exist_ok=False)
 
     env = dict(os.environ)
     env["SC_LLM_BACKEND"] = args.backend
-    python = sys.executable
 
     paths = {
         "architecture": evidence_dir / "ch456-architecture-reconcile.json",
@@ -75,6 +80,7 @@ def main() -> int:
         "replay": evidence_dir / "ch456-selective-replay.json",
         "live_blind": evidence_dir / "ch456-live-blind-benchmark.json",
         "legacy": evidence_dir / "ch456-8-25-replay.json",
+        "manifest": evidence_dir / "ch456-final-evidence-manifest.json",
         "final": evidence_dir / "ch456-final-completion.json",
     }
 
@@ -111,8 +117,27 @@ def main() -> int:
         results.append(result)
         print(json.dumps({"label": label, "exit_code": result["exit_code"], "passed": result["passed"]}, sort_keys=True), flush=True)
 
+    manifest_argv = _python(
+        "scripts/quick_dev/build_final_evidence_manifest.py",
+        "--architecture-reconcile", str(paths["architecture"]),
+        "--curated-semantic", str(paths["curated"]),
+        "--semantic-chain-mutations", str(paths["semantic_mutations"]),
+        "--agent-context-mutations", str(paths["agent_context"]),
+        "--real-semantic", str(paths["real_semantic"]),
+        "--stable-facade", str(paths["stable"]),
+        "--detached-mutations", str(paths["detached"]),
+        "--selective-replay", str(paths["replay"]),
+        "--live-blind", str(paths["live_blind"]),
+        "--legacy-replay", str(paths["legacy"]),
+        "--out", str(paths["manifest"]),
+    )
+    manifest_result = _run(manifest_argv, env=env, label="freeze-final-evidence-manifest")
+    results.append(manifest_result)
+    print(json.dumps({"label": manifest_result["label"], "exit_code": manifest_result["exit_code"], "passed": manifest_result["passed"]}, sort_keys=True), flush=True)
+
     final_argv = _python(
         "scripts/quick_dev/evaluate_final_completion.py",
+        "--manifest", str(paths["manifest"]),
         "--architecture-reconcile", str(paths["architecture"]),
         "--curated-semantic", str(paths["curated"]),
         "--semantic-chain-mutations", str(paths["semantic_mutations"]),
@@ -136,6 +161,7 @@ def main() -> int:
         "status": "pass" if not failed_steps else "blocked",
         "failed_steps": failed_steps,
         "steps": results,
+        "manifest_ref": paths["manifest"].relative_to(ROOT).as_posix(),
         "final_evidence_ref": paths["final"].relative_to(ROOT).as_posix(),
         "authorizes": [],
     }
