@@ -14,6 +14,7 @@ import argparse
 import json
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -32,12 +33,24 @@ MIN_ACTIVE_OBLIGATIONS = 23
 REQUIRED_SCORE = 0.95
 
 
+def _source_head() -> str:
+    proc = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return proc.stdout.strip() if proc.returncode == 0 else ""
+
+
 def evaluate(backend: str | None) -> dict:
     backend_name = resolve_llm_backend(backend)
     info = inspect_llm_backend(backend_name)
     result = {
         "schema": "vdd.real-semantic-quality-metric.v1",
         "fixture": FIXTURE.relative_to(ROOT).as_posix(),
+        "source_head": _source_head(),
         "backend": backend_name,
         "availability": info,
         "required_precision": REQUIRED_SCORE,
