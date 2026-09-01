@@ -1,54 +1,118 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
+import subprocess
 import sys
 
 TOOLS = Path(__file__).resolve().parents[1]
-if str(TOOLS) not in sys.path: sys.path.insert(0, str(TOOLS))
+if str(TOOLS) not in sys.path:
+    sys.path.insert(0, str(TOOLS))
 
-from current_router import materialize_descriptor, successor_descriptor
+from current_router import materialize_descriptor, stop_loss, successor_descriptor
+from independent_judge_v2 import judge_receipt
+from process_executor_v2 import execute_process
 from recovery_resolver import recover_explicit_run
-from runtime_evidence import create_json, execute_process, judge_receipt, selector_identity_from_descriptor, sha256_value
+from runtime_evidence import create_json, selector_identity_from_descriptor, sha256_value
 
 
 def _bundle() -> dict:
     return {"plan_id":"PLAN-X","acceptances":[{"acceptance_id":"A-X","assertion_ids":["ASSERT-X"]}],"slices":[{"slice_id":"S1","acceptance_ids":["A-X"],"failure_intent_ids":[],"execution_snapshot_paths":["tests/selector.py","tests/fixture.txt"],"allowed_write_paths":["src/value.txt"]}]}
 
 
-def _descriptor(root: Path, *, run_id: str = "R1", stage: str = "red") -> dict:
+def _descriptor(*, run_id: str = "R1", stage: str = "red", argv: list[str] | None = None) -> dict:
     bundle = _bundle()
-    return materialize_descriptor(bundle=bundle,slice_id="S1",stage=stage,run_id=run_id,candidate_hash="sha256:"+"1"*64,argv=[sys.executable,"tests/selector.py"],cwd=".",timeout_seconds=5,target_refs=["tests/selector.py"],fixture_refs=["tests/fixture.txt"])
+    return materialize_descriptor(
+        bundle=bundle,
+        slice_id="S1",
+        stage=stage,
+        run_id=run_id,
+        candidate_hash="sha256:"+"1"*64,
+        argv=argv or [sys.executable,"-m","pytest","tests/selector.py","-q"],
+        cwd=".",
+        timeout_seconds=30,
+        target_refs=["tests/selector.py"],
+        fixture_refs=["tests/fixture.txt"],
+    )
+
+
+def _prepare(root: Path, selector_source: str, *, run_ids: tuple[str, ...] = ("R1",)) -> None:
+    (root/"tests").mkdir(parents=True)
+    for run_id in run_ids:
+        (root/"runs"/run_id).mkdir(parents=True)
+    (root/"tests"/"fixture.txt").write_text("fixture\n",encoding="utf-8")
+    (root/"tests"/"selector.py").write_text(selector_source,encoding="utf-8")
+
+
+def _git_init(root: Path) -> None:
+    subprocess.run(["git","init"],cwd=root,check=True,capture_output=True,text=True)
+    subprocess.run(["git","config","user.email","ch456@example.invalid"],cwd=root,check=True)
+    subprocess.run(["git","config","user.name","CH456 Harness"],cwd=root,check=True)
+    subprocess.run(["git","add","tests"],cwd=root,check=True)
+    subprocess.run(["git","commit","-m","fixture baseline"],cwd=root,check=True,capture_output=True,text=True)
 
 
 def test_wrong_target_classifies_target_binding(tmp_path: Path) -> None:
-    (tmp_path/"tests").mkdir(); (tmp_path/"runs"/"R1").mkdir(parents=True)
-    (tmp_path/"tests"/"fixture.txt").write_text("x",encoding="utf-8")
-    descriptor = _descriptor(tmp_path); descriptor["target_refs"] = ["tests/missing.py"]; descriptor["acceptance_assertions"][0]["target_ref"] = "tests/missing.py"
+    _prepare(tmp_path,"def test_placeholder():\n    assert True\n")
+    descriptor = _descriptor()
+    descriptor["target_refs"] = ["tests/missing.py"]
+    descriptor["acceptance_assertions"][0]["target_ref"] = "tests/missing.py"
     receipt = execute_process(tmp_path,tmp_path/"runs"/"R1","red",descriptor,profile_identity="standard")
     observation = judge_receipt(tmp_path/"runs"/"R1","red",descriptor,receipt,expected_failure_ids=["EXPECTED"])
     assert observation["failure_family"] == "target-binding-failure" and observation["predicate_result"] is False
 
 
+def test_sut_self_reported_test_counts_are_ignored(tmp_path: Path) -> None:
+    _prepare(tmp_path,"print('TEST_EXECUTIONS:999')\nprint('CASES:999')\nprint('FAILURE_ID:EXPECTED')\nraise SystemExit(1)\n")
+    descriptor = _descriptor(argv=[sys.executable,"tests/selector.py"])
+    receipt = execute_process(tmp_path,tmp_path/"runs"/"R1","red",descriptor,profile_identity="standard")
+    observation = judge_receipt(tmp_path/"runs"/"R1","red",descriptor,receipt,expected_failure_ids=["EXPECTED"])
+    assert receipt["test_executions"] == 0 and receipt["cases"] == 0
+    assert observation["failure_family"] == "test-harness-failure" and observation["predicate_result"] is False
+
+
 def test_repo_noise_and_unexpected_green_never_satisfy_red(tmp_path: Path) -> None:
-    (tmp_path/"tests").mkdir(); (tmp_path/"runs"/"R1").mkdir(parents=True)
-    (tmp_path/"tests"/"fixture.txt").write_text("x",encoding="utf-8")
-    (tmp_path/"tests"/"selector.py").write_text("print('TEST_EXECUTIONS:1')\nprint('CASES:1')\nprint('REPO_NOISE: dirty unrelated file')\nprint('FAILURE_ID:EXPECTED')\nraise SystemExit(1)\n",encoding="utf-8")
-    descriptor = _descriptor(tmp_path); receipt = execute_process(tmp_path,tmp_path/"runs"/"R1","red",descriptor,profile_identity="standard"); obs = judge_receipt(tmp_path/"runs"/"R1","red",descriptor,receipt,expected_failure_ids=["EXPECTED"])
+    _prepare(
+        tmp_path,
+        "from pathlib import Path\ndef test_behavior():\n    root=Path(__file__).resolve().parents[1]\n    (root/'noise.txt').write_text('dirty',encoding='utf-8')\n    print('FAILURE_ID:EXPECTED')\n    assert False\n",
+    )
+    _git_init(tmp_path)
+    descriptor = _descriptor()
+    receipt = execute_process(tmp_path,tmp_path/"runs"/"R1","red",descriptor,profile_identity="standard")
+    obs = judge_receipt(tmp_path/"runs"/"R1","red",descriptor,receipt,expected_failure_ids=["EXPECTED"])
+    assert "noise.txt" in receipt["repo_noise_paths"]
     assert obs["failure_family"] == "repo-noise" and obs["predicate_result"] is False
-    root2 = tmp_path/"second"; (root2/"tests").mkdir(parents=True); (root2/"runs"/"R1").mkdir(parents=True)
-    (root2/"tests"/"fixture.txt").write_text("x",encoding="utf-8"); (root2/"tests"/"selector.py").write_text("print('TEST_EXECUTIONS:1')\nprint('CASES:1')\n",encoding="utf-8")
-    descriptor2 = _descriptor(root2); receipt2 = execute_process(root2,root2/"runs"/"R1","red",descriptor2,profile_identity="standard"); obs2 = judge_receipt(root2/"runs"/"R1","red",descriptor2,receipt2,expected_failure_ids=["EXPECTED"])
+
+    root2 = tmp_path/"second"
+    _prepare(root2,"def test_behavior():\n    assert True\n")
+    descriptor2 = _descriptor()
+    receipt2 = execute_process(root2,root2/"runs"/"R1","red",descriptor2,profile_identity="standard")
+    obs2 = judge_receipt(root2/"runs"/"R1","red",descriptor2,receipt2,expected_failure_ids=["EXPECTED"])
+    assert receipt2["test_executions"] == 1 and receipt2["cases"] == 1
     assert obs2["failure_family"] == "unexpected-green" and obs2["predicate_result"] is False
 
 
 def test_artifact_integrity_detects_mutated_output(tmp_path: Path) -> None:
-    (tmp_path/"tests").mkdir(); (tmp_path/"runs"/"R1").mkdir(parents=True)
-    (tmp_path/"tests"/"fixture.txt").write_text("x",encoding="utf-8"); (tmp_path/"tests"/"selector.py").write_text("print('TEST_EXECUTIONS:1')\nprint('CASES:1')\nprint('FAILURE_ID:EXPECTED')\nraise SystemExit(1)\n",encoding="utf-8")
-    descriptor = _descriptor(tmp_path); receipt = execute_process(tmp_path,tmp_path/"runs"/"R1","red",descriptor,profile_identity="standard")
+    _prepare(tmp_path,"def test_behavior():\n    print('FAILURE_ID:EXPECTED')\n    assert False\n")
+    descriptor = _descriptor()
+    receipt = execute_process(tmp_path,tmp_path/"runs"/"R1","red",descriptor,profile_identity="standard")
     (tmp_path/"runs"/"R1"/"canonical-evidence"/"red"/"stdout.bin").write_bytes(b"mutated")
     obs = judge_receipt(tmp_path/"runs"/"R1","red",descriptor,receipt,expected_failure_ids=["EXPECTED"])
     assert obs["evidence_state"] == "invalid-run" and obs["failure_family"] == "artifact-integrity"
+
+
+def test_repeated_deterministic_failure_fingerprint_is_stable_and_stops(tmp_path: Path) -> None:
+    _prepare(tmp_path,"def test_behavior():\n    print('FAILURE_ID:EXPECTED')\n    assert False\n",run_ids=("R1","R2"))
+    first_descriptor = _descriptor(run_id="R1")
+    second_descriptor = _descriptor(run_id="R2")
+    first_receipt = execute_process(tmp_path,tmp_path/"runs"/"R1","red",first_descriptor,profile_identity="standard")
+    first = judge_receipt(tmp_path/"runs"/"R1","red",first_descriptor,first_receipt,expected_failure_ids=["EXPECTED"])
+    second_receipt = execute_process(tmp_path,tmp_path/"runs"/"R2","red",second_descriptor,profile_identity="standard")
+    second = judge_receipt(tmp_path/"runs"/"R2","red",second_descriptor,second_receipt,expected_failure_ids=["EXPECTED"])
+    assert first["failure_family"] == second["failure_family"] == "expected-red"
+    assert first["failure_fingerprint"] == second["failure_fingerprint"]
+    assert first["failure_id"] == second["failure_id"]
+    decision = stop_loss([first["failure_fingerprint"]], second["failure_fingerprint"])
+    assert decision == {"stop":True,"failure_family":"repeated-deterministic-failure","action":"stop"}
 
 
 def test_nonterminal_selector_drift_is_rejected() -> None:
@@ -60,6 +124,8 @@ def test_nonterminal_selector_drift_is_rejected() -> None:
         successor_descriptor(descriptor,stage="green",run_id="R3",candidate_hash="sha256:"+"3"*64)
     except ValueError:
         pass
+    else:
+        raise AssertionError("GREEN selector drift must be rejected")
 
 
 def test_recovery_reads_only_explicit_run_and_rejects_stale_hash(tmp_path: Path) -> None:
