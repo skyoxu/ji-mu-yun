@@ -1,27 +1,385 @@
-"""Stable VDD compiler authority with an independent atomic source-recall gate.
+"""Stable VDD compiler authority for the Chapter 4/5/6 contract.
 
-The legacy semantic_compiler owns the canonical V0->V7 artifact construction.
-This wrapper inserts an additional fail-closed source-vs-obligation oracle before
-that compiler is allowed to publish plan-ready artifacts. The oracle is read-only
-and cannot authorize implementation.
+The canonical semantic_compiler still owns deterministic V0->V7 publication.
+This gate adds the normative semantic-worker envelope, atomic source recall,
+preflight-bearing planning fields, and resumable cache replay without granting
+model workers any plan-ready or runtime-evidence authority.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
+import sys
+import time
 from typing import Any, Mapping, Sequence
 
-from semantic_compiler import (
-    atomic_json,
-    build_source_index,
-    compile_acceptances,
-    compile_obligations,
-    compile_plan as _compile_plan,
-    guard_obligations,
-    invoke_worker,
-    repository_root,
-    semantic_preflight,
-    source_preflight,
-)
+import semantic_compiler as sc
+
+_ORIGINAL_INVOKE_WORKER = sc.invoke_worker
+_ORIGINAL_COMPILE_ACCEPTANCES = sc.compile_acceptances
+_ORIGINAL_PARTITION_SLICES = sc.partition_slices
+_ORIGINAL_VALIDATE_SEMANTIC_BUNDLE = sc.validate_semantic_bundle
+_ORIGINAL_COMPILE_PLAN = sc.compile_plan
+
+_PREFLIGHT_FIELDS = {
+    "complexity_class",
+    "verification_lane",
+    "context_lookup_required",
+    "context_lookup_reason",
+    "minimum_red_scope",
+    "upgrade_conditions",
+}
+_COMPLEXITY_ORDER = {"simple": 0, "complex": 1, "architectural": 2}
+
+
+def _worker_schema_findings(stage: str, value: Mapping[str, Any]) -> list[str]:
+    findings: list[str] = []
+    if not isinstance(value, Mapping):
+        return ["worker-output:not-object"]
+    if stage.startswith("v1-"):
+        obligations = value.get("obligations")
+        if not isinstance(obligations, list) or not obligations:
+            findings.append("worker-output:obligations")
+    elif stage == "v3":
+        for key in ("acceptances", "failure_intents", "slice_hints"):
+            if not isinstance(value.get(key), list) or not value[key]:
+                findings.append(f"worker-output:{key}")
+    elif stage == "v4-atomic-recall":
+        for key in ("supported_obligation_ids", "invented_obligation_ids", "source_gap_claims"):
+            if not isinstance(value.get(key), list):
+                findings.append(f"worker-output:{key}")
+    elif stage == "v4":
+        for key in ("covered_obligation_ids", "missing_obligation_ids", "invented_obligation_ids", "misaligned_acceptance_ids", "repairs"):
+            if not isinstance(value.get(key), list):
+                findings.append(f"worker-output:{key}")
+        if not isinstance(value.get("oracle_alignment"), Mapping):
+            findings.append("worker-output:oracle_alignment")
+    return findings
+
+
+def _backend_metadata(root: Path, *, injected: bool) -> tuple[str, str]:
+    if injected:
+        return "injected-worker-cache", "fixture"
+    scripts = root / "scripts" / "sc"
+    if str(scripts) not in sys.path:
+        sys.path.insert(0, str(scripts))
+    try:
+        from _llm_backend import resolve_llm_backend
+
+        backend = resolve_llm_backend(None)
+        model = str(
+            getattr(backend, "model", None)
+            or getattr(backend, "name", None)
+            or getattr(backend, "backend", None)
+            or type(backend).__name__
+        )
+        version = str(
+            getattr(backend, "version", None)
+            or getattr(backend, "model_version", None)
+            or "runtime-resolved"
+        )
+        return model, version
+    except Exception:
+        return "shared-llm-backend", "runtime-resolved"
+
+
+def _write_worker_receipt(
+    *,
+    root: Path,
+    out_dir: Path,
+    stage: str,
+    payload: Mapping[str, Any],
+    prompt: str,
+    result: Mapping[str, Any] | None,
+    findings: Sequence[str],
+    duration_ms: int,
+    repair_attempted: bool,
+    injected: bool,
+    exit_status: str,
+) -> None:
+    input_sha = sc.sha256_value(payload)
+    prompt_sha = sc.sha256_bytes(prompt.encode("utf-8"))
+    model, model_version = _backend_metadata(root, injected=injected)
+    receipt = {
+        "schema": "vdd.semantic-worker-receipt.v1",
+        "stage": stage,
+        "prompt_version": "vdd-ch456-semantic-worker.v1",
+        "model": model,
+        "model_version": model_version,
+        "input_sha256": input_sha,
+        "prompt_sha256": prompt_sha,
+        "duration_ms": duration_ms,
+        "exit_status": exit_status,
+        "schema_valid": not findings,
+        "schema_findings": list(findings),
+        "schema_repair_attempted": repair_attempted,
+        "result_sha256": sc.sha256_value(result) if isinstance(result, Mapping) else None,
+        "worker_authority": "read-only-semantic-candidate",
+        "authorizes": [],
+    }
+    path = out_dir / ".compiler-work" / "worker-receipts" / (
+        f"{stage}-{input_sha[7:19]}-{prompt_sha[7:19]}.json"
+    )
+    if not path.exists():
+        sc.atomic_json(path, receipt)
+
+
+def normative_invoke_worker(
+    *,
+    root: Path,
+    out_dir: Path,
+    stage: str,
+    payload: Mapping[str, Any],
+    prompt: str,
+    worker_cache: Mapping[str, Any] | None = None,
+) -> Mapping[str, Any]:
+    """Invoke one read-only semantic worker with schema repair and stop-loss."""
+    started = time.perf_counter()
+    injected = bool(worker_cache and stage in worker_cache)
+    repair_attempted = False
+    raw: Mapping[str, Any] | None = None
+    findings: list[str] = []
+    try:
+        try:
+            raw = _ORIGINAL_INVOKE_WORKER(
+                root=root,
+                out_dir=out_dir,
+                stage=stage,
+                payload=payload,
+                prompt=prompt,
+                worker_cache=worker_cache,
+            )
+            findings = _worker_schema_findings(stage, raw)
+        except (ValueError, RuntimeError) as first_error:
+            raw = None
+            findings = [f"worker-call:{type(first_error).__name__}:{first_error}"]
+
+        if findings:
+            repair_attempted = True
+            first_fingerprint = sc.sha256_value({
+                "stage": stage,
+                "input_sha256": sc.sha256_value(payload),
+                "findings": findings,
+                "result": dict(raw) if isinstance(raw, Mapping) else None,
+            })
+            repair_prompt = (
+                prompt
+                + "\n\nSCHEMA REPAIR (one attempt only): the deterministic validator rejected the prior output with: "
+                + json.dumps(findings, ensure_ascii=False, sort_keys=True)
+                + ". Return a corrected JSON object only; preserve source semantics and do not invent runtime evidence."
+            )
+            repaired = _ORIGINAL_INVOKE_WORKER(
+                root=root,
+                out_dir=out_dir,
+                stage=f"{stage}-schema-repair",
+                payload={"original_stage": stage, "input": payload, "validator_findings": findings},
+                prompt=repair_prompt,
+                worker_cache=worker_cache,
+            )
+            second_findings = _worker_schema_findings(stage, repaired)
+            second_fingerprint = sc.sha256_value({
+                "stage": stage,
+                "input_sha256": sc.sha256_value(payload),
+                "findings": second_findings,
+                "result": dict(repaired),
+            })
+            if second_findings:
+                elapsed = int((time.perf_counter() - started) * 1000)
+                _write_worker_receipt(
+                    root=root,
+                    out_dir=out_dir,
+                    stage=stage,
+                    payload=payload,
+                    prompt=prompt,
+                    result=repaired,
+                    findings=second_findings,
+                    duration_ms=elapsed,
+                    repair_attempted=True,
+                    injected=injected,
+                    exit_status="schema-invalid",
+                )
+                if second_fingerprint == first_fingerprint:
+                    raise RuntimeError("repeated deterministic semantic worker failure; stop and repair VDD")
+                raise RuntimeError("semantic worker schema repair failed; stop and repair VDD")
+            raw = repaired
+            findings = []
+
+        elapsed = int((time.perf_counter() - started) * 1000)
+        _write_worker_receipt(
+            root=root,
+            out_dir=out_dir,
+            stage=stage,
+            payload=payload,
+            prompt=prompt,
+            result=raw,
+            findings=findings,
+            duration_ms=elapsed,
+            repair_attempted=repair_attempted,
+            injected=injected,
+            exit_status="ok",
+        )
+        if raw is None:
+            raise RuntimeError("semantic worker returned no result")
+        return raw
+    except Exception:
+        if raw is None:
+            elapsed = int((time.perf_counter() - started) * 1000)
+            _write_worker_receipt(
+                root=root,
+                out_dir=out_dir,
+                stage=stage,
+                payload=payload,
+                prompt=prompt,
+                result=None,
+                findings=findings or ["worker-call:failed"],
+                duration_ms=elapsed,
+                repair_attempted=repair_attempted,
+                injected=injected,
+                exit_status="failed",
+            )
+        raise
+
+
+def _preflight_contract(hint: Mapping[str, Any]) -> dict[str, Any]:
+    lane = hint.get("verification_lane")
+    owners = [str(item) for item in hint.get("production_owners", []) if isinstance(item, str) and item]
+    if lane == "unit":
+        default_complexity = "simple"
+    elif lane in {"integration", "matrix"}:
+        default_complexity = "complex"
+    else:
+        default_complexity = "architectural"
+    complexity = hint.get("complexity_class")
+    if complexity not in _COMPLEXITY_ORDER:
+        complexity = default_complexity
+    context_required = hint.get("context_lookup_required")
+    if not isinstance(context_required, bool):
+        context_required = bool(len(owners) > 1 or lane in {"integration", "matrix", "runtime"})
+    reason = hint.get("context_lookup_reason")
+    if not isinstance(reason, str) or not reason.strip():
+        reason = (
+            "cross-owner or non-unit verification requires implementation context"
+            if context_required
+            else "single-owner unit verification is locally attributable"
+        )
+    minimum = hint.get("minimum_red_scope")
+    if not isinstance(minimum, str) or not minimum.strip():
+        minimum = "one bound Acceptance group, its failure family, and all declared assertion ids"
+    upgrades = hint.get("upgrade_conditions")
+    if not isinstance(upgrades, list) or any(not isinstance(item, str) or not item for item in upgrades):
+        upgrades = [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory",
+        ]
+    return {
+        "complexity_class": complexity,
+        "verification_lane": lane,
+        "context_lookup_required": context_required,
+        "context_lookup_reason": reason.strip(),
+        "minimum_red_scope": minimum.strip(),
+        "upgrade_conditions": list(upgrades),
+    }
+
+
+def compile_acceptances_with_preflight(
+    *,
+    root: Path,
+    out_dir: Path,
+    obligations: Sequence[Mapping[str, Any]],
+    worker_cache: Mapping[str, Any] | None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    acceptances, failures, hints = _ORIGINAL_COMPILE_ACCEPTANCES(
+        root=root,
+        out_dir=out_dir,
+        obligations=obligations,
+        worker_cache=worker_cache,
+    )
+    normalized_hints: list[dict[str, Any]] = []
+    for raw in hints:
+        if not isinstance(raw, Mapping):
+            raise ValueError("slice hint must be object")
+        hint = dict(raw)
+        hint.update(_preflight_contract(hint))
+        normalized_hints.append(hint)
+
+    enriched_acceptances: list[dict[str, Any]] = []
+    for acceptance in acceptances:
+        target = set(acceptance.get("obligation_ids", []))
+        matches = [hint for hint in normalized_hints if set(hint.get("obligation_ids", [])) == target]
+        if len(matches) != 1:
+            raise ValueError(f"Acceptance {acceptance.get('acceptance_id')} preflight contract is ambiguous")
+        item = dict(acceptance)
+        item.update(_preflight_contract(matches[0]))
+        enriched_acceptances.append(item)
+    return enriched_acceptances, failures, normalized_hints
+
+
+def partition_slices_with_preflight(
+    obligations: Sequence[Mapping[str, Any]],
+    acceptances: Sequence[Mapping[str, Any]],
+    failures: Sequence[Mapping[str, Any]],
+    hints: Sequence[Mapping[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, Mapping[str, Any]]]:
+    slices, by_acceptance = _ORIGINAL_PARTITION_SLICES(obligations, acceptances, failures, hints)
+    acceptance_by_id = {str(item["acceptance_id"]): item for item in acceptances}
+    enriched: list[dict[str, Any]] = []
+    for raw in slices:
+        item = dict(raw)
+        contracts = [
+            _preflight_contract(acceptance_by_id[aid])
+            for aid in item.get("acceptance_ids", [])
+            if aid in acceptance_by_id
+        ]
+        if not contracts:
+            raise ValueError(f"slice {item.get('slice_id')} lacks preflight contracts")
+        complexity = max((c["complexity_class"] for c in contracts), key=lambda value: _COMPLEXITY_ORDER[value])
+        item.update({
+            "complexity_class": complexity,
+            "context_lookup_required": any(c["context_lookup_required"] for c in contracts),
+            "context_lookup_reason": " | ".join(sorted({c["context_lookup_reason"] for c in contracts})),
+            "minimum_red_scope": " | ".join(sorted({c["minimum_red_scope"] for c in contracts})),
+            "upgrade_conditions": sorted({condition for c in contracts for condition in c["upgrade_conditions"]}),
+        })
+        enriched.append(item)
+    return enriched, by_acceptance
+
+
+def validate_semantic_bundle_with_preflight(bundle: Mapping[str, Any]) -> tuple[bool, list[str]]:
+    valid, findings = _ORIGINAL_VALIDATE_SEMANTIC_BUNDLE(bundle)
+    findings = list(findings)
+    for label in ("acceptances", "slices"):
+        values = bundle.get(label)
+        if not isinstance(values, list):
+            continue
+        for index, item in enumerate(values):
+            if not isinstance(item, Mapping):
+                continue
+            missing = _PREFLIGHT_FIELDS - set(item)
+            if missing:
+                findings.append(f"{label}[{index}]:preflight-fields:" + ",".join(sorted(missing)))
+                continue
+            if item.get("complexity_class") not in _COMPLEXITY_ORDER:
+                findings.append(f"{label}[{index}]:complexity-class")
+            if item.get("verification_lane") not in {"unit", "integration", "matrix", "runtime"}:
+                findings.append(f"{label}[{index}]:verification-lane")
+            if not isinstance(item.get("context_lookup_required"), bool):
+                findings.append(f"{label}[{index}]:context-lookup-required")
+            for field in ("context_lookup_reason", "minimum_red_scope"):
+                if not isinstance(item.get(field), str) or not item[field].strip():
+                    findings.append(f"{label}[{index}]:{field}")
+            upgrades = item.get("upgrade_conditions")
+            if not isinstance(upgrades, list) or not upgrades or any(not isinstance(value, str) or not value for value in upgrades):
+                findings.append(f"{label}[{index}]:upgrade-conditions")
+    return bool(valid and not findings), findings
+
+
+# Patch the canonical module at import time. Its compile_plan function resolves these
+# names from the module globals, so all stable calls pass through the normative gate.
+sc.invoke_worker = normative_invoke_worker
+sc.compile_acceptances = compile_acceptances_with_preflight
+sc.partition_slices = partition_slices_with_preflight
+sc.validate_semantic_bundle = validate_semantic_bundle_with_preflight
 
 
 def atomic_recall_alignment(
@@ -33,11 +391,8 @@ def atomic_recall_alignment(
     worker_cache: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
     """Independently compare frozen source claims with the V1 obligation set."""
-    payload = {
-        "source_index": source_index,
-        "obligations": list(obligations),
-    }
-    raw = invoke_worker(
+    payload = {"source_index": source_index, "obligations": list(obligations)}
+    raw = sc.invoke_worker(
         root=root,
         out_dir=out_dir,
         stage="v4-atomic-recall",
@@ -76,14 +431,14 @@ def atomic_recall_alignment(
 
     normalized_gaps: list[dict[str, str]] = []
     seen_gap_keys: set[tuple[str, str, str]] = set()
-    for index, item in enumerate(raw["source_gap_claims"]):
-        if not isinstance(item, Mapping):
+    for index, raw_gap in enumerate(raw["source_gap_claims"]):
+        if not isinstance(raw_gap, Mapping):
             findings.append(f"atomic-recall:gap[{index}]:not-object")
             continue
-        source_ref = item.get("source_ref")
-        subject = item.get("subject")
-        behavior = item.get("behavior")
-        reason = item.get("reason")
+        source_ref = raw_gap.get("source_ref")
+        subject = raw_gap.get("subject")
+        behavior = raw_gap.get("behavior")
+        reason = raw_gap.get("reason")
         if not all(isinstance(value, str) and value.strip() for value in (source_ref, subject, behavior, reason)):
             findings.append(f"atomic-recall:gap[{index}]:shape")
             continue
@@ -132,6 +487,31 @@ def atomic_recall_alignment(
     }
 
 
+def _completed_resume(out_dir: Path) -> dict[str, Any] | None:
+    state_path = out_dir / "compiler-state.v1.json"
+    bundle_path = out_dir / "semantic-plan-bundle.v1.json"
+    if not state_path.is_file() or not bundle_path.is_file():
+        return None
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    if not isinstance(state, Mapping) or state.get("state") != "plan-ready":
+        return None
+    bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
+    if not isinstance(bundle, Mapping):
+        return None
+    valid, findings = validate_semantic_bundle_with_preflight(bundle)
+    if not valid:
+        raise ValueError("resume found invalid completed bundle: " + ",".join(findings))
+    return {
+        "status": "plan-ready",
+        "plan_id": state.get("plan_id"),
+        "semantic_plan_sha256": state.get("semantic_plan_sha256"),
+        "slices": [item.get("slice_id") for item in bundle.get("slices", []) if isinstance(item, Mapping)],
+        "resumed": True,
+        "resume_from": "first-failed-stage",
+        "resume_strategy": "validated-completed-state",
+    }
+
+
 def compile_plan(
     *,
     requirements: Path,
@@ -140,10 +520,20 @@ def compile_plan(
     profile: str = "standard",
     worker_cache: Mapping[str, Any] | None = None,
     recommendation_only: bool = False,
+    resume_from: str | None = None,
 ) -> dict[str, Any]:
-    """Run source/obligation preflight plus atomic recall before canonical publication."""
+    """Run fail-closed semantic compilation with optional cache-backed resume."""
+    if resume_from not in {None, "first-failed-stage"}:
+        raise ValueError("unsupported VDD resume mode")
+    if recommendation_only and resume_from is not None:
+        raise ValueError("recommendation-only cannot be combined with resume")
+    if resume_from == "first-failed-stage":
+        completed = _completed_resume(out_dir)
+        if completed is not None:
+            return completed
+
     if recommendation_only:
-        return _compile_plan(
+        return _ORIGINAL_COMPILE_PLAN(
             requirements=requirements,
             out_dir=out_dir,
             companions=companions,
@@ -152,19 +542,19 @@ def compile_plan(
             recommendation_only=True,
         )
 
-    root = repository_root(requirements.parent)
-    source_index = build_source_index(root, requirements, companions)
-    preflight = source_preflight(root, source_index)
+    root = sc.repository_root(requirements.parent)
+    source_index = sc.build_source_index(root, requirements, companions)
+    preflight = sc.source_preflight(root, source_index)
     if not preflight["valid"]:
         return {"status": "repair-vdd", "stage": "V0A", "source_index": source_index, "preflight": preflight}
 
-    obligations = compile_obligations(root=root, out_dir=out_dir, source_index=source_index, worker_cache=worker_cache)
-    guard = guard_obligations(source_index, obligations)
+    obligations = sc.compile_obligations(root=root, out_dir=out_dir, source_index=source_index, worker_cache=worker_cache)
+    guard = sc.guard_obligations(source_index, obligations)
     if not guard["valid"]:
         return {"status": "repair-vdd", "stage": "V2", "findings": guard["findings"]}
 
-    acceptances, failures, _hints = compile_acceptances(root=root, out_dir=out_dir, obligations=obligations, worker_cache=worker_cache)
-    plan_preflight = semantic_preflight(obligations, acceptances, failures)
+    acceptances, failures, _hints = sc.compile_acceptances(root=root, out_dir=out_dir, obligations=obligations, worker_cache=worker_cache)
+    plan_preflight = sc.semantic_preflight(obligations, acceptances, failures)
     if not plan_preflight["valid"]:
         return {"status": "repair-vdd", "stage": "V3A", "findings": plan_preflight["findings"]}
 
@@ -175,7 +565,7 @@ def compile_plan(
         obligations=obligations,
         worker_cache=worker_cache,
     )
-    atomic_json(out_dir / "atomic-recall-alignment.v1.json", recall)
+    sc.atomic_json(out_dir / "atomic-recall-alignment.v1.json", recall)
     if not recall["valid"]:
         return {
             "status": "repair-vdd",
@@ -186,7 +576,7 @@ def compile_plan(
             "source_gap_claims": recall["source_gap_claims"],
         }
 
-    result = _compile_plan(
+    result = _ORIGINAL_COMPILE_PLAN(
         requirements=requirements,
         out_dir=out_dir,
         companions=companions,
@@ -196,4 +586,8 @@ def compile_plan(
     )
     result = dict(result)
     result["atomic_quality_metrics"] = recall["metrics"]
+    if resume_from is not None:
+        result["resumed"] = True
+        result["resume_from"] = resume_from
+        result["resume_strategy"] = "persistent-worker-cache-replay"
     return result
