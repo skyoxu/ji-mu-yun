@@ -1,0 +1,14 @@
+{
+  "schema": "quick-dev.change-impact-matrix.v1",
+  "rules": [
+    {"change_kind":"requirement_or_acceptance","invalidate":["coverage","red","green","refactor","terminal"]},
+    {"change_kind":"selector_fixture_target_case_source","invalidate":["red","green","refactor","terminal"]},
+    {"change_kind":"production_owner","invalidate":["green","refactor","terminal"]},
+    {"change_kind":"failure_semantics","invalidate":["red","green","refactor","terminal"]},
+    {"change_kind":"descriptor_compiler","invalidate":["descriptor","red","green","refactor","terminal"]},
+    {"change_kind":"validator_or_judge","invalidate":["red","green","refactor","terminal"]},
+    {"change_kind":"predecessor","invalidate":["successors","terminal"]},
+    {"change_kind":"ordinary_documentation","invalidate":[]},
+    {"change_kind":"development_governance","invalidate":[]}
+  ]
+}

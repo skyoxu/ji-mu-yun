@@ -1,14 +1,14 @@
 """Deterministic Q7/Q8 coverage predicates for current Quick Dev plans."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 import sys
 from typing import Any, Mapping, Sequence
 
 TOOLS = Path(__file__).resolve().parent
 if str(TOOLS) not in sys.path: sys.path.insert(0, str(TOOLS))
-from runtime_evidence import current_snapshot, create_json, expected_tuple_keys, load_json, resolve_file, sha256_bytes, sha256_value, validate_closure
+from closure_predicate import validate_runtime_closure
+from runtime_evidence import current_snapshot, create_json, expected_tuple_keys, load_json, resolve_file, sha256_bytes, sha256_value
 
 
 def _semantic_index(bundle: Mapping[str, Any], slice_id: str) -> tuple[Mapping[str, Any], dict[str, set[str]]]:
@@ -33,15 +33,16 @@ def _reread_edge(workspace: Path, run_root: Path, ref: Mapping[str, str], *, sli
     if sha256_value(edge) != expected_sha: raise ValueError("runtime edge hash stale")
     if edge.get("slice_id") != slice_id or edge.get("stage") != stage or edge.get("selector_identity") != selector_identity: raise ValueError("runtime edge identity stale")
     observation = load_json(resolve_file(run_root, edge["observation_ref"])); receipt = load_json(resolve_file(run_root, edge["receipt_ref"]))
-    if sha256_value(observation) != edge.get("observation_sha256") or sha256_value(receipt) != edge.get("receipt_sha256") or observation.get("receipt_sha256") != edge.get("receipt_sha256"): raise ValueError("edge predecessor hash stale")
-    descriptor = None
+    if sha256_value(observation) != edge.get("observation_sha256"): raise ValueError("observation hash stale")
+    if sha256_value(receipt) != edge.get("receipt_sha256") or observation.get("receipt_sha256") != edge.get("receipt_sha256"): raise ValueError("receipt hash stale")
     descriptor_path = run_root / "descriptors" / f"{stage}.json"
-    if descriptor_path.is_file():
-        descriptor = load_json(descriptor_path)
-        if sha256_value(descriptor) != edge.get("descriptor_sha256"): raise ValueError("descriptor hash stale")
+    if not descriptor_path.is_file(): raise ValueError("frozen descriptor missing")
+    descriptor = load_json(descriptor_path)
+    if sha256_value(descriptor) != edge.get("descriptor_sha256"): raise ValueError("descriptor hash stale")
     target = resolve_file(workspace, edge["target_ref"]); fixture = resolve_file(workspace, edge["fixture_ref"])
-    if sha256_bytes(target.read_bytes()) != edge.get("target_sha256") or sha256_bytes(fixture.read_bytes()) != edge.get("fixture_sha256"): raise ValueError("target/fixture hash stale")
-    if edge.get("predicate_result") is not True: raise ValueError("predicate-false runtime edge cannot cover")
+    if sha256_bytes(target.read_bytes()) != edge.get("target_sha256"): raise ValueError("target hash stale")
+    if sha256_bytes(fixture.read_bytes()) != edge.get("fixture_sha256"): raise ValueError("fixture hash stale")
+    if edge.get("predicate_result") is not True or edge.get("observed") is not True: raise ValueError("non-observed/predicate-false edge cannot cover")
     return edge
 
 
@@ -56,7 +57,7 @@ def validate_slice_ready(*, workspace: Path, semantic_plan: Path, run_root: Path
         current_selector = result.get("selector_identity")
         if not isinstance(current_selector, str): raise ValueError("selector identity missing")
         if selector is None: selector = current_selector
-        elif selector != current_selector: raise ValueError("selector drift")
+        elif selector != current_selector: raise ValueError("RED/GREEN/REFACTOR selector drift")
         if stage in {"green", "refactor"}: final_candidate = result.get("candidate_hash")
         refs = result.get("runtime_edges")
         if not isinstance(refs, list) or not refs: raise ValueError("runtime edges missing")
@@ -70,21 +71,19 @@ def validate_slice_ready(*, workspace: Path, semantic_plan: Path, run_root: Path
         for aid, expected in expected_assertions.items():
             if set(observed[aid]) != expected: raise ValueError(f"{stage} assertion exact cover failed for {aid}")
         coverage[stage] = {aid: [observed[aid][assertion] for assertion in sorted(observed[aid])] for aid in sorted(observed)}
-    result = {
-        "schema": "quick-dev.slice-ready-result.v2", "predicate": "slice-ready", "status": "pass", "slice_id": slice_id,
-        "run_id": run_root.name, "plan_sha256": sha256_bytes(semantic_plan.read_bytes()), "candidate_hash": final_candidate,
-        "selector_identity": selector, "current_snapshot_sha256": snapshot["sha256"], "assertion_coverage": coverage, "authorizes": [],
-    }
+    result = {"schema":"quick-dev.slice-ready-result.v2","predicate":"slice-ready","status":"pass","slice_id":slice_id,"run_id":run_root.name,"plan_sha256":sha256_bytes(semantic_plan.read_bytes()),"candidate_hash":final_candidate,"selector_identity":selector,"current_snapshot_sha256":snapshot["sha256"],"assertion_coverage":coverage,"authorizes":[]}
     create_json(out, result); return result
 
 
 def _canonical_edge(ready: Mapping[str, Any], stage: str, aid: str) -> Mapping[str, str]:
-    refs = ready.get("assertion_coverage", {}).get(stage, {}).get(aid, []) if isinstance(ready.get("assertion_coverage"), Mapping) else []
+    coverage = ready.get("assertion_coverage")
+    refs = coverage.get(stage, {}).get(aid, []) if isinstance(coverage, Mapping) else []
     if not isinstance(refs, list) or not refs or not isinstance(refs[0], Mapping): raise ValueError("canonical edge missing")
     return refs[0]
 
 
-def publish_implementation_complete(*, workspace: Path, semantic_plan: Path, predecessors: Sequence[Mapping[str, str]], snapshot_roots: Sequence[Mapping[str, str]], source_commit: str, out: Path, base_commit: str | None = None) -> dict[str, Any]:
+def publish_implementation_complete(*, workspace: Path, semantic_plan: Path, predecessors: Sequence[Mapping[str, str]], snapshot_roots: Sequence[Mapping[str, str]], source_commit: str, out: Path, base_commit: str | None = None, detached_promotion_passed: bool = False, profile: str = "standard") -> dict[str, Any]:
+    if profile == "self-hosted" and not detached_promotion_passed: raise ValueError("self-hosted terminal requires detached promotion evidence")
     bundle = load_json(semantic_plan); expected_keys = expected_tuple_keys(bundle)
     before = current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit)
     cover = bundle.get("final_plan_coverage"); acceptance_by_slice: dict[str, set[str]] = {}
@@ -98,26 +97,28 @@ def publish_implementation_complete(*, workspace: Path, semantic_plan: Path, pre
         seen.add(sid); run_root = (workspace / run_raw).resolve(); ready = load_json(resolve_file(workspace, ready_raw))
         if sha256_value(ready) != predecessor.get("result_sha256") or ready.get("slice_id") != sid or ready.get("status") != "pass": raise ValueError("slice-ready predecessor stale")
         if ready.get("current_snapshot_sha256") != before["sha256"]: raise ValueError("slice-ready snapshot stale")
-        selector = ready.get("selector_identity"); final_candidate = ready.get("candidate_hash")
+        tdd_selector = ready.get("selector_identity"); final_candidate = ready.get("candidate_hash")
         terminal = load_json(run_root / "canonical-evidence" / "terminal" / "stage-result.v2.json")
-        if terminal.get("predicate_result") is not True or terminal.get("verification_outcome") != "pass" or terminal.get("selector_identity") != selector or terminal.get("candidate_hash") != final_candidate: raise ValueError("terminal stage not current same-selector pass")
+        if terminal.get("predicate_result") is not True or terminal.get("verification_outcome") != "pass" or terminal.get("candidate_hash") != final_candidate: raise ValueError("terminal stage not current process pass")
+        terminal_selector = terminal.get("selector_identity")
+        if not isinstance(terminal_selector, str) or not terminal_selector: raise ValueError("terminal selector identity missing")
         terminal_refs = terminal.get("runtime_edges"); terminal_index: dict[str, list[Mapping[str, str]]] = {}
         if not isinstance(terminal_refs, list) or not terminal_refs: raise ValueError("terminal runtime edges missing")
         for ref in terminal_refs:
-            edge = _reread_edge(workspace, run_root, ref, slice_id=sid, stage="terminal", selector_identity=selector)
+            edge = _reread_edge(workspace, run_root, ref, slice_id=sid, stage="terminal", selector_identity=terminal_selector)
             terminal_index.setdefault(edge["acceptance_id"], []).append(ref)
         for aid in sorted(acceptance_by_slice.get(sid, set())):
             for stage in ("red", "green", "refactor"):
-                ref = _canonical_edge(ready, stage, aid); _reread_edge(workspace, run_root, ref, slice_id=sid, stage=stage, selector_identity=selector)
-                tuples.append({"tuple_key": f"{sid}|{aid}|{stage}", "slice_id": sid, "acceptance_id": aid, "stage": stage, "runtime_edge_ref": ref["path"], "runtime_edge_sha256": ref["sha256"], "selector_identity": selector, "current_snapshot_sha256": before["sha256"]})
+                ref = _canonical_edge(ready, stage, aid); _reread_edge(workspace, run_root, ref, slice_id=sid, stage=stage, selector_identity=tdd_selector)
+                tuples.append({"tuple_key":f"{sid}|{aid}|{stage}","slice_id":sid,"acceptance_id":aid,"stage":stage,"runtime_edge_ref":ref["path"],"runtime_edge_sha256":ref["sha256"],"selector_identity":tdd_selector,"current_snapshot_sha256":before["sha256"]})
             refs = terminal_index.get(aid, [])
             if not refs: raise ValueError(f"terminal Acceptance coverage missing: {aid}")
             ref = sorted(refs, key=lambda x: x["path"])[0]
-            tuples.append({"tuple_key": f"{sid}|{aid}|terminal", "slice_id": sid, "acceptance_id": aid, "stage": "terminal", "runtime_edge_ref": ref["path"], "runtime_edge_sha256": ref["sha256"], "selector_identity": selector, "current_snapshot_sha256": before["sha256"]})
+            tuples.append({"tuple_key":f"{sid}|{aid}|terminal","slice_id":sid,"acceptance_id":aid,"stage":"terminal","runtime_edge_ref":ref["path"],"runtime_edge_sha256":ref["sha256"],"selector_identity":terminal_selector,"current_snapshot_sha256":before["sha256"]})
     if seen != set(acceptance_by_slice): raise ValueError("terminal predecessor set does not match slices")
-    valid, findings = validate_closure(tuples, expected_keys, before["sha256"])
+    valid, findings = validate_runtime_closure(tuples, expected_keys, before["sha256"])
     if not valid: raise ValueError("runtime closure invalid: " + ",".join(findings))
     after = current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit)
     if after["sha256"] != before["sha256"]: raise ValueError("current snapshot changed during Q8")
-    result = {"schema": "quick-dev.implementation-complete-result.v2", "predicate": "implementation-complete", "status": "pass", "plan_sha256": sha256_bytes(semantic_plan.read_bytes()), "current_snapshot_sha256": after["sha256"], "predecessors": [dict(x) for x in predecessors], "runtime_closure_tuples": tuples, "runtime_closure_sha256": sha256_value(tuples), "authorizes": []}
+    result = {"schema":"quick-dev.implementation-complete-result.v2","predicate":"implementation-complete","status":"pass","profile":profile,"plan_sha256":sha256_bytes(semantic_plan.read_bytes()),"current_snapshot_sha256":after["sha256"],"predecessors":[dict(x) for x in predecessors],"runtime_closure_tuples":tuples,"runtime_closure_sha256":sha256_value(tuples),"authorizes":[]}
     create_json(out, result); return result

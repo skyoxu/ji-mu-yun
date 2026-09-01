@@ -1,0 +1,17 @@
+{
+  "schema": "quick-dev.profile-policy.v1",
+  "profiles": {
+    "fast-ship": {"targeted_only": true, "regression_required": false, "detached_promotion_required": false},
+    "standard": {"targeted_only": false, "regression_required": true, "detached_promotion_required": false},
+    "self-hosted": {"targeted_only": false, "regression_required": true, "detached_promotion_required": true}
+  },
+  "truth_floor": {
+    "real_execution": true,
+    "nonzero_test_and_case_counts": true,
+    "selector_binding": true,
+    "exact_cover": true,
+    "current_snapshot": true,
+    "deterministic_failure_classification": true,
+    "terminal_validation": true
+  }
+}
