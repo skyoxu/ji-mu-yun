@@ -20,7 +20,8 @@ def _context(bundle:Mapping[str,Any],slice_id:str)->Mapping[str,Any]|None:
     return matches[0] if matches else None
 
 
-def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,profile:str,primary_argv:Sequence[str],timeout_seconds:int,out:Path)->dict[str,Any]:
+def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,profile:str,primary_argv:Sequence[str],primary_receipt:Mapping[str,Any],timeout_seconds:int,out:Path)->dict[str,Any]:
+    """Run declared Q6 validations after the primary REFACTOR selector passed."""
     policy=profile_contract(profile)
     required=policy.get("regression_required") is True
     context=_context(bundle,slice_id)
@@ -36,7 +37,11 @@ def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,pr
     records=[]
     for argv in declared:
         if argv==primary:
-            records.append({"argv":argv,"status":"covered-by-primary-refactor-selector","exit_code":0,"timed_out":False,"test_executions":1,"cases":"primary-stage-evidence","stdout_sha256":None,"stderr_sha256":None})
+            executions=primary_receipt.get("test_executions")
+            cases=primary_receipt.get("cases")
+            if primary_receipt.get("timed_out") is True or primary_receipt.get("exit_code")!=0 or not isinstance(executions,int) or executions<1 or not isinstance(cases,int) or cases<1:
+                raise ValueError("Q6 primary refactor selector is not admissible regression evidence")
+            records.append({"argv":argv,"status":"covered-by-primary-refactor-selector","exit_code":0,"timed_out":False,"test_executions":executions,"cases":cases,"stdout_sha256":primary_receipt.get("stdout_sha256"),"stderr_sha256":primary_receipt.get("stderr_sha256")})
             continue
         try:
             proc=subprocess.run(argv,cwd=workspace,shell=False,check=False,capture_output=True,timeout=timeout_seconds)
