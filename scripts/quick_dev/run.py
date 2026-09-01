@@ -117,10 +117,75 @@ def _public_q1_planned_contract_guard() -> int | None:
     return None
 
 
+def _public_red_production_entry_guard() -> int | None:
+    """Reject fabricated RED selectors before any public RED process launch."""
+    action = _peek_value("--action") or "preflight"
+    if action not in {"run-red", "execute-stage"}:
+        return None
+    plan_raw = _peek_value("--plan")
+    slice_id = _peek_value("--slice")
+    if plan_raw is None or slice_id is None:
+        return None
+    plan = Path(plan_raw).resolve()
+    try:
+        plan.relative_to(ROOT.resolve())
+    except ValueError:
+        return None
+    semantic = plan / "semantic-plan-bundle.v1.json"
+    if not semantic.is_file() or semantic.is_symlink():
+        return None
+
+    descriptor_path: Path | None = None
+    if action == "run-red":
+        run_raw = _peek_value("--run-dir")
+        if run_raw is None:
+            return None
+        run_dir = Path(run_raw).resolve()
+        try:
+            run_dir.relative_to(ROOT.resolve())
+        except ValueError:
+            return None
+        descriptor_path = run_dir / "descriptors" / "red.json"
+    else:
+        descriptor_raw = _peek_value("--descriptor")
+        if descriptor_raw is None:
+            return None
+        descriptor_path = Path(descriptor_raw).resolve()
+        try:
+            descriptor_path.relative_to(ROOT.resolve())
+        except ValueError:
+            return None
+
+    if not descriptor_path.is_file() or descriptor_path.is_symlink():
+        return None  # Stable runner reports missing descriptor with its canonical diagnostic.
+    try:
+        bundle = json.loads(semantic.read_text(encoding="utf-8"))
+        descriptor = json.loads(descriptor_path.read_text(encoding="utf-8"))
+        if not isinstance(bundle, dict) or not isinstance(descriptor, dict):
+            raise ValueError("RED guard inputs must be JSON objects")
+        if descriptor.get("stage") != "red":
+            return None
+        from red_production_entry_guard import validate_red_production_entry
+
+        validate_red_production_entry(
+            workspace=ROOT,
+            bundle=bundle,
+            slice_id=slice_id,
+            descriptor=descriptor,
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+        print(json.dumps({"status": "blocked", "recommended_action": "author-red", "reason": str(exc)}, sort_keys=True))
+        return 1
+    return None
+
+
 guard_exit = _public_repeat_guard()
 if guard_exit is not None:
     raise SystemExit(guard_exit)
 q1_exit = _public_q1_planned_contract_guard()
 if q1_exit is not None:
     raise SystemExit(q1_exit)
+red_guard_exit = _public_red_production_entry_guard()
+if red_guard_exit is not None:
+    raise SystemExit(red_guard_exit)
 runpy.run_path(str(TARGET), run_name="__main__")
