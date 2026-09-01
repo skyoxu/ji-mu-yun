@@ -15,28 +15,7 @@ jobs:
         run: git config --system core.longpaths true
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: |
-            .agents/skills/vdd-execution-plan
-            .agents/skills/quick-dev-tdd-adapter
-            .agents/skills/run-phase-bootstrap-review
-            .agents/skills/run-refactor-implementation-acceptance
-            docs/adr
-            execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening
-            execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan
-            execution-plans/2026-07-12-llm-review-evidence-gate-hardening
-            execution-plans/2026-07-15-repository-maintenance-tdd-adapter
-            execution-plans/2026-08-17-acceptance-coordinator-efficiency
-            execution-plans/2026-08-17-quick-dev-tdd-stage-recovery
-            execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery
-            scripts/sc
-            scripts/vdd
-            scripts/quick_dev
-            scripts/python
-            scripts/toolchain
-            AGENTS.md
-            agentbuild.txt
-          sparse-checkout-cone-mode: false
-          fetch-depth: 2
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
