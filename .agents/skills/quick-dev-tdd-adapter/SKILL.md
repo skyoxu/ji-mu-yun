@@ -70,7 +70,7 @@ A successful lifecycle stage requires real observed execution and nonzero test/c
 
 ## Profiles
 
-Execution profiles are `fast-ship`, `standard`, and `self-hosted`. Profiles may change scope/cost only; none may bypass real execution, selector identity, exact cover, failure classification, current snapshot or terminal truth. `self-hosted` additionally requires the detached promotion/judge contract when promotion is requested. This execution profile is distinct from any older VDD plan-shape profile such as `resumable`.
+Execution profiles are `fast-ship`, `standard`, and `self-hosted`. Profiles may change scope/cost only; none may bypass real execution, selector identity, exact cover, failure classification, current snapshot or terminal truth. `self-hosted` additionally requires the detached promotion/judge contract when promotion is requested. Its detached bundle must contain external read-only `positive`, `negative`, and `mutation` fixture kinds and must exactly cover every current failure family; missing/unknown family coverage, candidate-local judge/oracle bytes, mutable artifacts, or current evidence-writer imports block promotion. This execution profile is distinct from any older VDD plan-shape profile such as `resumable`.
 
 ## Implementation Backend Boundary
 
