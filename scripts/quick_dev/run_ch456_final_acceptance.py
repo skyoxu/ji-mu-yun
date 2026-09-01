@@ -3,15 +3,15 @@
 
 This is a convenience orchestrator for an environment that actually has a live
 LLM backend (the user's Windows/Codex workstation is the primary intended host).
-It does not create `acceptance-passed` and has no release/merge authority.  It
+It does not create `acceptance-passed` and has no release/merge authority. It
 only reproduces the same deterministic + live evidence denominator used by the
 Chapter 4/5/6 capability workflow and then invokes the strict final completion
 predicate.
 
-Each invocation owns a fresh evidence directory. After all evidence producers
-run, a candidate-bound SHA-256 manifest is frozen and the final predicate must
-consume that exact set. Old local evidence can therefore never be silently
-reused by a later candidate.
+Each invocation refreshes only this runner's declared evidence files under
+`logs/`, then freezes a candidate-bound SHA-256 manifest. The final predicate
+must consume that exact set, so stale evidence cannot be silently reused while
+unrelated repository files are never recursively deleted.
 """
 from __future__ import annotations
 
@@ -19,7 +19,6 @@ import argparse
 import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 from typing import Any, Sequence
@@ -51,6 +50,15 @@ def _python(*parts: str) -> list[str]:
     return [sys.executable, *parts]
 
 
+def _refresh_owned_files(paths: dict[str, Path]) -> None:
+    for path in paths.values():
+        if not path.exists():
+            continue
+        if not path.is_file():
+            raise SystemExit(f"refusing to replace non-file evidence path: {path}")
+        path.unlink()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", default="codex-cli", choices=("codex-cli", "openai-api"))
@@ -58,13 +66,14 @@ def main() -> int:
     args = parser.parse_args()
 
     evidence_dir = (ROOT / args.evidence_dir).resolve() if not args.evidence_dir.is_absolute() else args.evidence_dir.resolve()
+    logs_root = (ROOT / "logs").resolve()
     try:
-        evidence_dir.relative_to(ROOT.resolve())
+        relative = evidence_dir.relative_to(logs_root)
     except ValueError as exc:
-        raise SystemExit("--evidence-dir must remain inside the repository") from exc
-    if evidence_dir.exists():
-        shutil.rmtree(evidence_dir)
-    evidence_dir.mkdir(parents=True, exist_ok=False)
+        raise SystemExit("--evidence-dir must remain under repository logs/") from exc
+    if relative == Path("."):
+        raise SystemExit("--evidence-dir must be a child directory under logs/")
+    evidence_dir.mkdir(parents=True, exist_ok=True)
 
     env = dict(os.environ)
     env["SC_LLM_BACKEND"] = args.backend
@@ -82,7 +91,9 @@ def main() -> int:
         "legacy": evidence_dir / "ch456-8-25-replay.json",
         "manifest": evidence_dir / "ch456-final-evidence-manifest.json",
         "final": evidence_dir / "ch456-final-completion.json",
+        "summary": evidence_dir / "ch456-local-final-acceptance-run.json",
     }
+    _refresh_owned_files(paths)
 
     steps: list[tuple[str, list[str]]] = [
         ("architecture-reconcile", _python("scripts/vdd/evaluate_architecture_reconcile.py", "--out", str(paths["architecture"]))),
@@ -165,9 +176,8 @@ def main() -> int:
         "final_evidence_ref": paths["final"].relative_to(ROOT).as_posix(),
         "authorizes": [],
     }
-    summary_path = evidence_dir / "ch456-local-final-acceptance-run.json"
-    summary_path.write_text(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"status": summary["status"], "failed_steps": failed_steps, "summary": summary_path.relative_to(ROOT).as_posix()}, sort_keys=True))
+    paths["summary"].write_text(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps({"status": summary["status"], "failed_steps": failed_steps, "summary": paths["summary"].relative_to(ROOT).as_posix()}, sort_keys=True))
     return 0 if not failed_steps else 1
 
 
