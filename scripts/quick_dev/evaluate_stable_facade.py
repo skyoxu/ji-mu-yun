@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""Exercise every canonical Quick Dev action through the public stable facade.
+"""Exercise every public Quick Dev action through the stable facade.
 
-This evaluator invokes scripts/quick_dev/run.py as an external process. It uses
-an independent expected action table and verifies that each public action reaches
-its production route rather than being parser-only or an internal-only helper.
+This evaluator invokes scripts/quick_dev/run.py as an external process and
+keeps an independent table of the parser-visible public actions.  It verifies
+that each action reaches its production dispatch branch (or its canonical
+argument guard) rather than being parser-only.  Bounded worker mutation
+semantics are proved separately by the worker-orchestration tests; this metric
+owns public facade route coverage only.
 """
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -19,11 +21,19 @@ ROOT = Path(__file__).resolve().parents[2]
 ENTRY = ROOT / "scripts" / "quick_dev" / "run.py"
 EXPECTED_ACTIONS = (
     "preflight",
+    "run-preflight",
     "recommendation",
+    "author-red",
+    "run-red",
+    "implement",
+    "run-green",
+    "run-refactor",
     "execute-stage",
     "implementation-handoff",
     "implementation-finish",
     "slice-ready",
+    "validate-slice",
+    "run-terminal",
     "implementation-complete",
     "recover",
 )
@@ -92,6 +102,10 @@ def _invoke(plan: Path, slice_id: str, action: str) -> tuple[int, dict]:
     return proc.returncode, payload
 
 
+def _blocked(reason: str):
+    return lambda code, payload: code == 1 and reason in str(payload.get("reason", ""))
+
+
 def evaluate() -> dict:
     work_parent = ROOT / ".tmp-ch456-facade"
     work_parent.mkdir(exist_ok=True)
@@ -102,19 +116,33 @@ def evaluate() -> dict:
             plan, slice_id = _fixture(Path(raw))
             expectations = {
                 "preflight": lambda code, p: code == 0 and p.get("status") in {"preflight-passed", "environment-blocked"},
+                "run-preflight": lambda code, p: code == 0 and p.get("status") in {"preflight-passed", "environment-blocked"},
                 "recommendation": lambda code, p: code == 0 and p.get("reason_code") == "current-snapshot-input-missing",
-                "execute-stage": lambda code, p: code == 1 and "execute-stage requires --run-dir and --descriptor" in str(p.get("reason", "")),
-                "implementation-handoff": lambda code, p: code == 1 and "implementation-handoff requires --run-dir --snapshot-roots --source-commit" in str(p.get("reason", "")),
-                "implementation-finish": lambda code, p: code == 1 and "implementation-finish requires --run-dir --before-state --snapshot-roots --source-commit" in str(p.get("reason", "")),
-                "slice-ready": lambda code, p: code == 1 and "slice-ready requires --run-dir --snapshot-roots --source-commit --out" in str(p.get("reason", "")),
-                "implementation-complete": lambda code, p: code == 1 and "implementation-complete requires --snapshot-roots --predecessors --source-commit --out" in str(p.get("reason", "")),
-                "recover": lambda code, p: code == 1 and "recover requires --run-dir --recovery-input --snapshot-roots --source-commit" in str(p.get("reason", "")),
+                "author-red": _blocked("author-red requires --run-dir"),
+                "run-red": _blocked("run-red requires --run-dir"),
+                "implement": _blocked("implement requires --run-dir --snapshot-roots --source-commit"),
+                "run-green": _blocked("run-green requires --run-dir"),
+                "run-refactor": _blocked("run-refactor requires --run-dir"),
+                "execute-stage": _blocked("execute-stage requires --run-dir and --descriptor"),
+                "implementation-handoff": _blocked("implementation-handoff requires --run-dir --snapshot-roots --source-commit"),
+                "implementation-finish": _blocked("implementation-finish requires --run-dir --before-state --snapshot-roots --source-commit"),
+                "slice-ready": _blocked("validate-slice requires --run-dir --snapshot-roots --source-commit --out"),
+                "validate-slice": _blocked("validate-slice requires --run-dir --snapshot-roots --source-commit --out"),
+                "run-terminal": _blocked("run-terminal requires --run-dir"),
+                "implementation-complete": _blocked("implementation-complete requires --snapshot-roots --predecessors --source-commit --out"),
+                "recover": _blocked("recover requires --run-dir --recovery-input --snapshot-roots --source-commit"),
             }
             for action in EXPECTED_ACTIONS:
                 code, payload = _invoke(plan, slice_id, action)
                 ok = bool(expectations[action](code, payload))
                 passed += int(ok)
-                rows.append({"action": action, "route_proven": ok, "exit_code": code, "status": payload.get("status"), "reason": payload.get("reason") or payload.get("reason_code")})
+                rows.append({
+                    "action": action,
+                    "route_proven": ok,
+                    "exit_code": code,
+                    "status": payload.get("status"),
+                    "reason": payload.get("reason") or payload.get("reason_code"),
+                })
     finally:
         try:
             if work_parent.exists() and not any(work_parent.iterdir()):
@@ -123,13 +151,14 @@ def evaluate() -> dict:
             pass
     coverage = passed / len(EXPECTED_ACTIONS)
     return {
-        "schema": "quick-dev.stable-facade-route-metric.v1",
+        "schema": "quick-dev.stable-facade-route-metric.v2",
         "expected_actions": list(EXPECTED_ACTIONS),
         "total_actions": len(EXPECTED_ACTIONS),
         "proven_routes": passed,
         "route_coverage": round(coverage, 6),
         "required_route_coverage": REQUIRED_ROUTE_COVERAGE,
         "threshold_passed": coverage >= REQUIRED_ROUTE_COVERAGE,
+        "worker_route_semantics_proven_by": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_worker_orchestration.py",
         "routes": rows,
         "authorizes": [],
     }
