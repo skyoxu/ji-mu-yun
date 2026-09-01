@@ -2,7 +2,7 @@
 """Strict Chapter 4/5/6 work-package completion predicate.
 
 This gate intentionally differs from the capability harness: an unavailable live
-model backend is *not* a pass.  The entire draft -> PRD -> SPEC -> Architecture
+model backend is *not* a pass. The entire draft -> PRD -> SPEC -> Architecture
 work package is complete only when deterministic capability metrics, live semantic
 quality, a live fresh-medium <=60 minute run, detached anti-false-green evidence,
 selective replay, Architecture reconciliation and the 8-25 regression all pass on
@@ -39,6 +39,33 @@ def _threshold_pass(value: Mapping[str, Any]) -> bool:
     return value.get("threshold_passed") is True
 
 
+def _score_at_least(value: Mapping[str, Any], score: str, required: str) -> bool:
+    observed = value.get(score)
+    floor = value.get(required)
+    return (
+        isinstance(observed, (int, float))
+        and isinstance(floor, (int, float))
+        and float(observed) >= float(floor)
+    )
+
+
+def _curated_semantic_pass(value: Mapping[str, Any]) -> bool:
+    return (
+        _status_pass(value)
+        and _score_at_least(value, "precision", "required_precision")
+        and _score_at_least(value, "recall", "required_recall")
+        and value.get("controlled_mutation_rejection_rate") == 1.0
+    )
+
+
+def _selective_replay_pass(value: Mapping[str, Any]) -> bool:
+    return (
+        _status_pass(value)
+        and _score_at_least(value, "accuracy", "required_accuracy")
+        and value.get("failed_cases") == 0
+    )
+
+
 def evaluate(args: argparse.Namespace) -> dict[str, Any]:
     evidence = {
         "architecture_reconcile": _load(args.architecture_reconcile),
@@ -52,9 +79,12 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         "live_blind": _load(args.live_blind),
         "legacy_replay": _load(args.legacy_replay),
     }
+    current_head = _head()
+    live_head = str(evidence["live_blind"].get("source_head") or "")
+    semantic_head = str(evidence["real_semantic"].get("source_head") or "")
     checks = {
         "architecture_reconcile": _status_pass(evidence["architecture_reconcile"]),
-        "curated_semantic": _status_pass(evidence["curated_semantic"]),
+        "curated_semantic": _curated_semantic_pass(evidence["curated_semantic"]),
         "semantic_chain_mutations": _threshold_pass(evidence["semantic_chain_mutations"]),
         "agent_context_mutations": _threshold_pass(evidence["agent_context_mutations"]),
         "real_semantic_quality": (
@@ -64,7 +94,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         ),
         "stable_facade": _threshold_pass(evidence["stable_facade"]),
         "detached_anti_false_green": _threshold_pass(evidence["detached_mutations"]),
-        "selective_replay": _threshold_pass(evidence["selective_replay"]),
+        "selective_replay": _selective_replay_pass(evidence["selective_replay"]),
         "live_blind_under_60_minutes": (
             evidence["live_blind"].get("status") == "pass"
             and evidence["live_blind"].get("execution_attempted") is True
@@ -72,10 +102,9 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
             and evidence["live_blind"].get("under_60_minutes") is True
         ),
         "legacy_8_25_replay": _status_pass(evidence["legacy_replay"]),
+        "live_blind_candidate_binding": bool(current_head and live_head == current_head),
+        "real_semantic_candidate_binding": bool(current_head and semantic_head == current_head),
     }
-    current_head = _head()
-    live_head = str(evidence["live_blind"].get("source_head") or "")
-    checks["live_blind_candidate_binding"] = bool(current_head and live_head == current_head)
     failed = sorted(name for name, passed in checks.items() if not passed)
     return {
         "schema": SCHEMA,
