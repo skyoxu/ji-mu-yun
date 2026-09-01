@@ -9,10 +9,9 @@ Chapter 4/5/6 capability workflow and then invokes the strict final completion
 predicate.
 
 Each invocation refreshes only this runner's declared evidence files under
-`logs/`. After all producers run, one candidate-sealing step binds every final
-evidence object to the current HEAD, then a SHA-256 manifest freezes the exact
-bytes. The final predicate consumes only that sealed set; unrelated repository
-files are never recursively deleted.
+`logs/`. Deterministic metrics are executed through a fixed candidate-bound
+runner; live metrics bind themselves. The seal is read-only, then a SHA-256
+manifest freezes exact bytes before the final predicate consumes the set.
 """
 from __future__ import annotations
 
@@ -49,6 +48,14 @@ def _run(argv: Sequence[str], *, env: dict[str, str], label: str) -> dict[str, A
 
 def _python(*parts: str) -> list[str]:
     return [sys.executable, *parts]
+
+
+def _bound_metric(metric: str, out: Path) -> list[str]:
+    return _python(
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric", metric,
+        "--out", str(out),
+    )
 
 
 def _refresh_owned_files(paths: dict[str, Path]) -> None:
@@ -98,30 +105,19 @@ def main() -> int:
     _refresh_owned_files(paths)
 
     steps: list[tuple[str, list[str]]] = [
-        ("architecture-reconcile", _python("scripts/vdd/evaluate_architecture_reconcile.py", "--out", str(paths["architecture"]))),
-        ("curated-semantic", _python("scripts/vdd/evaluate_semantic_quality.py", "--out", str(paths["curated"]))),
-        ("semantic-chain-mutations", _python("scripts/vdd/evaluate_semantic_chain_mutations.py", "--out", str(paths["semantic_mutations"]))),
-        ("agent-context-mutations", _python("scripts/vdd/evaluate_agent_context_mutations.py", "--out", str(paths["agent_context"]))),
+        ("architecture-reconcile", _bound_metric("architecture-reconcile", paths["architecture"])),
+        ("curated-semantic", _bound_metric("curated-semantic", paths["curated"])),
+        ("semantic-chain-mutations", _bound_metric("semantic-chain-mutations", paths["semantic_mutations"])),
+        ("agent-context-mutations", _bound_metric("agent-context-mutations", paths["agent_context"])),
         ("real-semantic", _python("scripts/vdd/evaluate_real_semantic_quality.py", "--backend", args.backend, "--out", str(paths["real_semantic"]))),
-        ("stable-facade", _python("scripts/quick_dev/evaluate_stable_facade.py", "--out", str(paths["stable"]))),
-        ("detached-mutations", _python("scripts/quick_dev/evaluate_detached_mutations.py", "--out", str(paths["detached"]))),
-        ("selective-replay", _python("scripts/quick_dev/evaluate_replay_matrix.py", "--out", str(paths["replay"]))),
+        ("stable-facade", _bound_metric("stable-facade", paths["stable"])),
+        ("detached-mutations", _bound_metric("detached-mutations", paths["detached"])),
+        ("selective-replay", _bound_metric("selective-replay", paths["replay"])),
         ("fresh-medium-deterministic", _python("-m", "pytest", "-q", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py")),
         ("live-blind-medium", _python("scripts/quick_dev/run_live_blind_benchmark.py", "--backend", args.backend, "--require-live", "--out", str(paths["live_blind"]))),
         ("full-vdd-regression", _python("-m", "pytest", "-q", ".agents/skills/vdd-execution-plan/scripts/tests")),
         ("full-quick-dev-regression", _python("-m", "pytest", "-q", ".agents/skills/quick-dev-tdd-adapter/tools/tests")),
-        (
-            "8-25-replay",
-            _python(
-                "scripts/quick_dev/replay_legacy_tdd.py",
-                "--plan",
-                "execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery",
-                "--red-baseline",
-                "7890d90cd9a9183159742bacc5575a07ad061dc7",
-                "--out",
-                str(paths["legacy"]),
-            ),
-        ),
+        ("8-25-replay", _bound_metric("legacy-replay", paths["legacy"])),
     ]
 
     results: list[dict[str, Any]] = []
