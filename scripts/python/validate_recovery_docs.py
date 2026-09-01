@@ -2,9 +2,13 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
+from typing import Iterable
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -56,6 +60,7 @@ DECISION_LOG_FIELDS = [
 FIELD_LINE_RE = re.compile(r"^- ([^:]+):\s*(.*)$")
 BACKTICK_PATH_RE = re.compile(r"`([^`]+)`")
 HEX_RE = re.compile(r"^[0-9a-f]{7,40}$")
+RECOVERY_DIRS = {"execution-plans", "decision-logs"}
 
 
 def parse_fields(path: Path) -> dict[str, str]:
@@ -175,6 +180,84 @@ def validate_doc(path: Path, required: list[str]) -> list[str]:
     return errors
 
 
+def _event_base_sha() -> str | None:
+    event_path = os.environ.get("GITHUB_EVENT_PATH")
+    if not event_path or os.environ.get("GITHUB_EVENT_NAME") != "pull_request":
+        return None
+    try:
+        payload = json.loads(Path(event_path).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    pull = payload.get("pull_request") if isinstance(payload, dict) else None
+    base = pull.get("base") if isinstance(pull, dict) else None
+    sha = base.get("sha") if isinstance(base, dict) else None
+    return sha if isinstance(sha, str) and HEX_RE.fullmatch(sha) else None
+
+
+def _ensure_git_object(sha: str) -> None:
+    probe = subprocess.run(
+        ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        check=False,
+    )
+    if probe.returncode == 0:
+        return
+    fetched = subprocess.run(
+        ["git", "fetch", "--no-tags", "--depth=1", "origin", sha],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if fetched.returncode != 0:
+        raise RuntimeError(f"cannot fetch PR base {sha}: {(fetched.stderr or fetched.stdout).strip()}")
+
+
+def changed_recovery_docs(base_sha: str) -> set[str]:
+    """Return top-level recovery markdown changed by this PR relative to its base.
+
+    The recovery READMEs say to validate *changes*. Historical pre-contract files
+    remain brownfield debt, but any file touched by the current PR is held to the
+    current schema. Unknown diff state fails closed rather than silently widening
+    or skipping the gate.
+    """
+    _ensure_git_object(base_sha)
+    proc = subprocess.run(
+        ["git", "diff", "--name-only", "--diff-filter=ACMRT", base_sha, "HEAD", "--", *sorted(RECOVERY_DIRS)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(f"cannot resolve recovery-doc PR delta: {proc.stderr.strip()}")
+    selected: set[str] = set()
+    for raw in proc.stdout.splitlines():
+        rel = raw.strip().replace("\\", "/")
+        if not rel or not rel.endswith(".md"):
+            continue
+        parts = Path(rel).parts
+        if len(parts) != 2 or parts[0] not in RECOVERY_DIRS:
+            continue
+        if parts[1].upper() == "README.MD":
+            continue
+        selected.add(rel)
+    return selected
+
+
+def validate_paths(paths: Iterable[str]) -> list[str]:
+    errors: list[str] = []
+    for rel in sorted(set(paths)):
+        path = REPO_ROOT / rel
+        if not path.is_file():
+            continue
+        directory = Path(rel).parts[0]
+        required = EXECUTION_PLAN_FIELDS if directory == "execution-plans" else DECISION_LOG_FIELDS
+        errors.extend(validate_doc(path, required))
+    return errors
+
+
 def validate_directory(dir_name: str, required: list[str]) -> list[str]:
     dir_path = REPO_ROOT / dir_name
     errors: list[str] = []
@@ -188,13 +271,35 @@ def validate_directory(dir_name: str, required: list[str]) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate recovery-oriented markdown in execution-plans/ and decision-logs/.")
     parser.add_argument("--dir", choices=["execution-plans", "decision-logs", "all"], default="all", help="Validate one directory or both.")
+    parser.add_argument(
+        "--scope",
+        choices=["auto", "all", "changed"],
+        default="auto",
+        help="auto validates PR changes in GitHub Actions and all docs otherwise; changed requires a resolvable PR base.",
+    )
     args = parser.parse_args()
 
     errors: list[str] = []
-    if args.dir in {"execution-plans", "all"}:
-        errors.extend(validate_directory("execution-plans", EXECUTION_PLAN_FIELDS))
-    if args.dir in {"decision-logs", "all"}:
-        errors.extend(validate_directory("decision-logs", DECISION_LOG_FIELDS))
+    base_sha = _event_base_sha() if args.scope in {"auto", "changed"} else None
+    changed_mode = args.scope == "changed" or (args.scope == "auto" and base_sha is not None)
+    try:
+        if changed_mode:
+            if base_sha is None:
+                raise RuntimeError("changed scope requires a pull_request base SHA")
+            selected = changed_recovery_docs(base_sha)
+            if args.dir != "all":
+                selected = {item for item in selected if item.startswith(args.dir + "/")}
+            errors.extend(validate_paths(selected))
+            print(f"RECOVERY_DOC_SCOPE mode=changed base={base_sha} files={len(selected)}")
+        else:
+            if args.dir in {"execution-plans", "all"}:
+                errors.extend(validate_directory("execution-plans", EXECUTION_PLAN_FIELDS))
+            if args.dir in {"decision-logs", "all"}:
+                errors.extend(validate_directory("decision-logs", DECISION_LOG_FIELDS))
+            print("RECOVERY_DOC_SCOPE mode=all")
+    except RuntimeError as exc:
+        print(f"ERROR: recovery doc scope resolution failed: {exc}")
+        return 1
 
     if errors:
         for item in errors:
