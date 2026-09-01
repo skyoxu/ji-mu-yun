@@ -10,7 +10,7 @@ if str(TOOLS) not in sys.path:
 
 from closure_predicate import validate_runtime_closure
 from current_router import impact_for_kinds, profile_contract, stop_loss
-from detached_promotion import validate_detached_bundle
+from detached_promotion import FAILURE_FAMILIES, validate_detached_bundle
 from process_executor_v2 import _counts
 
 
@@ -54,9 +54,13 @@ def test_change_impact_matrix_invalidates_only_required_stages() -> None:
 
 
 def test_profiles_cannot_weaken_truth_floor() -> None:
+    fast_ship = profile_contract("fast-ship")
     standard = profile_contract("standard")
     self_hosted = profile_contract("self-hosted")
-    assert standard and self_hosted
+    assert fast_ship and standard and self_hosted
+    assert fast_ship["targeted_only"] is True
+    assert standard["regression_required"] is True
+    assert self_hosted["detached_promotion_required"] is True
     for invalid in ("fast-but-trusting", "legacy-v1"):
         try:
             profile_contract(invalid)
@@ -66,7 +70,7 @@ def test_profiles_cannot_weaken_truth_floor() -> None:
             raise AssertionError("unknown profile must fail closed")
 
 
-def test_detached_bundle_requires_external_positive_negative_mutation_cover(tmp_path: Path) -> None:
+def test_detached_bundle_requires_external_fixture_and_failure_family_cover(tmp_path: Path) -> None:
     candidate = tmp_path / "candidate"
     detached = tmp_path / "detached"
     candidate.mkdir()
@@ -76,20 +80,47 @@ def test_detached_bundle_requires_external_positive_negative_mutation_cover(tmp_
         path = detached / f"{role}.txt"
         path.write_text(f"{role}\n", encoding="utf-8")
         artifacts.append({"role": role, "path": str(path), "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(), "read_only": True})
-    for fixture_kind in ("positive", "negative", "mutation"):
-        path = detached / f"fixture-{fixture_kind}.json"
-        path.write_text(f"{{\"kind\":\"{fixture_kind}\"}}\n", encoding="utf-8")
-        artifacts.append({"role": "fixture", "fixture_kind": fixture_kind, "path": str(path), "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(), "read_only": True})
+
+    positive = detached / "fixture-positive.json"
+    positive.write_text('{"kind":"positive"}\n', encoding="utf-8")
+    artifacts.append({
+        "role": "fixture",
+        "fixture_kind": "positive",
+        "path": str(positive),
+        "sha256": "sha256:" + hashlib.sha256(positive.read_bytes()).hexdigest(),
+        "read_only": True,
+    })
+    for index, family in enumerate(sorted(FAILURE_FAMILIES)):
+        fixture_kind = "negative" if index % 2 == 0 else "mutation"
+        path = detached / f"fixture-{family}.json"
+        path.write_text(f'{{"failure_family":"{family}"}}\n', encoding="utf-8")
+        artifacts.append({
+            "role": "fixture",
+            "fixture_kind": fixture_kind,
+            "failure_family": family,
+            "path": str(path),
+            "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(),
+            "read_only": True,
+        })
+
     bundle = {"schema": "detached-judge-bundle.v1", "source_commit": "c", "source_tree": "t", "judge_identity": "j", "judge_version": "1", "read_only_open_result": True, "promotion_revalidation_result": True, "artifacts": artifacts}
     valid, findings = validate_detached_bundle(bundle, candidate_root=candidate)
     assert valid, findings
+
+    missing_family = {
+        **bundle,
+        "artifacts": [item for item in artifacts if item.get("failure_family") != "unexpected-green"],
+    }
+    valid, findings = validate_detached_bundle(missing_family, candidate_root=candidate)
+    assert not valid and any("failure-family-cover" in item for item in findings)
 
     missing_mutation = {**bundle, "artifacts": [item for item in artifacts if item.get("fixture_kind") != "mutation"]}
     valid, findings = validate_detached_bundle(missing_mutation, candidate_root=candidate)
     assert not valid and any("fixture-kind-cover" in item for item in findings)
 
-    artifacts[0]["path"] = str(candidate / "judge.txt")
+    inside_artifacts = [dict(item) for item in artifacts]
+    inside_artifacts[0]["path"] = str(candidate / "judge.txt")
     (candidate / "judge.txt").write_text("judge", encoding="utf-8")
-    artifacts[0]["sha256"] = "sha256:" + hashlib.sha256((candidate / "judge.txt").read_bytes()).hexdigest()
-    valid, findings = validate_detached_bundle(bundle, candidate_root=candidate)
+    inside_artifacts[0]["sha256"] = "sha256:" + hashlib.sha256((candidate / "judge.txt").read_bytes()).hexdigest()
+    valid, findings = validate_detached_bundle({**bundle, "artifacts": inside_artifacts}, candidate_root=candidate)
     assert not valid and any("inside-candidate" in item for item in findings)
