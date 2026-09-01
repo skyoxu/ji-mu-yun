@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Measure self-hosted detached-promotion false-green rejection.
+"""Measure canonical self-hosted detached-promotion false-green rejection.
 
-The corpus is independent of the validator implementation. It proves both
-structural trust-boundary rejection and exact coverage of the normative Quick
-Dev failure taxonomy. A valid baseline must pass, at least 95% of general
-structural mutations must be rejected, and failure-family leakage must be zero.
+The corpus deliberately uses the closed `detached-judge-bundle.v1` schema from
+the canonical implementation contract. Fixture kind and failure-family cover
+are recomputed from detached fixture bytes, so the bundle cannot self-report
+coverage. The former implementation-only `artifacts[]` shape is not used as the
+promotion happy path.
 """
 from __future__ import annotations
 
@@ -12,8 +13,10 @@ import argparse
 import copy
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
+import stat
 import sys
 import tempfile
 
@@ -32,22 +35,21 @@ def _sha(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _artifact(
-    role: str,
-    path: Path,
-    *,
-    fixture_kind: str | None = None,
-    failure_family: str | None = None,
-) -> dict:
-    item = {"role": role, "path": str(path.resolve()), "sha256": _sha(path), "read_only": True}
-    if fixture_kind is not None:
-        item["fixture_kind"] = fixture_kind
-    if failure_family is not None:
-        item["failure_family"] = failure_family
-    return item
+def _read_only(path: Path) -> None:
+    path.chmod(stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
 
-def _valid_bundle(root: Path) -> tuple[dict, Path, dict[str, Path]]:
+def _write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    _read_only(path)
+
+
+def _ref(root: Path, path: Path) -> dict:
+    return {"path": path.relative_to(root).as_posix(), "sha256": _sha(path)}
+
+
+def _valid_bundle(root: Path) -> tuple[dict, Path, Path, dict[str, Path], dict[str, str]]:
     candidate = root / "candidate"
     detached = root / "detached"
     candidate.mkdir()
@@ -55,41 +57,55 @@ def _valid_bundle(root: Path) -> tuple[dict, Path, dict[str, Path]]:
     files: dict[str, Path] = {
         "judge": detached / "judge.py",
         "oracle": detached / "oracle.py",
-        "positive": detached / "positive.json",
+        "positive": detached / "fixtures" / "positive.json",
     }
-    files["judge"].write_text("def judge(value):\n    return bool(value)\n", encoding="utf-8")
-    files["oracle"].write_text("EXPECTED = {'status': 'pass'}\n", encoding="utf-8")
-    files["positive"].write_text('{"case":"positive"}\n', encoding="utf-8")
+    _write(files["judge"], "def judge(value):\n    return bool(value)\n")
+    _write(files["oracle"], "EXPECTED = {'status': 'pass'}\n")
+    _write(files["positive"], json.dumps({"fixture_kind": "positive", "case": "positive"}) + "\n")
 
-    artifacts = [
-        _artifact("judge", files["judge"]),
-        _artifact("oracle", files["oracle"]),
-        _artifact("fixture", files["positive"], fixture_kind="positive"),
-    ]
+    fixture_meta: dict[str, str] = {files["positive"].relative_to(detached).as_posix(): "positive"}
+    fixtures = [_ref(detached, files["positive"])]
     for index, family in enumerate(sorted(FAILURE_FAMILIES)):
         key = "family-" + family
-        path = detached / f"{key}.json"
-        path.write_text(json.dumps({"failure_family": family}) + "\n", encoding="utf-8")
+        path = detached / "fixtures" / f"{key}.json"
+        kind = "negative" if index % 2 == 0 else "mutation"
+        _write(path, json.dumps({"fixture_kind": kind, "failure_family": family, "case": key}, sort_keys=True) + "\n")
         files[key] = path
-        fixture_kind = "negative" if index % 2 == 0 else "mutation"
-        artifacts.append(
-            _artifact("fixture", path, fixture_kind=fixture_kind, failure_family=family)
-        )
+        relative = path.relative_to(detached).as_posix()
+        fixture_meta[relative] = kind
+        fixtures.append(_ref(detached, path))
+
+    # Alternative invalid bytes used by structural mutations. They are outside
+    # the canonical fixture list and cannot influence a valid baseline.
+    bad_kind = detached / "invalid" / "bad-kind.json"
+    bad_family = detached / "invalid" / "bad-family.json"
+    missing_family = detached / "invalid" / "missing-family.json"
+    mutable_judge = detached / "invalid" / "mutable-judge.py"
+    _write(bad_kind, json.dumps({"fixture_kind": "happy"}) + "\n")
+    _write(bad_family, json.dumps({"fixture_kind": "negative", "failure_family": "self-reported-pass"}) + "\n")
+    _write(missing_family, json.dumps({"fixture_kind": "negative"}) + "\n")
+    mutable_judge.parent.mkdir(parents=True, exist_ok=True)
+    mutable_judge.write_text("def judge(value):\n    return bool(value)\n", encoding="utf-8")
+    files.update({"bad-kind": bad_kind, "bad-family": bad_family, "missing-family": missing_family, "mutable-judge": mutable_judge})
 
     bundle = {
         "schema": "detached-judge-bundle.v1",
         "source_commit": "fixture-commit",
-        "source_tree": "fixture-tree",
-        "judge_identity": "detached-fixture-judge",
-        "judge_version": "1",
-        "read_only_open_result": True,
-        "promotion_revalidation_result": True,
-        "artifacts": artifacts,
+        "source_tree": "sha256:" + "1" * 64,
+        "judge": {**_ref(detached, files["judge"]), "identity": "detached-fixture-judge"},
+        "oracle": _ref(detached, files["oracle"]),
+        "fixtures": fixtures,
+        "read_only_open": True,
+        "revalidated_at_promotion": True,
     }
-    return bundle, candidate, files
+    return bundle, candidate, detached, files, fixture_meta
 
 
-def _general_mutations(bundle: dict, candidate: Path, files: dict[str, Path]) -> list[tuple[str, dict]]:
+def _replace_fixture(bundle: dict, detached: Path, path: Path) -> None:
+    bundle["fixtures"][0] = _ref(detached, path)
+
+
+def _general_mutations(bundle: dict, candidate: Path, detached: Path, files: dict[str, Path], fixture_meta: dict[str, str]) -> list[tuple[str, dict]]:
     cases: list[tuple[str, dict]] = []
 
     def add(name: str, mutate) -> None:
@@ -98,73 +114,95 @@ def _general_mutations(bundle: dict, candidate: Path, files: dict[str, Path]) ->
         cases.append((name, value))
 
     add("schema-drift", lambda b: b.__setitem__("schema", "detached-judge-bundle.v0"))
-    for field in ("source_commit", "source_tree", "judge_identity", "judge_version"):
+    add("unknown-top-level-field", lambda b: b.__setitem__("artifacts", []))
+    for field in ("source_commit", "source_tree"):
         add(f"missing-{field}", lambda b, field=field: b.__setitem__(field, ""))
-    add("read-only-open-false", lambda b: b.__setitem__("read_only_open_result", False))
-    add("promotion-revalidation-false", lambda b: b.__setitem__("promotion_revalidation_result", False))
-    add("artifacts-empty", lambda b: b.__setitem__("artifacts", []))
-    add("artifact-not-object", lambda b: b["artifacts"].__setitem__(0, "not-an-object"))
-    add("unknown-role", lambda b: b["artifacts"][0].__setitem__("role", "executor"))
+    add("read-only-open-false", lambda b: b.__setitem__("read_only_open", False))
+    add("promotion-revalidation-false", lambda b: b.__setitem__("revalidated_at_promotion", False))
+    add("fixtures-empty", lambda b: b.__setitem__("fixtures", []))
+    add("judge-identity-empty", lambda b: b["judge"].__setitem__("identity", ""))
+    add("judge-extra-field", lambda b: b["judge"].__setitem__("version", "1"))
+    add("oracle-extra-field", lambda b: b["oracle"].__setitem__("identity", "oracle"))
+    add("fixture-extra-field", lambda b: b["fixtures"][0].__setitem__("fixture_kind", "positive"))
+    add("artifact-path-empty", lambda b: b["judge"].__setitem__("path", ""))
+    add("artifact-path-absolute", lambda b: b["judge"].__setitem__("path", str(files["judge"].resolve())))
+    add("artifact-path-parent", lambda b: b["judge"].__setitem__("path", "../judge.py"))
+    add("artifact-missing", lambda b: b["judge"].__setitem__("path", "missing.py"))
+    add("artifact-hash-shape", lambda b: b["judge"].__setitem__("sha256", "not-a-hash"))
+    add("artifact-hash-mismatch", lambda b: b["judge"].__setitem__("sha256", "sha256:" + "0" * 64))
 
-    first_fixture = next(i for i, item in enumerate(bundle["artifacts"]) if item.get("role") == "fixture")
-    first_family = next(i for i, item in enumerate(bundle["artifacts"]) if item.get("failure_family"))
-    add("fixture-kind-invalid", lambda b: b["artifacts"][first_fixture].__setitem__("fixture_kind", "happy"))
-    add("fixture-kind-on-judge", lambda b: b["artifacts"][0].__setitem__("fixture_kind", "positive"))
-    add("failure-family-on-judge", lambda b: b["artifacts"][0].__setitem__("failure_family", "artifact-integrity"))
-    add("negative-family-missing", lambda b: b["artifacts"][first_family].pop("failure_family", None))
-    add("unknown-failure-family", lambda b: b["artifacts"][first_family].__setitem__("failure_family", "self-reported-pass"))
-    add("artifact-path-empty", lambda b: b["artifacts"][0].__setitem__("path", ""))
-    add("artifact-missing", lambda b: b["artifacts"][0].__setitem__("path", str((files["judge"].parent / "missing.py").resolve())))
-    add("artifact-hash-mismatch", lambda b: b["artifacts"][0].__setitem__("sha256", "sha256:" + "0" * 64))
-    add("artifact-not-read-only", lambda b: b["artifacts"][0].__setitem__("read_only", False))
+    mutable_rel = files["mutable-judge"].relative_to(detached).as_posix()
+    add("artifact-not-read-only", lambda b: b.__setitem__("judge", {"path": mutable_rel, "sha256": _sha(files["mutable-judge"]), "identity": "mutable"}))
 
     inside = candidate / "judge.py"
     shutil.copyfile(files["judge"], inside)
+    _read_only(inside)
+    # Canonical v1 cannot express an absolute or parent-traversal path to the
+    # candidate tree; trying to do so is itself rejected by the path grammar.
+    add("candidate-traversal", lambda b: b["judge"].__setitem__("path", "../candidate/judge.py"))
 
-    def inside_candidate(b: dict) -> None:
-        b["artifacts"][0]["path"] = str(inside.resolve())
-        b["artifacts"][0]["sha256"] = _sha(inside)
+    tainted = detached / "invalid" / "tainted-judge.py"
+    _write(tainted, "import runtime_evidence\n")
+    tainted_ref = _ref(detached, tainted)
+    add("judge-imports-current-writer", lambda b: b.__setitem__("judge", {**tainted_ref, "identity": "tainted"}))
 
-    add("artifact-inside-candidate", inside_candidate)
+    add("fixture-kind-invalid", lambda b: _replace_fixture(b, detached, files["bad-kind"]))
+    add("unknown-failure-family", lambda b: _replace_fixture(b, detached, files["bad-family"]))
+    add("negative-family-missing", lambda b: _replace_fixture(b, detached, files["missing-family"]))
 
-    tainted = files["judge"].parent / "tainted-judge.py"
-    tainted.write_text("import runtime_evidence\n", encoding="utf-8")
-
-    def current_writer_import(b: dict) -> None:
-        b["artifacts"][0]["path"] = str(tainted.resolve())
-        b["artifacts"][0]["sha256"] = _sha(tainted)
-
-    add("judge-imports-current-writer", current_writer_import)
-    add("role-cover-missing-oracle", lambda b: b.__setitem__("artifacts", [x for x in b["artifacts"] if isinstance(x, dict) and x.get("role") != "oracle"]))
-    add("fixture-cover-missing-positive", lambda b: b.__setitem__("artifacts", [x for x in b["artifacts"] if not (isinstance(x, dict) and x.get("fixture_kind") == "positive")]))
-    add("fixture-cover-missing-negative", lambda b: b.__setitem__("artifacts", [x for x in b["artifacts"] if not (isinstance(x, dict) and x.get("fixture_kind") == "negative")]))
-    add("fixture-cover-missing-mutation", lambda b: b.__setitem__("artifacts", [x for x in b["artifacts"] if not (isinstance(x, dict) and x.get("fixture_kind") == "mutation")]))
+    positive_paths = {path for path, kind in fixture_meta.items() if kind == "positive"}
+    negative_paths = {path for path, kind in fixture_meta.items() if kind == "negative"}
+    mutation_paths = {path for path, kind in fixture_meta.items() if kind == "mutation"}
+    add("fixture-cover-missing-positive", lambda b: b.__setitem__("fixtures", [x for x in b["fixtures"] if x.get("path") not in positive_paths]))
+    add("fixture-cover-missing-negative", lambda b: b.__setitem__("fixtures", [x for x in b["fixtures"] if x.get("path") not in negative_paths]))
+    add("fixture-cover-missing-mutation", lambda b: b.__setitem__("fixtures", [x for x in b["fixtures"] if x.get("path") not in mutation_paths]))
     return cases
 
 
-def _family_omission_mutations(bundle: dict) -> list[tuple[str, dict]]:
+def _family_for_fixture(detached: Path, item: dict) -> str | None:
+    try:
+        value = json.loads((detached / item["path"]).read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return value.get("failure_family") if isinstance(value, dict) else None
+
+
+def _family_omission_mutations(bundle: dict, detached: Path) -> list[tuple[str, dict]]:
     rows: list[tuple[str, dict]] = []
     for family in sorted(FAILURE_FAMILIES):
         mutated = copy.deepcopy(bundle)
-        mutated["artifacts"] = [
-            item
-            for item in mutated["artifacts"]
-            if not (isinstance(item, dict) and item.get("failure_family") == family)
-        ]
+        mutated["fixtures"] = [item for item in mutated["fixtures"] if _family_for_fixture(detached, item) != family]
         rows.append((f"missing-family-{family}", mutated))
     return rows
+
+
+def _coverage_from_fixture_bytes(bundle: dict, detached: Path) -> tuple[list[str], list[str]]:
+    kinds: set[str] = set()
+    families: set[str] = set()
+    for item in bundle["fixtures"]:
+        value = json.loads((detached / item["path"]).read_text(encoding="utf-8"))
+        if isinstance(value, dict):
+            if value.get("fixture_kind"):
+                kinds.add(str(value["fixture_kind"]))
+            if value.get("failure_family"):
+                families.add(str(value["failure_family"]))
+    return sorted(kinds), sorted(families)
 
 
 def evaluate() -> dict:
     with tempfile.TemporaryDirectory(prefix="ch456-detached-") as raw:
         root = Path(raw)
-        bundle, candidate, files = _valid_bundle(root)
-        baseline_valid, baseline_findings = validate_detached_bundle(bundle, candidate_root=candidate)
+        bundle, candidate, detached, files, fixture_meta = _valid_bundle(root)
+        baseline_valid, baseline_findings = validate_detached_bundle(
+            bundle, candidate_root=candidate, bundle_root=detached, allow_v2=False
+        )
 
         structural_rows = []
         structural_rejected = 0
-        for name, mutated in _general_mutations(bundle, candidate, files):
-            valid, findings = validate_detached_bundle(mutated, candidate_root=candidate)
+        for name, mutated in _general_mutations(bundle, candidate, detached, files, fixture_meta):
+            valid, findings = validate_detached_bundle(
+                mutated, candidate_root=candidate, bundle_root=detached, allow_v2=False
+            )
             did_reject = not valid
             structural_rejected += int(did_reject)
             structural_rows.append({"case": name, "rejected": did_reject, "findings": findings})
@@ -173,14 +211,17 @@ def evaluate() -> dict:
 
         family_rows = []
         family_rejected = 0
-        for name, mutated in _family_omission_mutations(bundle):
-            valid, findings = validate_detached_bundle(mutated, candidate_root=candidate)
+        for name, mutated in _family_omission_mutations(bundle, detached):
+            valid, findings = validate_detached_bundle(
+                mutated, candidate_root=candidate, bundle_root=detached, allow_v2=False
+            )
             did_reject = not valid
             family_rejected += int(did_reject)
             family_rows.append({"case": name, "rejected": did_reject, "findings": findings})
         family_total = len(family_rows)
         family_leaks = family_total - family_rejected
         family_leakage_rate = family_leaks / family_total if family_total else 1.0
+        fixture_kind_cover, failure_family_cover = _coverage_from_fixture_bytes(bundle, detached)
 
         threshold = (
             baseline_valid
@@ -188,11 +229,12 @@ def evaluate() -> dict:
             and family_leakage_rate == REQUIRED_FAILURE_FAMILY_LEAKAGE_RATE
         )
         return {
-            "schema": "quick-dev.detached-mutation-metric.v2",
+            "schema": "quick-dev.detached-mutation-metric.v3",
+            "canonical_bundle_schema": bundle["schema"],
             "baseline_valid": baseline_valid,
             "baseline_findings": baseline_findings,
-            "fixture_kind_cover": sorted({item.get("fixture_kind") for item in bundle["artifacts"] if isinstance(item, dict) and item.get("fixture_kind")}),
-            "failure_family_cover": sorted({item.get("failure_family") for item in bundle["artifacts"] if isinstance(item, dict) and item.get("failure_family")}),
+            "fixture_kind_cover": fixture_kind_cover,
+            "failure_family_cover": failure_family_cover,
             "expected_failure_families": sorted(FAILURE_FAMILIES),
             "structural_mutation_cases": structural_total,
             "structural_rejected_cases": structural_rejected,
