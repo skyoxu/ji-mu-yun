@@ -2,9 +2,9 @@
 """Exercise every public Quick Dev action through the stable facade.
 
 This evaluator invokes scripts/quick_dev/run.py as an external process and
-keeps an independent table of the parser-visible public actions.  It verifies
+keeps an independent table of the parser-visible public actions. It verifies
 that each action reaches its production dispatch branch (or its canonical
-argument guard) rather than being parser-only.  Bounded worker mutation
+argument guard) rather than being parser-only. Bounded worker mutation
 semantics are proved separately by the worker-orchestration tests; this metric
 owns public facade route coverage only.
 """
@@ -52,6 +52,23 @@ def _fixture(base: Path) -> tuple[Path, str]:
     (ROOT / owner).write_text("VALUE = 1\n", encoding="utf-8")
     (ROOT / selector).write_text("def test_value():\n    assert True\n", encoding="utf-8")
     (ROOT / fixture).write_text("fixture\n", encoding="utf-8")
+    proof = {
+        "acceptance_ids": ["A-FACADE"],
+        "selector_intents": [selector],
+        "assertion_ids": ["ASSERT-FACADE"],
+    }
+    agent_context = {
+        "slice_id": "S1",
+        "requirement_ids": ["FR-FACADE"],
+        "obligation_ids": ["O-FACADE"],
+        "acceptance_ids": ["A-FACADE"],
+        "source_refs": ["fixture:stable-facade"],
+        "contracts": ["semantic-plan-bundle.v1"],
+        "allowed_paths": [owner],
+        "forbidden_paths": [],
+        "selector_intents": [selector],
+        "validation_commands": [["py", "-3", "-m", "pytest", selector, "-q", "-p", "no:cacheprovider"]],
+    }
     bundle = {
         "schema_version": "vdd.semantic-plan-bundle.v1",
         "plan_id": "PLAN-FACADE",
@@ -75,6 +92,7 @@ def _fixture(base: Path) -> tuple[Path, str]:
             "allowed_write_paths": [owner],
             "execution_snapshot_paths": [selector, fixture],
             "terminal_predicate": "all active Acceptance assertions pass",
+            "proof": proof,
             "complexity_class": "simple",
             "verification_lane": "unit",
             "context_lookup_required": False,
@@ -82,8 +100,12 @@ def _fixture(base: Path) -> tuple[Path, str]:
             "minimum_red_scope": "one bound Acceptance group",
             "upgrade_conditions": ["multiple roots"],
         }],
+        "agent_contexts": [agent_context],
     }
     (plan / "semantic-plan-bundle.v1.json").write_text(json.dumps(bundle), encoding="utf-8")
+    context_path = plan / "agent-context" / "S1" / "agent-context.json"
+    context_path.parent.mkdir(parents=True)
+    context_path.write_text(json.dumps(agent_context), encoding="utf-8")
     return plan, "S1"
 
 
