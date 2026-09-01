@@ -26,6 +26,8 @@ jobs:
           choco install ripgrep -y --no-progress
       - name: VDD semantic compiler and closure tests
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_failed_resume.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_planned_red_feasibility.py
+      - name: Evaluate Architecture Deferred reconciliation
+        run: py -3 scripts/vdd/evaluate_architecture_reconcile.py --out ch456-architecture-reconcile.json
       - name: Evaluate curated semantic quality
         run: py -3 scripts/vdd/evaluate_semantic_quality.py --out ch456-curated-semantic-quality.json
       - name: Evaluate semantic chain mutation rejection
@@ -44,8 +46,10 @@ jobs:
         run: py -3 scripts/quick_dev/evaluate_detached_mutations.py --out ch456-detached-mutations.json
       - name: Evaluate selective replay accuracy
         run: py -3 scripts/quick_dev/evaluate_replay_matrix.py --out ch456-selective-replay.json
-      - name: Fresh medium three-behavior task
+      - name: Fresh medium deterministic three-behavior task
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py
+      - name: Live blind medium task when backend is available
+        run: py -3 scripts/quick_dev/run_live_blind_benchmark.py --out ch456-live-blind-benchmark.json
       - name: Full VDD skill regression
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests
       - name: Full Quick Dev skill regression
@@ -57,6 +61,7 @@ jobs:
         with:
           name: ch456-capability-evidence
           path: |
+            ch456-architecture-reconcile.json
             ch456-curated-semantic-quality.json
             ch456-semantic-chain-mutations.json
             ch456-agent-context-mutations.json
@@ -65,5 +70,6 @@ jobs:
             ch456-stable-facade.json
             ch456-detached-mutations.json
             ch456-selective-replay.json
+            ch456-live-blind-benchmark.json
             ch456-8-25-replay.json
           if-no-files-found: ignore
