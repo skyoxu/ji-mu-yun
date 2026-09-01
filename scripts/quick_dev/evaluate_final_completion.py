@@ -7,16 +7,34 @@ work package is complete only when deterministic capability metrics, live semant
 quality, a live fresh-medium <=60 minute run, detached anti-false-green evidence,
 selective replay, Architecture reconciliation and the 8-25 regression all pass on
 one candidate.
+
+The gate also requires a final-evidence manifest that binds the current candidate
+HEAD to the exact bytes of every evidence artifact. This prevents stale or mixed
+run evidence from satisfying the completion predicate.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import subprocess
 from typing import Any, Mapping
 
 SCHEMA = "ch456.final-completion-gate.v1"
+MANIFEST_SCHEMA = "ch456.final-evidence-manifest.v1"
+EVIDENCE_KEYS = (
+    "architecture_reconcile",
+    "curated_semantic",
+    "semantic_chain_mutations",
+    "agent_context_mutations",
+    "real_semantic",
+    "stable_facade",
+    "detached_mutations",
+    "selective_replay",
+    "live_blind",
+    "legacy_replay",
+)
 
 
 def _load(path: Path) -> Mapping[str, Any]:
@@ -29,6 +47,10 @@ def _load(path: Path) -> Mapping[str, Any]:
 def _head() -> str:
     proc = subprocess.run(["git", "rev-parse", "HEAD"], text=True, capture_output=True, check=False)
     return proc.stdout.strip() if proc.returncode == 0 else ""
+
+
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _status_pass(value: Mapping[str, Any]) -> bool:
@@ -66,23 +88,61 @@ def _selective_replay_pass(value: Mapping[str, Any]) -> bool:
     )
 
 
+def _manifest_findings(
+    manifest: Mapping[str, Any],
+    *,
+    current_head: str,
+    paths: Mapping[str, Path],
+    evidence: Mapping[str, Mapping[str, Any]],
+) -> list[str]:
+    findings: list[str] = []
+    if manifest.get("schema") != MANIFEST_SCHEMA:
+        findings.append("manifest-schema")
+    if not current_head or manifest.get("candidate_head") != current_head:
+        findings.append("manifest-candidate-head")
+    required = manifest.get("required_evidence_keys")
+    if required != list(EVIDENCE_KEYS):
+        findings.append("manifest-required-keys")
+    rows = manifest.get("evidence")
+    if not isinstance(rows, Mapping):
+        return findings + ["manifest-evidence-map"]
+    if set(rows) != set(EVIDENCE_KEYS):
+        findings.append("manifest-evidence-key-set")
+    for key in EVIDENCE_KEYS:
+        row = rows.get(key)
+        if not isinstance(row, Mapping):
+            findings.append(f"manifest-row:{key}")
+            continue
+        path = paths[key].resolve()
+        if row.get("path") != str(path):
+            findings.append(f"manifest-path:{key}")
+        if row.get("sha256") != _sha256(path):
+            findings.append(f"manifest-sha256:{key}")
+        source_head = evidence[key].get("source_head")
+        if source_head is not None and str(source_head) != current_head:
+            findings.append(f"evidence-candidate-head:{key}")
+        if row.get("source_head") != source_head:
+            findings.append(f"manifest-source-head:{key}")
+        if row.get("schema") != evidence[key].get("schema"):
+            findings.append(f"manifest-schema-binding:{key}")
+    return findings
+
+
 def evaluate(args: argparse.Namespace) -> dict[str, Any]:
-    evidence = {
-        "architecture_reconcile": _load(args.architecture_reconcile),
-        "curated_semantic": _load(args.curated_semantic),
-        "semantic_chain_mutations": _load(args.semantic_chain_mutations),
-        "agent_context_mutations": _load(args.agent_context_mutations),
-        "real_semantic": _load(args.real_semantic),
-        "stable_facade": _load(args.stable_facade),
-        "detached_mutations": _load(args.detached_mutations),
-        "selective_replay": _load(args.selective_replay),
-        "live_blind": _load(args.live_blind),
-        "legacy_replay": _load(args.legacy_replay),
-    }
+    paths = {key: Path(getattr(args, key)) for key in EVIDENCE_KEYS}
+    evidence = {key: _load(paths[key]) for key in EVIDENCE_KEYS}
+    manifest = _load(args.manifest)
     current_head = _head()
+    manifest_findings = _manifest_findings(
+        manifest,
+        current_head=current_head,
+        paths=paths,
+        evidence=evidence,
+    )
     live_head = str(evidence["live_blind"].get("source_head") or "")
     semantic_head = str(evidence["real_semantic"].get("source_head") or "")
     checks = {
+        "final_evidence_manifest": not manifest_findings,
         "architecture_reconcile": _status_pass(evidence["architecture_reconcile"]),
         "curated_semantic": _curated_semantic_pass(evidence["curated_semantic"]),
         "semantic_chain_mutations": _threshold_pass(evidence["semantic_chain_mutations"]),
@@ -110,6 +170,8 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         "schema": SCHEMA,
         "status": "pass" if not failed else "blocked",
         "candidate_head": current_head,
+        "manifest_candidate_head": manifest.get("candidate_head"),
+        "manifest_findings": manifest_findings,
         "checks": checks,
         "failed_checks": failed,
         "completion": "implementation-work-package-complete" if not failed else "not-complete",
@@ -119,6 +181,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--architecture-reconcile", type=Path, required=True)
     parser.add_argument("--curated-semantic", type=Path, required=True)
     parser.add_argument("--semantic-chain-mutations", type=Path, required=True)
@@ -142,6 +205,7 @@ def main() -> int:
             "error": str(exc),
             "authorizes": [],
         }
+    args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return 0 if result.get("status") == "pass" else 1
