@@ -39,6 +39,10 @@ jobs:
       WHITELIST_WARN_DAYS: '90'
       CI_DOTNET_STAGE_TIMEOUT_MS: '4200000'
     steps:
+      - name: Enable Windows long paths
+        shell: pwsh
+        run: git config --system core.longpaths true
+
       - name: Checkout
         uses: actions/checkout@v4
 
