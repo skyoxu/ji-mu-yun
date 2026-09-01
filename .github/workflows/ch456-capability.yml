@@ -31,4 +31,4 @@ jobs:
       - name: VDD semantic compiler tests
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py
       - name: Quick Dev runtime contract tests
-        run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py
+        run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py
