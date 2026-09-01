@@ -22,7 +22,7 @@ jobs:
       - name: Install Python and compatibility test dependencies
         shell: pwsh
         run: |
-          py -3 -m pip install pytest
+          py -3 -m pip install pytest openai
           choco install ripgrep -y --no-progress
       - name: VDD semantic compiler and closure tests
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_failed_resume.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_planned_red_feasibility.py
@@ -49,7 +49,16 @@ jobs:
       - name: Fresh medium deterministic three-behavior task
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py
       - name: Live blind medium task when backend is available
-        run: py -3 scripts/quick_dev/run_live_blind_benchmark.py --out ch456-live-blind-benchmark.json
+        shell: pwsh
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if ($env:OPENAI_API_KEY) {
+            $env:SC_LLM_BACKEND = "openai-api"
+            py -3 scripts/quick_dev/run_live_blind_benchmark.py --backend openai-api --require-live --out ch456-live-blind-benchmark.json
+          } else {
+            py -3 scripts/quick_dev/run_live_blind_benchmark.py --out ch456-live-blind-benchmark.json
+          }
       - name: Full VDD skill regression
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests
       - name: Full Quick Dev skill regression
