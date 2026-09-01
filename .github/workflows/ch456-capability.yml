@@ -18,6 +18,7 @@ jobs:
           sparse-checkout: |
             .agents/skills/vdd-execution-plan
             .agents/skills/quick-dev-tdd-adapter
+            execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery
             scripts/sc
             scripts/vdd
             scripts/quick_dev
@@ -32,3 +33,12 @@ jobs:
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py
       - name: Quick Dev runtime contract tests
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py
+      - name: Replay 8-25 real RED-to-GREEN selectors
+        run: py -3 scripts/quick_dev/replay_legacy_tdd.py --plan execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery --red-baseline 7890d90cd9a9183159742bacc5575a07ad061dc7 --out ch456-8-25-replay.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ch456-capability-evidence
+          path: |
+            ch456-8-25-replay.json
+          if-no-files-found: ignore
