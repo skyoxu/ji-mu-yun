@@ -28,6 +28,8 @@ jobs:
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_failed_resume.py
       - name: Evaluate curated semantic quality
         run: py -3 scripts/vdd/evaluate_semantic_quality.py --out ch456-curated-semantic-quality.json
+      - name: Evaluate semantic chain mutation rejection
+        run: py -3 scripts/vdd/evaluate_semantic_chain_mutations.py --out ch456-semantic-chain-mutations.json
       - name: Probe real semantic worker backend
         run: py -3 scripts/vdd/probe_real_worker.py --out ch456-real-worker-probe.json
       - name: Evaluate real semantic worker quality when available
@@ -54,6 +56,7 @@ jobs:
           name: ch456-capability-evidence
           path: |
             ch456-curated-semantic-quality.json
+            ch456-semantic-chain-mutations.json
             ch456-real-worker-probe.json
             ch456-real-semantic-quality.json
             ch456-stable-facade.json
