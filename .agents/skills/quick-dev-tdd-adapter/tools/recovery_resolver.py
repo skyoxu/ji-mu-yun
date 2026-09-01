@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
-from runtime_evidence import HASH_RE, load_json, resolve_file, sha256_value
+from runtime_evidence import HASH_RE, current_snapshot, load_json, resolve_file, sha256_value
 
 
 def _hash(value: Any, label: str) -> str:
@@ -14,6 +14,7 @@ def _hash(value: Any, label: str) -> str:
 
 
 def recover_explicit_run(*, run_root: Path, recovery_input: Mapping[str, Any]) -> dict[str, Any]:
+    """Validate one already snapshot-bound explicit predecessor without history scans."""
     if recovery_input.get("schema") != "quick-dev.recovery-input.v1":
         raise ValueError("recovery input schema invalid")
     required = {
@@ -92,4 +93,27 @@ def recover_explicit_run(*, run_root: Path, recovery_input: Mapping[str, Any]) -
         "failure_family": observation.get("failure_family"),
         "failure_id": observation.get("failure_id"),
         "reclassified": False,
+    }
+
+
+def recover_current_run(
+    *,
+    workspace: Path,
+    run_root: Path,
+    recovery_input: Mapping[str, Any],
+    snapshot_roots: Sequence[Mapping[str, str]],
+    source_commit: str,
+    base_commit: str | None = None,
+) -> dict[str, Any]:
+    """Canonical recovery path: recompute current snapshot before reusing evidence."""
+    snapshot = current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit)
+    expected = _hash(recovery_input.get("current_snapshot_sha256"), "current_snapshot_sha256")
+    if snapshot.get("sha256") != expected:
+        raise ValueError("recovery current snapshot is stale")
+    recovered = recover_explicit_run(run_root=run_root, recovery_input=recovery_input)
+    return {
+        **recovered,
+        "current_snapshot_sha256": snapshot["sha256"],
+        "snapshot_revalidated": True,
+        "authorizes": [],
     }
