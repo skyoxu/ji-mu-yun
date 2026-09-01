@@ -34,8 +34,8 @@ def _descriptor() -> dict:
 
 
 def _workspace(tmp_path: Path, source: str) -> Path:
-    (tmp_path / "src").mkdir()
-    (tmp_path / "tests").mkdir()
+    (tmp_path / "src").mkdir(parents=True)
+    (tmp_path / "tests").mkdir(parents=True)
     (tmp_path / "src" / "service.py").write_text(
         "class Service:\n    def behavior(self): return False\n",
         encoding="utf-8",
