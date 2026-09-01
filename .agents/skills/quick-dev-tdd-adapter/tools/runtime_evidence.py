@@ -16,7 +16,14 @@ ROOT_KINDS = ("candidate_tree", "plan", "contract", "descriptor", "fixture", "so
 GOVERNANCE_ROOTS = {"registry", "architecture_registry", "memlog", "spine", "review", "binding", "authorization"}
 HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 FAILURE_RE = re.compile(r"FAILURE_ID:([A-Z0-9][A-Z0-9._-]*)")
+REPO_NOISE_RE = re.compile(r"(?:^|\n)REPO_NOISE:", re.I)
 PYTEST_COUNT_RE = re.compile(r"(\d+)\s+(passed|failed|errors?|skipped)")
+EXPLICIT_CASES_RE = re.compile(r"(?:^|\n)CASES:(\d+)\b")
+EXPLICIT_EXECUTIONS_RE = re.compile(r"(?:^|\n)TEST_EXECUTIONS:(\d+)\b")
+DESCRIPTOR_FIELDS = {
+    "run_id", "plan_id", "slice_id", "stage", "candidate_hash", "argv", "cwd", "shell",
+    "timeout_seconds", "target_refs", "fixture_refs", "acceptance_assertions",
+}
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -33,9 +40,9 @@ def sha256_value(value: Any) -> str:
 
 def safe_relative(value: str) -> str:
     if not isinstance(value, str) or not value or "\\" in value:
-        raise ValueError("path must be a repository-relative POSIX path")
+        raise ValueError("path must be repository-relative POSIX")
     path = PurePosixPath(value)
-    if path.is_absolute() or ".." in path.parts or "." in path.parts:
+    if path.is_absolute() or any(part in {".", ".."} for part in path.parts):
         raise ValueError("path escapes repository")
     return path.as_posix()
 
@@ -88,28 +95,65 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def validate_descriptor(descriptor: Mapping[str, Any]) -> None:
-    required = {"id", "executable", "argv", "cwd", "timeout_seconds", "shell"}
-    if not isinstance(descriptor, Mapping) or set(descriptor) != required:
+    if not isinstance(descriptor, Mapping) or set(descriptor) != DESCRIPTOR_FIELDS:
         raise ValueError("descriptor shape is invalid")
+    for field in ("run_id", "plan_id", "slice_id", "stage", "candidate_hash", "cwd"):
+        if not isinstance(descriptor.get(field), str) or not descriptor[field]:
+            raise ValueError(f"descriptor {field} is invalid")
+    if descriptor["stage"] not in STAGES:
+        raise ValueError("descriptor stage is invalid")
+    if not HASH_RE.fullmatch(descriptor["candidate_hash"]):
+        raise ValueError("descriptor candidate hash is invalid")
     if descriptor.get("shell") is not False:
         raise ValueError("descriptor must use shell=false")
-    if not isinstance(descriptor.get("id"), str) or not descriptor["id"]:
-        raise ValueError("descriptor id is invalid")
-    if not isinstance(descriptor.get("executable"), str) or not descriptor["executable"]:
-        raise ValueError("descriptor executable is invalid")
-    if not isinstance(descriptor.get("argv"), list) or any(not isinstance(item, str) for item in descriptor["argv"]):
+    argv = descriptor.get("argv")
+    if not isinstance(argv, list) or not argv or any(not isinstance(item, str) or not item for item in argv):
         raise ValueError("descriptor argv is invalid")
-    cwd = descriptor.get("cwd")
-    if cwd != ".":
-        safe_relative(cwd)
+    if descriptor["cwd"] != ".":
+        safe_relative(descriptor["cwd"])
     timeout = descriptor.get("timeout_seconds")
     if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout <= 0:
         raise ValueError("descriptor timeout is invalid")
+    for field in ("target_refs", "fixture_refs"):
+        values = descriptor.get(field)
+        if not isinstance(values, list) or not values or any(not isinstance(item, str) or not item for item in values):
+            raise ValueError(f"descriptor {field} is invalid")
+        for item in values:
+            safe_relative(item)
+    assertions = descriptor.get("acceptance_assertions")
+    if not isinstance(assertions, list) or not assertions:
+        raise ValueError("descriptor acceptance assertions are invalid")
+    seen: set[tuple[str, str]] = set()
+    for item in assertions:
+        if not isinstance(item, Mapping) or set(item) - {"acceptance_id", "assertion_id", "case_source_ref", "target_ref", "fixture_ref"}:
+            raise ValueError("descriptor assertion shape is invalid")
+        for field in ("acceptance_id", "assertion_id", "case_source_ref"):
+            if not isinstance(item.get(field), str) or not item[field]:
+                raise ValueError("descriptor assertion identity is invalid")
+        key = (item["acceptance_id"], item["assertion_id"])
+        if key in seen:
+            raise ValueError("descriptor assertion duplicate")
+        seen.add(key)
+        for field in ("target_ref", "fixture_ref"):
+            if field in item:
+                safe_relative(str(item[field]))
+
+
+def selector_identity_from_descriptor(descriptor: Mapping[str, Any]) -> str:
+    validate_descriptor(descriptor)
+    return sha256_value({
+        "argv": descriptor["argv"], "cwd": descriptor["cwd"],
+        "target_refs": sorted(descriptor["target_refs"]), "fixture_refs": sorted(descriptor["fixture_refs"]),
+        "acceptance_assertions": sorted(
+            [{"acceptance_id": a["acceptance_id"], "assertion_id": a["assertion_id"], "case_source_ref": a["case_source_ref"]} for a in descriptor["acceptance_assertions"]],
+            key=lambda a: (a["acceptance_id"], a["assertion_id"], a["case_source_ref"]),
+        ),
+    })
 
 
 def hash_refs(root: Path, refs: Sequence[str]) -> dict[str, str]:
     if not refs:
-        raise ValueError("target/fixture refs must be explicit and non-empty")
+        raise ValueError("refs must be non-empty")
     result: dict[str, str] = {}
     for ref in refs:
         relative = safe_relative(ref)
@@ -117,37 +161,65 @@ def hash_refs(root: Path, refs: Sequence[str]) -> dict[str, str]:
     return dict(sorted(result.items()))
 
 
-def process_counts(output: str, *, timed_out: bool, exit_code: int | None) -> tuple[int, int]:
+def process_counts(output: str, *, timed_out: bool) -> tuple[int, int]:
+    if timed_out:
+        return 0, 0
+    explicit_cases = EXPLICIT_CASES_RE.search(output)
+    explicit_exec = EXPLICIT_EXECUTIONS_RE.search(output)
+    if explicit_cases or explicit_exec:
+        cases = int(explicit_cases.group(1)) if explicit_cases else 0
+        executions = int(explicit_exec.group(1)) if explicit_exec else (1 if cases > 0 else 0)
+        return executions, cases
     total = sum(int(match.group(1)) for match in PYTEST_COUNT_RE.finditer(output))
-    if total == 0 and not timed_out and isinstance(exit_code, int) and (exit_code == 0 or FAILURE_RE.search(output)):
-        total = 1
-    return (1 if total > 0 else 0, total)
+    return (1 if total > 0 else 0), total
 
 
-def execute_process(workspace: Path, run_dir: Path, stage: str, descriptor: Mapping[str, Any], *, candidate_hash: str, profile_identity: str, target_refs: Sequence[str], fixture_refs: Sequence[str]) -> dict[str, Any]:
-    """Executor trust zone: execute the SUT and persist only process facts."""
-    if stage not in STAGES:
-        raise ValueError("stage is invalid")
-    validate_descriptor(descriptor)
-    if not HASH_RE.fullmatch(candidate_hash or ""):
-        raise ValueError("candidate hash is invalid")
-    if not isinstance(profile_identity, str) or not profile_identity:
-        raise ValueError("profile identity is invalid")
+def _pre_execution_receipt(descriptor: Mapping[str, Any], stage: str, profile_identity: str, error_code: str) -> dict[str, Any]:
+    return {
+        "schema": "quick-dev.process-receipt.v2", "stage": stage,
+        "descriptor_ref": "frozen-descriptor", "descriptor_sha256": sha256_value(dict(descriptor)),
+        "argv": list(descriptor.get("argv", [])), "cwd": descriptor.get("cwd"),
+        "started_at": None, "ended_at": None, "process_attempts": 0, "test_executions": 0, "cases": 0,
+        "exit_code": None, "timed_out": False, "stdout_sha256": sha256_bytes(b""), "stderr_sha256": sha256_bytes(b""),
+        "candidate_hash": descriptor.get("candidate_hash"), "target_hashes": {}, "fixture_hashes": {},
+        "profile_identity": profile_identity, "executor_identity": "quick-dev-process-executor.v2",
+        "pre_execution_error_code": error_code,
+    }
+
+
+def execute_process(workspace: Path, run_dir: Path, stage: str, descriptor: Mapping[str, Any], *, profile_identity: str) -> dict[str, Any]:
+    """Executor trust zone: persist process facts only."""
+    evidence = run_dir.resolve() / "canonical-evidence" / stage
+    try:
+        validate_descriptor(descriptor)
+    except ValueError:
+        receipt = _pre_execution_receipt(descriptor, stage, profile_identity, "ARTIFACT_INTEGRITY")
+        create_immutable(evidence / "stdout.bin", b""); create_immutable(evidence / "stderr.bin", b"")
+        create_json(evidence / "process-receipt.v2.json", receipt)
+        return receipt
+    if descriptor["stage"] != stage or descriptor["run_id"] != run_dir.name:
+        receipt = _pre_execution_receipt(descriptor, stage, profile_identity, "ARTIFACT_INTEGRITY")
+        create_immutable(evidence / "stdout.bin", b""); create_immutable(evidence / "stderr.bin", b"")
+        create_json(evidence / "process-receipt.v2.json", receipt)
+        return receipt
     root = workspace.resolve()
     cwd = root if descriptor["cwd"] == "." else (root / safe_relative(descriptor["cwd"])).resolve()
     try:
         cwd.relative_to(root)
-    except ValueError as exc:
-        raise ValueError("descriptor cwd escapes repository") from exc
-    if not cwd.is_dir():
-        raise ValueError("descriptor cwd is unavailable")
-    target_hashes, fixture_hashes = hash_refs(root, target_refs), hash_refs(root, fixture_refs)
-    descriptor_sha = sha256_value(dict(descriptor))
+        if not cwd.is_dir():
+            raise ValueError
+        target_hashes = hash_refs(root, descriptor["target_refs"])
+        fixture_hashes = hash_refs(root, descriptor["fixture_refs"])
+    except (OSError, ValueError):
+        receipt = _pre_execution_receipt(descriptor, stage, profile_identity, "TARGET_BINDING")
+        create_immutable(evidence / "stdout.bin", b""); create_immutable(evidence / "stderr.bin", b"")
+        create_json(evidence / "process-receipt.v2.json", receipt)
+        return receipt
     started = datetime.now(timezone.utc)
     stdout, stderr, timed_out = b"", b"", False
     exit_code: int | None
     try:
-        completed = subprocess.run([descriptor["executable"], *descriptor["argv"]], cwd=cwd, shell=False, check=False, capture_output=True, timeout=descriptor["timeout_seconds"])
+        completed = subprocess.run(descriptor["argv"], cwd=cwd, shell=False, check=False, capture_output=True, timeout=descriptor["timeout_seconds"])
         stdout, stderr, exit_code = completed.stdout, completed.stderr, completed.returncode
     except subprocess.TimeoutExpired as exc:
         timed_out, exit_code = True, None
@@ -155,23 +227,17 @@ def execute_process(workspace: Path, run_dir: Path, stage: str, descriptor: Mapp
         if isinstance(stdout, str): stdout = stdout.encode("utf-8", errors="replace")
         if isinstance(stderr, str): stderr = stderr.encode("utf-8", errors="replace")
     ended = datetime.now(timezone.utc)
-    evidence = run_dir.resolve() / "canonical-evidence" / stage
-    create_immutable(evidence / "stdout.bin", stdout)
-    create_immutable(evidence / "stderr.bin", stderr)
+    create_immutable(evidence / "stdout.bin", stdout); create_immutable(evidence / "stderr.bin", stderr)
     output = (stdout + b"\n" + stderr).decode("utf-8", errors="replace")
-    test_executions, cases = process_counts(output, timed_out=timed_out, exit_code=exit_code)
+    test_executions, cases = process_counts(output, timed_out=timed_out)
     receipt = {
-        "schema": "quick-dev.process-receipt.v2",
-        "receipt_id": f"RECEIPT-{stage.upper()}-{sha256_value([candidate_hash, descriptor_sha, stage])[7:19].upper()}",
-        "stage": stage, "descriptor_ref": f"descriptor:{descriptor['id']}",
-        "argv": [descriptor["executable"], *descriptor["argv"]], "cwd": "." if cwd == root else cwd.relative_to(root).as_posix(),
+        "schema": "quick-dev.process-receipt.v2", "stage": stage, "descriptor_ref": "frozen-descriptor",
+        "descriptor_sha256": sha256_value(dict(descriptor)), "argv": list(descriptor["argv"]), "cwd": descriptor["cwd"],
         "started_at": started.isoformat().replace("+00:00", "Z"), "ended_at": ended.isoformat().replace("+00:00", "Z"),
-        "process_attempts": 1, "test_executions": test_executions, "cases": cases,
-        "exit_code": exit_code, "timed_out": timed_out,
-        "stdout_sha256": sha256_bytes(stdout), "stderr_sha256": sha256_bytes(stderr),
-        "candidate_hash": candidate_hash, "descriptor_sha256": descriptor_sha,
-        "target_hashes": target_hashes, "fixture_hashes": fixture_hashes,
-        "profile_identity": profile_identity, "executor_identity": "quick-dev-process-executor.v2",
+        "process_attempts": 1, "test_executions": test_executions, "cases": cases, "exit_code": exit_code,
+        "timed_out": timed_out, "stdout_sha256": sha256_bytes(stdout), "stderr_sha256": sha256_bytes(stderr),
+        "candidate_hash": descriptor["candidate_hash"], "target_hashes": target_hashes, "fixture_hashes": fixture_hashes,
+        "profile_identity": profile_identity, "executor_identity": "quick-dev-process-executor.v2", "pre_execution_error_code": None,
     }
     create_json(evidence / "process-receipt.v2.json", receipt)
     return receipt
@@ -182,112 +248,140 @@ def deterministic_failure_id(family: str, descriptor_sha: str, candidate_hash: s
     return f"QD-{family.upper().replace('_', '-')}-{digest}"
 
 
-def judge_receipt(run_dir: Path, stage: str, descriptor: Mapping[str, Any], receipt: Mapping[str, Any], *, expected_failure_ids: Sequence[str] = (), expected_exit: str | None = None) -> dict[str, Any]:
-    """Independent judge trust zone; this function never executes the SUT."""
-    validate_descriptor(descriptor)
-    descriptor_sha = sha256_value(dict(descriptor))
-    if receipt.get("schema") != "quick-dev.process-receipt.v2" or receipt.get("stage") != stage or receipt.get("descriptor_sha256") != descriptor_sha:
-        raise ValueError("receipt binding is invalid")
-    if receipt.get("argv") != [descriptor["executable"], *descriptor["argv"]]:
-        raise ValueError("receipt argv is stale")
+def judge_receipt(run_dir: Path, stage: str, descriptor: Mapping[str, Any], receipt: Mapping[str, Any], *, expected_failure_ids: Sequence[str] = ()) -> dict[str, Any]:
+    """Independent judge; never executes the SUT."""
     evidence = run_dir.resolve() / "canonical-evidence" / stage
-    stdout_path, stderr_path = evidence / "stdout.bin", evidence / "stderr.bin"
-    if not stdout_path.is_file() or not stderr_path.is_file():
-        raise ValueError("receipt output bytes are missing")
-    if sha256_bytes(stdout_path.read_bytes()) != receipt.get("stdout_sha256") or sha256_bytes(stderr_path.read_bytes()) != receipt.get("stderr_sha256"):
-        raise ValueError("receipt output hashes are stale")
-    output = (stdout_path.read_bytes() + b"\n" + stderr_path.read_bytes()).decode("utf-8", errors="replace")
+    integrity_error = False
+    try:
+        validate_descriptor(descriptor)
+        if descriptor["stage"] != stage or receipt.get("schema") != "quick-dev.process-receipt.v2" or receipt.get("stage") != stage:
+            raise ValueError
+        if receipt.get("descriptor_sha256") != sha256_value(dict(descriptor)) or receipt.get("candidate_hash") != descriptor["candidate_hash"]:
+            raise ValueError
+        if receipt.get("argv") != descriptor["argv"] or receipt.get("cwd") != descriptor["cwd"]:
+            raise ValueError
+        stdout_path, stderr_path = evidence / "stdout.bin", evidence / "stderr.bin"
+        if not stdout_path.is_file() or not stderr_path.is_file():
+            raise ValueError
+        if sha256_bytes(stdout_path.read_bytes()) != receipt.get("stdout_sha256") or sha256_bytes(stderr_path.read_bytes()) != receipt.get("stderr_sha256"):
+            raise ValueError
+    except (OSError, ValueError):
+        integrity_error = True
+    stdout = (evidence / "stdout.bin").read_bytes() if (evidence / "stdout.bin").is_file() else b""
+    stderr = (evidence / "stderr.bin").read_bytes() if (evidence / "stderr.bin").is_file() else b""
+    output = (stdout + b"\n" + stderr).decode("utf-8", errors="replace")
     observed, declared = sorted(set(FAILURE_RE.findall(output))), sorted(set(expected_failure_ids))
-    exit_code, timed_out = receipt.get("exit_code"), receipt.get("timed_out") is True
+    exit_code = receipt.get("exit_code")
+    timed_out = receipt.get("timed_out") is True
     executions, cases = receipt.get("test_executions"), receipt.get("cases")
-    if timed_out:
+    pre_error = receipt.get("pre_execution_error_code")
+    evidence_state = "observed-run"
+    if integrity_error or pre_error == "ARTIFACT_INTEGRITY":
+        outcome, family, predicate, evidence_state = "blocked", "artifact-integrity", False, "invalid-run"
+    elif pre_error == "TARGET_BINDING":
+        outcome, family, predicate = "blocked", "target-binding-failure", False
+    elif timed_out:
         outcome, family, predicate = "blocked", "timeout-no-observation", False
+    elif REPO_NOISE_RE.search(output):
+        outcome, family, predicate = "blocked", "repo-noise", False
     elif not isinstance(exit_code, int) or not isinstance(executions, int) or executions < 1 or not isinstance(cases, int) or cases < 1:
         outcome, family, predicate = "blocked", "test-harness-failure", False
     elif stage == "red" and exit_code == 0:
         outcome, family, predicate = "fail", "unexpected-green", False
-    elif stage == "red" and declared and observed == declared:
+    elif stage == "red" and declared and observed == declared and exit_code != 0:
         outcome, family, predicate = "fail", "expected-red", True
     elif stage == "red":
         outcome, family, predicate = "fail", "semantic-contract-gap", False
     elif exit_code == 0:
         outcome, family, predicate = "pass", None, True
     else:
-        outcome, family, predicate = "fail", ("terminal-failure" if stage == "terminal" else "task-implementation-failure"), False
-    if expected_exit not in (None, "zero", "nonzero"):
-        raise ValueError("expected exit is invalid")
-    if expected_exit == "zero" and exit_code != 0: predicate = False
-    if expected_exit == "nonzero" and (not isinstance(exit_code, int) or exit_code == 0): predicate = False
+        outcome, family, predicate = "fail", "task-implementation-failure", False
     receipt_sha = sha256_value(dict(receipt))
-    failure_id = None if family is None else deterministic_failure_id(family, descriptor_sha, receipt["candidate_hash"], stage, observed, receipt_sha)
+    descriptor_sha = sha256_value(dict(descriptor)) if isinstance(descriptor, Mapping) else sha256_value({})
+    candidate_hash = str(receipt.get("candidate_hash") or descriptor.get("candidate_hash") or "sha256:" + "0" * 64)
+    failure_id = None if family is None else deterministic_failure_id(family, descriptor_sha, candidate_hash, stage, observed, receipt_sha)
     observation = {
         "schema": "quick-dev.observation.v2", "observation_id": f"OBS-{stage.upper()}-{receipt_sha[7:19].upper()}",
         "receipt_ref": f"canonical-evidence/{stage}/process-receipt.v2.json", "receipt_sha256": receipt_sha,
-        "stage": stage, "evidence_state": "observed-run", "verification_outcome": outcome,
-        "process_attempts": receipt["process_attempts"], "test_executions": executions, "cases": cases,
-        "exit_code": exit_code, "timed_out": timed_out, "failure_family": family, "failure_id": failure_id,
-        "observed_failure_ids": observed, "expected_failure_ids": declared, "predicate_result": predicate,
-        "judge_identity": "quick-dev-independent-judge.v2",
+        "stage": stage, "evidence_state": evidence_state, "verification_outcome": outcome,
+        "process_attempts": receipt.get("process_attempts", 0), "test_executions": executions if isinstance(executions, int) else 0,
+        "cases": cases if isinstance(cases, int) else 0, "exit_code": exit_code, "timed_out": timed_out,
+        "failure_family": family, "failure_id": failure_id, "observed_failure_ids": observed,
+        "expected_failure_ids": declared, "predicate_result": predicate, "judge_identity": "quick-dev-independent-judge.v2",
     }
     create_json(evidence / "observation.v2.json", observation)
     return observation
 
 
-def selector_identity(selector: str, target_refs: Sequence[str], fixture_refs: Sequence[str], assertion_ids: Sequence[str], cwd: str) -> str:
-    if not isinstance(selector, str) or not selector:
-        raise ValueError("selector is invalid")
-    return sha256_value({"selector": selector, "target_refs": sorted(target_refs), "fixture_refs": sorted(fixture_refs), "assertion_ids": sorted(assertion_ids), "cwd": cwd})
-
-
-def build_runtime_edges(*, plan_id: str, plan_hash: str, slice_id: str, run_id: str, candidate_hash: str, stage: str, descriptor: Mapping[str, Any], receipt: Mapping[str, Any], observation: Mapping[str, Any], assertions: Sequence[Mapping[str, str]], selector_hash: str) -> list[dict[str, Any]]:
-    if stage not in STAGES or receipt.get("stage") != stage or observation.get("stage") != stage:
-        raise ValueError("runtime edge stage lineage is invalid")
-    descriptor_sha = sha256_value(dict(descriptor))
-    if receipt.get("descriptor_sha256") != descriptor_sha or observation.get("receipt_sha256") != sha256_value(dict(receipt)):
-        raise ValueError("runtime edge lineage is stale")
+def build_runtime_edges(*, plan_id: str, plan_hash: str, slice_id: str, run_id: str, candidate_hash: str, stage: str, descriptor: Mapping[str, Any], receipt: Mapping[str, Any], observation: Mapping[str, Any], selector_hash: str) -> list[dict[str, Any]]:
+    validate_descriptor(descriptor)
+    if descriptor["plan_id"] != plan_id or descriptor["slice_id"] != slice_id or descriptor["run_id"] != run_id or descriptor["candidate_hash"] != candidate_hash or descriptor["stage"] != stage:
+        raise ValueError("runtime edge descriptor lineage is invalid")
+    if receipt.get("descriptor_sha256") != sha256_value(dict(descriptor)) or observation.get("receipt_sha256") != sha256_value(dict(receipt)):
+        raise ValueError("runtime edge receipt/observation lineage is stale")
     targets, fixtures = receipt.get("target_hashes"), receipt.get("fixture_hashes")
-    if not isinstance(targets, dict) or not targets or not isinstance(fixtures, dict) or not fixtures:
-        raise ValueError("runtime edge target/fixture lineage is incomplete")
-    target_ref, target_sha = next(iter(sorted(targets.items())))
-    fixture_ref, fixture_sha = next(iter(sorted(fixtures.items())))
-    result = []
-    for assertion in assertions:
-        if not isinstance(assertion, Mapping) or not {"acceptance_id", "assertion_id", "case_source_ref"}.issubset(assertion):
-            raise ValueError("runtime assertion is invalid")
+    if not isinstance(targets, dict) or not isinstance(fixtures, dict):
+        raise ValueError("runtime edge target/fixture hashes are invalid")
+    result: list[dict[str, Any]] = []
+    for assertion in descriptor["acceptance_assertions"]:
+        target_ref = assertion.get("target_ref") or descriptor["target_refs"][0]
+        fixture_ref = assertion.get("fixture_ref") or descriptor["fixture_refs"][0]
+        if target_ref not in targets or fixture_ref not in fixtures:
+            if observation.get("predicate_result") is True:
+                raise ValueError("runtime edge assertion target/fixture is not bound")
+            continue
+        expected_stage_outcome = "fail" if stage == "red" else "pass"
+        actual_stage_outcome = "pass" if observation.get("verification_outcome") == "pass" else "fail"
         result.append({
-            "schema": "quick-dev.runtime-assertion-edge.v2", "plan_id": plan_id, "plan_hash": plan_hash,
-            "slice_id": slice_id, "run_id": run_id, "candidate_hash": candidate_hash, "stage": stage,
-            "acceptance_id": assertion["acceptance_id"], "assertion_id": assertion["assertion_id"], "case_source_ref": assertion["case_source_ref"],
-            "selector_identity": selector_hash, "receipt_ref": observation["receipt_ref"], "receipt_sha256": observation["receipt_sha256"],
+            "plan_id": plan_id, "plan_hash": plan_hash, "slice_id": slice_id, "candidate_hash": candidate_hash,
+            "observation_id": observation["observation_id"], "acceptance_id": assertion["acceptance_id"], "assertion_id": assertion["assertion_id"],
+            "selector_identity": selector_hash, "stage": stage, "run_id": run_id,
+            "result_ref": f"canonical-evidence/{stage}/process-receipt.v2.json", "result_sha256": sha256_value(dict(receipt)),
+            "receipt_ref": f"canonical-evidence/{stage}/process-receipt.v2.json", "receipt_sha256": sha256_value(dict(receipt)),
             "observation_ref": f"canonical-evidence/{stage}/observation.v2.json", "observation_sha256": sha256_value(dict(observation)),
-            "descriptor_sha256": descriptor_sha, "target_ref": target_ref, "target_sha256": target_sha,
-            "fixture_ref": fixture_ref, "fixture_sha256": fixture_sha,
-            "verification_outcome": observation["verification_outcome"], "failure_family": observation["failure_family"], "failure_id": observation["failure_id"],
-            "producer_identity": "quick-dev-runtime-edge-validator.v2", "validator_identity": "quick-dev-runtime-edge-validator.v2", "derived_by": "deterministic-validator",
+            "descriptor_sha256": sha256_value(dict(descriptor)), "target_sha256": targets[target_ref], "fixture_sha256": fixtures[fixture_ref],
+            "observed": observation.get("evidence_state") == "observed-run", "expected_stage_outcome": expected_stage_outcome,
+            "actual_stage_outcome": actual_stage_outcome, "predicate_result": observation.get("predicate_result") is True,
+            "verification_outcome": observation.get("verification_outcome"), "failure_family": observation.get("failure_family"),
+            "failure_id": observation.get("failure_id"), "target_ref": target_ref, "fixture_ref": fixture_ref,
+            "case_source_ref": assertion["case_source_ref"], "producer_identity": "quick-dev-runtime-edge-validator.v2",
+            "validator_identity": "quick-dev-runtime-edge-validator.v2", "derived_by": "deterministic-validator",
         })
-    if not result:
-        raise ValueError("runtime edges require assertions")
+    if observation.get("predicate_result") is True and not result:
+        raise ValueError("successful stage requires runtime assertion edges")
     return result
 
 
+def expected_tuple_keys(bundle: Mapping[str, Any]) -> set[str]:
+    cover = bundle.get("final_plan_coverage")
+    if not isinstance(cover, list):
+        raise ValueError("final plan coverage missing")
+    keys: set[str] = set()
+    for edge in cover:
+        if not isinstance(edge, Mapping) or edge.get("stage_scope") != list(STAGES):
+            raise ValueError("final plan coverage stage scope invalid")
+        sid, aid = edge.get("slice_id"), edge.get("acceptance_id")
+        if not isinstance(sid, str) or not isinstance(aid, str):
+            raise ValueError("final plan coverage identity invalid")
+        for stage in STAGES:
+            keys.add(f"{sid}|{aid}|{stage}")
+    return keys
+
+
 def validate_closure(tuples: Sequence[Mapping[str, Any]], expected_keys: Iterable[str], snapshot_sha: str) -> tuple[bool, list[str]]:
-    findings, actual = [], []
-    expected = set(expected_keys)
-    selector_by_acceptance: dict[tuple[str, str], str] = {}
+    findings: list[str] = []; actual: list[str] = []
+    expected = set(expected_keys); selectors: dict[tuple[str, str], str] = {}
     for index, item in enumerate(tuples):
-        if not isinstance(item, Mapping):
-            findings.append(f"tuple[{index}]:not-object"); continue
-        key = item.get("tuple_key")
-        canonical = f"{item.get('slice_id')}|{item.get('acceptance_id')}|{item.get('stage')}"
+        if not isinstance(item, Mapping): findings.append(f"tuple[{index}]:not-object"); continue
+        key = item.get("tuple_key"); canonical = f"{item.get('slice_id')}|{item.get('acceptance_id')}|{item.get('stage')}"
         if key != canonical: findings.append(f"tuple[{index}]:tuple-key-mismatch")
         if item.get("stage") not in STAGES: findings.append(f"tuple[{index}]:stage-invalid")
         if not HASH_RE.fullmatch(str(item.get("runtime_edge_sha256", ""))): findings.append(f"tuple[{index}]:runtime-edge-hash-invalid")
         if item.get("current_snapshot_sha256") != snapshot_sha: findings.append(f"tuple[{index}]:snapshot-stale")
-        selector = item.get("selector_identity")
-        pair = (str(item.get("slice_id")), str(item.get("acceptance_id")))
+        selector = item.get("selector_identity"); pair = (str(item.get("slice_id")), str(item.get("acceptance_id")))
         if not isinstance(selector, str) or not selector: findings.append(f"tuple[{index}]:selector-missing")
-        elif pair in selector_by_acceptance and selector_by_acceptance[pair] != selector: findings.append(f"tuple[{index}]:selector-drift")
-        else: selector_by_acceptance[pair] = selector
+        elif pair in selectors and selectors[pair] != selector: findings.append(f"tuple[{index}]:selector-drift")
+        else: selectors[pair] = selector
         if isinstance(key, str): actual.append(key)
     if len(actual) != len(set(actual)): findings.append("tuple-key-duplicate")
     if set(actual) != expected: findings.append("tuple-key-set-mismatch")
@@ -296,62 +390,69 @@ def validate_closure(tuples: Sequence[Mapping[str, Any]], expected_keys: Iterabl
 
 
 def hash_path(path: Path) -> str:
-    if path.is_symlink(): raise ValueError("snapshot root may not be a symlink")
+    if path.is_symlink(): raise ValueError("snapshot root may not be symlink")
     if path.is_file(): return sha256_bytes(path.read_bytes())
     if path.is_dir():
         rows = []
         for child in sorted(path.rglob("*")):
-            if child.is_symlink(): raise ValueError("snapshot tree contains a symlink")
+            if child.is_symlink(): raise ValueError("snapshot tree contains symlink")
             if child.is_file(): rows.append((child.relative_to(path).as_posix(), sha256_bytes(child.read_bytes())))
         return sha256_value(rows)
-    raise ValueError("snapshot root is missing")
+    raise ValueError("snapshot root missing")
+
+
+def _git_before_hash(root: Path, base: str, path: str) -> str:
+    proc = subprocess.run(["git", "show", f"{base}:{path}"], cwd=root, capture_output=True, check=False)
+    if proc.returncode != 0:
+        raise ValueError(f"cannot read baseline bytes: {path}")
+    return sha256_bytes(proc.stdout)
 
 
 def current_snapshot(workspace: Path, roots: Sequence[Mapping[str, str]], *, source_commit: str, base_commit: str | None = None) -> dict[str, Any]:
     root = workspace.resolve()
     if len(roots) != len(ROOT_KINDS): raise ValueError("current snapshot requires exactly eight roots")
-    resolved, kinds, prefixes = [], [], []
+    resolved: list[dict[str, str]] = []; kinds: list[str] = []; prefixes: list[str] = []
     for item in roots:
         kind, raw, reason = item.get("root_kind"), item.get("repository_relative_posix_path"), item.get("inclusion_reason")
-        if kind in GOVERNANCE_ROOTS or kind not in ROOT_KINDS: raise ValueError(f"snapshot root kind is not runtime authority: {kind}")
-        if not isinstance(raw, str) or not isinstance(reason, str) or not reason: raise ValueError("snapshot root fields are invalid")
-        relative = safe_relative(raw); target = (root / relative).resolve()
-        try: target.relative_to(root)
-        except ValueError as exc: raise ValueError("snapshot root escapes repository") from exc
+        if kind not in ROOT_KINDS or kind in GOVERNANCE_ROOTS: raise ValueError(f"invalid runtime root kind: {kind}")
+        if not isinstance(raw, str) or not isinstance(reason, str) or not reason: raise ValueError("snapshot root fields invalid")
+        relative = safe_relative(raw); target = (root / relative).resolve(); target.relative_to(root)
         resolved.append({"root_kind": kind, "repository_relative_posix_path": relative, "content_sha256": hash_path(target), "source_commit": source_commit, "inclusion_reason": reason})
         kinds.append(kind); prefixes.append(relative.rstrip("/"))
-    if set(kinds) != set(ROOT_KINDS) or len(kinds) != len(set(kinds)): raise ValueError("snapshot root kinds must be the exact unique set")
+    if set(kinds) != set(ROOT_KINDS) or len(kinds) != len(set(kinds)): raise ValueError("snapshot root kinds must be exact unique set")
     base = base_commit or source_commit
     delta: dict[str, Any] = {"base_commit": base, "additions": [], "deletions": [], "renames": []}
     if (root / ".git").exists() and base:
-        diff = subprocess.run(["git", "diff", "--name-status", "-M", base, "--"], cwd=root, capture_output=True, text=True, check=False)
-        if diff.returncode != 0: raise ValueError("git delta cannot be resolved")
-        for line in diff.stdout.splitlines():
+        proc = subprocess.run(["git", "diff", "--name-status", "-M", base, "--"], cwd=root, capture_output=True, text=True, check=False)
+        if proc.returncode != 0: raise ValueError("git delta cannot be resolved")
+        for line in proc.stdout.splitlines():
             parts = line.split("\t"); status = parts[0] if parts else ""
             if status.startswith("R") and len(parts) == 3:
-                before, after = safe_relative(parts[1]), safe_relative(parts[2]); delta["renames"].append({"from_path": before, "to_path": after})
+                before, after = safe_relative(parts[1]), safe_relative(parts[2])
+                delta["renames"].append({"from_path": before, "to_path": after, "before_sha256": _git_before_hash(root, base, before), "after_sha256": hash_path(root / after)})
             elif status == "A" and len(parts) == 2:
                 path = safe_relative(parts[1]); delta["additions"].append({"path": path, "after_sha256": hash_path(root / path)})
             elif status == "D" and len(parts) == 2:
-                delta["deletions"].append({"path": safe_relative(parts[1])})
+                path = safe_relative(parts[1]); delta["deletions"].append({"path": path, "before_sha256": _git_before_hash(root, base, path)})
             elif len(parts) == 2:
-                path = safe_relative(parts[1]); delta["deletions"].append({"path": path}); delta["additions"].append({"path": path, "after_sha256": hash_path(root / path)})
+                path = safe_relative(parts[1]); delta["deletions"].append({"path": path, "before_sha256": _git_before_hash(root, base, path)}); delta["additions"].append({"path": path, "after_sha256": hash_path(root / path)})
         untracked = subprocess.run(["git", "ls-files", "--others", "--exclude-standard"], cwd=root, capture_output=True, text=True, check=False)
         if untracked.returncode != 0: raise ValueError("untracked git delta cannot be resolved")
-        additions = {item["path"] for item in delta["additions"]}
+        known_additions = {item["path"] for item in delta["additions"]}
         for raw in untracked.stdout.splitlines():
             if raw.strip():
                 path = safe_relative(raw.strip())
-                if path not in additions: delta["additions"].append({"path": path, "after_sha256": hash_path(root / path)})
+                if path not in known_additions: delta["additions"].append({"path": path, "after_sha256": hash_path(root / path)})
         changed = {item["path"] for item in delta["additions"] + delta["deletions"]} | {item["from_path"] for item in delta["renames"]} | {item["to_path"] for item in delta["renames"]}
         for path in changed:
-            if not any(path == prefix or path.startswith(prefix + "/") for prefix in prefixes): raise ValueError(f"git delta contains an unlisted runtime root: {path}")
-    manifest = {"schema": "current-snapshot-resolver.v2", "roots": sorted(resolved, key=lambda item: ROOT_KINDS.index(item["root_kind"])), "git_delta": delta, "excluded_roots": sorted(GOVERNANCE_ROOTS)}
+            if not any(path == prefix or path.startswith(prefix + "/") for prefix in prefixes):
+                raise ValueError(f"git delta contains unlisted runtime root: {path}")
+    manifest = {"schema": "current-snapshot-resolver.v1", "roots": sorted(resolved, key=lambda item: ROOT_KINDS.index(item["root_kind"])), "git_delta": delta, "excluded_roots": sorted(GOVERNANCE_ROOTS)}
     manifest["sha256"] = sha256_value(manifest)
     return manifest
 
 
-def environment_probe() -> dict[str, str]:
-    python = subprocess.run([sys.executable, "--version"], capture_output=True, text=True, check=False)
+def environment_probe() -> dict[str, Any]:
+    py = subprocess.run([sys.executable, "--version"], capture_output=True, text=True, check=False)
     pytest = subprocess.run([sys.executable, "-m", "pytest", "--version"], capture_output=True, text=True, check=False)
-    return {"launcher": sys.executable, "interpreter_version": (python.stdout or python.stderr).strip(), "test_runner_version": (pytest.stdout or pytest.stderr).strip()}
+    return {"launcher": sys.executable, "interpreter_version": (py.stdout or py.stderr).strip(), "test_runner_version": (pytest.stdout or pytest.stderr).strip(), "available": py.returncode == 0 and pytest.returncode == 0}
