@@ -1,0 +1,21 @@
+name: Chapter 4-5-6 Capability Harness
+
+on:
+  push:
+    branches:
+      - implementation/vdd-quick-dev-456
+  workflow_dispatch:
+
+jobs:
+  capability-harness:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: py -3 -m pip install pytest
+      - name: VDD semantic compiler tests
+        run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py
+      - name: Quick Dev runtime contract tests
+        run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py
