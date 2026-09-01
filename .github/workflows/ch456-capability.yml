@@ -24,8 +24,8 @@ jobs:
         run: |
           py -3 -m pip install pytest
           choco install ripgrep -y --no-progress
-      - name: VDD semantic compiler tests
-        run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py
+      - name: VDD semantic compiler and closure tests
+        run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py
       - name: Probe real semantic worker backend
         run: py -3 scripts/vdd/probe_real_worker.py --out ch456-real-worker-probe.json
       - name: Quick Dev runtime contract tests
