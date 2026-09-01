@@ -20,6 +20,7 @@ jobs:
             .agents/skills/quick-dev-tdd-adapter
             .agents/skills/run-phase-bootstrap-review
             .agents/skills/run-refactor-implementation-acceptance
+            docs/adr
             execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening
             execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan
             execution-plans/2026-07-12-llm-review-evidence-gate-hardening
