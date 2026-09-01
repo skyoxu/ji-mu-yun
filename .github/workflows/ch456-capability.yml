@@ -34,6 +34,10 @@ jobs:
         run: py -3 scripts/vdd/evaluate_real_semantic_quality.py --out ch456-real-semantic-quality.json
       - name: Quick Dev runtime contract tests
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py
+      - name: Evaluate stable facade routing
+        run: py -3 scripts/quick_dev/evaluate_stable_facade.py --out ch456-stable-facade.json
+      - name: Evaluate detached promotion mutation rejection
+        run: py -3 scripts/quick_dev/evaluate_detached_mutations.py --out ch456-detached-mutations.json
       - name: Evaluate selective replay accuracy
         run: py -3 scripts/quick_dev/evaluate_replay_matrix.py --out ch456-selective-replay.json
       - name: Fresh medium three-behavior task
@@ -52,6 +56,8 @@ jobs:
             ch456-curated-semantic-quality.json
             ch456-real-worker-probe.json
             ch456-real-semantic-quality.json
+            ch456-stable-facade.json
+            ch456-detached-mutations.json
             ch456-selective-replay.json
             ch456-8-25-replay.json
           if-no-files-found: ignore
