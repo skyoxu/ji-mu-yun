@@ -10,7 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
-from semantic_compiler_gate import compile_plan
+from semantic_compiler_authority import compile_plan
 
 
 def main() -> int:
