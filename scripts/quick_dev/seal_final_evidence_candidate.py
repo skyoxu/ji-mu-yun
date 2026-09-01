@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Seal Chapter 4/5/6 final evidence to the current candidate HEAD.
+"""Verify all Chapter 4/5/6 final evidence is bound to current candidate HEAD.
 
-Metric evaluators own metric semantics, not candidate provenance. This one
-sealing step runs after all evidence producers and before the final manifest. It
-adds source_head to deterministic evidence that does not already carry one and
-fails closed if any producer already bound itself to a different candidate.
+This step is intentionally read-only with respect to evidence. Deterministic
+metrics must be produced through the fixed candidate-bound metric runner, while
+live metrics bind themselves. Missing or mismatched source_head fails closed;
+this verifier never promotes unbound bytes into current-candidate evidence.
 """
 from __future__ import annotations
 
@@ -44,16 +44,16 @@ def seal(paths: list[Path], candidate_head: str) -> dict[str, Any]:
         if not path.is_file():
             raise ValueError(f"missing evidence: {path}")
         value = _load(path)
-        existing = value.get("source_head")
-        if existing is not None and str(existing) != candidate_head:
-            raise ValueError(f"candidate binding mismatch: {path}: {existing} != {candidate_head}")
-        value["source_head"] = candidate_head
-        path.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        source_head = value.get("source_head")
+        if not isinstance(source_head, str) or not source_head:
+            raise ValueError(f"unsealed evidence: {path}: missing source_head")
+        if source_head != candidate_head:
+            raise ValueError(f"candidate binding mismatch: {path}: {source_head} != {candidate_head}")
         rows.append({
             "path": str(path),
             "schema": value.get("schema"),
-            "preexisting_binding": existing is not None,
-            "source_head": candidate_head,
+            "source_head": source_head,
+            "candidate_metric_producer": value.get("candidate_metric_producer"),
         })
     return {
         "schema": SCHEMA,
@@ -61,6 +61,7 @@ def seal(paths: list[Path], candidate_head: str) -> dict[str, Any]:
         "candidate_head": candidate_head,
         "sealed_count": len(rows),
         "evidence": rows,
+        "writes_performed": False,
         "authorizes": [],
     }
 
@@ -78,6 +79,7 @@ def main() -> int:
             "schema": SCHEMA,
             "status": "blocked",
             "candidate_head": _head(),
+            "writes_performed": False,
             "error": str(exc),
             "authorizes": [],
         }
