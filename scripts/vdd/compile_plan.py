@@ -10,6 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
+import semantic_feasibility_patch  # noqa: F401  # installs normative planned-new-file V7 rule
 from semantic_compiler_authority import compile_plan
 
 
