@@ -11,23 +11,25 @@ Use this Skill only for an explicit plan file or plan directory routed to `stric
 
 | Input | Route | Runtime authority |
 | --- | --- | --- |
-| `vdd.semantic-plan-bundle.v1` / Chapter 4/5/6 current plan | current | `tools/current_router.py` + `tools/stage_pipeline.py` + `tools/coverage_predicates.py` |
+| `vdd.semantic-plan-bundle.v1` / Chapter 4/5/6 current plan | current | stable `scripts/quick_dev/run.py` -> `tools/stable_runner.py`; predicates in `current_router.py`, execution in `stage_pipeline.py`, coverage in `coverage_predicates.py` |
 | historical `implementation-contract.v1.json` without the current semantic bundle | compatibility | `tools/legacy_compat.py` may inspect/project/route repair only |
 | standalone requirements or missing contract | reject | none |
 
 Current plans must never use `loop_plan_directory.py`, `run_slice_lifecycle.py`, `stage_command.py`, plan-local combined writers, `canonical_lifecycle.py`, or `evidence_pipeline.py` as completion authority.
+
+The stable CLI defaults to deterministic Q1 preflight. `--recommendation-only` is strict Q0 and must not run tests, create a run, call a model, or write state. Advanced deterministic actions are exposed through `--action execute-stage|implementation-handoff|slice-ready|implementation-complete|recover`; model-backed RED authoring and production implementation remain agent/worker actions outside the evidence writers.
 
 ## Current Required Order
 
 1. Q0 recommendation-only: validate the semantic plan, current snapshot, explicit predecessors and change-impact state without running tests or writing run state.
 2. Q1 preflight: validate plan/slice/candidate identity, environment probe, selector/target/fixture/cwd/argv/timeout, write sets and predecessor state.
 3. Q2 RED materialization: create a frozen shell-free descriptor from VDD intent. A RED author may touch only the declared test write set and must bind a real production entry.
-4. Q3 RED: dispatch the frozen descriptor through `tools/stage_pipeline.py`. Executor writes only a process receipt; the judge writes only an observation/classification; the runtime-edge validator writes only runtime assertion edges.
-5. Q4 implementation: only a current expected-red authorizes the implementation worker. Exact changed paths must stay inside production write paths; selector/test/fixture/plan/evidence changes invalidate RED.
-6. Q5 GREEN: execute the same selector identity/target/fixture/assertion/cwd contract and require real nonzero test/case evidence with exit zero.
-7. Q6 REFACTOR: require current GREEN, allow only production paths, rerun the same selector and required regression/schema validators.
+4. Q3 RED: dispatch the frozen descriptor through `tools/stage_pipeline.py`. `process_executor_v2.py` writes process facts; `independent_judge_v2.py` classifies those facts; runtime-edge code writes only assertion edges.
+5. Q4 implementation: only a current expected-red authorizes an implementation-worker handoff. Exact changed paths must stay inside production write paths; selector/test/fixture/plan/evidence changes invalidate RED. The worker never writes evidence authority.
+6. Q5 GREEN: before execution, re-read the explicit frozen RED descriptor and RED stage result; require their bound hash and selector identity to match. Then execute the same selector identity/target/fixture/assertion/cwd contract and require real nonzero test/case evidence with exit zero.
+7. Q6 REFACTOR: require the same frozen RED predecessor binding plus current GREEN, allow only production paths, rerun the same selector and required regression/schema validators.
 8. Q7 slice-ready: `tools/coverage_predicates.py` re-reads RED/GREEN/REFACTOR edge -> observation -> receipt -> descriptor -> target/fixture bytes and proves exact Acceptance assertion coverage.
-9. Execute the terminal descriptor through `tools/stage_pipeline.py`; process success alone is not completion.
+9. Execute the terminal descriptor through `tools/stage_pipeline.py`; terminal may have its own selector identity and process success alone is not completion.
 10. Q8 whole-plan terminal: `tools/coverage_predicates.py` verifies one explicit hash-bound predecessor per slice, exact `(slice, Acceptance, stage)` tuple closure, terminal assertions and a freshly recomputed current snapshot before writing `implementation-complete`.
 
 Stop at `implementation-complete`, `repair-vdd`, `environment-blocked`, or repeated deterministic failure. Never publish `acceptance-passed` here.
@@ -36,9 +38,9 @@ Stop at `implementation-complete`, `repair-vdd`, `environment-blocked`, or repea
 
 | Artifact | Sole current writer |
 | --- | --- |
-| descriptor/run orchestration/recommendation/recovery | Quick Dev |
-| process receipt | executor trust zone |
-| observation/classification | independent judge |
+| descriptor/run orchestration/recommendation/recovery | Quick Dev stable runner/current router |
+| process receipt/stdout/stderr facts | `process_executor_v2.py` |
+| observation/classification | `independent_judge_v2.py` |
 | runtime assertion edge | runtime-edge validator |
 | slice-ready | Q7 coverage predicate |
 | implementation-complete | Q8 terminal predicate |
@@ -56,7 +58,7 @@ Use the versioned change-impact resolver for Q0/Q4/Q7/Q8/recovery. Selector/fixt
 
 Current classification must distinguish at least: `semantic-contract-gap`, `expected-red`, `unexpected-green`, `task-implementation-failure`, `test-harness-failure`, `target-binding-failure`, `repo-noise`, `timeout-no-observation`, `repeated-deterministic-failure`, and `artifact-integrity`.
 
-A successful lifecycle stage requires real observed execution and nonzero test/case counts. Timeout, harness, repo-noise, zero-case, wrong target, unexpected-green and artifact-integrity failures cannot satisfy RED or completion. The same deterministic failure fingerprint twice routes `repair-vdd` or `stop`; rerun is legal only after relevant input changes.
+A successful lifecycle stage requires real observed execution and nonzero test/case counts. Test/case counts come from the executor's recognized test-runner summary, never from arbitrary SUT markers. Timeout, harness, repo-noise, zero-case, wrong target, unexpected-green and artifact-integrity failures cannot satisfy RED or completion. Deterministic failure fingerprints exclude timestamp/run-duration/output-byte noise; the same fingerprint twice routes `repair-vdd` or `stop`. Rerun is legal only after relevant input changes.
 
 ## Profiles
 
@@ -68,13 +70,13 @@ The implementation worker may change only declared production paths after expect
 
 ## Legacy Compatibility
 
-Historical v1 plans are read-only compatibility inputs. `tools/legacy_compat.py` may report reusable identities or required current projection, but legacy combined receipt/observation fields, aggregate execution counters and plan-local terminal status cannot directly become current v2 evidence or completion authority.
+Historical v1 plans are read-only compatibility inputs. `tools/legacy_compat.py` may report reusable identities or required current projection, but legacy combined receipt/observation fields, aggregate execution counters and plan-local terminal status cannot directly become current v2 evidence or completion authority. `scripts/quick_dev/replay_legacy_tdd.py` is a regression harness only: it may prove a historical RED baseline and current GREEN with the same declared selector/failure identities, but it never authorizes current evidence.
 
 ## Boundaries
 
 - Use argv arrays with `shell=false`; reject raw shell commands.
 - Keep cwd and all paths repository-contained and POSIX-normalized in contracts.
-- Preserve same selector semantics through RED -> GREEN -> REFACTOR.
+- Preserve same selector semantics through RED -> GREEN -> REFACTOR and bind GREEN/REFACTOR to the frozen RED predecessor.
 - Never let SUT/backend/model text write or authorize evidence.
 - Never let governance bytes become runtime truth by default.
 - Never use artifact existence or plan status strings as completion proof.
