@@ -9,6 +9,9 @@ on:
 jobs:
   capability-harness:
     runs-on: windows-latest
+    env:
+      SC_LLM_BACKEND: openai-api
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - name: Enable Windows long paths
         shell: pwsh
@@ -37,7 +40,7 @@ jobs:
       - name: Probe real semantic worker backend
         run: py -3 scripts/vdd/probe_real_worker.py --out ch456-real-worker-probe.json
       - name: Evaluate real semantic worker quality when available
-        run: py -3 scripts/vdd/evaluate_real_semantic_quality.py --out ch456-real-semantic-quality.json
+        run: py -3 scripts/vdd/evaluate_real_semantic_quality.py --backend openai-api --out ch456-real-semantic-quality.json
       - name: Quick Dev runtime contract tests
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_worker_orchestration.py
       - name: Evaluate stable facade routing
@@ -50,14 +53,11 @@ jobs:
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py
       - name: Live blind medium task when backend is available
         shell: pwsh
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           if ($env:OPENAI_API_KEY) {
-            $env:SC_LLM_BACKEND = "openai-api"
             py -3 scripts/quick_dev/run_live_blind_benchmark.py --backend openai-api --require-live --out ch456-live-blind-benchmark.json
           } else {
-            py -3 scripts/quick_dev/run_live_blind_benchmark.py --out ch456-live-blind-benchmark.json
+            py -3 scripts/quick_dev/run_live_blind_benchmark.py --backend openai-api --out ch456-live-blind-benchmark.json
           }
       - name: Full VDD skill regression
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests
@@ -65,6 +65,21 @@ jobs:
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests
       - name: Replay 8-25 real RED-to-GREEN selectors
         run: py -3 scripts/quick_dev/replay_legacy_tdd.py --plan execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery --red-baseline 7890d90cd9a9183159742bacc5575a07ad061dc7 --out ch456-8-25-replay.json
+      - name: Strict final work-package completion gate
+        if: always()
+        run: >-
+          py -3 scripts/quick_dev/evaluate_final_completion.py
+          --architecture-reconcile ch456-architecture-reconcile.json
+          --curated-semantic ch456-curated-semantic-quality.json
+          --semantic-chain-mutations ch456-semantic-chain-mutations.json
+          --agent-context-mutations ch456-agent-context-mutations.json
+          --real-semantic ch456-real-semantic-quality.json
+          --stable-facade ch456-stable-facade.json
+          --detached-mutations ch456-detached-mutations.json
+          --selective-replay ch456-selective-replay.json
+          --live-blind ch456-live-blind-benchmark.json
+          --legacy-replay ch456-8-25-replay.json
+          --out ch456-final-completion.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -81,4 +96,5 @@ jobs:
             ch456-selective-replay.json
             ch456-live-blind-benchmark.json
             ch456-8-25-replay.json
+            ch456-final-completion.json
           if-no-files-found: ignore
