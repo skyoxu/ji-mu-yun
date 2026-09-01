@@ -11,12 +11,26 @@ HARNESS_RE = re.compile(r"ERROR collecting|collected 0 items|no tests ran|Import
 
 
 def normalized_failure_fingerprint(*, descriptor: Mapping[str, Any], receipt: Mapping[str, Any], family: str, observed_failure_ids: Sequence[str], expected_failure_ids: Sequence[str]) -> str:
+    """Hash only stable semantic failure inputs, never run timing/output-byte noise."""
+    observed_assertions = receipt.get("observed_assertion_ids", [])
+    if not isinstance(observed_assertions, list):
+        observed_assertions = []
     return sha256_value({
-        "taxonomy":"quick-dev.failure-taxonomy.v1","family":family,"selector_identity":selector_identity_from_descriptor(descriptor),
-        "candidate_hash":receipt.get("candidate_hash"),"stage":receipt.get("stage"),"exit_code":receipt.get("exit_code"),"timed_out":receipt.get("timed_out"),
-        "stdout_sha256":receipt.get("stdout_sha256"),"stderr_sha256":receipt.get("stderr_sha256"),
-        "target_hashes":receipt.get("target_hashes",{}),"fixture_hashes":receipt.get("fixture_hashes",{}),
-        "acceptance_assertions":descriptor.get("acceptance_assertions",[]),"observed_failure_ids":sorted(set(observed_failure_ids)),"expected_failure_ids":sorted(set(expected_failure_ids)),
+        "taxonomy":"quick-dev.failure-taxonomy.v1",
+        "family":family,
+        "selector_identity":selector_identity_from_descriptor(descriptor),
+        "candidate_hash":receipt.get("candidate_hash"),
+        "stage":receipt.get("stage"),
+        "exit_code":receipt.get("exit_code"),
+        "timed_out":receipt.get("timed_out"),
+        "test_executions":receipt.get("test_executions"),
+        "cases":receipt.get("cases"),
+        "target_hashes":receipt.get("target_hashes",{}),
+        "fixture_hashes":receipt.get("fixture_hashes",{}),
+        "acceptance_assertions":descriptor.get("acceptance_assertions",[]),
+        "observed_assertion_ids":sorted(set(str(x) for x in observed_assertions)),
+        "observed_failure_ids":sorted(set(observed_failure_ids)),
+        "expected_failure_ids":sorted(set(expected_failure_ids)),
     })
 
 
