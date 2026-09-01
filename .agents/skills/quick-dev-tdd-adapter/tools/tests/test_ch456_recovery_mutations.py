@@ -19,7 +19,7 @@ def _bundle() -> dict:
     return {"plan_id":"PLAN-X","acceptances":[{"acceptance_id":"A-X","assertion_ids":["ASSERT-X"]}],"slices":[{"slice_id":"S1","acceptance_ids":["A-X"],"failure_intent_ids":[],"execution_snapshot_paths":["tests/selector.py","tests/fixture.txt"],"allowed_write_paths":["src/value.txt"]}]}
 
 
-def _descriptor(*, run_id: str = "R1", stage: str = "red", argv: list[str] | None = None) -> dict:
+def _descriptor(*, run_id: str = "R1", stage: str = "red", argv: list[str] | None = None, timeout_seconds: int = 30) -> dict:
     bundle = _bundle()
     return materialize_descriptor(
         bundle=bundle,
@@ -29,7 +29,7 @@ def _descriptor(*, run_id: str = "R1", stage: str = "red", argv: list[str] | Non
         candidate_hash="sha256:"+"1"*64,
         argv=argv or [sys.executable,"-m","pytest","tests/selector.py","-q"],
         cwd=".",
-        timeout_seconds=30,
+        timeout_seconds=timeout_seconds,
         target_refs=["tests/selector.py"],
         fixture_refs=["tests/fixture.txt"],
     )
@@ -67,6 +67,25 @@ def test_sut_self_reported_test_counts_are_ignored(tmp_path: Path) -> None:
     receipt = execute_process(tmp_path,tmp_path/"runs"/"R1","red",descriptor,profile_identity="standard")
     observation = judge_receipt(tmp_path/"runs"/"R1","red",descriptor,receipt,expected_failure_ids=["EXPECTED"])
     assert receipt["test_executions"] == 0 and receipt["cases"] == 0
+    assert observation["failure_family"] == "test-harness-failure" and observation["predicate_result"] is False
+
+
+def test_timeout_never_counts_as_red_or_test_failure(tmp_path: Path) -> None:
+    _prepare(tmp_path,"import time\ndef test_slow():\n    time.sleep(5)\n    print('FAILURE_ID:EXPECTED')\n    assert False\n")
+    descriptor = _descriptor(timeout_seconds=1)
+    receipt = execute_process(tmp_path,tmp_path/"runs"/"R1","red",descriptor,profile_identity="standard")
+    observation = judge_receipt(tmp_path/"runs"/"R1","red",descriptor,receipt,expected_failure_ids=["EXPECTED"])
+    assert receipt["timed_out"] is True and receipt["exit_code"] is None
+    assert receipt["test_executions"] == 0 and receipt["cases"] == 0
+    assert observation["failure_family"] == "timeout-no-observation" and observation["predicate_result"] is False
+
+
+def test_pytest_collection_failure_is_harness_failure(tmp_path: Path) -> None:
+    _prepare(tmp_path,"import module_that_does_not_exist_ch456\ndef test_never_collected():\n    assert False\n")
+    descriptor = _descriptor()
+    receipt = execute_process(tmp_path,tmp_path/"runs"/"R1","red",descriptor,profile_identity="standard")
+    observation = judge_receipt(tmp_path/"runs"/"R1","red",descriptor,receipt,expected_failure_ids=["EXPECTED"])
+    assert receipt["exit_code"] != 0
     assert observation["failure_family"] == "test-harness-failure" and observation["predicate_result"] is False
 
 
