@@ -65,10 +65,26 @@ jobs:
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests
       - name: Replay 8-25 real RED-to-GREEN selectors
         run: py -3 scripts/quick_dev/replay_legacy_tdd.py --plan execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery --red-baseline 7890d90cd9a9183159742bacc5575a07ad061dc7 --out ch456-8-25-replay.json
+      - name: Freeze candidate-bound final evidence manifest
+        if: always()
+        run: >-
+          py -3 scripts/quick_dev/build_final_evidence_manifest.py
+          --architecture-reconcile ch456-architecture-reconcile.json
+          --curated-semantic ch456-curated-semantic-quality.json
+          --semantic-chain-mutations ch456-semantic-chain-mutations.json
+          --agent-context-mutations ch456-agent-context-mutations.json
+          --real-semantic ch456-real-semantic-quality.json
+          --stable-facade ch456-stable-facade.json
+          --detached-mutations ch456-detached-mutations.json
+          --selective-replay ch456-selective-replay.json
+          --live-blind ch456-live-blind-benchmark.json
+          --legacy-replay ch456-8-25-replay.json
+          --out ch456-final-evidence-manifest.json
       - name: Strict final work-package completion gate
         if: always()
         run: >-
           py -3 scripts/quick_dev/evaluate_final_completion.py
+          --manifest ch456-final-evidence-manifest.json
           --architecture-reconcile ch456-architecture-reconcile.json
           --curated-semantic ch456-curated-semantic-quality.json
           --semantic-chain-mutations ch456-semantic-chain-mutations.json
@@ -96,5 +112,6 @@ jobs:
             ch456-selective-replay.json
             ch456-live-blind-benchmark.json
             ch456-8-25-replay.json
+            ch456-final-evidence-manifest.json
             ch456-final-completion.json
           if-no-files-found: ignore
