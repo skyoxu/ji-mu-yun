@@ -7,12 +7,14 @@ plan artifacts are written only after the corresponding gate is valid.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import shutil
 import sys
 from typing import Any, Mapping, Sequence
 
 import semantic_compiler_gate as gate
+from semantic_chain_audit import audit_bundle
 
 
 def _resolved_backend_metadata(root: Path, *, injected: bool) -> tuple[str, str]:
@@ -46,6 +48,25 @@ def _resolved_backend_metadata(root: Path, *, injected: bool) -> tuple[str, str]
 gate._backend_metadata = _resolved_backend_metadata
 
 
+_BASE_VALIDATE = gate.validate_semantic_bundle_with_preflight
+
+
+def _strict_validate_semantic_bundle(bundle: Mapping[str, Any]) -> tuple[bool, list[str]]:
+    """Compose structural/preflight validation with exact semantic-chain audit."""
+    base_valid, base_findings = _BASE_VALIDATE(bundle)
+    audit = audit_bundle(bundle)
+    findings = list(base_findings) + [str(item) for item in audit["findings"]]
+    return bool(base_valid and audit["valid"] and not findings), findings
+
+
+# `_ORIGINAL_COMPILE_PLAN` resolves this symbol from semantic_compiler globals at
+# runtime, so this patch blocks plan-ready publication rather than auditing only
+# after canonical artifacts have already been written.  Resume validation uses
+# the gate-level name, so patch both authorities.
+gate.validate_semantic_bundle_with_preflight = _strict_validate_semantic_bundle
+gate.sc.validate_semantic_bundle = _strict_validate_semantic_bundle
+
+
 def _attempt(out_dir: Path, label: str, value: Mapping[str, Any]) -> None:
     digest = gate.sc.sha256_value(value)[7:31]
     gate.sc.atomic_json(out_dir / ".compiler-attempts" / f"{label}-{digest}.json", dict(value))
@@ -66,6 +87,20 @@ def _explicit_fixture_cache_wins(out_dir: Path, worker_cache: Mapping[str, Any] 
         shutil.rmtree(cache_dir)
 
 
+def _plan_chain_audit(out_dir: Path) -> Mapping[str, Any]:
+    bundle_path = out_dir / "semantic-plan-bundle.v1.json"
+    if not bundle_path.is_file():
+        raise ValueError("plan-ready result is missing semantic bundle")
+    bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
+    if not isinstance(bundle, Mapping):
+        raise ValueError("semantic bundle must be object")
+    audit = audit_bundle(bundle)
+    if not audit["valid"]:
+        raise ValueError("plan-ready semantic chain audit failed: " + ",".join(audit["findings"]))
+    gate.sc.atomic_json(out_dir / "semantic-chain-audit.v1.json", audit)
+    return audit
+
+
 def compile_plan(
     *,
     requirements: Path,
@@ -84,7 +119,8 @@ def compile_plan(
     if resume_from == "first-failed-stage":
         completed = gate._completed_resume(out_dir)
         if completed is not None:
-            return completed
+            audit = _plan_chain_audit(out_dir)
+            return {**completed, "semantic_chain_metrics": audit["metrics"]}
 
     if recommendation_only:
         return gate._ORIGINAL_COMPILE_PLAN(
@@ -160,6 +196,8 @@ def compile_plan(
     if result.get("status") != "plan-ready":
         _attempt(out_dir, str(result.get("stage") or "compile"), result)
         return result
+    audit = _plan_chain_audit(out_dir)
+    result["semantic_chain_metrics"] = audit["metrics"]
     if resume_from is not None:
         result["resumed"] = True
         result["resume_from"] = resume_from
