@@ -2,10 +2,10 @@
 """Freeze one Chapter 4/5/6 final-evidence set against the current candidate.
 
 The manifest prevents the strict final-completion predicate from accidentally
-mixing stale evidence from another local/CI run.  It binds the current git HEAD
-to the exact bytes of every required evidence artifact.  Evidence that already
-carries a source_head must agree with the same candidate before it can enter the
-manifest.
+mixing stale evidence from another local/CI run. It binds the current git HEAD
+to the exact bytes of every required evidence artifact. Every evidence object
+must already have been sealed to the same source_head; unbound evidence is
+rejected rather than implicitly promoted by this manifest builder.
 """
 from __future__ import annotations
 
@@ -62,7 +62,9 @@ def build(candidate_head: str, paths: dict[str, Path]) -> dict[str, Any]:
             raise ValueError(f"missing evidence: {key}: {path}")
         value = _load(path)
         source_head = value.get("source_head")
-        if source_head is not None and str(source_head) != candidate_head:
+        if not isinstance(source_head, str) or not source_head:
+            raise ValueError(f"unsealed evidence: {key}: missing source_head")
+        if source_head != candidate_head:
             raise ValueError(f"candidate binding mismatch: {key}: {source_head} != {candidate_head}")
         evidence[key] = {
             "path": str(path),
