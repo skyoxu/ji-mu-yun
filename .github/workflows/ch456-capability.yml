@@ -30,13 +30,13 @@ jobs:
       - name: VDD semantic compiler and closure tests
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_failed_resume.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_planned_red_feasibility.py
       - name: Evaluate Architecture Deferred reconciliation
-        run: py -3 scripts/vdd/evaluate_architecture_reconcile.py --out ch456-architecture-reconcile.json
+        run: py -3 scripts/quick_dev/run_candidate_bound_metric.py --metric architecture-reconcile --out ch456-architecture-reconcile.json
       - name: Evaluate curated semantic quality
-        run: py -3 scripts/vdd/evaluate_semantic_quality.py --out ch456-curated-semantic-quality.json
+        run: py -3 scripts/quick_dev/run_candidate_bound_metric.py --metric curated-semantic --out ch456-curated-semantic-quality.json
       - name: Evaluate semantic chain mutation rejection
-        run: py -3 scripts/vdd/evaluate_semantic_chain_mutations.py --out ch456-semantic-chain-mutations.json
+        run: py -3 scripts/quick_dev/run_candidate_bound_metric.py --metric semantic-chain-mutations --out ch456-semantic-chain-mutations.json
       - name: Evaluate agent context mutation rejection
-        run: py -3 scripts/vdd/evaluate_agent_context_mutations.py --out ch456-agent-context-mutations.json
+        run: py -3 scripts/quick_dev/run_candidate_bound_metric.py --metric agent-context-mutations --out ch456-agent-context-mutations.json
       - name: Probe real semantic worker backend
         run: py -3 scripts/vdd/probe_real_worker.py --out ch456-real-worker-probe.json
       - name: Evaluate real semantic worker quality when available
@@ -44,11 +44,11 @@ jobs:
       - name: Quick Dev runtime contract tests
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_worker_orchestration.py
       - name: Evaluate stable facade routing
-        run: py -3 scripts/quick_dev/evaluate_stable_facade.py --out ch456-stable-facade.json
+        run: py -3 scripts/quick_dev/run_candidate_bound_metric.py --metric stable-facade --out ch456-stable-facade.json
       - name: Evaluate detached promotion mutation rejection
-        run: py -3 scripts/quick_dev/evaluate_detached_mutations.py --out ch456-detached-mutations.json
+        run: py -3 scripts/quick_dev/run_candidate_bound_metric.py --metric detached-mutations --out ch456-detached-mutations.json
       - name: Evaluate selective replay accuracy
-        run: py -3 scripts/quick_dev/evaluate_replay_matrix.py --out ch456-selective-replay.json
+        run: py -3 scripts/quick_dev/run_candidate_bound_metric.py --metric selective-replay --out ch456-selective-replay.json
       - name: Fresh medium deterministic three-behavior task
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py
       - name: Live blind medium task when backend is available
@@ -64,8 +64,8 @@ jobs:
       - name: Full Quick Dev skill regression
         run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests
       - name: Replay 8-25 real RED-to-GREEN selectors
-        run: py -3 scripts/quick_dev/replay_legacy_tdd.py --plan execution-plans/2026-08-25-vdd-quick-dev-semantic-oracle-recovery --red-baseline 7890d90cd9a9183159742bacc5575a07ad061dc7 --out ch456-8-25-replay.json
-      - name: Seal all final evidence to current candidate
+        run: py -3 scripts/quick_dev/run_candidate_bound_metric.py --metric legacy-replay --out ch456-8-25-replay.json
+      - name: Verify all final evidence is candidate-bound
         if: always()
         run: >-
           py -3 scripts/quick_dev/seal_final_evidence_candidate.py
