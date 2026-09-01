@@ -33,12 +33,17 @@ jobs:
             scripts/python
             scripts/toolchain
             AGENTS.md
+            agentbuild.txt
           sparse-checkout-cone-mode: false
           fetch-depth: 2
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: py -3 -m pip install pytest
+      - name: Install Python and compatibility test dependencies
+        shell: pwsh
+        run: |
+          py -3 -m pip install pytest
+          choco install ripgrep -y --no-progress
       - name: VDD semantic compiler tests
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py
       - name: Probe real semantic worker backend
