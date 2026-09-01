@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
+import stat
 import sys
 
 TOOLS = Path(__file__).resolve().parents[1]
@@ -75,52 +77,77 @@ def test_detached_bundle_requires_external_fixture_and_failure_family_cover(tmp_
     detached = tmp_path / "detached"
     candidate.mkdir()
     detached.mkdir()
-    artifacts = []
-    for role in ("judge", "oracle"):
-        path = detached / f"{role}.txt"
-        path.write_text(f"{role}\n", encoding="utf-8")
-        artifacts.append({"role": role, "path": str(path), "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(), "read_only": True})
 
-    positive = detached / "fixture-positive.json"
-    positive.write_text('{"kind":"positive"}\n', encoding="utf-8")
-    artifacts.append({
-        "role": "fixture",
-        "fixture_kind": "positive",
-        "path": str(positive),
-        "sha256": "sha256:" + hashlib.sha256(positive.read_bytes()).hexdigest(),
-        "read_only": True,
-    })
-    for index, family in enumerate(sorted(FAILURE_FAMILIES)):
-        fixture_kind = "negative" if index % 2 == 0 else "mutation"
-        path = detached / f"fixture-{family}.json"
-        path.write_text(f'{{"failure_family":"{family}"}}\n', encoding="utf-8")
-        artifacts.append({
-            "role": "fixture",
-            "fixture_kind": fixture_kind,
-            "failure_family": family,
-            "path": str(path),
+    def write_read_only(path: Path, text: str) -> None:
+        path.write_text(text, encoding="utf-8")
+        path.chmod(stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+
+    def ref(path: Path) -> dict[str, str]:
+        return {
+            "path": path.relative_to(detached).as_posix(),
             "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(),
-            "read_only": True,
-        })
+        }
 
-    bundle = {"schema": "detached-judge-bundle.v1", "source_commit": "c", "source_tree": "t", "judge_identity": "j", "judge_version": "1", "read_only_open_result": True, "promotion_revalidation_result": True, "artifacts": artifacts}
-    valid, findings = validate_detached_bundle(bundle, candidate_root=candidate)
+    judge = detached / "judge.py"
+    oracle = detached / "oracle.py"
+    write_read_only(judge, "def judge(value):\n    return bool(value)\n")
+    write_read_only(oracle, "EXPECTED = {'status': 'pass'}\n")
+
+    fixtures: list[dict[str, str]] = []
+    fixture_meta: dict[str, tuple[str, str | None]] = {}
+    positive = detached / "fixture-positive.json"
+    write_read_only(positive, json.dumps({"fixture_kind": "positive"}) + "\n")
+    fixtures.append(ref(positive))
+    fixture_meta[positive.name] = ("positive", None)
+    for index, family in enumerate(sorted(FAILURE_FAMILIES)):
+        kind = "negative" if index % 2 == 0 else "mutation"
+        path = detached / f"fixture-{family}.json"
+        write_read_only(path, json.dumps({"fixture_kind": kind, "failure_family": family}) + "\n")
+        fixtures.append(ref(path))
+        fixture_meta[path.name] = (kind, family)
+
+    bundle = {
+        "schema": "detached-judge-bundle.v1",
+        "source_commit": "c",
+        "source_tree": "sha256:" + "1" * 64,
+        "judge": {**ref(judge), "identity": "j"},
+        "oracle": ref(oracle),
+        "fixtures": fixtures,
+        "read_only_open": True,
+        "revalidated_at_promotion": True,
+    }
+    valid, findings = validate_detached_bundle(bundle, candidate_root=candidate, bundle_root=detached, allow_v2=False)
     assert valid, findings
 
     missing_family = {
         **bundle,
-        "artifacts": [item for item in artifacts if item.get("failure_family") != "unexpected-green"],
+        "fixtures": [
+            item for item in fixtures
+            if fixture_meta[Path(item["path"]).name][1] != "unexpected-green"
+        ],
     }
-    valid, findings = validate_detached_bundle(missing_family, candidate_root=candidate)
+    valid, findings = validate_detached_bundle(missing_family, candidate_root=candidate, bundle_root=detached, allow_v2=False)
     assert not valid and any("failure-family-cover" in item for item in findings)
 
-    missing_mutation = {**bundle, "artifacts": [item for item in artifacts if item.get("fixture_kind") != "mutation"]}
-    valid, findings = validate_detached_bundle(missing_mutation, candidate_root=candidate)
+    missing_mutation = {
+        **bundle,
+        "fixtures": [
+            item for item in fixtures
+            if fixture_meta[Path(item["path"]).name][0] != "mutation"
+        ],
+    }
+    valid, findings = validate_detached_bundle(missing_mutation, candidate_root=candidate, bundle_root=detached, allow_v2=False)
     assert not valid and any("fixture-kind-cover" in item for item in findings)
 
-    inside_artifacts = [dict(item) for item in artifacts]
-    inside_artifacts[0]["path"] = str(candidate / "judge.txt")
-    (candidate / "judge.txt").write_text("judge", encoding="utf-8")
-    inside_artifacts[0]["sha256"] = "sha256:" + hashlib.sha256((candidate / "judge.txt").read_bytes()).hexdigest()
-    valid, findings = validate_detached_bundle({**bundle, "artifacts": inside_artifacts}, candidate_root=candidate)
-    assert not valid and any("inside-candidate" in item for item in findings)
+    old_shape = {
+        "schema": "detached-judge-bundle.v1",
+        "source_commit": "c",
+        "source_tree": "t",
+        "judge_identity": "j",
+        "judge_version": "1",
+        "read_only_open_result": True,
+        "promotion_revalidation_result": True,
+        "artifacts": [],
+    }
+    valid, findings = validate_detached_bundle(old_shape, candidate_root=candidate, bundle_root=detached)
+    assert not valid and "bundle:closed-schema" in findings
