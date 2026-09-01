@@ -13,6 +13,7 @@ from independent_judge_v2 import judge_receipt
 from process_executor_v2 import execute_process
 from recovery_resolver import recover_explicit_run
 from runtime_evidence import create_json, selector_identity_from_descriptor, sha256_value
+from stage_pipeline import validate_nonterminal_successor
 
 
 def _bundle() -> dict:
@@ -134,17 +135,48 @@ def test_repeated_deterministic_failure_fingerprint_is_stable_and_stops(tmp_path
     assert decision == {"stop":True,"failure_family":"repeated-deterministic-failure","action":"stop"}
 
 
-def test_nonterminal_selector_drift_is_rejected() -> None:
-    descriptor = {"run_id":"R1","plan_id":"PLAN-X","slice_id":"S1","stage":"red","candidate_hash":"sha256:"+"1"*64,"argv":[sys.executable,"tests/a.py"],"cwd":".","shell":False,"timeout_seconds":5,"target_refs":["tests/a.py"],"fixture_refs":["tests/f.txt"],"acceptance_assertions":[{"acceptance_id":"A-X","assertion_id":"ASSERT-X","case_source_ref":"tests/a.py","target_ref":"tests/a.py","fixture_ref":"tests/f.txt"}]}
-    green = successor_descriptor(descriptor,stage="green",run_id="R2",candidate_hash="sha256:"+"2"*64)
-    assert selector_identity_from_descriptor(green) == selector_identity_from_descriptor(descriptor)
-    descriptor["argv"] = [sys.executable,"tests/other.py"]
+def _write_clean_red_predecessor(run: Path, red: dict) -> None:
+    create_json(run/"descriptors"/"red.json",red)
+    create_json(run/"canonical-evidence"/"red"/"stage-result.v2.json",{
+        "schema":"quick-dev.stage-result.v2",
+        "plan_id":red["plan_id"],
+        "slice_id":red["slice_id"],
+        "run_id":red["run_id"],
+        "stage":"red",
+        "descriptor_sha256":sha256_value(red),
+        "selector_identity":selector_identity_from_descriptor(red),
+        "predicate_result":True,
+        "verification_outcome":"fail",
+        "failure_family":"expected-red",
+    })
+
+
+def test_nonterminal_selector_drift_and_red_predecessor_mutation_are_rejected(tmp_path: Path) -> None:
+    run=tmp_path/"runs"/"R1"
+    (run/"descriptors").mkdir(parents=True)
+    red=_descriptor(run_id="R1")
+    _write_clean_red_predecessor(run,red)
+    green=successor_descriptor(red,stage="green",run_id="R1",candidate_hash="sha256:"+"2"*64)
+    binding=validate_nonterminal_successor(run,green)
+    assert binding["selector_identity"]==selector_identity_from_descriptor(red)
+
+    drifted=dict(green)
+    drifted["argv"]=[sys.executable,"-m","pytest","tests/other.py","-q"]
     try:
-        successor_descriptor(descriptor,stage="green",run_id="R3",candidate_hash="sha256:"+"3"*64)
+        validate_nonterminal_successor(run,drifted)
+    except ValueError as exc:
+        assert "selector drift" in str(exc)
+    else:
+        raise AssertionError("GREEN selector drift must be rejected")
+
+    red_path=run/"descriptors"/"red.json"
+    red_path.write_text("{}\n",encoding="utf-8")
+    try:
+        validate_nonterminal_successor(run,green)
     except ValueError:
         pass
     else:
-        raise AssertionError("GREEN selector drift must be rejected")
+        raise AssertionError("mutated frozen RED descriptor must be rejected")
 
 
 def test_recovery_reads_only_explicit_run_and_rejects_stale_hash(tmp_path: Path) -> None:
