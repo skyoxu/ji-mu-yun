@@ -9,9 +9,10 @@ Chapter 4/5/6 capability workflow and then invokes the strict final completion
 predicate.
 
 Each invocation refreshes only this runner's declared evidence files under
-`logs/`, then freezes a candidate-bound SHA-256 manifest. The final predicate
-must consume that exact set, so stale evidence cannot be silently reused while
-unrelated repository files are never recursively deleted.
+`logs/`. After all producers run, one candidate-sealing step binds every final
+evidence object to the current HEAD, then a SHA-256 manifest freezes the exact
+bytes. The final predicate consumes only that sealed set; unrelated repository
+files are never recursively deleted.
 """
 from __future__ import annotations
 
@@ -89,6 +90,7 @@ def main() -> int:
         "replay": evidence_dir / "ch456-selective-replay.json",
         "live_blind": evidence_dir / "ch456-live-blind-benchmark.json",
         "legacy": evidence_dir / "ch456-8-25-replay.json",
+        "seal": evidence_dir / "ch456-final-evidence-candidate-seal.json",
         "manifest": evidence_dir / "ch456-final-evidence-manifest.json",
         "final": evidence_dir / "ch456-final-completion.json",
         "summary": evidence_dir / "ch456-local-final-acceptance-run.json",
@@ -127,6 +129,19 @@ def main() -> int:
         result = _run(argv, env=env, label=label)
         results.append(result)
         print(json.dumps({"label": label, "exit_code": result["exit_code"], "passed": result["passed"]}, sort_keys=True), flush=True)
+
+    denominator = [
+        paths["architecture"], paths["curated"], paths["semantic_mutations"], paths["agent_context"],
+        paths["real_semantic"], paths["stable"], paths["detached"], paths["replay"],
+        paths["live_blind"], paths["legacy"],
+    ]
+    seal_argv = _python("scripts/quick_dev/seal_final_evidence_candidate.py")
+    for path in denominator:
+        seal_argv.extend(["--evidence", str(path)])
+    seal_argv.extend(["--out", str(paths["seal"])])
+    seal_result = _run(seal_argv, env=env, label="seal-final-evidence-candidate")
+    results.append(seal_result)
+    print(json.dumps({"label": seal_result["label"], "exit_code": seal_result["exit_code"], "passed": seal_result["passed"]}, sort_keys=True), flush=True)
 
     manifest_argv = _python(
         "scripts/quick_dev/build_final_evidence_manifest.py",
@@ -172,6 +187,7 @@ def main() -> int:
         "status": "pass" if not failed_steps else "blocked",
         "failed_steps": failed_steps,
         "steps": results,
+        "candidate_seal_ref": paths["seal"].relative_to(ROOT).as_posix(),
         "manifest_ref": paths["manifest"].relative_to(ROOT).as_posix(),
         "final_evidence_ref": paths["final"].relative_to(ROOT).as_posix(),
         "authorizes": [],
