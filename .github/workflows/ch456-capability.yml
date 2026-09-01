@@ -33,7 +33,7 @@ jobs:
       - name: Evaluate real semantic worker quality when available
         run: py -3 scripts/vdd/evaluate_real_semantic_quality.py --out ch456-real-semantic-quality.json
       - name: Quick Dev runtime contract tests
-        run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py
+        run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py
       - name: Evaluate selective replay accuracy
         run: py -3 scripts/quick_dev/evaluate_replay_matrix.py --out ch456-selective-replay.json
       - name: Fresh medium three-behavior task
