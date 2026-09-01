@@ -12,6 +12,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0,str(TOOLS))
 from independent_judge_v2 import judge_receipt
 from process_executor_v2 import execute_process
+from regression_gate import run_regression_gate
 from runtime_evidence import build_runtime_edges,create_json,load_json,selector_identity_from_descriptor,sha256_bytes,sha256_value,validate_descriptor
 
 
@@ -98,6 +99,22 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
         raise ValueError("descriptor assertion universe differs from semantic plan")
     receipt=execute_process(workspace,run_dir,descriptor["stage"],descriptor,profile_identity=profile_identity)
     observation=judge_receipt(run_dir,descriptor["stage"],descriptor,receipt,expected_failure_ids=expected_failures if descriptor["stage"]=="red" else ())
+
+    regression_binding=None
+    if descriptor["stage"]=="refactor" and observation.get("predicate_result") is True:
+        gate_path=run_dir/"canonical-evidence"/"refactor"/"regression-gate.v1.json"
+        gate=run_regression_gate(
+            workspace=workspace,
+            bundle=bundle,
+            slice_id=descriptor["slice_id"],
+            profile=profile_identity,
+            primary_argv=descriptor["argv"],
+            primary_receipt=receipt,
+            timeout_seconds=descriptor["timeout_seconds"],
+            out=gate_path,
+        )
+        regression_binding={"ref":gate_path.relative_to(run_dir).as_posix(),"sha256":sha256_value(gate)}
+
     selector_hash=selector_identity_from_descriptor(descriptor)
     plan_hash=sha256_bytes(semantic_plan.read_bytes())
     edges=build_runtime_edges(plan_id=bundle["plan_id"],plan_hash=plan_hash,slice_id=descriptor["slice_id"],run_id=descriptor["run_id"],candidate_hash=descriptor["candidate_hash"],stage=descriptor["stage"],descriptor=descriptor,receipt=receipt,observation=observation,selector_hash=selector_hash)
@@ -114,6 +131,8 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
     }
     if predecessor_binding is not None:
         result["red_predecessor_binding"]=predecessor_binding
+    if regression_binding is not None:
+        result["regression_gate"]=regression_binding
     create_json(run_dir/"canonical-evidence"/descriptor["stage"]/"stage-result.v2.json",result)
     return result
 
