@@ -13,12 +13,20 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from coverage_predicates import publish_implementation_complete, validate_slice_ready
-from current_router import preflight, profile_contract, recommendation, validate_expected_red
-from detached_promotion import validate_detached_bundle
+from current_router import (
+    materialize_descriptor,
+    preflight,
+    profile_contract,
+    recommendation,
+    successor_descriptor,
+    validate_expected_red,
+)
+from detached_promotion import detached_bundle_metadata, validate_detached_bundle
 from q4_q6_gates import begin_q4, finish_q4
 from recovery_resolver import recover_current_run
 from runtime_evidence import create_json, current_snapshot, load_json, safe_relative, sha256_bytes, sha256_value
 from stage_pipeline import execute_stage
+from worker_orchestrator import run_implementation_worker, run_red_author, run_refactor_worker
 
 
 def _inside_root(path: Path, label: str) -> Path:
@@ -46,6 +54,14 @@ def _slice(bundle: Mapping[str, Any], slice_id: str) -> Mapping[str, Any]:
     if len(matches) != 1:
         raise ValueError("slice identity missing or ambiguous")
     return matches[0]
+
+
+def _agent_context(plan_dir: Path, slice_id: str) -> Mapping[str, Any]:
+    path = plan_dir / "agent-context" / slice_id / "agent-context.json"
+    value = _load_json_object(path, "agent-context")
+    if value.get("slice_id") != slice_id:
+        raise ValueError("agent-context slice mismatch")
+    return value
 
 
 def candidate_identity(workspace: Path, bundle: Mapping[str, Any], slice_id: str) -> dict[str, Any]:
@@ -94,6 +110,36 @@ def _load_json_object(path: Path, label: str, *, inside_repo: bool = True) -> Ma
     if not isinstance(value, Mapping):
         raise ValueError(f"{label} must contain JSON object")
     return value
+
+
+def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str) -> tuple[list[str], list[str], list[str]]:
+    selected = _slice(bundle, slice_id)
+    context = _agent_context(plan_dir, slice_id)
+    commands = context.get("validation_commands")
+    if not isinstance(commands, list) or not commands or not isinstance(commands[0], list) or not commands[0]:
+        raise ValueError("agent-context validation command missing")
+    argv = [str(item) for item in commands[0]]
+    if any(not item for item in argv):
+        raise ValueError("validation command contains empty argv")
+    snapshots = [safe_relative(str(item)) for item in selected.get("execution_snapshot_paths", [])]
+    if not snapshots:
+        raise ValueError("slice execution snapshot paths missing")
+    selector_text = " ".join(
+        [*argv, *[str(item) for item in (selected.get("proof") or {}).get("selector_intents", [])]]
+    )
+    targets = [path for path in snapshots if path in selector_text]
+    if not targets:
+        targets = [path for path in snapshots if Path(path).suffix.lower() in {".py", ".cs", ".gd", ".js", ".ts"}]
+    if not targets:
+        targets = [snapshots[0]]
+    fixtures = [path for path in snapshots if path not in targets]
+    if not fixtures:
+        fixtures = [targets[0]]
+    return argv, targets, fixtures
+
+
+def _stage_descriptor(run_dir: Path, stage: str) -> Path:
+    return run_dir / "descriptors" / f"{stage}.json"
 
 
 def q0_recommendation(
@@ -156,6 +202,71 @@ def q1_preflight(*, semantic: Path, slice_id: str, profile: str) -> dict[str, An
     identity = candidate_identity(ROOT, bundle, slice_id)
     result = preflight(workspace=ROOT, semantic_plan=semantic, slice_id=slice_id, candidate_hash=identity["candidate_hash"], profile=profile)
     return {**result, "candidate_identity": identity, "plan_sha256": sha256_bytes(semantic.read_bytes()), "slice_id": slice_id, "profile": profile, "authorizes": []}
+
+
+def q2_author_red(
+    *,
+    semantic: Path,
+    slice_id: str,
+    run_dir: Path,
+    profile: str,
+    timeout_seconds: int,
+    backend: str | None,
+) -> dict[str, Any]:
+    run_dir = _inside_root(run_dir, "run-dir")
+    plan_dir = semantic.parent
+    bundle = load_json(semantic)
+    argv, target_refs, fixture_refs = _descriptor_inputs(bundle, plan_dir, slice_id)
+    selected = _slice(bundle, slice_id)
+    missing = [path for path in sorted(set(target_refs + fixture_refs)) if not (ROOT / path).is_file()]
+    planned = set(str(item) for item in selected.get("planned_new_files", []))
+    worker_required = bool(missing or planned.intersection(target_refs + fixture_refs))
+    if worker_required:
+        worker = run_red_author(
+            workspace=ROOT,
+            plan_dir=plan_dir,
+            semantic_plan=semantic,
+            slice_id=slice_id,
+            timeout_seconds=timeout_seconds,
+            backend=backend,
+        )
+        if worker.get("status") != "worker-changes-valid":
+            return {**worker, "required_next_action": "author-red"}
+    else:
+        worker = {
+            "schema": "quick-dev.worker-result.v1", "stage": "red-author", "status": "worker-not-required",
+            "changed_paths": [], "authorizes_evidence": False, "authorizes": [],
+        }
+    for ref in sorted(set(target_refs + fixture_refs)):
+        path = _inside_root(ROOT / ref, "RED target/fixture")
+        if not path.is_file() or path.is_symlink():
+            raise ValueError(f"RED author did not materialize bound path: {ref}")
+    identity = candidate_identity(ROOT, bundle, slice_id)
+    descriptor = materialize_descriptor(
+        bundle=bundle,
+        slice_id=slice_id,
+        stage="red",
+        run_id=run_dir.name,
+        candidate_hash=identity["candidate_hash"],
+        argv=argv,
+        cwd=".",
+        timeout_seconds=max(1, min(timeout_seconds, 600)),
+        target_refs=target_refs,
+        fixture_refs=fixture_refs,
+    )
+    descriptor_path = _stage_descriptor(run_dir, "red")
+    create_json(descriptor_path, descriptor)
+    return {
+        "schema": "quick-dev.red-author-result.v1",
+        "status": "red-materialized",
+        "worker": worker,
+        "descriptor_ref": descriptor_path.relative_to(ROOT).as_posix(),
+        "descriptor_sha256": sha256_value(descriptor),
+        "candidate_identity": identity,
+        "required_next_action": "run-red",
+        "authorizes_evidence": False,
+        "authorizes": [],
+    }
 
 
 def q4_handoff(
@@ -226,25 +337,156 @@ def q4_finish(
     return {**result, "plan_id": bundle.get("plan_id"), "slice_id": slice_id, "run_id": run_dir.name}
 
 
+def q4_implementation_worker(
+    *,
+    semantic: Path,
+    slice_id: str,
+    run_dir: Path,
+    snapshot_roots: Sequence[Mapping[str, str]],
+    source_commit: str,
+    base_commit: str | None,
+    timeout_seconds: int,
+    backend: str | None,
+) -> dict[str, Any]:
+    handoff = q4_handoff(
+        semantic=semantic, slice_id=slice_id, run_dir=run_dir, snapshot_roots=snapshot_roots,
+        source_commit=source_commit, base_commit=base_commit,
+    )
+    red = load_json(_inside_root(run_dir, "run-dir") / "canonical-evidence" / "red" / "stage-result.v2.json")
+    worker = run_implementation_worker(
+        workspace=ROOT,
+        plan_dir=semantic.parent,
+        semantic_plan=semantic,
+        slice_id=slice_id,
+        red_stage_result=red,
+        timeout_seconds=timeout_seconds,
+        backend=backend,
+    )
+    if worker.get("status") != "worker-changes-valid":
+        return {"schema": "quick-dev.implementation-worker-result.v1", "status": worker.get("status"), "worker": worker, "handoff": handoff, "authorizes": []}
+    gate = q4_finish(
+        semantic=semantic, slice_id=slice_id, run_dir=run_dir, before=handoff["before"],
+        snapshot_roots=snapshot_roots, source_commit=source_commit, base_commit=base_commit,
+        claimed_changed_paths=worker.get("changed_paths", []),
+    )
+    bundle = load_json(semantic)
+    red_descriptor = load_json(_stage_descriptor(_inside_root(run_dir, "run-dir"), "red"))
+    identity = candidate_identity(ROOT, bundle, slice_id)
+    green = successor_descriptor(red_descriptor, stage="green", run_id=_inside_root(run_dir, "run-dir").name, candidate_hash=identity["candidate_hash"])
+    green_path = _stage_descriptor(_inside_root(run_dir, "run-dir"), "green")
+    create_json(green_path, green)
+    return {
+        "schema": "quick-dev.implementation-worker-result.v1",
+        "status": "implementation-successor",
+        "worker": worker,
+        "q4_gate": gate,
+        "green_descriptor_ref": green_path.relative_to(ROOT).as_posix(),
+        "green_descriptor_sha256": sha256_value(green),
+        "required_next_action": "run-green",
+        "authorizes_evidence": False,
+        "authorizes": [],
+    }
+
+
+def q6_refactor_worker_and_run(
+    *,
+    semantic: Path,
+    slice_id: str,
+    run_dir: Path,
+    profile: str,
+    timeout_seconds: int,
+    backend: str | None,
+) -> dict[str, Any]:
+    run_dir = _inside_root(run_dir, "run-dir")
+    green = load_json(run_dir / "canonical-evidence" / "green" / "stage-result.v2.json")
+    worker = run_refactor_worker(
+        workspace=ROOT,
+        plan_dir=semantic.parent,
+        semantic_plan=semantic,
+        slice_id=slice_id,
+        green_stage_result=green,
+        timeout_seconds=timeout_seconds,
+        backend=backend,
+    )
+    if worker.get("status") != "worker-changes-valid":
+        return {"schema": "quick-dev.refactor-worker-result.v1", "status": worker.get("status"), "worker": worker, "authorizes": []}
+    bundle = load_json(semantic)
+    red_descriptor = load_json(_stage_descriptor(run_dir, "red"))
+    identity = candidate_identity(ROOT, bundle, slice_id)
+    refactor = successor_descriptor(red_descriptor, stage="refactor", run_id=run_dir.name, candidate_hash=identity["candidate_hash"])
+    refactor_path = _stage_descriptor(run_dir, "refactor")
+    create_json(refactor_path, refactor)
+    stage_result = execute_stage(
+        workspace=ROOT,
+        semantic_plan=semantic,
+        run_dir=run_dir,
+        descriptor_path=refactor_path,
+        profile_identity=profile,
+    )
+    return {
+        "schema": "quick-dev.refactor-worker-result.v1",
+        "status": "refactor-observed" if stage_result.get("predicate_result") is True else "refactor-failed",
+        "worker": worker,
+        "stage_result": stage_result,
+        "required_next_action": "validate-slice" if stage_result.get("predicate_result") is True else "repair-vdd",
+        "authorizes_evidence": False,
+        "authorizes": [],
+    }
+
+
 def _detached_promotion_binding(path: Path, profile: str) -> Mapping[str, Any] | None:
     if profile != "self-hosted":
         return None
-    bundle = _load_json_object(path, "detached-bundle", inside_repo=False)
-    valid, findings = validate_detached_bundle(bundle, candidate_root=ROOT)
+    resolved = path.resolve()
+    bundle = _load_json_object(resolved, "detached-bundle", inside_repo=False)
+    if bundle.get("schema") != "detached-judge-bundle.v1":
+        raise ValueError("self-hosted promotion requires canonical detached-judge-bundle.v1")
+    valid, findings = validate_detached_bundle(
+        bundle,
+        candidate_root=ROOT,
+        bundle_root=resolved.parent,
+        allow_v2=False,
+    )
     if not valid:
         raise ValueError("detached promotion bundle invalid: " + ",".join(findings))
+    metadata = detached_bundle_metadata(bundle)
     return {
         "schema": "quick-dev.detached-promotion-binding.v1",
         "bundle_sha256": sha256_value(dict(bundle)),
-        "judge_identity": bundle.get("judge_identity"),
-        "judge_version": bundle.get("judge_version"),
+        "judge_identity": metadata["judge_identity"],
+        "judge_version": metadata["judge_version"],
         "source_commit": bundle.get("source_commit"),
         "source_tree": bundle.get("source_tree"),
-        "artifact_count": len(bundle.get("artifacts", [])),
+        "artifact_count": metadata["artifact_count"],
         "validated": True,
         "validator_identity": "quick-dev-detached-bundle-validator.v1",
         "authorizes": [],
     }
+
+
+def _execute_named_stage(semantic: Path, run_dir: Path, stage: str, profile: str) -> Mapping[str, Any]:
+    run_dir = _inside_root(run_dir, "run-dir")
+    descriptor = _stage_descriptor(run_dir, stage)
+    if not descriptor.is_file():
+        if stage != "terminal":
+            raise ValueError(f"{stage} descriptor missing")
+        bundle = load_json(semantic)
+        slice_id = load_json(_stage_descriptor(run_dir, "red"))["slice_id"]
+        argv, target_refs, fixture_refs = _descriptor_inputs(bundle, semantic.parent, slice_id)
+        identity = candidate_identity(ROOT, bundle, slice_id)
+        terminal = materialize_descriptor(
+            bundle=bundle, slice_id=slice_id, stage="terminal", run_id=run_dir.name,
+            candidate_hash=identity["candidate_hash"], argv=argv, cwd=".", timeout_seconds=120,
+            target_refs=target_refs, fixture_refs=fixture_refs,
+        )
+        create_json(descriptor, terminal)
+    return execute_stage(
+        workspace=ROOT,
+        semantic_plan=semantic,
+        run_dir=run_dir,
+        descriptor_path=descriptor,
+        profile_identity=profile,
+    )
 
 
 def main() -> int:
@@ -255,7 +497,11 @@ def main() -> int:
     parser.add_argument("--recommendation-only", action="store_true")
     parser.add_argument(
         "--action",
-        choices=("preflight", "recommendation", "execute-stage", "implementation-handoff", "implementation-finish", "slice-ready", "implementation-complete", "recover"),
+        choices=(
+            "preflight", "run-preflight", "recommendation", "author-red", "run-red", "implement", "run-green",
+            "run-refactor", "execute-stage", "implementation-handoff", "implementation-finish", "slice-ready",
+            "validate-slice", "run-terminal", "implementation-complete", "recover",
+        ),
         default="preflight",
     )
     parser.add_argument("--state", type=Path)
@@ -273,6 +519,8 @@ def main() -> int:
     parser.add_argument("--out", type=Path)
     parser.add_argument("--detached-bundle", type=Path)
     parser.add_argument("--detached-promotion-passed", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--worker-timeout-seconds", type=int, default=600)
+    parser.add_argument("--llm-backend")
     args = parser.parse_args()
     try:
         profile_contract(args.profile)
@@ -292,8 +540,35 @@ def main() -> int:
                 base_commit=args.base_commit,
                 observation_index=observations,
             )
-        elif args.action == "preflight":
+        elif args.action in {"preflight", "run-preflight"}:
             result = q1_preflight(semantic=semantic, slice_id=args.slice_id, profile=args.profile)
+        elif args.action == "author-red":
+            if args.run_dir is None:
+                raise ValueError("author-red requires --run-dir")
+            result = q2_author_red(
+                semantic=semantic, slice_id=args.slice_id, run_dir=args.run_dir, profile=args.profile,
+                timeout_seconds=args.worker_timeout_seconds, backend=args.llm_backend,
+            )
+        elif args.action in {"run-red", "run-green", "run-terminal"}:
+            if args.run_dir is None:
+                raise ValueError(f"{args.action} requires --run-dir")
+            stage = {"run-red": "red", "run-green": "green", "run-terminal": "terminal"}[args.action]
+            result = _execute_named_stage(semantic, args.run_dir, stage, args.profile)
+        elif args.action == "implement":
+            if args.run_dir is None or snapshot_roots is None or args.source_commit is None:
+                raise ValueError("implement requires --run-dir --snapshot-roots --source-commit")
+            result = q4_implementation_worker(
+                semantic=semantic, slice_id=args.slice_id, run_dir=args.run_dir, snapshot_roots=snapshot_roots,
+                source_commit=args.source_commit, base_commit=args.base_commit,
+                timeout_seconds=args.worker_timeout_seconds, backend=args.llm_backend,
+            )
+        elif args.action == "run-refactor":
+            if args.run_dir is None:
+                raise ValueError("run-refactor requires --run-dir")
+            result = q6_refactor_worker_and_run(
+                semantic=semantic, slice_id=args.slice_id, run_dir=args.run_dir, profile=args.profile,
+                timeout_seconds=args.worker_timeout_seconds, backend=args.llm_backend,
+            )
         elif args.action == "execute-stage":
             if args.run_dir is None or args.descriptor is None:
                 raise ValueError("execute-stage requires --run-dir and --descriptor")
@@ -332,9 +607,9 @@ def main() -> int:
             )
             if args.out is not None:
                 create_json(_inside_root(args.out, "out"), result)
-        elif args.action == "slice-ready":
+        elif args.action in {"slice-ready", "validate-slice"}:
             if args.run_dir is None or snapshot_roots is None or args.source_commit is None or args.out is None:
-                raise ValueError("slice-ready requires --run-dir --snapshot-roots --source-commit --out")
+                raise ValueError("validate-slice requires --run-dir --snapshot-roots --source-commit --out")
             result = validate_slice_ready(workspace=ROOT, semantic_plan=semantic, run_root=_inside_root(args.run_dir, "run-dir"), slice_id=args.slice_id, snapshot_roots=snapshot_roots, source_commit=args.source_commit, base_commit=args.base_commit, out=_inside_root(args.out, "out"))
         elif args.action == "implementation-complete":
             if snapshot_roots is None or args.predecessors is None or args.source_commit is None or args.out is None:
