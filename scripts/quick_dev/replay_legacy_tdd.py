@@ -60,7 +60,7 @@ def replay(*, root: Path, plan_rel: str, red_baseline: str) -> dict[str, object]
     root = root.resolve()
     rows = _selectors(root, plan_rel)
     static_script = root / plan_rel / "tools" / "validate_red_green_contract.py"
-    static = _run([sys.executable, str(static_script), str(root / plan_rel)], root)
+    static = _run([sys.executable, str(static_script), "--plan-dir", str(root / plan_rel)], root)
     current = _probe_green(root, rows)
 
     fetch = _run(["git", "fetch", "--no-tags", "origin", red_baseline], root, timeout=600)
@@ -83,12 +83,18 @@ def replay(*, root: Path, plan_rel: str, red_baseline: str) -> dict[str, object]
         _run(["git", "worktree", "remove", "--force", str(baseline_root)], root, timeout=600)
         shutil.rmtree(temp_parent, ignore_errors=True)
 
-    valid = static.returncode == 0 and all(item["valid_red"] for item in baseline) and all(item["green"] for item in current)
+    behavior_valid = all(item["valid_red"] for item in baseline) and all(item["green"] for item in current)
+    static_valid = static.returncode == 0
+    valid = behavior_valid and static_valid
     return {
         "schema": "quick-dev.legacy-tdd-replay.v1",
         "plan": plan_rel,
         "red_baseline": red_baseline,
+        "behavior_replay_status": "pass" if behavior_valid else "fail",
+        "static_contract_status": "pass" if static_valid else "fail",
         "static_contract_exit_code": static.returncode,
+        "static_contract_stdout": (static.stdout or "")[-4000:],
+        "static_contract_stderr": (static.stderr or "")[-4000:],
         "baseline": baseline,
         "current": current,
         "status": "pass" if valid else "fail",
