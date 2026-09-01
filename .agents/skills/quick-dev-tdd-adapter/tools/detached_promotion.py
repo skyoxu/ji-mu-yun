@@ -7,6 +7,18 @@ from typing import Any, Mapping
 
 FORBIDDEN_IMPORT_TOKENS = ("runtime_evidence", "stage_pipeline", "coverage_predicates", "current_router")
 FIXTURE_KINDS = {"positive", "negative", "mutation"}
+FAILURE_FAMILIES = {
+    "semantic-contract-gap",
+    "expected-red",
+    "unexpected-green",
+    "task-implementation-failure",
+    "test-harness-failure",
+    "target-binding-failure",
+    "repo-noise",
+    "timeout-no-observation",
+    "repeated-deterministic-failure",
+    "artifact-integrity",
+}
 
 
 def sha256_file(path: Path) -> str:
@@ -29,6 +41,7 @@ def validate_detached_bundle(bundle: Mapping[str, Any], *, candidate_root: Path)
         return False, findings + ["bundle:artifacts"]
     roles: set[str] = set()
     fixture_kinds: set[str] = set()
+    fixture_failure_families: set[str] = set()
     candidate = candidate_root.resolve()
     for index, item in enumerate(artifacts):
         if not isinstance(item, Mapping):
@@ -45,8 +58,19 @@ def validate_detached_bundle(bundle: Mapping[str, Any], *, candidate_root: Path)
                 findings.append(f"artifact[{index}]:fixture-kind")
             else:
                 fixture_kinds.add(str(fixture_kind))
-        elif "fixture_kind" in item:
-            findings.append(f"artifact[{index}]:unexpected-fixture-kind")
+            failure_family = item.get("failure_family")
+            if failure_family is not None:
+                if failure_family not in FAILURE_FAMILIES:
+                    findings.append(f"artifact[{index}]:failure-family")
+                else:
+                    fixture_failure_families.add(str(failure_family))
+            elif fixture_kind in {"negative", "mutation"}:
+                findings.append(f"artifact[{index}]:failure-family-missing")
+        else:
+            if "fixture_kind" in item:
+                findings.append(f"artifact[{index}]:unexpected-fixture-kind")
+            if "failure_family" in item:
+                findings.append(f"artifact[{index}]:unexpected-failure-family")
         if not isinstance(raw, str) or not raw:
             findings.append(f"artifact[{index}]:path")
             continue
@@ -72,4 +96,11 @@ def validate_detached_bundle(bundle: Mapping[str, Any], *, candidate_root: Path)
     if fixture_kinds != FIXTURE_KINDS:
         missing = ",".join(sorted(FIXTURE_KINDS - fixture_kinds))
         findings.append("bundle:fixture-kind-cover" + (":" + missing if missing else ""))
+    if fixture_failure_families != FAILURE_FAMILIES:
+        missing = ",".join(sorted(FAILURE_FAMILIES - fixture_failure_families))
+        unexpected = ",".join(sorted(fixture_failure_families - FAILURE_FAMILIES))
+        detail = ":" + missing if missing else ""
+        if unexpected:
+            detail += ":unexpected=" + unexpected
+        findings.append("bundle:failure-family-cover" + detail)
     return not findings, findings
