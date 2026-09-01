@@ -7,7 +7,8 @@ SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from semantic_compiler import _normalize_obligation, compile_plan
+from semantic_compiler import _normalize_obligation
+from semantic_compiler_gate import compile_plan
 
 
 def _repo(tmp_path: Path) -> tuple[Path, Path, str, str]:
@@ -37,6 +38,7 @@ def _worker_cache(source_ref: str, owner: str, selector: str) -> dict:
             "failure_intents": [{"obligation_ids":[oid],"failure_family":"semantic-contract-gap","selector_intent":selector,"expected_outcome":"fail","failure_id":"COMPILE-RED"}],
             "slice_hints": [{"obligation_ids":[oid],"production_owners":[owner],"verification_lane":"unit","behavior_change":"compile deterministic plans","affected_subjects":["compiler"],"state_transition":"uncompiled->compiled","rollback_scope":{"production_paths":[owner],"state_or_schema_compatibility":"backward-compatible"},"allowed_write_paths":[owner],"execution_snapshot_paths":[selector],"planned_new_files":[],"terminal_predicate":"all active Acceptance assertions pass","forbidden_paths":[],"validation_commands":[[sys.executable,selector]]}]
         },
+        "v4-atomic-recall": {"supported_obligation_ids":[oid],"invented_obligation_ids":[],"source_gap_claims":[]},
         "v4": {"covered_obligation_ids":[oid],"missing_obligation_ids":[],"invented_obligation_ids":[],"misaligned_acceptance_ids":[],"oracle_alignment":{},"repairs":[]}
     }
 
@@ -46,8 +48,60 @@ def test_full_v0_to_v7_compilation_with_injected_readonly_workers(tmp_path: Path
     cache = _worker_cache("req.md#FR-1", owner, selector)
     result = compile_plan(requirements=req, out_dir=root / "plan", worker_cache=cache)
     assert result["status"] == "plan-ready"
+    assert result["atomic_quality_metrics"]["precision"] == 1.0
+    assert result["atomic_quality_metrics"]["recall"] == 1.0
+    assert (root / "plan" / "atomic-recall-alignment.v1.json").is_file()
     assert (root / "plan" / "semantic-plan-bundle.v1.json").is_file()
     assert (root / "plan" / "agent-context" / "S1" / "agent-context.json").is_file()
+
+
+def test_atomic_source_gap_blocks_plan_ready_and_reduces_recall(tmp_path: Path) -> None:
+    root, req, owner, selector = _repo(tmp_path)
+    req.write_text(
+        "# FR-1\nThe compiler must emit a deterministic plan. It must also stop after the second identical deterministic failure fingerprint.\n",
+        encoding="utf-8",
+    )
+    cache = _worker_cache("req.md#FR-1", owner, selector)
+    oid = cache["v4-atomic-recall"]["supported_obligation_ids"][0]
+    cache["v4-atomic-recall"] = {
+        "supported_obligation_ids":[oid],
+        "invented_obligation_ids":[],
+        "source_gap_claims":[{
+            "source_ref":"req.md#FR-1",
+            "subject":"compiler retry loop",
+            "behavior":"stop after the second identical deterministic failure fingerprint",
+            "reason":"V1 obligation set only represents deterministic plan emission",
+        }],
+    }
+    result = compile_plan(requirements=req, out_dir=root / "plan", worker_cache=cache)
+    assert result["status"] == "repair-vdd" and result["stage"] == "V4"
+    assert result["gate"] == "atomic-source-recall"
+    assert result["atomic_quality_metrics"]["precision"] == 1.0
+    assert result["atomic_quality_metrics"]["recall"] == 0.5
+    assert len(result["source_gap_claims"]) == 1
+    assert not (root / "plan" / "semantic-plan-bundle.v1.json").exists()
+    assert not (root / "plan" / "compiler-state.v1.json").exists()
+
+
+def test_invented_obligation_blocks_atomic_precision(tmp_path: Path) -> None:
+    root, req, owner, selector = _repo(tmp_path)
+    cache = _worker_cache("req.md#FR-1", owner, selector)
+    oid = cache["v4-atomic-recall"]["supported_obligation_ids"][0]
+    cache["v4-atomic-recall"] = {
+        "supported_obligation_ids":[],
+        "invented_obligation_ids":[oid],
+        "source_gap_claims":[{
+            "source_ref":"req.md#FR-1",
+            "subject":"compiler",
+            "behavior":"emit a deterministic plan",
+            "reason":"the proposed obligation is judged unsupported and the actual source behavior remains uncovered",
+        }],
+    }
+    result = compile_plan(requirements=req, out_dir=root / "plan", worker_cache=cache)
+    assert result["status"] == "repair-vdd" and result["stage"] == "V4"
+    assert result["atomic_quality_metrics"]["precision"] == 0.0
+    assert result["atomic_quality_metrics"]["recall"] == 0.0
+    assert not (root / "plan" / "semantic-plan-bundle.v1.json").exists()
 
 
 def test_recommendation_only_calls_no_worker_and_writes_nothing(tmp_path: Path) -> None:
