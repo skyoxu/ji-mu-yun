@@ -8,9 +8,10 @@ quality, a live fresh-medium <=60 minute run, detached anti-false-green evidence
 selective replay, Architecture reconciliation and the 8-25 regression all pass on
 one candidate.
 
-The gate also requires a final-evidence manifest that binds the current candidate
-HEAD to the exact bytes of every evidence artifact. This prevents stale or mixed
-run evidence from satisfying the completion predicate.
+The gate requires a final-evidence manifest that binds the current candidate HEAD
+to the exact bytes of every evidence artifact. All denominator evidence must
+already be candidate-sealed with the same source_head; unsealed, stale or mixed
+run evidence fails closed.
 """
 from __future__ import annotations
 
@@ -88,6 +89,10 @@ def _selective_replay_pass(value: Mapping[str, Any]) -> bool:
     )
 
 
+def _candidate_bound(value: Mapping[str, Any], current_head: str) -> bool:
+    return bool(current_head and value.get("source_head") == current_head)
+
+
 def _manifest_findings(
     manifest: Mapping[str, Any],
     *,
@@ -119,7 +124,9 @@ def _manifest_findings(
         if row.get("sha256") != _sha256(path):
             findings.append(f"manifest-sha256:{key}")
         source_head = evidence[key].get("source_head")
-        if source_head is not None and str(source_head) != current_head:
+        if not isinstance(source_head, str) or not source_head:
+            findings.append(f"evidence-unsealed:{key}")
+        elif source_head != current_head:
             findings.append(f"evidence-candidate-head:{key}")
         if row.get("source_head") != source_head:
             findings.append(f"manifest-source-head:{key}")
@@ -139,10 +146,10 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         paths=paths,
         evidence=evidence,
     )
-    live_head = str(evidence["live_blind"].get("source_head") or "")
-    semantic_head = str(evidence["real_semantic"].get("source_head") or "")
+    candidate_bindings = {key: _candidate_bound(evidence[key], current_head) for key in EVIDENCE_KEYS}
     checks = {
         "final_evidence_manifest": not manifest_findings,
+        "all_evidence_candidate_binding": all(candidate_bindings.values()),
         "architecture_reconcile": _status_pass(evidence["architecture_reconcile"]),
         "curated_semantic": _curated_semantic_pass(evidence["curated_semantic"]),
         "semantic_chain_mutations": _threshold_pass(evidence["semantic_chain_mutations"]),
@@ -162,8 +169,8 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
             and evidence["live_blind"].get("under_60_minutes") is True
         ),
         "legacy_8_25_replay": _status_pass(evidence["legacy_replay"]),
-        "live_blind_candidate_binding": bool(current_head and live_head == current_head),
-        "real_semantic_candidate_binding": bool(current_head and semantic_head == current_head),
+        "live_blind_candidate_binding": candidate_bindings["live_blind"],
+        "real_semantic_candidate_binding": candidate_bindings["real_semantic"],
     }
     failed = sorted(name for name, passed in checks.items() if not passed)
     return {
@@ -171,6 +178,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         "status": "pass" if not failed else "blocked",
         "candidate_head": current_head,
         "manifest_candidate_head": manifest.get("candidate_head"),
+        "candidate_bindings": candidate_bindings,
         "manifest_findings": manifest_findings,
         "checks": checks,
         "failed_checks": failed,
