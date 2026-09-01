@@ -19,12 +19,38 @@ def _write(path: Path, value: dict) -> Path:
     return path
 
 
+def _freeze_manifest(args: SimpleNamespace, tmp_path: Path, head: str) -> Path:
+    rows = {}
+    for key in GATE.EVIDENCE_KEYS:
+        path = Path(getattr(args, key)).resolve()
+        value = json.loads(path.read_text(encoding="utf-8"))
+        rows[key] = {
+            "path": str(path),
+            "sha256": GATE._sha256(path),
+            "schema": value.get("schema"),
+            "source_head": value.get("source_head"),
+        }
+    manifest = _write(
+        tmp_path / "manifest.json",
+        {
+            "schema": GATE.MANIFEST_SCHEMA,
+            "candidate_head": head,
+            "required_evidence_keys": list(GATE.EVIDENCE_KEYS),
+            "evidence": rows,
+            "authorizes": [],
+        },
+    )
+    args.manifest = manifest
+    return manifest
+
+
 def _args(tmp_path: Path, head: str) -> SimpleNamespace:
-    return SimpleNamespace(
-        architecture_reconcile=_write(tmp_path / "architecture.json", {"status": "pass"}),
+    args = SimpleNamespace(
+        architecture_reconcile=_write(tmp_path / "architecture.json", {"schema": "architecture.v1", "status": "pass"}),
         curated_semantic=_write(
             tmp_path / "curated.json",
             {
+                "schema": "curated.v1",
                 "status": "pass",
                 "precision": 1.0,
                 "required_precision": 0.95,
@@ -33,26 +59,28 @@ def _args(tmp_path: Path, head: str) -> SimpleNamespace:
                 "controlled_mutation_rejection_rate": 1.0,
             },
         ),
-        semantic_chain_mutations=_write(tmp_path / "semantic-mutations.json", {"threshold_passed": True}),
-        agent_context_mutations=_write(tmp_path / "agent-context.json", {"threshold_passed": True}),
+        semantic_chain_mutations=_write(tmp_path / "semantic-mutations.json", {"schema": "semantic-mutations.v1", "threshold_passed": True}),
+        agent_context_mutations=_write(tmp_path / "agent-context.json", {"schema": "agent-context.v1", "threshold_passed": True}),
         real_semantic=_write(
             tmp_path / "real-semantic.json",
             {
+                "schema": "real-semantic.v1",
                 "status": "pass",
                 "execution_attempted": True,
                 "execution_succeeded": True,
                 "source_head": head,
             },
         ),
-        stable_facade=_write(tmp_path / "stable.json", {"threshold_passed": True}),
-        detached_mutations=_write(tmp_path / "detached.json", {"threshold_passed": True}),
+        stable_facade=_write(tmp_path / "stable.json", {"schema": "stable.v1", "threshold_passed": True}),
+        detached_mutations=_write(tmp_path / "detached.json", {"schema": "detached.v1", "threshold_passed": True}),
         selective_replay=_write(
             tmp_path / "replay.json",
-            {"status": "pass", "accuracy": 1.0, "required_accuracy": 0.99, "failed_cases": 0},
+            {"schema": "replay.v1", "status": "pass", "accuracy": 1.0, "required_accuracy": 0.99, "failed_cases": 0},
         ),
         live_blind=_write(
             tmp_path / "live.json",
             {
+                "schema": "live.v1",
                 "status": "pass",
                 "execution_attempted": True,
                 "product_acceptance_proven": True,
@@ -60,8 +88,10 @@ def _args(tmp_path: Path, head: str) -> SimpleNamespace:
                 "source_head": head,
             },
         ),
-        legacy_replay=_write(tmp_path / "legacy.json", {"status": "pass"}),
+        legacy_replay=_write(tmp_path / "legacy.json", {"schema": "legacy.v1", "status": "pass"}),
     )
+    _freeze_manifest(args, tmp_path, head)
+    return args
 
 
 def test_strict_gate_passes_only_when_full_live_denominator_passes(tmp_path: Path, monkeypatch) -> None:
@@ -71,6 +101,7 @@ def test_strict_gate_passes_only_when_full_live_denominator_passes(tmp_path: Pat
     assert result["status"] == "pass"
     assert result["completion"] == "implementation-work-package-complete"
     assert result["failed_checks"] == []
+    assert result["checks"]["final_evidence_manifest"] is True
     assert result["checks"]["selective_replay"] is True
 
 
@@ -81,6 +112,7 @@ def test_environment_blocked_live_evidence_can_never_complete(tmp_path: Path, mo
     _write(
         args.real_semantic,
         {
+            "schema": "real-semantic.v1",
             "status": "environment-blocked",
             "execution_attempted": False,
             "execution_succeeded": False,
@@ -90,6 +122,7 @@ def test_environment_blocked_live_evidence_can_never_complete(tmp_path: Path, mo
     _write(
         args.live_blind,
         {
+            "schema": "live.v1",
             "status": "environment-blocked",
             "execution_attempted": False,
             "product_acceptance_proven": False,
@@ -97,6 +130,7 @@ def test_environment_blocked_live_evidence_can_never_complete(tmp_path: Path, mo
             "source_head": head,
         },
     )
+    _freeze_manifest(args, tmp_path, head)
     result = GATE.evaluate(args)
     assert result["status"] == "blocked"
     assert set(result["failed_checks"]) == {"live_blind_under_60_minutes", "real_semantic_quality"}
@@ -112,10 +146,28 @@ def test_candidate_binding_drift_blocks_live_evidence(tmp_path: Path, monkeypatc
     real = json.loads(args.real_semantic.read_text(encoding="utf-8"))
     real["source_head"] = "e" * 40
     _write(args.real_semantic, real)
+    _freeze_manifest(args, tmp_path, head)
     result = GATE.evaluate(args)
     assert result["status"] == "blocked"
+    assert "final_evidence_manifest" in result["failed_checks"]
     assert "live_blind_candidate_binding" in result["failed_checks"]
     assert "real_semantic_candidate_binding" in result["failed_checks"]
+    assert "evidence-candidate-head:live_blind" in result["manifest_findings"]
+    assert "evidence-candidate-head:real_semantic" in result["manifest_findings"]
+
+
+def test_stale_or_mutated_deterministic_evidence_breaks_manifest_binding(tmp_path: Path, monkeypatch) -> None:
+    head = "d" * 40
+    monkeypatch.setattr(GATE, "_head", lambda: head)
+    args = _args(tmp_path, head)
+    curated = json.loads(args.curated_semantic.read_text(encoding="utf-8"))
+    curated["non_authoritative_note"] = "bytes changed after manifest freeze"
+    _write(args.curated_semantic, curated)
+    result = GATE.evaluate(args)
+    assert result["status"] == "blocked"
+    assert result["checks"]["curated_semantic"] is True
+    assert result["checks"]["final_evidence_manifest"] is False
+    assert "manifest-sha256:curated_semantic" in result["manifest_findings"]
 
 
 def test_selective_replay_uses_status_and_accuracy_contract_not_threshold_field(tmp_path: Path, monkeypatch) -> None:
