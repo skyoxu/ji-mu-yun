@@ -89,6 +89,20 @@ def _write(path: Path, value: Mapping[str, Any]) -> None:
     path.write_text(json.dumps(dict(value), ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
 
 
+def _parse_child_evidence(stdout: str) -> dict[str, Any] | None:
+    """Return the last structured CH456 evidence object even for a failed child."""
+    lines = [line for line in stdout.splitlines() if line.strip()]
+    if not lines:
+        return None
+    try:
+        value = json.loads(lines[-1])
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(value, dict) or value.get("schema") != SCHEMA:
+        return None
+    return value
+
+
 def _task_source() -> str:
     # The domain and behavior set are intentionally distinct from the rate-limiter
     # fixture used while designing the toolchain.
@@ -417,14 +431,7 @@ def _outer(*, out: Path, backend_requested: str | None, limit_seconds: int, requ
                 str(limit_seconds),
             ]
             completed = subprocess.run(command, cwd=str(worktree), text=True, capture_output=True, timeout=limit_seconds + 120, check=False)
-            lines = [line for line in completed.stdout.splitlines() if line.strip()]
-            if completed.returncode == 0 and lines:
-                try:
-                    evidence = json.loads(lines[-1])
-                except json.JSONDecodeError:
-                    evidence = None
-            else:
-                evidence = None
+            evidence = _parse_child_evidence(completed.stdout)
             if not isinstance(evidence, dict):
                 evidence = {
                     "schema": SCHEMA,
@@ -438,12 +445,14 @@ def _outer(*, out: Path, backend_requested: str | None, limit_seconds: int, requ
                     "under_60_minutes": None,
                     "product_acceptance_proven": False,
                     "child_exit_code": completed.returncode,
+                    "reason": "child-evidence-unparseable",
                     "stdout_sha256": _sha(completed.stdout),
                     "stderr_sha256": _sha(completed.stderr),
                     "authorizes": [],
                 }
             else:
                 evidence["backend"] = probe
+                evidence["child_exit_code"] = completed.returncode
             _write(out, evidence)
             print(json.dumps(evidence, sort_keys=True))
             return 0 if evidence.get("status") == "pass" else 1
