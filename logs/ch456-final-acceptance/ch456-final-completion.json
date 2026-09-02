@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "48172da60564b5b0aa26f494dbc486a724224d9d",
+  "candidate_head": "ec1d2a897e18bdf9091b2f570c0a82d6a540e716",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -43,7 +43,7 @@
         "model": null,
         "version": null
       },
-      "error": "V3 execution-contract validation failed: v3-contract:slice_hints[5]:no-real-production-entry; v3-contract:slice_hints[7]:no-real-production-entry; v3-contract:slice_hints[8]:no-real-production-entry; v3-contract:slice_hints[10]:no-real-production-entry",
+      "error": "semantic worker v3-schema-repair failed: OpenAI Codex v0.148.0\n--------\nworkdir: C:\\Users\\Administrator\\AppData\\Local\\Temp\\3\\ch456-live-blind-kcc75lxm\\worktree\nmodel: gpt-5.6-terra\nprovider: aicodemirror\napproval: never\nsandbox: read-only\nreasoning effort: medium\nreasoning summaries: none\nsession id: 01a0622a-faf3-7c00-bd1d-f2b6a5251bc6\n--------\nuser\nCompile observable Acceptance contracts, RED failure intents, and slice_hints. Return {\"acceptances\":[],\"failure_intents\":[],\"slice_hints\":[]}. Acceptance: obligation_ids[], source_refs[],",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
@@ -61,13 +61,13 @@
       "compiler_findings": [],
       "compiler_stage": null,
       "compiler_status": null,
-      "error": "V3 execution-contract validation failed: v3-contract:acceptances[4]:overbroad-subject:Deterministic failure fingerprint rerun stop,RED execution timeout classification,Repository noise authorization gate,Unexpected green authorization gate,Zero-case test run classification; v3-contract:acceptances[5]:overbroad-subject:Fixture-byte RED lineage invalidation,GREEN RED assertion scope preservation,GREEN RED fixture preservation,GREEN RED safe cwd preservation,GREEN RED selector identity preservation,GREEN RED target preservation,Implementation production write-set containment,REFACTOR RED assertion scope preservation,REFACTOR RED fixture preservation,REFACTOR RED safe cwd preservation,REFACTOR RED selector identity preservation,REFACTOR RED target preservation,Refactor production write-set containment,Selector-byte RED lineage invalidation",
+      "error": "semantic worker v3-schema-repair failed: OpenAI Codex v0.148.0\n--------\nworkdir: C:\\jimuyun\nmodel: gpt-5.6-terra\nprovider: aicodemirror\napproval: never\nsandbox: read-only\nreasoning effort: medium\nreasoning summaries: none\nsession id: 01a06222-a9e0-7721-bd96-698471a64452\n--------\nuser\nCompile observable Acceptance contracts, RED failure intents, and slice_hints. Return {\"acceptances\":[],\"failure_intents\":[],\"slice_hints\":[]}. Acceptance: obligation_ids[], source_refs[], given, when, then, oracle{observable,expected,forbidden[]}, asserti",
       "execution_attempted": true,
       "execution_succeeded": false,
       "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "48172da60564b5b0aa26f494dbc486a724224d9d",
+  "manifest_candidate_head": "ec1d2a897e18bdf9091b2f570c0a82d6a540e716",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
