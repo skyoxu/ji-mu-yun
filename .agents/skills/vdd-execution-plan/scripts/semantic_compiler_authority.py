@@ -48,6 +48,81 @@ def _resolved_backend_metadata(root: Path, *, injected: bool) -> tuple[str, str]
 gate._backend_metadata = _resolved_backend_metadata
 
 
+_BASE_WORKER_SCHEMA_FINDINGS = gate._worker_schema_findings
+_V1_REQUIRED_TEXT_FIELDS = (
+    "subject",
+    "trigger",
+    "state_before",
+    "state_after",
+    "expected_behavior",
+    "observable_result",
+)
+_V1_STRING_LIST_FIELDS = (
+    "source_refs",
+    "forbidden_result",
+    "unresolved_fragments",
+    "depends_on",
+)
+
+
+def _strict_worker_schema_findings(stage: str, value: Mapping[str, Any]) -> list[str]:
+    """Validate V1 obligation shape early enough for the one-shot repair lane.
+
+    The lower-level gate historically checked only that `obligations[]` existed.
+    Real model output could therefore pass the worker boundary and fail later in
+    `_normalize_obligation()` or V2, after the schema-repair opportunity had been
+    lost. Keep the canonical obligation contract strict, but surface those
+    failures at the worker boundary so the existing one-attempt repair contract
+    can correct formatting without weakening semantic truth.
+    """
+    findings = list(_BASE_WORKER_SCHEMA_FINDINGS(stage, value))
+    if not stage.startswith("v1-"):
+        return findings
+    obligations = value.get("obligations")
+    if not isinstance(obligations, list) or not obligations:
+        return findings
+
+    for index, raw in enumerate(obligations):
+        prefix = f"worker-output:obligations[{index}]"
+        if not isinstance(raw, Mapping):
+            findings.append(f"{prefix}:not-object")
+            continue
+        for field in _V1_REQUIRED_TEXT_FIELDS:
+            item = raw.get(field)
+            if not isinstance(item, str) or not item.strip():
+                findings.append(f"{prefix}:{field}:nonempty-string-required")
+        for field in _V1_STRING_LIST_FIELDS:
+            item = raw.get(field)
+            if not isinstance(item, list) or any(not isinstance(entry, str) for entry in item):
+                if field == "depends_on":
+                    findings.append(
+                        f"{prefix}:depends_on:string-list-required-use-empty-list-when-source-declares-no-dependency"
+                    )
+                else:
+                    findings.append(f"{prefix}:{field}:string-list-required")
+        requirement_type = raw.get("requirement_type")
+        if requirement_type not in {"Product", "Platform", "Governance"}:
+            findings.append(f"{prefix}:requirement_type:invalid")
+        kind = raw.get("obligation_kind", "behavior")
+        if kind not in {"behavior", "quality", "constraint", "governance"}:
+            findings.append(f"{prefix}:obligation_kind:invalid")
+        status = raw.get("status", "active")
+        if status not in {"active", "deferred", "not_applicable"}:
+            findings.append(f"{prefix}:status:invalid")
+        unresolved = raw.get("unresolved_fragments")
+        if status == "active" and isinstance(unresolved, list) and unresolved:
+            findings.append(
+                f"{prefix}:active-unresolved:mandatory-active-obligations-require-empty-unresolved_fragments"
+            )
+    return findings
+
+
+# The normative worker wrapper resolves this global on every invocation. Patch it
+# once here so both normal compilation and schema-repair validation use the same
+# strict V1 contract.
+gate._worker_schema_findings = _strict_worker_schema_findings
+
+
 _BASE_VALIDATE = gate.validate_semantic_bundle_with_preflight
 
 
