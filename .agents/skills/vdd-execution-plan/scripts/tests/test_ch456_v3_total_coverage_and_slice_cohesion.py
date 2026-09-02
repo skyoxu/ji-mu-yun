@@ -3,23 +3,36 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
+import pytest
+
 SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import semantic_feasibility_patch  # noqa: F401  # installs stable composition
 import semantic_slice_cohesion_patch as cohesion
+import semantic_worker_v3_execution_contract_patch as execution_contract
+import semantic_worker_v3_explicit_path_contract_patch as path_contract
+import semantic_worker_v3_group_repair_patch as grouped
 import semantic_worker_v3_total_coverage_patch as total
+import semantic_worker_v4_domain_patch as v4_domain
 
 
-def _obligation(oid: str) -> dict:
+def _obligation(
+    oid: str,
+    *,
+    subject: str = "idempotency ledger",
+    state_before: str = "entry absent",
+    state_after: str = "entry recorded",
+) -> dict:
     return {
         "obligation_id": oid,
         "requirement_id": "FR-1",
         "source_refs": ["req.md#FR-1"],
-        "subject": "idempotency ledger",
+        "subject": subject,
         "trigger": "when the ledger is updated",
-        "state_before": "entry absent",
-        "state_after": "entry recorded",
+        "state_before": state_before,
+        "state_after": state_after,
         "expected_behavior": f"preserve behavior for {oid}",
         "observable_result": f"observable {oid}",
         "forbidden_result": [],
@@ -108,11 +121,10 @@ def test_v3_repair_completes_only_missing_active_obligations(monkeypatch, tmp_pa
         "slice_hints": [_raw_group("O-1")["slice_hint"] | {"obligation_ids": ["O-1"]}],
     }
 
-    monkeypatch.setattr(total, "_BASE_TRANSPORT", lambda **_kwargs: base)
     monkeypatch.setattr(
         total,
         "_complete_missing",
-        lambda **kwargs: total.grouped._project({"groups": [_raw_group(next(iter(kwargs["missing"]))) ]}),
+        lambda **kwargs: grouped._project({"groups": [_raw_group(next(iter(kwargs["missing"]))) ]}),
     )
     monkeypatch.setattr(
         total.path_contract,
@@ -120,12 +132,12 @@ def test_v3_repair_completes_only_missing_active_obligations(monkeypatch, tmp_pa
         lambda _root, _stage, _payload, value: value,
     )
 
-    result = total.total_coverage_transport(
+    result = total.complete_total_coverage(
         root=tmp_path,
         out_dir=tmp_path / "plan",
         stage="v3-schema-repair",
         payload=payload,
-        prompt="repair",
+        value=base,
         worker_cache=None,
     )
     covered = {
@@ -135,6 +147,36 @@ def test_v3_repair_completes_only_missing_active_obligations(monkeypatch, tmp_pa
     }
     assert covered == {"O-1", "O-2"}
     assert len(result["acceptances"]) == 2
+
+
+def test_repair_group_schema_and_projection_are_atomic() -> None:
+    payload = {"input": {"obligations": [_obligation("O-1"), _obligation("O-2")]}}
+    schema = grouped._group_schema(payload)
+    ids_schema = schema["properties"]["groups"]["items"]["properties"]["obligation_ids"]
+    assert ids_schema["minItems"] == 1
+    assert ids_schema["maxItems"] == 1
+    assert ids_schema["uniqueItems"] is True
+    with pytest.raises(ValueError, match="exactly one obligation"):
+        grouped._project({"groups": [{**_raw_group("O-1"), "obligation_ids": ["O-1", "O-2"]}]})
+
+
+def test_execution_contract_catches_same_subject_independent_state_shapes(tmp_path: Path) -> None:
+    obligations = [
+        _obligation("O-1", state_before="absent", state_after="present"),
+        _obligation("O-2", state_before="present", state_after="archived"),
+    ]
+    value = {
+        "acceptances": [{"obligation_ids": ["O-1", "O-2"]}],
+        "failure_intents": [],
+        "slice_hints": [],
+    }
+    findings = execution_contract._findings(tmp_path, "v3", {"obligations": obligations}, value)
+    assert "v3-contract:acceptances[0]:overbroad-independent-behavior" in findings
+
+
+def test_total_coverage_preserves_transport_composition() -> None:
+    assert execution_contract._BASE_TRANSPORT is path_contract.explicit_path_contract_transport
+    assert v4_domain._BASE_TRANSPORT is execution_contract.execution_contract_transport
 
 
 def _hint(snapshot: str, *, owner: str = "src/ledger.py", forbidden: list[str] | None = None) -> dict:

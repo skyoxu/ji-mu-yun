@@ -1,9 +1,16 @@
 """Validate V3 semantic coverage and executable hint contracts before normalization.
 
-The canonical compiler already rejects these defects later in V3A/V7.  This
+The canonical compiler already rejects these defects later in V3A/V7. This
 patch moves the same deterministic facts to the live worker boundary so the
-existing single schema-repair attempt can correct the candidate once.  It never
+existing single schema-repair attempt can correct the candidate once. It never
 fills paths, merges semantics, or drops obligations locally.
+
+For the schema-repair stage only, the normal base transport returns first; then
+the bounded missing-obligation completion may add semantics for still-uncovered
+active obligations. Deterministic execution-contract findings run after that
+completion. Keeping completion inside this function preserves the established
+transport composition: ``_BASE_TRANSPORT`` remains the explicit-path contract
+and V4 still composes directly over ``execution_contract_transport``.
 """
 from __future__ import annotations
 
@@ -12,6 +19,7 @@ from typing import Any, Mapping
 
 import semantic_compiler_gate as gate
 import semantic_worker_v3_group_repair_patch  # noqa: F401  # relation-safe repair first
+import semantic_worker_v3_total_coverage_patch as total_coverage
 
 _BASE_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
 
@@ -72,14 +80,27 @@ def _findings(root: Path, stage: str, payload: Mapping[str, Any], value: Mapping
             if ids is None:
                 continue
             covered.update(oid for oid in ids if oid in by_id)
+            known = [oid for oid in ids if oid in by_id]
             subjects = {
                 str(by_id[oid].get("subject"))
-                for oid in ids
-                if oid in by_id and isinstance(by_id[oid].get("subject"), str)
+                for oid in known
+                if isinstance(by_id[oid].get("subject"), str)
             }
             if len(ids) > 1 and len(subjects) > 1:
                 findings.append(
                     f"v3-contract:acceptances[{index}]:overbroad-subject:" + ",".join(sorted(subjects))
+                )
+            semantic_shapes = {
+                (
+                    str(by_id[oid].get("subject")),
+                    str(by_id[oid].get("state_before")),
+                    str(by_id[oid].get("state_after")),
+                )
+                for oid in known
+            }
+            if len(semantic_shapes) > 1:
+                findings.append(
+                    f"v3-contract:acceptances[{index}]:overbroad-independent-behavior"
                 )
     missing = active - covered
     if missing:
@@ -136,6 +157,15 @@ def execution_contract_transport(
         prompt=prompt,
         worker_cache=worker_cache,
     )
+    if stage.startswith("v3-schema-repair"):
+        value = total_coverage.complete_total_coverage(
+            root=root,
+            out_dir=out_dir,
+            stage=stage,
+            payload=payload,
+            value=value,
+            worker_cache=worker_cache,
+        )
     findings = _findings(Path(root), stage, payload, value)
     if findings:
         raise ValueError("V3 execution-contract validation failed: " + "; ".join(findings))

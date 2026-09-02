@@ -1,11 +1,17 @@
 """Complete only genuinely missing V3 Acceptance coverage inside the one repair lane.
 
 The stable V3 schema-repair transport can return a structurally valid grouped
-candidate that still omits active frozen obligations.  The execution-contract
+candidate that still omits active frozen obligations. The execution-contract
 must continue to reject that state, but a live compile gets one bounded,
 missing-only semantic completion before the rejection becomes terminal.
 
-This layer never marks an obligation covered locally.  A read-only worker must
+This module is deliberately side-effect free. It does not mutate the installed
+transport chain. The V3 execution-contract calls ``complete_total_coverage``
+after its normal base transport returns and before deterministic findings run.
+That preserves the established composition invariant while keeping the bounded
+completion inside the same V3 contract boundary.
+
+This layer never marks an obligation covered locally. A read-only worker must
 author Acceptance/RED/slice semantics for the exact missing obligation domain.
 The completion is then revalidated against frozen obligation IDs, subject
 boundaries, source refs, owner/write-set rules and explicit frozen path facts.
@@ -18,12 +24,10 @@ from pathlib import Path
 from typing import Any, Mapping
 
 import semantic_worker_v3_domain_patch as v3_domain
-import semantic_worker_v3_execution_contract_patch as execution_contract
 import semantic_worker_v3_explicit_path_contract_patch as path_contract
 import semantic_worker_v3_group_repair_patch as grouped
 import semantic_worker_v3_group_safety_patch as safety
 
-_BASE_TRANSPORT = execution_contract._BASE_TRANSPORT
 _COMPLETION_CACHE_KEY = "v3-coverage-completion"
 
 
@@ -127,8 +131,9 @@ def _complete_missing(
             payload=narrowed,
             prompt=(
                 "COVERAGE COMPLETION: author semantics only for the supplied missing active obligations. "
-                "Every supplied obligation must appear in at least one Acceptance group. Do not rewrite, merge with, "
-                "or weaken any previously accepted group. Preserve subject boundaries and frozen source semantics."
+                "Every supplied obligation must appear in exactly one atomic Acceptance group. Each group must bind "
+                "exactly one obligation_id. Do not rewrite, merge with, or weaken any previously accepted group. "
+                "Preserve subject boundaries and frozen source semantics."
             ),
         )
 
@@ -150,23 +155,15 @@ def _merge(base: Mapping[str, Any], completion: Mapping[str, Any]) -> dict[str, 
     return result
 
 
-def total_coverage_transport(
+def complete_total_coverage(
     *,
     root,
     out_dir,
     stage: str,
     payload: Mapping[str, Any],
-    prompt: str,
+    value: Mapping[str, Any],
     worker_cache: Mapping[str, Any] | None = None,
 ) -> Mapping[str, Any]:
-    value = _BASE_TRANSPORT(
-        root=root,
-        out_dir=out_dir,
-        stage=stage,
-        payload=payload,
-        prompt=prompt,
-        worker_cache=worker_cache,
-    )
     if not stage.startswith("v3-schema-repair"):
         return value
 
@@ -185,21 +182,12 @@ def total_coverage_transport(
     )
     combined = _merge(value, completion)
 
-    # Reapply the explicit frozen path projection because the completion was
-    # authored after the normal path-contract transport already ran.
+    # The new completion was authored after the normal explicit-path transport
+    # already ran, so reapply only that deterministic frozen-path projection to
+    # the combined result before the execution-contract validates it.
     combined = dict(path_contract.normalize_explicit_path_contracts(Path(root), stage, payload, combined))
 
     remaining = active - _covered_ids(combined)
     if remaining:
         raise ValueError("V3 coverage completion remains hard-uncovered: " + ",".join(sorted(remaining)))
     return combined
-
-
-def install() -> None:
-    # Keep the public transport composition stable: v4 still wraps the V3
-    # execution-contract function.  Only that function's base candidate source
-    # gains bounded total-coverage completion before its deterministic findings.
-    execution_contract._BASE_TRANSPORT = total_coverage_transport
-
-
-install()

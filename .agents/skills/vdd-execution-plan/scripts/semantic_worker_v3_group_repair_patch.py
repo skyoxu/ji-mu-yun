@@ -4,8 +4,13 @@ The public/canonical V3 candidate remains three arrays. Only the one-shot
 schema-repair worker uses a grouped transport shape so an Acceptance, its RED
 intents, and its slice hint share one obligation set by construction. The
 result is deterministically projected back to the canonical arrays before the
-normal V3 validators run. This prevents repair-time relational drift without
-adding retries or weakening any semantic gate.
+normal V3 validators run.
+
+Repair groups are atomic: each group binds exactly one frozen obligation. This
+prevents a repaired Acceptance from swallowing multiple independent state
+transitions while still allowing V6 to merge compatible atomic Acceptances into
+one cohesive implementation slice. Atomicity is enforced in both the structured
+schema and deterministic projection, never by a later truth-gate relaxation.
 """
 from __future__ import annotations
 
@@ -20,7 +25,7 @@ import semantic_worker_v3_domain_patch as v3_domain
 
 sc = gate.sc
 _BASE_DOMAIN_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
-_GROUP_STAGE = "v3-schema-repair-group-v1"
+_GROUP_STAGE = "v3-schema-repair-group-v2-atomic"
 
 
 def _string_array(*, nonempty: bool = False, enum: list[str] | None = None) -> dict[str, Any]:
@@ -57,6 +62,8 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
         if isinstance(ref, str) and ref
     })
     obligation_ids = _string_array(nonempty=True, enum=known_ids or None)
+    obligation_ids["maxItems"] = 1
+    obligation_ids["uniqueItems"] = True
 
     acceptance = {
         "type": "object",
@@ -156,6 +163,7 @@ def _project(value: Mapping[str, Any]) -> dict[str, Any]:
     acceptances: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
     hints: list[dict[str, Any]] = []
+    seen_obligations: set[str] = set()
     for index, raw in enumerate(groups):
         if not isinstance(raw, Mapping):
             raise ValueError(f"V3 group repair group {index} is not object")
@@ -163,14 +171,21 @@ def _project(value: Mapping[str, Any]) -> dict[str, Any]:
         acceptance = raw.get("acceptance")
         group_failures = raw.get("failure_intents")
         hint = raw.get("slice_hint")
-        if not isinstance(ids, list) or not ids or not isinstance(acceptance, Mapping) or not isinstance(group_failures, list) or not group_failures or not isinstance(hint, Mapping):
+        if not isinstance(ids, list) or len(ids) != 1 or not isinstance(ids[0], str) or not ids[0].strip():
+            raise ValueError(f"V3 group repair group {index} must bind exactly one obligation")
+        oid = ids[0].strip()
+        if oid in seen_obligations:
+            raise ValueError(f"V3 group repair obligation {oid} appears in multiple groups")
+        seen_obligations.add(oid)
+        if not isinstance(acceptance, Mapping) or not isinstance(group_failures, list) or not group_failures or not isinstance(hint, Mapping):
             raise ValueError(f"V3 group repair group {index} is incomplete")
-        acceptances.append({"obligation_ids": list(ids), **dict(acceptance)})
-        hints.append({"obligation_ids": list(ids), **dict(hint)})
+        normalized_ids = [oid]
+        acceptances.append({"obligation_ids": normalized_ids, **dict(acceptance)})
+        hints.append({"obligation_ids": normalized_ids, **dict(hint)})
         for failure in group_failures:
             if not isinstance(failure, Mapping):
                 raise ValueError(f"V3 group repair failure in group {index} is not object")
-            failures.append({"obligation_ids": list(ids), **dict(failure)})
+            failures.append({"obligation_ids": normalized_ids, **dict(failure)})
     return {"acceptances": acceptances, "failure_intents": failures, "slice_hints": hints}
 
 
@@ -208,10 +223,11 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
     grouped_prompt = (
         prompt
         + "\n\nGROUP-FIRST REPAIR CONTRACT: return {\"groups\":[...]}, not the three canonical arrays. "
-        "Each group owns exactly one normalized obligation_ids set, exactly one Acceptance body, one or more RED "
-        "failure intents, and exactly one slice_hint. Do not repeat obligation_ids inside child objects. Do not create "
-        "multiple groups for the same obligation set. The compiler will deterministically project groups back to the "
-        "canonical acceptances/failure_intents/slice_hints arrays."
+        "Each group owns exactly one frozen obligation_id, exactly one Acceptance body, one or more RED failure intents, "
+        "and exactly one slice_hint. Never merge two obligations into one group, even when they share a subject, owner, "
+        "test root, or implementation slice. Do not repeat obligation_ids inside child objects and do not create multiple "
+        "groups for the same obligation. The compiler will deterministically project atomic groups back to the canonical "
+        "acceptances/failure_intents/slice_hints arrays; compatible Acceptances may be merged later only at V6 slice partitioning."
         + "\n\nINPUT:\n"
         + json.dumps(payload, ensure_ascii=False, sort_keys=True)
     )
@@ -243,8 +259,9 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
     if code != 0 or not output.is_file():
         raise RuntimeError(f"semantic worker v3-schema-repair failed: {_trace_summary(trace)}")
     raw = sc._parse_json_output(output.read_text(encoding="utf-8"))
+    projected = _project(raw)
     sc.atomic_json(cache_path, raw)
-    return _project(raw)
+    return projected
 
 
 def group_repair_transport(
