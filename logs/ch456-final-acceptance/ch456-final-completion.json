@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "f3e1791b5eebc680694ffe790b5e2f068e479841",
+  "candidate_head": "de08c977c11842af7b635b2f3ec66e023075e935",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -43,7 +43,7 @@
         "model": null,
         "version": null
       },
-      "error": "live VDD did not reach plan-ready: {\"findings\": [\"obligation:O-68B7849050C4:active-unresolved\", \"obligation:O-B4D9B3A3B2DA:active-unresolved\", \"obligation:O-E5CE9EE1DDA5:active-unresolved\"], \"stage\": \"V2\", \"status\": \"repair-vdd\"}",
+      "error": "failure intent family invalid",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
@@ -60,13 +60,13 @@
       },
       "compiler_stage": null,
       "compiler_status": null,
-      "error": "obligation depends_on is invalid",
+      "error": "semantic worker schema repair failed; stop and repair VDD",
       "execution_attempted": true,
       "execution_succeeded": false,
       "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "f3e1791b5eebc680694ffe790b5e2f068e479841",
+  "manifest_candidate_head": "de08c977c11842af7b635b2f3ec66e023075e935",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
