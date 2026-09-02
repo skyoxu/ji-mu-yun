@@ -9,7 +9,9 @@ SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import semantic_compiler as sc
 import semantic_compiler_gate as gate
+import semantic_feasibility_patch
 from semantic_compiler_authority import _strict_worker_schema_findings
 
 
@@ -29,6 +31,10 @@ def _obligation() -> dict:
         "status": "active",
         "depends_on": [],
     }
+
+
+def test_stable_authority_installs_planned_red_feasibility_rule() -> None:
+    assert sc.feasibility is semantic_feasibility_patch.feasibility_with_planned_red_files
 
 
 def test_v1_worker_contract_catches_late_normalizer_failures() -> None:
