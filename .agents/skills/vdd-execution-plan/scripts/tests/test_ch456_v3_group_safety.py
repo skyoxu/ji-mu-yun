@@ -3,11 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
+import pytest
+
 SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 import semantic_feasibility_patch  # noqa: F401  # installs the stable patch chain
+import semantic_worker_v3_group_repair_patch as grouped
 import semantic_worker_v3_group_safety_patch as safety
 from semantic_worker_v3_execution_contract_patch import _findings
 
@@ -43,7 +46,7 @@ def _hint(*, owners: list[str], rollback_paths: list[str], allowed: list[str] | 
     }
 
 
-def test_group_schema_allows_only_one_frozen_subject_domain_per_group() -> None:
+def test_group_schema_stays_on_basic_frozen_id_enum_for_codex_transport() -> None:
     payload = {
         "input": {
             "obligations": [
@@ -53,14 +56,50 @@ def test_group_schema_allows_only_one_frozen_subject_domain_per_group() -> None:
             ]
         }
     }
-    schema = safety._group_schema(payload)
+    schema = grouped._group_schema(payload)
     obligation_schema = schema["properties"]["groups"]["items"]["properties"]["obligation_ids"]
-    domains = {
-        frozenset(option["items"]["enum"])
-        for option in obligation_schema["oneOf"]
+    assert "oneOf" not in obligation_schema
+    assert obligation_schema["items"]["enum"] == ["O-1", "O-2", "O-3"]
+
+
+def test_group_repair_rejects_cross_subject_acceptance_deterministically() -> None:
+    payload = {
+        "input": {
+            "obligations": [
+                _obligation("O-1", "ledger"),
+                _obligation("O-2", "audit"),
+                _obligation("O-3", "ledger"),
+            ]
+        }
     }
-    assert domains == {frozenset({"O-1", "O-3"}), frozenset({"O-2"})}
-    assert all(option["uniqueItems"] is True for option in obligation_schema["oneOf"])
+    value = {
+        "acceptances": [
+            {"obligation_ids": ["O-1", "O-2"]},
+            {"obligation_ids": ["O-3"]},
+        ],
+        "failure_intents": [],
+        "slice_hints": [],
+    }
+    with pytest.raises(ValueError, match="overbroad-subject"):
+        safety._validate_subject_domains(payload, value)
+
+
+def test_group_repair_accepts_same_subject_group_deterministically() -> None:
+    payload = {
+        "input": {
+            "obligations": [
+                _obligation("O-1", "ledger"),
+                _obligation("O-2", "audit"),
+                _obligation("O-3", "ledger"),
+            ]
+        }
+    }
+    value = {
+        "acceptances": [{"obligation_ids": ["O-1", "O-3"]}],
+        "failure_intents": [],
+        "slice_hints": [],
+    }
+    safety._validate_subject_domains(payload, value)
 
 
 def test_group_repair_recovers_owner_only_from_same_hint_real_rollback_production_path(tmp_path: Path) -> None:
