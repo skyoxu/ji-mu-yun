@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from pathlib import Path
 import sys
 
@@ -10,6 +11,7 @@ if str(SCRIPTS) not in sys.path:
 import semantic_compiler_gate as gate
 import semantic_feasibility_patch  # noqa: F401  # installs stable worker contract transitively
 from semantic_worker_contract_patch import _augment_prompt
+from semantic_worker_relational_patch import _augment_prompt as _augment_relational_prompt
 
 
 def _v3_payload(family: str) -> dict:
@@ -72,6 +74,24 @@ def test_valid_failure_family_passes_v3_shape_contract() -> None:
     assert findings == []
 
 
+def test_duplicate_slice_hint_is_caught_before_preflight_ambiguity() -> None:
+    invalid = _v3_payload("expected-red")
+    invalid["slice_hints"].append(deepcopy(invalid["slice_hints"][0]))
+    findings = gate._worker_schema_findings("v3", invalid)
+    assert any("slice-hint-count=2:must-equal-1" in item for item in findings)
+    assert any("duplicate-count=2:must-equal-1" in item for item in findings)
+
+
+def test_failure_intent_subset_is_caught_before_acceptance_binding() -> None:
+    invalid = _v3_payload("expected-red")
+    invalid["acceptances"][0]["obligation_ids"] = ["O-1", "O-2"]
+    invalid["slice_hints"][0]["obligation_ids"] = ["O-1", "O-2"]
+    invalid["failure_intents"][0]["obligation_ids"] = ["O-1"]
+    findings = gate._worker_schema_findings("v3", invalid)
+    assert any("acceptance-obligation-set=O-1,O-2:failure-intent-count=0" in item for item in findings)
+    assert any("failure-intent-obligation-set=O-1:matching-acceptance-count=0" in item for item in findings)
+
+
 def test_invalid_v3_family_routes_through_single_repair(tmp_path: Path) -> None:
     invalid = _v3_payload("assertion-failure")
     repaired = _v3_payload("expected-red")
@@ -90,12 +110,42 @@ def test_invalid_v3_family_routes_through_single_repair(tmp_path: Path) -> None:
     assert result == repaired
 
 
+def test_relational_v3_errors_route_through_single_repair(tmp_path: Path) -> None:
+    invalid = _v3_payload("expected-red")
+    invalid["acceptances"][0]["obligation_ids"] = ["O-1", "O-2"]
+    invalid["slice_hints"][0]["obligation_ids"] = ["O-1", "O-2"]
+    invalid["slice_hints"].append(deepcopy(invalid["slice_hints"][0]))
+    invalid["failure_intents"][0]["obligation_ids"] = ["O-1"]
+
+    repaired = _v3_payload("expected-red")
+    repaired["acceptances"][0]["obligation_ids"] = ["O-1", "O-2"]
+    repaired["slice_hints"][0]["obligation_ids"] = ["O-1", "O-2"]
+    repaired["failure_intents"][0]["obligation_ids"] = ["O-1", "O-2"]
+
+    result = gate.normative_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v3",
+        payload={"obligations": [{"obligation_id": "O-1"}, {"obligation_id": "O-2"}]},
+        prompt="Compile observable Acceptance contracts.",
+        worker_cache={"v3": invalid, "v3-schema-repair": repaired},
+    )
+    assert result == repaired
+
+
 def test_v3_prompt_enumerates_failure_taxonomy() -> None:
     prompt = _augment_prompt("v3", "Compile Acceptance contracts.")
     assert "STRICT V3 JSON CONTRACT" in prompt
     assert "expected-red" in prompt
     assert "semantic-contract-gap" in prompt
     assert "Do not invent new failure-family names" in prompt
+
+
+def test_v3_prompt_makes_relational_binding_explicit() -> None:
+    prompt = _augment_relational_prompt("v3", "Compile Acceptance contracts.")
+    assert "EXACTLY ONE slice_hint for each Acceptance" in prompt
+    assert "exactly equal one and only one Acceptance" in prompt
+    assert "subset, superset" in prompt
 
 
 def test_v1_prompt_makes_array_contract_explicit() -> None:
