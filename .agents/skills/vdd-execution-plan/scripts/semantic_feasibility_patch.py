@@ -7,16 +7,17 @@ owners must still resolve to a real entry and every other missing snapshot path
 remains fail-closed.
 
 Importing this stable compatibility layer also installs the semantic-worker
-contract patches so every stable compiler authority caller uses the same live
-V1/V3 field, relational, and repair semantics.
+transport and contract patches so every stable compiler authority caller uses
+the same live V1/V3 structured transport, field, relational, and repair semantics.
 """
 from __future__ import annotations
 
 from typing import Any, Mapping, Sequence
 
 import semantic_compiler as sc
-import semantic_worker_contract_patch  # noqa: F401  # installs stable live worker field contract
-import semantic_worker_relational_patch  # noqa: F401  # installs stable live V3 relational contract
+import semantic_worker_transport_patch  # noqa: F401  # structured JSON + bounded repair transport
+import semantic_worker_contract_patch  # noqa: F401  # stable live worker field contract
+import semantic_worker_relational_patch  # noqa: F401  # stable live V3 relational contract
 
 _ORIGINAL_FEASIBILITY = sc.feasibility
 
