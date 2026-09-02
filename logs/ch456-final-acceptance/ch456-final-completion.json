@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "1ab6daed94bfffe84cd8549709e1db3671eb7fad",
+  "candidate_head": "89a4ecbd1803d784b767557cdd2c57259c2c5121",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -24,14 +24,15 @@
     "live_blind_candidate_binding": true,
     "live_blind_under_60_minutes": false,
     "real_semantic_candidate_binding": true,
-    "real_semantic_quality": true,
+    "real_semantic_quality": false,
     "selective_replay": true,
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
   "completion": "not-complete",
   "failed_checks": [
-    "live_blind_under_60_minutes"
+    "live_blind_under_60_minutes",
+    "real_semantic_quality"
   ],
   "failed_evidence": {
     "live_blind_under_60_minutes": {
@@ -42,15 +43,30 @@
         "model": null,
         "version": null
       },
-      "error": "live VDD did not reach plan-ready: {\"atomic_quality_metrics\": {\"active_obligation_count\": 14, \"f1\": 1.0, \"invented_obligation_count\": 0, \"precision\": 1.0, \"recall\": 1.0, \"source_gap_count\": 0, \"supported_obligation_count\": 14}, \"findings\": [\"atomic-recall:unknown-supported:O-EB19C5D08501\", \"atomic-recall:obligation-partition-incomplete:\"], \"gate\": \"atomic-source-recall\", \"source_gap_claims\": [], \"stage\": \"V4\", \"status\": \"repair-vdd\"}",
+      "error": "live VDD did not reach plan-ready: {\"atomic_quality_metrics\": {\"active_obligation_count\": 10, \"f1\": 1.0, \"invented_obligation_count\": 0, \"precision\": 1.0, \"recall\": 1.0, \"source_gap_count\": 0, \"supported_obligation_count\": 10}, \"findings\": [\"v4:misaligned-acceptance:A-5BA0D8EFD7DC\"], \"stage\": \"V4\", \"status\": \"repair-vdd\"}",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
       "status": "failed",
       "under_60_minutes": null
+    },
+    "real_semantic_quality": {
+      "atomic_quality_metrics": null,
+      "backend": {
+        "available": true,
+        "backend": "codex-cli",
+        "blocking_errors": [],
+        "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+      },
+      "compiler_stage": null,
+      "compiler_status": null,
+      "error": "acceptance obligation binding is invalid",
+      "execution_attempted": true,
+      "execution_succeeded": false,
+      "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "1ab6daed94bfffe84cd8549709e1db3671eb7fad",
+  "manifest_candidate_head": "89a4ecbd1803d784b767557cdd2c57259c2c5121",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
