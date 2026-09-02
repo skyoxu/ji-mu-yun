@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "119e8719d5b7dc5451820d451714da597f81cbf6",
+  "candidate_head": "af3696fb94220af40aa8330292fa860a7f9ea56e",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -24,14 +24,15 @@
     "live_blind_candidate_binding": true,
     "live_blind_under_60_minutes": false,
     "real_semantic_candidate_binding": true,
-    "real_semantic_quality": true,
+    "real_semantic_quality": false,
     "selective_replay": true,
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
   "completion": "not-complete",
   "failed_checks": [
-    "live_blind_under_60_minutes"
+    "live_blind_under_60_minutes",
+    "real_semantic_quality"
   ],
   "failed_evidence": {
     "live_blind_under_60_minutes": {
@@ -42,15 +43,31 @@
         "model": null,
         "version": null
       },
-      "error": "V3 execution-contract validation failed: v3-contract:slice_hints[0]:no-real-production-entry; v3-contract:slice_hints[0]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[1]:no-real-production-entry; v3-contract:slice_hints[2]:no-real-production-entry; v3-contract:slice_hints[3]:no-real-production-entry; v3-contract:slice_hints[3]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[6]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[7]:no-real-production-entry; v3-contract:slice_hints[7]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[8]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[9]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[10]:no-real-production-entry; v3-contract:slice_hints[10]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[11]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[12]:selector-target-missing-not-planne",
+      "error": "blind benchmark contract expects one cohesive slice, observed 15",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
       "status": "failed",
       "under_60_minutes": null
+    },
+    "real_semantic_quality": {
+      "atomic_quality_metrics": null,
+      "backend": {
+        "available": true,
+        "backend": "codex-cli",
+        "blocking_errors": [],
+        "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+      },
+      "compiler_findings": [],
+      "compiler_stage": null,
+      "compiler_status": null,
+      "error": "V3 execution-contract validation failed: v3-contract:hard-uncovered:O-05FBEB617CC0,O-0930A8432D68,O-0EED69209F49,O-1D250C9CE2DC,O-2151AFA48D1A,O-216151C24718,O-308CEC0AF0D3,O-3F8D3A91514B,O-478B426C9453,O-4826B1FC54F4,O-5452917BF2BA,O-585DE04DD0F0,O-5A11FE402230,O-5D0E708BAE62,O-61CC95352ABE,O-6428D66A0E2F,O-6AF32E8E8C22,O-8FF3370F82D5,O-937159A9EBBD,O-93D347113BDD,O-9489821DE499,O-96805601FC2F,O-978A937F3EC8,O-9DB7591EC12E,O-A3DD0AC500B5,O-AA95F036A37C,O-B4E1E62F4C61,O-B55E9454CAF5,O-ED12B0C4180E,O-F56E9158420C",
+      "execution_attempted": true,
+      "execution_succeeded": false,
+      "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "119e8719d5b7dc5451820d451714da597f81cbf6",
+  "manifest_candidate_head": "af3696fb94220af40aa8330292fa860a7f9ea56e",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
