@@ -8,7 +8,8 @@ remains fail-closed.
 
 Importing this stable compatibility layer also installs the semantic-worker
 transport and contract patches so every stable compiler authority caller uses
-the same live V1/V3 structured transport, field, relational, and repair semantics.
+the same live V1/V3 structured transport, field, relational, domain, and repair
+semantics.
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ from typing import Any, Mapping, Sequence
 
 import semantic_compiler as sc
 import semantic_worker_transport_patch  # noqa: F401  # structured JSON + bounded repair transport
+import semantic_worker_v3_domain_patch  # noqa: F401  # frozen obligation/source domain for V3
 import semantic_worker_contract_patch  # noqa: F401  # stable live worker field contract
 import semantic_worker_relational_patch  # noqa: F401  # stable live V3 relational contract
 import semantic_worker_v4_domain_patch  # noqa: F401  # frozen-id V4 atomic-recall contract
