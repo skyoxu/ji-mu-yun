@@ -10,8 +10,9 @@ usable only after V0A succeeds, and adds only the source entries referenced by
 the frozen obligations to the V3 worker payload. The one-shot
 v3-schema-repair inherits the same enriched payload through its existing nested
 `input` field. No source file is reread and no model output can mutate the
-frozen source projection. The context is consumed by V3 and then cleared so it
-cannot leak into another compile or direct worker invocation.
+frozen source projection. The context is consumed by the next V3 call and then
+cleared on success, fallback, or error so it cannot leak into another compile or
+direct worker invocation.
 """
 from __future__ import annotations
 
@@ -135,34 +136,32 @@ def normative_invoke_worker_with_source_projection(
             worker_cache=worker_cache,
         )
 
-    projection = _source_contracts(root, payload)
-    if projection is None:
-        # Direct unit tests may invoke V3 without running V0/V0A first. Preserve
-        # that compatibility path; real compile_plan execution reaches V3 only
-        # after the validated frozen context has been created.
-        return _BASE_NORMATIVE_INVOKE(
-            root=root,
-            out_dir=out_dir,
-            stage=stage,
-            payload=payload,
-            prompt=prompt,
-            worker_cache=worker_cache,
-        )
-
-    source_sha, contracts = projection
-    enriched = dict(payload)
-    enriched["frozen_source_index_sha256"] = source_sha
-    enriched["source_contracts"] = contracts
-    augmented_prompt = prompt + (
-        "\n\nFROZEN SOURCE CONTRACTS: source_contracts are the exact V0/V0A-validated canonical "
-        "requirement sections referenced by these obligations. Treat explicit repository-relative paths, production "
-        "owners, test/fixture paths, write boundaries, lifecycle qualifiers, and validation commands in those frozen "
-        "sections as authority. Do not guess a production owner from a fixture path. A missing selector/fixture that the "
-        "frozen source explicitly requires to be authored must be listed verbatim in planned_new_files. A production "
-        "owner must name a real implementation file when the source identifies one, must be writable, and must not be "
-        "repeated in forbidden_paths. Do not invent paths not supported by the frozen source or repository reality."
-    )
     try:
+        projection = _source_contracts(root, payload)
+        if projection is None:
+            # Direct unit tests may invoke V3 without running V0/V0A first.
+            return _BASE_NORMATIVE_INVOKE(
+                root=root,
+                out_dir=out_dir,
+                stage=stage,
+                payload=payload,
+                prompt=prompt,
+                worker_cache=worker_cache,
+            )
+
+        source_sha, contracts = projection
+        enriched = dict(payload)
+        enriched["frozen_source_index_sha256"] = source_sha
+        enriched["source_contracts"] = contracts
+        augmented_prompt = prompt + (
+            "\n\nFROZEN SOURCE CONTRACTS: source_contracts are the exact V0/V0A-validated canonical "
+            "requirement sections referenced by these obligations. Treat explicit repository-relative paths, production "
+            "owners, test/fixture paths, write boundaries, lifecycle qualifiers, and validation commands in those frozen "
+            "sections as authority. Do not guess a production owner from a fixture path. A missing selector/fixture that the "
+            "frozen source explicitly requires to be authored must be listed verbatim in planned_new_files. A production "
+            "owner must name a real implementation file when the source identifies one, must be writable, and must not be "
+            "repeated in forbidden_paths. Do not invent paths not supported by the frozen source or repository reality."
+        )
         return _BASE_NORMATIVE_INVOKE(
             root=root,
             out_dir=out_dir,
