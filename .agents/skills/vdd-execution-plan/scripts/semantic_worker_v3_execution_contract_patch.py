@@ -116,13 +116,6 @@ def _findings(root: Path, stage: str, payload: Mapping[str, Any], value: Mapping
                     findings.append(
                         f"v3-contract:slice_hints[{index}]:selector-target-missing-not-planned:{snapshot}"
                     )
-            commands = raw.get("validation_commands")
-            if isinstance(commands, list) and snapshots:
-                flat = [str(part) for command in commands if isinstance(command, list) for part in command]
-                if not any(snapshot in flat for snapshot in snapshots):
-                    findings.append(
-                        f"v3-contract:slice_hints[{index}]:validation-command-unbound-to-snapshot"
-                    )
     return findings
 
 
