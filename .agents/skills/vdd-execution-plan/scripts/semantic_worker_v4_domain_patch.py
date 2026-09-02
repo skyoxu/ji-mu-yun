@@ -8,6 +8,11 @@ must reference source refs already present in the frozen source index.
 This layer adds dynamic structured output plus deterministic post-parse domain
 validation.  A domain violation therefore enters the existing one-shot semantic
 repair lane; unknown ids are never silently filtered or reinterpreted.
+
+IMPORTANT: this wrapper composes over the transport chain already installed when
+this module is imported.  Non-V4 stages must delegate to that chain rather than
+jumping back to the raw transport, otherwise V3 domain/group/execution-contract
+validators and their one-shot repair semantics are silently bypassed.
 """
 from __future__ import annotations
 
@@ -20,7 +25,10 @@ import semantic_compiler_gate as gate
 import semantic_worker_transport_patch as transport
 
 sc = gate.sc
-_BASE_TRANSPORT = transport.transport_invoke_worker
+# Capture the *currently installed* transport chain.  semantic_feasibility_patch
+# imports V3 domain/group/execution-contract layers before this module, so this
+# preserves those wrappers for every non-V4 call.
+_BASE_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
 
 
 def _semantic_payload(stage: str, payload: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -225,8 +233,7 @@ def v4_transport_invoke_worker(
 
 
 def install() -> None:
-    # The normative worker resolves this transport global for both the initial V4
-    # call and its existing one-shot schema-repair call.
+    # Compose V4 specialization over the already-installed V3 transport stack.
     gate._ORIGINAL_INVOKE_WORKER = v4_transport_invoke_worker
 
 
