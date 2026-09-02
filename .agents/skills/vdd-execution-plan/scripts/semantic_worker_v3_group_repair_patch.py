@@ -1,10 +1,10 @@
 """Make the single V3 schema-repair attempt group-first and relation-safe.
 
-The public/canonical V3 candidate remains three arrays.  Only the one-shot
+The public/canonical V3 candidate remains three arrays. Only the one-shot
 schema-repair worker uses a grouped transport shape so an Acceptance, its RED
-intents, and its slice hint share one obligation set by construction.  The
+intents, and its slice hint share one obligation set by construction. The
 result is deterministically projected back to the canonical arrays before the
-normal V3 validators run.  This prevents repair-time relational drift without
+normal V3 validators run. This prevents repair-time relational drift without
 adding retries or weakening any semantic gate.
 """
 from __future__ import annotations
@@ -174,6 +174,13 @@ def _project(value: Mapping[str, Any]) -> dict[str, Any]:
     return {"acceptances": acceptances, "failure_intents": failures, "slice_hints": hints}
 
 
+def _trace_summary(trace: str) -> str:
+    text = trace.strip()
+    if len(text) <= 2600:
+        return text
+    return text[:300] + "\n...<trace elided>...\n" + text[-2200:]
+
+
 def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any], prompt: str) -> Mapping[str, Any]:
     scripts = root / "scripts" / "sc"
     if str(scripts) not in sys.path:
@@ -234,7 +241,7 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
             codex_extra_args=[],
         )
     if code != 0 or not output.is_file():
-        raise RuntimeError(f"semantic worker v3-schema-repair failed: {trace.strip()[:500]}")
+        raise RuntimeError(f"semantic worker v3-schema-repair failed: {_trace_summary(trace)}")
     raw = sc._parse_json_output(output.read_text(encoding="utf-8"))
     sc.atomic_json(cache_path, raw)
     return _project(raw)
