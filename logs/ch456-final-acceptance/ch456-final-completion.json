@@ -1,0 +1,41 @@
+{
+  "authorizes": [],
+  "candidate_bindings": {
+    "agent_context_mutations": true,
+    "architecture_reconcile": true,
+    "curated_semantic": true,
+    "detached_mutations": true,
+    "legacy_replay": true,
+    "live_blind": true,
+    "real_semantic": true,
+    "selective_replay": true,
+    "semantic_chain_mutations": true,
+    "stable_facade": true
+  },
+  "candidate_head": "a168405028ff74ed4f08e7def43290eacf241fcf",
+  "checks": {
+    "agent_context_mutations": true,
+    "all_evidence_candidate_binding": true,
+    "architecture_reconcile": true,
+    "curated_semantic": true,
+    "detached_anti_false_green": true,
+    "final_evidence_manifest": true,
+    "legacy_8_25_replay": true,
+    "live_blind_candidate_binding": true,
+    "live_blind_under_60_minutes": false,
+    "real_semantic_candidate_binding": true,
+    "real_semantic_quality": false,
+    "selective_replay": true,
+    "semantic_chain_mutations": true,
+    "stable_facade": true
+  },
+  "completion": "not-complete",
+  "failed_checks": [
+    "live_blind_under_60_minutes",
+    "real_semantic_quality"
+  ],
+  "manifest_candidate_head": "a168405028ff74ed4f08e7def43290eacf241fcf",
+  "manifest_findings": [],
+  "schema": "ch456.final-completion-gate.v1",
+  "status": "blocked"
+}
