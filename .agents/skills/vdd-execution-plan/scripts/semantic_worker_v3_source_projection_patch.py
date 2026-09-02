@@ -5,35 +5,66 @@ path contract. V3, however, must choose production owners, RED selectors,
 fixtures, planned files, and validation commands. Those values are often stated
 explicitly only in the canonical requirement text.
 
-This patch captures the exact source-index.v1 value produced by V0 and already
-validated by V0A, then adds only the source entries referenced by the frozen
-obligations to the V3 worker payload. The one-shot v3-schema-repair inherits the
-same enriched payload through its existing nested `input` field. No source file
-is reread and no model output can mutate the frozen source projection.
+This patch captures the exact source-index.v1 value produced by V0, marks it
+usable only after V0A succeeds, and adds only the source entries referenced by
+the frozen obligations to the V3 worker payload. The one-shot
+v3-schema-repair inherits the same enriched payload through its existing nested
+`input` field. No source file is reread and no model output can mutate the
+frozen source projection. The context is consumed by V3 and then cleared so it
+cannot leak into another compile or direct worker invocation.
 """
 from __future__ import annotations
 
 from contextvars import ContextVar
+from pathlib import Path
 from typing import Any, Mapping
 
 import semantic_compiler as sc
 import semantic_compiler_gate as gate
 
 _BASE_BUILD_SOURCE_INDEX = sc.build_source_index
+_BASE_SOURCE_PREFLIGHT = sc.source_preflight
 _BASE_NORMATIVE_INVOKE = gate.normative_invoke_worker
-_FROZEN_SOURCE_INDEX: ContextVar[Mapping[str, Any] | None] = ContextVar(
-    "ch456_frozen_source_index", default=None
+_FROZEN_SOURCE_CONTEXT: ContextVar[Mapping[str, Any] | None] = ContextVar(
+    "ch456_frozen_source_context", default=None
 )
 
 
-def build_source_index_with_projection(*args, **kwargs) -> dict[str, Any]:
-    source_index = _BASE_BUILD_SOURCE_INDEX(*args, **kwargs)
-    _FROZEN_SOURCE_INDEX.set(source_index)
+def build_source_index_with_projection(root, *args, **kwargs) -> dict[str, Any]:
+    source_index = _BASE_BUILD_SOURCE_INDEX(root, *args, **kwargs)
+    _FROZEN_SOURCE_CONTEXT.set(
+        {
+            "root": str(Path(root).resolve()),
+            "source_index": source_index,
+            "validated": False,
+        }
+    )
     return source_index
 
 
-def _source_contracts(payload: Mapping[str, Any]) -> tuple[str, list[dict[str, Any]]] | None:
-    source_index = _FROZEN_SOURCE_INDEX.get()
+def source_preflight_with_projection(root, source_index: Mapping[str, Any]) -> dict[str, Any]:
+    result = _BASE_SOURCE_PREFLIGHT(root, source_index)
+    current = _FROZEN_SOURCE_CONTEXT.get()
+    same_context = (
+        isinstance(current, Mapping)
+        and current.get("root") == str(Path(root).resolve())
+        and isinstance(current.get("source_index"), Mapping)
+        and current["source_index"].get("sha256") == source_index.get("sha256")
+    )
+    if result.get("valid") and same_context:
+        _FROZEN_SOURCE_CONTEXT.set({**dict(current), "validated": True})
+    elif same_context:
+        _FROZEN_SOURCE_CONTEXT.set(None)
+    return result
+
+
+def _source_contracts(root, payload: Mapping[str, Any]) -> tuple[str, list[dict[str, Any]]] | None:
+    context = _FROZEN_SOURCE_CONTEXT.get()
+    if not isinstance(context, Mapping) or context.get("validated") is not True:
+        return None
+    if context.get("root") != str(Path(root).resolve()):
+        return None
+    source_index = context.get("source_index")
     if not isinstance(source_index, Mapping):
         return None
     entries = source_index.get("entries")
@@ -104,10 +135,11 @@ def normative_invoke_worker_with_source_projection(
             worker_cache=worker_cache,
         )
 
-    projection = _source_contracts(payload)
+    projection = _source_contracts(root, payload)
     if projection is None:
-        # Direct unit tests may invoke V3 without running V0 first. Preserve that
-        # compatibility path; real compile_plan execution always builds V0 first.
+        # Direct unit tests may invoke V3 without running V0/V0A first. Preserve
+        # that compatibility path; real compile_plan execution reaches V3 only
+        # after the validated frozen context has been created.
         return _BASE_NORMATIVE_INVOKE(
             root=root,
             out_dir=out_dir,
@@ -130,18 +162,22 @@ def normative_invoke_worker_with_source_projection(
         "owner must name a real implementation file when the source identifies one, must be writable, and must not be "
         "repeated in forbidden_paths. Do not invent paths not supported by the frozen source or repository reality."
     )
-    return _BASE_NORMATIVE_INVOKE(
-        root=root,
-        out_dir=out_dir,
-        stage=stage,
-        payload=enriched,
-        prompt=augmented_prompt,
-        worker_cache=worker_cache,
-    )
+    try:
+        return _BASE_NORMATIVE_INVOKE(
+            root=root,
+            out_dir=out_dir,
+            stage=stage,
+            payload=enriched,
+            prompt=augmented_prompt,
+            worker_cache=worker_cache,
+        )
+    finally:
+        _FROZEN_SOURCE_CONTEXT.set(None)
 
 
 def install() -> None:
     sc.build_source_index = build_source_index_with_projection
+    sc.source_preflight = source_preflight_with_projection
     gate.normative_invoke_worker = normative_invoke_worker_with_source_projection
     sc.invoke_worker = normative_invoke_worker_with_source_projection
 
