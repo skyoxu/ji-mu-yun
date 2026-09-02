@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "af3696fb94220af40aa8330292fa860a7f9ea56e",
+  "candidate_head": "54da57f87ef2c37b60ad3f03501f0136d55d2d6e",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -24,15 +24,14 @@
     "live_blind_candidate_binding": true,
     "live_blind_under_60_minutes": false,
     "real_semantic_candidate_binding": true,
-    "real_semantic_quality": false,
+    "real_semantic_quality": true,
     "selective_replay": true,
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
   "completion": "not-complete",
   "failed_checks": [
-    "live_blind_under_60_minutes",
-    "real_semantic_quality"
+    "live_blind_under_60_minutes"
   ],
   "failed_evidence": {
     "live_blind_under_60_minutes": {
@@ -43,31 +42,15 @@
         "model": null,
         "version": null
       },
-      "error": "blind benchmark contract expects one cohesive slice, observed 15",
+      "error": "live VDD did not reach plan-ready: {\"atomic_quality_metrics\": {\"active_obligation_count\": 13, \"f1\": 1.0, \"invented_obligation_count\": 0, \"precision\": 1.0, \"recall\": 1.0, \"source_gap_count\": 0, \"supported_obligation_count\": 13}, \"findings\": [\"chain:acceptance:A-91348D0857BF:overbroad-independent-behavior\"], \"stage\": \"final-validation\", \"status\": \"repair-vdd\"}",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
       "status": "failed",
       "under_60_minutes": null
-    },
-    "real_semantic_quality": {
-      "atomic_quality_metrics": null,
-      "backend": {
-        "available": true,
-        "backend": "codex-cli",
-        "blocking_errors": [],
-        "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
-      },
-      "compiler_findings": [],
-      "compiler_stage": null,
-      "compiler_status": null,
-      "error": "V3 execution-contract validation failed: v3-contract:hard-uncovered:O-05FBEB617CC0,O-0930A8432D68,O-0EED69209F49,O-1D250C9CE2DC,O-2151AFA48D1A,O-216151C24718,O-308CEC0AF0D3,O-3F8D3A91514B,O-478B426C9453,O-4826B1FC54F4,O-5452917BF2BA,O-585DE04DD0F0,O-5A11FE402230,O-5D0E708BAE62,O-61CC95352ABE,O-6428D66A0E2F,O-6AF32E8E8C22,O-8FF3370F82D5,O-937159A9EBBD,O-93D347113BDD,O-9489821DE499,O-96805601FC2F,O-978A937F3EC8,O-9DB7591EC12E,O-A3DD0AC500B5,O-AA95F036A37C,O-B4E1E62F4C61,O-B55E9454CAF5,O-ED12B0C4180E,O-F56E9158420C",
-      "execution_attempted": true,
-      "execution_succeeded": false,
-      "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "af3696fb94220af40aa8330292fa860a7f9ea56e",
+  "manifest_candidate_head": "54da57f87ef2c37b60ad3f03501f0136d55d2d6e",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
