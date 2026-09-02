@@ -62,6 +62,7 @@ def evaluate(backend: str | None) -> dict:
         "atomic_quality_metrics": None,
         "compiler_status": None,
         "compiler_stage": None,
+        "compiler_findings": [],
         "authorizes": [],
     }
     if info.get("available") is not True:
@@ -82,6 +83,8 @@ def evaluate(backend: str | None) -> dict:
             metrics = compiled.get("atomic_quality_metrics")
             result["compiler_status"] = compiled.get("status")
             result["compiler_stage"] = compiled.get("stage")
+            findings = compiled.get("findings")
+            result["compiler_findings"] = [str(item) for item in findings] if isinstance(findings, list) else []
             result["atomic_quality_metrics"] = metrics
             if not isinstance(metrics, dict):
                 result["status"] = "metric-unavailable"
