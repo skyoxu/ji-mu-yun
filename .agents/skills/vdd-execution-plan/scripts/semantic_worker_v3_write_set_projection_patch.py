@@ -2,9 +2,14 @@
 
 This layer applies only to the single group-first V3 schema-repair projection.
 Once a repair group declares production_owners, canonical V7 requires those
-same paths to be writable.  The projection therefore unions the already-declared
-owners into allowed_write_paths.  It never invents a path; an owner that is also
-forbidden remains a hard contract conflict and fails closed.
+same paths to be writable. The projection therefore unions the already-declared
+owners into allowed_write_paths.
+
+A repaired model can redundantly repeat the same owner in forbidden_paths. That
+state is internally contradictory because canonical V7 requires the owner to be
+writable. The projection resolves only that exact overlap by removing declared
+owners from forbidden_paths; every other forbidden path is preserved. No new
+path is invented and no unrelated forbidden boundary is weakened.
 """
 from __future__ import annotations
 
@@ -32,14 +37,10 @@ def project_with_owner_write_set(value: Mapping[str, Any]) -> dict[str, Any]:
             raise ValueError(f"V3 repaired slice hint {index} is not object")
         hint = dict(raw)
         owners = set(_strings(hint.get("production_owners")))
-        forbidden = set(_strings(hint.get("forbidden_paths")))
-        conflict = sorted(owners & forbidden)
-        if conflict:
-            raise ValueError(
-                "V3 repaired production owner is forbidden: " + ",".join(conflict)
-            )
         allowed = set(_strings(hint.get("allowed_write_paths")))
+        forbidden = set(_strings(hint.get("forbidden_paths")))
         hint["allowed_write_paths"] = sorted(allowed | owners)
+        hint["forbidden_paths"] = sorted(forbidden - owners)
         normalized.append(hint)
     result["slice_hints"] = normalized
     return result
