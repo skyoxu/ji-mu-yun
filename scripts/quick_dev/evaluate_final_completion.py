@@ -12,6 +12,12 @@ The gate requires a final-evidence manifest that binds the current candidate HEA
 to the exact bytes of every evidence artifact. All denominator evidence must
 already be candidate-sealed with the same source_head; unsealed, stale or mixed
 run evidence fails closed.
+
+The final result is also the minimal reviewer handoff. When a live denominator
+fails, it carries a bounded diagnostic summary so a separately committed
+``ch456-final-completion.json`` is sufficient to distinguish environment,
+worker-quality, lifecycle and timing failures without publishing the full evidence
+bundle.
 """
 from __future__ import annotations
 
@@ -91,6 +97,58 @@ def _selective_replay_pass(value: Mapping[str, Any]) -> bool:
 
 def _candidate_bound(value: Mapping[str, Any], current_head: str) -> bool:
     return bool(current_head and value.get("source_head") == current_head)
+
+
+def _bounded_backend_summary(value: Mapping[str, Any]) -> dict[str, Any] | None:
+    backend = value.get("backend")
+    if not isinstance(backend, Mapping):
+        availability = value.get("availability")
+        if isinstance(availability, Mapping):
+            backend = availability
+        else:
+            return None
+    keys = ("backend", "available", "blocking_errors", "model", "version", "executable")
+    return {key: backend.get(key) for key in keys if key in backend}
+
+
+def _failure_summary(value: Mapping[str, Any], *, kind: str) -> dict[str, Any]:
+    if kind == "real_semantic":
+        keys = (
+            "status",
+            "execution_attempted",
+            "execution_succeeded",
+            "compiler_status",
+            "compiler_stage",
+            "precision_threshold_passed",
+            "recall_threshold_passed",
+            "atomic_behavior_floor_passed",
+            "atomic_quality_metrics",
+            "error",
+        )
+    elif kind == "live_blind":
+        keys = (
+            "status",
+            "execution_attempted",
+            "product_acceptance_proven",
+            "under_60_minutes",
+            "elapsed_seconds",
+            "limit_seconds",
+            "final_status",
+            "vdd_worker_calls",
+            "vdd_schema_repairs",
+            "quick_dev_worker_calls",
+            "retry_count",
+            "repeated_fingerprint_stops",
+            "failure_stage",
+            "error",
+        )
+    else:
+        keys = ("status", "error")
+    summary = {key: value.get(key) for key in keys if key in value}
+    backend = _bounded_backend_summary(value)
+    if backend is not None:
+        summary["backend"] = backend
+    return summary
 
 
 def _manifest_findings(
@@ -173,6 +231,11 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         "real_semantic_candidate_binding": candidate_bindings["real_semantic"],
     }
     failed = sorted(name for name, passed in checks.items() if not passed)
+    failed_evidence: dict[str, Any] = {}
+    if "real_semantic_quality" in failed:
+        failed_evidence["real_semantic_quality"] = _failure_summary(evidence["real_semantic"], kind="real_semantic")
+    if "live_blind_under_60_minutes" in failed:
+        failed_evidence["live_blind_under_60_minutes"] = _failure_summary(evidence["live_blind"], kind="live_blind")
     return {
         "schema": SCHEMA,
         "status": "pass" if not failed else "blocked",
@@ -182,6 +245,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         "manifest_findings": manifest_findings,
         "checks": checks,
         "failed_checks": failed,
+        "failed_evidence": failed_evidence,
         "completion": "implementation-work-package-complete" if not failed else "not-complete",
         "authorizes": [],
     }
