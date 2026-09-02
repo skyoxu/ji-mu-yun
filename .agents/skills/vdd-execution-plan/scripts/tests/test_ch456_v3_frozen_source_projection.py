@@ -31,9 +31,17 @@ def _source_index() -> dict:
     }
 
 
-def test_v3_receives_exact_v0_frozen_source_projection_without_rereading_worktree(tmp_path: Path, monkeypatch) -> None:
+def _validated_context(root: Path, frozen: dict) -> dict:
+    return {
+        "root": str(root.resolve()),
+        "source_index": frozen,
+        "validated": True,
+    }
+
+
+def test_v3_receives_exact_v0a_frozen_source_projection_without_rereading_worktree(tmp_path: Path, monkeypatch) -> None:
     frozen = _source_index()
-    projection._FROZEN_SOURCE_INDEX.set(frozen)
+    projection._FROZEN_SOURCE_CONTEXT.set(_validated_context(tmp_path, frozen))
     captured: dict = {}
 
     def fake_base(**kwargs):
@@ -73,13 +81,37 @@ def test_v3_receives_exact_v0_frozen_source_projection_without_rereading_worktre
         }
     ]
     assert "FROZEN SOURCE CONTRACTS" in captured["prompt"]
-    # No requirements.md file exists in tmp_path. Success therefore proves the
-    # projection came from the frozen V0 value rather than a worktree reread.
     assert not (tmp_path / "requirements.md").exists()
+    assert projection._FROZEN_SOURCE_CONTEXT.get() is None
+
+
+def test_unvalidated_v0_context_is_not_projected_into_v3(tmp_path: Path, monkeypatch) -> None:
+    frozen = _source_index()
+    projection._FROZEN_SOURCE_CONTEXT.set(
+        {"root": str(tmp_path.resolve()), "source_index": frozen, "validated": False}
+    )
+    captured: dict = {}
+
+    def fake_base(**kwargs):
+        captured.update(kwargs)
+        return {}
+
+    monkeypatch.setattr(projection, "_BASE_NORMATIVE_INVOKE", fake_base)
+    payload = {"obligations": [{"obligation_id": "O-1", "source_refs": ["requirements.md#FR-1"]}]}
+    projection.normative_invoke_worker_with_source_projection(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v3",
+        payload=payload,
+        prompt="compile",
+        worker_cache=None,
+    )
+    assert "source_contracts" not in captured["payload"]
 
 
 def test_v3_projection_fails_closed_when_obligation_source_is_not_in_frozen_index(tmp_path: Path, monkeypatch) -> None:
-    projection._FROZEN_SOURCE_INDEX.set(_source_index())
+    frozen = _source_index()
+    projection._FROZEN_SOURCE_CONTEXT.set(_validated_context(tmp_path, frozen))
     monkeypatch.setattr(projection, "_BASE_NORMATIVE_INVOKE", lambda **kwargs: {})
     payload = {
         "obligations": [
