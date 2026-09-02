@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "de08c977c11842af7b635b2f3ec66e023075e935",
+  "candidate_head": "89b124bf65ba69f7f875cdd918f6be66dc180b3a",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -43,7 +43,7 @@
         "model": null,
         "version": null
       },
-      "error": "failure intent family invalid",
+      "error": "Acceptance A-C5ADE1F440D5 preflight contract is ambiguous",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
@@ -60,13 +60,13 @@
       },
       "compiler_stage": null,
       "compiler_status": null,
-      "error": "semantic worker schema repair failed; stop and repair VDD",
+      "error": "failure intent does not bind exactly one Acceptance",
       "execution_attempted": true,
       "execution_succeeded": false,
       "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "de08c977c11842af7b635b2f3ec66e023075e935",
+  "manifest_candidate_head": "89b124bf65ba69f7f875cdd918f6be66dc180b3a",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
