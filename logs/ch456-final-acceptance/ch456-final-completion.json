@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "d1665484c1bcd7e6a2870d6311224dcac00622a5",
+  "candidate_head": "119e8719d5b7dc5451820d451714da597f81cbf6",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -24,15 +24,14 @@
     "live_blind_candidate_binding": true,
     "live_blind_under_60_minutes": false,
     "real_semantic_candidate_binding": true,
-    "real_semantic_quality": false,
+    "real_semantic_quality": true,
     "selective_replay": true,
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
   "completion": "not-complete",
   "failed_checks": [
-    "live_blind_under_60_minutes",
-    "real_semantic_quality"
+    "live_blind_under_60_minutes"
   ],
   "failed_evidence": {
     "live_blind_under_60_minutes": {
@@ -43,31 +42,15 @@
         "model": null,
         "version": null
       },
-      "error": "V3 repaired production owner is forbidden: benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py",
+      "error": "V3 execution-contract validation failed: v3-contract:slice_hints[0]:no-real-production-entry; v3-contract:slice_hints[0]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[1]:no-real-production-entry; v3-contract:slice_hints[2]:no-real-production-entry; v3-contract:slice_hints[3]:no-real-production-entry; v3-contract:slice_hints[3]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[6]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[7]:no-real-production-entry; v3-contract:slice_hints[7]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[8]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[9]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[10]:no-real-production-entry; v3-contract:slice_hints[10]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[11]:selector-target-missing-not-planned:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py; v3-contract:slice_hints[12]:selector-target-missing-not-planne",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
       "status": "failed",
       "under_60_minutes": null
-    },
-    "real_semantic_quality": {
-      "atomic_quality_metrics": null,
-      "backend": {
-        "available": true,
-        "backend": "codex-cli",
-        "blocking_errors": [],
-        "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
-      },
-      "compiler_findings": [],
-      "compiler_stage": null,
-      "compiler_status": null,
-      "error": "V3 execution-contract validation failed: v3-contract:slice_hints[0]:no-real-production-entry; v3-contract:slice_hints[0]:selector-target-missing-not-planned:tests/fixtures/vdd/unobservable_acceptance.json; v3-contract:slice_hints[1]:no-real-production-entry; v3-contract:slice_hints[1]:selector-target-missing-not-planned:tests/fixtures/vdd/precheck_failure.json; v3-contract:slice_hints[2]:no-real-production-entry; v3-contract:slice_hints[2]:selector-target-missing-not-planned:tests/fixtures/vdd/blocked_compile.json; v3-contract:slice_hints[3]:no-real-production-entry; v3-contract:slice_hints[3]:selector-target-missing-not-planned:tests/fixtures/quickdev/recommendation_snapshot.json; v3-contract:slice_hints[4]:no-real-production-entry; v3-contract:slice_hints[4]:selector-target-missing-not-planned:tests/fixtures/red/timeout.json; v3-contract:slice_hints[5]:no-real-production-entry; v3-contract:slice_hints[5]:selector-target-missing-not-planned:tests/fixtures/red/unexpected_green.json; v3-contract:slice_hints[6]:no-real-production-entry; v3-contract:slice_hints[6]:selector-target-missing-not-planned:tests/fixtures/red/repository_noise.json; v3-contract:slice_hints[7]:no-real-production-entry; v3-contract:slice_hints[7]:selector-target-missing-not-planned:tests/fixtures/red/repeated_failure.json; v3-contract:slice_hints[8]:no-real-production-entry; v3-contract:slice_hints[8]:selector-target-missing-not-planned:tests/fixtures/red/zero_case.json; v3-contract:slice_hints[9]:no-real-production-entry; v3-contract:slice_hints[9]:selector-target-missing-not-planned:tests/fixtures/tdd/red_fixture.bin; v3-contract:slice_hints[10]:no-real-production-entry; v3-contract:slice_hints[10]:selector-target-missing-not-planned:tests/fixtures/tdd/fixture_bytes_changed.bin; v3-contract:slice_hints[11]:no-real-production-entry; v3-contract:slice_hints[11]:selector-target-missing-not-planned:tests/fixtures/tdd/red_target.json; v3-contract:slice_hints[12]:no-real-production-entry; v3-contract:slice_hints[12]:selector-target-missing-not-planned:tests/fixtures/tdd/red_selector.json; v3-contract:slice_hints[13]:no-real-production-entry; v3-contract:slice_hints[13]:selector-target-missing-not-planned:tests/fixtures/tdd/selector_bytes_changed.bin; v3-contract:slice_hints[14]:no-real-production-entry; v3-contract:slice_hints[14]:selector-target-missing-not-planned:tests/fixtures/tdd/red_assertion_scope.json; v3-contract:slice_hints[15]:no-real-production-entry; v3-contract:slice_hints[15]:selector-target-missing-not-planned:tests/fixtures/tdd/declared_write_set.json; v3-contract:slice_hints[16]:no-real-production-entry; v3-contract:slice_hints[16]:selector-target-missing-not-planned:tests/fixtures/tdd/red_safe_cwd.json; v3-contract:slice_hints[17]:no-real-production-entry; v3-contract:slice_hints[17]:selector-target-missing-not-planned:tests/fixtures/promotion/detached_mutation.json; v3-contract:slice_hints[18]:no-real-production-entry; v3-contract:slice_hints[18]:selector-target-missing-not-planned:tests/fixtures/validation/glob_history.json; v3-contract:slice_hints[19]:no-real-production-entry; v3-contract:slice_hints[19]:selector-target-missing-not-planned:tests/fixtures/validation/active_acceptances.json; v3-contract:slice_hints[20]:no-real-production-entry; v3-contract:slice_hints[20]:selector-target-missing-not-planned:tests/fixtures/promotion/external_judge.json; v3-contract:slice_hints[21]:no-real-production-entry; v3-contract:slice_hints[21]:selector-target-missing-not-planned:tests/fixtures/validation/runtime_evidence.json; v3-contract:slice_hints[22]:no-real-production-entry; v3-contract:slice_hints[22]:selector-target-missing-not-planned:tests/fixtures/promotion/detached_negative.json; v3-contract:slice_hints[23]:no-real-production-entry; v3-contract:slice_hints[23]:selector-target-missing-not-planned:tests/fixtures/promotion/detached_positive.json; v3-contract:slice_hints[24]:no-real-production-entry; v3-contract:slice_hints[24]:selector-target-missing-not-planned:tests/fixtures/validation/predecessors.json; v3-contract:slice_hints[25]:no-real-production-entry; v3-contract:slice_hints[25]:selector-target-missing-not-planned:tests/fixtures/validation/latest_success.json; v3-contract:slice_hints[26]:no-real-production-entry; v3-contract:slice_hints[26]:selector-target-missing-not-planned:tests/fixtures/validation/mtime_history.json; v3-contract:slice_hints[27]:no-real-production-entry; v3-contract:slice_hints[27]:selector-target-missing-not-planned:tests/fixtures/validation/current_snapshot.json",
-      "execution_attempted": true,
-      "execution_succeeded": false,
-      "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "d1665484c1bcd7e6a2870d6311224dcac00622a5",
+  "manifest_candidate_head": "119e8719d5b7dc5451820d451714da597f81cbf6",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
