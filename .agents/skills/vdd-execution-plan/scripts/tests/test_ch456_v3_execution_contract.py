@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
+import pytest
+
 SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
@@ -10,6 +12,7 @@ if str(SCRIPTS) not in sys.path:
 import semantic_compiler_gate as gate
 import semantic_feasibility_patch  # noqa: F401  # installs stable V3 repair chain
 from semantic_worker_v3_execution_contract_patch import _findings
+from semantic_worker_v3_write_set_projection_patch import project_with_owner_write_set
 
 
 def _obligation(oid: str, *, subject: str = "ledger") -> dict:
@@ -54,7 +57,7 @@ def _failure(ids: list[str]) -> dict:
     }
 
 
-def _hint(ids: list[str], *, allowed: list[str], planned: list[str]) -> dict:
+def _hint(ids: list[str], *, allowed: list[str], planned: list[str], forbidden: list[str] | None = None) -> dict:
     return {
         "obligation_ids": ids,
         "production_owners": ["src/owner.py"],
@@ -70,7 +73,7 @@ def _hint(ids: list[str], *, allowed: list[str], planned: list[str]) -> dict:
         "execution_snapshot_paths": ["tests/test_owner.py"],
         "planned_new_files": planned,
         "terminal_predicate": "all bound assertions pass",
-        "forbidden_paths": [],
+        "forbidden_paths": list(forbidden or []),
         "validation_commands": [[sys.executable, "-m", "pytest", "tests/test_owner.py", "-q"]],
     }
 
@@ -90,7 +93,10 @@ def test_v3_contract_routes_missing_coverage_and_path_defects_through_one_groupe
                 "obligation_ids": ["O-1", "O-2"],
                 "acceptance": {key: value for key, value in _acceptance(["O-1", "O-2"]).items() if key != "obligation_ids"},
                 "failure_intents": [{key: value for key, value in _failure(["O-1", "O-2"]).items() if key != "obligation_ids"}],
-                "slice_hint": {key: value for key, value in _hint(["O-1", "O-2"], allowed=["src/owner.py"], planned=["tests/test_owner.py"]).items() if key != "obligation_ids"},
+                # Reproduce the live model defect: the repair declares the owner
+                # but forgets to repeat it in allowed_write_paths. Projection
+                # must normalize the two fields before execution-contract validation.
+                "slice_hint": {key: value for key, value in _hint(["O-1", "O-2"], allowed=[], planned=["tests/test_owner.py"]).items() if key != "obligation_ids"},
             }
         ]
     }
@@ -119,3 +125,27 @@ def test_v3_contract_catches_overbroad_subject_before_v3a(tmp_path: Path) -> Non
     }
     findings = _findings(tmp_path, "v3", {"obligations": obligations}, candidate)
     assert any("overbroad-subject" in item for item in findings)
+
+
+def test_repaired_owner_cannot_be_both_allowed_and_forbidden() -> None:
+    raw = {
+        "groups": [
+            {
+                "obligation_ids": ["O-1"],
+                "acceptance": {key: value for key, value in _acceptance(["O-1"]).items() if key != "obligation_ids"},
+                "failure_intents": [{key: value for key, value in _failure(["O-1"]).items() if key != "obligation_ids"}],
+                "slice_hint": {
+                    key: value
+                    for key, value in _hint(
+                        ["O-1"],
+                        allowed=[],
+                        planned=["tests/test_owner.py"],
+                        forbidden=["src/owner.py"],
+                    ).items()
+                    if key != "obligation_ids"
+                },
+            }
+        ]
+    }
+    with pytest.raises(ValueError, match="production owner is forbidden"):
+        project_with_owner_write_set(raw)
