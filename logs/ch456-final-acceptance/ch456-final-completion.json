@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "89b124bf65ba69f7f875cdd918f6be66dc180b3a",
+  "candidate_head": "086b6df529c7cd258079f72fae56c8fa20c1573a",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -43,7 +43,7 @@
         "model": null,
         "version": null
       },
-      "error": "Acceptance A-C5ADE1F440D5 preflight contract is ambiguous",
+      "error": "Expecting ',' delimiter: line 1 column 19419 (char 19418)",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
@@ -60,13 +60,13 @@
       },
       "compiler_stage": null,
       "compiler_status": null,
-      "error": "failure intent does not bind exactly one Acceptance",
+      "error": "semantic worker v3-schema-repair failed: codex exec timeout",
       "execution_attempted": true,
       "execution_succeeded": false,
       "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "89b124bf65ba69f7f875cdd918f6be66dc180b3a",
+  "manifest_candidate_head": "086b6df529c7cd258079f72fae56c8fa20c1573a",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
