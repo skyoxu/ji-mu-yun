@@ -26,7 +26,7 @@ for path in (SC, VDD):
         sys.path.insert(0, str(path))
 
 from _llm_backend import inspect_llm_backend, resolve_llm_backend
-from semantic_compiler_gate import compile_plan
+from semantic_compiler_authority import compile_plan
 
 FIXTURE = ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts" / "fixtures" / "ch456-curated-semantic-quality.md"
 MIN_ACTIVE_OBLIGATIONS = 23
