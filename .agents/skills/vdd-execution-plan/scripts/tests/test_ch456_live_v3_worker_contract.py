@@ -72,6 +72,24 @@ def test_valid_failure_family_passes_v3_shape_contract() -> None:
     assert findings == []
 
 
+def test_invalid_v3_family_routes_through_single_repair(tmp_path: Path) -> None:
+    invalid = _v3_payload("assertion-failure")
+    repaired = _v3_payload("expected-red")
+    worker_cache = {
+        "v3": invalid,
+        "v3-schema-repair": repaired,
+    }
+    result = gate.normative_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v3",
+        payload={"obligations": [{"obligation_id": "O-1"}]},
+        prompt="Compile observable Acceptance contracts.",
+        worker_cache=worker_cache,
+    )
+    assert result == repaired
+
+
 def test_v3_prompt_enumerates_failure_taxonomy() -> None:
     prompt = _augment_prompt("v3", "Compile Acceptance contracts.")
     assert "STRICT V3 JSON CONTRACT" in prompt
