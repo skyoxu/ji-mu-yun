@@ -14,6 +14,7 @@ import sys
 from typing import Any, Mapping, Sequence
 
 import semantic_compiler_gate as gate
+import semantic_feasibility_patch  # noqa: F401  # installs normative planned-new-file V7 rule
 from semantic_chain_audit import audit_bundle
 
 
