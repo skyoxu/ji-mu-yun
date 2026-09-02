@@ -1,7 +1,7 @@
 """Constrain grouped V3 repair to canonical subject and production-owner domains.
 
-The one-shot grouped repair remains model-authored.  This layer only makes two
-canonical invariants structural before the existing V3 validators run:
+The one-shot grouped repair remains model-authored. This layer enforces two
+canonical invariants after the worker has returned its normal structured shape:
 
 * one Acceptance group may reference obligation IDs from exactly one frozen
   subject domain, matching canonical V3A overbroad-subject semantics;
@@ -9,58 +9,64 @@ canonical invariants structural before the existing V3 validators run:
   already names real production paths, those declared production paths become
   the repaired production owners and are included in the write set.
 
+Subject compatibility is deliberately validated after structured generation
+instead of encoded with JSON-Schema composition keywords. Codex structured
+output accepts only a supported JSON-Schema subset, while the deterministic
+validator remains authoritative and fail-closed.
+
 No repository-wide owner guessing, sibling-group borrowing, semantic retry, or
-truth-gate relaxation is performed.  If neither the declared owners nor the
+truth-gate relaxation is performed. If neither the declared owners nor the
 hint's own rollback production paths resolve to real files, the downstream V3
 execution-contract continues to fail closed.
 """
 from __future__ import annotations
 
-from copy import deepcopy
 from pathlib import Path
 from typing import Any, Mapping
 
 import semantic_compiler_gate as gate
 import semantic_worker_v3_group_repair_patch as grouped
 
-_BASE_GROUP_SCHEMA = grouped._group_schema
 _BASE_GROUP_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
 
 
-def _subject_domains(payload: Mapping[str, Any]) -> list[dict[str, Any]]:
-    by_subject: dict[str, list[str]] = {}
+def _obligation_subjects(payload: Mapping[str, Any]) -> dict[str, str]:
+    result: dict[str, str] = {}
     for item in grouped._repair_obligations(payload):
         oid = item.get("obligation_id")
         subject = item.get("subject")
-        if not isinstance(oid, str) or not oid or not isinstance(subject, str) or not subject.strip():
-            continue
-        by_subject.setdefault(subject.strip(), []).append(oid)
-    domains: list[dict[str, Any]] = []
-    for subject in sorted(by_subject):
-        ids = sorted(set(by_subject[subject]))
-        if not ids:
-            continue
-        domains.append(
-            {
-                "type": "array",
-                "minItems": 1,
-                "uniqueItems": True,
-                "items": {"type": "string", "enum": ids},
-            }
-        )
-    if not domains:
-        raise ValueError("V3 grouped repair has no frozen subject domains")
-    return domains
+        if isinstance(oid, str) and oid and isinstance(subject, str) and subject.strip():
+            result[oid] = subject.strip()
+    if not result:
+        raise ValueError("V3 grouped repair has no frozen subject domain")
+    return result
 
 
-def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
-    schema = deepcopy(_BASE_GROUP_SCHEMA(payload))
-    try:
-        group = schema["properties"]["groups"]["items"]
-        group["properties"]["obligation_ids"] = {"oneOf": _subject_domains(payload)}
-    except (KeyError, TypeError) as exc:
-        raise ValueError("V3 grouped repair schema shape is unavailable") from exc
-    return schema
+def _validate_subject_domains(payload: Mapping[str, Any], value: Mapping[str, Any]) -> None:
+    subjects_by_id = _obligation_subjects(payload)
+    acceptances = value.get("acceptances")
+    if not isinstance(acceptances, list) or not acceptances:
+        return
+    findings: list[str] = []
+    for index, raw in enumerate(acceptances):
+        if not isinstance(raw, Mapping):
+            continue
+        ids = raw.get("obligation_ids")
+        if not isinstance(ids, list) or not ids:
+            continue
+        unknown = sorted({str(oid) for oid in ids if isinstance(oid, str)} - set(subjects_by_id))
+        if unknown:
+            findings.append(
+                f"acceptances[{index}]:unknown-obligation-id:" + ",".join(unknown)
+            )
+            continue
+        subjects = sorted({subjects_by_id[str(oid)] for oid in ids if isinstance(oid, str)})
+        if len(subjects) > 1:
+            findings.append(
+                f"acceptances[{index}]:overbroad-subject:" + ",".join(subjects)
+            )
+    if findings:
+        raise ValueError("V3 grouped repair subject validation failed: " + "; ".join(findings))
 
 
 def _real_file(root: Path, raw: str) -> bool:
@@ -134,14 +140,13 @@ def group_safety_transport(
     )
     if stage != "v3-schema-repair":
         return value
+    _validate_subject_domains(payload, value)
     return _normalize_repaired_value(Path(root), value)
 
 
 def install() -> None:
-    # Live grouped repair resolves this schema global at call time.
-    grouped._group_schema = _group_schema
     # Compose over the grouped transport so injected and live repair results share
-    # the same deterministic owner normalization before execution-contract checks.
+    # the same deterministic subject and owner checks before execution-contract.
     gate._ORIGINAL_INVOKE_WORKER = group_safety_transport
 
 
