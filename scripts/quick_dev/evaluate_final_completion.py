@@ -119,6 +119,7 @@ def _failure_summary(value: Mapping[str, Any], *, kind: str) -> dict[str, Any]:
             "execution_succeeded",
             "compiler_status",
             "compiler_stage",
+            "compiler_findings",
             "precision_threshold_passed",
             "recall_threshold_passed",
             "atomic_behavior_floor_passed",
