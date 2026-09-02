@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "dcfbf6fea8bef7637be43cf71ae8b2cbd4303be2",
+  "candidate_head": "ecae961d53be15643f1ce0dcc81c318c5960bac5",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -43,7 +43,7 @@
         "model": null,
         "version": null
       },
-      "error": "live VDD did not reach plan-ready: {\"atomic_quality_metrics\": {\"active_obligation_count\": 16, \"f1\": 1.0, \"invented_obligation_count\": 0, \"precision\": 1.0, \"recall\": 1.0, \"source_gap_count\": 0, \"supported_obligation_count\": 16}, \"findings\": [\"S1:owner-outside-write-set:benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py\", \"S1:selector-target-missing:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py\", \"S3:owner-outside-write-set:benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py\", \"S3:selector-target-missing:logs\", \"S4:owner-outside-write-set:benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py\", \"S6:owner-outside-write-set:benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py\", \"S6:selector-target-missing:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py\", \"S8:owner-outside-write-set:benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py\", \"S8:selector-target-missing:benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py\", \"S9:owner-outside-write-set:benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempote",
+      "error": "live VDD did not reach plan-ready: {\"findings\": [\"acceptance:A-B4BB2A5A4AF7:overbroad-subject\", \"acceptance:A-BBAAC793E0F4:overbroad-subject\", \"acceptance:A-CA021EEC339E:overbroad-subject\", \"acceptance:A-ECE84B796471:overbroad-subject\"], \"stage\": \"V3A\", \"status\": \"repair-vdd\"}",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
@@ -58,14 +58,16 @@
         "blocking_errors": [],
         "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
       },
-      "compiler_stage": "V3A",
-      "compiler_status": "repair-vdd",
+      "compiler_findings": [],
+      "compiler_stage": null,
+      "compiler_status": null,
+      "error": "semantic worker schema repair failed; stop and repair VDD: [\"worker-output:v3-relational:acceptance-obligation-set=O-2286B5CC6B31:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-24A8E3C6E3F6:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-34A7D12FB43D:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-369B8FCF577F:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-3DF303D8FC21:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-3F85B75A27AA:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-511D8FE48628:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-54C5C146E9C5:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-5708E7F3F587:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-5C9DBD5D9FC0:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-5CEE2B15F9D5:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-5EF49315966A:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-629B94805BD8:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-6F8EAC1D86AF:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-822F123F395D:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-82517454CA35:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-8C4FCEFF2CC9:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-8CC9244D0F3A:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-9168B5594C3F:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-986114B0D760:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-99103DB20E57:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-9A9128BBB1CD:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-9B725B651522:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-A96275F605DF:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-ABE7923FDBE6:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-AED0FE1D39F8:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-C148F4E49C2E:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-C38917C6698F:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-C857652F8BE2:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-E1E1BB1DD852:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-E934B8CC5FE3:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-E9B64F1F82A1:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-ECB2D8A49562:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-EF9090BFD122:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-F8BF3E62D5A9:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-FCFE4960DF5C:slice-hint-count=0:must-equal-1\"]",
       "execution_attempted": true,
       "execution_succeeded": false,
-      "status": "metric-unavailable"
+      "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "dcfbf6fea8bef7637be43cf71ae8b2cbd4303be2",
+  "manifest_candidate_head": "ecae961d53be15643f1ce0dcc81c318c5960bac5",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
