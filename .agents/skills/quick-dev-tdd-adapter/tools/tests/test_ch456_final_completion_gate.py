@@ -93,6 +93,7 @@ def test_strict_gate_passes_only_when_full_live_denominator_passes(tmp_path: Pat
     assert result["status"] == "pass"
     assert result["completion"] == "implementation-work-package-complete"
     assert result["failed_checks"] == []
+    assert result["failed_evidence"] == {}
     assert result["checks"]["final_evidence_manifest"] is True
     assert result["checks"]["all_evidence_candidate_binding"] is True
     assert result["checks"]["selective_replay"] is True
@@ -102,12 +103,83 @@ def test_environment_blocked_live_evidence_can_never_complete(tmp_path: Path, mo
     head = "b" * 40
     monkeypatch.setattr(GATE, "_head", lambda: head)
     args = _args(tmp_path, head)
-    _write(args.real_semantic, _bound(head, schema="real-semantic.v1", status="environment-blocked", execution_attempted=False, execution_succeeded=False))
-    _write(args.live_blind, _bound(head, schema="live.v1", status="environment-blocked", execution_attempted=False, product_acceptance_proven=False, under_60_minutes=None))
+    _write(
+        args.real_semantic,
+        _bound(
+            head,
+            schema="real-semantic.v1",
+            status="environment-blocked",
+            execution_attempted=False,
+            execution_succeeded=False,
+            availability={"backend": "codex-cli", "available": False, "blocking_errors": ["codex executable not found in PATH"]},
+        ),
+    )
+    _write(
+        args.live_blind,
+        _bound(
+            head,
+            schema="live.v1",
+            status="environment-blocked",
+            execution_attempted=False,
+            product_acceptance_proven=False,
+            under_60_minutes=None,
+            backend={"backend": "codex-cli", "available": False, "blocking_errors": ["codex executable not found in PATH"]},
+        ),
+    )
     _freeze_manifest(args, tmp_path, head)
     result = GATE.evaluate(args)
     assert result["status"] == "blocked"
     assert set(result["failed_checks"]) == {"live_blind_under_60_minutes", "real_semantic_quality"}
+    assert result["failed_evidence"]["real_semantic_quality"]["status"] == "environment-blocked"
+    assert result["failed_evidence"]["real_semantic_quality"]["backend"]["blocking_errors"] == ["codex executable not found in PATH"]
+    assert result["failed_evidence"]["live_blind_under_60_minutes"]["execution_attempted"] is False
+
+
+def test_failed_live_evidence_exposes_bounded_root_cause(tmp_path: Path, monkeypatch) -> None:
+    head = "1" * 40
+    monkeypatch.setattr(GATE, "_head", lambda: head)
+    args = _args(tmp_path, head)
+    _write(
+        args.real_semantic,
+        _bound(
+            head,
+            schema="real-semantic.v1",
+            status="quality-threshold-failed",
+            execution_attempted=True,
+            execution_succeeded=False,
+            compiler_status="plan-ready",
+            compiler_stage="V7",
+            precision_threshold_passed=True,
+            recall_threshold_passed=False,
+            atomic_behavior_floor_passed=True,
+            atomic_quality_metrics={"precision": 1.0, "recall": 0.91, "active_obligation_count": 29},
+        ),
+    )
+    _write(
+        args.live_blind,
+        _bound(
+            head,
+            schema="live.v1",
+            status="worker-failed",
+            execution_attempted=True,
+            product_acceptance_proven=False,
+            under_60_minutes=False,
+            elapsed_seconds=42.0,
+            final_status=None,
+            failure_stage="q2-author-red",
+            error="bounded diagnostic",
+            backend={"backend": "codex-cli", "available": True},
+        ),
+    )
+    _freeze_manifest(args, tmp_path, head)
+    result = GATE.evaluate(args)
+    semantic = result["failed_evidence"]["real_semantic_quality"]
+    blind = result["failed_evidence"]["live_blind_under_60_minutes"]
+    assert semantic["compiler_stage"] == "V7"
+    assert semantic["atomic_quality_metrics"]["recall"] == 0.91
+    assert blind["failure_stage"] == "q2-author-red"
+    assert blind["error"] == "bounded diagnostic"
+    assert blind["backend"]["backend"] == "codex-cli"
 
 
 def test_candidate_binding_drift_blocks_live_evidence(tmp_path: Path, monkeypatch) -> None:
