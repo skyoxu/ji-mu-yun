@@ -18,6 +18,7 @@ import semantic_compiler as sc
 import semantic_worker_transport_patch  # noqa: F401  # structured JSON + bounded repair transport
 import semantic_worker_contract_patch  # noqa: F401  # stable live worker field contract
 import semantic_worker_relational_patch  # noqa: F401  # stable live V3 relational contract
+import semantic_worker_v4_domain_patch  # noqa: F401  # frozen-id V4 atomic-recall contract
 
 _ORIGINAL_FEASIBILITY = sc.feasibility
 
