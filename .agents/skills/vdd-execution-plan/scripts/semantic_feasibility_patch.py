@@ -9,7 +9,7 @@ remains fail-closed.
 Importing this stable compatibility layer also installs the semantic-worker
 transport and contract patches so every stable compiler authority caller uses
 the same live V1/V3 structured transport, field, relational, domain, and repair
-semantics.
+semantics plus bounded independent V4 alignment repair.
 """
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ import semantic_worker_contract_patch  # noqa: F401  # stable live worker field 
 import semantic_worker_relational_patch  # noqa: F401  # stable live V3 relational contract
 import semantic_worker_v4_domain_patch  # noqa: F401  # frozen-id V4 atomic-recall contract
 import semantic_atomic_recall_result_patch  # noqa: F401  # exact V4 partition diagnostics
+import semantic_alignment_repair_patch  # noqa: F401  # bounded Acceptance-only repair + independent recheck
 
 _ORIGINAL_FEASIBILITY = sc.feasibility
 
