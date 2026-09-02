@@ -9,8 +9,9 @@ remains fail-closed.
 Importing this stable compatibility layer also installs the semantic-worker
 transport and contract patches so every stable compiler authority caller uses
 the same live V1/V3 structured transport, field, relational, domain, grouped
-repair, repaired owner/write-set projection, execution-contract, atomic-gap
-repair, and bounded independent V4 alignment semantics.
+repair, repaired owner/write-set projection, grouped subject/owner safety,
+execution-contract, atomic-gap repair, and bounded independent V4 alignment
+semantics.
 """
 from __future__ import annotations
 
@@ -22,6 +23,7 @@ import semantic_worker_v3_domain_patch  # noqa: F401  # frozen obligation/source
 import semantic_worker_v3_group_repair_patch  # noqa: F401  # relation-safe one-shot V3 repair
 import semantic_worker_v3_group_prompt_patch  # noqa: F401  # explicit grouped repair invariants
 import semantic_worker_v3_write_set_projection_patch  # noqa: F401  # owner/write-set identity in repaired groups
+import semantic_worker_v3_group_safety_patch  # noqa: F401  # single-subject groups + rollback owner recovery
 import semantic_worker_v3_execution_contract_patch  # noqa: F401  # V3A/V7 facts at worker boundary
 import semantic_worker_contract_patch  # noqa: F401  # stable live worker field contract
 import semantic_worker_relational_patch  # noqa: F401  # stable live V3 relational contract
