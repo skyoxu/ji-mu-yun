@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "89a4ecbd1803d784b767557cdd2c57259c2c5121",
+  "candidate_head": "8a334160ba6b64aea9515f2331288c3037d02f7c",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -43,7 +43,7 @@
         "model": null,
         "version": null
       },
-      "error": "live VDD did not reach plan-ready: {\"atomic_quality_metrics\": {\"active_obligation_count\": 10, \"f1\": 1.0, \"invented_obligation_count\": 0, \"precision\": 1.0, \"recall\": 1.0, \"source_gap_count\": 0, \"supported_obligation_count\": 10}, \"findings\": [\"v4:misaligned-acceptance:A-5BA0D8EFD7DC\"], \"stage\": \"V4\", \"status\": \"repair-vdd\"}",
+      "error": "live VDD did not reach plan-ready: {\"atomic_quality_metrics\": {\"active_obligation_count\": 11, \"f1\": 0.956522, \"invented_obligation_count\": 0, \"precision\": 1.0, \"recall\": 0.916667, \"source_gap_count\": 1, \"supported_obligation_count\": 11}, \"findings\": [\"atomic-recall:source-gap-count:1\"], \"gate\": \"atomic-source-recall\", \"source_gap_claims\": [{\"behavior\": \"Production implementation changes must be confined to the declared production-owner file throughout implementation, not only during GREEN.\", \"reason\": \"The obligation set constrains out-of-owner file changes specifically during GREEN and separately requires the implementation to be located in the owner file, but does not enforce the source's broader only-modify-the-owner boundary across all implementation activity.\", \"source_ref\": \"benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301\", \"subject\": \"Production modification boundary\"}], \"stage\": \"V4\", \"status\": \"repair-vdd\"}",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
@@ -60,13 +60,13 @@
       },
       "compiler_stage": null,
       "compiler_status": null,
-      "error": "acceptance obligation binding is invalid",
+      "error": "semantic worker schema repair failed; stop and repair VDD: [\"worker-output:v3-relational:acceptance-obligation-set=O-155311DE6D9A:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-15641302754C:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-2DA916A11D3D:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-353B5F309E9B:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-3BEC9B6231F2:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-55C4301C4407:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-5CFB1573BF1A:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-607D718EDB16:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-670F46BC62FD:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-6854CF23F459:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-6C458B9DB73A:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-73E2A6CDE4A0:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-7D6F5D39D7AA:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-7E784095DF58:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-8608526ED17A:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-91AB6EA19451:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-A21F108B3A70:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-A50F7516AF92:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-A52AB1EC5FDB:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-B69C403E178B:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-C0ED03652BCA:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-C57CD931AC76:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-D47088963BE0:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-D7C4E7C56F50:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-DA2FF3696B07:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-E2C908FCA2CC:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-EF6370DA773F:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-F27DFAAF9B89:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-F2DC6E349CFE:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-F3068AB947B5:slice-hint-count=0:must-equal-1\", \"worker-output:v3-relational:acceptance-obligation-set=O-F6ABA99F7BC1:slice-hint-count=0:must-equal-1\"]",
       "execution_attempted": true,
       "execution_succeeded": false,
       "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "89a4ecbd1803d784b767557cdd2c57259c2c5121",
+  "manifest_candidate_head": "8a334160ba6b64aea9515f2331288c3037d02f7c",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
