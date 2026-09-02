@@ -14,6 +14,11 @@ instead of encoded with JSON-Schema composition keywords. Codex structured
 output accepts only a supported JSON-Schema subset, while the deterministic
 validator remains authoritative and fail-closed.
 
+When rollback recovery promotes an already-declared production path to owner,
+the same path is removed from forbidden_paths because canonical V7 requires a
+production owner to be writable. Only that exact owner overlap is normalized;
+all unrelated forbidden paths remain unchanged.
+
 No repository-wide owner guessing, sibling-group borrowing, semantic retry, or
 truth-gate relaxation is performed. If neither the declared owners nor the
 hint's own rollback production paths resolve to real files, the downstream V3
@@ -97,15 +102,11 @@ def _normalize_hint(root: Path, raw: Mapping[str, Any]) -> dict[str, Any]:
             owners = sorted(set(rollback_real))
             hint["production_owners"] = owners
 
-    owners = _strings(hint.get("production_owners"))
-    forbidden = set(_strings(hint.get("forbidden_paths")))
-    conflict = sorted(set(owners) & forbidden)
-    if conflict:
-        raise ValueError("V3 grouped repair production owner is forbidden: " + ",".join(conflict))
-
+    owners = set(_strings(hint.get("production_owners")))
     allowed = set(_strings(hint.get("allowed_write_paths")))
-    allowed.update(owners)
-    hint["allowed_write_paths"] = sorted(allowed)
+    forbidden = set(_strings(hint.get("forbidden_paths")))
+    hint["allowed_write_paths"] = sorted(allowed | owners)
+    hint["forbidden_paths"] = sorted(forbidden - owners)
     return hint
 
 
