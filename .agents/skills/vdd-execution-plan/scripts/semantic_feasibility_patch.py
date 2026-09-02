@@ -11,7 +11,8 @@ transport and contract patches so every stable compiler authority caller uses
 the same live V1/V3 structured transport, field, relational, domain, grouped
 repair, repaired owner/write-set projection, grouped subject/owner safety,
 explicit frozen path-contract projection, frozen V0 source projection,
-execution-contract, atomic-gap repair, and bounded independent V4 alignment
+execution-contract, bounded missing-obligation completion, atomic-gap repair,
+cohesive semantic slice partitioning, and bounded independent V4 alignment
 semantics.
 """
 from __future__ import annotations
@@ -31,6 +32,8 @@ import semantic_worker_contract_patch  # noqa: F401  # stable live worker field 
 import semantic_worker_relational_patch  # noqa: F401  # stable live V3 relational contract
 import semantic_worker_v3_source_projection_patch  # noqa: F401  # V0-frozen source contracts available to V3/repair
 import semantic_worker_v4_domain_patch  # noqa: F401  # frozen-id V4 atomic-recall contract
+import semantic_worker_v3_total_coverage_patch  # noqa: F401  # bounded missing-only V3 completion before hard reject
+import semantic_slice_cohesion_patch  # noqa: F401  # semantic compatibility grouping instead of exact path-set identity
 import semantic_atomic_recall_result_patch  # noqa: F401  # exact V4 partition diagnostics
 import semantic_obligation_gap_repair_patch  # noqa: F401  # one bounded V1 repair for proven source gaps
 import semantic_alignment_repair_patch  # noqa: F401  # bounded Acceptance-only repair + independent recheck
