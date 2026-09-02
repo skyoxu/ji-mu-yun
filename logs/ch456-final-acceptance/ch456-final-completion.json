@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "a168405028ff74ed4f08e7def43290eacf241fcf",
+  "candidate_head": "f3e1791b5eebc680694ffe790b5e2f068e479841",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -34,7 +34,39 @@
     "live_blind_under_60_minutes",
     "real_semantic_quality"
   ],
-  "manifest_candidate_head": "a168405028ff74ed4f08e7def43290eacf241fcf",
+  "failed_evidence": {
+    "live_blind_under_60_minutes": {
+      "backend": {
+        "available": true,
+        "backend": "codex-cli",
+        "blocking_errors": [],
+        "model": null,
+        "version": null
+      },
+      "error": "live VDD did not reach plan-ready: {\"findings\": [\"obligation:O-68B7849050C4:active-unresolved\", \"obligation:O-B4D9B3A3B2DA:active-unresolved\", \"obligation:O-E5CE9EE1DDA5:active-unresolved\"], \"stage\": \"V2\", \"status\": \"repair-vdd\"}",
+      "execution_attempted": true,
+      "limit_seconds": 3600,
+      "product_acceptance_proven": false,
+      "status": "failed",
+      "under_60_minutes": null
+    },
+    "real_semantic_quality": {
+      "atomic_quality_metrics": null,
+      "backend": {
+        "available": true,
+        "backend": "codex-cli",
+        "blocking_errors": [],
+        "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+      },
+      "compiler_stage": null,
+      "compiler_status": null,
+      "error": "obligation depends_on is invalid",
+      "execution_attempted": true,
+      "execution_succeeded": false,
+      "status": "worker-failed"
+    }
+  },
+  "manifest_candidate_head": "f3e1791b5eebc680694ffe790b5e2f068e479841",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
