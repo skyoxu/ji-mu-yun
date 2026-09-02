@@ -20,6 +20,7 @@ import semantic_compiler as sc
 import semantic_worker_transport_patch  # noqa: F401  # structured JSON + bounded repair transport
 import semantic_worker_v3_domain_patch  # noqa: F401  # frozen obligation/source domain for V3
 import semantic_worker_v3_group_repair_patch  # noqa: F401  # relation-safe one-shot V3 repair
+import semantic_worker_v3_group_prompt_patch  # noqa: F401  # explicit grouped repair invariants
 import semantic_worker_v3_execution_contract_patch  # noqa: F401  # V3A/V7 facts at worker boundary
 import semantic_worker_contract_patch  # noqa: F401  # stable live worker field contract
 import semantic_worker_relational_patch  # noqa: F401  # stable live V3 relational contract
