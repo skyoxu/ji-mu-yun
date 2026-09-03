@@ -3,8 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
-import pytest
-
 SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
@@ -108,10 +106,11 @@ def test_v3_contract_routes_missing_coverage_and_path_defects_through_one_groupe
         prompt="Compile Acceptance, RED intent and slice hints.",
         worker_cache={"v3": initial, "v3-schema-repair": repaired},
     )
-    assert result["acceptances"][0]["obligation_ids"] == ["O-1", "O-2"]
-    assert result["failure_intents"][0]["obligation_ids"] == ["O-1", "O-2"]
-    assert result["slice_hints"][0]["allowed_write_paths"] == ["src/owner.py"]
-    assert result["slice_hints"][0]["planned_new_files"] == ["tests/test_owner.py"]
+    assert [item["obligation_ids"] for item in result["acceptances"]] == [["O-1"], ["O-2"]]
+    assert [item["obligation_ids"] for item in result["failure_intents"]] == [["O-1"], ["O-2"]]
+    assert [item["obligation_ids"] for item in result["slice_hints"]] == [["O-1"], ["O-2"]]
+    assert all(item["allowed_write_paths"] == ["src/owner.py"] for item in result["slice_hints"])
+    assert all(item["planned_new_files"] == ["tests/test_owner.py"] for item in result["slice_hints"])
 
 
 def test_v3_contract_catches_overbroad_subject_before_v3a(tmp_path: Path) -> None:
@@ -127,7 +126,7 @@ def test_v3_contract_catches_overbroad_subject_before_v3a(tmp_path: Path) -> Non
     assert any("overbroad-subject" in item for item in findings)
 
 
-def test_repaired_owner_cannot_be_both_allowed_and_forbidden() -> None:
+def test_repaired_owner_overlap_is_removed_from_forbidden() -> None:
     raw = {
         "groups": [
             {
@@ -147,5 +146,6 @@ def test_repaired_owner_cannot_be_both_allowed_and_forbidden() -> None:
             }
         ]
     }
-    with pytest.raises(ValueError, match="production owner is forbidden"):
-        project_with_owner_write_set(raw)
+    result = project_with_owner_write_set(raw)
+    assert result["slice_hints"][0]["allowed_write_paths"] == ["src/owner.py"]
+    assert result["slice_hints"][0]["forbidden_paths"] == []

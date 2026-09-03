@@ -49,7 +49,14 @@ def _v3_payload(oid: str) -> dict:
 
 
 def test_unknown_v3_obligation_routes_through_existing_single_repair(tmp_path: Path) -> None:
-    obligations = [{"obligation_id": "O-1", "source_refs": ["req.md#FR-1"], "status": "active"}]
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "ledger.py").write_text("VALUE = 1\n", encoding="utf-8")
+    obligations = [{
+        "obligation_id": "O-1",
+        "source_refs": ["req.md#FR-1"],
+        "subject": "ledger",
+        "status": "active",
+    }]
     repaired = _v3_payload("O-1")
     result = gate.normative_invoke_worker(
         root=tmp_path,
