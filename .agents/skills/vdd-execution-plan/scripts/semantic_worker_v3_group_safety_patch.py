@@ -9,7 +9,7 @@ canonical invariants after the worker has returned its normal structured shape:
   already names real production paths, those declared production paths become
   the repaired production owners and are included in the write set.
 
-Subject compatibility is deliberately validated after structured generation
+Subject compatibility is deliberately validated after structured output
 instead of encoded with JSON-Schema composition keywords. Codex structured
 output accepts only a supported JSON-Schema subset, while the deterministic
 validator remains authoritative and fail-closed.
