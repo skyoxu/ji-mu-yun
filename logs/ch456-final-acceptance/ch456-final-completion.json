@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "54da57f87ef2c37b60ad3f03501f0136d55d2d6e",
+  "candidate_head": "f229d959a5e98417fe537d60c210898b0a17e7ea",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -24,14 +24,15 @@
     "live_blind_candidate_binding": true,
     "live_blind_under_60_minutes": false,
     "real_semantic_candidate_binding": true,
-    "real_semantic_quality": true,
+    "real_semantic_quality": false,
     "selective_replay": true,
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
   "completion": "not-complete",
   "failed_checks": [
-    "live_blind_under_60_minutes"
+    "live_blind_under_60_minutes",
+    "real_semantic_quality"
   ],
   "failed_evidence": {
     "live_blind_under_60_minutes": {
@@ -42,15 +43,31 @@
         "model": null,
         "version": null
       },
-      "error": "live VDD did not reach plan-ready: {\"atomic_quality_metrics\": {\"active_obligation_count\": 13, \"f1\": 1.0, \"invented_obligation_count\": 0, \"precision\": 1.0, \"recall\": 1.0, \"source_gap_count\": 0, \"supported_obligation_count\": 13}, \"findings\": [\"chain:acceptance:A-91348D0857BF:overbroad-independent-behavior\"], \"stage\": \"final-validation\", \"status\": \"repair-vdd\"}",
+      "error": "blind benchmark contract expects one cohesive slice, observed 15",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
       "status": "failed",
       "under_60_minutes": null
+    },
+    "real_semantic_quality": {
+      "atomic_quality_metrics": null,
+      "backend": {
+        "available": true,
+        "backend": "codex-cli",
+        "blocking_errors": [],
+        "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+      },
+      "compiler_findings": [],
+      "compiler_stage": null,
+      "compiler_status": null,
+      "error": "V3 execution-contract validation failed: v3-contract:slice_hints[0]:no-real-production-entry; v3-contract:slice_hints[1]:no-real-production-entry; v3-contract:slice_hints[2]:no-real-production-entry; v3-contract:slice_hints[3]:no-real-production-entry; v3-contract:slice_hints[4]:no-real-production-entry; v3-contract:slice_hints[5]:no-real-production-entry; v3-contract:slice_hints[6]:no-real-production-entry; v3-contract:slice_hints[7]:no-real-production-entry; v3-contract:slice_hints[8]:no-real-production-entry; v3-contract:slice_hints[9]:no-real-production-entry; v3-contract:slice_hints[10]:no-real-production-entry; v3-contract:slice_hints[11]:no-real-production-entry; v3-contract:slice_hints[12]:no-real-production-entry; v3-contract:slice_hints[13]:no-real-production-entry; v3-contract:slice_hints[14]:no-real-production-entry; v3-contract:slice_hints[15]:no-real-production-entry; v3-contract:slice_hints[16]:no-real-production-entry; v3-contract:slice_hints[17]:no-real-production-entry; v3-contract:slice_hints[18]:no-real-production-entry; v3-contract:slice_hints[19]:no-real-production-entry; v3-contract:slice_hints[20]:no-real-production-entry; v3-contract:slice_hints[21]:no-real-production-entry; v3-contract:slice_hints[22]:no-real-production-entry; v3-contract:slice_hints[23]:no-real-production-entry; v3-contract:slice_hints[24]:no-real-production-entry; v3-contract:slice_hints[25]:no-real-production-entry; v3-contract:slice_hints[26]:no-real-production-entry; v3-contract:slice_hints[27]:no-real-production-entry; v3-contract:slice_hints[28]:no-real-production-entry; v3-contract:slice_hints[29]:no-real-production-entry; v3-contract:slice_hints[30]:no-real-production-entry; v3-contract:slice_hints[31]:no-real-production-entry; v3-contract:slice_hints[32]:no-real-production-entry; v3-contract:slice_hints[33]:no-real-production-entry; v3-contract:slice_hints[34]:no-real-production-entry; v3-contract:slice_hints[35]:no-real-production-entry; v3-contract:slice_hints[36]:no-real-production-entry; v3-contract:slice_hints[37]:no-real-production-entry; v3-contract:slice_hints[38]:no-real-production-entry; v3-contract:slice_hints[39]:no-real-production-entry; v3-contract:slice_hints[40]:no-real-production-entry",
+      "execution_attempted": true,
+      "execution_succeeded": false,
+      "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "54da57f87ef2c37b60ad3f03501f0136d55d2d6e",
+  "manifest_candidate_head": "f229d959a5e98417fe537d60c210898b0a17e7ea",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
