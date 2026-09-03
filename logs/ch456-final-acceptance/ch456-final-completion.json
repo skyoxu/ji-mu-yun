@@ -12,7 +12,7 @@
     "semantic_chain_mutations": true,
     "stable_facade": true
   },
-  "candidate_head": "f229d959a5e98417fe537d60c210898b0a17e7ea",
+  "candidate_head": "c98af020ddfee363e040828cb85c436435c5f1a5",
   "checks": {
     "agent_context_mutations": true,
     "all_evidence_candidate_binding": true,
@@ -43,7 +43,7 @@
         "model": null,
         "version": null
       },
-      "error": "blind benchmark contract expects one cohesive slice, observed 15",
+      "error": "blind benchmark contract expects one cohesive slice, observed 17",
       "execution_attempted": true,
       "limit_seconds": 3600,
       "product_acceptance_proven": false,
@@ -61,13 +61,13 @@
       "compiler_findings": [],
       "compiler_stage": null,
       "compiler_status": null,
-      "error": "V3 execution-contract validation failed: v3-contract:slice_hints[0]:no-real-production-entry; v3-contract:slice_hints[1]:no-real-production-entry; v3-contract:slice_hints[2]:no-real-production-entry; v3-contract:slice_hints[3]:no-real-production-entry; v3-contract:slice_hints[4]:no-real-production-entry; v3-contract:slice_hints[5]:no-real-production-entry; v3-contract:slice_hints[6]:no-real-production-entry; v3-contract:slice_hints[7]:no-real-production-entry; v3-contract:slice_hints[8]:no-real-production-entry; v3-contract:slice_hints[9]:no-real-production-entry; v3-contract:slice_hints[10]:no-real-production-entry; v3-contract:slice_hints[11]:no-real-production-entry; v3-contract:slice_hints[12]:no-real-production-entry; v3-contract:slice_hints[13]:no-real-production-entry; v3-contract:slice_hints[14]:no-real-production-entry; v3-contract:slice_hints[15]:no-real-production-entry; v3-contract:slice_hints[16]:no-real-production-entry; v3-contract:slice_hints[17]:no-real-production-entry; v3-contract:slice_hints[18]:no-real-production-entry; v3-contract:slice_hints[19]:no-real-production-entry; v3-contract:slice_hints[20]:no-real-production-entry; v3-contract:slice_hints[21]:no-real-production-entry; v3-contract:slice_hints[22]:no-real-production-entry; v3-contract:slice_hints[23]:no-real-production-entry; v3-contract:slice_hints[24]:no-real-production-entry; v3-contract:slice_hints[25]:no-real-production-entry; v3-contract:slice_hints[26]:no-real-production-entry; v3-contract:slice_hints[27]:no-real-production-entry; v3-contract:slice_hints[28]:no-real-production-entry; v3-contract:slice_hints[29]:no-real-production-entry; v3-contract:slice_hints[30]:no-real-production-entry; v3-contract:slice_hints[31]:no-real-production-entry; v3-contract:slice_hints[32]:no-real-production-entry; v3-contract:slice_hints[33]:no-real-production-entry; v3-contract:slice_hints[34]:no-real-production-entry; v3-contract:slice_hints[35]:no-real-production-entry; v3-contract:slice_hints[36]:no-real-production-entry; v3-contract:slice_hints[37]:no-real-production-entry; v3-contract:slice_hints[38]:no-real-production-entry; v3-contract:slice_hints[39]:no-real-production-entry; v3-contract:slice_hints[40]:no-real-production-entry",
+      "error": "semantic worker v3-schema-repair failed: codex exec timeout",
       "execution_attempted": true,
       "execution_succeeded": false,
       "status": "worker-failed"
     }
   },
-  "manifest_candidate_head": "f229d959a5e98417fe537d60c210898b0a17e7ea",
+  "manifest_candidate_head": "c98af020ddfee363e040828cb85c436435c5f1a5",
   "manifest_findings": [],
   "schema": "ch456.final-completion-gate.v1",
   "status": "blocked"
