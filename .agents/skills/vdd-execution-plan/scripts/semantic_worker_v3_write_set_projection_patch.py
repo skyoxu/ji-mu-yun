@@ -1,15 +1,8 @@
 """Normalize repaired V3 owner/write-set identity without inventing paths.
 
-This layer applies only to the single group-first V3 schema-repair projection.
-Once a repair group declares production_owners, canonical V7 requires those
-same paths to be writable. The projection therefore unions the already-declared
-owners into allowed_write_paths.
-
-A repaired model can redundantly repeat the same owner in forbidden_paths. That
-state is internally contradictory because canonical V7 requires the owner to be
-writable. The projection resolves only that exact overlap by removing declared
-owners from forbidden_paths; every other forbidden path is preserved. No new
-path is invented and no unrelated forbidden boundary is weakened.
+This wrapper is intentionally transparent to future grouped projection keyword
+arguments (for example refs_by_oid). It only unions already-declared owners into
+allowed_write_paths and removes the exact owner overlap from forbidden_paths.
 """
 from __future__ import annotations
 
@@ -26,8 +19,8 @@ def _strings(value: Any) -> list[str]:
     return [str(item) for item in value if isinstance(item, str) and item]
 
 
-def project_with_owner_write_set(value: Mapping[str, Any]) -> dict[str, Any]:
-    result = _BASE_PROJECT(value)
+def project_with_owner_write_set(value: Mapping[str, Any], **kwargs: Any) -> dict[str, Any]:
+    result = _BASE_PROJECT(value, **kwargs)
     hints = result.get("slice_hints")
     if not isinstance(hints, list):
         return result

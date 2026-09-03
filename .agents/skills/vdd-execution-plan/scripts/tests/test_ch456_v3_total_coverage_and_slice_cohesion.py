@@ -68,7 +68,10 @@ def test_shared_group_projects_to_atomic_acceptances_with_shared_context() -> No
     ids_schema = schema["properties"]["groups"]["items"]["properties"]["obligation_ids"]
     assert ids_schema["minItems"] == 1
     assert "maxItems" not in ids_schema
-    projected = grouped._project(_raw_group(["O-1", "O-2"]), refs_by_oid={"O-1": ["req.md#FR-1"], "O-2": ["req.md#FR-1"]}) if False else grouped._project({"groups": [_raw_group(["O-1", "O-2"])]}, refs_by_oid={"O-1": ["req.md#FR-1"], "O-2": ["req.md#FR-1"]})
+    projected = grouped._project(
+        {"groups": [_raw_group(["O-1", "O-2"])]},
+        refs_by_oid={"O-1": ["req.md#FR-1"], "O-2": ["req.md#FR-1"]},
+    )
     assert [a["obligation_ids"] for a in projected["acceptances"]] == [["O-1"], ["O-2"]]
     assert projected["slice_hints"][0]["production_owners"] == projected["slice_hints"][1]["production_owners"] == ["src/ledger.py"]
 
