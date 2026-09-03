@@ -1,11 +1,10 @@
 """Partition atomic Acceptances by real implementation boundaries.
 
-Model-authored state_transition/behavior text is evidence, not a stable split
-key.  Cohesion is therefore decided by production owner, verification lane,
-failure mechanism, selector lifecycle, explicit dependency boundaries and
-write/forbidden conflicts.  Compatible atomic Acceptances are merged into one
-slice while their transitions, predicates and rollback constraints are retained
-conjunctively.
+Model-authored failure, state-transition, and execution-evidence text is not a
+stable split key. Cohesion is therefore decided by production owner,
+verification lane, explicit dependency boundaries, and write/forbidden
+conflicts. Compatible atomic Acceptances are merged into one slice while their
+transitions, predicates, and rollback constraints are retained conjunctively.
 """
 from __future__ import annotations
 
@@ -27,20 +26,12 @@ def _strings(value: Any) -> set[str]:
     return {str(item) for item in value if isinstance(item, str) and item} if isinstance(value, list) else set()
 
 
-def _base_key(acceptance: Mapping[str, Any], hint: Mapping[str, Any], failure_by_acceptance: Mapping[str, Sequence[Mapping[str, Any]]]) -> str:
-    aid = str(acceptance["acceptance_id"])
+def _base_key(hint: Mapping[str, Any]) -> str:
     owners = _paths(hint, "production_owners", nonempty=True)
-    snapshots = _paths(hint, "execution_snapshot_paths", nonempty=True)
     lane = hint.get("verification_lane")
     if lane not in sc.LANES:
         raise ValueError("slice hint verification_lane invalid")
-    families = sorted({str(item["failure_family"]) for item in failure_by_acceptance.get(aid, [])})
-    return sc.sha256_value({
-        "owners": sorted(owners),
-        "lane": lane,
-        "families": families,
-        "snapshot_roots": _snapshot_roots(snapshots),
-    })
+    return sc.sha256_value({"owners": sorted(owners), "lane": lane})
 
 
 def _dependency_boundary(cluster: Sequence[tuple[Mapping[str, Any], Mapping[str, Any]]], candidate: Mapping[str, Any], obligations_by_id: Mapping[str, Mapping[str, Any]]) -> bool:
@@ -91,18 +82,13 @@ def cohesive_partition_slices(obligations: Sequence[Mapping[str, Any]], acceptan
         for item in obligations
         if isinstance(item, Mapping) and isinstance(item.get("obligation_id"), str)
     }
-    failure_by_acceptance: dict[str, list[Mapping[str, Any]]] = {str(item["acceptance_id"]): [] for item in acceptances}
-    for failure in failures:
-        for aid in failure.get("acceptance_ids", []):
-            failure_by_acceptance.setdefault(str(aid), []).append(failure)
-
     hint_by_acceptance: dict[str, Mapping[str, Any]] = {}
     broad: dict[str, list[list[tuple[Mapping[str, Any], Mapping[str, Any]]]]] = {}
     for acceptance in acceptances:
         hint = sc._hint_for_acceptance(hints, acceptance)
         aid = str(acceptance["acceptance_id"])
         hint_by_acceptance[aid] = hint
-        key = _base_key(acceptance, hint, failure_by_acceptance)
+        key = _base_key(hint)
         clusters = broad.setdefault(key, [])
         for cluster in clusters:
             if _compatible(cluster, acceptance, hint, obligations_by_id):

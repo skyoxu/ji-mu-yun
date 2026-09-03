@@ -143,6 +143,30 @@ def test_cohesive_partition_ignores_model_transition_wording_for_same_real_bound
     assert " AND " in slices[0]["state_transition"]
 
 
+def test_cohesive_partition_ignores_evidence_fields_for_same_real_boundary() -> None:
+    acceptances = [_acceptance("O-1", "A-1"), _acceptance("O-2", "A-2")]
+    failures = [
+        {"failure_intent_id": "FI-O-1", "acceptance_ids": ["A-1"], "failure_family": "expected-red", "selector_intent": "tests/unit/test_ledger_a.py"},
+        {"failure_intent_id": "FI-O-2", "acceptance_ids": ["A-2"], "failure_family": "timeout-no-observation", "selector_intent": "tests/integration/test_ledger_b.py"},
+    ]
+    hints = [
+        {**_hint("tests/unit/test_ledger_a.py", transition="absent->present"), "obligation_ids": ["O-1"]},
+        {**_hint("tests/integration/test_ledger_b.py", transition="present->stable"), "obligation_ids": ["O-2"]},
+    ]
+    slices, _ = cohesion.cohesive_partition_slices(
+        [_obligation("O-1"), _obligation("O-2")],
+        acceptances,
+        failures,
+        hints,
+    )
+    assert len(slices) == 1
+    assert slices[0]["failure_intent_ids"] == ["FI-O-1", "FI-O-2"]
+    assert slices[0]["execution_snapshot_paths"] == [
+        "tests/integration/test_ledger_b.py",
+        "tests/unit/test_ledger_a.py",
+    ]
+
+
 def test_cohesive_partition_keeps_dependency_boundary_separate() -> None:
     acceptances = [_acceptance("O-1", "A-1"), _acceptance("O-2", "A-2")]
     failures = [
