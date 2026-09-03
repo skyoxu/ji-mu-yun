@@ -37,6 +37,8 @@ def test_v4_structured_schema_is_closed_over_frozen_active_ids_and_source_refs()
     assert supported == ["O-1", "O-2"]
     assert invented == ["O-1", "O-2"]
     assert source_ref == ["req.md#FR-1", "req.md#FR-2"]
+    assert "uniqueItems" not in schema["properties"]["supported_obligation_ids"]
+    assert "uniqueItems" not in schema["properties"]["invented_obligation_ids"]
 
 
 def test_unknown_supported_id_routes_through_existing_single_repair(tmp_path: Path) -> None:
@@ -77,3 +79,16 @@ def test_empty_partition_diagnostic_is_removed_but_unknown_id_stays_blocking() -
     assert result["valid"] is False
     assert result["findings"] == ["atomic-recall:unknown-supported:O-UNKNOWN"]
     assert result["protocol_metrics"]["unknown_supported_finding_count"] == 1
+
+
+def test_duplicate_ids_remain_a_deterministic_domain_failure() -> None:
+    findings = v4_domain._domain_findings(
+        "v4-atomic-recall",
+        _payload(),
+        {
+            "supported_obligation_ids": ["O-1", "O-1", "O-2"],
+            "invented_obligation_ids": [],
+            "source_gap_claims": [],
+        },
+    )
+    assert findings == ["supported_obligation_ids:duplicate-frozen-id:O-1"]

@@ -20,6 +20,17 @@ sc = gate.sc
 _BASE_INVOKE_WORKER = gate._ORIGINAL_INVOKE_WORKER
 _NORMAL_TIMEOUT_SECONDS = 180
 _REPAIR_TIMEOUT_SECONDS = 300
+_TRACE_LIMIT = 500
+
+
+def _bounded_trace(trace: str) -> str:
+    text = str(trace or "").strip()
+    if len(text) <= _TRACE_LIMIT:
+        return text
+    marker = "\n...[trace truncated]...\n"
+    tail_length = 300
+    head_length = _TRACE_LIMIT - len(marker) - tail_length
+    return text[:head_length] + marker + text[-tail_length:]
 
 
 def _schema_kind(stage: str) -> str | None:
@@ -250,7 +261,7 @@ def transport_invoke_worker(
             output.unlink()
         code, trace, argv = execute([])
     if code != 0 or not output.is_file():
-        raise RuntimeError(f"semantic worker {stage} failed: {trace.strip()[:500]}")
+        raise RuntimeError(f"semantic worker {stage} failed: {_bounded_trace(trace)}")
 
     value = sc._parse_json_output(output.read_text(encoding="utf-8"))
     sc.atomic_json(cache_path, value)

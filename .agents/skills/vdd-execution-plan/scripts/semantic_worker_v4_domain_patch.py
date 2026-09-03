@@ -64,7 +64,6 @@ def _domains(stage: str, payload: Mapping[str, Any]) -> tuple[list[str], list[st
 def _enum_array(values: list[str]) -> dict[str, Any]:
     return {
         "type": "array",
-        "uniqueItems": True,
         "items": {"type": "string", "enum": values},
     }
 
@@ -103,6 +102,10 @@ def _domain_findings(stage: str, payload: Mapping[str, Any], value: Mapping[str,
         raw = value.get(field)
         if not isinstance(raw, list):
             continue
+        strings = [item for item in raw if isinstance(item, str)]
+        duplicates = sorted({item for item in strings if strings.count(item) > 1})
+        if duplicates:
+            findings.append(f"{field}:duplicate-frozen-id:" + ",".join(duplicates))
         unknown = sorted({str(item) for item in raw if isinstance(item, str)} - allowed_ids)
         if unknown:
             findings.append(f"{field}:unknown-frozen-id:" + ",".join(unknown))
@@ -183,7 +186,7 @@ def v4_transport_invoke_worker(
     frozen_contract = (
         "\n\nFROZEN V4 ID DOMAIN: supported_obligation_ids and invented_obligation_ids may contain ONLY these exact ids: "
         + json.dumps(ids, ensure_ascii=False)
-        + ". Do not create, rewrite, abbreviate, or infer identifier tokens. source_gap_claims.source_ref may contain ONLY: "
+        + ". Do not create, rewrite, abbreviate, duplicate, or infer identifier tokens. source_gap_claims.source_ref may contain ONLY: "
         + json.dumps(refs, ensure_ascii=False)
         + ". An empty source_gap_claims array is valid when no independently observable source behavior is missing."
     )
@@ -222,7 +225,7 @@ def v4_transport_invoke_worker(
             output.unlink()
         code, trace, _argv = execute([])
     if code != 0 or not output.is_file():
-        raise RuntimeError(f"semantic worker {stage} failed: {trace.strip()[:500]}")
+        raise RuntimeError(f"semantic worker {stage} failed: {transport._bounded_trace(trace)}")
 
     value = sc._parse_json_output(output.read_text(encoding="utf-8"))
     findings = _domain_findings(stage, payload, value)

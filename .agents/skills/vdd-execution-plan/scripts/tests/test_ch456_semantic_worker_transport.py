@@ -12,6 +12,15 @@ if str(SCRIPTS) not in sys.path:
 import semantic_worker_transport_patch as transport
 
 
+def test_bounded_trace_preserves_failure_tail() -> None:
+    trace = "header\n" + ("prompt" * 100) + "\nerror: invalid output schema keyword uniqueItems"
+    bounded = transport._bounded_trace(trace)
+    assert len(bounded) <= 500
+    assert bounded.startswith("header")
+    assert "[trace truncated]" in bounded
+    assert bounded.endswith("error: invalid output schema keyword uniqueItems")
+
+
 def test_v1_and_v3_have_native_structured_output_schemas() -> None:
     v1 = transport._worker_output_schema("v1-FR-1")
     v3 = transport._worker_output_schema("v3-schema-repair")
