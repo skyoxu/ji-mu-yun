@@ -1,0 +1,21 @@
+{
+  "authorizes": [],
+  "backend": {
+    "available": true,
+    "backend": "codex-cli",
+    "blocking_errors": [],
+    "model": null,
+    "version": null
+  },
+  "child_exit_code": 1,
+  "error": "semantic worker v4-atomic-recall-schema-repair failed: OpenAI Codex v0.148.0\n--------\nworkdir: C:\\Users\\Administrator\\AppData\\Local\\Temp\\3\\ch456-live-blind-er8aa_yz\\worktree\nmodel: gpt-5.6-terra\nprovider: aicodemirror\napproval: never\nsandbox: read-only\nreasoning effort: medium\nreasoning summaries: none\nsession id: 01a066af-3a9c-7250-99b7-b3e56430ddf4\n--------\nuser\nYou are a read-only semantic compiler worker. Do not modify files. Return JSON only. Do not invent requirements or runtime evidence.\n\nIndependently compare each frozen requirement source t",
+  "error_type": "RuntimeError",
+  "execution_attempted": true,
+  "limit_seconds": 3600,
+  "product_acceptance_proven": false,
+  "schema": "ch456.live-blind-benchmark.v1",
+  "source_head": "83c5bdb1199f34d66c9e563db2b8939e080d3611",
+  "status": "failed",
+  "task_id": "CH456-BLIND-IDEMPOTENCY-LEDGER-V1",
+  "under_60_minutes": null
+}
