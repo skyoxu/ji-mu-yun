@@ -106,3 +106,7 @@ _bmad/*
 .agents/skills/**/*.pyc
 backup/BMAD-METHOD-upstream/
 prototype_run_dump.txt
+
+# Local CH456 diagnostic scratch and reviewer instructions
+.tmp-ch456-semantic-quality/
+docs/know110.txt

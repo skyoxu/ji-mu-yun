@@ -1,0 +1,73 @@
+下一步本地不要继续改代码，只做一次完整的、候选绑定的 final acceptance。
+
+1. 同步并确认候选
+
+在 Windows PowerShell 中：
+
+git status --short
+git switch implementation/vdd-quick-dev-456
+git pull --ff-only
+git status --short
+git rev-parse HEAD
+
+当前预期 HEAD：
+
+83c5bdb1199f34d66c9e563db2b8939e080d3611
+
+如果工作区不干净或 HEAD 不一致，先停止，不要 reset。
+
+2. 检查 Codex live backend
+codex --version
+"Return exactly OK." | codex exec -s read-only -C . -
+
+必须能真实返回结果，不能只有版本号可用但执行未登录。
+
+3. 跑最后一组定向回归
+py -3 -m pytest ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_total_coverage_and_slice_cohesion.py" -q
+
+预期：
+
+10 passed
+4. 运行完整 final acceptance
+py -3 scripts/quick_dev/run_ch456_final_acceptance.py --backend codex-cli
+
+该命令会重新生成 logs/ch456-final-acceptance/ 下的全部 candidate-bound evidence，并依次执行：
+
+deterministic metrics
+real semantic quality
+fresh live-blind
+全量 VDD/Quick Dev 回归
+evidence seal 和 manifest
+strict final completion
+
+不要并行执行其他会改变 HEAD 或工作区的命令。
+
+5. 检查最终结果
+$summary = Get-Content "logs/ch456-final-acceptance/ch456-local-final-acceptance-run.json" -Raw | ConvertFrom-Json
+$final = Get-Content "logs/ch456-final-acceptance/ch456-final-completion.json" -Raw | ConvertFrom-Json
+
+$summary | Select-Object status, failed_steps | Format-List
+$final | Select-Object candidate_head, status, completion, failed_checks | Format-List
+
+按照当前代码的真实成功值，应当是：
+
+summary.status = pass
+final.status = pass
+final.completion = implementation-work-package-complete
+final.failed_checks = []
+final.candidate_head = 83c5bdb1199f34d66c9e563db2b8939e080d3611
+
+不是 status=passed 或 completion=complete；代码合同实际使用上面的值。
+
+如果失败，先不要继续修改代码，也不要立即提交 evidence。保留并提供这四个文件：
+
+ch456-local-final-acceptance-run.json
+ch456-final-completion.json
+ch456-real-semantic-quality.json
+ch456-live-blind-benchmark.json
+
+判断原则：
+
+若仍然 observed > 1 slices，继续检查 V6 实际输入。
+若 slice 已为 1，但仍是 v3-schema-repair timeout，下一轮只分析 V3 semantic execution cost，不再修改 V6。
+若全部通过，再单独提交 acceptance evidence。
