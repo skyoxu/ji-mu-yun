@@ -62,6 +62,15 @@ def _raw_group(ids: list[str], *, snapshot: str = "tests/test_ledger.py") -> dic
     }
 
 
+def _raw_v3(ids: list[str], *, snapshot: str = "tests/test_ledger.py") -> dict:
+    group = _raw_group(ids, snapshot=snapshot)
+    return {
+        "acceptances": [{"obligation_ids": ids, **group["acceptance"]}],
+        "failure_intents": [{"obligation_ids": ids, **group["failure_intents"][0]}],
+        "slice_hints": [{"obligation_ids": ids, **group["slice_hint"]}],
+    }
+
+
 def test_shared_group_projects_to_atomic_acceptances_with_shared_context() -> None:
     payload = {"input": {"obligations": [_obligation("O-1"), _obligation("O-2")]}}
     schema = grouped._group_schema(payload)
@@ -76,13 +85,35 @@ def test_shared_group_projects_to_atomic_acceptances_with_shared_context() -> No
     assert projected["slice_hints"][0]["production_owners"] == projected["slice_hints"][1]["production_owners"] == ["src/ledger.py"]
 
 
+def test_initial_v3_shared_set_atomicizes_before_overbroad_validation() -> None:
+    payload = {"obligations": [_obligation("O-1", state_before="absent", state_after="present"), _obligation("O-2", state_before="present", state_after="stable")]}
+    projected = execution_contract._atomicize_initial_candidate("v3", payload, _raw_v3(["O-1", "O-2"]))
+    assert [a["obligation_ids"] for a in projected["acceptances"]] == [["O-1"], ["O-2"]]
+    assert [h["obligation_ids"] for h in projected["slice_hints"]] == [["O-1"], ["O-2"]]
+    assert len(projected["failure_intents"]) == 2
+    assert not any("overbroad-independent-behavior" in item for item in execution_contract._findings(Path("."), "v3", payload, projected))
+
+
+def test_initial_v3_overlapping_sets_are_not_silently_atomicized() -> None:
+    payload = {"obligations": [_obligation("O-1"), _obligation("O-2"), _obligation("O-3")]}
+    first = _raw_v3(["O-1", "O-2"])
+    second = _raw_v3(["O-2", "O-3"])
+    raw = {key: [*first[key], *second[key]] for key in first}
+    assert execution_contract._atomicize_initial_candidate("v3", payload, raw) is raw
+
+
+def test_v3_completion_runs_for_initial_stage_without_global_schema_repair(monkeypatch, tmp_path: Path) -> None:
+    payload = {"obligations": [_obligation("O-1"), _obligation("O-2")]}
+    base = _raw_v3(["O-1"])
+    monkeypatch.setattr(total, "_complete_missing", lambda **kwargs: grouped._project({"groups": [_raw_group([next(iter(kwargs["missing"]))])]}))
+    monkeypatch.setattr(total.path_contract, "normalize_explicit_path_contracts", lambda _root, _stage, _payload, value: value)
+    result = total.complete_total_coverage(root=tmp_path, out_dir=tmp_path / "plan", stage="v3", payload=payload, value=base, worker_cache=None)
+    assert {oid for a in result["acceptances"] for oid in a["obligation_ids"]} == {"O-1", "O-2"}
+
+
 def test_v3_repair_completes_only_missing_active_obligations(monkeypatch, tmp_path: Path) -> None:
     payload = {"input": {"obligations": [_obligation("O-1"), _obligation("O-2")]}, "original_stage": "v3", "validator_findings": ["v3-contract:hard-uncovered:O-2"]}
-    base = {
-        "acceptances": [{**_acceptance("O-1", "A-1")}],
-        "failure_intents": [{"obligation_ids": ["O-1"], "failure_family": "expected-red", "selector_intent": "tests/test_ledger.py", "expected_outcome": "fail", "failure_id": "RED-O-1"}],
-        "slice_hints": [{**_hint("tests/test_ledger.py"), "obligation_ids": ["O-1"]}],
-    }
+    base = _raw_v3(["O-1"])
     monkeypatch.setattr(total, "_complete_missing", lambda **kwargs: grouped._project({"groups": [_raw_group([next(iter(kwargs["missing"]))])]}))
     monkeypatch.setattr(total.path_contract, "normalize_explicit_path_contracts", lambda _root, _stage, _payload, value: value)
     result = total.complete_total_coverage(root=tmp_path, out_dir=tmp_path / "plan", stage="v3-schema-repair", payload=payload, value=base, worker_cache=None)

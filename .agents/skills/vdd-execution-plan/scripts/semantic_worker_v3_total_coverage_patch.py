@@ -1,22 +1,12 @@
-"""Complete only genuinely missing V3 Acceptance coverage inside the one repair lane.
+"""Complete genuinely missing V3 Acceptance coverage through a bounded lane.
 
-The stable V3 schema-repair transport can return a structurally valid grouped
-candidate that still omits active frozen obligations. The execution-contract
-must continue to reject that state, but a live compile gets one bounded,
-missing-only semantic completion before the rejection becomes terminal.
+Both the initial V3 candidate and the one-shot schema-repair candidate may omit
+active frozen obligations. Rather than promoting that omission into a full V3
+rewrite, this module narrows the semantic worker input to only the missing
+obligations and relevant frozen source contracts. The returned completion still
+passes frozen-domain, subject, owner/write-set and explicit-path validation.
 
-This module is deliberately side-effect free. It does not mutate the installed
-transport chain. The V3 execution-contract calls ``complete_total_coverage``
-after its normal base transport returns and before deterministic findings run.
-That preserves the established composition invariant while keeping the bounded
-completion inside the same V3 contract boundary.
-
-This layer never marks an obligation covered locally. A read-only worker must
-author Acceptance/RED/slice semantics for the exact missing obligation domain.
-The completion is then revalidated against frozen obligation IDs, subject
-boundaries, source refs, owner/write-set rules and explicit frozen path facts.
-If any active obligation remains missing, the downstream execution-contract
-fails closed exactly as before.
+The module is side-effect free and does not mutate transport composition.
 """
 from __future__ import annotations
 
@@ -121,8 +111,6 @@ def _complete_missing(
     if fixture is not None:
         completion = fixture
     elif worker_cache:
-        # Unit/injected runs must never escape into a live model call merely
-        # because a fixture intentionally exercises a hard-uncovered failure.
         raise ValueError("V3 injected repair remains hard-uncovered")
     else:
         completion = grouped._live_group_repair(
@@ -131,9 +119,11 @@ def _complete_missing(
             payload=narrowed,
             prompt=(
                 "COVERAGE COMPLETION: author semantics only for the supplied missing active obligations. "
-                "Every supplied obligation must appear in exactly one atomic Acceptance group. Each group must bind "
-                "exactly one obligation_id. Do not rewrite, merge with, or weaken any previously accepted group. "
-                "Preserve subject boundaries and frozen source semantics."
+                "Every supplied obligation must be covered exactly once after canonical projection. Obligations that "
+                "share the same production owner, verification lane, RED selector/fixture lifecycle and legal write "
+                "boundary MAY share one worker group so that implementation context is authored once; the compiler "
+                "will project that shared group to atomic one-obligation Acceptances before stable IDs are created. "
+                "Do not weaken source semantics or borrow context from obligations outside this narrowed input."
             ),
         )
 
@@ -164,7 +154,7 @@ def complete_total_coverage(
     value: Mapping[str, Any],
     worker_cache: Mapping[str, Any] | None = None,
 ) -> Mapping[str, Any]:
-    if not stage.startswith("v3-schema-repair"):
+    if stage != "v3" and not stage.startswith("v3-schema-repair"):
         return value
 
     active = _active_ids(stage, payload)
@@ -181,10 +171,6 @@ def complete_total_coverage(
         worker_cache=worker_cache,
     )
     combined = _merge(value, completion)
-
-    # The new completion was authored after the normal explicit-path transport
-    # already ran, so reapply only that deterministic frozen-path projection to
-    # the combined result before the execution-contract validates it.
     combined = dict(path_contract.normalize_explicit_path_contracts(Path(root), stage, payload, combined))
 
     remaining = active - _covered_ids(combined)
