@@ -77,12 +77,23 @@ def test_shared_group_projects_to_atomic_acceptances_with_shared_context() -> No
     ids_schema = schema["properties"]["groups"]["items"]["properties"]["obligation_ids"]
     assert ids_schema["minItems"] == 1
     assert "maxItems" not in ids_schema
+    assert "uniqueItems" not in ids_schema
     projected = grouped._project(
         {"groups": [_raw_group(["O-1", "O-2"])]},
         refs_by_oid={"O-1": ["req.md#FR-1"], "O-2": ["req.md#FR-1"]},
     )
     assert [a["obligation_ids"] for a in projected["acceptances"]] == [["O-1"], ["O-2"]]
     assert projected["slice_hints"][0]["production_owners"] == projected["slice_hints"][1]["production_owners"] == ["src/ledger.py"]
+
+
+def test_grouped_repair_rejects_duplicate_ids_deterministically() -> None:
+    duplicate = _raw_group(["O-1", "O-1"])
+    try:
+        grouped._project({"groups": [duplicate]})
+    except ValueError as exc:
+        assert str(exc) == "V3 group repair group 0 has duplicate obligation_ids"
+    else:
+        raise AssertionError("duplicate obligation ids must fail closed")
 
 
 def test_initial_v3_shared_set_atomicizes_before_overbroad_validation() -> None:

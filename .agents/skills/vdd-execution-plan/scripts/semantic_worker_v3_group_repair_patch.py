@@ -69,7 +69,6 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
         if isinstance(ref, str) and ref
     })
     obligation_ids = _string_array(nonempty=True, enum=known_ids or None)
-    obligation_ids["uniqueItems"] = True
 
     acceptance = {
         "type": "object", "additionalProperties": False,
@@ -167,7 +166,10 @@ def _project(value: Mapping[str, Any], *, refs_by_oid: Mapping[str, list[str]] |
         hint = raw.get("slice_hint")
         if not isinstance(ids, list) or not ids or any(not isinstance(x, str) or not x.strip() for x in ids):
             raise ValueError(f"V3 group repair group {index} has invalid obligation_ids")
-        normalized_ids = sorted(set(str(x).strip() for x in ids))
+        normalized_values = [str(x).strip() for x in ids]
+        normalized_ids = sorted(set(normalized_values))
+        if len(normalized_ids) != len(normalized_values):
+            raise ValueError(f"V3 group repair group {index} has duplicate obligation_ids")
         duplicates = seen & set(normalized_ids)
         if duplicates:
             raise ValueError("V3 group repair obligation appears in multiple groups: " + ",".join(sorted(duplicates)))
