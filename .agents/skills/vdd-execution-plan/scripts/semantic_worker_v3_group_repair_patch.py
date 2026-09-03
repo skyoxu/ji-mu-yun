@@ -1,16 +1,13 @@
-"""Make the single V3 schema-repair attempt group-first and relation-safe.
+"""Group-first V3 schema repair with atomic canonical projection.
 
-The public/canonical V3 candidate remains three arrays. Only the one-shot
-schema-repair worker uses a grouped transport shape so an Acceptance, its RED
-intents, and its slice hint share one obligation set by construction. The
-result is deterministically projected back to the canonical arrays before the
-normal V3 validators run.
-
-Repair groups are atomic: each group binds exactly one frozen obligation. This
-prevents a repaired Acceptance from swallowing multiple independent state
-transitions while still allowing V6 to merge compatible atomic Acceptances into
-one cohesive implementation slice. Atomicity is enforced in both the structured
-schema and deterministic projection, never by a later truth-gate relaxation.
+The repair worker may group several frozen obligations when they share one
+implementation context (owner/lane/failure mechanism/selector lifecycle).  That
+shared group is useful because path ownership is authored once instead of being
+re-guessed independently for every obligation.  Before the canonical V3 arrays
+are returned, the group is deterministically projected to one Acceptance, one
+slice hint, and cloned RED intents per obligation.  Thus Acceptance remains
+atomic while V6 may later merge compatible atomic Acceptances into one cohesive
+implementation slice.
 """
 from __future__ import annotations
 
@@ -25,7 +22,7 @@ import semantic_worker_v3_domain_patch as v3_domain
 
 sc = gate.sc
 _BASE_DOMAIN_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
-_GROUP_STAGE = "v3-schema-repair-group-v2-atomic"
+_GROUP_STAGE = "v3-schema-repair-group-v3-shared-context-atomic-projection"
 
 
 def _string_array(*, nonempty: bool = False, enum: list[str] | None = None) -> dict[str, Any]:
@@ -48,6 +45,16 @@ def _repair_obligations(payload: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     return [item for item in values if isinstance(item, Mapping)]
 
 
+def _obligation_refs(payload: Mapping[str, Any]) -> dict[str, list[str]]:
+    result: dict[str, list[str]] = {}
+    for item in _repair_obligations(payload):
+        oid = item.get("obligation_id")
+        refs = item.get("source_refs")
+        if isinstance(oid, str) and oid and isinstance(refs, list):
+            result[oid] = sorted({str(ref) for ref in refs if isinstance(ref, str) and ref})
+    return result
+
+
 def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
     obligations = _repair_obligations(payload)
     known_ids = sorted(
@@ -62,20 +69,17 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
         if isinstance(ref, str) and ref
     })
     obligation_ids = _string_array(nonempty=True, enum=known_ids or None)
-    obligation_ids["maxItems"] = 1
     obligation_ids["uniqueItems"] = True
 
     acceptance = {
-        "type": "object",
-        "additionalProperties": False,
+        "type": "object", "additionalProperties": False,
         "properties": {
             "source_refs": _string_array(nonempty=True, enum=source_refs or None),
             "given": {"type": "string", "minLength": 1},
             "when": {"type": "string", "minLength": 1},
             "then": {"type": "string", "minLength": 1},
             "oracle": {
-                "type": "object",
-                "additionalProperties": False,
+                "type": "object", "additionalProperties": False,
                 "properties": {
                     "observable": {"type": "string", "minLength": 1},
                     "expected": {"type": "string", "minLength": 1},
@@ -88,8 +92,7 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
         "required": ["source_refs", "given", "when", "then", "oracle", "assertion_ids"],
     }
     failure = {
-        "type": "object",
-        "additionalProperties": False,
+        "type": "object", "additionalProperties": False,
         "properties": {
             "failure_family": {"type": "string", "enum": sorted(sc.FAILURE_FAMILIES)},
             "selector_intent": {"type": "string", "minLength": 1},
@@ -99,8 +102,7 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
         "required": ["failure_family", "selector_intent", "expected_outcome", "failure_id"],
     }
     slice_hint = {
-        "type": "object",
-        "additionalProperties": False,
+        "type": "object", "additionalProperties": False,
         "properties": {
             "production_owners": _string_array(nonempty=True),
             "verification_lane": {"type": "string", "enum": sorted(sc.LANES)},
@@ -108,8 +110,7 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
             "affected_subjects": _string_array(nonempty=True),
             "state_transition": {"type": "string", "minLength": 1},
             "rollback_scope": {
-                "type": "object",
-                "additionalProperties": False,
+                "type": "object", "additionalProperties": False,
                 "properties": {
                     "production_paths": _string_array(nonempty=True),
                     "state_or_schema_compatibility": {"type": "string", "minLength": 1},
@@ -122,13 +123,8 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
             "terminal_predicate": {"type": "string", "minLength": 1},
             "forbidden_paths": _string_array(),
             "validation_commands": {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {"type": "string", "minLength": 1},
-                },
+                "type": "array", "minItems": 1,
+                "items": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
             },
         },
         "required": [
@@ -138,8 +134,7 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
         ],
     }
     group = {
-        "type": "object",
-        "additionalProperties": False,
+        "type": "object", "additionalProperties": False,
         "properties": {
             "obligation_ids": obligation_ids,
             "acceptance": acceptance,
@@ -149,21 +144,20 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
         "required": ["obligation_ids", "acceptance", "failure_intents", "slice_hint"],
     }
     return {
-        "type": "object",
-        "additionalProperties": False,
+        "type": "object", "additionalProperties": False,
         "properties": {"groups": {"type": "array", "minItems": 1, "items": group}},
         "required": ["groups"],
     }
 
 
-def _project(value: Mapping[str, Any]) -> dict[str, Any]:
+def _project(value: Mapping[str, Any], *, refs_by_oid: Mapping[str, list[str]] | None = None) -> dict[str, Any]:
     groups = value.get("groups")
     if not isinstance(groups, list) or not groups:
         raise ValueError("V3 group repair must return non-empty groups")
     acceptances: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
     hints: list[dict[str, Any]] = []
-    seen_obligations: set[str] = set()
+    seen: set[str] = set()
     for index, raw in enumerate(groups):
         if not isinstance(raw, Mapping):
             raise ValueError(f"V3 group repair group {index} is not object")
@@ -171,29 +165,32 @@ def _project(value: Mapping[str, Any]) -> dict[str, Any]:
         acceptance = raw.get("acceptance")
         group_failures = raw.get("failure_intents")
         hint = raw.get("slice_hint")
-        if not isinstance(ids, list) or len(ids) != 1 or not isinstance(ids[0], str) or not ids[0].strip():
-            raise ValueError(f"V3 group repair group {index} must bind exactly one obligation")
-        oid = ids[0].strip()
-        if oid in seen_obligations:
-            raise ValueError(f"V3 group repair obligation {oid} appears in multiple groups")
-        seen_obligations.add(oid)
+        if not isinstance(ids, list) or not ids or any(not isinstance(x, str) or not x.strip() for x in ids):
+            raise ValueError(f"V3 group repair group {index} has invalid obligation_ids")
+        normalized_ids = sorted(set(str(x).strip() for x in ids))
+        duplicates = seen & set(normalized_ids)
+        if duplicates:
+            raise ValueError("V3 group repair obligation appears in multiple groups: " + ",".join(sorted(duplicates)))
+        seen.update(normalized_ids)
         if not isinstance(acceptance, Mapping) or not isinstance(group_failures, list) or not group_failures or not isinstance(hint, Mapping):
             raise ValueError(f"V3 group repair group {index} is incomplete")
-        normalized_ids = [oid]
-        acceptances.append({"obligation_ids": normalized_ids, **dict(acceptance)})
-        hints.append({"obligation_ids": normalized_ids, **dict(hint)})
-        for failure in group_failures:
-            if not isinstance(failure, Mapping):
-                raise ValueError(f"V3 group repair failure in group {index} is not object")
-            failures.append({"obligation_ids": normalized_ids, **dict(failure)})
+
+        for oid in normalized_ids:
+            atomic_acceptance = dict(acceptance)
+            if refs_by_oid is not None and oid in refs_by_oid:
+                atomic_acceptance["source_refs"] = list(refs_by_oid[oid])
+            acceptances.append({"obligation_ids": [oid], **atomic_acceptance})
+            hints.append({"obligation_ids": [oid], **dict(hint)})
+            for failure in group_failures:
+                if not isinstance(failure, Mapping):
+                    raise ValueError(f"V3 group repair failure in group {index} is not object")
+                failures.append({"obligation_ids": [oid], **dict(failure)})
     return {"acceptances": acceptances, "failure_intents": failures, "slice_hints": hints}
 
 
 def _trace_summary(trace: str) -> str:
     text = trace.strip()
-    if len(text) <= 2600:
-        return text
-    return text[:300] + "\n...<trace elided>...\n" + text[-2200:]
+    return text if len(text) <= 2600 else text[:300] + "\n...<trace elided>...\n" + text[-2200:]
 
 
 def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any], prompt: str) -> Mapping[str, Any]:
@@ -207,83 +204,61 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
 
     cache_dir = out_dir / ".compiler-cache"
     cache_path = cache_dir / sc._worker_cache_key(_GROUP_STAGE, payload)
+    refs_by_oid = _obligation_refs(payload)
     if cache_path.is_file():
         cached = json.loads(cache_path.read_text(encoding="utf-8"))
         if not isinstance(cached, Mapping):
             raise ValueError("V3 group repair cache is malformed")
-        return _project(cached)
+        return _project(cached, refs_by_oid=refs_by_oid)
 
-    work = out_dir / ".compiler-work"
-    output = work / f"{_GROUP_STAGE}-last-message.json"
+    output = out_dir / ".compiler-work" / f"{_GROUP_STAGE}-last-message.json"
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         output.unlink()
-    schema = _group_schema(payload)
-    schema_path = transport._schema_path(out_dir, _GROUP_STAGE, schema)
+    schema_path = transport._schema_path(out_dir, _GROUP_STAGE, _group_schema(payload))
     grouped_prompt = (
         prompt
-        + "\n\nGROUP-FIRST REPAIR CONTRACT: return {\"groups\":[...]}, not the three canonical arrays. "
-        "Each group owns exactly one frozen obligation_id, exactly one Acceptance body, one or more RED failure intents, "
-        "and exactly one slice_hint. Never merge two obligations into one group, even when they share a subject, owner, "
-        "test root, or implementation slice. Do not repeat obligation_ids inside child objects and do not create multiple "
-        "groups for the same obligation. The compiler will deterministically project atomic groups back to the canonical "
-        "acceptances/failure_intents/slice_hints arrays; compatible Acceptances may be merged later only at V6 slice partitioning."
-        + "\n\nINPUT:\n"
-        + json.dumps(payload, ensure_ascii=False, sort_keys=True)
+        + "\n\nGROUP-FIRST REPAIR CONTRACT: return {\"groups\":[...]}. A group may contain multiple frozen obligation_ids "
+        "ONLY when they share one real production owner context, verification lane, RED failure mechanism, selector/test "
+        "lifecycle, legal write boundary, and no predecessor boundary. Prefer one shared group over repeating the same owner "
+        "guess independently. The compiler will atomize every group deterministically into one Acceptance per obligation, "
+        "while preserving the shared slice context. Do not place an obligation in more than one group."
+        + "\n\nINPUT:\n" + json.dumps(payload, ensure_ascii=False, sort_keys=True)
     )
     backend = resolve_llm_backend(None)
     extra_args = ["--output-schema", str(schema_path)] if backend == "codex-cli" else []
-    code, trace, _argv = run_llm_exec(
-        backend=backend,
-        root=root,
-        prompt=grouped_prompt,
-        output_last_message=output,
-        timeout_sec=transport._REPAIR_TIMEOUT_SECONDS,
-        codex_configs=['model_reasoning_effort="medium"'],
-        codex_sandbox="read-only",
-        codex_extra_args=extra_args,
-    )
+
+    def run(extra: list[str]):
+        return run_llm_exec(
+            backend=backend, root=root, prompt=grouped_prompt, output_last_message=output,
+            timeout_sec=transport._REPAIR_TIMEOUT_SECONDS,
+            codex_configs=['model_reasoning_effort="medium"'], codex_sandbox="read-only", codex_extra_args=extra,
+        )
+
+    code, trace, _argv = run(extra_args)
     if code != 0 and extra_args and transport._unsupported_output_schema(trace):
         if output.exists():
             output.unlink()
-        code, trace, _argv = run_llm_exec(
-            backend=backend,
-            root=root,
-            prompt=grouped_prompt,
-            output_last_message=output,
-            timeout_sec=transport._REPAIR_TIMEOUT_SECONDS,
-            codex_configs=['model_reasoning_effort="medium"'],
-            codex_sandbox="read-only",
-            codex_extra_args=[],
-        )
+        code, trace, _argv = run([])
     if code != 0 or not output.is_file():
         raise RuntimeError(f"semantic worker v3-schema-repair failed: {_trace_summary(trace)}")
     raw = sc._parse_json_output(output.read_text(encoding="utf-8"))
-    projected = _project(raw)
+    projected = _project(raw, refs_by_oid=refs_by_oid)
     sc.atomic_json(cache_path, raw)
     return projected
 
 
-def group_repair_transport(
-    *,
-    root,
-    out_dir,
-    stage: str,
-    payload: Mapping[str, Any],
-    prompt: str,
-    worker_cache: Mapping[str, Any] | None = None,
-) -> Mapping[str, Any]:
+def group_repair_transport(*, root, out_dir, stage: str, payload: Mapping[str, Any], prompt: str, worker_cache: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
     if stage != "v3-schema-repair":
-        return _BASE_DOMAIN_TRANSPORT(
-            root=root, out_dir=out_dir, stage=stage, payload=payload, prompt=prompt, worker_cache=worker_cache
-        )
+        return _BASE_DOMAIN_TRANSPORT(root=root, out_dir=out_dir, stage=stage, payload=payload, prompt=prompt, worker_cache=worker_cache)
+    refs_by_oid = _obligation_refs(payload)
     if worker_cache and stage in worker_cache:
         raw = worker_cache[stage]
         if not isinstance(raw, Mapping):
             raise ValueError("injected V3 repair cache must be object")
-        value = _project(raw) if "groups" in raw else dict(raw)
+        value = _project(raw, refs_by_oid=refs_by_oid) if "groups" in raw else dict(raw)
     else:
-        value = _live_group_repair(root=root, out_dir=out_dir, payload=payload, prompt=prompt)
+        value = _live_group_repair(root=Path(root), out_dir=Path(out_dir), payload=payload, prompt=prompt)
     findings = v3_domain._domain_findings(stage, payload, value)
     if findings:
         raise ValueError("V3 frozen-domain validation failed: " + "; ".join(findings))
