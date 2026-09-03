@@ -62,7 +62,7 @@ def _value() -> dict:
                 "obligation_ids": ["O-1"],
                 "production_owners": ["tests/not-production.py"],
                 "allowed_write_paths": ["tests/not-production.py"],
-                "forbidden_paths": [OWNER, "src/unrelated.py"],
+                "forbidden_paths": [OWNER, RED_TEST, "src/unrelated.py"],
                 "rollback_scope": {
                     "production_paths": ["tests/not-production.py"],
                     "state_or_schema_compatibility": "compatible",
@@ -74,7 +74,7 @@ def _value() -> dict:
                 "obligation_ids": ["O-2"],
                 "production_owners": ["missing/owner.py"],
                 "allowed_write_paths": [],
-                "forbidden_paths": [],
+                "forbidden_paths": [RED_TEST],
                 "rollback_scope": {
                     "production_paths": [],
                     "state_or_schema_compatibility": "compatible",
@@ -106,9 +106,11 @@ The production implementation may modify only the production owner above.
         assert hint["production_owners"] == [OWNER]
         assert hint["allowed_write_paths"] == [OWNER]
         assert OWNER not in hint["forbidden_paths"]
+        assert RED_TEST not in hint["forbidden_paths"]
         assert RED_TEST in hint["planned_new_files"]
         assert FIXTURE not in hint["planned_new_files"]
         assert OWNER in hint["rollback_scope"]["production_paths"]
+    assert "src/unrelated.py" in normalized["slice_hints"][0]["forbidden_paths"]
 
     findings = _findings(tmp_path, "v3", payload, normalized)
     assert not any("no-real-production-entry" in finding for finding in findings)

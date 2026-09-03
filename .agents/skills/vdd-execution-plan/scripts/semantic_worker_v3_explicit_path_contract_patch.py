@@ -157,11 +157,20 @@ def _normalize_hint(
 
     if explicit_planned:
         planned = set(_strings(hint.get("planned_new_files")))
-        planned.update(explicit_planned)
+        authorized_planned = set(explicit_planned) - set(explicit_existing)
+        planned.update(authorized_planned)
         # A path explicitly identified as already existing by the same frozen
         # source is never promoted to a planned-new file.
         planned.difference_update(explicit_existing)
         hint["planned_new_files"] = sorted(planned)
+
+        # A frozen must-create contract is positive write authority for that
+        # exact new path. Preserve every unrelated/model-authored prohibition,
+        # but remove this otherwise self-contradictory planned/forbidden overlap
+        # before V6 compatibility grouping.
+        forbidden = set(_strings(hint.get("forbidden_paths")))
+        forbidden.difference_update(authorized_planned)
+        hint["forbidden_paths"] = sorted(forbidden)
 
     return hint
 

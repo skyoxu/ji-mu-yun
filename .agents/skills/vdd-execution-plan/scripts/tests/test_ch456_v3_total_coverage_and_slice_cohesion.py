@@ -167,6 +167,63 @@ def test_cohesive_partition_ignores_evidence_fields_for_same_real_boundary() -> 
     ]
 
 
+def test_frozen_planned_red_authorization_removes_false_conflict_for_ten_atomic_acceptances() -> None:
+    snapshot = "tests/test_ledger.py"
+    obligations = [_obligation(f"O-{number}") for number in range(1, 11)]
+    acceptances = [_acceptance(f"O-{number}", f"A-{number}") for number in range(1, 11)]
+    failures = [
+        {
+            "failure_intent_id": f"FI-O-{number}",
+            "acceptance_ids": [f"A-{number}"],
+            "failure_family": "expected-red",
+            "selector_intent": snapshot,
+        }
+        for number in range(1, 11)
+    ]
+    hints = [
+        {
+            **_hint(snapshot),
+            "obligation_ids": [f"O-{number}"],
+            "forbidden_paths": [snapshot, "requirements.md"],
+        }
+        for number in range(1, 11)
+    ]
+    raw_slices, _ = cohesion.cohesive_partition_slices(
+        obligations,
+        acceptances,
+        failures,
+        hints,
+    )
+    assert len(raw_slices) == 10
+
+    source_text = f"""# FR-1
+Production owner: `src/ledger.py`.
+The RED author must create `{snapshot}`.
+The production implementation may modify only the production owner above.
+"""
+    normalized = path_contract.normalize_explicit_path_contracts(
+        Path("."),
+        "v3",
+        {
+            "obligations": obligations,
+            "source_contracts": [{"source_ref": "req.md#FR-1", "source_text": source_text}],
+        },
+        {"slice_hints": hints},
+    )
+    normalized_hints = normalized["slice_hints"]
+    assert all(snapshot not in hint["forbidden_paths"] for hint in normalized_hints)
+    assert all("requirements.md" in hint["forbidden_paths"] for hint in normalized_hints)
+
+    slices, _ = cohesion.cohesive_partition_slices(
+        obligations,
+        acceptances,
+        failures,
+        normalized_hints,
+    )
+    assert len(slices) == 1
+    assert len(slices[0]["acceptance_ids"]) == 10
+
+
 def test_cohesive_partition_keeps_dependency_boundary_separate() -> None:
     acceptances = [_acceptance("O-1", "A-1"), _acceptance("O-2", "A-2")]
     failures = [
