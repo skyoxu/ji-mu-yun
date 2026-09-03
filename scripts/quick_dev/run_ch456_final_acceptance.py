@@ -33,6 +33,8 @@ def _run(argv: Sequence[str], *, env: dict[str, str], label: str) -> dict[str, A
         cwd=ROOT,
         env=env,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         capture_output=True,
         check=False,
     )

@@ -13,6 +13,12 @@ assert SPEC and SPEC.loader
 GATE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(GATE)
 
+RUNNER_MODULE_PATH = ROOT / "scripts" / "quick_dev" / "run_ch456_final_acceptance.py"
+RUNNER_SPEC = importlib.util.spec_from_file_location("ch456_final_acceptance_runner", RUNNER_MODULE_PATH)
+assert RUNNER_SPEC and RUNNER_SPEC.loader
+RUNNER = importlib.util.module_from_spec(RUNNER_SPEC)
+RUNNER_SPEC.loader.exec_module(RUNNER)
+
 
 def _write(path: Path, value: dict) -> Path:
     path.write_text(json.dumps(value, sort_keys=True), encoding="utf-8")
@@ -242,3 +248,19 @@ def test_selective_replay_uses_status_and_accuracy_contract_not_threshold_field(
     assert "threshold_passed" not in replay
     result = GATE.evaluate(args)
     assert result["checks"]["selective_replay"] is True
+
+
+def test_local_runner_decodes_child_output_without_windows_locale_dependency(monkeypatch) -> None:
+    observed = {}
+
+    def fake_run(argv, **kwargs):
+        observed.update(kwargs)
+        return SimpleNamespace(returncode=1, stdout="semantic → failed", stderr="诊断")
+
+    monkeypatch.setattr(RUNNER.subprocess, "run", fake_run)
+    result = RUNNER._run(["python", "child.py"], env={}, label="child")
+
+    assert observed["encoding"] == "utf-8"
+    assert observed["errors"] == "replace"
+    assert result["stdout_tail"] == "semantic → failed"
+    assert result["stderr_tail"] == "诊断"
