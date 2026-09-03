@@ -67,7 +67,7 @@ def _raw_v3(ids: list[str], *, snapshot: str = "tests/test_ledger.py") -> dict:
     return {
         "acceptances": [{"obligation_ids": ids, **group["acceptance"]}],
         "failure_intents": [{"obligation_ids": ids, **group["failure_intents"][0]}],
-        "slice_hints": [{"obligation_ids": ids, **group["slice_hint"]}],
+        "slice_hints": [{**group["slice_hint"], "obligation_ids": ids}],
     }
 
 
