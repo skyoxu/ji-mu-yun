@@ -1,10 +1,10 @@
 """Reconcile proven atomic source gaps and invented V1 candidates.
 
 Atomic source recall is an independent judge. When it proves only source gaps,
-V1 gets one bounded addition pass. When it returns an exact frozen-ID partition
-and identifies only invented candidate obligations, those candidates may be
-projected out once, before canonical V1 publication, only if V2 and a fresh
-atomic-recall recheck pass. Mixed, incomplete, or ambiguous findings remain
+V1 gets one bounded addition pass. Exact frozen-ID findings can also project
+invented candidates or atomically combine that projection with proven source-gap
+additions. A transaction becomes canonical only after V2 and one fresh
+atomic-recall recheck pass. Incomplete, ambiguous, or repeated findings remain
 fail-closed. This preserves the repository-owned authority boundary accepted in
 ADR-0041 without weakening the precision or recall gate.
 """
@@ -73,9 +73,73 @@ def _exact_invented_partition(
     return invented
 
 
+def _normalized_worker_gaps(raw_gaps: Any) -> list[dict[str, str]] | None:
+    """Normalize only complete worker gap claims for exact recall comparison."""
+    if not isinstance(raw_gaps, list) or not raw_gaps:
+        return None
+    normalized: list[dict[str, str]] = []
+    for raw in raw_gaps:
+        if not isinstance(raw, Mapping):
+            return None
+        values = {name: raw.get(name) for name in ("source_ref", "subject", "behavior", "reason")}
+        if any(not isinstance(value, str) or not value.strip() for value in values.values()):
+            return None
+        normalized.append({name: str(value).strip() for name, value in values.items()})
+    return normalized
+
+
+def _exact_mixed_reconciliation(
+    recall: Mapping[str, Any],
+    obligations: Sequence[Mapping[str, Any]],
+) -> tuple[set[str], list[dict[str, str]]] | None:
+    """Accept only an exact invented/source-gap result over the frozen V1 domain."""
+    gaps = recall.get("source_gap_claims")
+    worker = recall.get("worker")
+    if not isinstance(gaps, list) or not gaps or not isinstance(worker, Mapping):
+        return None
+
+    normalized_gaps = _normalized_worker_gaps(gaps)
+    worker_gaps = _normalized_worker_gaps(worker.get("source_gap_claims"))
+    supported_raw = worker.get("supported_obligation_ids")
+    invented_raw = worker.get("invented_obligation_ids")
+    if (
+        normalized_gaps is None
+        or worker_gaps != normalized_gaps
+        or not isinstance(supported_raw, list)
+        or not isinstance(invented_raw, list)
+        or any(not isinstance(item, str) for item in [*supported_raw, *invented_raw])
+        or len(supported_raw) != len(set(supported_raw))
+        or len(invented_raw) != len(set(invented_raw))
+    ):
+        return None
+
+    known = {
+        str(item.get("obligation_id"))
+        for item in obligations
+        if isinstance(item, Mapping)
+        and item.get("status") == "active"
+        and isinstance(item.get("obligation_id"), str)
+    }
+    supported = set(supported_raw)
+    invented = set(invented_raw)
+    if not known or not invented or supported & invented or supported | invented != known:
+        return None
+
+    findings = [str(item) for item in recall.get("findings", [])]
+    expected = [
+        "atomic-recall:invented-obligation:" + ",".join(sorted(invented)),
+        "atomic-recall:source-gap-count:" + str(len(normalized_gaps)),
+    ]
+    if findings != expected:
+        return None
+    return invented, normalized_gaps
+
+
 def _project_invented_candidates(
     obligations: Sequence[Mapping[str, Any]],
     invented_ids: set[str],
+    *,
+    preserve_requirement_coverage: bool = True,
 ) -> list[dict[str, Any]] | None:
     """Project only active invented candidates while preserving dependency and source coverage."""
     projected = [
@@ -101,7 +165,10 @@ def _project_invented_candidates(
         for item in projected
         if item.get("status") == "active"
     }
-    if not remaining_active or not active_requirements.issubset(remaining_requirements):
+    if not remaining_active or (
+        preserve_requirement_coverage
+        and not active_requirements.issubset(remaining_requirements)
+    ):
         return None
     for item in projected:
         depends_on = item.get("depends_on", [])
@@ -110,6 +177,58 @@ def _project_invented_candidates(
         ):
             return None
     return projected
+
+
+def _merge_reconciled_candidates(
+    *,
+    original: Sequence[Mapping[str, Any]],
+    projected: Sequence[Mapping[str, Any]],
+    additions: Sequence[Mapping[str, Any]],
+    invented_ids: set[str],
+) -> list[dict[str, Any]] | None:
+    """Build one atomic candidate set without identity, coverage, or dependency drift."""
+    original_ids = {
+        str(item.get("obligation_id"))
+        for item in original
+        if isinstance(item.get("obligation_id"), str)
+    }
+    addition_ids = [
+        str(item.get("obligation_id"))
+        for item in additions
+        if isinstance(item.get("obligation_id"), str)
+    ]
+    if (
+        not additions
+        or len(addition_ids) != len(additions)
+        or len(addition_ids) != len(set(addition_ids))
+        or original_ids.intersection(addition_ids)
+        or any(item.get("status") != "active" for item in additions)
+    ):
+        return None
+
+    reconciled = sorted(
+        [*(dict(item) for item in projected), *(dict(item) for item in additions)],
+        key=lambda item: (str(item.get("requirement_id")), str(item.get("obligation_id"))),
+    )
+    required = {
+        str(item.get("requirement_id"))
+        for item in original
+        if item.get("status") == "active"
+    }
+    covered = {
+        str(item.get("requirement_id"))
+        for item in reconciled
+        if item.get("status") == "active"
+    }
+    if not required.issubset(covered):
+        return None
+    for item in additions:
+        depends_on = item.get("depends_on", [])
+        if not isinstance(depends_on, list) or invented_ids.intersection(
+            str(value) for value in depends_on
+        ):
+            return None
+    return reconciled
 
 
 def _source_entry_by_ref(source_index: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
@@ -220,6 +339,45 @@ def compile_obligations_with_gap_repair(
         obligations=obligations,
         worker_cache=worker_cache,
     )
+    mixed = _exact_mixed_reconciliation(recall, obligations)
+    if mixed is not None:
+        invented_ids, gaps = mixed
+        projected = _project_invented_candidates(
+            obligations,
+            invented_ids,
+            preserve_requirement_coverage=False,
+        )
+        if projected is None:
+            return obligations
+        additions = _additional_obligations(
+            root=root,
+            out_dir=out_dir,
+            source_index=source_index,
+            obligations=projected,
+            gaps=gaps,
+            worker_cache=worker_cache,
+        )
+        reconciled = _merge_reconciled_candidates(
+            original=obligations,
+            projected=projected,
+            additions=additions,
+            invented_ids=invented_ids,
+        )
+        if reconciled is None:
+            return obligations
+        guard = sc.guard_obligations(source_index, reconciled)
+        if not guard.get("valid"):
+            return obligations
+        recheck = gate.atomic_recall_alignment(
+            root=root,
+            out_dir=out_dir,
+            source_index=source_index,
+            obligations=reconciled,
+            worker_cache=worker_cache,
+        )
+        # ADR-0041: adopt the complete transaction only after one clean recheck.
+        return reconciled if recheck.get("valid") else obligations
+
     invented_ids = _exact_invented_partition(recall, obligations)
     if invented_ids:
         projected = _project_invented_candidates(obligations, invented_ids)
