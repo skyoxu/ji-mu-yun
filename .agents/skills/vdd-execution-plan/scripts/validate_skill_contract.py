@@ -103,6 +103,19 @@ EXPECTED_ROUTE_TEXT = {
     ),
 }
 
+# ADR-0041 keeps the repository-owned public entry distinct from internal authorities.
+EXPECTED_RUNTIME_ENTRY = {
+    "public_cli": "scripts/vdd/compile_plan.py",
+    "required_routes": ["vdd-create", "vdd-repair"],
+    "invocation_mode": "repository-root-process",
+    "plan_ready_authority": "public-cli-only",
+}
+EXPECTED_RUNTIME_ENTRY_TEXT = (
+    "`scripts/vdd/compile_plan.py` is the only public plan compiler entry",
+    "hand-author `plan-ready`",
+)
+
+
 EXPECTED_OBSOLETE_FIXTURES = [
     "clarification-cases.json",
     "clarification-state-pass.json",
@@ -229,6 +242,27 @@ def validate_input_routes(skill_root: Path, contract: dict[str, Any]) -> list[di
         for phrase in phrases:
             if phrase not in text:
                 findings.append(finding("VDD-INPUT-ROUTING", relative, f"missing route statement: {phrase}"))
+    return findings
+
+
+def validate_runtime_entry(skill_root: Path, contract: dict[str, Any]) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    if contract.get("runtime_entry") != EXPECTED_RUNTIME_ENTRY:
+        findings.append(
+            finding(
+                "VDD-RUNTIME-ENTRY",
+                "scripts/skill-contract.json",
+                "VDD create/repair must use the repository-root public compiler process",
+            )
+        )
+    path = skill_root / "SKILL.md"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        return [finding("VDD-RUNTIME-ENTRY", "SKILL.md", str(exc))]
+    for phrase in EXPECTED_RUNTIME_ENTRY_TEXT:
+        if phrase not in text:
+            findings.append(finding("VDD-RUNTIME-ENTRY", "SKILL.md", f"missing runtime entry statement: {phrase}"))
     return findings
 
 
@@ -379,7 +413,7 @@ def validate_generic_source(skill_root: Path, contract: dict[str, Any]) -> list[
 
 
 def validate_skill(skill_root: Path) -> dict[str, Any]:
-    checks = ["required-files", "required-headings", "governance-policy", "input-routing", "static-lifecycle", "review-reentry", "profile-cases", "clarification-fixtures", "generic-source"]
+    checks = ["required-files", "required-headings", "governance-policy", "input-routing", "runtime-entry", "static-lifecycle", "review-reentry", "profile-cases", "clarification-fixtures", "generic-source"]
     findings: list[dict[str, str]] = []
     try:
         contract = load_contract(skill_root)
@@ -395,6 +429,7 @@ def validate_skill(skill_root: Path) -> dict[str, Any]:
         ))
     findings.extend(validate_governance_policy(skill_root, contract))
     findings.extend(validate_input_routes(skill_root, contract))
+    findings.extend(validate_runtime_entry(skill_root, contract))
     findings.extend(validate_review_reentry_text(skill_root))
     for relative in contract["required_files"]:
         if not (skill_root / relative).is_file():

@@ -1,5 +1,14 @@
 {
   "schema_version": "vdd.skill-contract.v2",
+  "runtime_entry": {
+    "public_cli": "scripts/vdd/compile_plan.py",
+    "required_routes": [
+      "vdd-create",
+      "vdd-repair"
+    ],
+    "invocation_mode": "repository-root-process",
+    "plan_ready_authority": "public-cli-only"
+  },
   "governance_policy": {
     "phase_state_env": "PHASEA_SERVICE_STATE",
     "mode_env": "JIMUYUN_GOVERNANCE_MODE",
@@ -129,6 +138,7 @@
     "SKILL.md": [
       "# VDD Execution Plan",
       "## Route Input Before Profile",
+      "## Canonical Compiler Entry",
       "## Choose The Profile First",
       "## Clarify Only Material Boundaries",
       "## Lifecycle And Implementation",

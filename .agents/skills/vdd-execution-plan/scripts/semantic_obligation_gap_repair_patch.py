@@ -1,10 +1,12 @@
-"""Repair one independently proven atomic source gap before V3 compilation.
+"""Reconcile proven atomic source gaps and invented V1 candidates.
 
-Atomic source recall is an independent judge.  When it proves a real source gap
-(and only a source gap), V1 gets one bounded opportunity to add missing atomic
-obligations.  Existing obligations and frozen source text are immutable.  The
-repaired obligation set must pass V2 and a fresh atomic-recall recheck; otherwise
-the normal repair-vdd result remains authoritative.
+Atomic source recall is an independent judge. When it proves only source gaps,
+V1 gets one bounded addition pass. When it returns an exact frozen-ID partition
+and identifies only invented candidate obligations, those candidates may be
+projected out once, before canonical V1 publication, only if V2 and a fresh
+atomic-recall recheck pass. Mixed, incomplete, or ambiguous findings remain
+fail-closed. This preserves the repository-owned authority boundary accepted in
+ADR-0041 without weakening the precision or recall gate.
 """
 from __future__ import annotations
 
@@ -26,6 +28,88 @@ def _only_source_gaps(recall: Mapping[str, Any]) -> bool:
         and bool(gaps)
         and all(item.startswith("atomic-recall:source-gap-count:") for item in findings)
     )
+
+
+def _exact_invented_partition(
+    recall: Mapping[str, Any],
+    obligations: Sequence[Mapping[str, Any]],
+) -> set[str]:
+    """Return removable candidate IDs only for an exact, invented-only V4 partition."""
+    gaps = recall.get("source_gap_claims")
+    worker = recall.get("worker")
+    if not isinstance(gaps, list) or gaps or not isinstance(worker, Mapping):
+        return set()
+
+    supported_raw = worker.get("supported_obligation_ids")
+    invented_raw = worker.get("invented_obligation_ids")
+    worker_gaps = worker.get("source_gap_claims")
+    if (
+        not isinstance(supported_raw, list)
+        or not isinstance(invented_raw, list)
+        or not isinstance(worker_gaps, list)
+        or worker_gaps
+        or any(not isinstance(item, str) for item in [*supported_raw, *invented_raw])
+        or len(supported_raw) != len(set(supported_raw))
+        or len(invented_raw) != len(set(invented_raw))
+    ):
+        return set()
+
+    known = {
+        str(item.get("obligation_id"))
+        for item in obligations
+        if isinstance(item, Mapping)
+        and item.get("status") == "active"
+        and isinstance(item.get("obligation_id"), str)
+    }
+    supported = set(supported_raw)
+    invented = set(invented_raw)
+    if not known or not invented or supported & invented or supported | invented != known:
+        return set()
+
+    expected = "atomic-recall:invented-obligation:" + ",".join(sorted(invented))
+    findings = [str(item) for item in recall.get("findings", [])]
+    if findings != [expected]:
+        return set()
+    return invented
+
+
+def _project_invented_candidates(
+    obligations: Sequence[Mapping[str, Any]],
+    invented_ids: set[str],
+) -> list[dict[str, Any]] | None:
+    """Project only active invented candidates while preserving dependency and source coverage."""
+    projected = [
+        dict(item)
+        for item in obligations
+        if not (
+            item.get("status") == "active"
+            and str(item.get("obligation_id")) in invented_ids
+        )
+    ]
+    remaining_active = {
+        str(item.get("obligation_id"))
+        for item in projected
+        if item.get("status") == "active"
+    }
+    active_requirements = {
+        str(item.get("requirement_id"))
+        for item in obligations
+        if item.get("status") == "active"
+    }
+    remaining_requirements = {
+        str(item.get("requirement_id"))
+        for item in projected
+        if item.get("status") == "active"
+    }
+    if not remaining_active or not active_requirements.issubset(remaining_requirements):
+        return None
+    for item in projected:
+        depends_on = item.get("depends_on", [])
+        if isinstance(depends_on, list) and invented_ids.intersection(
+            str(value) for value in depends_on
+        ):
+            return None
+    return projected
 
 
 def _source_entry_by_ref(source_index: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
@@ -136,6 +220,24 @@ def compile_obligations_with_gap_repair(
         obligations=obligations,
         worker_cache=worker_cache,
     )
+    invented_ids = _exact_invented_partition(recall, obligations)
+    if invented_ids:
+        projected = _project_invented_candidates(obligations, invented_ids)
+        if projected is None:
+            return obligations
+        guard = sc.guard_obligations(source_index, projected)
+        if not guard.get("valid"):
+            return obligations
+        recheck = gate.atomic_recall_alignment(
+            root=root,
+            out_dir=out_dir,
+            source_index=source_index,
+            obligations=projected,
+            worker_cache=worker_cache,
+        )
+        # Projection becomes canonical only after an independent clean recheck.
+        return projected if recheck.get("valid") else obligations
+
     if recall.get("valid") or not _only_source_gaps(recall):
         return obligations
 

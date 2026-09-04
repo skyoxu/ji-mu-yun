@@ -30,6 +30,18 @@ the terminal full validation command.
 
 One standalone requirements Markdown file routes to direct implementation and creates no VDD directory, lifecycle bundle, 95 report, or Bootstrap run. Only an explicit request to create a complete execution-plan directory routes to VDD `create`; only an explicit request to repair a complete existing directory routes to VDD `repair`. Never infer either VDD route from file contents or growing task complexity.
 
+## Canonical Compiler Entry
+
+For VDD `create` and `repair`, `scripts/vdd/compile_plan.py` is the only public plan compiler entry. Invoke it as a process from the repository root; callers must not import the internal semantic compiler modules directly or hand-author `plan-ready`. The CLI installs the complete repository-owned semantic patch stack and alone may publish current canonical plan artifacts, preserving the repository/plan authority boundary accepted in [ADR-0041](../../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md).
+
+Use the selected profile with the canonical entry:
+
+```text
+py -3 scripts/vdd/compile_plan.py --requirements <requirements.md> --out-dir <execution-plans/plan> --profile <standard|resumable|self-hosted>
+```
+
+For an existing failed compiler directory, add `--resume-from first-failed-stage`. A nonzero exit or any status other than `plan-ready` remains a VDD repair result; no caller may promote it. `--recommendation-only` performs no plan publication and never represents readiness.
+
 ## Choose The Profile First
 
 Choose the least complex profile that serves a real consumer. Record the selected profile and reason in the plan.

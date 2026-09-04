@@ -75,6 +75,18 @@ class SkillContractTests(unittest.TestCase):
             result = self.validator.validate_skill(copied)
             self.assertIn("VDD-INPUT-ROUTING", {item["rule_id"] for item in result["findings"]})
 
+    def test_runtime_entry_mutation_is_rejected(self) -> None:
+        # ADR-0041: the public repository entry cannot drift to an internal module.
+        with tempfile.TemporaryDirectory() as tmp:
+            copied = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, copied)
+            path = copied / "scripts" / "skill-contract.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["runtime_entry"]["public_cli"] = "scripts/vdd/direct_internal.py"
+            path.write_text(json.dumps(data), encoding="utf-8", newline="\n")
+            result = self.validator.validate_skill(copied)
+            self.assertIn("VDD-RUNTIME-ENTRY", {item["rule_id"] for item in result["findings"]})
+
     def test_clarification_security_regression_suite_is_required(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             copied = Path(tmp) / "skill"

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+import subprocess
 import sys
 
 SCRIPTS = Path(__file__).resolve().parents[1]
@@ -124,3 +126,40 @@ def test_resume_from_completed_plan_revalidates_without_worker_cache(tmp_path: P
     assert resumed["resumed"] is True
     assert resumed["resume_from"] == "first-failed-stage"
     assert resumed["resume_strategy"] == "validated-completed-state"
+
+
+def test_public_cli_is_the_canonical_plan_ready_entry(tmp_path: Path) -> None:
+    # ADR-0041: exercise the repository-owned entry as a process, not an internal import.
+    root, req, owner, selector = _repo(tmp_path)
+    out = root / "plan"
+    cache_path = root / "worker-cache.json"
+    cache_path.write_text(json.dumps(_cache(owner, selector)), encoding="utf-8", newline="\n")
+    repository_root = Path(__file__).resolve().parents[5]
+    entry = repository_root / "scripts" / "vdd" / "compile_plan.py"
+    env = dict(os.environ)
+    env["PYTHONUTF8"] = "1"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(entry),
+            "--requirements",
+            str(req),
+            "--out-dir",
+            str(out),
+            "--profile",
+            "standard",
+            "--worker-cache",
+            str(cache_path),
+        ],
+        cwd=str(root),
+        env=env,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+    result = json.loads([line for line in completed.stdout.splitlines() if line.strip()][-1])
+    assert result["status"] == "plan-ready"
+    assert (out / "compiler-state.v1.json").is_file()

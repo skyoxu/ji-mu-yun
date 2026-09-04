@@ -153,6 +153,70 @@ def test_proven_source_gap_gets_one_bounded_obligation_addition(monkeypatch, tmp
     assert [item["obligation_id"] for item in result] == ["O-1", "O-2"]
 
 
+def test_exact_invented_partition_projects_candidate_after_clean_recheck(monkeypatch, tmp_path: Path) -> None:
+    # ADR-0041: a read-only oracle may constrain candidates but cannot publish readiness.
+    supported = {"obligation_id": "O-1", "requirement_id": "FR-1", "status": "active", "depends_on": []}
+    invented = {"obligation_id": "O-2", "requirement_id": "FR-1", "status": "active", "depends_on": []}
+    recalls = iter([
+        {
+            "valid": False,
+            "findings": ["atomic-recall:invented-obligation:O-2"],
+            "source_gap_claims": [],
+            "worker": {
+                "supported_obligation_ids": ["O-1"],
+                "invented_obligation_ids": ["O-2"],
+                "source_gap_claims": [],
+            },
+        },
+        {"valid": True, "findings": [], "source_gap_claims": [], "worker": {}},
+    ])
+    monkeypatch.setattr(gap_patch, "_BASE_COMPILE_OBLIGATIONS", lambda **_kwargs: [dict(supported), dict(invented)])
+    monkeypatch.setattr(gate, "atomic_recall_alignment", lambda **_kwargs: next(recalls))
+    monkeypatch.setattr(gap_patch.sc, "guard_obligations", lambda *_args, **_kwargs: {"valid": True, "findings": []})
+
+    result = gap_patch.compile_obligations_with_gap_repair(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        source_index={"entries": [{"requirement_id": "FR-1", "source_ref": "req.md#FR-1"}]},
+        worker_cache=None,
+    )
+    assert [item["obligation_id"] for item in result] == ["O-1"]
+
+
+def test_invented_projection_recheck_failure_keeps_original_candidates(monkeypatch, tmp_path: Path) -> None:
+    supported = {"obligation_id": "O-1", "requirement_id": "FR-1", "status": "active", "depends_on": []}
+    invented = {"obligation_id": "O-2", "requirement_id": "FR-1", "status": "active", "depends_on": []}
+    recalls = iter([
+        {
+            "valid": False,
+            "findings": ["atomic-recall:invented-obligation:O-2"],
+            "source_gap_claims": [],
+            "worker": {
+                "supported_obligation_ids": ["O-1"],
+                "invented_obligation_ids": ["O-2"],
+                "source_gap_claims": [],
+            },
+        },
+        {
+            "valid": False,
+            "findings": ["atomic-recall:source-gap-count:1"],
+            "source_gap_claims": [{"source_ref": "req.md#FR-1"}],
+            "worker": {},
+        },
+    ])
+    monkeypatch.setattr(gap_patch, "_BASE_COMPILE_OBLIGATIONS", lambda **_kwargs: [dict(supported), dict(invented)])
+    monkeypatch.setattr(gate, "atomic_recall_alignment", lambda **_kwargs: next(recalls))
+    monkeypatch.setattr(gap_patch.sc, "guard_obligations", lambda *_args, **_kwargs: {"valid": True, "findings": []})
+
+    result = gap_patch.compile_obligations_with_gap_repair(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        source_index={"entries": [{"requirement_id": "FR-1", "source_ref": "req.md#FR-1"}]},
+        worker_cache=None,
+    )
+    assert [item["obligation_id"] for item in result] == ["O-1", "O-2"]
+
+
 def test_non_gap_v4_failure_never_starts_obligation_repair(monkeypatch, tmp_path: Path) -> None:
     original = {"obligation_id": "O-1", "requirement_id": "FR-1", "status": "active"}
     monkeypatch.setattr(gap_patch, "_BASE_COMPILE_OBLIGATIONS", lambda **_kwargs: [dict(original)])
