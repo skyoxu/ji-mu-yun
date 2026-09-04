@@ -37,7 +37,11 @@ def semantic_assertions(bundle: Mapping[str, Any], slice_id: str) -> tuple[set[t
         item=fmap.get(fid)
         if not isinstance(item,Mapping) or not isinstance(item.get("failure_id"),str):
             raise ValueError("failure intent missing")
-        expected.append(item["failure_id"])
+        family=item.get("failure_family")
+        if not isinstance(family,str) or not family:
+            raise ValueError("failure intent family missing")
+        if family=="expected-red":
+            expected.append(item["failure_id"])
     if not assertions or not expected:
         raise ValueError("slice semantic bindings incomplete")
     return assertions,sorted(set(expected))

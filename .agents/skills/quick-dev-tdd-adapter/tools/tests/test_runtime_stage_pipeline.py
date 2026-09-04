@@ -4,13 +4,15 @@ import json
 from pathlib import Path
 import sys
 
+import pytest
+
 TOOLS = Path(__file__).resolve().parents[1]
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from current_router import materialize_descriptor
 from runtime_evidence import create_json
-from stage_pipeline import execute_stage
+from stage_pipeline import execute_stage,semantic_assertions
 
 
 def digest() -> str:
@@ -22,11 +24,17 @@ def bundle() -> dict:
         "schema_version": "vdd.semantic-plan-bundle.v1",
         "plan_id": "P1",
         "acceptances": [{"acceptance_id": "A-ONE", "assertion_ids": ["AS-1"]}],
-        "failure_intents": [{"failure_intent_id": "FI-ONE", "failure_id": "EXPECTED-RED"}],
+        "failure_intents": [
+            {"failure_intent_id": "FI-RED-1", "failure_id": "EXPECTED-RED", "failure_family": "expected-red"},
+            {"failure_intent_id": "FI-HARNESS", "failure_id": "HARNESS-FAILURE", "failure_family": "test-harness-failure"},
+            {"failure_intent_id": "FI-SCOPE", "failure_id": "SCOPE-FAILURE", "failure_family": "artifact-integrity"},
+            {"failure_intent_id": "FI-SIGNAL", "failure_id": "SIGNAL-FAILURE", "failure_family": "semantic-contract-gap"},
+            {"failure_intent_id": "FI-RED-2", "failure_id": "EXPECTED-RED", "failure_family": "expected-red"},
+        ],
         "slices": [{
             "slice_id": "S1",
             "acceptance_ids": ["A-ONE"],
-            "failure_intent_ids": ["FI-ONE"],
+            "failure_intent_ids": ["FI-RED-1", "FI-HARNESS", "FI-SCOPE", "FI-SIGNAL", "FI-RED-2"],
             "execution_snapshot_paths": ["tests/test_one.py", "tests/test_slow.py", "tests/fixture.py"],
             "allowed_write_paths": ["src/value.py"],
         }],
@@ -64,6 +72,19 @@ def _red_descriptor(tmp_path: Path, *, run_id: str, target: str, timeout_seconds
     return path
 
 
+def test_red_projection_uses_only_expected_red_family() -> None:
+    assertions, expected = semantic_assertions(bundle(), "S1")
+    assert assertions == {("A-ONE", "AS-1")}
+    assert expected == ["EXPECTED-RED"]
+
+
+def test_failure_intent_family_is_required() -> None:
+    value = bundle()
+    del value["failure_intents"][0]["failure_family"]
+    with pytest.raises(ValueError, match="failure intent family missing"):
+        semantic_assertions(value, "S1")
+
+
 def test_red_receipt_and_judge_are_separate(tmp_path: Path) -> None:
     semantic = setup(tmp_path)
     (tmp_path / "tests" / "test_one.py").write_text(
@@ -88,6 +109,28 @@ def test_red_receipt_and_judge_are_separate(tmp_path: Path) -> None:
     assert observation["verification_outcome"] == "fail"
     assert observation["failure_family"] == "expected-red"
     assert result["predicate_result"] is True
+
+
+def test_red_rejects_extra_guard_failure_marker(tmp_path: Path) -> None:
+    semantic = setup(tmp_path)
+    (tmp_path / "tests" / "test_one.py").write_text(
+        "def test_one():\n"
+        "    print('FAILURE_ID:EXPECTED-RED')\n"
+        "    print('FAILURE_ID:SCOPE-FAILURE')\n"
+        "    assert False\n",
+        encoding="utf-8",
+    )
+    path = _red_descriptor(tmp_path, run_id="RUN-GUARD", target="tests/test_one.py")
+    run = tmp_path / "RUN-GUARD"
+    result = execute_stage(
+        workspace=tmp_path,
+        semantic_plan=semantic,
+        run_dir=run,
+        descriptor_path=path,
+        profile_identity="standard",
+    )
+    assert result["predicate_result"] is False
+    assert result["failure_family"] == "semantic-contract-gap"
 
 
 def test_timeout_has_zero_cases(tmp_path: Path) -> None:
