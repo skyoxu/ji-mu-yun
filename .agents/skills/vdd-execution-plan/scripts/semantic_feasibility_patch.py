@@ -30,6 +30,7 @@ import semantic_worker_v3_explicit_path_contract_patch  # noqa: F401  # explicit
 import semantic_worker_v3_execution_contract_patch  # noqa: F401  # V3A/V7 facts at worker boundary
 import semantic_worker_contract_patch  # noqa: F401  # stable live worker field contract
 import semantic_worker_relational_patch  # noqa: F401  # stable live V3 relational contract
+import semantic_worker_v3_expected_red_eligibility_patch  # noqa: F401  # runtime marker vs guard role
 import semantic_worker_v3_source_projection_patch  # noqa: F401  # V0-frozen source contracts available to V3/repair
 import semantic_worker_v4_domain_patch  # noqa: F401  # frozen-id V4 atomic-recall contract
 import semantic_worker_v3_total_coverage_patch  # noqa: F401  # bounded missing-only V3 completion before hard reject

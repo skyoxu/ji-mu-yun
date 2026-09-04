@@ -38,8 +38,12 @@ def _live_group_repair(*, root, out_dir, payload, prompt):
         "authored and the exact same path is listed in planned_new_files. Do not use directories, generic logs paths, "
         "or evidence folders as selector snapshots. Honor explicit semantics that require compatible behaviors to share "
         "one bounded/cohesive slice or the same selector family; do not create artificial hint differences that fragment "
-        "otherwise compatible work. Never weaken lifecycle, owner, write-set, oracle, or failure semantics merely to "
-        "make grouping easier."
+        "otherwise compatible work. Treat expected-red as an executable runtime observation role: every obligation "
+        "assigned to a group whose failure_family is expected-red must have frozen obligation_kind behavior or quality "
+        "and requirement_type other than Governance. Constraint/governance and RED-construction, marker, validation, "
+        "write-scope, fixture, or harness guards must keep a failure intent under the appropriate non-expected-red family; "
+        "do not group those guards into an expected-red context. Never weaken lifecycle, owner, write-set, oracle, or "
+        "failure semantics merely to make grouping easier."
     )
     return _BASE_LIVE_GROUP_REPAIR(root=root, out_dir=out_dir, payload=payload, prompt=augmented)
 
