@@ -55,6 +55,8 @@ def test_unknown_v3_obligation_routes_through_existing_single_repair(tmp_path: P
         "obligation_id": "O-1",
         "source_refs": ["req.md#FR-1"],
         "subject": "ledger",
+        "requirement_type": "Product",
+        "obligation_kind": "behavior",
         "status": "active",
     }]
     repaired = _v3_payload("O-1")

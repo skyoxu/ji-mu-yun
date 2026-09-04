@@ -14,6 +14,15 @@ from semantic_worker_contract_patch import _augment_prompt
 from semantic_worker_relational_patch import _augment_prompt as _augment_relational_prompt
 
 
+def _obligation(oid: str) -> dict:
+    return {
+        "obligation_id": oid,
+        "source_refs": ["req.md#FR-1"],
+        "requirement_type": "Product",
+        "obligation_kind": "behavior",
+    }
+
+
 def _v3_payload(family: str) -> dict:
     return {
         "acceptances": [
@@ -103,7 +112,7 @@ def test_invalid_v3_family_routes_through_single_repair(tmp_path: Path) -> None:
         root=tmp_path,
         out_dir=tmp_path / "plan",
         stage="v3",
-        payload={"obligations": [{"obligation_id": "O-1"}]},
+        payload={"obligations": [_obligation("O-1")]},
         prompt="Compile observable Acceptance contracts.",
         worker_cache=worker_cache,
     )
@@ -126,7 +135,7 @@ def test_relational_v3_errors_route_through_single_repair(tmp_path: Path) -> Non
         root=tmp_path,
         out_dir=tmp_path / "plan",
         stage="v3",
-        payload={"obligations": [{"obligation_id": "O-1"}, {"obligation_id": "O-2"}]},
+        payload={"obligations": [_obligation("O-1"), _obligation("O-2")]},
         prompt="Compile observable Acceptance contracts.",
         worker_cache={"v3": invalid, "v3-schema-repair": repaired},
     )

@@ -29,10 +29,10 @@ def _group() -> dict:
         },
         "failure_intents": [
             {
-                "failure_family": "expected-red",
+                "failure_family": "artifact-integrity",
                 "selector_intent": "tests/test_owner_boundary.py",
                 "expected_outcome": "fail",
-                "failure_id": "OWNER-BOUNDARY-RED",
+                "failure_id": "OWNER-BOUNDARY-GUARD",
             }
         ],
         "slice_hint": {
@@ -80,6 +80,8 @@ def test_injected_v3_schema_repair_projects_group_before_domain_validation(tmp_p
                 {
                     "obligation_id": "O-1",
                     "source_refs": ["req.md#FR-1"],
+                    "requirement_type": "Product",
+                    "obligation_kind": "constraint",
                 }
             ]
         },
