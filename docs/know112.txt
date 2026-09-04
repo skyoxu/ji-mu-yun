@@ -1,0 +1,112 @@
+上一轮同一 fixture 曾通过，因此要先保留本轮 V3 原始输出，查明第 32 条 hint 的 obligation 和错误 owner。
+
+在候选 f6262fe8… 的本地 worktree 执行：
+
+$env:CH456_DEBUG_OUT = Join-Path `
+  (Get-Location) `
+  (".tmp-ch456-v3-debug-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+
+@'
+import json
+import os
+import sys
+from pathlib import Path
+
+root = Path.cwd().resolve()
+vdd = root / ".agents/skills/vdd-execution-plan/scripts"
+sc = root / "scripts/sc"
+
+for path in (vdd, sc):
+    sys.path.insert(0, str(path))
+
+os.environ["SC_LLM_BACKEND"] = "codex-cli"
+
+from semantic_compiler_authority import compile_plan
+
+out = Path(os.environ["CH456_DEBUG_OUT"]) / "plan"
+fixture = vdd / "fixtures/ch456-curated-semantic-quality.md"
+
+try:
+    result = compile_plan(
+        requirements=fixture,
+        out_dir=out,
+        profile="standard",
+    )
+    print("COMPILE_RESULT")
+    print(json.dumps(result, ensure_ascii=True, indent=2))
+except Exception as exc:
+    print("COMPILE_ERROR:", repr(exc))
+
+def is_real_file(raw):
+    try:
+        path = (root / raw).resolve()
+        path.relative_to(root)
+        return path.is_file() and not path.is_symlink()
+    except (OSError, ValueError):
+        return False
+
+def report(kind, artifact, index, ids, hint):
+    owners = hint.get("production_owners", [])
+    if isinstance(owners, list) and any(
+        isinstance(owner, str) and is_real_file(owner)
+        for owner in owners
+    ):
+        return
+
+    print(json.dumps({
+        "kind": kind,
+        "artifact": artifact.relative_to(root).as_posix(),
+        "index": index,
+        "obligation_ids": ids,
+        "production_owners": owners,
+        "allowed_write_paths": hint.get("allowed_write_paths"),
+        "forbidden_paths": hint.get("forbidden_paths"),
+        "planned_new_files": hint.get("planned_new_files"),
+        "rollback_scope": hint.get("rollback_scope"),
+    }, ensure_ascii=True, indent=2))
+
+for artifact in out.rglob("*.json"):
+    try:
+        value = json.loads(artifact.read_text(encoding="utf-8"))
+    except Exception:
+        continue
+
+    if isinstance(value, dict):
+        hints = value.get("slice_hints")
+        if isinstance(hints, list):
+            for index, hint in enumerate(hints):
+                if isinstance(hint, dict):
+                    report(
+                        "slice_hint",
+                        artifact,
+                        index,
+                        hint.get("obligation_ids"),
+                        hint,
+                    )
+
+        groups = value.get("groups")
+        if isinstance(groups, list):
+            for index, group in enumerate(groups):
+                if not isinstance(group, dict):
+                    continue
+                hint = group.get("slice_hint")
+                if isinstance(hint, dict):
+                    report(
+                        "repair_group",
+                        artifact,
+                        index,
+                        group.get("obligation_ids"),
+                        hint,
+                    )
+
+print("DEBUG_DIR:", out)
+'@ | py -3 -
+
+把输出中的以下字段发给我即可：
+
+kind
+index
+obligation_ids
+production_owners
+rollback_scope
+planned_new_files
