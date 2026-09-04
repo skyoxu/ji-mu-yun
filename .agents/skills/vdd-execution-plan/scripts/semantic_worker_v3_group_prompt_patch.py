@@ -27,10 +27,12 @@ def _subject_domains(payload: Mapping[str, Any]) -> dict[str, list[str]]:
 def _live_group_repair(*, root, out_dir, payload, prompt):
     domains = _subject_domains(payload)
     augmented = prompt + (
-        "\n\nGROUPED REPAIR INVARIANTS: every active frozen obligation must appear in at least one Acceptance group; "
-        "do not combine obligations with different subjects into one Acceptance. The exact frozen subject domains are: "
+        "\n\nGROUPED REPAIR INVARIANTS: obligation_group_assignments must contain every active frozen obligation "
+        "as a required key exactly once. Each value must reference one returned group_id; every group_id must be unique, "
+        "used by at least one assignment, and assigned to itself. Do not assign obligations with different subjects to "
+        "the same group. The exact frozen subject domains are: "
         + json.dumps(domains, ensure_ascii=False, sort_keys=True)
-        + ". Each group's obligation_ids MUST be a non-empty subset of exactly one listed subject domain. "
+        + ". Obligations may share a group only within exactly one listed subject domain. "
         "Every existing production_owner that can be modified must also appear in allowed_write_paths. An "
         "execution_snapshot_path that does not yet exist is legal only when the frozen obligations require it to be "
         "authored and the exact same path is listed in planned_new_files. Do not use directories, generic logs paths, "

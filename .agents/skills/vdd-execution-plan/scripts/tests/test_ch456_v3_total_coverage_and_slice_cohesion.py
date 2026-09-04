@@ -71,19 +71,29 @@ def _raw_v3(ids: list[str], *, snapshot: str = "tests/test_ledger.py") -> dict:
     }
 
 
-def test_shared_group_projects_to_atomic_acceptances_with_shared_context() -> None:
+def test_shared_group_projects_exact_assignments_to_atomic_acceptances() -> None:
     payload = {"input": {"obligations": [_obligation("O-1"), _obligation("O-2")]}}
     schema = grouped._group_schema(payload)
-    ids_schema = schema["properties"]["groups"]["items"]["properties"]["obligation_ids"]
-    assert ids_schema["minItems"] == 1
-    assert "maxItems" not in ids_schema
-    assert "uniqueItems" not in ids_schema
+    assignment_schema = schema["properties"]["obligation_group_assignments"]
+    assert set(assignment_schema["properties"]) == {"O-1", "O-2"}
+    assert set(assignment_schema["required"]) == {"O-1", "O-2"}
+    assert assignment_schema["additionalProperties"] is False
+    assert "uniqueItems" not in str(schema)
+
+    shared = _raw_group(["O-1", "O-2"])
+    del shared["obligation_ids"]
+    shared["group_id"] = "O-1"
+    shared["slice_hint"]["allowed_write_paths"] = []
     projected = grouped._project(
-        {"groups": [_raw_group(["O-1", "O-2"])]},
+        {
+            "groups": [shared],
+            "obligation_group_assignments": {"O-1": "O-1", "O-2": "O-1"},
+        },
         refs_by_oid={"O-1": ["req.md#FR-1"], "O-2": ["req.md#FR-1"]},
     )
     assert [a["obligation_ids"] for a in projected["acceptances"]] == [["O-1"], ["O-2"]]
     assert projected["slice_hints"][0]["production_owners"] == projected["slice_hints"][1]["production_owners"] == ["src/ledger.py"]
+    assert projected["slice_hints"][0]["allowed_write_paths"] == projected["slice_hints"][1]["allowed_write_paths"] == ["src/ledger.py"]
 
 
 def test_grouped_repair_rejects_duplicate_ids_deterministically() -> None:
@@ -94,6 +104,51 @@ def test_grouped_repair_rejects_duplicate_ids_deterministically() -> None:
         assert str(exc) == "V3 group repair group 0 has duplicate obligation_ids"
     else:
         raise AssertionError("duplicate obligation ids must fail closed")
+
+
+def test_exact_assignments_reject_missing_frozen_obligation() -> None:
+    shared = _raw_group(["O-1"])
+    del shared["obligation_ids"]
+    shared["group_id"] = "O-1"
+    try:
+        grouped._project(
+            {
+                "groups": [shared],
+                "obligation_group_assignments": {"O-1": "O-1"},
+            },
+            refs_by_oid={"O-1": ["req.md#FR-1"], "O-2": ["req.md#FR-1"]},
+        )
+    except ValueError as exc:
+        assert str(exc) == "V3 group repair assignments differ from frozen obligations: missing=O-2"
+    else:
+        raise AssertionError("missing exact assignment must fail closed")
+
+
+def test_exact_assignments_reject_unknown_group_reference() -> None:
+    shared = _raw_group(["O-1"])
+    del shared["obligation_ids"]
+    shared["group_id"] = "O-1"
+    try:
+        grouped._project({
+            "groups": [shared],
+            "obligation_group_assignments": {"O-1": "O-1", "O-2": "O-2"},
+        })
+    except ValueError as exc:
+        assert str(exc) == "V3 group repair assignments reference unknown groups: O-2"
+    else:
+        raise AssertionError("unknown group reference must fail closed")
+
+
+def test_legacy_conflicting_cross_group_duplicate_remains_rejected() -> None:
+    first = _raw_group(["O-1"])
+    second = _raw_group(["O-1"])
+    second["slice_hint"]["behavior_change"] = "conflicting behavior"
+    try:
+        grouped._project({"groups": [first, second]})
+    except ValueError as exc:
+        assert str(exc) == "V3 group repair obligation appears in multiple groups: O-1"
+    else:
+        raise AssertionError("legacy cross-group duplicate must fail closed")
 
 
 def test_initial_v3_shared_set_atomicizes_before_overbroad_validation() -> None:

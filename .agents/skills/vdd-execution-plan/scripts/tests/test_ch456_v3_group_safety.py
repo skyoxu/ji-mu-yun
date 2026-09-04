@@ -57,9 +57,13 @@ def test_group_schema_stays_on_basic_frozen_id_enum_for_codex_transport() -> Non
         }
     }
     schema = grouped._group_schema(payload)
-    obligation_schema = schema["properties"]["groups"]["items"]["properties"]["obligation_ids"]
-    assert "oneOf" not in obligation_schema
-    assert obligation_schema["items"]["enum"] == ["O-1", "O-2", "O-3"]
+    group_id_schema = schema["properties"]["groups"]["items"]["properties"]["group_id"]
+    assignments = schema["properties"]["obligation_group_assignments"]
+    assert "oneOf" not in group_id_schema
+    assert group_id_schema["enum"] == ["O-1", "O-2", "O-3"]
+    assert set(assignments["properties"]) == {"O-1", "O-2", "O-3"}
+    assert set(assignments["required"]) == {"O-1", "O-2", "O-3"}
+    assert assignments["additionalProperties"] is False
 
 
 def test_group_repair_rejects_cross_subject_acceptance_deterministically() -> None:

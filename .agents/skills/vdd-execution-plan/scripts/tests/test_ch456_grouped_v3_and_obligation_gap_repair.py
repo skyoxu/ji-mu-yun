@@ -55,6 +55,16 @@ def _group() -> dict:
     }
 
 
+def _exact_output() -> dict:
+    group = _group()
+    group_id = group.pop("obligation_ids")[0]
+    group["group_id"] = group_id
+    return {
+        "groups": [group],
+        "obligation_group_assignments": {"O-1": group_id},
+    }
+
+
 def test_group_first_projection_cannot_drift_obligation_sets() -> None:
     projected = group_patch._project({"groups": [_group()]})
     assert projected["acceptances"][0]["obligation_ids"] == ["O-1"]
@@ -81,7 +91,7 @@ def test_injected_v3_schema_repair_projects_group_before_domain_validation(tmp_p
         stage="v3-schema-repair",
         payload=payload,
         prompt="Repair V3.",
-        worker_cache={"v3-schema-repair": {"groups": [_group()]}},
+        worker_cache={"v3-schema-repair": _exact_output()},
     )
     assert set(result) == {"acceptances", "failure_intents", "slice_hints"}
     assert result["acceptances"][0]["source_refs"] == ["req.md#FR-1"]

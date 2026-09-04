@@ -1,13 +1,14 @@
 """Group-first V3 schema repair with atomic canonical projection.
 
-The repair worker may group several frozen obligations when they share one
-implementation context (owner/lane/failure mechanism/selector lifecycle).  That
-shared group is useful because path ownership is authored once instead of being
-re-guessed independently for every obligation.  Before the canonical V3 arrays
-are returned, the group is deterministically projected to one Acceptance, one
-slice hint, and cloned RED intents per obligation.  Thus Acceptance remains
-atomic while V6 may later merge compatible atomic Acceptances into one cohesive
-implementation slice.
+The repair worker authors shared implementation contexts plus an exact
+one-key-per-frozen-obligation assignment object. Multiple obligations may reuse
+one context (owner/lane/failure mechanism/selector lifecycle), so path ownership
+is authored once instead of being re-guessed independently. Before the canonical
+V3 arrays are returned, assignments are deterministically projected to one
+Acceptance, one slice hint, and cloned RED intents per obligation. Thus
+Acceptance remains atomic while V6 may later merge compatible atomic Acceptances
+into one cohesive implementation slice. Legacy group arrays remain readable for
+cache/test compatibility, but overlapping legacy membership stays fail-closed.
 """
 from __future__ import annotations
 
@@ -57,18 +58,22 @@ def _obligation_refs(payload: Mapping[str, Any]) -> dict[str, list[str]]:
 
 def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
     obligations = _repair_obligations(payload)
-    known_ids = sorted(
+    known_ids = sorted({
         str(item["obligation_id"])
         for item in obligations
         if isinstance(item.get("obligation_id"), str) and item.get("obligation_id")
-    )
+    })
     source_refs = sorted({
         str(ref)
         for item in obligations
         for ref in item.get("source_refs", [])
         if isinstance(ref, str) and ref
     })
-    obligation_ids = _string_array(nonempty=True, enum=known_ids or None)
+    group_id_schema: dict[str, Any] = {"type": "string", "minLength": 1}
+    assignment_target_schema: dict[str, Any] = {"type": "string", "minLength": 1}
+    if known_ids:
+        group_id_schema["enum"] = known_ids
+        assignment_target_schema["enum"] = known_ids
 
     acceptance = {
         "type": "object", "additionalProperties": False,
@@ -135,24 +140,153 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
     group = {
         "type": "object", "additionalProperties": False,
         "properties": {
-            "obligation_ids": obligation_ids,
+            "group_id": group_id_schema,
             "acceptance": acceptance,
             "failure_intents": {"type": "array", "minItems": 1, "items": failure},
             "slice_hint": slice_hint,
         },
-        "required": ["obligation_ids", "acceptance", "failure_intents", "slice_hint"],
+        "required": ["group_id", "acceptance", "failure_intents", "slice_hint"],
+    }
+    assignments = {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            oid: dict(assignment_target_schema)
+            for oid in known_ids
+        },
+        "required": known_ids,
     }
     return {
         "type": "object", "additionalProperties": False,
-        "properties": {"groups": {"type": "array", "minItems": 1, "items": group}},
-        "required": ["groups"],
+        "properties": {
+            "groups": {"type": "array", "minItems": 1, "items": group},
+            "obligation_group_assignments": assignments,
+        },
+        "required": ["groups", "obligation_group_assignments"],
     }
 
 
-def _project(value: Mapping[str, Any], *, refs_by_oid: Mapping[str, list[str]] | None = None) -> dict[str, Any]:
-    groups = value.get("groups")
-    if not isinstance(groups, list) or not groups:
-        raise ValueError("V3 group repair must return non-empty groups")
+def _group_body(raw: Mapping[str, Any], index: int) -> tuple[Mapping[str, Any], list[Any], Mapping[str, Any]]:
+    acceptance = raw.get("acceptance")
+    group_failures = raw.get("failure_intents")
+    hint = raw.get("slice_hint")
+    if not isinstance(acceptance, Mapping) or not isinstance(group_failures, list) or not group_failures or not isinstance(hint, Mapping):
+        raise ValueError(f"V3 group repair group {index} is incomplete")
+    return acceptance, group_failures, hint
+
+
+def _append_atomic(
+    *,
+    oid: str,
+    acceptance: Mapping[str, Any],
+    group_failures: list[Any],
+    hint: Mapping[str, Any],
+    group_index: int,
+    refs_by_oid: Mapping[str, list[str]] | None,
+    acceptances: list[dict[str, Any]],
+    failures: list[dict[str, Any]],
+    hints: list[dict[str, Any]],
+) -> None:
+    atomic_acceptance = dict(acceptance)
+    if refs_by_oid is not None and oid in refs_by_oid:
+        atomic_acceptance["source_refs"] = list(refs_by_oid[oid])
+    acceptances.append({"obligation_ids": [oid], **atomic_acceptance})
+    hints.append({"obligation_ids": [oid], **dict(hint)})
+    for failure in group_failures:
+        if not isinstance(failure, Mapping):
+            raise ValueError(f"V3 group repair failure in group {group_index} is not object")
+        failures.append({"obligation_ids": [oid], **dict(failure)})
+
+
+def _project_exact_assignments(
+    value: Mapping[str, Any],
+    groups: list[Any],
+    *,
+    refs_by_oid: Mapping[str, list[str]] | None,
+) -> dict[str, Any]:
+    raw_assignments = value.get("obligation_group_assignments")
+    if not isinstance(raw_assignments, Mapping) or not raw_assignments:
+        raise ValueError("V3 group repair assignments must be a non-empty object")
+    if any(
+        not isinstance(oid, str) or not oid.strip()
+        or not isinstance(group_id, str) or not group_id.strip()
+        for oid, group_id in raw_assignments.items()
+    ):
+        raise ValueError("V3 group repair assignments must map non-empty obligation IDs to non-empty group IDs")
+    assignments = {
+        str(oid).strip(): str(group_id).strip()
+        for oid, group_id in raw_assignments.items()
+    }
+    if len(assignments) != len(raw_assignments):
+        raise ValueError("V3 group repair assignments contain normalized duplicate obligation IDs")
+
+    if refs_by_oid is not None:
+        expected = set(refs_by_oid)
+        actual = set(assignments)
+        if actual != expected:
+            details = []
+            missing = sorted(expected - actual)
+            extra = sorted(actual - expected)
+            if missing:
+                details.append("missing=" + ",".join(missing))
+            if extra:
+                details.append("unknown=" + ",".join(extra))
+            raise ValueError("V3 group repair assignments differ from frozen obligations: " + ";".join(details))
+
+    group_by_id: dict[str, tuple[int, Mapping[str, Any], list[Any], Mapping[str, Any]]] = {}
+    for index, raw in enumerate(groups):
+        if not isinstance(raw, Mapping):
+            raise ValueError(f"V3 group repair group {index} is not object")
+        group_id = raw.get("group_id")
+        if not isinstance(group_id, str) or not group_id.strip():
+            raise ValueError(f"V3 group repair group {index} has invalid group_id")
+        normalized_group_id = group_id.strip()
+        if normalized_group_id in group_by_id:
+            raise ValueError(f"V3 group repair duplicate group_id: {normalized_group_id}")
+        acceptance, group_failures, hint = _group_body(raw, index)
+        group_by_id[normalized_group_id] = (index, acceptance, group_failures, hint)
+
+    unknown_groups = sorted(set(assignments.values()) - set(group_by_id))
+    if unknown_groups:
+        raise ValueError("V3 group repair assignments reference unknown groups: " + ",".join(unknown_groups))
+    unused_groups = sorted(set(group_by_id) - set(assignments.values()))
+    if unused_groups:
+        raise ValueError("V3 group repair contains unused groups: " + ",".join(unused_groups))
+    invalid_representatives = sorted(
+        group_id
+        for group_id in group_by_id
+        if assignments.get(group_id) != group_id
+    )
+    if invalid_representatives:
+        raise ValueError(
+            "V3 group repair group IDs must represent obligations assigned to themselves: "
+            + ",".join(invalid_representatives)
+        )
+
+    acceptances: list[dict[str, Any]] = []
+    failures: list[dict[str, Any]] = []
+    hints: list[dict[str, Any]] = []
+    for oid in sorted(assignments):
+        group_index, acceptance, group_failures, hint = group_by_id[assignments[oid]]
+        _append_atomic(
+            oid=oid,
+            acceptance=acceptance,
+            group_failures=group_failures,
+            hint=hint,
+            group_index=group_index,
+            refs_by_oid=refs_by_oid,
+            acceptances=acceptances,
+            failures=failures,
+            hints=hints,
+        )
+    return {"acceptances": acceptances, "failure_intents": failures, "slice_hints": hints}
+
+
+def _project_legacy_groups(
+    groups: list[Any],
+    *,
+    refs_by_oid: Mapping[str, list[str]] | None,
+) -> dict[str, Any]:
     acceptances: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
     hints: list[dict[str, Any]] = []
@@ -161,9 +295,6 @@ def _project(value: Mapping[str, Any], *, refs_by_oid: Mapping[str, list[str]] |
         if not isinstance(raw, Mapping):
             raise ValueError(f"V3 group repair group {index} is not object")
         ids = raw.get("obligation_ids")
-        acceptance = raw.get("acceptance")
-        group_failures = raw.get("failure_intents")
-        hint = raw.get("slice_hint")
         if not isinstance(ids, list) or not ids or any(not isinstance(x, str) or not x.strip() for x in ids):
             raise ValueError(f"V3 group repair group {index} has invalid obligation_ids")
         normalized_values = [str(x).strip() for x in ids]
@@ -174,20 +305,29 @@ def _project(value: Mapping[str, Any], *, refs_by_oid: Mapping[str, list[str]] |
         if duplicates:
             raise ValueError("V3 group repair obligation appears in multiple groups: " + ",".join(sorted(duplicates)))
         seen.update(normalized_ids)
-        if not isinstance(acceptance, Mapping) or not isinstance(group_failures, list) or not group_failures or not isinstance(hint, Mapping):
-            raise ValueError(f"V3 group repair group {index} is incomplete")
-
+        acceptance, group_failures, hint = _group_body(raw, index)
         for oid in normalized_ids:
-            atomic_acceptance = dict(acceptance)
-            if refs_by_oid is not None and oid in refs_by_oid:
-                atomic_acceptance["source_refs"] = list(refs_by_oid[oid])
-            acceptances.append({"obligation_ids": [oid], **atomic_acceptance})
-            hints.append({"obligation_ids": [oid], **dict(hint)})
-            for failure in group_failures:
-                if not isinstance(failure, Mapping):
-                    raise ValueError(f"V3 group repair failure in group {index} is not object")
-                failures.append({"obligation_ids": [oid], **dict(failure)})
+            _append_atomic(
+                oid=oid,
+                acceptance=acceptance,
+                group_failures=group_failures,
+                hint=hint,
+                group_index=index,
+                refs_by_oid=refs_by_oid,
+                acceptances=acceptances,
+                failures=failures,
+                hints=hints,
+            )
     return {"acceptances": acceptances, "failure_intents": failures, "slice_hints": hints}
+
+
+def _project(value: Mapping[str, Any], *, refs_by_oid: Mapping[str, list[str]] | None = None) -> dict[str, Any]:
+    groups = value.get("groups")
+    if not isinstance(groups, list) or not groups:
+        raise ValueError("V3 group repair must return non-empty groups")
+    if "obligation_group_assignments" in value:
+        return _project_exact_assignments(value, groups, refs_by_oid=refs_by_oid)
+    return _project_legacy_groups(groups, refs_by_oid=refs_by_oid)
 
 
 def _trace_summary(trace: str) -> str:
@@ -220,11 +360,13 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
     schema_path = transport._schema_path(out_dir, _GROUP_STAGE, _group_schema(payload))
     grouped_prompt = (
         prompt
-        + "\n\nGROUP-FIRST REPAIR CONTRACT: return {\"groups\":[...]}. A group may contain multiple frozen obligation_ids "
-        "ONLY when they share one real production owner context, verification lane, RED failure mechanism, selector/test "
-        "lifecycle, legal write boundary, and no predecessor boundary. Prefer one shared group over repeating the same owner "
-        "guess independently. The compiler will atomize every group deterministically into one Acceptance per obligation, "
-        "while preserving the shared slice context. Do not place an obligation in more than one group."
+        + "\n\nGROUP-FIRST REPAIR CONTRACT: return {\"groups\":[...],\"obligation_group_assignments\":{...}}. "
+        "Each group has one group_id selected from the supplied frozen obligation IDs plus one shared Acceptance, failure, "
+        "and slice context. The assignment object MUST contain every supplied obligation ID as a key exactly once; each "
+        "value is the group_id whose context that obligation uses. A group_id must map to itself, every returned group must "
+        "be used, and multiple obligations may map to one group ONLY when they share one real production owner context, "
+        "verification lane, RED failure mechanism, selector/test lifecycle, legal write boundary, and no predecessor boundary. "
+        "The compiler will project assignments deterministically into one Acceptance per obligation."
         + "\n\nINPUT:\n" + json.dumps(payload, ensure_ascii=False, sort_keys=True)
     )
     backend = resolve_llm_backend(None)
