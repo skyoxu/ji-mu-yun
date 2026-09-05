@@ -1,0 +1,1 @@
+{"atomic_quality_metrics":{"active_obligation_count":14,"f1":1.0,"invented_obligation_count":0,"precision":1.0,"recall":1.0,"source_gap_count":0,"supported_obligation_count":14},"findings":["v4:active-not-covered:O-400DF360A352","v4:missing:O-400DF360A352","v4:misaligned-acceptance:A-22676D615E8B"],"stage":"V4","status":"repair-vdd"}
