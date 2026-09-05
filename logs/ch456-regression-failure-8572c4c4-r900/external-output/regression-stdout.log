@@ -1,0 +1,113 @@
+........F............................................................... [ 39%]
+........................................................................ [ 78%]
+.......................................                                  [100%]
+================================== FAILURES ===================================
+_ test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecycle _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/3/pytest-of-Administrator/pytest-1487/test_fresh_three_behavior_requ0')
+
+    def test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecycle(tmp_path:Path)->None:
+        root=tmp_path
+        (root/".agents").mkdir(); (root/"AGENTS.md").write_text("fresh fixture\n",encoding="utf-8")
+        (root/"src").mkdir(); (root/"tests").mkdir(); (root/"runs"/"R1"/"descriptors").mkdir(parents=True)
+        requirements=root/"requirements.md"
+        requirements.write_text(
+            "# FR-21\nA fixed-window limiter must allow the first two events, reject the third event inside the same 10-second window, and restore capacity after the window expires.\n",
+            encoding="utf-8",
+        )
+        production=root/"src"/"rate_limiter.py"
+        production.write_text(
+            "class RateLimiter:\n"
+            "    def __init__(self):\n        self.calls=0\n"
+            "    def allow(self, now):\n"
+            "        if now >= 10: return False\n"
+            "        self.calls += 1\n"
+            "        return self.calls > 2\n",
+            encoding="utf-8",
+        )
+        (root/"tests"/"fixture.txt").write_text("limit=2;window=10\n",encoding="utf-8")
+        (root/"tests"/"test_rate_limiter.py").write_text(
+            "from src.rate_limiter import RateLimiter\n\n"
+            "def test_first_two_are_allowed():\n"
+            "    r=RateLimiter(); ok=r.allow(0) and r.allow(1)\n"
+            "    if not ok: print('FAILURE_ID:RL-FIRST-TWO')\n"
+            "    assert ok\n\n"
+            "def test_third_inside_window_is_rejected():\n"
+            "    r=RateLimiter(); r.allow(0); r.allow(1); denied=not r.allow(2)\n"
+            "    if not denied: print('FAILURE_ID:RL-THIRD-REJECTED')\n"
+            "    assert denied\n\n"
+            "def test_capacity_resets_after_window():\n"
+            "    r=RateLimiter(); r.allow(0); r.allow(1); allowed=r.allow(12)\n"
+            "    if not allowed: print('FAILURE_ID:RL-WINDOW-RESET')\n"
+            "    assert allowed\n",
+            encoding="utf-8",
+        )
+    
+        plan=root/"plan"
+        result=compile_plan(requirements=requirements,out_dir=plan,worker_cache=_worker_cache())
+        assert result["status"]=="plan-ready"
+        assert result["atomic_quality_metrics"]=={
+            "active_obligation_count":3,"supported_obligation_count":3,"invented_obligation_count":0,"source_gap_count":0,
+            "precision":1.0,"recall":1.0,"f1":1.0,
+        }
+        bundle=json.loads((plan/"semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))
+        assert len(bundle["obligations"])==3
+        assert len(bundle["slices"])==1
+        selected=bundle["slices"][0]
+        assert len(selected["obligation_ids"])==3 and len(selected["acceptance_ids"])==3
+    
+        (plan/"contract.txt").write_text("fresh contract\n",encoding="utf-8")
+        (root/"validators.txt").write_text("current validator/judge v2\n",encoding="utf-8")
+        (root/"state.json").write_text("{}\n",encoding="utf-8")
+        run=root/"runs"/"R1"
+        candidate0=sha256_bytes(production.read_bytes())
+        selector=[sys.executable,"-m","pytest","tests/test_rate_limiter.py","-q"]
+        red=materialize_descriptor(bundle=bundle,slice_id="S1",stage="red",run_id="R1",candidate_hash=candidate0,argv=selector,cwd=".",timeout_seconds=30,target_refs=["tests/test_rate_limiter.py"],fixture_refs=["tests/fixture.txt"])
+        create_json(run/"descriptors"/"red.json",red)
+>       red_result=execute_stage(workspace=root,semantic_plan=plan/"semantic-plan-bundle.v1.json",run_dir=run,descriptor_path=run/"descriptors"/"red.json",profile_identity="standard")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_ch456_fresh_medium_task.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.agents\skills\quick-dev-tdd-adapter\tools\stage_pipeline.py:100: in execute_stage
+    expected_assertions,expected_failures=semantic_assertions(bundle,descriptor["slice_id"])
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+bundle = {'acceptances': [{'acceptance_id': 'A-033DA4898343', 'assertion_ids': ['ASSERT-RL-3'], 'complexity_class': 'simple', '...D64', 'failure_intent_id': 'FI-F88E2A47BEA1', 'obligation_id': 'O-D3CF4FFEF56E', 'requirement_id': 'FR-21', ...}], ...}
+slice_id = 'S1'
+
+    def semantic_assertions(bundle: Mapping[str, Any], slice_id: str) -> tuple[set[tuple[str,str]],list[str]]:
+        slices,acceptances,failures=bundle.get("slices"),bundle.get("acceptances"),bundle.get("failure_intents")
+        if not all(isinstance(x,list) for x in (slices,acceptances,failures)):
+            raise ValueError("semantic plan incomplete")
+        selected=next((x for x in slices if isinstance(x,Mapping) and x.get("slice_id")==slice_id),None)
+        if selected is None:
+            raise ValueError("slice not declared")
+        amap={x.get("acceptance_id"):x for x in acceptances if isinstance(x,Mapping)}
+        fmap={x.get("failure_intent_id"):x for x in failures if isinstance(x,Mapping)}
+        assertions:set[tuple[str,str]]=set()
+        for aid in selected.get("acceptance_ids",[]):
+            item=amap.get(aid)
+            if not isinstance(item,Mapping):
+                raise ValueError("Acceptance missing")
+            for assertion_id in item.get("assertion_ids",[]):
+                assertions.add((aid,assertion_id))
+        expected=[]
+        for fid in selected.get("failure_intent_ids",[]):
+            item=fmap.get(fid)
+            if not isinstance(item,Mapping) or not isinstance(item.get("failure_id"),str):
+                raise ValueError("failure intent missing")
+            family=item.get("failure_family")
+            if not isinstance(family,str) or not family:
+                raise ValueError("failure intent family missing")
+            if family=="expected-red":
+                expected.append(item["failure_id"])
+        if not assertions or not expected:
+>           raise ValueError("slice semantic bindings incomplete")
+E           ValueError: slice semantic bindings incomplete
+
+.agents\skills\quick-dev-tdd-adapter\tools\stage_pipeline.py:46: ValueError
+=========================== short test summary info ===========================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py::test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecycle
+1 failed, 182 passed in 11.13s

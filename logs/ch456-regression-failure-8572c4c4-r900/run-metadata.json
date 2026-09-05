@@ -1,0 +1,26 @@
+{
+  "schema": "ch456.regression-failure-evidence.v1",
+  "candidate": "8572c4c4383900271c6cf90bc403bda907397380",
+  "source_worktree": "C:/ch456-full-acceptance-8572c4c4",
+  "worktree_status_after_run": "clean",
+  "command": "python -m pytest $(find .agents/skills -type f -path '*/tests/test_ch456_*.py' -print | sort) -q",
+  "result": {
+    "exit_code": 1,
+    "summary": "1 failed, 182 passed in 11.13s",
+    "failed_test": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py::test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecycle",
+    "exception": "ValueError: slice semantic bindings incomplete",
+    "exception_source": ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py:46"
+  },
+  "configured_follow_on_runtime": {
+    "repair_timeout_seconds": 900,
+    "scope": "external sitecustomize import hook; repository default remains 300 seconds",
+    "invoked": false,
+    "reason": "specified regression failed; first-failure stop applied"
+  },
+  "not_run": [
+    "real semantic",
+    "formal live blind",
+    "final acceptance"
+  ],
+  "authorizes": []
+}
