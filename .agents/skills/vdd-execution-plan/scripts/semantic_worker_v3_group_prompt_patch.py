@@ -29,20 +29,20 @@ def _live_group_repair(*, root, out_dir, payload, prompt):
     augmented = prompt + (
         "\n\nGROUPED REPAIR INVARIANTS: obligation_group_assignments must contain every active frozen obligation "
         "as a required key exactly once. Each value must reference one returned group_id; every group_id must be unique, "
-        "used by at least one assignment, and assigned to itself. Do not assign obligations with different subjects to "
-        "the same group. The exact frozen subject domains are: "
+        "used by at least one assignment, and assigned to itself. Keep each obligation contract specific to its "
+        "frozen subject. The exact frozen subject domains are: "
         + json.dumps(domains, ensure_ascii=False, sort_keys=True)
-        + ". Obligations may share a group only within exactly one listed subject domain. "
+        + ". Different subjects may share implementation context, but never a shared verification contract. "
         "Every existing production_owner that can be modified must also appear in allowed_write_paths. An "
         "execution_snapshot_path that does not yet exist is legal only when the frozen obligations require it to be "
         "authored and the exact same path is listed in planned_new_files. Do not use directories, generic logs paths, "
         "or evidence folders as selector snapshots. Honor explicit semantics that require compatible behaviors to share "
         "one bounded/cohesive slice or the same selector family; do not create artificial hint differences that fragment "
-        "otherwise compatible work. Treat expected-red as an executable runtime observation role: every obligation "
-        "assigned to a group whose failure_family is expected-red must have frozen obligation_kind behavior or quality "
+        "otherwise compatible work. Treat expected-red as an executable runtime observation role: each obligation "
+        "whose own failure intent uses expected-red must have frozen obligation_kind behavior or quality "
         "and requirement_type other than Governance. Constraint/governance and RED-construction, marker, validation, "
         "write-scope, fixture, or harness guards must keep a failure intent under the appropriate non-expected-red family; "
-        "do not group those guards into an expected-red context. Never weaken lifecycle, owner, write-set, oracle, or "
+        "do not copy expected-red intents from another obligation. Never weaken lifecycle, owner, write-set, oracle, or "
         "failure semantics merely to make grouping easier."
     )
     return _BASE_LIVE_GROUP_REPAIR(root=root, out_dir=out_dir, payload=payload, prompt=augmented)

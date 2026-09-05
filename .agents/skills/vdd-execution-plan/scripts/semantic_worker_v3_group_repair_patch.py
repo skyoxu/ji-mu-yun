@@ -1,14 +1,9 @@
-"""Group-first V3 schema repair with atomic canonical projection.
+"""V3 repair with shared implementation context and per-obligation proof.
 
-The repair worker authors shared implementation contexts plus an exact
-one-key-per-frozen-obligation assignment object. Multiple obligations may reuse
-one context (owner/lane/failure mechanism/selector lifecycle), so path ownership
-is authored once instead of being re-guessed independently. Before the canonical
-V3 arrays are returned, assignments are deterministically projected to one
-Acceptance, one slice hint, and cloned RED intents per obligation. Thus
-Acceptance remains atomic while V6 may later merge compatible atomic Acceptances
-into one cohesive implementation slice. Legacy group arrays remain readable for
-cache/test compatibility, but overlapping legacy membership stays fail-closed.
+ADR-0041: groups own slice hints only. Exact assignment and contract objects
+bind each active obligation to its own Acceptance and failure intents. Legacy
+singleton groups remain readable; multi-obligation shared oracles require a
+new worker result. V6 still merges compatible implementation slices.
 """
 from __future__ import annotations
 
@@ -23,7 +18,7 @@ import semantic_worker_v3_domain_patch as v3_domain
 
 sc = gate.sc
 _BASE_DOMAIN_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
-_GROUP_STAGE = "v3-schema-repair-group-v3-shared-context-atomic-projection"
+_GROUP_STAGE = "v3-schema-repair-group-v4-per-obligation-contract"
 
 
 def _string_array(*, nonempty: bool = False, enum: list[str] | None = None) -> dict[str, Any]:
@@ -43,7 +38,7 @@ def _repair_obligations(payload: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     values = original.get("obligations")
     if not isinstance(values, list):
         return []
-    return [item for item in values if isinstance(item, Mapping)]
+    return [item for item in values if isinstance(item, Mapping) and item.get("status", "active") == "active"]
 
 
 def _obligation_refs(payload: Mapping[str, Any]) -> dict[str, list[str]]:
@@ -141,11 +136,9 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
         "type": "object", "additionalProperties": False,
         "properties": {
             "group_id": group_id_schema,
-            "acceptance": acceptance,
-            "failure_intents": {"type": "array", "minItems": 1, "items": failure},
             "slice_hint": slice_hint,
         },
-        "required": ["group_id", "acceptance", "failure_intents", "slice_hint"],
+        "required": ["group_id", "slice_hint"],
     }
     assignments = {
         "type": "object",
@@ -156,13 +149,27 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
         },
         "required": known_ids,
     }
+    contract = {
+        "type": "object", "additionalProperties": False,
+        "properties": {
+            "acceptance": acceptance,
+            "failure_intents": {"type": "array", "minItems": 1, "items": failure},
+        },
+        "required": ["acceptance", "failure_intents"],
+    }
+    contracts = {
+        "type": "object", "additionalProperties": False,
+        "properties": {oid: contract for oid in known_ids},
+        "required": known_ids,
+    }
     return {
         "type": "object", "additionalProperties": False,
         "properties": {
             "groups": {"type": "array", "minItems": 1, "items": group},
             "obligation_group_assignments": assignments,
+            "obligation_contracts": contracts,
         },
-        "required": ["groups", "obligation_group_assignments"],
+        "required": ["groups", "obligation_group_assignments", "obligation_contracts"],
     }
 
 
@@ -190,12 +197,12 @@ def _append_atomic(
     atomic_acceptance = dict(acceptance)
     if refs_by_oid is not None and oid in refs_by_oid:
         atomic_acceptance["source_refs"] = list(refs_by_oid[oid])
-    acceptances.append({"obligation_ids": [oid], **atomic_acceptance})
-    hints.append({"obligation_ids": [oid], **dict(hint)})
+    acceptances.append({**atomic_acceptance, "obligation_ids": [oid]})
+    hints.append({**dict(hint), "obligation_ids": [oid]})
     for failure in group_failures:
         if not isinstance(failure, Mapping):
             raise ValueError(f"V3 group repair failure in group {group_index} is not object")
-        failures.append({"obligation_ids": [oid], **dict(failure)})
+        failures.append({**dict(failure), "obligation_ids": [oid]})
 
 
 def _project_exact_assignments(
@@ -233,6 +240,12 @@ def _project_exact_assignments(
                 details.append("unknown=" + ",".join(extra))
             raise ValueError("V3 group repair assignments differ from frozen obligations: " + ";".join(details))
 
+    contracts = value.get("obligation_contracts")
+    if "obligation_contracts" in value and (
+        not isinstance(contracts, Mapping) or set(contracts) != set(assignments)
+    ):
+        raise ValueError("V3 repair contracts must exactly cover assigned obligations")
+
     group_by_id: dict[str, tuple[int, Mapping[str, Any], list[Any], Mapping[str, Any]]] = {}
     for index, raw in enumerate(groups):
         if not isinstance(raw, Mapping):
@@ -243,7 +256,15 @@ def _project_exact_assignments(
         normalized_group_id = group_id.strip()
         if normalized_group_id in group_by_id:
             raise ValueError(f"V3 group repair duplicate group_id: {normalized_group_id}")
-        acceptance, group_failures, hint = _group_body(raw, index)
+        if contracts is None:
+            acceptance, group_failures, hint = _group_body(raw, index)
+        else:
+            hint = raw.get("slice_hint")
+            if not isinstance(hint, Mapping):
+                raise ValueError(f"V3 repair group {index} has no implementation context")
+            if "acceptance" in raw or "failure_intents" in raw:
+                raise ValueError("V3 shared contexts cannot contain verification contracts")
+            acceptance, group_failures = {}, []
         group_by_id[normalized_group_id] = (index, acceptance, group_failures, hint)
 
     unknown_groups = sorted(set(assignments.values()) - set(group_by_id))
@@ -268,6 +289,13 @@ def _project_exact_assignments(
     hints: list[dict[str, Any]] = []
     for oid in sorted(assignments):
         group_index, acceptance, group_failures, hint = group_by_id[assignments[oid]]
+        if contracts is not None:
+            raw_contract = contracts[oid]
+            if not isinstance(raw_contract, Mapping):
+                raise ValueError(f"V3 repair contract {oid} is not object")
+            acceptance, group_failures, _ = _group_body({**raw_contract, "slice_hint": hint}, group_index)
+        elif list(assignments.values()).count(assignments[oid]) != 1:
+            raise ValueError("V3 shared group requires per-obligation contracts; legacy oracle cloning is forbidden")
         _append_atomic(
             oid=oid,
             acceptance=acceptance,
@@ -306,6 +334,8 @@ def _project_legacy_groups(
             raise ValueError("V3 group repair obligation appears in multiple groups: " + ",".join(sorted(duplicates)))
         seen.update(normalized_ids)
         acceptance, group_failures, hint = _group_body(raw, index)
+        if len(normalized_ids) != 1:
+            raise ValueError("V3 shared group requires per-obligation contracts; legacy oracle cloning is forbidden")
         for oid in normalized_ids:
             _append_atomic(
                 oid=oid,
@@ -360,13 +390,17 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
     schema_path = transport._schema_path(out_dir, _GROUP_STAGE, _group_schema(payload))
     grouped_prompt = (
         prompt
-        + "\n\nGROUP-FIRST REPAIR CONTRACT: return {\"groups\":[...],\"obligation_group_assignments\":{...}}. "
-        "Each group has one group_id selected from the supplied frozen obligation IDs plus one shared Acceptance, failure, "
-        "and slice context. The assignment object MUST contain every supplied obligation ID as a key exactly once; each "
-        "value is the group_id whose context that obligation uses. A group_id must map to itself, every returned group must "
-        "be used, and multiple obligations may map to one group ONLY when they share one real production owner context, "
-        "verification lane, RED failure mechanism, selector/test lifecycle, legal write boundary, and no predecessor boundary. "
-        "The compiler will project assignments deterministically into one Acceptance per obligation."
+        + "\n\nGROUP-FIRST REPAIR CONTRACT: return groups[], obligation_group_assignments{}, and "
+        "obligation_contracts{}. Each group contains only group_id and slice_hint, with shared real owner, lane, "
+        "write boundary and selector lifecycle. Both objects must contain every supplied active obligation ID "
+        "exactly once. Assign each obligation to a returned group_id; each group_id must map to itself and be used. "
+        "Each obligation_contracts value contains its own acceptance and failure_intents. Author the oracle, "
+        "assertions and failure intents for THAT obligation, not the union of the group's behaviors. Do not copy "
+        "one shared oracle across independent obligations. A boundary/structural constraint needs its own "
+        "observable artifact and check, with the evaluation phase in when/oracle; a runtime result cannot prove "
+        "a partition constraint. Do not assume the required result in given or claim future checks already ran. "
+        "The compiler attaches frozen IDs and source refs; V4 independently judges semantic alignment. "
+        "Only implementation contexts are shared. V6 may merge compatible contexts into one slice."
         + "\n\nINPUT:\n" + json.dumps(payload, ensure_ascii=False, sort_keys=True)
     )
     backend = resolve_llm_backend(None)

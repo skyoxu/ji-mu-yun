@@ -29,6 +29,24 @@ New plans formally bootstrap the protocol. Historical plans may receive read-onl
 
 ## Consequences
 
+### VDD Verification Contract Projection (2026-09-05)
+
+Repository-owned V3 workers may share implementation owner, lane, paths and
+slice context. Each active obligation must nevertheless have its own Acceptance
+oracle, assertions and failure intents. Splitting obligation IDs while copying
+a multi-behavior oracle does not establish atomic semantic coverage. Structural
+constraints name an observable artifact/boundary check and its evaluation phase;
+they cannot be proved by unrelated runtime return values or assumed in Given.
+
+Grouped repair uses exact per-obligation contract and context-assignment maps.
+Legacy singleton groups remain readable. Legacy multi-obligation shared oracles
+are rejected for recompilation; their historical evidence is never rewritten.
+The existing bounded repair budget and independent V4 semantic authority remain
+unchanged. V5 checks semantic edges, V6 owns partitioning, and the downstream
+plan/runtime checks still establish whether the declared constraints hold.
+
+### Existing Ownership Consequences
+
 - Protocol changes are made once in the repository-owned Skill and projected through compatibility adapters.
 - Plan-local validators retain domain acceptance authority.
 - Generic schemas cannot drift independently across plans.

@@ -17,6 +17,8 @@ from semantic_worker_relational_patch import _augment_prompt as _augment_relatio
 def _obligation(oid: str) -> dict:
     return {
         "obligation_id": oid,
+        "subject": "ledger",
+        "status": "active",
         "source_refs": ["req.md#FR-1"],
         "requirement_type": "Product",
         "obligation_kind": "behavior",
@@ -102,6 +104,8 @@ def test_failure_intent_subset_is_caught_before_acceptance_binding() -> None:
 
 
 def test_invalid_v3_family_routes_through_single_repair(tmp_path: Path) -> None:
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/ledger.py").write_text("VALUE = 0\n", encoding="utf-8")
     invalid = _v3_payload("assertion-failure")
     repaired = _v3_payload("expected-red")
     worker_cache = {
@@ -120,6 +124,9 @@ def test_invalid_v3_family_routes_through_single_repair(tmp_path: Path) -> None:
 
 
 def test_relational_v3_errors_route_through_single_repair(tmp_path: Path) -> None:
+    # ADR-0041: the repair must author singleton contracts, not regroup the same oracle.
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/ledger.py").write_text("VALUE = 0\n", encoding="utf-8")
     invalid = _v3_payload("expected-red")
     invalid["acceptances"][0]["obligation_ids"] = ["O-1", "O-2"]
     invalid["slice_hints"][0]["obligation_ids"] = ["O-1", "O-2"]
@@ -127,9 +134,13 @@ def test_relational_v3_errors_route_through_single_repair(tmp_path: Path) -> Non
     invalid["failure_intents"][0]["obligation_ids"] = ["O-1"]
 
     repaired = _v3_payload("expected-red")
-    repaired["acceptances"][0]["obligation_ids"] = ["O-1", "O-2"]
-    repaired["slice_hints"][0]["obligation_ids"] = ["O-1", "O-2"]
-    repaired["failure_intents"][0]["obligation_ids"] = ["O-1", "O-2"]
+    second = _v3_payload("expected-red")
+    for key in second:
+        second[key][0]["obligation_ids"] = ["O-2"]
+    second["acceptances"][0]["oracle"]["expected"] = "invalid-ttl"
+    second["acceptances"][0]["assertion_ids"] = ["ASSERT-INVALID-TTL"]
+    for key in repaired:
+        repaired[key].extend(second[key])
 
     result = gate.normative_invoke_worker(
         root=tmp_path,
@@ -154,7 +165,8 @@ def test_v3_prompt_makes_relational_binding_explicit() -> None:
     prompt = _augment_relational_prompt("v3", "Compile Acceptance contracts.")
     assert "EXACTLY ONE slice_hint for each Acceptance" in prompt
     assert "exactly equal one and only one Acceptance" in prompt
-    assert "subset, superset" in prompt
+    assert "exactly ONE active obligation" in prompt
+    assert "Do not assume the required result in given" in prompt
 
 
 def test_v1_prompt_makes_array_contract_explicit() -> None:

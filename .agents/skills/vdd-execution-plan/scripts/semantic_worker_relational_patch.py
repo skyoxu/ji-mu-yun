@@ -1,9 +1,8 @@
 """Validate relational V3 semantic-worker contracts at the model boundary.
 
-The worker may use a multi-obligation set to express one genuinely shared
-implementation context. The V3 execution-contract deterministically projects
-such an unambiguous set to atomic canonical Acceptance records before stable
-IDs. Relational validation still requires exact set identity across Acceptance,
+ADR-0041: each Acceptance authors its own obligation-specific verification.
+Implementation context may be shared by V6, but an oracle is never cloned to
+manufacture semantic coverage. Relational validation still requires exact set identity across Acceptance,
 RED intent and slice hint and rejects overlaps/duplicates through downstream
 canonical checks.
 """
@@ -88,11 +87,12 @@ def _augment_prompt(stage: str, prompt: str) -> str:
         "Do not emit two Acceptances with the same obligation set. Emit EXACTLY ONE slice_hint for each Acceptance, "
         "and that slice_hint obligation_ids set MUST exactly equal the Acceptance obligation_ids set. Every failure_intent "
         "obligation_ids set MUST exactly equal one and only one Acceptance obligation_ids set. Every Acceptance MUST have "
-        "at least one matching failure_intent. When multiple obligations truly share the SAME production owner(s), "
-        "verification lane, RED selector/fixture/runtime lifecycle, legal write boundary, and have no predecessor boundary, "
-        "prefer ONE shared obligation_ids set so the implementation context is authored once. Do not create different owner "
-        "or selector guesses merely because the obligations are semantically atomic. The deterministic V3 boundary will "
-        "project an unambiguous shared set to one-obligation canonical Acceptances before stable evidence IDs are generated."
+        "at least one matching failure_intent. Each Acceptance must bind exactly ONE active obligation, with its "
+        "own Given/When/Then, oracle, assertions and failure intents for that obligation. Shared owners, lanes, "
+        "paths and selector families may repeat across hints; they do not justify sharing a multi-behavior oracle. "
+        "V6 will merge compatible implementation contexts. A structural/boundary constraint needs an observable "
+        "artifact or boundary check, with its evaluation phase stated in when/oracle; runtime return values alone "
+        "do not prove it. Do not assume the required result in given. Describe future checks, never invent results."
     )
 
 

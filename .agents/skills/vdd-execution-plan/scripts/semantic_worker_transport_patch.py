@@ -88,7 +88,7 @@ def _worker_output_schema(stage: str) -> dict[str, Any] | None:
             "type": "object",
             "additionalProperties": False,
             "properties": {
-                "obligation_ids": _string_array(nonempty=True),
+                "obligation_ids": {**_string_array(nonempty=True), "maxItems": 1},
                 "source_refs": _string_array(nonempty=True),
                 "given": {"type": "string", "minLength": 1},
                 "when": {"type": "string", "minLength": 1},
@@ -111,7 +111,7 @@ def _worker_output_schema(stage: str) -> dict[str, Any] | None:
             "type": "object",
             "additionalProperties": False,
             "properties": {
-                "obligation_ids": _string_array(nonempty=True),
+                "obligation_ids": {**_string_array(nonempty=True), "maxItems": 1},
                 "failure_family": {"type": "string", "enum": sorted(sc.FAILURE_FAMILIES)},
                 "selector_intent": {"type": "string", "minLength": 1},
                 "expected_outcome": {"type": "string", "enum": ["fail"]},
@@ -128,7 +128,7 @@ def _worker_output_schema(stage: str) -> dict[str, Any] | None:
             "type": "object",
             "additionalProperties": False,
             "properties": {
-                "obligation_ids": _string_array(nonempty=True),
+                "obligation_ids": {**_string_array(nonempty=True), "maxItems": 1},
                 "production_owners": _string_array(nonempty=True),
                 "verification_lane": {"type": "string", "enum": sorted(sc.LANES)},
                 "behavior_change": {"type": "string", "minLength": 1},

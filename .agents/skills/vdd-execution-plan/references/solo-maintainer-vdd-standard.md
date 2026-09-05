@@ -32,6 +32,14 @@ terminal full validation.
 
 ## Freshness And Repair
 
+V3 Acceptance contracts are specific to one active obligation. Implementation
+owners, lanes, paths and selector families may be shared, but each obligation
+retains its own oracle, assertions and failure intents. Never clone a grouped
+oracle and change only its obligation ID. A structural constraint declares an
+observable artifact/boundary check and the phase that evaluates it; placing the
+desired result in Given does not verify it. Independent V4 checks the contract;
+the declared plan/runtime check must later establish the result (ADR-0041).
+
 Use Git baseline/range or a scoped dirty-worktree identity. Bind current contracts, implementation, and validation inputs, but exclude append-only reports and logs. Preserve previous evidence as historical rather than rewriting it.
 
 Repairs first run the smallest targeted checks for the affected layer. A local slice change invalidates only that slice and declared downstream dependents. One final full replay follows stabilization; replay all slices only after a shared lifecycle contract, global validator semantic, baseline identity, or all-slice dependency changes.

@@ -83,11 +83,19 @@ def test_shared_group_projects_exact_assignments_to_atomic_acceptances() -> None
     shared = _raw_group(["O-1", "O-2"])
     del shared["obligation_ids"]
     shared["group_id"] = "O-1"
+    del shared["acceptance"], shared["failure_intents"]
+    contracts = {}
+    for oid in ("O-1", "O-2"):
+        raw = _raw_group([oid])
+        raw["acceptance"]["oracle"]["observable"] = f"observable {oid}"
+        raw["acceptance"]["assertion_ids"] = [f"ASSERT-{oid}"]
+        contracts[oid] = {"acceptance": raw["acceptance"], "failure_intents": raw["failure_intents"]}
     shared["slice_hint"]["allowed_write_paths"] = []
     projected = grouped._project(
         {
             "groups": [shared],
             "obligation_group_assignments": {"O-1": "O-1", "O-2": "O-1"},
+            "obligation_contracts": contracts,
         },
         refs_by_oid={"O-1": ["req.md#FR-1"], "O-2": ["req.md#FR-1"]},
     )
@@ -151,13 +159,15 @@ def test_legacy_conflicting_cross_group_duplicate_remains_rejected() -> None:
         raise AssertionError("legacy cross-group duplicate must fail closed")
 
 
-def test_initial_v3_shared_set_atomicizes_before_overbroad_validation() -> None:
+def test_initial_v3_shared_oracle_requires_semantic_repair_before_atomic_binding() -> None:
+    # ADR-0041: changing IDs alone cannot make a shared oracle atomic.
     payload = {"obligations": [_obligation("O-1", state_before="absent", state_after="present"), _obligation("O-2", state_before="present", state_after="stable")]}
-    projected = execution_contract._atomicize_initial_candidate("v3", payload, _raw_v3(["O-1", "O-2"]))
-    assert [a["obligation_ids"] for a in projected["acceptances"]] == [["O-1"], ["O-2"]]
-    assert [h["obligation_ids"] for h in projected["slice_hints"]] == [["O-1"], ["O-2"]]
-    assert len(projected["failure_intents"]) == 2
-    assert not any("overbroad-independent-behavior" in item for item in execution_contract._findings(Path("."), "v3", payload, projected))
+    raw = _raw_v3(["O-1", "O-2"])
+    projected = execution_contract._atomicize_initial_candidate("v3", payload, raw)
+    assert projected is raw
+    findings = execution_contract._findings(Path("."), "v3", payload, projected)
+    assert any("per-obligation-contract-required" in item for item in findings)
+    assert any("overbroad-independent-behavior" in item for item in findings)
 
 
 def test_initial_v3_overlapping_sets_are_not_silently_atomicized() -> None:

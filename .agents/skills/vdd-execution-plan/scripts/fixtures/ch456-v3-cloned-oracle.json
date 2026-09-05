@@ -1,0 +1,174 @@
+{
+  "provenance": {
+    "commit": "f0ab8bf1ae64a91fd0405c676de24059937729fc",
+    "artifact": "v4-payload-probe.json",
+    "scope": "Unmodified excerpt of two obligations and their V4 inputs; no repair result or live pass is asserted."
+  },
+  "source_index": {
+    "entries": [
+      {
+        "anchor": "FR-301",
+        "line": 1,
+        "repository_relative_source_path": "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md",
+        "requirement_id": "FR-301",
+        "source_order": 1,
+        "source_ref": "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301",
+        "source_sha256": "sha256:b6a777b60850e8965a50cfcd9e8ebdc74404c4e9a93214a0b9c6622f180adcfd",
+        "source_text": "# FR-301\nAn idempotency reservation ledger must be implemented as one bounded stateful slice.\n\nProduction owner: `benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py`.\nThe RED author must create `benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py` and may use the existing fixture `benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/cases.json`.\nThe production implementation may modify only the production owner above.\nThe validation command is `py -3 -m pytest benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py -q -p no:cacheprovider`.\nThe RED test must call the real production owner and, whenever a declared Acceptance assertion fails, emit the matching VDD failure intent as `FAILURE_ID:<failure_id>` before the assertion fails.\n\nThe ledger has three independently observable required behaviors, all of which must be exercised by the same selector family:\n\n1. Claiming a key that is already active at `now < expires_at` returns `duplicate` rather than `accepted`.\n2. Claiming with `ttl_seconds <= 0` returns `invalid-ttl` and must not create an active reservation.\n3. Releasing a key that is not active returns `not-found` rather than reporting a successful release.\n\nThe existing skeleton intentionally returns success for every operation, so all three forbidden behaviors are observable before implementation.  A legal GREEN must change production only; GREEN and REFACTOR must preserve the RED selector, fixture and assertions.",
+        "text_sha256": "sha256:e698c1a8fc7fd288a641cc0c26933291f34f9666222d8a680f5e276e909b4f77"
+      }
+    ],
+    "schema": "source-index.v1",
+    "sha256": "sha256:02b347376b18cb05b08b67375b767ea740c06c787067f39b7367f67f1aaaeb1d"
+  },
+  "obligations": [
+    {
+      "depends_on": [],
+      "expected_behavior": "Implement the idempotency reservation ledger as one bounded stateful slice.",
+      "forbidden_result": [
+        "Splitting the required ledger behavior across unbounded or unrelated slices."
+      ],
+      "obligation_id": "O-400DF360A352",
+      "obligation_kind": "constraint",
+      "observable_result": "A bounded stateful idempotency reservation ledger implementation exists.",
+      "requirement_id": "FR-301",
+      "requirement_type": "Product",
+      "source_refs": [
+        "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+      ],
+      "state_after": "The ledger is implemented as one bounded stateful slice.",
+      "state_before": "The idempotency reservation ledger slice is not implemented.",
+      "status": "active",
+      "subject": "Idempotency reservation ledger",
+      "trigger": "Implementation of FR-301",
+      "unresolved_fragments": []
+    },
+    {
+      "depends_on": [],
+      "expected_behavior": "When claiming a key already active at now < expires_at, return duplicate.",
+      "forbidden_result": [
+        "Returning accepted when claiming a key that is already active at now < expires_at."
+      ],
+      "obligation_id": "O-FA92E80AD267",
+      "obligation_kind": "behavior",
+      "observable_result": "The claim result is duplicate.",
+      "requirement_id": "FR-301",
+      "requirement_type": "Product",
+      "source_refs": [
+        "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+      ],
+      "state_after": "The active reservation remains identified as a duplicate claim.",
+      "state_before": "The key has an active reservation and now < expires_at.",
+      "status": "active",
+      "subject": "Ledger claim operation",
+      "trigger": "A claim is made for a key already active at now < expires_at",
+      "unresolved_fragments": []
+    }
+  ],
+  "acceptances": [
+    {
+      "acceptance_id": "A-22676D615E8B",
+      "assertion_ids": [
+        "ASSERT_LEDGER_DUPLICATE",
+        "ASSERT_LEDGER_INVALID_TTL",
+        "ASSERT_LEDGER_INVALID_TTL_NO_RESERVATION",
+        "ASSERT_LEDGER_RELEASE_NOT_FOUND"
+      ],
+      "complexity_class": "simple",
+      "context_lookup_reason": "single-owner unit verification is locally attributable",
+      "context_lookup_required": false,
+      "given": "The bounded idempotency reservation ledger is implemented at its designated production owner.",
+      "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+      "obligation_ids": [
+        "O-400DF360A352"
+      ],
+      "oracle": {
+        "expected": "An active duplicate claim returns duplicate; a non-positive TTL claim returns invalid-ttl without an active reservation; and release of an inactive key returns not-found, with production implementation confined to the designated owner.",
+        "forbidden": [
+          "Returning accepted for an active duplicate claim.",
+          "Returning accepted or creating an active reservation for a non-positive TTL claim.",
+          "Reporting successful release of an inactive key.",
+          "Using a production implementation path other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+        ],
+        "observable": "Results and reservation state returned by the real ledger implementation, plus the production implementation path changed."
+      },
+      "red_intent_ids": [
+        "FI-03FB72AC00F6"
+      ],
+      "source_refs": [
+        "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+      ],
+      "then": "The required ledger outcomes are observable from the designated production owner.",
+      "upgrade_conditions": [
+        "selector spans multiple test roots",
+        "independent failure mechanisms require separate observations",
+        "runtime or detached judge evidence becomes mandatory"
+      ],
+      "verification_lane": "unit",
+      "when": "A selector-family test claims an active key, claims with ttl_seconds <= 0, and releases an inactive key."
+    },
+    {
+      "acceptance_id": "A-8B795532DB7B",
+      "assertion_ids": [
+        "ASSERT_LEDGER_DUPLICATE",
+        "ASSERT_LEDGER_INVALID_TTL",
+        "ASSERT_LEDGER_INVALID_TTL_NO_RESERVATION",
+        "ASSERT_LEDGER_RELEASE_NOT_FOUND"
+      ],
+      "complexity_class": "simple",
+      "context_lookup_reason": "single-owner unit verification is locally attributable",
+      "context_lookup_required": false,
+      "given": "The bounded idempotency reservation ledger is implemented at its designated production owner.",
+      "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+      "obligation_ids": [
+        "O-FA92E80AD267"
+      ],
+      "oracle": {
+        "expected": "An active duplicate claim returns duplicate; a non-positive TTL claim returns invalid-ttl without an active reservation; and release of an inactive key returns not-found, with production implementation confined to the designated owner.",
+        "forbidden": [
+          "Returning accepted for an active duplicate claim.",
+          "Returning accepted or creating an active reservation for a non-positive TTL claim.",
+          "Reporting successful release of an inactive key.",
+          "Using a production implementation path other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+        ],
+        "observable": "Results and reservation state returned by the real ledger implementation, plus the production implementation path changed."
+      },
+      "red_intent_ids": [
+        "FI-D4A38A68AE66"
+      ],
+      "source_refs": [
+        "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+      ],
+      "then": "The required ledger outcomes are observable from the designated production owner.",
+      "upgrade_conditions": [
+        "selector spans multiple test roots",
+        "independent failure mechanisms require separate observations",
+        "runtime or detached judge evidence becomes mandatory"
+      ],
+      "verification_lane": "unit",
+      "when": "A selector-family test claims an active key, claims with ttl_seconds <= 0, and releases an inactive key."
+    }
+  ],
+  "failure_intents": [
+    {
+      "acceptance_ids": [
+        "A-22676D615E8B"
+      ],
+      "expected_outcome": "fail",
+      "failure_family": "task-implementation-failure",
+      "failure_id": "LEDGER_REQUIRED_BEHAVIORS",
+      "failure_intent_id": "FI-03FB72AC00F6",
+      "selector_intent": "Run the shared ledger behavior selector family against the unimplemented success-returning skeleton."
+    },
+    {
+      "acceptance_ids": [
+        "A-8B795532DB7B"
+      ],
+      "expected_outcome": "fail",
+      "failure_family": "task-implementation-failure",
+      "failure_id": "LEDGER_REQUIRED_BEHAVIORS",
+      "failure_intent_id": "FI-D4A38A68AE66",
+      "selector_intent": "Run the shared ledger behavior selector family against the unimplemented success-returning skeleton."
+    }
+  ]
+}

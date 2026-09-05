@@ -4,9 +4,8 @@ The canonical compiler still owns every truth gate. This wrapper only performs
 two deterministic/bounded normalizations before emitting V3 execution-contract
 findings:
 
-* a relation-safe initial V3 group is projected to atomic one-obligation
-  Acceptance/hint/failure records while preserving the model-authored semantic
-  body and shared implementation context;
+* one-obligation contracts remain unchanged; shared multi-obligation oracles
+  are rejected for the existing schema-repair lane rather than cloned;
 * genuinely uncovered obligations use the existing missing-only semantic
   completion lane.
 
@@ -16,7 +15,6 @@ the existing fail-closed schema-repair path. No finding is suppressed.
 """
 from __future__ import annotations
 
-from collections import Counter
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -49,95 +47,13 @@ def _string_list(value: Any, *, nonempty: bool = False) -> list[str] | None:
     return [item.strip() for item in value]
 
 
-def _obligation_key(value: Any) -> tuple[str, ...] | None:
-    values = _string_list(value, nonempty=True)
-    if values is None:
-        return None
-    normalized = tuple(sorted(set(values)))
-    return normalized if len(normalized) == len(values) else None
-
-
 def _atomicize_initial_candidate(stage: str, payload: Mapping[str, Any], value: Mapping[str, Any]) -> Mapping[str, Any]:
-    """Project only an unambiguous relational V3 candidate to atomic records."""
-    if stage != "v3":
-        return value
-    acceptances = value.get("acceptances")
-    failures = value.get("failure_intents")
-    hints = value.get("slice_hints")
-    if not all(isinstance(items, list) and items for items in (acceptances, failures, hints)):
-        return value
-    if not all(isinstance(item, Mapping) for items in (acceptances, failures, hints) for item in items):
-        return value
+    """ADR-0041: preserve worker semantics; never clone a group oracle into atomic proof.
 
-    acceptance_keys = [_obligation_key(item.get("obligation_ids")) for item in acceptances]
-    failure_keys = [_obligation_key(item.get("obligation_ids")) for item in failures]
-    hint_keys = [_obligation_key(item.get("obligation_ids")) for item in hints]
-    if any(key is None for key in [*acceptance_keys, *failure_keys, *hint_keys]):
-        return value
-
-    akeys = [key for key in acceptance_keys if key is not None]
-    fkeys = [key for key in failure_keys if key is not None]
-    hkeys = [key for key in hint_keys if key is not None]
-    if any(count != 1 for count in Counter(akeys).values()):
-        return value
-    if any(count != 1 for count in Counter(hkeys).values()):
-        return value
-    if set(akeys) != set(hkeys) or set(akeys) != set(fkeys):
-        return value
-
-    seen: set[str] = set()
-    for key in akeys:
-        if seen.intersection(key):
-            return value
-        seen.update(key)
-
-    obligations = {
-        str(item.get("obligation_id")): item
-        for item in _obligations(stage, payload)
-        if isinstance(item.get("obligation_id"), str) and item.get("obligation_id")
-    }
-    if seen - set(obligations):
-        return value
-
-    acceptance_by_key = {key: raw for key, raw in zip(akeys, acceptances)}
-    hint_by_key = {key: raw for key, raw in zip(hkeys, hints)}
-    failures_by_key: dict[tuple[str, ...], list[Mapping[str, Any]]] = {key: [] for key in akeys}
-    for key, raw in zip(fkeys, failures):
-        failures_by_key.setdefault(key, []).append(raw)
-
-    atomic_acceptances: list[dict[str, Any]] = []
-    atomic_failures: list[dict[str, Any]] = []
-    atomic_hints: list[dict[str, Any]] = []
-    for key in akeys:
-        acceptance = acceptance_by_key[key]
-        hint = hint_by_key[key]
-        related_failures = failures_by_key.get(key, [])
-        if not related_failures:
-            return value
-        for oid in key:
-            obligation = obligations[oid]
-            source_refs = _string_list(obligation.get("source_refs"), nonempty=True)
-            if source_refs is None:
-                return value
-            atomic_acceptance = dict(acceptance)
-            atomic_acceptance["obligation_ids"] = [oid]
-            atomic_acceptance["source_refs"] = sorted(set(source_refs))
-            atomic_acceptances.append(atomic_acceptance)
-
-            atomic_hint = dict(hint)
-            atomic_hint["obligation_ids"] = [oid]
-            atomic_hints.append(atomic_hint)
-
-            for failure in related_failures:
-                atomic_failure = dict(failure)
-                atomic_failure["obligation_ids"] = [oid]
-                atomic_failures.append(atomic_failure)
-
-    result = dict(value)
-    result["acceptances"] = atomic_acceptances
-    result["failure_intents"] = atomic_failures
-    result["slice_hints"] = atomic_hints
-    return result
+    Multi-obligation candidates are rejected by _findings and use the existing
+    one-shot schema repair. Singleton candidates need no semantic projection.
+    """
+    return value
 
 
 def _safe_path(root: Path, raw: str) -> Path | None:
@@ -170,6 +86,8 @@ def _findings(root: Path, stage: str, payload: Mapping[str, Any], value: Mapping
             ids = _string_list(raw.get("obligation_ids"), nonempty=True)
             if ids is None:
                 continue
+            if len(ids) != 1:
+                findings.append(f"v3-contract:acceptances[{index}]:per-obligation-contract-required")
             covered.update(oid for oid in ids if oid in by_id)
             known = [oid for oid in ids if oid in by_id]
             subjects = {

@@ -1,0 +1,70 @@
+{
+  "schema": "ch456.local-code-validation.v1",
+  "created_at": "2026-09-05T05:34:06.548263+00:00",
+  "baseline_source_head": "f0ab8bf1ae64a91fd0405c676de24059937729fc",
+  "candidate_binding": "sha256 of changed files below; validation ran before commit creation",
+  "changed_files": {
+    ".agents/skills/vdd-execution-plan/references/solo-maintainer-vdd-standard.md": "3e6e54cc914af03569ebcb4ad0f21547502980b240435aa0e315c9ed2e550d21",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_relational_patch.py": "657056f77d38e0058cda2a8430a738fa76769c1b400cd500c924772c9ef5b2c7",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_transport_patch.py": "531f8a37a6fd3a62517412c5797397f4fe38c05b4a525b9cc0f9126e1eee1dc0",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_domain_patch.py": "341a8a19c553cd8a103ec48a6385c1affbf8e03856683513bac8ffdd557c40f7",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_execution_contract_patch.py": "a95f8d4b101530e53fa0a08c2b20f9b8af373e52d8f1e06e499b052de70a11ec",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_prompt_patch.py": "99e8297d570db96cba9daef727c1460ba484968435e6b33e473212c172a05224",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_repair_patch.py": "d8eb27970593e15f9813eb27445611264e1423a3096fcb0f148bf42185d8f6a7",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_live_v3_worker_contract.py": "c201861f55716c3934f32782cbb3f69c47895a508f1421504815ef84476835d5",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_total_coverage_and_slice_cohesion.py": "6df75f56885e815f5dd40984dadcc112bbe42345279c765c1d8ad625e8d44f07",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "f9821a49d9a424e40589ae84400723a40b78ca42ac59417589158cee73ce358b",
+    ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-v3-cloned-oracle.json": "d31d6a350a31d9ff69598e841dbca97be21bc5881410a0665074a6bd60cc16af",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_per_obligation_contract.py": "e3082324f02161c8d1d70f72ab6a3582155ff109273856add9c684e95e2e0c73"
+  },
+  "environment": "Linux scratch reconstruction of current VDD subtree with local repository dependencies; not Windows live runner",
+  "regression": {
+    "exit_code": 0,
+    "passed": 89,
+    "subtests_passed": 15,
+    "test_directory": ".agents/skills/vdd-execution-plan/scripts/tests",
+    "test_files": [
+      "test_ch456_v3_per_obligation_contract.py",
+      "test_ch456_v3_total_coverage_and_slice_cohesion.py",
+      "test_ch456_grouped_v3_and_obligation_gap_repair.py",
+      "test_ch456_live_v3_worker_contract.py",
+      "test_ch456_v3_domain_and_v4_alignment_repair.py",
+      "test_ch456_v3_expected_red_eligibility.py",
+      "test_ch456_compiler_closure.py",
+      "test_ch456_v3_group_safety.py",
+      "test_ch456_v3_group_safety_composition.py",
+      "test_ch456_worker_transport_composition.py",
+      "test_ch456_semantic_worker_transport.py",
+      "test_validate_skill_contract.py"
+    ]
+  },
+  "before_fix_regression": {
+    "exit_code": 1,
+    "failed": 1,
+    "deselected": 9,
+    "test": "test_actual_v4_input_clone_is_rejected_before_semantic_alignment",
+    "reason": "baseline V3 domain validation accepts identical oracle/assertion proof across distinct frozen semantics"
+  },
+  "skill_validation": {
+    "command": "python .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan",
+    "exit_code": 0,
+    "ok": true,
+    "findings": []
+  },
+  "scope": "V3 normal worker and grouped repair own per-obligation verification; shared implementation context remains available to V6",
+  "live_backend_called": false,
+  "real_semantic_run": false,
+  "live_blind_run": false,
+  "final_acceptance_run": false,
+  "completion_claimed": false,
+  "remaining": [
+    "Current candidate real semantic with recorded 600-second configuration",
+    "Current candidate full live blind, including V4/V5/V6 and Quick Dev stages",
+    "Full final acceptance with current evidence and completion=complete/status=passed"
+  ],
+  "limitations": [
+    "Offline regression does not prove new live worker output or the historical unretained V5 orphan cause",
+    "No extra repair/recheck loop and no timeout default change",
+    "Existing acceptance/benchmark evidence remains untouched"
+  ]
+}
