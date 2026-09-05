@@ -1,0 +1,20 @@
+{
+  "atomic_recall_findings": [],
+  "atomic_recall_metrics": {
+    "active_obligation_count": 14,
+    "f1": 1.0,
+    "invented_obligation_count": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "source_gap_count": 0,
+    "supported_obligation_count": 14
+  },
+  "invented_obligation_ids": [],
+  "source_gap_claims": [],
+  "source_head": "cd7933f8f92891b8840a3c9ff2c5965f97020a1d",
+  "status": "pass",
+  "v1_guard": {
+    "findings": [],
+    "valid": true
+  }
+}

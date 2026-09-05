@@ -1,0 +1,8 @@
+diagnostic_run=semantic-v1-atomic-recall-cd7933f8
+candidate=cd7933f8f92891b8840a3c9ff2c5965f97020a1d
+worktree=C:/ch456-semantic-diagnostic-cd7933f8
+output_dir=C:/ch456-semantic-diagnostic-output-cd7933f8
+repair_timeout_seconds=600
+complete_real_semantic=false
+live_blind=false
+final_acceptance=false

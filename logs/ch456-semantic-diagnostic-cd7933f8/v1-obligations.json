@@ -1,0 +1,304 @@
+[
+  {
+    "depends_on": [
+      "RED test artifact"
+    ],
+    "expected_behavior": "Preserve the RED fixture during GREEN and REFACTOR.",
+    "forbidden_result": [
+      "Replacing, removing, or altering the RED fixture during GREEN or REFACTOR."
+    ],
+    "obligation_id": "O-0861BBCA82C8",
+    "obligation_kind": "constraint",
+    "observable_result": "The fixture used by RED remains preserved through GREEN and REFACTOR.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Governance",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "The RED fixture is preserved across later phases.",
+    "state_before": "The RED fixture is the baseline test input when used by RED.",
+    "status": "active",
+    "subject": "RED fixture preservation",
+    "trigger": "During GREEN and REFACTOR.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [],
+    "expected_behavior": "Whenever a declared Acceptance assertion fails, emit the matching VDD failure intent in the format `FAILURE_ID:<failure_id>` before that assertion fails.",
+    "forbidden_result": [
+      "Allowing a declared Acceptance assertion to fail without first emitting its matching failure intent.",
+      "Emitting the failure intent only after the assertion failure."
+    ],
+    "obligation_id": "O-178046953E71",
+    "obligation_kind": "governance",
+    "observable_result": "Each failing declared Acceptance assertion is preceded by its matching `FAILURE_ID:<failure_id>` output.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Platform",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "Failure-intent emission precedes every applicable failing Acceptance assertion.",
+    "state_before": "Failure-intent ordering and emission are not yet established.",
+    "status": "active",
+    "subject": "VDD failure intent emission",
+    "trigger": "A declared Acceptance assertion fails during RED execution.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [],
+    "expected_behavior": "Releasing a key that is not active returns `not-found`, not a successful release.",
+    "forbidden_result": [
+      "Reporting a successful release for a key that is not active."
+    ],
+    "obligation_id": "O-1DEABF5A0444",
+    "obligation_kind": "behavior",
+    "observable_result": "The release operation returns `not-found` for an inactive key.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Product",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "Inactive-key releases are reported as not found.",
+    "state_before": "The skeleton returns success for every operation, including releases of inactive keys.",
+    "status": "active",
+    "subject": "Inactive-key release handling",
+    "trigger": "Release a key that is not active.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [
+      "Duplicate active-key claim handling",
+      "Invalid TTL claim handling",
+      "Inactive-key release handling"
+    ],
+    "expected_behavior": "Exercise all three required ledger behaviors through the same selector family.",
+    "forbidden_result": [
+      "Leaving any of the three required behaviors outside the shared selector family."
+    ],
+    "obligation_id": "O-279BB4FD676F",
+    "obligation_kind": "quality",
+    "observable_result": "The shared selector family contains assertions covering duplicate active-key claims, invalid TTL claims, and inactive-key releases.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Platform",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "All three behaviors are exercised by one selector family.",
+    "state_before": "The shared selector-family coverage has not yet been established.",
+    "status": "active",
+    "subject": "Common selector-family coverage",
+    "trigger": "When authoring and running the ledger tests.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [],
+    "expected_behavior": "Make the RED test call the real production owner.",
+    "forbidden_result": [
+      "Testing only a mock, stub, or substitute instead of the real production owner."
+    ],
+    "obligation_id": "O-34714E84AD5D",
+    "obligation_kind": "behavior",
+    "observable_result": "The RED test invokes the designated production implementation.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Platform",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "RED coverage exercises the real production owner.",
+    "state_before": "The required RED invocation has not been established.",
+    "status": "active",
+    "subject": "RED test target",
+    "trigger": "When the RED test runs.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [],
+    "expected_behavior": "Restrict production implementation modifications to the designated production owner file.",
+    "forbidden_result": [
+      "Modifying production implementation files outside the designated production owner."
+    ],
+    "obligation_id": "O-6546614DFC69",
+    "obligation_kind": "constraint",
+    "observable_result": "Only the specified production owner file is changed for production implementation.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Governance",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "Production changes are confined to the designated owner file.",
+    "state_before": "Implementation changes have not yet been applied.",
+    "status": "active",
+    "subject": "Production modification scope",
+    "trigger": "During implementation.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [],
+    "expected_behavior": "Create the RED test file at the specified test path.",
+    "forbidden_result": [],
+    "obligation_id": "O-935E72B78CC9",
+    "obligation_kind": "behavior",
+    "observable_result": "The specified test file exists and contains the RED test coverage.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Platform",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "The RED test file is created at the designated path.",
+    "state_before": "The designated RED test file has not yet been created.",
+    "status": "active",
+    "subject": "RED test artifact",
+    "trigger": "Before validating the implementation.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [
+      "RED test artifact"
+    ],
+    "expected_behavior": "A legal GREEN change modifies production code only.",
+    "forbidden_result": [
+      "Changing test files or unrelated files during GREEN."
+    ],
+    "obligation_id": "O-AC13AA5426B5",
+    "obligation_kind": "constraint",
+    "observable_result": "The GREEN change set contains only the permitted production implementation change.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Governance",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "GREEN is achieved without non-production modifications.",
+    "state_before": "The RED test and implementation are in the pre-GREEN state.",
+    "status": "active",
+    "subject": "GREEN change scope",
+    "trigger": "During the GREEN phase.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [],
+    "expected_behavior": "Claiming with `ttl_seconds <= 0` returns `invalid-ttl` and does not create an active reservation.",
+    "forbidden_result": [
+      "Returning a successful claim for `ttl_seconds <= 0`.",
+      "Creating an active reservation when `ttl_seconds <= 0`."
+    ],
+    "obligation_id": "O-B44910D0BF40",
+    "obligation_kind": "behavior",
+    "observable_result": "The claim operation returns `invalid-ttl`, and no active reservation is present afterward.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Product",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "Non-positive TTL claims are rejected without creating active reservations.",
+    "state_before": "The skeleton returns success for every operation and may not enforce TTL validity.",
+    "status": "active",
+    "subject": "Invalid TTL claim handling",
+    "trigger": "Claim with `ttl_seconds <= 0`.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [],
+    "expected_behavior": "Run the specified pytest validation command for the idempotency ledger test.",
+    "forbidden_result": [],
+    "obligation_id": "O-B8EA1B5D1718",
+    "obligation_kind": "governance",
+    "observable_result": "The exact validation command is executed against the designated test file with the stated options.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Platform",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "Validation evidence is produced by the specified command.",
+    "state_before": "No FR-301 validation result has been established.",
+    "status": "active",
+    "subject": "Ledger validation command",
+    "trigger": "After creating or updating the implementation and tests.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [],
+    "expected_behavior": "Implement the idempotency reservation ledger as one bounded, stateful slice.",
+    "forbidden_result": [],
+    "obligation_id": "O-C5A4E6F4A6CB",
+    "obligation_kind": "quality",
+    "observable_result": "A bounded stateful ledger slice exists in the designated production implementation.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Product",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "The ledger is implemented as one bounded stateful slice.",
+    "state_before": "The production implementation is an existing skeleton with incomplete operation behavior.",
+    "status": "active",
+    "subject": "Idempotency reservation ledger implementation",
+    "trigger": "Implement FR-301.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [],
+    "expected_behavior": "Claiming a key that is active at `now < expires_at` returns `duplicate`, not `accepted`.",
+    "forbidden_result": [
+      "Returning `accepted` for a key that is already active at `now < expires_at`."
+    ],
+    "obligation_id": "O-C96D1EFE4975",
+    "obligation_kind": "behavior",
+    "observable_result": "The claim operation returns `duplicate` for an active unexpired reservation.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Product",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "Active unexpired key claims are reported as duplicates.",
+    "state_before": "The skeleton returns success for every operation, including active-key claims.",
+    "status": "active",
+    "subject": "Duplicate active-key claim handling",
+    "trigger": "Claim a key while `now < expires_at`.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [
+      "RED test artifact"
+    ],
+    "expected_behavior": "Preserve the RED assertions during GREEN and REFACTOR.",
+    "forbidden_result": [
+      "Changing or removing the RED assertions during GREEN or REFACTOR."
+    ],
+    "obligation_id": "O-D087C883313F",
+    "obligation_kind": "constraint",
+    "observable_result": "The assertions established in RED remain unchanged through GREEN and REFACTOR.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Governance",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "RED assertions are preserved across later phases.",
+    "state_before": "RED assertions define the baseline acceptance checks.",
+    "status": "active",
+    "subject": "RED assertion preservation",
+    "trigger": "During GREEN and REFACTOR.",
+    "unresolved_fragments": []
+  },
+  {
+    "depends_on": [
+      "RED test artifact"
+    ],
+    "expected_behavior": "Preserve the RED selector during GREEN and REFACTOR.",
+    "forbidden_result": [
+      "Changing or removing the RED selector during GREEN or REFACTOR."
+    ],
+    "obligation_id": "O-E6810A84F068",
+    "obligation_kind": "constraint",
+    "observable_result": "The selector used by RED remains unchanged through GREEN and REFACTOR.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Governance",
+    "source_refs": [
+      "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "The RED selector is preserved across later phases.",
+    "state_before": "The RED selector exists as the baseline test selector.",
+    "status": "active",
+    "subject": "RED selector preservation",
+    "trigger": "During GREEN and REFACTOR.",
+    "unresolved_fragments": []
+  }
+]

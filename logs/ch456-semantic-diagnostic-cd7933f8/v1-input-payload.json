@@ -1,0 +1,13 @@
+{
+  "source": {
+    "anchor": "FR-301",
+    "line": 1,
+    "repository_relative_source_path": "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md",
+    "requirement_id": "FR-301",
+    "source_order": 1,
+    "source_ref": "logs/ch456-q3-debug-r2-3abb26ac/idempotency-ledger-v1/requirements.md#FR-301",
+    "source_sha256": "sha256:0cb875c3f609a57587cb3065cce24168fb4e5dfced634b60cc8949ab1c00a10e",
+    "source_text": "# FR-301\nAn idempotency reservation ledger must be implemented as one bounded stateful slice.\n\nProduction owner: `benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py`.\nThe RED author must create `benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py` and may use the existing fixture `benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/cases.json`.\nThe production implementation may modify only the production owner above.\nThe validation command is `py -3 -m pytest benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py -q -p no:cacheprovider`.\nThe RED test must call the real production owner and, whenever a declared Acceptance assertion fails, emit the matching VDD failure intent as `FAILURE_ID:<failure_id>` before the assertion fails.\n\nThe ledger has three independently observable required behaviors, all of which must be exercised by the same selector family:\n\n1. Claiming a key that is already active at `now < expires_at` returns `duplicate` rather than `accepted`.\n2. Claiming with `ttl_seconds <= 0` returns `invalid-ttl` and must not create an active reservation.\n3. Releasing a key that is not active returns `not-found` rather than reporting a successful release.\n\nThe existing skeleton intentionally returns success for every operation, so all three forbidden behaviors are observable before implementation.  A legal GREEN must change production only; GREEN and REFACTOR must preserve the RED selector, fixture and assertions.",
+    "text_sha256": "sha256:e698c1a8fc7fd288a641cc0c26933291f34f9666222d8a680f5e276e909b4f77"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "authorizes": [],
+  "findings": [],
+  "metrics": {
+    "active_obligation_count": 14,
+    "f1": 1.0,
+    "invented_obligation_count": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "source_gap_count": 0,
+    "supported_obligation_count": 14
+  },
+  "protocol_metrics": {
+    "unknown_invented_finding_count": 0,
+    "unknown_supported_finding_count": 0,
+    "worker_result_present": true
+  },
+  "schema": "vdd.atomic-recall-alignment.v1",
+  "source_gap_claims": [],
+  "valid": true,
+  "worker": {
+    "invented_obligation_ids": [],
+    "source_gap_claims": [],
+    "supported_obligation_ids": [
+      "O-0861BBCA82C8",
+      "O-178046953E71",
+      "O-1DEABF5A0444",
+      "O-279BB4FD676F",
+      "O-34714E84AD5D",
+      "O-6546614DFC69",
+      "O-935E72B78CC9",
+      "O-AC13AA5426B5",
+      "O-B44910D0BF40",
+      "O-B8EA1B5D1718",
+      "O-C5A4E6F4A6CB",
+      "O-C96D1EFE4975",
+      "O-D087C883313F",
+      "O-E6810A84F068"
+    ]
+  }
+}

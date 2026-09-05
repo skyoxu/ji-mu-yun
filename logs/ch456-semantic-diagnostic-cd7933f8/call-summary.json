@@ -1,0 +1,10 @@
+{
+  "atomic_recall_worker_calls": 1,
+  "exit_code": 0,
+  "receipt_paths": [
+    "plan/.compiler-work/worker-receipts/v1-FR-301-466a9f9ab407-9de911cf2203.json",
+    "plan/.compiler-work/worker-receipts/v4-atomic-recall-2f6021288e53-bbef945296b5.json"
+  ],
+  "total_receipts": 2,
+  "v1_worker_calls": 1
+}

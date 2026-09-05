@@ -1,0 +1,17 @@
+﻿{
+    "exit_code":  0,
+    "diagnostic_run":  "semantic-v1-atomic-recall-cd7933f8",
+    "repair_timeout_seconds":  600,
+    "atomic_recall_worker_calls":  1,
+    "schema":  "ch456.semantic-diagnostic-collection.v1",
+    "frozen_requirements_source":  "commit-70df1b400e33c27bfec594d609633ef12f469ead",
+    "frozen_requirements_sha256":  "sha256:b6a777b60850e8965a50cfcd9e8ebdc74404c4e9a93214a0b9c6622f180adcfd",
+    "final_acceptance":  false,
+    "candidate":  "cd7933f8f92891b8840a3c9ff2c5965f97020a1d",
+    "v1_worker_calls":  1,
+    "real_semantic":  false,
+    "status":  "pass",
+    "live_blind":  false,
+    "note":  "Diagnostic only; no authorization and no completion claim.",
+    "source_head":  "cd7933f8f92891b8840a3c9ff2c5965f97020a1d"
+}

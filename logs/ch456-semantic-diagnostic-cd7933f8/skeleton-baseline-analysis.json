@@ -1,0 +1,10 @@
+{
+  "interpretation": "review required",
+  "skeleton_baseline_detected_in_obligation_text": true,
+  "suspicious_obligation_ids": [
+    "O-1DEABF5A0444",
+    "O-B44910D0BF40",
+    "O-C5A4E6F4A6CB",
+    "O-C96D1EFE4975"
+  ]
+}
