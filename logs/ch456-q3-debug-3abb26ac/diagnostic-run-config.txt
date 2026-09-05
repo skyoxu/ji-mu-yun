@@ -1,0 +1,8 @@
+candidate=3abb26ac4bfb24dca6a44db8ca5e5ce402bc5d44
+repair_timeout_seconds=600
+timeout_injection=semantic_worker_transport_patch._REPAIR_TIMEOUT_SECONDS=600
+entry=--inner
+backend=codex-cli
+benchmark_limit_seconds=3600
+worktree=/c/ch456-q3-diagnostic-3abb26ac
+source_head=3abb26ac4bfb24dca6a44db8ca5e5ce402bc5d44

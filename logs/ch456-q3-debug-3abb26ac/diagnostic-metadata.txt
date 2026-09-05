@@ -1,0 +1,4 @@
+diagnostic_run=new
+source_worktree=C:/ch456-q3-diagnostic-3abb26ac
+source_head=3abb26ac4bfb24dca6a44db8ca5e5ce402bc5d44
+benchmark_entry=inner

@@ -1,0 +1,26 @@
+﻿{
+    "schema":  "ch456.q3-diagnostic-collection.v1",
+    "diagnostic_run":  "new",
+    "source_head":  "3abb26ac4bfb24dca6a44db8ca5e5ce402bc5d44",
+    "source_worktree":  "C:\\ch456-q3-diagnostic-3abb26ac",
+    "execution_entry":  "scripts/quick_dev/run_live_blind_benchmark.py --inner",
+    "repair_timeout_seconds":  600,
+    "benchmark_exit_code":  1,
+    "benchmark_status":  "failed-before-Q3",
+    "q3_observation_present":  false,
+    "q3_expected_failure_ids":  [
+
+                                ],
+    "q3_observed_failure_ids":  [
+
+                                ],
+    "red_run_file_count":  0,
+    "plan_file_count":  31,
+    "generated_benchmark_file_count":  3,
+    "failure":  "git delta contains unlisted runtime root: diagnostic-stdout.log",
+    "original_paths":  [
+                           "logs/ch456-live-blind/",
+                           "logs/tdd-adapter/ch456-live-blind/RUN-BLIND-001/",
+                           "benchmarks/ch456-live-blind/idempotency-ledger-v1/"
+                       ]
+}
