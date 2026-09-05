@@ -1,8 +1,44 @@
 {
   "acceptance": {
     "acceptance_id": "A-22676D615E8B",
-    "availability": "unavailable",
-    "reason": "The retained V4 output names this post-V3-repair ID, but the V3 repair output and exact normalized Acceptance payload were not retained. The initial V3 worker output has a different deterministic Acceptance ID and is not substituted here."
+    "assertion_ids": [
+      "ASSERT_LEDGER_DUPLICATE",
+      "ASSERT_LEDGER_INVALID_TTL",
+      "ASSERT_LEDGER_INVALID_TTL_NO_RESERVATION",
+      "ASSERT_LEDGER_RELEASE_NOT_FOUND"
+    ],
+    "complexity_class": "simple",
+    "context_lookup_reason": "single-owner unit verification is locally attributable",
+    "context_lookup_required": false,
+    "given": "The bounded idempotency reservation ledger is implemented at its designated production owner.",
+    "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+    "obligation_ids": [
+      "O-400DF360A352"
+    ],
+    "oracle": {
+      "expected": "An active duplicate claim returns duplicate; a non-positive TTL claim returns invalid-ttl without an active reservation; and release of an inactive key returns not-found, with production implementation confined to the designated owner.",
+      "forbidden": [
+        "Returning accepted for an active duplicate claim.",
+        "Returning accepted or creating an active reservation for a non-positive TTL claim.",
+        "Reporting successful release of an inactive key.",
+        "Using a production implementation path other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+      ],
+      "observable": "Results and reservation state returned by the real ledger implementation, plus the production implementation path changed."
+    },
+    "red_intent_ids": [
+      "FI-03FB72AC00F6"
+    ],
+    "source_refs": [
+      "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "then": "The required ledger outcomes are observable from the designated production owner.",
+    "upgrade_conditions": [
+      "selector spans multiple test roots",
+      "independent failure mechanisms require separate observations",
+      "runtime or detached judge evidence becomes mandatory"
+    ],
+    "verification_lane": "unit",
+    "when": "A selector-family test claims an active key, claims with ttl_seconds <= 0, and releases an inactive key."
   },
   "actual_stop": {
     "findings": [
@@ -23,7 +59,8 @@
     "logs/ch456-live-blind/plan/.compiler-work/v4-atomic-recall-last-message.json": "sha256:96cd99e0eedbe0edcf07e233c591cc5527577d3f1d7fe195e85db9da703e5494",
     "logs/ch456-live-blind/plan/.compiler-work/v4-last-message.json": "sha256:5fa71f1d944dc2f472d5aa66cd69e3a37c0678ffa6feffbb596ba401dfbac74a",
     "logs/ch456-live-blind/plan/.compiler-work/worker-receipts/v3-8a0f5bbde65e-ab83e4d71d82.json": "sha256:664b4927f18d0d572aa5579741855c091960f67be5378b9826f5c16ba6f0520f",
-    "logs/ch456-live-blind/plan/.compiler-work/worker-receipts/v3-d084e6578f76-861088527f44.json": "sha256:f3ce15640dc28b6758d5e6787fd1b0126427d3f98519cc371c5cb993595f22e9"
+    "logs/ch456-live-blind/plan/.compiler-work/worker-receipts/v3-d084e6578f76-861088527f44.json": "sha256:f3ce15640dc28b6758d5e6787fd1b0126427d3f98519cc371c5cb993595f22e9",
+    "logs/ch456-v5-offline-replay-f07cca65-20260905/v4-payload-probe.json": "sha256:23e80599fa2c4cacb641e47836c08616701cabf3ec85cc4087417338a10aa99e"
   },
   "authorizes": [],
   "candidate_commit": "f07cca6502fef2a8997e712b9a05c86a9d691ffa",
@@ -57,10 +94,18 @@
     "trigger": "Implementation of FR-301",
     "unresolved_fragments": []
   },
-  "related_failure_intents": {
-    "availability": "unavailable",
-    "reason": "Failure intents for the post-V3-repair Acceptance cannot be derived without substituting the missing V3 repair output."
-  },
+  "related_failure_intents": [
+    {
+      "acceptance_ids": [
+        "A-22676D615E8B"
+      ],
+      "expected_outcome": "fail",
+      "failure_family": "task-implementation-failure",
+      "failure_id": "LEDGER_REQUIRED_BEHAVIORS",
+      "failure_intent_id": "FI-03FB72AC00F6",
+      "selector_intent": "Run the shared ledger behavior selector family against the unimplemented success-returning skeleton."
+    }
+  ],
   "retained_v3_material": {
     "initial_worker_output": {
       "acceptances": [
@@ -461,6 +506,12 @@
     "acceptance_id": "A-22676D615E8B",
     "obligation_id": "O-400DF360A352"
   },
+  "supplemental_payload_probe": {
+    "path": "logs/ch456-v5-offline-replay-f07cca65-20260905/v4-payload-probe.json",
+    "sha256": "sha256:23e80599fa2c4cacb641e47836c08616701cabf3ec85cc4087417338a10aa99e",
+    "stop_reason": "captured payload immediately before V4",
+    "v4_reached": true
+  },
   "v4_attempt": {
     "atomic_quality_metrics": {
       "active_obligation_count": 14,
@@ -480,8 +531,1057 @@
     "status": "repair-vdd"
   },
   "v4_input": {
-    "availability": "unavailable",
-    "reason": "The runner retained V4 outputs, cache keys, receipts, and attempt, but not the exact V4 invocation payload. No reconstructed payload is asserted as the original input."
+    "availability": "captured",
+    "payload": {
+      "acceptances": [
+        {
+          "acceptance_id": "A-07DF2029F34E",
+          "assertion_ids": [
+            "ASSERT_LEDGER_DUPLICATE",
+            "ASSERT_LEDGER_INVALID_TTL",
+            "ASSERT_LEDGER_INVALID_TTL_NO_RESERVATION",
+            "ASSERT_LEDGER_RELEASE_NOT_FOUND"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "The bounded idempotency reservation ledger is implemented at its designated production owner.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-D80D6C9E25F5"
+          ],
+          "oracle": {
+            "expected": "An active duplicate claim returns duplicate; a non-positive TTL claim returns invalid-ttl without an active reservation; and release of an inactive key returns not-found, with production implementation confined to the designated owner.",
+            "forbidden": [
+              "Returning accepted for an active duplicate claim.",
+              "Returning accepted or creating an active reservation for a non-positive TTL claim.",
+              "Reporting successful release of an inactive key.",
+              "Using a production implementation path other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+            ],
+            "observable": "Results and reservation state returned by the real ledger implementation, plus the production implementation path changed."
+          },
+          "red_intent_ids": [
+            "FI-BD08004183F1"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "The required ledger outcomes are observable from the designated production owner.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "A selector-family test claims an active key, claims with ttl_seconds <= 0, and releases an inactive key."
+        },
+        {
+          "acceptance_id": "A-0C629C87D22A",
+          "assertion_ids": [
+            "ASSERT_LEDGER_DUPLICATE",
+            "ASSERT_LEDGER_INVALID_TTL",
+            "ASSERT_LEDGER_INVALID_TTL_NO_RESERVATION",
+            "ASSERT_LEDGER_RELEASE_NOT_FOUND"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "The bounded idempotency reservation ledger is implemented at its designated production owner.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-78ABA66136BC"
+          ],
+          "oracle": {
+            "expected": "An active duplicate claim returns duplicate; a non-positive TTL claim returns invalid-ttl without an active reservation; and release of an inactive key returns not-found, with production implementation confined to the designated owner.",
+            "forbidden": [
+              "Returning accepted for an active duplicate claim.",
+              "Returning accepted or creating an active reservation for a non-positive TTL claim.",
+              "Reporting successful release of an inactive key.",
+              "Using a production implementation path other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+            ],
+            "observable": "Results and reservation state returned by the real ledger implementation, plus the production implementation path changed."
+          },
+          "red_intent_ids": [
+            "FI-96CD7BF7149C"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "The required ledger outcomes are observable from the designated production owner.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "A selector-family test claims an active key, claims with ttl_seconds <= 0, and releases an inactive key."
+        },
+        {
+          "acceptance_id": "A-2226B3CB8DCE",
+          "assertion_ids": [
+            "ASSERT_GREEN_PRODUCTION_ONLY",
+            "ASSERT_GREEN_REFACTOR_PRESERVES_RED"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "The FR-301 RED selector, fixture, and assertions have been established.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-6DE4C51FA8E1"
+          ],
+          "oracle": {
+            "expected": "GREEN changes production only, and both GREEN and REFACTOR preserve the established RED selector, fixture, and assertions.",
+            "forbidden": [
+              "Changing tests, selectors, fixtures, or assertions during GREEN.",
+              "Changing the RED selector, fixture, or assertions during GREEN or REFACTOR."
+            ],
+            "observable": "Diff and repeated execution of the established RED test file through GREEN and REFACTOR."
+          },
+          "red_intent_ids": [
+            "FI-A023363D48E4"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "The established RED test contract remains unchanged while production reaches GREEN.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "GREEN or REFACTOR work is performed for FR-301."
+        },
+        {
+          "acceptance_id": "A-22676D615E8B",
+          "assertion_ids": [
+            "ASSERT_LEDGER_DUPLICATE",
+            "ASSERT_LEDGER_INVALID_TTL",
+            "ASSERT_LEDGER_INVALID_TTL_NO_RESERVATION",
+            "ASSERT_LEDGER_RELEASE_NOT_FOUND"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "The bounded idempotency reservation ledger is implemented at its designated production owner.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-400DF360A352"
+          ],
+          "oracle": {
+            "expected": "An active duplicate claim returns duplicate; a non-positive TTL claim returns invalid-ttl without an active reservation; and release of an inactive key returns not-found, with production implementation confined to the designated owner.",
+            "forbidden": [
+              "Returning accepted for an active duplicate claim.",
+              "Returning accepted or creating an active reservation for a non-positive TTL claim.",
+              "Reporting successful release of an inactive key.",
+              "Using a production implementation path other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+            ],
+            "observable": "Results and reservation state returned by the real ledger implementation, plus the production implementation path changed."
+          },
+          "red_intent_ids": [
+            "FI-03FB72AC00F6"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "The required ledger outcomes are observable from the designated production owner.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "A selector-family test claims an active key, claims with ttl_seconds <= 0, and releases an inactive key."
+        },
+        {
+          "acceptance_id": "A-4CE701AD8073",
+          "assertion_ids": [
+            "ASSERT_DECLARED_VALIDATION_COMMAND"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "FR-301 requires validation after its test contract is authored.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-32F333238885"
+          ],
+          "oracle": {
+            "expected": "Validation invokes py -3 -m pytest benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py -q -p no:cacheprovider.",
+            "forbidden": [
+              "Using a different declared validation command."
+            ],
+            "observable": "The recorded validation argv targeting the required test file with cacheprovider disabled."
+          },
+          "red_intent_ids": [
+            "FI-B675DF35566F"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "FR-301 validation uses its declared command.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "FR-301 validation is invoked."
+        },
+        {
+          "acceptance_id": "A-7C5ED926AFFD",
+          "assertion_ids": [
+            "ASSERT_LEDGER_DUPLICATE",
+            "ASSERT_LEDGER_INVALID_TTL",
+            "ASSERT_LEDGER_INVALID_TTL_NO_RESERVATION",
+            "ASSERT_LEDGER_RELEASE_NOT_FOUND"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "The bounded idempotency reservation ledger is implemented at its designated production owner.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-A90B595E2613"
+          ],
+          "oracle": {
+            "expected": "An active duplicate claim returns duplicate; a non-positive TTL claim returns invalid-ttl without an active reservation; and release of an inactive key returns not-found, with production implementation confined to the designated owner.",
+            "forbidden": [
+              "Returning accepted for an active duplicate claim.",
+              "Returning accepted or creating an active reservation for a non-positive TTL claim.",
+              "Reporting successful release of an inactive key.",
+              "Using a production implementation path other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+            ],
+            "observable": "Results and reservation state returned by the real ledger implementation, plus the production implementation path changed."
+          },
+          "red_intent_ids": [
+            "FI-43D105E033DB"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "The required ledger outcomes are observable from the designated production owner.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "A selector-family test claims an active key, claims with ttl_seconds <= 0, and releases an inactive key."
+        },
+        {
+          "acceptance_id": "A-8B795532DB7B",
+          "assertion_ids": [
+            "ASSERT_LEDGER_DUPLICATE",
+            "ASSERT_LEDGER_INVALID_TTL",
+            "ASSERT_LEDGER_INVALID_TTL_NO_RESERVATION",
+            "ASSERT_LEDGER_RELEASE_NOT_FOUND"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "The bounded idempotency reservation ledger is implemented at its designated production owner.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-FA92E80AD267"
+          ],
+          "oracle": {
+            "expected": "An active duplicate claim returns duplicate; a non-positive TTL claim returns invalid-ttl without an active reservation; and release of an inactive key returns not-found, with production implementation confined to the designated owner.",
+            "forbidden": [
+              "Returning accepted for an active duplicate claim.",
+              "Returning accepted or creating an active reservation for a non-positive TTL claim.",
+              "Reporting successful release of an inactive key.",
+              "Using a production implementation path other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+            ],
+            "observable": "Results and reservation state returned by the real ledger implementation, plus the production implementation path changed."
+          },
+          "red_intent_ids": [
+            "FI-D4A38A68AE66"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "The required ledger outcomes are observable from the designated production owner.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "A selector-family test claims an active key, claims with ttl_seconds <= 0, and releases an inactive key."
+        },
+        {
+          "acceptance_id": "A-90C08A6553DC",
+          "assertion_ids": [
+            "ASSERT_FAILURE_MARKER_PRECEDES_ASSERTION",
+            "ASSERT_RED_CALLS_REAL_OWNER",
+            "ASSERT_RED_TEST_FILE",
+            "ASSERT_SHARED_SELECTOR_FAMILY"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "RED tests are being authored for FR-301 before production behavior is implemented.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-2FD5B47E4B18"
+          ],
+          "oracle": {
+            "expected": "The required RED test file exists, invokes the real production owner, exercises all three behaviors through one selector family, and emits FAILURE_ID:<failure_id> before each failing declared Acceptance assertion.",
+            "forbidden": [
+              "Omitting the required RED test file or placing it elsewhere.",
+              "Testing a mock, duplicate, or substitute implementation.",
+              "Using different selector families or omitting a required behavior.",
+              "Emitting a failure marker after its assertion failure or in a format other than FAILURE_ID:<failure_id>."
+            ],
+            "observable": "RED test source and its failing execution output."
+          },
+          "red_intent_ids": [
+            "FI-20601612B545"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "RED evidence is bound to the real owner with marker output preceding declared assertion failures.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "The FR-301 RED selector family is executed against the intentionally successful skeleton."
+        },
+        {
+          "acceptance_id": "A-98B27A77AD9F",
+          "assertion_ids": [
+            "ASSERT_FAILURE_MARKER_PRECEDES_ASSERTION",
+            "ASSERT_RED_CALLS_REAL_OWNER",
+            "ASSERT_RED_TEST_FILE",
+            "ASSERT_SHARED_SELECTOR_FAMILY"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "RED tests are being authored for FR-301 before production behavior is implemented.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-0F9CD5CF0156"
+          ],
+          "oracle": {
+            "expected": "The required RED test file exists, invokes the real production owner, exercises all three behaviors through one selector family, and emits FAILURE_ID:<failure_id> before each failing declared Acceptance assertion.",
+            "forbidden": [
+              "Omitting the required RED test file or placing it elsewhere.",
+              "Testing a mock, duplicate, or substitute implementation.",
+              "Using different selector families or omitting a required behavior.",
+              "Emitting a failure marker after its assertion failure or in a format other than FAILURE_ID:<failure_id>."
+            ],
+            "observable": "RED test source and its failing execution output."
+          },
+          "red_intent_ids": [
+            "FI-D3F6E804FAFD"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "RED evidence is bound to the real owner with marker output preceding declared assertion failures.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "The FR-301 RED selector family is executed against the intentionally successful skeleton."
+        },
+        {
+          "acceptance_id": "A-A89F362D3F30",
+          "assertion_ids": [
+            "ASSERT_LEDGER_DUPLICATE",
+            "ASSERT_LEDGER_INVALID_TTL",
+            "ASSERT_LEDGER_INVALID_TTL_NO_RESERVATION",
+            "ASSERT_LEDGER_RELEASE_NOT_FOUND"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "The bounded idempotency reservation ledger is implemented at its designated production owner.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-84D0659124BA"
+          ],
+          "oracle": {
+            "expected": "An active duplicate claim returns duplicate; a non-positive TTL claim returns invalid-ttl without an active reservation; and release of an inactive key returns not-found, with production implementation confined to the designated owner.",
+            "forbidden": [
+              "Returning accepted for an active duplicate claim.",
+              "Returning accepted or creating an active reservation for a non-positive TTL claim.",
+              "Reporting successful release of an inactive key.",
+              "Using a production implementation path other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+            ],
+            "observable": "Results and reservation state returned by the real ledger implementation, plus the production implementation path changed."
+          },
+          "red_intent_ids": [
+            "FI-7E17D6D91381"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "The required ledger outcomes are observable from the designated production owner.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "A selector-family test claims an active key, claims with ttl_seconds <= 0, and releases an inactive key."
+        },
+        {
+          "acceptance_id": "A-C75A510B52E1",
+          "assertion_ids": [
+            "ASSERT_FAILURE_MARKER_PRECEDES_ASSERTION",
+            "ASSERT_RED_CALLS_REAL_OWNER",
+            "ASSERT_RED_TEST_FILE",
+            "ASSERT_SHARED_SELECTOR_FAMILY"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "RED tests are being authored for FR-301 before production behavior is implemented.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-D97C96CD6D6E"
+          ],
+          "oracle": {
+            "expected": "The required RED test file exists, invokes the real production owner, exercises all three behaviors through one selector family, and emits FAILURE_ID:<failure_id> before each failing declared Acceptance assertion.",
+            "forbidden": [
+              "Omitting the required RED test file or placing it elsewhere.",
+              "Testing a mock, duplicate, or substitute implementation.",
+              "Using different selector families or omitting a required behavior.",
+              "Emitting a failure marker after its assertion failure or in a format other than FAILURE_ID:<failure_id>."
+            ],
+            "observable": "RED test source and its failing execution output."
+          },
+          "red_intent_ids": [
+            "FI-980E9D504378"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "RED evidence is bound to the real owner with marker output preceding declared assertion failures.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "The FR-301 RED selector family is executed against the intentionally successful skeleton."
+        },
+        {
+          "acceptance_id": "A-CD81075449F9",
+          "assertion_ids": [
+            "ASSERT_FAILURE_MARKER_PRECEDES_ASSERTION",
+            "ASSERT_RED_CALLS_REAL_OWNER",
+            "ASSERT_RED_TEST_FILE",
+            "ASSERT_SHARED_SELECTOR_FAMILY"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "RED tests are being authored for FR-301 before production behavior is implemented.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-AC90A459DD40"
+          ],
+          "oracle": {
+            "expected": "The required RED test file exists, invokes the real production owner, exercises all three behaviors through one selector family, and emits FAILURE_ID:<failure_id> before each failing declared Acceptance assertion.",
+            "forbidden": [
+              "Omitting the required RED test file or placing it elsewhere.",
+              "Testing a mock, duplicate, or substitute implementation.",
+              "Using different selector families or omitting a required behavior.",
+              "Emitting a failure marker after its assertion failure or in a format other than FAILURE_ID:<failure_id>."
+            ],
+            "observable": "RED test source and its failing execution output."
+          },
+          "red_intent_ids": [
+            "FI-138471C9BD28"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "RED evidence is bound to the real owner with marker output preceding declared assertion failures.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "The FR-301 RED selector family is executed against the intentionally successful skeleton."
+        },
+        {
+          "acceptance_id": "A-ED39377D87B7",
+          "assertion_ids": [
+            "ASSERT_LEDGER_DUPLICATE",
+            "ASSERT_LEDGER_INVALID_TTL",
+            "ASSERT_LEDGER_INVALID_TTL_NO_RESERVATION",
+            "ASSERT_LEDGER_RELEASE_NOT_FOUND"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "The bounded idempotency reservation ledger is implemented at its designated production owner.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-46630AC78666"
+          ],
+          "oracle": {
+            "expected": "An active duplicate claim returns duplicate; a non-positive TTL claim returns invalid-ttl without an active reservation; and release of an inactive key returns not-found, with production implementation confined to the designated owner.",
+            "forbidden": [
+              "Returning accepted for an active duplicate claim.",
+              "Returning accepted or creating an active reservation for a non-positive TTL claim.",
+              "Reporting successful release of an inactive key.",
+              "Using a production implementation path other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+            ],
+            "observable": "Results and reservation state returned by the real ledger implementation, plus the production implementation path changed."
+          },
+          "red_intent_ids": [
+            "FI-095F5C424D17"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "The required ledger outcomes are observable from the designated production owner.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "A selector-family test claims an active key, claims with ttl_seconds <= 0, and releases an inactive key."
+        },
+        {
+          "acceptance_id": "A-F561230E5C44",
+          "assertion_ids": [
+            "ASSERT_GREEN_PRODUCTION_ONLY",
+            "ASSERT_GREEN_REFACTOR_PRESERVES_RED"
+          ],
+          "complexity_class": "simple",
+          "context_lookup_reason": "single-owner unit verification is locally attributable",
+          "context_lookup_required": false,
+          "given": "The FR-301 RED selector, fixture, and assertions have been established.",
+          "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+          "obligation_ids": [
+            "O-96D8A901E747"
+          ],
+          "oracle": {
+            "expected": "GREEN changes production only, and both GREEN and REFACTOR preserve the established RED selector, fixture, and assertions.",
+            "forbidden": [
+              "Changing tests, selectors, fixtures, or assertions during GREEN.",
+              "Changing the RED selector, fixture, or assertions during GREEN or REFACTOR."
+            ],
+            "observable": "Diff and repeated execution of the established RED test file through GREEN and REFACTOR."
+          },
+          "red_intent_ids": [
+            "FI-12F8A85BAF78"
+          ],
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "The established RED test contract remains unchanged while production reaches GREEN.",
+          "upgrade_conditions": [
+            "selector spans multiple test roots",
+            "independent failure mechanisms require separate observations",
+            "runtime or detached judge evidence becomes mandatory"
+          ],
+          "verification_lane": "unit",
+          "when": "GREEN or REFACTOR work is performed for FR-301."
+        }
+      ],
+      "failure_intents": [
+        {
+          "acceptance_ids": [
+            "A-22676D615E8B"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "task-implementation-failure",
+          "failure_id": "LEDGER_REQUIRED_BEHAVIORS",
+          "failure_intent_id": "FI-03FB72AC00F6",
+          "selector_intent": "Run the shared ledger behavior selector family against the unimplemented success-returning skeleton."
+        },
+        {
+          "acceptance_ids": [
+            "A-ED39377D87B7"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "task-implementation-failure",
+          "failure_id": "LEDGER_REQUIRED_BEHAVIORS",
+          "failure_intent_id": "FI-095F5C424D17",
+          "selector_intent": "Run the shared ledger behavior selector family against the unimplemented success-returning skeleton."
+        },
+        {
+          "acceptance_ids": [
+            "A-F561230E5C44"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "GREEN_RED_PRESERVATION",
+          "failure_intent_id": "FI-12F8A85BAF78",
+          "selector_intent": "Compare the established RED test contract with GREEN and REFACTOR revisions while executing the unchanged selector."
+        },
+        {
+          "acceptance_ids": [
+            "A-CD81075449F9"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "test-harness-failure",
+          "failure_id": "RED_CONTRACT_BINDING",
+          "failure_intent_id": "FI-138471C9BD28",
+          "selector_intent": "Inspect and execute the required RED test selector family to verify file creation, real-owner binding, shared selection, and pre-assertion failure markers."
+        },
+        {
+          "acceptance_ids": [
+            "A-90C08A6553DC"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "test-harness-failure",
+          "failure_id": "RED_CONTRACT_BINDING",
+          "failure_intent_id": "FI-20601612B545",
+          "selector_intent": "Inspect and execute the required RED test selector family to verify file creation, real-owner binding, shared selection, and pre-assertion failure markers."
+        },
+        {
+          "acceptance_ids": [
+            "A-7C5ED926AFFD"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "task-implementation-failure",
+          "failure_id": "LEDGER_REQUIRED_BEHAVIORS",
+          "failure_intent_id": "FI-43D105E033DB",
+          "selector_intent": "Run the shared ledger behavior selector family against the unimplemented success-returning skeleton."
+        },
+        {
+          "acceptance_ids": [
+            "A-A89F362D3F30"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "task-implementation-failure",
+          "failure_id": "LEDGER_REQUIRED_BEHAVIORS",
+          "failure_intent_id": "FI-7E17D6D91381",
+          "selector_intent": "Run the shared ledger behavior selector family against the unimplemented success-returning skeleton."
+        },
+        {
+          "acceptance_ids": [
+            "A-0C629C87D22A"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "task-implementation-failure",
+          "failure_id": "LEDGER_REQUIRED_BEHAVIORS",
+          "failure_intent_id": "FI-96CD7BF7149C",
+          "selector_intent": "Run the shared ledger behavior selector family against the unimplemented success-returning skeleton."
+        },
+        {
+          "acceptance_ids": [
+            "A-C75A510B52E1"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "test-harness-failure",
+          "failure_id": "RED_CONTRACT_BINDING",
+          "failure_intent_id": "FI-980E9D504378",
+          "selector_intent": "Inspect and execute the required RED test selector family to verify file creation, real-owner binding, shared selection, and pre-assertion failure markers."
+        },
+        {
+          "acceptance_ids": [
+            "A-2226B3CB8DCE"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "GREEN_RED_PRESERVATION",
+          "failure_intent_id": "FI-A023363D48E4",
+          "selector_intent": "Compare the established RED test contract with GREEN and REFACTOR revisions while executing the unchanged selector."
+        },
+        {
+          "acceptance_ids": [
+            "A-4CE701AD8073"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "test-harness-failure",
+          "failure_id": "DECLARED_VALIDATION_COMMAND",
+          "failure_intent_id": "FI-B675DF35566F",
+          "selector_intent": "Invoke validation only through the frozen FR-301 pytest argv with cacheprovider disabled."
+        },
+        {
+          "acceptance_ids": [
+            "A-07DF2029F34E"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "task-implementation-failure",
+          "failure_id": "LEDGER_REQUIRED_BEHAVIORS",
+          "failure_intent_id": "FI-BD08004183F1",
+          "selector_intent": "Run the shared ledger behavior selector family against the unimplemented success-returning skeleton."
+        },
+        {
+          "acceptance_ids": [
+            "A-98B27A77AD9F"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "test-harness-failure",
+          "failure_id": "RED_CONTRACT_BINDING",
+          "failure_intent_id": "FI-D3F6E804FAFD",
+          "selector_intent": "Inspect and execute the required RED test selector family to verify file creation, real-owner binding, shared selection, and pre-assertion failure markers."
+        },
+        {
+          "acceptance_ids": [
+            "A-8B795532DB7B"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "task-implementation-failure",
+          "failure_id": "LEDGER_REQUIRED_BEHAVIORS",
+          "failure_intent_id": "FI-D4A38A68AE66",
+          "selector_intent": "Run the shared ledger behavior selector family against the unimplemented success-returning skeleton."
+        }
+      ],
+      "obligations": [
+        {
+          "depends_on": [],
+          "expected_behavior": "Whenever a declared Acceptance assertion fails, emit the matching VDD failure intent in the format FAILURE_ID:<failure_id> before the assertion fails.",
+          "forbidden_result": [
+            "Allowing a declared Acceptance assertion to fail without first emitting its matching VDD failure intent.",
+            "Emitting the VDD failure intent after the assertion fails.",
+            "Emitting a failure intent that does not use the FAILURE_ID:<failure_id> format."
+          ],
+          "obligation_id": "O-0F9CD5CF0156",
+          "obligation_kind": "governance",
+          "observable_result": "A matching FAILURE_ID:<failure_id> is emitted before each failing declared Acceptance assertion.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Governance",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "Each failing declared Acceptance assertion has preceding matching VDD failure-intent output.",
+          "state_before": "A declared Acceptance assertion is about to fail.",
+          "status": "active",
+          "subject": "RED test",
+          "trigger": "A declared Acceptance assertion fails",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "Make the RED test call the real production owner.",
+          "forbidden_result": [
+            "Testing a mock, duplicate, or substitute implementation instead of the real production owner."
+          ],
+          "obligation_id": "O-2FD5B47E4B18",
+          "obligation_kind": "constraint",
+          "observable_result": "The RED test invokes the real production owner.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Governance",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "RED test execution reaches the real production owner.",
+          "state_before": "RED tests have not been connected to the real production owner.",
+          "status": "active",
+          "subject": "RED test",
+          "trigger": "Executing RED assertions",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "Validate using py -3 -m pytest benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py -q -p no:cacheprovider.",
+          "forbidden_result": [
+            "Using a different command as the declared validation command."
+          ],
+          "obligation_id": "O-32F333238885",
+          "obligation_kind": "governance",
+          "observable_result": "The declared validation command targets the specified test file with cacheprovider disabled.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Platform",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "FR-301 validation is invoked with the declared command.",
+          "state_before": "FR-301 validation has not been invoked.",
+          "status": "active",
+          "subject": "Validation process",
+          "trigger": "Validating FR-301",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "Implement the idempotency reservation ledger as one bounded stateful slice.",
+          "forbidden_result": [
+            "Splitting the required ledger behavior across unbounded or unrelated slices."
+          ],
+          "obligation_id": "O-400DF360A352",
+          "obligation_kind": "constraint",
+          "observable_result": "A bounded stateful idempotency reservation ledger implementation exists.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Product",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "The ledger is implemented as one bounded stateful slice.",
+          "state_before": "The idempotency reservation ledger slice is not implemented.",
+          "status": "active",
+          "subject": "Idempotency reservation ledger",
+          "trigger": "Implementation of FR-301",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "Place the production implementation in benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py.",
+          "forbidden_result": [
+            "Implementing the production owner at a different path."
+          ],
+          "obligation_id": "O-46630AC78666",
+          "obligation_kind": "constraint",
+          "observable_result": "The production owner is benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Platform",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "The specified production owner contains the implementation.",
+          "state_before": "The specified production owner is the designated production location.",
+          "status": "active",
+          "subject": "Production implementation",
+          "trigger": "Implementing FR-301",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "Before each declared Acceptance assertion fails, emit its matching VDD failure intent in the format FAILURE_ID:<failure_id>.",
+          "forbidden_result": [
+            "Allowing a declared Acceptance assertion to fail without first emitting its matching VDD failure intent.",
+            "Emitting the VDD failure intent after the assertion fails.",
+            "Emitting a failure intent that does not use the FAILURE_ID:<failure_id> format."
+          ],
+          "obligation_id": "O-6B8EB239D9FE",
+          "obligation_kind": "governance",
+          "observable_result": "A matching FAILURE_ID:<failure_id> is emitted before each failing declared Acceptance assertion.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Governance",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "Each failing declared Acceptance assertion has preceding matching VDD failure-intent output.",
+          "state_before": "A declared Acceptance assertion is about to fail.",
+          "status": "deferred",
+          "subject": "RED test",
+          "trigger": "A declared Acceptance assertion fails",
+          "unresolved_fragments": [
+            "The supplied requirement does not define the concrete failure_id values or map them to Acceptance assertions."
+          ]
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "Preserve the RED selector, fixture, and assertions during GREEN and REFACTOR.",
+          "forbidden_result": [
+            "Changing the RED selector during GREEN or REFACTOR.",
+            "Changing the fixture during GREEN or REFACTOR.",
+            "Changing the RED assertions during GREEN or REFACTOR."
+          ],
+          "obligation_id": "O-6DE4C51FA8E1",
+          "obligation_kind": "constraint",
+          "observable_result": "The RED selector, fixture, and assertions remain unchanged through GREEN and REFACTOR.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Governance",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "GREEN and REFACTOR preserve the RED selector, fixture, and assertions.",
+          "state_before": "The RED selector, fixture, and assertions are established.",
+          "status": "active",
+          "subject": "GREEN and REFACTOR phases",
+          "trigger": "Performing GREEN or REFACTOR work",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "When releasing a key that is not active, return not-found.",
+          "forbidden_result": [
+            "Reporting a successful release for a key that is not active."
+          ],
+          "obligation_id": "O-78ABA66136BC",
+          "obligation_kind": "behavior",
+          "observable_result": "The release result is not-found.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Product",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "The release is reported as not-found.",
+          "state_before": "The key is not active.",
+          "status": "active",
+          "subject": "Ledger release operation",
+          "trigger": "A release is made for a key that is not active",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "Modify only benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py for the production implementation.",
+          "forbidden_result": [
+            "Modifying any production file other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+          ],
+          "obligation_id": "O-84D0659124BA",
+          "obligation_kind": "constraint",
+          "observable_result": "Production implementation changes are confined to the designated production owner.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Governance",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "Only the designated production owner has production implementation modifications.",
+          "state_before": "Production implementation changes have not been made.",
+          "status": "active",
+          "subject": "Production implementation",
+          "trigger": "Implementing FR-301",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "During a legal GREEN change, change production only.",
+          "forbidden_result": [
+            "Changing tests, selectors, fixtures, or assertions during GREEN."
+          ],
+          "obligation_id": "O-96D8A901E747",
+          "obligation_kind": "governance",
+          "observable_result": "GREEN changes are confined to production.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Governance",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "GREEN has changed production only.",
+          "state_before": "RED tests, selector, fixture, and assertions are established.",
+          "status": "active",
+          "subject": "GREEN phase",
+          "trigger": "Making a legal GREEN change",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "When ttl_seconds <= 0, return invalid-ttl for a claim.",
+          "forbidden_result": [
+            "Returning accepted for a claim with ttl_seconds <= 0."
+          ],
+          "obligation_id": "O-A90B595E2613",
+          "obligation_kind": "behavior",
+          "observable_result": "The claim result is invalid-ttl.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Product",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "The claim is rejected as invalid-ttl.",
+          "state_before": "A claim is submitted with ttl_seconds <= 0.",
+          "status": "active",
+          "subject": "Ledger claim operation",
+          "trigger": "A claim is made with ttl_seconds <= 0",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "Create benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py for RED tests.",
+          "forbidden_result": [
+            "Omitting the required RED test file.",
+            "Creating the required RED tests only at another path."
+          ],
+          "obligation_id": "O-AC90A459DD40",
+          "obligation_kind": "governance",
+          "observable_result": "The specified RED test file exists.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Governance",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "The RED test file exists at the specified path.",
+          "state_before": "The required RED test file has not been created.",
+          "status": "active",
+          "subject": "RED author",
+          "trigger": "Authoring RED tests for FR-301",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "Do not create an active reservation for a claim with ttl_seconds <= 0.",
+          "forbidden_result": [
+            "Creating an active reservation for a claim with ttl_seconds <= 0."
+          ],
+          "obligation_id": "O-D80D6C9E25F5",
+          "obligation_kind": "constraint",
+          "observable_result": "No active reservation exists as a result of the invalid-TTL claim.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Product",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "No active reservation is created for the invalid-TTL claim.",
+          "state_before": "A claim is submitted with ttl_seconds <= 0.",
+          "status": "active",
+          "subject": "Ledger reservation state",
+          "trigger": "A claim is made with ttl_seconds <= 0",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "Exercise all three required ledger behaviors using the same selector family.",
+          "forbidden_result": [
+            "Exercising the required behaviors through different selector families.",
+            "Failing to exercise one or more required behaviors."
+          ],
+          "obligation_id": "O-D97C96CD6D6E",
+          "obligation_kind": "quality",
+          "observable_result": "Tests for duplicate claim, invalid TTL, and inactive release use one selector family.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Governance",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "All three required behaviors are exercised by one selector family.",
+          "state_before": "The required behavior tests have not been selected.",
+          "status": "active",
+          "subject": "RED test suite",
+          "trigger": "Exercising the required ledger behaviors",
+          "unresolved_fragments": []
+        },
+        {
+          "depends_on": [],
+          "expected_behavior": "When claiming a key already active at now < expires_at, return duplicate.",
+          "forbidden_result": [
+            "Returning accepted when claiming a key that is already active at now < expires_at."
+          ],
+          "obligation_id": "O-FA92E80AD267",
+          "obligation_kind": "behavior",
+          "observable_result": "The claim result is duplicate.",
+          "requirement_id": "FR-301",
+          "requirement_type": "Product",
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "state_after": "The active reservation remains identified as a duplicate claim.",
+          "state_before": "The key has an active reservation and now < expires_at.",
+          "status": "active",
+          "subject": "Ledger claim operation",
+          "trigger": "A claim is made for a key already active at now < expires_at",
+          "unresolved_fragments": []
+        }
+      ],
+      "source_index": {
+        "entries": [
+          {
+            "anchor": "FR-301",
+            "line": 1,
+            "repository_relative_source_path": "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md",
+            "requirement_id": "FR-301",
+            "source_order": 1,
+            "source_ref": "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301",
+            "source_sha256": "sha256:b6a777b60850e8965a50cfcd9e8ebdc74404c4e9a93214a0b9c6622f180adcfd",
+            "source_text": "# FR-301\nAn idempotency reservation ledger must be implemented as one bounded stateful slice.\n\nProduction owner: `benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py`.\nThe RED author must create `benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py` and may use the existing fixture `benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/cases.json`.\nThe production implementation may modify only the production owner above.\nThe validation command is `py -3 -m pytest benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py -q -p no:cacheprovider`.\nThe RED test must call the real production owner and, whenever a declared Acceptance assertion fails, emit the matching VDD failure intent as `FAILURE_ID:<failure_id>` before the assertion fails.\n\nThe ledger has three independently observable required behaviors, all of which must be exercised by the same selector family:\n\n1. Claiming a key that is already active at `now < expires_at` returns `duplicate` rather than `accepted`.\n2. Claiming with `ttl_seconds <= 0` returns `invalid-ttl` and must not create an active reservation.\n3. Releasing a key that is not active returns `not-found` rather than reporting a successful release.\n\nThe existing skeleton intentionally returns success for every operation, so all three forbidden behaviors are observable before implementation.  A legal GREEN must change production only; GREEN and REFACTOR must preserve the RED selector, fixture and assertions.",
+            "text_sha256": "sha256:e698c1a8fc7fd288a641cc0c26933291f34f9666222d8a680f5e276e909b4f77"
+          }
+        ],
+        "schema": "source-index.v1",
+        "sha256": "sha256:02b347376b18cb05b08b67375b767ea740c06c787067f39b7367f67f1aaaeb1d"
+      }
+    }
   },
   "v4_worker_outputs": {
     "cache": {
