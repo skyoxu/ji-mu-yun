@@ -1,0 +1,22 @@
+{
+  "schema": "ch456.regression-fixture-repair.v1",
+  "base_commit": "7890f7a4e26f252e9a86d29cfc088cfe044352d2",
+  "adr": "ADR-0041",
+  "scope": "Only the two reported regression fixtures; production code and gates unchanged.",
+  "before": "Both reported failures reproduced locally.",
+  "after": {
+    "focused": "4 passed",
+    "vdd_ch456": "121 passed",
+    "environment": "Linux reconstructed checkout",
+    "command": "PYTHONPATH=/workspace/scratch/95026fb3ee55/pytest-deps python -m pytest .agents/skills/vdd-execution-plan/scripts/tests/test_ch456*.py -q"
+  },
+  "changes": [
+    "Supply source-gap repair and per-obligation V3 responses in failed-resume fixture; retain the failed independent recall, then resume with full corrected coverage in the same output directory.",
+    "Reject accidental live backend calls in the resume regression.",
+    "Replace legacy shared oracle fixture with inline per-obligation contracts, retaining missing write-set and missing coverage defects and checking distinct projected oracles."
+  ],
+  "limitations": [
+    "Not the full Windows specified regression suite.",
+    "No real semantic, live blind, or final acceptance executed."
+  ]
+}

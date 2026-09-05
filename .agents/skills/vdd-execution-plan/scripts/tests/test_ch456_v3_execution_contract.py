@@ -85,19 +85,24 @@ def test_v3_contract_routes_missing_coverage_and_path_defects_through_one_groupe
         "failure_intents": [_failure(["O-1"])],
         "slice_hints": [_hint(["O-1"], allowed=[], planned=[])],
     }
-    repaired = {
-        "groups": [
-            {
-                "obligation_ids": ["O-1", "O-2"],
-                "acceptance": {key: value for key, value in _acceptance(["O-1", "O-2"]).items() if key != "obligation_ids"},
-                "failure_intents": [{key: value for key, value in _failure(["O-1", "O-2"]).items() if key != "obligation_ids"}],
-                # Reproduce the live model defect: the repair declares the owner
-                # but forgets to repeat it in allowed_write_paths. Projection
-                # must normalize the two fields before execution-contract validation.
-                "slice_hint": {key: value for key, value in _hint(["O-1", "O-2"], allowed=[], planned=["tests/test_owner.py"]).items() if key != "obligation_ids"},
-            }
-        ]
-    }
+    # ADR-0041: each obligation owns its oracle; only execution context is shared.
+    contracts = {}
+    for obligation in obligations:
+        oid = obligation["obligation_id"]
+        acceptance = _acceptance([oid])
+        acceptance["then"] = obligation["expected_behavior"]
+        acceptance["oracle"]["expected"] = obligation["observable_result"]
+        acceptance["assertion_ids"] = [f"ASSERT-{oid}"]
+        failure = _failure([oid])
+        failure["failure_id"] = f"FAIL-{oid}"
+        # Keep the original defect: owner declared but omitted from the write set.
+        hint = _hint([oid], allowed=[], planned=["tests/test_owner.py"])
+        contracts[oid] = {
+            "acceptance": {key: value for key, value in acceptance.items() if key != "obligation_ids"},
+            "failure_intents": [{key: value for key, value in failure.items() if key != "obligation_ids"}],
+            "slice_hint": {key: value for key, value in hint.items() if key != "obligation_ids"},
+        }
+    repaired = {"obligation_contracts": contracts}
     result = gate.normative_invoke_worker(
         root=tmp_path,
         out_dir=tmp_path / "plan",
@@ -109,6 +114,7 @@ def test_v3_contract_routes_missing_coverage_and_path_defects_through_one_groupe
     assert [item["obligation_ids"] for item in result["acceptances"]] == [["O-1"], ["O-2"]]
     assert [item["obligation_ids"] for item in result["failure_intents"]] == [["O-1"], ["O-2"]]
     assert [item["obligation_ids"] for item in result["slice_hints"]] == [["O-1"], ["O-2"]]
+    assert [item["oracle"]["expected"] for item in result["acceptances"]] == ["observable O-1", "observable O-2"]
     assert all(item["allowed_write_paths"] == ["src/owner.py"] for item in result["slice_hints"])
     assert all(item["planned_new_files"] == ["tests/test_owner.py"] for item in result["slice_hints"])
 
