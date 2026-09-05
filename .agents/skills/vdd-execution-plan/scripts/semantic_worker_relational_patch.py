@@ -92,7 +92,10 @@ def _augment_prompt(stage: str, prompt: str) -> str:
         "paths and selector families may repeat across hints; they do not justify sharing a multi-behavior oracle. "
         "V6 will merge compatible implementation contexts. A structural/boundary constraint needs an observable "
         "artifact or boundary check, with its evaluation phase stated in when/oracle; runtime return values alone "
-        "do not prove it. Do not assume the required result in given. Describe future checks, never invent results."
+        "do not prove it. A harness guard of the same exact validation command uses that command's behavior "
+        "verification lane; observing an invocation does not by itself create a separate runtime lane. Keep its "
+        "own oracle and non-expected-red failure intent. Do not assume the required result in given. "
+        "Describe future checks, never invent results."
     )
 
 

@@ -56,6 +56,69 @@ def _atomicize_initial_candidate(stage: str, payload: Mapping[str, Any], value: 
     return value
 
 
+def _normalize_harness_lanes(stage: str, payload: Mapping[str, Any], value: Mapping[str, Any]) -> Mapping[str, Any]:
+    """ADR-0041: a guard of the same test invocation shares its execution lane.
+
+    Match exact frozen sources, owners and argv, never a filename heuristic or
+    majority lane. Product/runtime behaviors and ambiguous environments retain
+    their declared lanes. Oracle, failure family and execution checks are kept.
+    """
+    hints = value.get("slice_hints")
+    failures = value.get("failure_intents")
+    if not isinstance(hints, list) or not isinstance(failures, list):
+        return value
+    known = {o["obligation_id"]: o for o in _obligations(stage, payload) if isinstance(o.get("obligation_id"), str)}
+    families: dict[str, set[str]] = {}
+    for failure in failures:
+        if not isinstance(failure, Mapping):
+            continue
+        ids = _string_list(failure.get("obligation_ids"), nonempty=True)
+        family = failure.get("failure_family")
+        if ids is not None and len(ids) == 1 and isinstance(family, str):
+            families.setdefault(ids[0], set()).add(family)
+
+    def binding(hint):
+        if not isinstance(hint, Mapping):
+            return None
+        ids = _string_list(hint.get("obligation_ids"), nonempty=True)
+        owners = _string_list(hint.get("production_owners"), nonempty=True)
+        commands = hint.get("validation_commands")
+        if ids is None or len(ids) != 1 or owners is None or not isinstance(commands, list) or not commands:
+            return None
+        if any(not isinstance(argv, list) or not argv or any(not isinstance(arg, str) or not arg for arg in argv) for argv in commands):
+            return None
+        obligation = known.get(ids[0])
+        if not obligation or obligation.get("status") != "active":
+            return None
+        refs = _string_list(obligation.get("source_refs"), nonempty=True)
+        if refs is None or hint.get("verification_lane") not in gate.sc.LANES:
+            return None
+        return ids[0], obligation, (tuple(sorted(refs)), tuple(sorted(owners)), tuple(tuple(argv) for argv in commands))
+
+    anchors: dict[tuple, set[str]] = {}
+    for hint in hints:
+        bound = binding(hint)
+        if bound is None:
+            continue
+        oid, obligation, key = bound
+        if (obligation.get("requirement_type") in {"Product", "Platform"}
+                and obligation.get("obligation_kind") in {"behavior", "quality"}
+                and families.get(oid) == {"expected-red"}):
+            anchors.setdefault(key, set()).add(hint["verification_lane"])
+    normalized = []
+    for hint in hints:
+        bound = binding(hint)
+        if bound is not None:
+            oid, obligation, key = bound
+            lanes = anchors.get(key, set())
+            if (obligation.get("requirement_type") == "Governance"
+                    and obligation.get("obligation_kind") in {"governance", "constraint"}
+                    and families.get(oid) == {"test-harness-failure"} and len(lanes) == 1):
+                hint = {**hint, "verification_lane": next(iter(lanes))}
+        normalized.append(hint)
+    return {**value, "slice_hints": normalized}
+
+
 def _safe_path(root: Path, raw: str) -> Path | None:
     try:
         path = (root / raw).resolve()
@@ -164,6 +227,7 @@ def execution_contract_transport(
             value=value,
             worker_cache=worker_cache,
         )
+        value = _normalize_harness_lanes(stage, payload, value)
     findings = _findings(Path(root), stage, payload, value)
     if findings:
         raise ValueError("V3 execution-contract validation failed: " + "; ".join(findings))

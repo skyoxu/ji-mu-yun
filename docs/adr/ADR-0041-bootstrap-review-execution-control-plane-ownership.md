@@ -50,6 +50,15 @@ The existing bounded repair budget and independent V4 semantic authority remain
 unchanged. V5 checks semantic edges, V6 owns partitioning, and the downstream
 plan/runtime checks still establish whether the declared constraints hold.
 
+A Governance constraint with only test-harness-failure intents guards its
+matched test execution. When frozen source refs, production owners and complete
+validation argv match active Product/Platform expected-red behaviors with one
+unambiguous lane, V3 projects the guard onto that lane before preflight and V6.
+The guard retains its oracle, assertions, failure family and terminal check;
+an invocation observation is not a separate implementation environment.
+Different or ambiguous execution bindings remain unchanged. V6 continues to
+enforce lane, owner, dependency and write/forbidden boundaries.
+
 ### Existing Ownership Consequences
 
 - Protocol changes are made once in the repository-owned Skill and projected through compatibility adapters.

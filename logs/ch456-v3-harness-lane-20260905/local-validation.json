@@ -1,0 +1,82 @@
+{
+  "schema": "ch456.local-code-validation.v1",
+  "created_at": "2026-09-05T07:14:30.596495+00:00",
+  "baseline_source_head": "f81381fa6e4423ba7707770a8f8f25555dfa8f36",
+  "failed_implementation_candidate": "f33feb706c5ba5d4c61f2c5ef36b72da66242fd5",
+  "candidate_binding": "sha256 of changed files; checks executed before commit creation",
+  "changed_files": {
+    ".agents/skills/vdd-execution-plan/references/solo-maintainer-vdd-standard.md": "56eb74398facd5029d1332dc57aa474412d21e1e6ee32789ee3a4ad418def093",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_relational_patch.py": "2962226c0178dd127dabe365c190fe80d6a82af82d3c169030bf175812edec90",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_execution_contract_patch.py": "35caf8a5894da373721313aa23745b8ae6e315e1ece86e6efac5d65790b6ac90",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_prompt_patch.py": "99accbd28ce272d4e74117588fed97b51fe0b541ad263645d86ad46d54ffa28f",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "50ee1d20fe19730db6b656c7d0003c16cd4f5ef58d149ca4987802352654021a",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_harness_lane.py": "78b4c275d025e34374c966d97d973e1536396c815c29ef1a277b28fe5c0680b9",
+    ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-v3-harness-lane.json": "9f7086aa7974fdad02b036312b8c88b2e2814a9dfe4bd02e75350cba9226eada"
+  },
+  "root_cause": {
+    "guard_obligation": "O-EF8E117BB3E5",
+    "acceptance": "A-B1553563604B",
+    "failure_family": "test-harness-failure",
+    "guard_lane": "runtime",
+    "behavior_lane": "unit",
+    "same_production_owner": true,
+    "same_exact_validation_argv": true,
+    "same_frozen_source_refs": true,
+    "source": "logs/ch456-live-blind-f33feb70-20260905/plan"
+  },
+  "fix": "V3 projects a Governance harness-only guard onto the unique lane of matching active Product/Platform expected-red behaviors. Exact source refs, owners and complete argv must match. Independent proof and failure role are preserved; V6 boundaries unchanged.",
+  "regression": {
+    "passed": 112,
+    "subtests_passed": 15,
+    "exit_code": 0,
+    "test_directory": ".agents/skills/vdd-execution-plan/scripts/tests",
+    "test_files": [
+      "test_ch456_v3_harness_lane.py",
+      "test_ch456_v3_inline_context_repair.py",
+      "test_ch456_v3_per_obligation_contract.py",
+      "test_ch456_v3_total_coverage_and_slice_cohesion.py",
+      "test_ch456_grouped_v3_and_obligation_gap_repair.py",
+      "test_ch456_live_v3_worker_contract.py",
+      "test_ch456_v3_domain_and_v4_alignment_repair.py",
+      "test_ch456_v3_expected_red_eligibility.py",
+      "test_ch456_compiler_closure.py",
+      "test_ch456_v3_group_safety.py",
+      "test_ch456_v3_group_safety_composition.py",
+      "test_ch456_worker_transport_composition.py",
+      "test_ch456_semantic_worker_transport.py",
+      "test_validate_skill_contract.py"
+    ]
+  },
+  "offline_replay": {
+    "input": "Unmodified captured V3 result, frozen obligations and source text from f81381fa",
+    "local_files": "Owner and existing-fixture placeholders for existence checks only; no product tests executed",
+    "normalizer_disabled_slices": 2,
+    "normalizer_enabled_slices": 1,
+    "acceptances_preserved": 15,
+    "guard_oracle_assertions_and_failure_family_preserved": true,
+    "dependencies_still_split": true,
+    "worker_invocation": "Injected captured V3 cache; unexpected live repair fails the test"
+  },
+  "skill_validation": {
+    "exit_code": 0,
+    "ok": true,
+    "command": "python .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan"
+  },
+  "package_validation": {
+    "exit_code": 0,
+    "status": "pass",
+    "command": "python -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/vdd-execution-plan --capability scripts/sc/config/skill-package-validator-capability.v1.json"
+  },
+  "environment": "Linux scratch reconstruction; Windows live runner remains the live validation environment",
+  "live_backend_called": false,
+  "real_semantic_run": false,
+  "live_blind_run": false,
+  "final_acceptance_run": false,
+  "completion_claimed": false,
+  "next_validation": "Windows regressions, then one real semantic and one live blind using the recorded 600-second configuration. Stop at the first failure and retain original payload/cache/worktree. Full final acceptance follows only if both pass.",
+  "limitations": [
+    "Offline replay proves the captured partition repair, not new live worker quality or Quick Dev success",
+    "Old real-semantic success does not certify this changed candidate",
+    "No extra repair/recheck budget, benchmark modifications, or acceptance gate changes"
+  ]
+}

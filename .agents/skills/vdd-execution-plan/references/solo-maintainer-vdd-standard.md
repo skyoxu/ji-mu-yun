@@ -43,6 +43,10 @@ The repair worker returns one exact map keyed by active obligation ID, with
 proof and a complete slice hint in each record. Compatible records repeat the
 same execution context for V6 to merge; workers do not maintain a separate
 group catalog and assignment references.
+A harness constraint observing the same validation invocation shares its
+unambiguously matched behavior lane, while retaining its separate proof and
+non-expected-red failure role. Invocation evidence alone does not create a new
+implementation environment; different sources, owners or argv do not match.
 
 Use Git baseline/range or a scoped dirty-worktree identity. Bind current contracts, implementation, and validation inputs, but exclude append-only reports and logs. Preserve previous evidence as historical rather than rewriting it.
 

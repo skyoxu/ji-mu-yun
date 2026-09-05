@@ -33,6 +33,8 @@ def _live_group_repair(*, root, out_dir, payload, prompt):
         "frozen subject. The exact frozen subject domains are: "
         + json.dumps(domains, ensure_ascii=False, sort_keys=True)
         + ". Different subjects may share implementation context, but never a shared verification contract. "
+        "A harness guard of the same validation invocation uses its behavior's verification lane; observing "
+        "the command does not itself require a separate runtime environment. Keep the guard's own proof. "
         "Every existing production_owner that can be modified must also appear in allowed_write_paths. An "
         "execution_snapshot_path that does not yet exist is legal only when the frozen obligations require it to be "
         "authored and the exact same path is listed in planned_new_files. Do not use directories, generic logs paths, "
