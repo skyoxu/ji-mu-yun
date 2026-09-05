@@ -1,0 +1,8 @@
+candidate=b8323177b632e74994fc439eed128789116e3448
+worktree=C:/ch456-full-acceptance-b8323177
+output_dir=C:/ch456-full-acceptance-output-b8323177-r900
+repair_timeout_seconds=900
+repair_timeout_scope=explicit one-off configuration; default 300-second behavior is not proven
+sequence=specified-regression,real-semantic,live-blind,final-acceptance
+each_stage_once=true
+stdout_stderr_external=true

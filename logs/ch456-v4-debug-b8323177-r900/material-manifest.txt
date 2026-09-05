@@ -1,0 +1,24 @@
+candidate=b8323177b632e74994fc439eed128789116e3448
+source_head=b8323177b632e74994fc439eed128789116e3448
+source_worktree=C:/ch456-full-acceptance-b8323177
+repair_timeout_seconds=900
+live_blind_status=failed
+live_blind_stop_stage=V4
+live_blind_failure=v4:missing:O-7A5FFDE9AE7D
+real_semantic_status=pass
+real_semantic_exit_code=0
+live_blind_exit_code=1
+final_acceptance=not-run
+
+Included:
+  live-blind/plan/ (compiler cache, attempts, worker messages, receipts, schemas)
+  live-blind/snapshot-state.json
+  benchmark/idempotency-ledger-v1/
+  inputs/requirements-and-acceptance.md
+  inputs/active-acceptance-manifest.v1.json
+  inputs/benchmark-requirements.md
+  external-output/ (stdout, stderr, exit codes, run-config, real-semantic success)
+
+Not present in source run:
+  logs/ch456-live-blind/router-state.json
+  logs/tdd-adapter/ch456-live-blind/RUN-BLIND-001/*

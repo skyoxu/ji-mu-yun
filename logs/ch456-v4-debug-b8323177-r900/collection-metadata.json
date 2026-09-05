@@ -1,0 +1,43 @@
+{
+  "schema": "ch456.v4-debug-evidence-collection.v1",
+  "run_kind": "new-diagnostic-evidence-collection",
+  "candidate": "b8323177b632e74994fc439eed128789116e3448",
+  "source_head": "b8323177b632e74994fc439eed128789116e3448",
+  "source_worktree": "C:/ch456-full-acceptance-b8323177",
+  "external_output_dir": "C:/ch456-full-acceptance-output-b8323177-r900",
+  "repair_timeout_seconds": 900,
+  "repair_timeout_scope": "explicit one-off configuration; default 300 seconds is not proven",
+  "live_blind": {
+    "status": "failed",
+    "stop_stage": "V4",
+    "failure": "v4:missing:O-7A5FFDE9AE7D",
+    "exit_code": 1,
+    "limit_seconds": 3600,
+    "evidence_source_head": "b8323177b632e74994fc439eed128789116e3448"
+  },
+  "real_semantic": {
+    "status": "pass",
+    "exit_code": 0,
+    "source_head": "b8323177b632e74994fc439eed128789116e3448",
+    "plan_status": "plan-ready",
+    "precision": 1.0,
+    "recall": 1.0,
+    "invented_obligation_count": 0,
+    "source_gap_count": 0
+  },
+  "specified_regression": {
+    "exit_code": 0
+  },
+  "final_acceptance": {
+    "run": false,
+    "reason": "live blind stopped at V4"
+  },
+  "missing_source_artifacts": [
+    "logs/ch456-live-blind/router-state.json",
+    "logs/tdd-adapter/ch456-live-blind/RUN-BLIND-001/*"
+  ],
+  "notes": [
+    "All available compiler cache, attempts, worker outputs, receipts, schemas, benchmark files, snapshot and external logs were copied byte-for-byte.",
+    "Missing artifacts were not reconstructed or substituted from another candidate."
+  ]
+}

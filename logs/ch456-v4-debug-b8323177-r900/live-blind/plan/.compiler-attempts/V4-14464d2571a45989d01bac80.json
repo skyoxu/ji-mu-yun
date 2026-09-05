@@ -1,0 +1,1 @@
+{"atomic_quality_metrics":{"active_obligation_count":12,"f1":1.0,"invented_obligation_count":0,"precision":1.0,"recall":1.0,"source_gap_count":0,"supported_obligation_count":12},"findings":["v4:missing:O-7A5FFDE9AE7D"],"stage":"V4","status":"repair-vdd"}

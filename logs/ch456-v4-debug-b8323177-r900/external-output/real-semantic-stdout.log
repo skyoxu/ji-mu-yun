@@ -1,0 +1,34 @@
+{
+  "atomic_behavior_floor_passed": true,
+  "atomic_quality_metrics": {
+    "active_obligation_count": 30,
+    "f1": 1.0,
+    "invented_obligation_count": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "source_gap_count": 0,
+    "supported_obligation_count": 30
+  },
+  "authorizes": [],
+  "availability": {
+    "available": true,
+    "backend": "codex-cli",
+    "blocking_errors": [],
+    "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+  },
+  "backend": "codex-cli",
+  "compiler_findings": [],
+  "compiler_stage": null,
+  "compiler_status": "plan-ready",
+  "execution_attempted": true,
+  "execution_succeeded": true,
+  "fixture": ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md",
+  "minimum_active_obligations": 23,
+  "precision_threshold_passed": true,
+  "recall_threshold_passed": true,
+  "required_precision": 0.95,
+  "required_recall": 0.95,
+  "schema": "vdd.real-semantic-quality-metric.v1",
+  "source_head": "b8323177b632e74994fc439eed128789116e3448",
+  "status": "pass"
+}
