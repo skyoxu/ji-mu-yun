@@ -74,7 +74,7 @@ def _raw_v3(ids: list[str], *, snapshot: str = "tests/test_ledger.py") -> dict:
 def test_shared_group_projects_exact_assignments_to_atomic_acceptances() -> None:
     payload = {"input": {"obligations": [_obligation("O-1"), _obligation("O-2")]}}
     schema = grouped._group_schema(payload)
-    assignment_schema = schema["properties"]["obligation_group_assignments"]
+    assignment_schema = schema["properties"]["obligation_contracts"]
     assert set(assignment_schema["properties"]) == {"O-1", "O-2"}
     assert set(assignment_schema["required"]) == {"O-1", "O-2"}
     assert assignment_schema["additionalProperties"] is False

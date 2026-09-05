@@ -39,6 +39,10 @@ oracle and change only its obligation ID. A structural constraint declares an
 observable artifact/boundary check and the phase that evaluates it; placing the
 desired result in Given does not verify it. Independent V4 checks the contract;
 the declared plan/runtime check must later establish the result (ADR-0041).
+The repair worker returns one exact map keyed by active obligation ID, with
+proof and a complete slice hint in each record. Compatible records repeat the
+same execution context for V6 to merge; workers do not maintain a separate
+group catalog and assignment references.
 
 Use Git baseline/range or a scoped dirty-worktree identity. Bind current contracts, implementation, and validation inputs, but exclude append-only reports and logs. Preserve previous evidence as historical rather than rewriting it.
 

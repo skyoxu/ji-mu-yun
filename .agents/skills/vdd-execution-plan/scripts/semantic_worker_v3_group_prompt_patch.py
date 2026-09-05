@@ -27,9 +27,9 @@ def _subject_domains(payload: Mapping[str, Any]) -> dict[str, list[str]]:
 def _live_group_repair(*, root, out_dir, payload, prompt):
     domains = _subject_domains(payload)
     augmented = prompt + (
-        "\n\nGROUPED REPAIR INVARIANTS: obligation_group_assignments must contain every active frozen obligation "
-        "as a required key exactly once. Each value must reference one returned group_id; every group_id must be unique, "
-        "used by at least one assignment, and assigned to itself. Keep each obligation contract specific to its "
+        "\n\nV3 REPAIR INVARIANTS: obligation_contracts must contain every active frozen obligation "
+        "as a required key exactly once. Each value includes its own complete slice_hint, acceptance and failure_intents; "
+        "there are no group references or assignment joins. Keep each obligation contract specific to its "
         "frozen subject. The exact frozen subject domains are: "
         + json.dumps(domains, ensure_ascii=False, sort_keys=True)
         + ". Different subjects may share implementation context, but never a shared verification contract. "

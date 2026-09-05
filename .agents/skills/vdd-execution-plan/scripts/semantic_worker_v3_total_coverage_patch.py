@@ -94,7 +94,7 @@ def _completion_from_fixture(worker_cache: Mapping[str, Any] | None) -> Mapping[
     raw = worker_cache[_COMPLETION_CACHE_KEY]
     if not isinstance(raw, Mapping):
         raise ValueError("injected V3 coverage completion must be object")
-    return grouped._project(raw) if "groups" in raw else dict(raw)
+    return grouped._project(raw) if "groups" in raw or "obligation_contracts" in raw else dict(raw)
 
 
 def _complete_missing(
@@ -119,10 +119,9 @@ def _complete_missing(
             payload=narrowed,
             prompt=(
                 "COVERAGE COMPLETION: author semantics only for the supplied missing active obligations. "
-                "Every supplied obligation must be covered exactly once after canonical projection. Obligations that "
-                "share the same production owner, verification lane, RED selector/fixture lifecycle and legal write "
-                "boundary MAY share one worker group so that implementation context is authored once; the compiler "
-                "will project that shared group to atomic one-obligation Acceptances before stable IDs are created. "
+                "Every supplied obligation must have its own keyed contract with proof and a complete slice_hint. "
+                "Compatible obligations repeat the same real production owner, lane and legal execution context; "
+                "V6 merges compatible contexts. Do not emit group references or assignment maps. "
                 "Do not weaken source semantics or borrow context from obligations outside this narrowed input."
             ),
         )

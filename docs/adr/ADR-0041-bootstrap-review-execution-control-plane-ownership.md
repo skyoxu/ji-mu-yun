@@ -38,9 +38,14 @@ a multi-behavior oracle does not establish atomic semantic coverage. Structural
 constraints name an observable artifact/boundary check and its evaluation phase;
 they cannot be proved by unrelated runtime return values or assumed in Given.
 
-Grouped repair uses exact per-obligation contract and context-assignment maps.
-Legacy singleton groups remain readable. Legacy multi-obligation shared oracles
-are rejected for recompilation; their historical evidence is never rewritten.
+The V3 repair wire format uses one exact frozen-obligation map. Each required
+key contains its own proof and complete execution context. Live workers do not
+author group IDs or cross-object assignments: enumerating frozen obligation IDs
+did not ensure the corresponding group was actually returned. Matching contexts
+remain eligible for V6 merging; this does not require one slice per obligation.
+Legacy grouped caches retain strict reference and atomic-contract checks.
+Malformed references and multi-obligation shared oracles remain rejected;
+historical evidence is never rewritten and cache format versions stay distinct.
 The existing bounded repair budget and independent V4 semantic authority remain
 unchanged. V5 checks semantic edges, V6 owns partitioning, and the downstream
 plan/runtime checks still establish whether the declared constraints hold.

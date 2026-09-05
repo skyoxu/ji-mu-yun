@@ -46,7 +46,7 @@ def _hint(*, owners: list[str], rollback_paths: list[str], allowed: list[str] | 
     }
 
 
-def test_group_schema_stays_on_basic_frozen_id_enum_for_codex_transport() -> None:
+def test_group_schema_stays_on_required_frozen_keys_for_codex_transport() -> None:
     payload = {
         "input": {
             "obligations": [
@@ -57,10 +57,9 @@ def test_group_schema_stays_on_basic_frozen_id_enum_for_codex_transport() -> Non
         }
     }
     schema = grouped._group_schema(payload)
-    group_id_schema = schema["properties"]["groups"]["items"]["properties"]["group_id"]
-    assignments = schema["properties"]["obligation_group_assignments"]
-    assert "oneOf" not in group_id_schema
-    assert group_id_schema["enum"] == ["O-1", "O-2", "O-3"]
+    assignments = schema["properties"]["obligation_contracts"]
+    assert "oneOf" not in str(schema)
+    assert set(schema["properties"]) == {"obligation_contracts"}
     assert set(assignments["properties"]) == {"O-1", "O-2", "O-3"}
     assert set(assignments["required"]) == {"O-1", "O-2", "O-3"}
     assert assignments["additionalProperties"] is False

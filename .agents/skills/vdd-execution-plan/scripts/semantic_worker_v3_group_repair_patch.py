@@ -1,9 +1,9 @@
 """V3 repair with shared implementation context and per-obligation proof.
 
-ADR-0041: groups own slice hints only. Exact assignment and contract objects
-bind each active obligation to its own Acceptance and failure intents. Legacy
-singleton groups remain readable; multi-obligation shared oracles require a
-new worker result. V6 still merges compatible implementation slices.
+ADR-0041: each required frozen-obligation key owns its complete proof and
+execution context. The live format has no group references to drift. V6 merges
+compatible contexts. Historical grouped caches keep their strict projection
+checks; malformed references are never guessed or silently repaired.
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ import semantic_worker_v3_domain_patch as v3_domain
 
 sc = gate.sc
 _BASE_DOMAIN_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
-_GROUP_STAGE = "v3-schema-repair-group-v4-per-obligation-contract"
+_GROUP_STAGE = "v3-schema-repair-group-v5-inline-context"
 
 
 def _string_array(*, nonempty: bool = False, enum: list[str] | None = None) -> dict[str, Any]:
@@ -64,12 +64,6 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
         for ref in item.get("source_refs", [])
         if isinstance(ref, str) and ref
     })
-    group_id_schema: dict[str, Any] = {"type": "string", "minLength": 1}
-    assignment_target_schema: dict[str, Any] = {"type": "string", "minLength": 1}
-    if known_ids:
-        group_id_schema["enum"] = known_ids
-        assignment_target_schema["enum"] = known_ids
-
     acceptance = {
         "type": "object", "additionalProperties": False,
         "properties": {
@@ -132,30 +126,14 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
             "planned_new_files", "terminal_predicate", "forbidden_paths", "validation_commands",
         ],
     }
-    group = {
-        "type": "object", "additionalProperties": False,
-        "properties": {
-            "group_id": group_id_schema,
-            "slice_hint": slice_hint,
-        },
-        "required": ["group_id", "slice_hint"],
-    }
-    assignments = {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {
-            oid: dict(assignment_target_schema)
-            for oid in known_ids
-        },
-        "required": known_ids,
-    }
     contract = {
         "type": "object", "additionalProperties": False,
         "properties": {
             "acceptance": acceptance,
             "failure_intents": {"type": "array", "minItems": 1, "items": failure},
+            "slice_hint": slice_hint,
         },
-        "required": ["acceptance", "failure_intents"],
+        "required": ["acceptance", "failure_intents", "slice_hint"],
     }
     contracts = {
         "type": "object", "additionalProperties": False,
@@ -165,11 +143,9 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "type": "object", "additionalProperties": False,
         "properties": {
-            "groups": {"type": "array", "minItems": 1, "items": group},
-            "obligation_group_assignments": assignments,
             "obligation_contracts": contracts,
         },
-        "required": ["groups", "obligation_group_assignments", "obligation_contracts"],
+        "required": ["obligation_contracts"],
     }
 
 
@@ -351,7 +327,38 @@ def _project_legacy_groups(
     return {"acceptances": acceptances, "failure_intents": failures, "slice_hints": hints}
 
 
+def _project_inline_contracts(
+    value: Mapping[str, Any], *, refs_by_oid: Mapping[str, list[str]] | None,
+) -> dict[str, Any]:
+    """Bind exact frozen keys without asking the worker to maintain group joins."""
+    if set(value) != {"obligation_contracts"}:
+        raise ValueError("V3 inline repair must contain only obligation_contracts")
+    contracts = value.get("obligation_contracts")
+    if not isinstance(contracts, Mapping) or not contracts:
+        raise ValueError("V3 inline repair contracts must be a non-empty object")
+    if any(not isinstance(oid, str) or not oid or oid != oid.strip() for oid in contracts):
+        raise ValueError("V3 inline repair requires exact non-empty obligation IDs")
+    if refs_by_oid is not None and set(contracts) != set(refs_by_oid):
+        raise ValueError("V3 inline repair contracts differ from frozen obligations")
+    acceptances: list[dict[str, Any]] = []
+    failures: list[dict[str, Any]] = []
+    hints: list[dict[str, Any]] = []
+    for index, oid in enumerate(sorted(contracts)):
+        raw = contracts[oid]
+        if not isinstance(raw, Mapping) or set(raw) != {"acceptance", "failure_intents", "slice_hint"}:
+            raise ValueError(f"V3 inline repair contract {oid} requires proof and execution context")
+        acceptance, group_failures, hint = _group_body(raw, index)
+        _append_atomic(
+            oid=oid, acceptance=acceptance, group_failures=group_failures, hint=hint,
+            group_index=index, refs_by_oid=refs_by_oid,
+            acceptances=acceptances, failures=failures, hints=hints,
+        )
+    return {"acceptances": acceptances, "failure_intents": failures, "slice_hints": hints}
+
+
 def _project(value: Mapping[str, Any], *, refs_by_oid: Mapping[str, list[str]] | None = None) -> dict[str, Any]:
+    if "obligation_contracts" in value and "groups" not in value:
+        return _project_inline_contracts(value, refs_by_oid=refs_by_oid)
     groups = value.get("groups")
     if not isinstance(groups, list) or not groups:
         raise ValueError("V3 group repair must return non-empty groups")
@@ -363,6 +370,13 @@ def _project(value: Mapping[str, Any], *, refs_by_oid: Mapping[str, list[str]] |
 def _trace_summary(trace: str) -> str:
     text = trace.strip()
     return text if len(text) <= 2600 else text[:300] + "\n...<trace elided>...\n" + text[-2200:]
+
+
+def _project_current_output(value: Mapping[str, Any], refs_by_oid: Mapping[str, list[str]]) -> dict[str, Any]:
+    if set(value) != {"obligation_contracts"}:
+        raise ValueError("V3 current repair output requires inline obligation_contracts")
+    # Keep the installed owner/write-set projection wrapper on the live path.
+    return _project(value, refs_by_oid=refs_by_oid)
 
 
 def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any], prompt: str) -> Mapping[str, Any]:
@@ -381,7 +395,7 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         cached = json.loads(cache_path.read_text(encoding="utf-8"))
         if not isinstance(cached, Mapping):
             raise ValueError("V3 group repair cache is malformed")
-        return _project(cached, refs_by_oid=refs_by_oid)
+        return _project_current_output(cached, refs_by_oid)
 
     output = out_dir / ".compiler-work" / f"{_GROUP_STAGE}-last-message.json"
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -390,17 +404,18 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
     schema_path = transport._schema_path(out_dir, _GROUP_STAGE, _group_schema(payload))
     grouped_prompt = (
         prompt
-        + "\n\nGROUP-FIRST REPAIR CONTRACT: return groups[], obligation_group_assignments{}, and "
-        "obligation_contracts{}. Each group contains only group_id and slice_hint, with shared real owner, lane, "
-        "write boundary and selector lifecycle. Both objects must contain every supplied active obligation ID "
-        "exactly once. Assign each obligation to a returned group_id; each group_id must map to itself and be used. "
-        "Each obligation_contracts value contains its own acceptance and failure_intents. Author the oracle, "
+        + "\n\nV3 REPAIR OUTPUT CONTRACT: return only obligation_contracts{}. It must contain every "
+        "supplied active obligation ID exactly once as a required key. Each value contains acceptance, "
+        "failure_intents, and a complete slice_hint. Do not emit groups, group_id, or assignments. "
+        "For compatible obligations, repeat the same real owner, lane, legal write boundary and selector "
+        "context in their hints; do not invent different paths merely to distinguish atomic obligations. "
+        "V6 owns grouping and dependency boundaries. Author the oracle, "
         "assertions and failure intents for THAT obligation, not the union of the group's behaviors. Do not copy "
         "one shared oracle across independent obligations. A boundary/structural constraint needs its own "
         "observable artifact and check, with the evaluation phase in when/oracle; a runtime result cannot prove "
         "a partition constraint. Do not assume the required result in given or claim future checks already ran. "
         "The compiler attaches frozen IDs and source refs; V4 independently judges semantic alignment. "
-        "Only implementation contexts are shared. V6 may merge compatible contexts into one slice."
+        "Verification contracts remain independent even when execution contexts match."
         + "\n\nINPUT:\n" + json.dumps(payload, ensure_ascii=False, sort_keys=True)
     )
     backend = resolve_llm_backend(None)
@@ -421,7 +436,7 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
     if code != 0 or not output.is_file():
         raise RuntimeError(f"semantic worker v3-schema-repair failed: {_trace_summary(trace)}")
     raw = sc._parse_json_output(output.read_text(encoding="utf-8"))
-    projected = _project(raw, refs_by_oid=refs_by_oid)
+    projected = _project_current_output(raw, refs_by_oid)
     sc.atomic_json(cache_path, raw)
     return projected
 
@@ -434,7 +449,7 @@ def group_repair_transport(*, root, out_dir, stage: str, payload: Mapping[str, A
         raw = worker_cache[stage]
         if not isinstance(raw, Mapping):
             raise ValueError("injected V3 repair cache must be object")
-        value = _project(raw, refs_by_oid=refs_by_oid) if "groups" in raw else dict(raw)
+        value = _project(raw, refs_by_oid=refs_by_oid) if "groups" in raw or "obligation_contracts" in raw else dict(raw)
     else:
         value = _live_group_repair(root=Path(root), out_dir=Path(out_dir), payload=payload, prompt=prompt)
     findings = v3_domain._domain_findings(stage, payload, value)

@@ -1,0 +1,86 @@
+{
+  "schema": "ch456.local-code-validation.v1",
+  "created_at": "2026-09-05T06:03:36.582806+00:00",
+  "baseline_source_head": "5d0081d51e42ba6b3e4803951bf3842994c96128",
+  "candidate_binding": "sha256 of changed files below; validation ran before commit creation",
+  "changed_files": {
+    ".agents/skills/vdd-execution-plan/references/solo-maintainer-vdd-standard.md": "bc23b9aa3fbca26981992a715fac7ba3dd42f36263ba86e3e73e38adaa94bac8",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_prompt_patch.py": "ad1e6dfaf8e2ef68e7d138bd6f7d6f6c6fe95246d63c0387342fac1d074eafd1",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_repair_patch.py": "905139bfc271c89fdf644964b0b41dcbdd69abeff7f881d53877c3c3262e11ef",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_total_coverage_patch.py": "be8f03574d9bed32ec8abaadf9e9175a3e52d3851e078fe1feafbf66d34c8db5",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_group_safety.py": "171d62526592d36de64d4753a6257dd0fa8ac2d1c0f6365cd0688c144e6d0e22",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_per_obligation_contract.py": "a0aeee622f2320fa644c4c5ce6bc038bdccc0d6d6c335695aaf73337759c9acd",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_total_coverage_and_slice_cohesion.py": "eba06026aa4942edc133c99974d4fb0cbaaa192824d60fd7521b09a909798486",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "5a76da177f7cdd93cb73f4d4e026b7e7a3c69498795e279492e0884dbd298640",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_inline_context_repair.py": "593c6ceede93c6dce1c30ba8e1fa82e93f5b3a9f4b35ddc0a9ab4e5a65d76ed8"
+  },
+  "reported_blocker": {
+    "source_head": "5d0081d51e42ba6b3e4803951bf3842994c96128",
+    "status": "worker-failed",
+    "error": "V3 group repair assignments reference unknown groups",
+    "reference_count_reported_by_user": 37,
+    "raw_output_available_in_this_session": false
+  },
+  "scope": "Eliminate cross-object group references from current V3 repair output; exact frozen keys own proof and execution context. Preserve strict historical grouped projection, domain validation and V6 partitioning.",
+  "environment": "Linux scratch reconstruction of current VDD subtree with repository dependencies; FastCtx unavailable; validation used shell fallback. Not the Windows live runner.",
+  "regression": {
+    "exit_code": 0,
+    "passed": 102,
+    "subtests_passed": 15,
+    "test_directory": ".agents/skills/vdd-execution-plan/scripts/tests",
+    "test_files": [
+      "test_ch456_v3_inline_context_repair.py",
+      "test_ch456_v3_per_obligation_contract.py",
+      "test_ch456_v3_total_coverage_and_slice_cohesion.py",
+      "test_ch456_grouped_v3_and_obligation_gap_repair.py",
+      "test_ch456_live_v3_worker_contract.py",
+      "test_ch456_v3_domain_and_v4_alignment_repair.py",
+      "test_ch456_v3_expected_red_eligibility.py",
+      "test_ch456_compiler_closure.py",
+      "test_ch456_v3_group_safety.py",
+      "test_ch456_v3_group_safety_composition.py",
+      "test_ch456_worker_transport_composition.py",
+      "test_ch456_semantic_worker_transport.py",
+      "test_validate_skill_contract.py"
+    ]
+  },
+  "before_fix_regression": {
+    "exit_code": 1,
+    "failed": 2,
+    "deselected": 11,
+    "tests": [
+      "test_inline_schema_requires_proof_and_context_without_reference_targets",
+      "test_37_inline_contracts_compile_once_and_keep_one_cohesive_slice"
+    ],
+    "fixture_kind": "synthetic; not the user live output"
+  },
+  "skill_validation": {
+    "command": "python .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan",
+    "exit_code": 0,
+    "ok": true
+  },
+  "package_validation": {
+    "command": "python -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/vdd-execution-plan --capability scripts/sc/config/skill-package-validator-capability.v1.json",
+    "exit_code": 0,
+    "status": "pass",
+    "note": "A truncated scratch dependency was refreshed byte-for-byte from the baseline before the successful run; no acceptance package code is changed by this commit."
+  },
+  "composition": {
+    "synthetic_obligations": 37,
+    "atomic_acceptances": 37,
+    "cohesive_slices": 1,
+    "schema_repair_attempts": 1,
+    "live_transport_test_backend": "stubbed; exercises output schema, projection and cache reuse"
+  },
+  "live_backend_called": false,
+  "real_semantic_run": false,
+  "live_blind_run": false,
+  "final_acceptance_run": false,
+  "completion_claimed": false,
+  "next_validation": "Windows regressions then one real-semantic run with the existing recorded 600-second configuration; stop at first failure and preserve original payload/cache/worktree. Do not rerun live blind or final acceptance until real semantic passes.",
+  "limitations": [
+    "Synthetic regressions do not replay the uncollected live failure output",
+    "Current candidate real semantic, live blind and final acceptance remain unverified",
+    "No new repair/recheck loops, timeout default changes or benchmark/gate changes"
+  ]
+}

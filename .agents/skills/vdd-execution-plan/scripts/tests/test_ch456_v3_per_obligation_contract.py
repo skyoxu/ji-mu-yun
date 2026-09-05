@@ -93,8 +93,9 @@ def test_worker_schema_requires_contracts_for_active_domain_only():
     obligations = [_obligation("O-1"), _obligation("O-2"), {**_obligation("O-3"), "status": "deferred"}]
     schema = grouped._group_schema({"input": {"obligations": obligations}})
     assert set(schema["properties"]["obligation_contracts"]["required"]) == {"O-1", "O-2"}
-    assert set(schema["properties"]["obligation_group_assignments"]["required"]) == {"O-1", "O-2"}
-    assert set(schema["properties"]["groups"]["items"]["properties"]) == {"group_id", "slice_hint"}
+    assert set(schema["properties"]) == {"obligation_contracts"}
+    assert set(schema["properties"]["obligation_contracts"]["properties"]["O-1"]["required"]) == {
+        "acceptance", "failure_intents", "slice_hint"}
     normal = transport._worker_output_schema("v3")
     assert normal["properties"]["acceptances"]["items"]["properties"]["obligation_ids"]["maxItems"] == 1
 
