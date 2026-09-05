@@ -1,0 +1,10 @@
+{
+  "schema": "ch456.live-blind-runtime-configuration.v1",
+  "candidate_commit": "f33feb706c5ba5d4c61f2c5ef36b72da66242fd5",
+  "backend": "codex-cli",
+  "v3_repair_timeout_seconds": 600,
+  "command": "python scripts/quick_dev/run_live_blind_benchmark.py --inner --backend codex-cli --limit-seconds 3600",
+  "worktree": "C:/ch456-live-blind-debug-f33feb70",
+  "result_source_head": "f33feb706c5ba5d4c61f2c5ef36b72da66242fd5",
+  "authorizes": []
+}
