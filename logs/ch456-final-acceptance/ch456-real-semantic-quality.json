@@ -1,5 +1,14 @@
 {
-  "atomic_quality_metrics": null,
+  "atomic_behavior_floor_passed": true,
+  "atomic_quality_metrics": {
+    "active_obligation_count": 39,
+    "f1": 1.0,
+    "invented_obligation_count": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "source_gap_count": 0,
+    "supported_obligation_count": 39
+  },
   "authorizes": [],
   "availability": {
     "available": true,
@@ -10,15 +19,16 @@
   "backend": "codex-cli",
   "compiler_findings": [],
   "compiler_stage": null,
-  "compiler_status": null,
-  "error": "V3 execution-contract validation failed: v3-contract:slice_hints[32]:no-real-production-entry",
+  "compiler_status": "plan-ready",
   "execution_attempted": true,
-  "execution_succeeded": false,
+  "execution_succeeded": true,
   "fixture": ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md",
   "minimum_active_obligations": 23,
+  "precision_threshold_passed": true,
+  "recall_threshold_passed": true,
   "required_precision": 0.95,
   "required_recall": 0.95,
   "schema": "vdd.real-semantic-quality-metric.v1",
-  "source_head": "f6262fe88c9161a2f2c479fd99cf61a1c795e93c",
-  "status": "worker-failed"
+  "source_head": "c4ff9a429094a089248676369593430209452d3b",
+  "status": "pass"
 }
