@@ -1,0 +1,26 @@
+{
+  "base_commit": "256d9bbbe348b8684e8dba7172d6a137d49cda24",
+  "implementation_candidate": "1ee886c6b3b4feea6c5c41c01dee22f703c70e49",
+  "adr": "ADR-0041",
+  "cause": "Frozen-source production owner was also projected as an immutable execution snapshot. Q4 worker allowed/forbidden sets overlapped; Q5 executed unchanged skeleton and failed all three RED behaviors.",
+  "change": "Project explicit owner-only write authority out of execution snapshots; preserve other paths and bind explicitly declared fixtures for owner-only hints. Conflicting explicit source roles remain rejected.",
+  "scope": [
+    "V3 initial and existing schema-repair path projection",
+    "No benchmark, runtime GREEN predicate, failure IDs, or semantic worker retry-budget change"
+  ],
+  "validation": {
+    "vdd_ch456_tests": "126 passed",
+    "skill_contract": "pass",
+    "package_validator": "pass",
+    "captured_v3_to_v6_replay": "pass; 1 slice, 11 acceptances, 11 failure intents; expected oracle values and failure IDs unchanged; owner writable and RED test/fixture protected",
+    "live_backend_calls": 0,
+    "live_green_proven": false,
+    "environment": "Linux reconstructed checkout; Windows full specified regressions remain to run"
+  },
+  "changed_sha256": {
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_explicit_path_contract_patch.py": "sha256:7df77b99edf9f2309b8aa5c90e6e2a3ce2bc5f028938d4e55421dd46ca46a6dd",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_explicit_path_contract.py": "sha256:a42918757acf99fa5c3d7a656f600702e611eeaf7782a9c3fedb7ebf1ae20566",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "sha256:89a69f0d7ac0aab43bbb362d5e644ea8eb8c42548701eb7bba8c611d3b766021",
+    "logs/ch456-q5-path-repair-20260905/replay.py": "sha256:d03373ccce346baf9fbfeb7365e97c5302f8b3cae21b9f9a97a41d8ad2e2b475"
+  }
+}

@@ -130,6 +130,21 @@ def _normalize_hint(
     explicit_existing = sorted({path for fact in facts for path in _strings(fact.get("existing_fixtures"))})
     owner_only = bool(explicit_owners) and all(bool(fact.get("owner_only")) for fact in facts if _strings(fact.get("owners")))
 
+    # ADR-0041: execution snapshots are immutable RED inputs in Quick Dev.
+    # Exact frozen production-write authority must not also freeze that owner.
+    # Do not guess roles for other paths or resolve contradictory source facts.
+    if owner_only and refs.issubset(contracts_by_ref):
+        if set(explicit_owners) & (set(explicit_existing) | set(explicit_planned)):
+            raise ValueError("frozen production owner conflicts with explicit RED artifact role")
+        snapshots = hint.get("execution_snapshot_paths")
+        if isinstance(snapshots, list):
+            kept = [path for path in snapshots if path not in explicit_owners]
+            if len(kept) != len(snapshots):
+                # Owner-only hints still bind the source's explicit immutable
+                # fixtures. Never substitute an arbitrary path to satisfy V3.
+                kept.extend(path for path in explicit_existing if path not in kept)
+            hint["execution_snapshot_paths"] = kept
+
     if explicit_owners:
         # Frozen source authority outranks a model-authored path guess.  Keep the
         # exact explicit owner set even if a source file is unexpectedly absent;

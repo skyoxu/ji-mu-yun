@@ -71,6 +71,16 @@ The exact-ID partition, coverage thresholds and single recheck budget remain.
 
 ### Existing Ownership Consequences
 
+When frozen source explicitly names production owners and limits production
+writes to those owners, V3 removes those exact paths from model-authored
+`execution_snapshot_paths`. Quick Dev treats execution snapshots as immutable
+RED test/fixture inputs; production bytes remain bound through production
+owners and candidate snapshots. Other paths retain their protection. Missing
+source authority is not inferred from write sets or filenames; an explicit
+owner also declared as a RED artifact is a source-role conflict, not permission
+to weaken the RED freeze. This projection applies to initial V3 and its existing
+repair path without changing Acceptance semantics or the GREEN predicate.
+
 - Protocol changes are made once in the repository-owned Skill and projected through compatibility adapters.
 - Plan-local validators retain domain acceptance authority.
 - Generic schemas cannot drift independently across plans.
