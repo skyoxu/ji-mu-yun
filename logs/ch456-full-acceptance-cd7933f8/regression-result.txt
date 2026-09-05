@@ -1,0 +1,16 @@
+candidate=cd7933f8f92891b8840a3c9ff2c5965f97020a1d
+worktree=C:/ch456-full-acceptance-cd7933f8
+stage=specified-regression
+exit_code=1
+status=failed
+tests_passed=141
+subtests_passed=15
+tests_failed=2
+failure_1=.agents/skills/vdd-execution-plan/scripts/tests/test_ch456_failed_resume.py::test_atomic_recall_failure_can_be_repaired_in_same_out_dir_and_resumed
+failure_1_cause=shared LLM backend unavailable in temporary test root; ModuleNotFoundError _llm_backend
+failure_2=.agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_execution_contract.py::test_v3_contract_routes_missing_coverage_and_path_defects_through_one_grouped_repair
+failure_2_cause=legacy shared group repair rejected; V3 shared group requires per-obligation contracts
+real_semantic=not_run
+live_blind=not_run
+final_acceptance=not_run
+note=First-stage failure; no retry performed. Candidate worktree retained.
