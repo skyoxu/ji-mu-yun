@@ -1,0 +1,660 @@
+{
+  "acceptance": {
+    "acceptance_id": "A-22676D615E8B",
+    "availability": "unavailable",
+    "reason": "The retained V4 output names this post-V3-repair ID, but the V3 repair output and exact normalized Acceptance payload were not retained. The initial V3 worker output has a different deterministic Acceptance ID and is not substituted here."
+  },
+  "actual_stop": {
+    "findings": [
+      "v4:active-not-covered:O-400DF360A352",
+      "v4:missing:O-400DF360A352",
+      "v4:misaligned-acceptance:A-22676D615E8B"
+    ],
+    "stage": "V4",
+    "status": "repair-vdd"
+  },
+  "artifact_sha256": {
+    "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md": "sha256:b6a777b60850e8965a50cfcd9e8ebdc74404c4e9a93214a0b9c6622f180adcfd",
+    "logs/ch456-live-blind/plan/.compiler-attempts/V4-2e224519c68c2719632e1740.json": "sha256:2e224519c68c2719632e17409a106563111355bb1585a582df1847ad5c930e16",
+    "logs/ch456-live-blind/plan/.compiler-cache/v3-8a0f5bbde65ed8bdca35cf5a.json": "sha256:71bc2e027743273630a795b85e7447a33646acc3390eda9838065472e7824396",
+    "logs/ch456-live-blind/plan/.compiler-cache/v4-atomic-recall-d26424db126463c28fd51973.json": "sha256:62a460fa200cf520d8ae344a6067c24d43f50951b9c52085a97c60360de1b158",
+    "logs/ch456-live-blind/plan/.compiler-cache/v4-atomic-recall-e8efdc32ced8aeb7952298db.json": "sha256:829e9e54218bcad1daffec35d25605a5ab43539ee834c9c2cd403f4affa09740",
+    "logs/ch456-live-blind/plan/.compiler-cache/v4-f20b1175986883130704d8c5.json": "sha256:317cd0e158ea587891800f6b051efd0b458991c29894285ec81706a772e2a7ef",
+    "logs/ch456-live-blind/plan/.compiler-work/v4-atomic-recall-last-message.json": "sha256:96cd99e0eedbe0edcf07e233c591cc5527577d3f1d7fe195e85db9da703e5494",
+    "logs/ch456-live-blind/plan/.compiler-work/v4-last-message.json": "sha256:5fa71f1d944dc2f472d5aa66cd69e3a37c0678ffa6feffbb596ba401dfbac74a",
+    "logs/ch456-live-blind/plan/.compiler-work/worker-receipts/v3-8a0f5bbde65e-ab83e4d71d82.json": "sha256:664b4927f18d0d572aa5579741855c091960f67be5378b9826f5c16ba6f0520f",
+    "logs/ch456-live-blind/plan/.compiler-work/worker-receipts/v3-d084e6578f76-861088527f44.json": "sha256:f3ce15640dc28b6758d5e6787fd1b0126427d3f98519cc371c5cb993595f22e9"
+  },
+  "authorizes": [],
+  "candidate_commit": "f07cca6502fef2a8997e712b9a05c86a9d691ffa",
+  "compiler_transport_called": false,
+  "exact_cover_invoked": false,
+  "frozen_requirement": {
+    "source_refs": [
+      "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "verbatim_text": "# FR-301\nAn idempotency reservation ledger must be implemented as one bounded stateful slice.\n\nProduction owner: `benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py`.\nThe RED author must create `benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py` and may use the existing fixture `benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/cases.json`.\nThe production implementation may modify only the production owner above.\nThe validation command is `py -3 -m pytest benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py -q -p no:cacheprovider`.\nThe RED test must call the real production owner and, whenever a declared Acceptance assertion fails, emit the matching VDD failure intent as `FAILURE_ID:<failure_id>` before the assertion fails.\n\nThe ledger has three independently observable required behaviors, all of which must be exercised by the same selector family:\n\n1. Claiming a key that is already active at `now < expires_at` returns `duplicate` rather than `accepted`.\n2. Claiming with `ttl_seconds <= 0` returns `invalid-ttl` and must not create an active reservation.\n3. Releasing a key that is not active returns `not-found` rather than reporting a successful release.\n\nThe existing skeleton intentionally returns success for every operation, so all three forbidden behaviors are observable before implementation.  A legal GREEN must change production only; GREEN and REFACTOR must preserve the RED selector, fixture and assertions.\n"
+  },
+  "live_backend_called": false,
+  "obligation": {
+    "depends_on": [],
+    "expected_behavior": "Implement the idempotency reservation ledger as one bounded stateful slice.",
+    "forbidden_result": [
+      "Splitting the required ledger behavior across unbounded or unrelated slices."
+    ],
+    "obligation_id": "O-400DF360A352",
+    "obligation_kind": "constraint",
+    "observable_result": "A bounded stateful idempotency reservation ledger implementation exists.",
+    "requirement_id": "FR-301",
+    "requirement_type": "Product",
+    "source_refs": [
+      "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+    ],
+    "state_after": "The ledger is implemented as one bounded stateful slice.",
+    "state_before": "The idempotency reservation ledger slice is not implemented.",
+    "status": "active",
+    "subject": "Idempotency reservation ledger",
+    "trigger": "Implementation of FR-301",
+    "unresolved_fragments": []
+  },
+  "related_failure_intents": {
+    "availability": "unavailable",
+    "reason": "Failure intents for the post-V3-repair Acceptance cannot be derived without substituting the missing V3 repair output."
+  },
+  "retained_v3_material": {
+    "initial_worker_output": {
+      "acceptances": [
+        {
+          "assertion_ids": [
+            "ASSERT_LEDGER_DUPLICATE",
+            "ASSERT_LEDGER_INVALID_TTL",
+            "ASSERT_LEDGER_INVALID_TTL_NO_RESERVATION",
+            "ASSERT_LEDGER_RELEASE_NOT_FOUND"
+          ],
+          "given": "The bounded idempotency reservation ledger is implemented at its designated production owner.",
+          "obligation_ids": [
+            "O-400DF360A352",
+            "O-46630AC78666",
+            "O-84D0659124BA",
+            "O-78ABA66136BC",
+            "O-A90B595E2613",
+            "O-D80D6C9E25F5",
+            "O-FA92E80AD267"
+          ],
+          "oracle": {
+            "expected": "An active duplicate claim returns duplicate; a non-positive TTL claim returns invalid-ttl without an active reservation; and release of an inactive key returns not-found, with production implementation confined to the designated owner.",
+            "forbidden": [
+              "Returning accepted for an active duplicate claim.",
+              "Returning accepted or creating an active reservation for a non-positive TTL claim.",
+              "Reporting successful release of an inactive key.",
+              "Using a production implementation path other than benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py."
+            ],
+            "observable": "Results and reservation state returned by the real ledger implementation, plus the production implementation path changed."
+          },
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "The required ledger outcomes are observable from the designated production owner.",
+          "when": "A selector-family test claims an active key, claims with ttl_seconds <= 0, and releases an inactive key."
+        },
+        {
+          "assertion_ids": [
+            "ASSERT_RED_TEST_FILE",
+            "ASSERT_RED_CALLS_REAL_OWNER",
+            "ASSERT_SHARED_SELECTOR_FAMILY",
+            "ASSERT_FAILURE_MARKER_PRECEDES_ASSERTION"
+          ],
+          "given": "RED tests are being authored for FR-301 before production behavior is implemented.",
+          "obligation_ids": [
+            "O-0F9CD5CF0156",
+            "O-2FD5B47E4B18",
+            "O-AC90A459DD40",
+            "O-D97C96CD6D6E"
+          ],
+          "oracle": {
+            "expected": "The required RED test file exists, invokes the real production owner, exercises all three behaviors through one selector family, and emits FAILURE_ID:<failure_id> before each failing declared Acceptance assertion.",
+            "forbidden": [
+              "Omitting the required RED test file or placing it elsewhere.",
+              "Testing a mock, duplicate, or substitute implementation.",
+              "Using different selector families or omitting a required behavior.",
+              "Emitting a failure marker after its assertion failure or in a format other than FAILURE_ID:<failure_id>."
+            ],
+            "observable": "RED test source and its failing execution output."
+          },
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "RED evidence is bound to the real owner with marker output preceding declared assertion failures.",
+          "when": "The FR-301 RED selector family is executed against the intentionally successful skeleton."
+        },
+        {
+          "assertion_ids": [
+            "ASSERT_GREEN_PRODUCTION_ONLY",
+            "ASSERT_GREEN_REFACTOR_PRESERVES_RED"
+          ],
+          "given": "The FR-301 RED selector, fixture, and assertions have been established.",
+          "obligation_ids": [
+            "O-6DE4C51FA8E1",
+            "O-96D8A901E747"
+          ],
+          "oracle": {
+            "expected": "GREEN changes production only, and both GREEN and REFACTOR preserve the established RED selector, fixture, and assertions.",
+            "forbidden": [
+              "Changing tests, selectors, fixtures, or assertions during GREEN.",
+              "Changing the RED selector, fixture, or assertions during GREEN or REFACTOR."
+            ],
+            "observable": "Diff and repeated execution of the established RED test file through GREEN and REFACTOR."
+          },
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "The established RED test contract remains unchanged while production reaches GREEN.",
+          "when": "GREEN or REFACTOR work is performed for FR-301."
+        },
+        {
+          "assertion_ids": [
+            "ASSERT_DECLARED_VALIDATION_COMMAND"
+          ],
+          "given": "FR-301 requires validation after its test contract is authored.",
+          "obligation_ids": [
+            "O-32F333238885"
+          ],
+          "oracle": {
+            "expected": "Validation invokes py -3 -m pytest benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py -q -p no:cacheprovider.",
+            "forbidden": [
+              "Using a different declared validation command."
+            ],
+            "observable": "The recorded validation argv targeting the required test file with cacheprovider disabled."
+          },
+          "source_refs": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301"
+          ],
+          "then": "FR-301 validation uses its declared command.",
+          "when": "FR-301 validation is invoked."
+        }
+      ],
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "task-implementation-failure",
+          "failure_id": "LEDGER_REQUIRED_BEHAVIORS",
+          "obligation_ids": [
+            "O-400DF360A352",
+            "O-46630AC78666",
+            "O-84D0659124BA",
+            "O-78ABA66136BC",
+            "O-A90B595E2613",
+            "O-D80D6C9E25F5",
+            "O-FA92E80AD267"
+          ],
+          "selector_intent": "Run the shared ledger behavior selector family against the unimplemented success-returning skeleton."
+        },
+        {
+          "expected_outcome": "fail",
+          "failure_family": "test-harness-failure",
+          "failure_id": "RED_CONTRACT_BINDING",
+          "obligation_ids": [
+            "O-0F9CD5CF0156",
+            "O-2FD5B47E4B18",
+            "O-AC90A459DD40",
+            "O-D97C96CD6D6E"
+          ],
+          "selector_intent": "Inspect and execute the required RED test selector family to verify file creation, real-owner binding, shared selection, and pre-assertion failure markers."
+        },
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "GREEN_RED_PRESERVATION",
+          "obligation_ids": [
+            "O-6DE4C51FA8E1",
+            "O-96D8A901E747"
+          ],
+          "selector_intent": "Compare the established RED test contract with GREEN and REFACTOR revisions while executing the unchanged selector."
+        },
+        {
+          "expected_outcome": "fail",
+          "failure_family": "test-harness-failure",
+          "failure_id": "DECLARED_VALIDATION_COMMAND",
+          "obligation_ids": [
+            "O-32F333238885"
+          ],
+          "selector_intent": "Invoke validation only through the frozen FR-301 pytest argv with cacheprovider disabled."
+        }
+      ],
+      "slice_hints": [
+        {
+          "affected_subjects": [
+            "Idempotency reservation ledger",
+            "Ledger claim operation",
+            "Ledger release operation",
+            "Ledger reservation state"
+          ],
+          "allowed_write_paths": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py",
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py"
+          ],
+          "behavior_change": "Implement the bounded stateful ledger behaviors at the designated production owner.",
+          "execution_snapshot_paths": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py",
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py",
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/cases.json"
+          ],
+          "forbidden_paths": [],
+          "obligation_ids": [
+            "O-400DF360A352",
+            "O-46630AC78666",
+            "O-84D0659124BA",
+            "O-78ABA66136BC",
+            "O-A90B595E2613",
+            "O-D80D6C9E25F5",
+            "O-FA92E80AD267"
+          ],
+          "planned_new_files": [],
+          "production_owners": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py"
+          ],
+          "rollback_scope": {
+            "production_paths": [
+              "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py"
+            ],
+            "state_or_schema_compatibility": "In-memory reservation behavior only; no schema or persisted-state compatibility change is specified."
+          },
+          "state_transition": "From success-returning skeleton behavior to bounded stateful duplicate, invalid-TTL, and inactive-release outcomes.",
+          "terminal_predicate": "The declared test command observes duplicate, invalid-ttl without reservation creation, and not-found from the designated production owner.",
+          "validation_commands": [
+            [
+              "py",
+              "-3",
+              "-m",
+              "pytest",
+              "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py",
+              "-q",
+              "-p",
+              "no:cacheprovider"
+            ]
+          ],
+          "verification_lane": "unit"
+        },
+        {
+          "affected_subjects": [
+            "RED author",
+            "RED test suite",
+            "RED test"
+          ],
+          "allowed_write_paths": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py"
+          ],
+          "behavior_change": "Author the required RED test contract bound to the real production owner and one selector family.",
+          "execution_snapshot_paths": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py",
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py",
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/cases.json"
+          ],
+          "forbidden_paths": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py"
+          ],
+          "obligation_ids": [
+            "O-0F9CD5CF0156",
+            "O-2FD5B47E4B18",
+            "O-AC90A459DD40",
+            "O-D97C96CD6D6E"
+          ],
+          "planned_new_files": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py"
+          ],
+          "production_owners": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py"
+          ],
+          "rollback_scope": {
+            "production_paths": [
+              "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py"
+            ],
+            "state_or_schema_compatibility": "No production state or schema change is authorized while authoring RED tests."
+          },
+          "state_transition": "From no required RED test file to a failing selector-family test contract with pre-assertion failure markers.",
+          "terminal_predicate": "The required RED test file exists and its selector family reaches the real owner while emitting matching FAILURE_ID markers before declared assertion failures.",
+          "validation_commands": [
+            [
+              "py",
+              "-3",
+              "-m",
+              "pytest",
+              "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py",
+              "-q",
+              "-p",
+              "no:cacheprovider"
+            ]
+          ],
+          "verification_lane": "unit"
+        },
+        {
+          "affected_subjects": [
+            "GREEN phase",
+            "GREEN and REFACTOR phases"
+          ],
+          "allowed_write_paths": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py"
+          ],
+          "behavior_change": "Constrain GREEN to production changes and preserve the established RED test contract through GREEN and REFACTOR.",
+          "execution_snapshot_paths": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py",
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py",
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/cases.json"
+          ],
+          "forbidden_paths": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py"
+          ],
+          "obligation_ids": [
+            "O-6DE4C51FA8E1",
+            "O-96D8A901E747"
+          ],
+          "planned_new_files": [],
+          "production_owners": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py"
+          ],
+          "rollback_scope": {
+            "production_paths": [
+              "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py"
+            ],
+            "state_or_schema_compatibility": "Rollback is limited to the production owner; RED test selector, fixture, and assertions remain unchanged."
+          },
+          "state_transition": "From established RED failure to production-only GREEN and preserved RED contract through REFACTOR.",
+          "terminal_predicate": "Diff evidence and rerun output show production-only GREEN changes with unchanged RED selector, fixture, and assertions.",
+          "validation_commands": [
+            [
+              "py",
+              "-3",
+              "-m",
+              "pytest",
+              "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py",
+              "-q",
+              "-p",
+              "no:cacheprovider"
+            ]
+          ],
+          "verification_lane": "unit"
+        },
+        {
+          "affected_subjects": [
+            "Validation process"
+          ],
+          "allowed_write_paths": [],
+          "behavior_change": "Bind FR-301 verification to the frozen pytest argv.",
+          "execution_snapshot_paths": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py"
+          ],
+          "forbidden_paths": [],
+          "obligation_ids": [
+            "O-32F333238885"
+          ],
+          "planned_new_files": [],
+          "production_owners": [
+            "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py"
+          ],
+          "rollback_scope": {
+            "production_paths": [
+              "benchmarks/ch456-live-blind/idempotency-ledger-v1/src/idempotency_ledger.py"
+            ],
+            "state_or_schema_compatibility": "No state or schema change."
+          },
+          "state_transition": "From uninvoked FR-301 validation to execution through the declared pytest command.",
+          "terminal_predicate": "The exact declared pytest argv is used with cacheprovider disabled.",
+          "validation_commands": [
+            [
+              "py",
+              "-3",
+              "-m",
+              "pytest",
+              "benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py",
+              "-q",
+              "-p",
+              "no:cacheprovider"
+            ]
+          ],
+          "verification_lane": "unit"
+        }
+      ]
+    },
+    "initial_worker_output_path": "logs/ch456-live-blind/plan/.compiler-cache/v3-8a0f5bbde65ed8bdca35cf5a.json",
+    "missing_repair_output": true,
+    "receipts": {
+      "v3-8a0f5bbde65e-ab83e4d71d82.json": {
+        "authorizes": [],
+        "duration_ms": 78791,
+        "exit_status": "ok",
+        "input_sha256": "sha256:8a0f5bbde65ed8bdca35cf5aa3221a9e4ecba1cdb57ecfa05056044ccd57aa65",
+        "model": "codex-cli:runtime-default-model",
+        "model_version": "runtime-resolved",
+        "prompt_sha256": "sha256:ab83e4d71d828d51c106f178c077e4c79f6559f2b784c871cd029b73c8b10a6f",
+        "prompt_version": "vdd-ch456-semantic-worker.v1",
+        "result_sha256": "sha256:c3e1cdd19a4053f02efb9505269fb0b0606ffb367cbb76e49c5998d1623dbe20",
+        "schema": "vdd.semantic-worker-receipt.v1",
+        "schema_findings": [],
+        "schema_repair_attempted": false,
+        "schema_valid": true,
+        "stage": "v3",
+        "worker_authority": "read-only-semantic-candidate"
+      },
+      "v3-d084e6578f76-861088527f44.json": {
+        "authorizes": [],
+        "duration_ms": 3,
+        "exit_status": "failed",
+        "input_sha256": "sha256:d084e6578f768bc4f5a0089ef3dc5cb019e0a3c182c616050dc18aae88704941",
+        "model": "offline-disabled:runtime-default-model",
+        "model_version": "runtime-resolved",
+        "prompt_sha256": "sha256:861088527f449c700fd87baf7157c5f55056734b0f13d72bf2f54d110300e912",
+        "prompt_version": "vdd-ch456-semantic-worker.v1",
+        "result_sha256": null,
+        "schema": "vdd.semantic-worker-receipt.v1",
+        "schema_findings": [
+          "worker-call:RuntimeError:semantic worker v3 failed: unsupported llm backend: offline-disabled"
+        ],
+        "schema_repair_attempted": true,
+        "schema_valid": false,
+        "stage": "v3",
+        "worker_authority": "read-only-semantic-candidate"
+      }
+    }
+  },
+  "schema": "ch456.v4-offline-diagnostic.v1",
+  "selection": {
+    "acceptance_id": "A-22676D615E8B",
+    "obligation_id": "O-400DF360A352"
+  },
+  "v4_attempt": {
+    "atomic_quality_metrics": {
+      "active_obligation_count": 14,
+      "f1": 1.0,
+      "invented_obligation_count": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "source_gap_count": 0,
+      "supported_obligation_count": 14
+    },
+    "findings": [
+      "v4:active-not-covered:O-400DF360A352",
+      "v4:missing:O-400DF360A352",
+      "v4:misaligned-acceptance:A-22676D615E8B"
+    ],
+    "stage": "V4",
+    "status": "repair-vdd"
+  },
+  "v4_input": {
+    "availability": "unavailable",
+    "reason": "The runner retained V4 outputs, cache keys, receipts, and attempt, but not the exact V4 invocation payload. No reconstructed payload is asserted as the original input."
+  },
+  "v4_worker_outputs": {
+    "cache": {
+      "v4-atomic-recall-d26424db126463c28fd51973.json": {
+        "invented_obligation_ids": [],
+        "source_gap_claims": [
+          {
+            "behavior": "Whenever a declared Acceptance assertion fails, emit the matching VDD failure intent in the format FAILURE_ID:<failure_id> before the assertion fails.",
+            "reason": "This source behavior has no obligation in the frozen allowed obligation ID domain.",
+            "source_ref": "benchmarks/ch456-live-blind/idempotency-ledger-v1/requirements.md#FR-301",
+            "subject": "RED test"
+          }
+        ],
+        "supported_obligation_ids": [
+          "O-2FD5B47E4B18",
+          "O-32F333238885",
+          "O-400DF360A352",
+          "O-46630AC78666",
+          "O-6DE4C51FA8E1",
+          "O-78ABA66136BC",
+          "O-84D0659124BA",
+          "O-96D8A901E747",
+          "O-A90B595E2613",
+          "O-AC90A459DD40",
+          "O-D80D6C9E25F5",
+          "O-D97C96CD6D6E",
+          "O-FA92E80AD267"
+        ]
+      },
+      "v4-atomic-recall-e8efdc32ced8aeb7952298db.json": {
+        "invented_obligation_ids": [],
+        "source_gap_claims": [],
+        "supported_obligation_ids": [
+          "O-0F9CD5CF0156",
+          "O-2FD5B47E4B18",
+          "O-32F333238885",
+          "O-400DF360A352",
+          "O-46630AC78666",
+          "O-6DE4C51FA8E1",
+          "O-78ABA66136BC",
+          "O-84D0659124BA",
+          "O-96D8A901E747",
+          "O-A90B595E2613",
+          "O-AC90A459DD40",
+          "O-D80D6C9E25F5",
+          "O-D97C96CD6D6E",
+          "O-FA92E80AD267"
+        ]
+      },
+      "v4-f20b1175986883130704d8c5.json": {
+        "covered_obligation_ids": [
+          "O-0F9CD5CF0156",
+          "O-2FD5B47E4B18",
+          "O-32F333238885",
+          "O-46630AC78666",
+          "O-6DE4C51FA8E1",
+          "O-78ABA66136BC",
+          "O-84D0659124BA",
+          "O-96D8A901E747",
+          "O-A90B595E2613",
+          "O-AC90A459DD40",
+          "O-D80D6C9E25F5",
+          "O-D97C96CD6D6E",
+          "O-FA92E80AD267"
+        ],
+        "invented_obligation_ids": [],
+        "misaligned_acceptance_ids": [
+          "A-22676D615E8B"
+        ],
+        "missing_obligation_ids": [
+          "O-400DF360A352"
+        ],
+        "oracle_alignment": {
+          "deferred_obligation_ids": [
+            "O-6B8EB239D9FE"
+          ],
+          "failure_intents_match_acceptance_bindings": true,
+          "issues": [
+            {
+              "acceptance_id": "A-22676D615E8B",
+              "obligation_id": "O-400DF360A352",
+              "reason": "该义务要求“one bounded stateful slice”，但 Acceptance 的 oracle 仅观察三项运行时行为及生产路径，无法判定实现是否为单一有界状态切片。"
+            }
+          ],
+          "source_grounded": true
+        },
+        "repairs": [
+          {
+            "acceptance_id": "A-22676D615E8B",
+            "action": "增加可观察标准以验证实现为单一有界状态切片，或将该 Acceptance 改绑定到已观察的行为义务。",
+            "type": "acceptance_oracle"
+          },
+          {
+            "action": "新增或修订一个专门验证有界单一状态切片边界的 Acceptance。",
+            "obligation_id": "O-400DF360A352",
+            "type": "obligation_coverage"
+          }
+        ],
+        "valid": false
+      }
+    },
+    "last_messages": {
+      "v4-atomic-recall-last-message.json": {
+        "invented_obligation_ids": [],
+        "source_gap_claims": [],
+        "supported_obligation_ids": [
+          "O-0F9CD5CF0156",
+          "O-2FD5B47E4B18",
+          "O-32F333238885",
+          "O-400DF360A352",
+          "O-46630AC78666",
+          "O-6DE4C51FA8E1",
+          "O-78ABA66136BC",
+          "O-84D0659124BA",
+          "O-96D8A901E747",
+          "O-A90B595E2613",
+          "O-AC90A459DD40",
+          "O-D80D6C9E25F5",
+          "O-D97C96CD6D6E",
+          "O-FA92E80AD267"
+        ]
+      },
+      "v4-last-message.json": {
+        "covered_obligation_ids": [
+          "O-0F9CD5CF0156",
+          "O-2FD5B47E4B18",
+          "O-32F333238885",
+          "O-46630AC78666",
+          "O-6DE4C51FA8E1",
+          "O-78ABA66136BC",
+          "O-84D0659124BA",
+          "O-96D8A901E747",
+          "O-A90B595E2613",
+          "O-AC90A459DD40",
+          "O-D80D6C9E25F5",
+          "O-D97C96CD6D6E",
+          "O-FA92E80AD267"
+        ],
+        "invented_obligation_ids": [],
+        "misaligned_acceptance_ids": [
+          "A-22676D615E8B"
+        ],
+        "missing_obligation_ids": [
+          "O-400DF360A352"
+        ],
+        "oracle_alignment": {
+          "deferred_obligation_ids": [
+            "O-6B8EB239D9FE"
+          ],
+          "failure_intents_match_acceptance_bindings": true,
+          "issues": [
+            {
+              "acceptance_id": "A-22676D615E8B",
+              "obligation_id": "O-400DF360A352",
+              "reason": "该义务要求“one bounded stateful slice”，但 Acceptance 的 oracle 仅观察三项运行时行为及生产路径，无法判定实现是否为单一有界状态切片。"
+            }
+          ],
+          "source_grounded": true
+        },
+        "repairs": [
+          {
+            "acceptance_id": "A-22676D615E8B",
+            "action": "增加可观察标准以验证实现为单一有界状态切片，或将该 Acceptance 改绑定到已观察的行为义务。",
+            "type": "acceptance_oracle"
+          },
+          {
+            "action": "新增或修订一个专门验证有界单一状态切片边界的 Acceptance。",
+            "obligation_id": "O-400DF360A352",
+            "type": "obligation_coverage"
+          }
+        ],
+        "valid": false
+      }
+    }
+  }
+}
