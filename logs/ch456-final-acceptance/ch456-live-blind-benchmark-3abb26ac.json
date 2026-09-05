@@ -1,0 +1,21 @@
+{
+  "authorizes": [],
+  "backend": {
+    "available": true,
+    "backend": "codex-cli",
+    "blocking_errors": [],
+    "model": null,
+    "version": null
+  },
+  "child_exit_code": 1,
+  "error": "Q3 did not observe clean expected RED: {\"authorizes\": [], \"candidate_hash\": \"sha256:b44459fa54515fb5bc44866784655458fd1cec8ef3ac43d6e07e108efb3347f8\", \"descriptor_sha256\": \"sha256:d1b0e1d486a8619a7999bd51a18eb5e929a52b1f6840d1586a3f527a4401910d\", \"failure_family\": \"semantic-contract-gap\", \"failure_fingerprint\": \"sha256:9d1ce131908f4db19a7ec9826f411209020d128be76e272ff6a95fc47a77bfcd\", \"failure_id\": \"QD-SEMANTIC-CONTRACT-GAP-9D1CE131908F4DB1\", \"observation_sha256\": \"sha256:87744ce135fd5f6ecd8efec80384457e21269d4845f81b6f055b45a6a047c081\", \"plan_hash\": \"sha256:5b3268dec330f6124c2c313f9c5fa9aae299bee535f0e6632089feb0de724138\", \"plan_id\": \"PLAN-61CAE2D1C844\", \"predicate_result\": false, \"receipt_sha256\": \"sha256:cb831c9e8dda400d67dbc1a9801144a73eb704eb532a7bbf808f3e16ecd43615\", \"run_id\": \"RUN-BLIND-001\", \"runtime_edges\": [{\"acceptance_id\": \"A-13C8EDF36EA4\", \"assertion_id\": \"A-INVALID-TTL-RESULT\", \"path\": \"canonical-evidence/red/runtime-edges/0001-A-13C8EDF36EA4-A-INVALID-TTL-RESULT.json\", \"sha256\": \"sha256:a952c22b6c9e44628a291652c5ae6a9c6aa43a81886aefe53d14880d29523f35\"}, {\"acceptance_id\": \"A-3665B504529D\", \"assertion_id\": \"A-GREEN-PRODUCTION-ONLY\", \"path\": \"canonical-evidence/red/runtime-edges/0002-A-3665B504529D-A-GREEN-P",
+  "error_type": "RuntimeError",
+  "execution_attempted": true,
+  "limit_seconds": 3600,
+  "product_acceptance_proven": false,
+  "schema": "ch456.live-blind-benchmark.v1",
+  "source_head": "3abb26ac4bfb24dca6a44db8ca5e5ce402bc5d44",
+  "status": "failed",
+  "task_id": "CH456-BLIND-IDEMPOTENCY-LEDGER-V1",
+  "under_60_minutes": null
+}
