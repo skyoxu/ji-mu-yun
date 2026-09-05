@@ -457,12 +457,34 @@ def semantic_preflight(obligations: Sequence[Mapping[str, Any]], acceptances: Se
     return {"valid": not findings, "recommended_action": "continue" if not findings else "repair-vdd", "findings": findings}
 
 
+def alignment_payload(source_index, obligations, acceptances, failures) -> dict[str, Any]:
+    """ADR-0041: distinguish active proof targets from retained disposition context."""
+    return {
+        "alignment_scope": "active-obligation-acceptance-coverage.v1",
+        "source_index": source_index,
+        "obligations": [item for item in obligations if item.get("status") == "active"],
+        "non_active_obligation_context": [item for item in obligations if item.get("status") != "active"],
+        "acceptances": list(acceptances),
+        "failure_intents": list(failures),
+    }
+
+
+ALIGNMENT_SCOPE_PROMPT = (
+    " Coverage targets are exactly the active records in obligations. "
+    "non_active_obligation_context retains deferred/excluded records and their unresolved fragments for context; "
+    "do not demand Acceptance or RED intents for those records or include their IDs in covered/missing/invented arrays. "
+    "Do not merge IDs, change status, or treat descriptive similarity as proof. Independently check every active "
+    "obligation against its bound Acceptance and RED intent. Source recall remains a separate gate."
+)
+
+
 def semantic_align(*, root: Path, out_dir: Path, source_index: Mapping[str, Any], obligations: Sequence[Mapping[str, Any]], acceptances: Sequence[Mapping[str, Any]], failures: Sequence[Mapping[str, Any]], worker_cache: Mapping[str, Any] | None) -> dict[str, Any]:
-    payload = {"source_index": source_index, "obligations": list(obligations), "acceptances": list(acceptances), "failure_intents": list(failures)}
+    payload = alignment_payload(source_index, obligations, acceptances, failures)
     raw = invoke_worker(
         root=root, out_dir=out_dir, stage="v4", payload=payload, worker_cache=worker_cache,
         prompt=(
             "Independently align the frozen source to obligations, Acceptance and RED intents. Do not read another worker's reasoning. Return covered_obligation_ids[], missing_obligation_ids[], invented_obligation_ids[], misaligned_acceptance_ids[], oracle_alignment object, repairs[]. A boolean valid may be included but is not authoritative."
+            + ALIGNMENT_SCOPE_PROMPT
         ),
     )
     for key in ("covered_obligation_ids", "missing_obligation_ids", "invented_obligation_ids", "misaligned_acceptance_ids", "repairs"):

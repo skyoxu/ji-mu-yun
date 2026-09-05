@@ -1,0 +1,30 @@
+{
+  "adr": "ADR-0041",
+  "base_commit": "399140c7dabdc5aa7eec8ae488b79525d6de43db",
+  "evidence": "logs/ch456-v4-debug-b8323177-r900",
+  "diagnosis": {
+    "missing_id": "O-7A5FFDE9AE7D",
+    "normalized_v1_status": "deferred",
+    "active_obligations": 12,
+    "v3_bound_ids_equal_active_ids": true,
+    "v4_covered_ids_equal_active_ids": true,
+    "raw_v4_missing_ids": [
+      "O-7A5FFDE9AE7D"
+    ]
+  },
+  "change": "Separate active V4 proof targets from retained non-active context for initial alignment and independent recheck; scope field partitions transport caches. No output finding is removed.",
+  "validation": {
+    "vdd_ch456_tests": "132 passed",
+    "skill_contract": "pass",
+    "live_calls": 0,
+    "environment": "Linux reconstructed checkout",
+    "fresh_live_v4_proven": false,
+    "final_acceptance_run": false
+  },
+  "sha256": {
+    ".agents/skills/vdd-execution-plan/scripts/semantic_compiler.py": "7a873be0b2256633d6ce0dfb1c8f68de0d6aa618b7f8e3845d4e7c1ef1c561fc",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_alignment_repair_patch.py": "445234e388bb8d64d9b83985f0d0f6ab0368c1c549df93e6e28260fe2738079d",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_active_alignment_scope.py": "707971bf0325b36edf882110c9be11196942c3a595d2dc73cea6e54483503d2c",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "fc963045453069d0cfe18fbdedd49563d559107578713b8b02e067a6b500dd2d"
+  }
+}

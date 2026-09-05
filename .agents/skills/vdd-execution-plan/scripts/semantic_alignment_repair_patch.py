@@ -171,12 +171,7 @@ def _independent_recheck(
     failures: Sequence[Mapping[str, Any]],
     worker_cache: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
-    payload = {
-        "source_index": source_index,
-        "obligations": list(obligations),
-        "acceptances": list(acceptances),
-        "failure_intents": list(failures),
-    }
+    payload = sc.alignment_payload(source_index, obligations, acceptances, failures)
     raw = sc.invoke_worker(
         root=root,
         out_dir=out_dir,
@@ -188,6 +183,7 @@ def _independent_recheck(
             "Do not trust the repair worker or any prior V4 conclusion. Return covered_obligation_ids[], "
             "missing_obligation_ids[], invented_obligation_ids[], misaligned_acceptance_ids[], "
             "oracle_alignment object, repairs[]. A boolean valid is not authoritative."
+            + sc.ALIGNMENT_SCOPE_PROMPT
         ),
     )
     findings = _alignment_findings(raw, obligations, acceptances)

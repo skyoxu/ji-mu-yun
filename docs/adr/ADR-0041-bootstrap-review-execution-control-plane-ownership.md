@@ -71,6 +71,14 @@ The exact-ID partition, coverage thresholds and single recheck budget remain.
 
 ### Existing Ownership Consequences
 
+V4 Acceptance alignment and its independent recheck use active obligations as
+their exact proof targets. Deferred/excluded records and unresolved fragments
+remain visible in a separate non-active context field, without acquiring an
+Acceptance/RED requirement. This does not delete or merge obligations, promote
+dispositions, or replace independent source recall. The versioned input scope
+changes alignment cache identity; old judgments remain historical and are not
+filtered into success. Active missing coverage and misalignment still fail.
+
 When frozen source explicitly names production owners and limits production
 writes to those owners, V3 removes those exact paths from model-authored
 `execution_snapshot_paths`. Quick Dev treats execution snapshots as immutable
