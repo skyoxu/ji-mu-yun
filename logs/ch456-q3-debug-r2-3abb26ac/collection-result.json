@@ -1,0 +1,19 @@
+﻿{
+    "schema":  "ch456.q3-diagnostic-collection.v2",
+    "diagnostic_run":  "new-r2",
+    "candidate":  "3abb26ac4bfb24dca6a44db8ca5e5ce402bc5d44",
+    "source_head":  "3abb26ac4bfb24dca6a44db8ca5e5ce402bc5d44",
+    "source_worktree":  "C:\\ch456-q3-diagnostic-r2-3abb26ac",
+    "output_dir":  "C:\\ch456-q3-diagnostic-output-r2-3abb26ac",
+    "exit_code":  1,
+    "status":  "failed-before-Q3",
+    "stopped_stage":  "Q3 precondition / slice cardinality",
+    "error":  "blind benchmark contract expects one cohesive slice, observed 2",
+    "q3_observation_present":  false,
+    "expected_failure_ids":  [
+
+                             ],
+    "observed_failure_ids":  [
+
+                             ]
+}
