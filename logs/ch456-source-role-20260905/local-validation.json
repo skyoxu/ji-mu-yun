@@ -1,0 +1,67 @@
+{
+  "schema": "ch456.local-code-validation.v1",
+  "created_at": "2026-09-05T12:03:27.566787+00:00",
+  "baseline_source_head": "70df1b400e33c27bfec594d609633ef12f469ead",
+  "failed_implementation_candidate": "3abb26ac4bfb24dca6a44db8ca5e5ce402bc5d44",
+  "changed_files": {
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_transport_patch.py": "5134575178939f34f4276941730206bc1204da0cb0c3afbc19926e064bf6ffbf",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "6809e1e49530347d0ce51c0297b0765b840f80fb77f529e9f3fbd588b09163c9",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_source_role_transport.py": "5e7bf09263a799c833b2dc912e2cbe3aad020b38a33379e4320e521f600be29a"
+  },
+  "evidence_directory": "logs/ch456-q3-debug-r2-3abb26ac/live-blind/plan",
+  "confirmed_chain": [
+    "v4-atomic-recall-df401bc6c005577855241669.json claims the descriptive always-success skeleton as a missing obligation",
+    "v1-source-gap-repair-b9ecd2ca860579973f6d3934.json adds it as an active Product behavior",
+    "v4-atomic-recall-abaeba3b7533e1708c6243a1.json accepts the added obligation",
+    "Acceptance A-4EFB792D9589 for O-0525FCBFD36D expects the pre-implementation defect and uses expected-red SKELETON_ALWAYS_SUCCESS",
+    "Final S2 contains this Product behavior with runtime lane; S1 contains the remaining 13 obligations with unit lane"
+  ],
+  "fix": "Add shared source-role instructions at the V1 extraction/addition and independent atomic-recall transport boundary. Distinguish descriptive defects from required targets and explicit baseline verification. Include the contract in affected cache keys.",
+  "regression": {
+    "exit_code": 0,
+    "passed": 117,
+    "subtests_passed": 15,
+    "test_directory": ".agents/skills/vdd-execution-plan/scripts/tests",
+    "test_files": [
+      "test_ch456_source_role_transport.py",
+      "test_ch456_v3_harness_lane.py",
+      "test_ch456_v3_inline_context_repair.py",
+      "test_ch456_v3_per_obligation_contract.py",
+      "test_ch456_v3_total_coverage_and_slice_cohesion.py",
+      "test_ch456_grouped_v3_and_obligation_gap_repair.py",
+      "test_ch456_live_v3_worker_contract.py",
+      "test_ch456_v3_domain_and_v4_alignment_repair.py",
+      "test_ch456_v3_expected_red_eligibility.py",
+      "test_ch456_compiler_closure.py",
+      "test_ch456_v3_group_safety.py",
+      "test_ch456_v3_group_safety_composition.py",
+      "test_ch456_worker_transport_composition.py",
+      "test_ch456_semantic_worker_transport.py",
+      "test_validate_skill_contract.py"
+    ]
+  },
+  "skill_validation": {
+    "exit_code": 0,
+    "ok": true
+  },
+  "package_validation": {
+    "exit_code": 0,
+    "status": "pass"
+  },
+  "semantic_rejudgment_performed": false,
+  "live_backend_called": false,
+  "real_semantic_run": false,
+  "live_blind_run": false,
+  "q3_root_cause_proven": false,
+  "final_acceptance_run": false,
+  "completion_claimed": false,
+  "validation_scope": "Offline tests establish worker instruction delivery, unchanged source payload, cache separation and existing regressions only. They do not prove a model will correctly reclassify the captured source.",
+  "preserved": [
+    "Existing raw caches and historical failure evidence",
+    "Real temporal and baseline-verification requirements",
+    "V4 precision/recall thresholds and exact-ID accounting",
+    "Existing one-recheck budget",
+    "V6 lane/owner/dependency boundaries and benchmark gates"
+  ],
+  "next_step": "No new live run is authorized by this exhausted diagnostic allowance. Retain all captured artifacts. A current-candidate live judgment is still required before claiming this semantic defect repaired."
+}

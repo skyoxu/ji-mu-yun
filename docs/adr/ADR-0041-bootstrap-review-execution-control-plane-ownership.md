@@ -59,6 +59,16 @@ an invocation observation is not a separate implementation environment.
 Different or ambiguous execution bindings remain unchanged. V6 continues to
 enforce lane, owner, dependency and write/forbidden boundaries.
 
+V1 extraction, source-gap additions and independent atomic recall distinguish
+normative targets and explicit verification duties from descriptive current
+state. Descriptions of existing defects remain transition/negative-test context;
+their presence in source does not require implementing or preserving them.
+Explicit baseline-verification duties and temporal qualifiers remain covered.
+This is a semantic worker instruction, not a keyword-based deletion rule.
+Source-role contract revisions partition affected transport caches; old worker
+judgments are not silently reused as fresh judgments under a changed contract.
+The exact-ID partition, coverage thresholds and single recheck budget remain.
+
 ### Existing Ownership Consequences
 
 - Protocol changes are made once in the repository-owned Skill and projected through compatibility adapters.

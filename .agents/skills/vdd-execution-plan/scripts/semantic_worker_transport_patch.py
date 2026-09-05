@@ -185,6 +185,27 @@ def _unsupported_output_schema(trace: str) -> bool:
     )
 
 
+def _source_role_contract(stage: str) -> str:
+    """ADR-0041: source coverage concerns obligations, not every descriptive fact."""
+    if not (stage.startswith("v1-") or stage.startswith("v4-atomic-recall")):
+        return ""
+    return (
+        "\n\nSOURCE ROLE CONTRACT v1: distinguish required target behavior, explicit verification duties, "
+        "and descriptive current-state context using the complete frozen source. Textual presence alone does not "
+        "make a fact an active implementation obligation. Existing defects, intentionally incomplete stubs and "
+        "pre-change failure descriptions belong in state_before/Given and negative-test context for the required "
+        "transition; do not require implementing, restoring or preserving the defect as expected_behavior or "
+        "state_after. An explicit requirement to capture or verify a baseline IS an obligation: preserve its "
+        "verification action and before/after scope without turning the observed defect into the desired product. "
+        "Do not discard temporal requirements merely because they say before, existing or baseline. "
+        "For source recall, report gaps only for independently required behavior or verification duties. "
+        "A descriptive fact already represented as transition context is not a source gap. Classify a candidate "
+        "that invents a duty to preserve an unwanted current state as invented, even if its words occur in source. "
+        "For gap repair, read the cited source before adding a claim: preserve an actual verification duty, never "
+        "manufacture a product duty from a descriptive claim. Never omit a real required behavior to improve metrics."
+    )
+
+
 def transport_invoke_worker(
     *,
     root: Path,
@@ -195,8 +216,10 @@ def transport_invoke_worker(
     worker_cache: Mapping[str, Any] | None = None,
 ) -> Mapping[str, Any]:
     """Mirror the canonical worker seam with bounded structured-output transport."""
+    role_contract = _source_role_contract(stage)
+    cache_payload = {"source_role_contract": role_contract, "input": payload} if role_contract else payload
     cache_dir = out_dir / ".compiler-cache"
-    cache_path = cache_dir / sc._worker_cache_key(stage, payload)
+    cache_path = cache_dir / sc._worker_cache_key(stage, cache_payload)
     if cache_path.is_file():
         value = json.loads(cache_path.read_text(encoding="utf-8"))
         if not isinstance(value, Mapping):
@@ -229,6 +252,7 @@ def transport_invoke_worker(
         "You are a read-only semantic compiler worker. Do not modify files. "
         "Return JSON only. Do not invent requirements or runtime evidence.\n\n"
         + prompt
+        + role_contract
         + "\n\nINPUT:\n"
         + json.dumps(payload, ensure_ascii=False, sort_keys=True)
     )
