@@ -1,0 +1,7 @@
+candidate=1ee886c6b3b4feea6c5c41c01dee22f703c70e49
+worktree=C:/ch456-live-blind-1ee886c6-r900
+output_dir=C:/ch456-live-blind-output-1ee886c6-r900
+repair_timeout_seconds=900
+repair_timeout_scope=explicit one-off configuration; default 300-second behavior is not proven
+live_blind_entry=scripts/quick_dev/run_live_blind_benchmark.py --inner --backend codex-cli --limit-seconds 3600
+final_acceptance=not_started

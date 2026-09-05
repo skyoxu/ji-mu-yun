@@ -1,0 +1,33 @@
+{
+  "schema": "ch456.live-blind-evidence-collection.v1",
+  "candidate": "1ee886c6b3b4feea6c5c41c01dee22f703c70e49",
+  "diagnostic_worktree": "C:/ch456-live-blind-1ee886c6-r900",
+  "repair_timeout_seconds": 900,
+  "repair_timeout_scope": "explicit one-off configuration; default 300-second behavior is not proven",
+  "real_semantic": {
+    "status": "pass",
+    "exit_code": 0,
+    "evidence_directory": "real-semantic-success"
+  },
+  "live_blind": {
+    "status": "failed",
+    "exit_code": 1,
+    "stopped_stage": "Q5 GREEN",
+    "failure_id": "QD-TASK-IMPLEMENTATION-FAILURE-DA13527B815C9344",
+    "red_expected_failure_ids": [
+      "ACTIVE_CLAIM_DUPLICATE",
+      "INVALID_TTL_NO_RESERVATION",
+      "RELEASE_NOT_FOUND"
+    ],
+    "red_observed_failure_ids": [
+      "ACTIVE_CLAIM_DUPLICATE",
+      "INVALID_TTL_NO_RESERVATION",
+      "RELEASE_NOT_FOUND"
+    ]
+  },
+  "final_acceptance": {
+    "executed": false,
+    "reason": "live blind first failure"
+  },
+  "authorizes": []
+}

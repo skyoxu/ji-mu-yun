@@ -1,0 +1,133 @@
+FFF                                                                      [100%]
+================================== FAILURES ===================================
+_ test_idempotency_ledger_behaviors[active_duplicate-ACTIVE_CLAIM_DUPLICATE] __
+
+cases = {'duplicate': {'key': 'alpha', 'now': 5, 'ttl_seconds': 10}, 'invalid_ttl': 0, 'missing_release': 'missing'}
+scenario = 'active_duplicate', failure_id = 'ACTIVE_CLAIM_DUPLICATE'
+
+    @pytest.mark.parametrize(
+        ("scenario", "failure_id"),
+        [
+            ("active_duplicate", "ACTIVE_CLAIM_DUPLICATE"),
+            ("invalid_ttl", "INVALID_TTL_NO_RESERVATION"),
+            ("missing_release", "RELEASE_NOT_FOUND"),
+        ],
+    )
+    def test_idempotency_ledger_behaviors(cases, scenario, failure_id):
+        ledger = IdempotencyLedger()
+    
+        if scenario == "active_duplicate":
+            duplicate = cases["duplicate"]
+            assert ledger.claim(**duplicate) == "accepted"
+            result = ledger.claim(**duplicate)
+            expected = "duplicate"
+        elif scenario == "invalid_ttl":
+            key = "invalid-ttl-key"
+            result = (
+                ledger.claim(key, now=5, ttl_seconds=cases["invalid_ttl"]),
+                ledger.claim(key, now=5, ttl_seconds=10),
+            )
+            expected = ("invalid-ttl", "accepted")
+        else:
+            result = ledger.release(cases["missing_release"])
+            expected = "not-found"
+    
+        print(f"FAILURE_ID:{failure_id}")
+>       assert result == expected
+E       AssertionError: assert 'accepted' == 'duplicate'
+E         
+E         - duplicate
+E         + accepted
+
+benchmarks\ch456-live-blind\idempotency-ledger-v1\tests\test_idempotency_ledger.py:47: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:ACTIVE_CLAIM_DUPLICATE
+__ test_idempotency_ledger_behaviors[invalid_ttl-INVALID_TTL_NO_RESERVATION] __
+
+cases = {'duplicate': {'key': 'alpha', 'now': 5, 'ttl_seconds': 10}, 'invalid_ttl': 0, 'missing_release': 'missing'}
+scenario = 'invalid_ttl', failure_id = 'INVALID_TTL_NO_RESERVATION'
+
+    @pytest.mark.parametrize(
+        ("scenario", "failure_id"),
+        [
+            ("active_duplicate", "ACTIVE_CLAIM_DUPLICATE"),
+            ("invalid_ttl", "INVALID_TTL_NO_RESERVATION"),
+            ("missing_release", "RELEASE_NOT_FOUND"),
+        ],
+    )
+    def test_idempotency_ledger_behaviors(cases, scenario, failure_id):
+        ledger = IdempotencyLedger()
+    
+        if scenario == "active_duplicate":
+            duplicate = cases["duplicate"]
+            assert ledger.claim(**duplicate) == "accepted"
+            result = ledger.claim(**duplicate)
+            expected = "duplicate"
+        elif scenario == "invalid_ttl":
+            key = "invalid-ttl-key"
+            result = (
+                ledger.claim(key, now=5, ttl_seconds=cases["invalid_ttl"]),
+                ledger.claim(key, now=5, ttl_seconds=10),
+            )
+            expected = ("invalid-ttl", "accepted")
+        else:
+            result = ledger.release(cases["missing_release"])
+            expected = "not-found"
+    
+        print(f"FAILURE_ID:{failure_id}")
+>       assert result == expected
+E       AssertionError: assert ('accepted', 'accepted') == ('invalid-ttl', 'accepted')
+E         
+E         At index 0 diff: 'accepted' != 'invalid-ttl'
+E         Use -v to get more diff
+
+benchmarks\ch456-live-blind\idempotency-ledger-v1\tests\test_idempotency_ledger.py:47: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:INVALID_TTL_NO_RESERVATION
+____ test_idempotency_ledger_behaviors[missing_release-RELEASE_NOT_FOUND] _____
+
+cases = {'duplicate': {'key': 'alpha', 'now': 5, 'ttl_seconds': 10}, 'invalid_ttl': 0, 'missing_release': 'missing'}
+scenario = 'missing_release', failure_id = 'RELEASE_NOT_FOUND'
+
+    @pytest.mark.parametrize(
+        ("scenario", "failure_id"),
+        [
+            ("active_duplicate", "ACTIVE_CLAIM_DUPLICATE"),
+            ("invalid_ttl", "INVALID_TTL_NO_RESERVATION"),
+            ("missing_release", "RELEASE_NOT_FOUND"),
+        ],
+    )
+    def test_idempotency_ledger_behaviors(cases, scenario, failure_id):
+        ledger = IdempotencyLedger()
+    
+        if scenario == "active_duplicate":
+            duplicate = cases["duplicate"]
+            assert ledger.claim(**duplicate) == "accepted"
+            result = ledger.claim(**duplicate)
+            expected = "duplicate"
+        elif scenario == "invalid_ttl":
+            key = "invalid-ttl-key"
+            result = (
+                ledger.claim(key, now=5, ttl_seconds=cases["invalid_ttl"]),
+                ledger.claim(key, now=5, ttl_seconds=10),
+            )
+            expected = ("invalid-ttl", "accepted")
+        else:
+            result = ledger.release(cases["missing_release"])
+            expected = "not-found"
+    
+        print(f"FAILURE_ID:{failure_id}")
+>       assert result == expected
+E       AssertionError: assert 'released' == 'not-found'
+E         
+E         - not-found
+E         + released
+
+benchmarks\ch456-live-blind\idempotency-ledger-v1\tests\test_idempotency_ledger.py:47: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:RELEASE_NOT_FOUND
+=========================== short test summary info ===========================
+FAILED benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py::test_idempotency_ledger_behaviors[active_duplicate-ACTIVE_CLAIM_DUPLICATE]
+FAILED benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py::test_idempotency_ledger_behaviors[invalid_ttl-INVALID_TTL_NO_RESERVATION]
+FAILED benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py::test_idempotency_ledger_behaviors[missing_release-RELEASE_NOT_FOUND]
+3 failed in 0.05s

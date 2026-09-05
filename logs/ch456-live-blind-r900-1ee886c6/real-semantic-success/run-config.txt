@@ -1,0 +1,4 @@
+candidate=1ee886c6b3b4feea6c5c41c01dee22f703c70e49
+repair_timeout_seconds=900
+stage=real-semantic-only
+retry_authorized_by_user=true
