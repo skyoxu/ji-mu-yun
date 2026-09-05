@@ -1,0 +1,20 @@
+{
+  "schema": "ch456.acceptance-runtime-configuration.v1",
+  "execution_head": "f07cca6502fef2a8997e712b9a05c86a9d691ffa",
+  "implementation_candidate": "c4ff9a429094a089248676369593430209452d3b",
+  "implementation_delta_from_candidate": [
+    "logs/ch456-final-acceptance/ch456-real-semantic-quality.json"
+  ],
+  "backend": "codex-cli",
+  "configuration": {
+    "module": "semantic_worker_transport_patch",
+    "setting": "_REPAIR_TIMEOUT_SECONDS",
+    "default_seconds": 300,
+    "configured_seconds": 600,
+    "scope": "ephemeral Python process tree through sitecustomize import hook"
+  },
+  "live_blind_command": "PYTHONPATH=C:/Users/Administrator/AppData/Local/Temp/ch456-timeout600-20260905-115913 python scripts/quick_dev/run_live_blind_benchmark.py --backend codex-cli --require-live --out logs/ch456-final-acceptance-timeout600-20260905-115913/ch456-live-blind-benchmark.json",
+  "final_acceptance_command": "PYTHONPATH=C:/Users/Administrator/AppData/Local/Temp/ch456-timeout600-20260905-115913 python scripts/quick_dev/run_ch456_final_acceptance.py --backend codex-cli --evidence-dir logs/ch456-final-acceptance-timeout600-20260905-115913",
+  "repository_sources_modified": false,
+  "authorizes": []
+}

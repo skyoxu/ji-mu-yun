@@ -1,0 +1,21 @@
+{
+  "authorizes": [],
+  "backend": {
+    "available": true,
+    "backend": "codex-cli",
+    "blocking_errors": [],
+    "model": null,
+    "version": null
+  },
+  "child_exit_code": 1,
+  "error": "V5 orphan Acceptance",
+  "error_type": "ValueError",
+  "execution_attempted": true,
+  "limit_seconds": 3600,
+  "product_acceptance_proven": false,
+  "schema": "ch456.live-blind-benchmark.v1",
+  "source_head": "f07cca6502fef2a8997e712b9a05c86a9d691ffa",
+  "status": "failed",
+  "task_id": "CH456-BLIND-IDEMPOTENCY-LEDGER-V1",
+  "under_60_minutes": null
+}
