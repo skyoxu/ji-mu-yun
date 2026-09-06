@@ -123,6 +123,13 @@ results. Neither pipe EOF nor context-manager exit may introduce an unbounded
 wait. This does not extend worker budgets or authorize another semantic retry;
 the outer compiler watchdog remains the independent total runtime bound.
 
+The CH456 formal acceptance entry forwards an explicit repair timeout override
+to both real-semantic evaluation and the detached live-blind child. Each entry
+records the override; omitting it preserves the existing 300-second repair
+default. The live-blind 3600-second limit and completion predicates are unchanged.
+An optional stop-on-failure mode writes a blocked runner summary after the first
+failed prerequisite and does not run later checks or publish final completion.
+
 ## References
 
 - `decision-logs/2026-07-16-bootstrap-review-self-audit-and-hardening-proposal.md`

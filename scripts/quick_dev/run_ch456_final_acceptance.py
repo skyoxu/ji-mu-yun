@@ -72,8 +72,15 @@ def _refresh_owned_files(paths: dict[str, Path]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", default="codex-cli", choices=("codex-cli", "openai-api"))
+    parser.add_argument("--repair-timeout-seconds", type=int, help="Explicit VDD repair budget forwarded to both live checks")
+    parser.add_argument("--stop-on-failure", action="store_true", help="Record the first failed step and stop before later checks")
     parser.add_argument("--evidence-dir", type=Path, default=Path("logs/ch456-final-acceptance"))
     args = parser.parse_args()
+    if args.repair_timeout_seconds is not None and args.repair_timeout_seconds <= 0:
+        parser.error("repair timeout must be positive")
+    # ADR-0041: preserve the explicit run configuration across process boundaries.
+    repair_args = (["--repair-timeout-seconds", str(args.repair_timeout_seconds)]
+                   if args.repair_timeout_seconds is not None else [])
 
     evidence_dir = (ROOT / args.evidence_dir).resolve() if not args.evidence_dir.is_absolute() else args.evidence_dir.resolve()
     logs_root = (ROOT / "logs").resolve()
@@ -111,12 +118,12 @@ def main() -> int:
         ("curated-semantic", _bound_metric("curated-semantic", paths["curated"])),
         ("semantic-chain-mutations", _bound_metric("semantic-chain-mutations", paths["semantic_mutations"])),
         ("agent-context-mutations", _bound_metric("agent-context-mutations", paths["agent_context"])),
-        ("real-semantic", _python("scripts/vdd/evaluate_real_semantic_quality.py", "--backend", args.backend, "--out", str(paths["real_semantic"]))),
+        ("real-semantic", _python("scripts/vdd/evaluate_real_semantic_quality.py", "--backend", args.backend, "--out", str(paths["real_semantic"]), *repair_args)),
         ("stable-facade", _bound_metric("stable-facade", paths["stable"])),
         ("detached-mutations", _bound_metric("detached-mutations", paths["detached"])),
         ("selective-replay", _bound_metric("selective-replay", paths["replay"])),
         ("fresh-medium-deterministic", _python("-m", "pytest", "-q", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py")),
-        ("live-blind-medium", _python("scripts/quick_dev/run_live_blind_benchmark.py", "--backend", args.backend, "--require-live", "--out", str(paths["live_blind"]))),
+        ("live-blind-medium", _python("scripts/quick_dev/run_live_blind_benchmark.py", "--backend", args.backend, "--require-live", "--out", str(paths["live_blind"]), *repair_args)),
         ("full-vdd-regression", _python("-m", "pytest", "-q", ".agents/skills/vdd-execution-plan/scripts/tests")),
         ("full-quick-dev-regression", _python("-m", "pytest", "-q", ".agents/skills/quick-dev-tdd-adapter/tools/tests")),
         ("8-25-replay", _bound_metric("legacy-replay", paths["legacy"])),
@@ -127,6 +134,16 @@ def main() -> int:
         result = _run(argv, env=env, label=label)
         results.append(result)
         print(json.dumps({"label": label, "exit_code": result["exit_code"], "passed": result["passed"]}, sort_keys=True), flush=True)
+        if args.stop_on_failure and not result["passed"]:
+            summary = {
+                "schema": SCHEMA, "backend": args.backend,
+                "repair_timeout_seconds_override": args.repair_timeout_seconds,
+                "evidence_dir": evidence_dir.relative_to(ROOT).as_posix(),
+                "status": "blocked", "failed_steps": [label], "steps": results,
+                "stopped_on_first_failure": True, "authorizes": [],
+            }
+            paths["summary"].write_text(json.dumps(summary, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+            return 1
 
     denominator = [
         paths["architecture"], paths["curated"], paths["semantic_mutations"], paths["agent_context"],
@@ -181,6 +198,7 @@ def main() -> int:
     summary = {
         "schema": SCHEMA,
         "backend": args.backend,
+        "repair_timeout_seconds_override": args.repair_timeout_seconds,
         "evidence_dir": evidence_dir.relative_to(ROOT).as_posix(),
         "status": "pass" if not failed_steps else "blocked",
         "failed_steps": failed_steps,

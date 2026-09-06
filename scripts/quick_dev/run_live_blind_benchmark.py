@@ -403,11 +403,13 @@ def _inner(*, backend: str, limit_seconds: int) -> dict[str, Any]:
     }
 
 
-def _outer(*, out: Path, backend_requested: str | None, limit_seconds: int, require_live: bool) -> int:
+def _outer(*, out: Path, backend_requested: str | None, limit_seconds: int, require_live: bool,
+           repair_timeout_seconds: int | None = None) -> int:
     head = _git(ROOT, "rev-parse", "HEAD").stdout.strip()
     probe = _backend_probe(backend_requested)
     if not probe["available"]:
         evidence = _blocked_evidence(head=head, backend=probe, limit_seconds=limit_seconds)
+        evidence["repair_timeout_seconds_override"] = repair_timeout_seconds
         _write(out, evidence)
         print(json.dumps(evidence, sort_keys=True))
         return 2 if require_live else 0
@@ -417,6 +419,7 @@ def _outer(*, out: Path, backend_requested: str | None, limit_seconds: int, requ
         add = _git(ROOT, "worktree", "add", "--detach", str(worktree), head, check=False)
         if add.returncode != 0:
             evidence = {**_blocked_evidence(head=head, backend=probe, limit_seconds=limit_seconds), "status": "harness-failed", "execution_attempted": True, "reason": "git-worktree-add-failed", "stderr_sha256": _sha(add.stderr)}
+            evidence["repair_timeout_seconds_override"] = repair_timeout_seconds
             _write(out, evidence)
             print(json.dumps(evidence, sort_keys=True))
             return 1
@@ -429,6 +432,8 @@ def _outer(*, out: Path, backend_requested: str | None, limit_seconds: int, requ
                 str(probe["backend"]),
                 "--limit-seconds",
                 str(limit_seconds),
+                *(["--repair-timeout-seconds", str(repair_timeout_seconds)]
+                  if repair_timeout_seconds is not None else []),
             ]
             completed = subprocess.run(command, cwd=str(worktree), text=True, capture_output=True, timeout=limit_seconds + 120, check=False)
             evidence = _parse_child_evidence(completed.stdout)
@@ -453,6 +458,7 @@ def _outer(*, out: Path, backend_requested: str | None, limit_seconds: int, requ
             else:
                 evidence["backend"] = probe
                 evidence["child_exit_code"] = completed.returncode
+            evidence["repair_timeout_seconds_override"] = repair_timeout_seconds
             _write(out, evidence)
             print(json.dumps(evidence, sort_keys=True))
             return 0 if evidence.get("status") == "pass" else 1
@@ -472,6 +478,7 @@ def _outer(*, out: Path, backend_requested: str | None, limit_seconds: int, requ
                 "stderr_sha256": _sha(exc.stderr or ""),
                 "authorizes": [],
             }
+            evidence["repair_timeout_seconds_override"] = repair_timeout_seconds
             _write(out, evidence)
             print(json.dumps(evidence, sort_keys=True))
             return 1
@@ -486,15 +493,26 @@ def main() -> int:
     parser.add_argument("--backend")
     parser.add_argument("--limit-seconds", type=int, default=DEFAULT_LIMIT_SECONDS)
     parser.add_argument("--require-live", action="store_true")
+    parser.add_argument("--repair-timeout-seconds", type=int, help="Explicit per-repair VDD worker budget")
     parser.add_argument("--inner", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.repair_timeout_seconds is not None and args.repair_timeout_seconds <= 0:
+        parser.error("repair timeout must be positive")
     if args.limit_seconds <= 0 or args.limit_seconds > DEFAULT_LIMIT_SECONDS:
         raise SystemExit("--limit-seconds must be in 1..3600")
     if args.inner:
         if not args.backend:
             raise SystemExit("inner benchmark requires --backend")
+        # ADR-0041: the detached child must apply the same override as compile_plan.py.
+        if args.repair_timeout_seconds is not None:
+            vdd = ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts"
+            if str(vdd) not in sys.path:
+                sys.path.insert(0, str(vdd))
+            import semantic_worker_transport_patch as transport
+            transport._REPAIR_TIMEOUT_SECONDS = args.repair_timeout_seconds
         try:
             result = _inner(backend=args.backend, limit_seconds=args.limit_seconds)
+            result["repair_timeout_seconds_override"] = args.repair_timeout_seconds
             print(json.dumps(result, sort_keys=True))
             return 0 if result.get("status") == "pass" else 1
         except Exception as exc:
@@ -510,11 +528,13 @@ def main() -> int:
                 "product_acceptance_proven": False,
                 "error_type": type(exc).__name__,
                 "error": str(exc)[:1600],
+                "repair_timeout_seconds_override": args.repair_timeout_seconds,
                 "authorizes": [],
             }
             print(json.dumps(failure, sort_keys=True))
             return 1
-    return _outer(out=args.out.resolve(), backend_requested=args.backend, limit_seconds=args.limit_seconds, require_live=args.require_live)
+    return _outer(out=args.out.resolve(), backend_requested=args.backend, limit_seconds=args.limit_seconds,
+                  require_live=args.require_live, repair_timeout_seconds=args.repair_timeout_seconds)
 
 
 if __name__ == "__main__":

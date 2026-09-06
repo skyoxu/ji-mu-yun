@@ -1,0 +1,23 @@
+{
+  "schema": "ch456.local-validation.v1",
+  "base_head": "8adad89644498eda12201adaa9e76217da0ce4cd",
+  "scope": "Formal entry repair timeout propagation",
+  "validation": {
+    "command": "python -m pytest .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456*.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456*.py -q",
+    "passed": 163,
+    "exit_code": 0
+  },
+  "coverage": [
+    "Formal entry forwards explicit override to both live checks",
+    "Omitted override preserves defaults",
+    "Detached live-blind child receives override",
+    "Inner live-blind applies override before compilation",
+    "Nonpositive overrides rejected",
+    "First failed prerequisite stops optional fail-fast run and writes blocked summary"
+  ],
+  "live_backend_called": false,
+  "formal_entry_live": "pending local verification",
+  "final_acceptance": "not-run",
+  "benchmark_limit_seconds": 3600,
+  "default_repair_budget_changed": false
+}
