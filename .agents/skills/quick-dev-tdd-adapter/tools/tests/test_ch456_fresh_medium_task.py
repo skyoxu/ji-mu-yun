@@ -55,7 +55,9 @@ def _worker_cache()->dict:
             "assertion_ids":[f"ASSERT-RL-{index}"],
         })
         failures.append({
-            "obligation_ids":[oid],"failure_family":"semantic-contract-gap","selector_intent":"tests/test_rate_limiter.py","expected_outcome":"fail","failure_id":failure_id,
+            # ADR-0041: these active Product behaviors are runtime RED markers,
+            # not semantic-contract or harness failures.
+            "obligation_ids":[oid],"failure_family":"expected-red","selector_intent":"tests/test_rate_limiter.py","expected_outcome":"fail","failure_id":failure_id,
         })
         hints.append({
             "obligation_ids":[oid],"production_owners":["src/rate_limiter.py"],"verification_lane":"unit",
@@ -136,6 +138,10 @@ def test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecyc
     create_json(run/"descriptors"/"red.json",red)
     red_result=execute_stage(workspace=root,semantic_plan=plan/"semantic-plan-bundle.v1.json",run_dir=run,descriptor_path=run/"descriptors"/"red.json",profile_identity="standard")
     assert red_result["predicate_result"] is True and red_result["failure_family"]=="expected-red"
+    observation=json.loads((run/"canonical-evidence"/"red"/"observation.v2.json").read_text(encoding="utf-8"))
+    expected_ids={"RL-FIRST-TWO","RL-THIRD-REJECTED","RL-WINDOW-RESET"}
+    assert set(observation["expected_failure_ids"])==expected_ids
+    assert set(observation["observed_failure_ids"])==expected_ids
 
     production.write_text(
         "class RateLimiter:\n"

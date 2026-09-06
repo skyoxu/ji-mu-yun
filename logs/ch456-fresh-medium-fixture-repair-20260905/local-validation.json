@@ -1,0 +1,20 @@
+{
+  "base_commit": "9610db1d59dfef62fa1e7f596177e8144c53ec0a",
+  "adr": "ADR-0041",
+  "scope": "Only fresh-medium lifecycle regression fixture; production code and gates unchanged.",
+  "cause": "Three active Product/behavior failure intents used semantic-contract-gap. Runtime expected-red projection therefore found no expected failure IDs.",
+  "before": "Reproduced slice semantic bindings incomplete at Q3.",
+  "after": {
+    "fresh_medium_test": "1 passed; full deterministic lifecycle through implementation-complete",
+    "combined_vdd_ch456_and_fresh_medium": "133 passed",
+    "red_expected_observed_ids": [
+      "RL-FIRST-TWO",
+      "RL-THIRD-REJECTED",
+      "RL-WINDOW-RESET"
+    ]
+  },
+  "environment": "Linux reconstructed checkout",
+  "live_backend_calls": 0,
+  "full_windows_ch456_suite_run": false,
+  "final_acceptance_run": false
+}
