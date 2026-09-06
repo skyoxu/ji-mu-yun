@@ -19,6 +19,39 @@ import time
 from pathlib import Path
 
 KNOWN_LLM_BACKENDS = ("codex-cli", "openai-api")
+TRANSIENT_RETRY_LIMIT = 5
+_TRANSIENT_FAILURE_MARKERS = (
+    "429 too many requests",
+    "500 internal server error",
+    "502 bad gateway",
+    "503 service unavailable",
+    "504 gateway timeout",
+    "no available channel",
+    "temporarily unavailable",
+    "connection reset",
+    "connection aborted",
+    "connection refused",
+)
+
+
+def _is_transient_failure(code: int, output: str) -> bool:
+    """Retry only transport/provider failures; semantic and timeout failures stay bounded."""
+    if code in {0, 124, 127, 2}:
+        return False
+    normalized = str(output or "").lower()
+    return any(marker in normalized for marker in _TRANSIENT_FAILURE_MARKERS)
+
+
+def _retry_pause(retry_number: int) -> None:
+    # Small deterministic backoff avoids hammering a recovering gateway.
+    time.sleep(min(float(retry_number), 5.0))
+
+
+def _clear_output_file(path: Path) -> None:
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        pass
 
 
 def _stop_codex_tree(process, *, windows=None):
@@ -218,11 +251,20 @@ def run_llm_exec(
         }
         if reasoning_effort:
             kwargs["reasoning"] = {"effort": reasoning_effort}
-        try:
-            client = OpenAI(timeout=float(timeout_sec))
-            response = client.responses.create(**kwargs)
-        except Exception as exc:  # noqa: BLE001
-            return 1, f"openai-api request failed: {exc}\n", [backend_name]
+        retries = 0
+        while True:
+            try:
+                client = OpenAI(timeout=float(timeout_sec))
+                response = client.responses.create(**kwargs)
+                break
+            except Exception as exc:  # noqa: BLE001
+                failure = f"openai-api request failed: {exc}\n"
+                if not _is_transient_failure(1, failure) or retries >= TRANSIENT_RETRY_LIMIT:
+                    if retries:
+                        failure = f"llm transient retries exhausted: {retries}\n" + failure
+                    return 1, failure, [backend_name]
+                retries += 1
+                _retry_pause(retries)
 
         output_text = _extract_response_output_text(response)
         if output_text:
@@ -234,6 +276,7 @@ def run_llm_exec(
             "reasoning_effort": reasoning_effort or None,
             "response_id": str(getattr(response, "id", "") or ""),
             "output_chars": len(output_text),
+            "transient_retries": retries,
         }
         return (0 if output_text else 1), json.dumps(trace, ensure_ascii=False, indent=2) + "\n", [backend_name, model]
     if backend_name != "codex-cli":
@@ -268,8 +311,16 @@ def run_llm_exec(
         *[str(item) for item in (codex_extra_args or [])],
         "-",
     ]
-    try:
-        code, output = _run_codex_process(cmd, root=root, prompt=prompt, timeout_sec=timeout_sec)
-    except Exception as exc:  # noqa: BLE001
-        return 1, f"codex exec failed to start: {exc}\n", cmd
-    return code, output, cmd
+    retries = 0
+    while True:
+        try:
+            code, output = _run_codex_process(cmd, root=root, prompt=prompt, timeout_sec=timeout_sec)
+        except Exception as exc:  # noqa: BLE001
+            return 1, f"codex exec failed to start: {exc}\n", cmd
+        if not _is_transient_failure(code, output) or retries >= TRANSIENT_RETRY_LIMIT:
+            if retries:
+                output = f"llm transient retries: {retries}\n" + output
+            return code, output, cmd
+        retries += 1
+        _clear_output_file(output_last_message)
+        _retry_pause(retries)

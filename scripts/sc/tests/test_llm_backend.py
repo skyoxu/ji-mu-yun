@@ -97,6 +97,36 @@ class LlmBackendTests(unittest.TestCase):
         self.assertIn("codex exec timeout", output)
         self.assertEqual("codex", command[0])
 
+    def test_codex_transient_gateway_failure_retries_five_times(self):
+        responses = [(1, "503 Service Unavailable: no available channel\n")] * 5 + [(0, "ok")]
+        with tempfile.TemporaryDirectory() as td, \
+                mock.patch.object(llm_backend.shutil, "which", return_value="codex"), \
+                mock.patch.object(llm_backend, "_run_codex_process", side_effect=responses) as run_mock, \
+                mock.patch.object(llm_backend.time, "sleep") as sleep_mock:
+            output_path = Path(td) / "last-message.json"
+            output_path.write_text("stale\n", encoding="utf-8")
+            code, output, _command = llm_backend.run_llm_exec(
+                backend="codex-cli", root=REPO_ROOT, prompt="hello",
+                output_last_message=output_path, timeout_sec=10)
+
+        self.assertEqual(0, code)
+        self.assertIn("llm transient retries: 5", output)
+        self.assertEqual(6, run_mock.call_count)
+        self.assertEqual([mock.call(float(i)) for i in range(1, 6)], sleep_mock.call_args_list)
+
+    def test_codex_timeout_is_not_retried(self):
+        with mock.patch.object(llm_backend.shutil, "which", return_value="codex"), \
+                mock.patch.object(llm_backend, "_run_codex_process", return_value=(124, "codex exec timeout\n")) as run_mock, \
+                mock.patch.object(llm_backend.time, "sleep") as sleep_mock:
+            code, output, _command = llm_backend.run_llm_exec(
+                backend="codex-cli", root=REPO_ROOT, prompt="hello",
+                output_last_message=REPO_ROOT / "unused.json", timeout_sec=10)
+
+        self.assertEqual(124, code)
+        self.assertIn("codex exec timeout", output)
+        run_mock.assert_called_once()
+        sleep_mock.assert_not_called()
+
     def test_inspect_openai_backend_should_publish_non_secret_runtime_identity(self) -> None:
         with mock.patch.dict(
             os.environ,
