@@ -1,0 +1,64 @@
+{
+  "atomic_quality_metrics": null,
+  "authorizes": [],
+  "availability": {
+    "available": true,
+    "backend": "codex-cli",
+    "blocking_errors": [],
+    "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+  },
+  "backend": "codex-cli",
+  "compile_timeout_seconds": 3600.0,
+  "compiler_findings": [],
+  "compiler_result": {
+    "reason": "V3 execution-contract validation failed: v3-contract:slice_hints[0]:no-real-production-entry; v3-contract:slice_hints[0]:selector-target-missing-not-planned:logs/refactor-write-set.json; v3-contract:slice_hints[1]:no-real-production-entry; v3-contract:slice_hints[1]:selector-target-missing-not-planned:logs/selector-lineage.json; v3-contract:slice_hints[2]:no-real-production-entry; v3-contract:slice_hints[2]:selector-target-missing-not-planned:logs/terminal-validation.json; v3-contract:slice_hints[3]:no-real-production-entry; v3-contract:slice_hints[3]:selector-target-missing-not-planned:logs/vdd-compiler-recommendation.json; v3-contract:slice_hints[4]:no-real-production-entry; v3-contract:slice_hints[4]:selector-target-missing-not-planned:logs/red-green-lineage.json; v3-contract:slice_hints[5]:no-real-production-entry; v3-contract:slice_hints[5]:selector-target-missing-not-planned:logs/quick-dev-current-snapshot.json; v3-contract:slice_hints[6]:no-real-production-entry; v3-contract:slice_hints[6]:selector-target-missing-not-planned:logs/promotion-fixtures.json; v3-contract:slice_hints[7]:no-real-production-entry; v3-contract:slice_hints[7]:selector-target-missing-not-planned:logs/authorization-decision.json; v3-contract:slice_hints[8]:no-real-production-entry; v3-contract:slice_hints[8]:selector-target-missing-not-planned:logs/quick-dev-run-state.json; v3-contract:slice_hints[9]:no-real-production-entry; v3-contract:slice_hints[9]:selector-target-missing-not-planned:logs/red-refactor-lineage.json; v3-contract:slice_hints[10]:no-real-production-entry; v3-contract:slice_hints[10]:selector-target-missing-not-planned:logs/acceptance-coverage.json; v3-contract:slice_hints[11]:no-real-production-entry; v3-contract:slice_hints[11]:selector-target-missing-not-planned:logs/prepublication-runtime.json; v3-contract:slice_hints[12]:no-real-production-entry; v3-contract:slice_hints[12]:selector-target-missing-not-planned:logs/red-green-lineage.json; v3-contract:slice_hints[13]:no-real-production-entry; v3-contract:slice_hints[13]:selector-target-missing-not-planned:logs/red-green-lineage.json; v3-contract:slice_hints[14]:no-real-production-entry; v3-contract:slice_hints[14]:selector-target-missing-not-planned:logs/quick-dev-observations.json; v3-contract:slice_hints[15]:no-real-production-entry; v3-contract:slice_hints[15]:selector-target-missing-not-planned:logs/red-green-lineage.json; v3-contract:slice_hints[16]:no-real-production-entry; v3-contract:slice_hints[16]:selector-target-missing-not-planned:logs/prepublication-snapshot.json; v3-contract:slice_hints[17]:no-real-production-entry; v3-contract:slice_hints[17]:selector-target-missing-not-planned:logs/red-refactor-lineage.json; v3-contract:slice_hints[18]:no-real-production-entry; v3-contract:slice_hints[18]:selector-target-missing-not-planned:logs/quick-dev-observation-trace.json; v3-contract:slice_hints[19]:no-real-production-entry; v3-contract:slice_hints[19]:selector-target-missing-not-planned:logs/implementation-write-set.json; v3-contract:slice_hints[20]:no-real-production-entry; v3-contract:slice_hints[20]:selector-target-missing-not-planned:logs/quick-dev-observation-trace.json; v3-contract:slice_hints[21]:no-real-production-entry; v3-contract:slice_hints[21]:selector-target-missing-not-planned:logs/red-refactor-lineage.json; v3-contract:slice_hints[22]:no-real-production-entry; v3-contract:slice_hints[22]:selector-target-missing-not-planned:logs/red-green-lineage.json; v3-contract:slice_hints[23]:no-real-production-entry; v3-contract:slice_hints[23]:selector-target-missing-not-planned:logs/red-refactor-lineage.json; v3-contract:slice_hints[24]:no-real-production-entry; v3-contract:slice_hints[24]:selector-target-missing-not-planned:logs/test-run-classification.json; v3-contract:slice_hints[25]:no-real-production-entry; v3-contract:slice_hints[25]:selector-target-missing-not-planned:logs/terminal-predecessors.json; v3-contract:slice_hints[26]:no-real-production-entry; v3-contract:slice_hints[26]:selector-target-missing-not-planned:logs/quick-dev-lifecycle-state.json; v3-contract:slice_hints[27]:no-real-production-entry; v3-contract:slice_hints[27]:selector-target-missing-not-planned:logs/vdd-compiler-rejection.json; v3-contract:slice_hints[28]:no-real-production-entry; v3-contract:slice_hints[28]:selector-target-missing-not-planned:logs/vdd-preflight-trace.json; v3-contract:slice_hints[29]:no-real-production-entry; v3-contract:slice_hints[29]:selector-target-missing-not-planned:logs/rerun-control.json; v3-contract:slice_hints[30]:no-real-production-entry; v3-contract:slice_hints[30]:selector-target-missing-not-planned:logs/promotion-fixtures.json; v3-contract:slice_hints[31]:no-real-production-entry; v3-contract:slice_hints[31]:selector-target-missing-not-planned:logs/terminal-validation.json; v3-contract:slice_hints[32]:no-real-production-entry; v3-contract:slice_hints[32]:selector-target-missing-not-planned:logs/red-refactor-lineage.json; v3-contract:slice_hints[33]:no-real-production-entry; v3-contract:slice_hints[33]:selector-target-missing-not-planned:logs/promotion-judge.json; v3-contract:slice_hints[34]:no-real-production-entry; v3-contract:slice_hints[34]:selector-target-missing-not-planned:logs/fixture-lineage.json; v3-contract:slice_hints[35]:no-real-production-entry; v3-contract:slice_hints[35]:selector-target-missing-not-planned:logs/red-execution-classification.json; v3-contract:slice_hints[36]:no-real-production-entry; v3-contract:slice_hints[36]:selector-target-missing-not-planned:logs/promotion-fixtures.json; v3-contract:slice_hints[37]:no-real-production-entry; v3-contract:slice_hints[37]:selector-target-missing-not-planned:logs/terminal-validation.json; v3-contract:slice_hints[38]:no-real-production-entry; v3-contract:slice_hints[38]:selector-target-missing-not-planned:logs/authorization-decision.json",
+    "status": "repair-vdd"
+  },
+  "compiler_stage": null,
+  "compiler_status": "repair-vdd",
+  "error": "compiler process failed; inspect retained result/stdout/stderr",
+  "execution_attempted": true,
+  "execution_succeeded": false,
+  "fixture": ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md",
+  "minimum_active_obligations": 23,
+  "progress_file": "C:\\ch456-full-acceptance-10c5b609\\.tmp-ch456-semantic-quality\\run-x6ysnzpx\\plan\\.compiler-work\\compiler-progress.jsonl",
+  "repair_timeout_seconds_override": 900,
+  "required_precision": 0.95,
+  "required_recall": 0.95,
+  "run_directory": "C:\\ch456-full-acceptance-10c5b609\\.tmp-ch456-semantic-quality\\run-x6ysnzpx",
+  "schema": "vdd.real-semantic-quality-metric.v1",
+  "source_head": "10c5b6099ffd4a6de9ba9d8e3fd801b9d4be6f8e",
+  "status": "worker-failed",
+  "watchdog": {
+    "cleanup_error": null,
+    "command": [
+      "C:\\Program Files\\Python312\\python.exe",
+      "C:\\ch456-full-acceptance-10c5b609\\scripts\\vdd\\compile_plan.py",
+      "--requirements",
+      "C:\\ch456-full-acceptance-10c5b609\\.agents\\skills\\vdd-execution-plan\\scripts\\fixtures\\ch456-curated-semantic-quality.md",
+      "--out-dir",
+      "C:\\ch456-full-acceptance-10c5b609\\.tmp-ch456-semantic-quality\\run-x6ysnzpx\\plan",
+      "--profile",
+      "standard",
+      "--result-json",
+      "C:\\ch456-full-acceptance-10c5b609\\.tmp-ch456-semantic-quality\\run-x6ysnzpx\\compiler-result.json",
+      "--repair-timeout-seconds",
+      "900"
+    ],
+    "elapsed_seconds": 1182.687,
+    "exit_code": 1,
+    "last_checkpoint": {
+      "call_id": "fedef919df804529affcc914fecbfc6f",
+      "elapsed_seconds": 746.0150000000003,
+      "error_type": "ValueError",
+      "event": "stage-raised",
+      "pid": 1660,
+      "schema": "vdd.compiler-progress.v1",
+      "stage": "V3",
+      "timestamp": "2026-09-06T05:44:22.677984+00:00"
+    },
+    "pid": 1660,
+    "timed_out": false,
+    "timeout_seconds": 3600.0
+  }
+}

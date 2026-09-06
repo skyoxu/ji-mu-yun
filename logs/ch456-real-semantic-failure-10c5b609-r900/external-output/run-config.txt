@@ -1,0 +1,5 @@
+candidate=10c5b609
+compile_timeout_seconds=3600
+repair_timeout_seconds=900
+sequence=specified-regression,real-semantic-only
+each_stage_once=true

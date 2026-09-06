@@ -1,0 +1,26 @@
+{
+  "schema": "ch456.real-semantic-failure-evidence.v1",
+  "candidate": "10c5b6099ffd4a6de9ba9d8e3fd801b9d4be6f8e",
+  "source_worktree": "C:/ch456-full-acceptance-10c5b609",
+  "run_directory": "C:/ch456-full-acceptance-10c5b609/.tmp-ch456-semantic-quality/run-x6ysnzpx",
+  "compile_timeout_seconds": 3600,
+  "repair_timeout_seconds": 900,
+  "regression": {"status": "pass", "summary": "193 passed"},
+  "real_semantic": {
+    "status": "worker-failed",
+    "exit_code": 1,
+    "elapsed_seconds": 1182.687,
+    "last_stage": "V3",
+    "initial_v3_exit_code": 124,
+    "v3_repair_exit_code": 0,
+    "v3_failure": "execution-contract validation: no-real-production-entry; selector-target-missing-not-planned",
+    "watchdog_timed_out": false
+  },
+  "not_run": ["formal-live-blind", "final-acceptance"],
+  "integrity": {
+    "production_code_modified": false,
+    "gate_modified": false,
+    "cache_modified": false,
+    "source_outputs_preserved": true
+  }
+}
