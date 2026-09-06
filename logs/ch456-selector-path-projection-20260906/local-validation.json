@@ -1,0 +1,21 @@
+{
+  "schema": "ch456.local-validation.v1",
+  "base_head": "7afba502a7a069108e8d085d5d4ea9536ae87559",
+  "scope": "Singleton snapshot spelling reconciliation against the same direct script command",
+  "regression": {
+    "passed": 174,
+    "exit_code": 0
+  },
+  "focused_tests": {
+    "passed": 11,
+    "exit_code": 0
+  },
+  "skill_contract": "pass",
+  "skill_package": "pass",
+  "offline_replay": "replay-result.json",
+  "live_backend_calls": 0,
+  "real_semantic": "not-run",
+  "final_acceptance": "not-run",
+  "gate_relaxed": false,
+  "raw_cache_modified": false
+}

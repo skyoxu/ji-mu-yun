@@ -1,0 +1,27 @@
+{
+  "schema": "ch456.selector-path-offline-replay.v1",
+  "cache_sha256": "b65cbcd5fd353a422a48ec82edb599a3d98dcb83e16b0d8c00e934a2fb54dbc9",
+  "changes": [
+    {
+      "hint_index": 30,
+      "obligation_ids": [
+        "O-CE3FDF37FD6D"
+      ],
+      "before": ".agents/skills/quick-dev-tdd-adapter/tools/test_model_routing.py",
+      "after": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+      "validation_command": [
+        "python",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py"
+      ],
+      "target_sha256": "57d3eae5281b055a776ad77be83b510e2e7122c89368db2b3ac5cc7841824c5c"
+    }
+  ],
+  "before_findings": [
+    "v3-contract:slice_hints[0]:selector-target-missing-not-planned:.agents/skills/quick-dev-tdd-adapter/tools/test_model_routing.py"
+  ],
+  "after_findings": [],
+  "scope": "Affected hint execution-contract only; not full semantic or final acceptance",
+  "cache_unchanged": true,
+  "unrelated_fields_unchanged": true,
+  "live_backend_calls": 0
+}

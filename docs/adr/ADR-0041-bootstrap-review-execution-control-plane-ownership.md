@@ -130,6 +130,17 @@ default. The live-blind 3600-second limit and completion predicates are unchange
 An optional stop-on-failure mode writes a blocked runner summary after the first
 failed prerequisite and does not run later checks or publish final completion.
 
+V3 may reconcile one redundant missing snapshot path against the same hint's
+single direct Python script command when the command file exists and the only
+spelling difference is omission of its immediate parent directory. This narrow
+projection requires no planned files and rejects existing snapshot paths,
+multiple commands or snapshots, symlink targets, and paths explicitly mentioned
+by frozen source contracts or other hint fields. It does not search the repository
+for matching filenames or choose a different command. Acceptance, failure intents,
+owner and write scopes remain unchanged. A hash-bound projection sidecar records
+the before/after paths; raw worker output and caches remain unchanged. The normal
+execution and semantic validators still run on the projected result.
+
 ## References
 
 - `decision-logs/2026-07-16-bootstrap-review-self-audit-and-hardening-proposal.md`

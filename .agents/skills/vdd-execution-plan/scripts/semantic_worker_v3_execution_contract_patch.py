@@ -1,13 +1,15 @@
 """Validate and narrow-repair V3 semantics before the expensive global repair lane.
 
 The canonical compiler still owns every truth gate. This wrapper only performs
-two deterministic/bounded normalizations before emitting V3 execution-contract
+deterministic/bounded normalizations before emitting V3 execution-contract
 findings:
 
 * one-obligation contracts remain unchanged; shared multi-obligation oracles
   are rejected for the existing schema-repair lane rather than cloned;
 * genuinely uncovered obligations use the existing missing-only semantic
   completion lane.
+* redundant singleton snapshot spelling may be projected from the same hint's
+  single existing direct-script target, with an explicit projection receipt.
 
 If the candidate is relationally ambiguous, references unknown obligations, or
 still violates owner/path/semantic contracts after those steps, it is left to
@@ -16,11 +18,14 @@ the existing fail-closed schema-repair path. No finding is suppressed.
 from __future__ import annotations
 
 from pathlib import Path
+import hashlib
+import json
 from typing import Any, Mapping
 
 import semantic_compiler_gate as gate
 import semantic_worker_v3_group_repair_patch  # noqa: F401  # relation-safe repair first
 import semantic_worker_v3_total_coverage_patch as total_coverage
+from semantic_selector_path_projection import project_selector_paths
 
 _BASE_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
 
@@ -228,6 +233,14 @@ def execution_contract_transport(
             worker_cache=worker_cache,
         )
         value = _normalize_harness_lanes(stage, payload, value)
+        before = value
+        value, path_changes = project_selector_paths(Path(root), _input_payload(stage, payload), value)
+        if path_changes:
+            digest = lambda item: hashlib.sha256(json.dumps(item, sort_keys=True).encode("utf-8")).hexdigest()
+            record = {"schema": "vdd.selector-path-projection.v1", "stage": stage,
+                      "input_sha256": digest(before), "output_sha256": digest(value),
+                      "changes": path_changes, "authorizes": []}
+            gate.sc.atomic_json(Path(out_dir) / ".compiler-work" / "selector-path-projections" / (digest(record) + ".json"), record)
     findings = _findings(Path(root), stage, payload, value)
     if findings:
         raise ValueError("V3 execution-contract validation failed: " + "; ".join(findings))
