@@ -17,6 +17,7 @@ from typing import Any, Mapping
 import semantic_compiler_gate as gate
 import semantic_worker_transport_patch as transport
 import semantic_worker_v3_domain_patch as v3_domain
+from semantic_repository_context import enrich_repository_context, PATH_CONTEXT_PROMPT
 
 sc = gate.sc
 _BASE_DOMAIN_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
@@ -382,6 +383,8 @@ def _project_current_output(value: Mapping[str, Any], refs_by_oid: Mapping[str, 
 
 
 def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any], prompt: str) -> Mapping[str, Any]:
+    payload = enrich_repository_context(root, payload)
+    prompt += PATH_CONTEXT_PROMPT
     scripts = root / "scripts" / "sc"
     if str(scripts) not in sys.path:
         sys.path.insert(0, str(scripts))

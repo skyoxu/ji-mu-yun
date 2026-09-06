@@ -22,6 +22,7 @@ from typing import Any, Mapping
 
 import semantic_compiler as sc
 import semantic_compiler_gate as gate
+from semantic_repository_context import enrich_repository_context, PATH_CONTEXT_PROMPT
 
 _BASE_BUILD_SOURCE_INDEX = sc.build_source_index
 _BASE_SOURCE_PREFLIGHT = sc.source_preflight
@@ -153,6 +154,7 @@ def normative_invoke_worker_with_source_projection(
         enriched = dict(payload)
         enriched["frozen_source_index_sha256"] = source_sha
         enriched["source_contracts"] = contracts
+        enriched = enrich_repository_context(root, enriched)
         augmented_prompt = prompt + (
             "\n\nFROZEN SOURCE CONTRACTS: source_contracts are the exact V0/V0A-validated canonical "
             "requirement sections referenced by these obligations. Treat explicit repository-relative paths, production "
@@ -167,7 +169,7 @@ def normative_invoke_worker_with_source_projection(
             out_dir=out_dir,
             stage=stage,
             payload=enriched,
-            prompt=augmented_prompt,
+            prompt=augmented_prompt + PATH_CONTEXT_PROMPT,
             worker_cache=worker_cache,
         )
     finally:

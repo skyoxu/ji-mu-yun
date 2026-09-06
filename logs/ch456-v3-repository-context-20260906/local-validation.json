@@ -1,0 +1,30 @@
+{
+  "schema": "ch456.local-validation.v1",
+  "base_head": "4be718f1d4a2d74810327d803b2c706d115460ec",
+  "failure_candidate": "10c5b6099ffd4a6de9ba9d8e3fd801b9d4be6f8e",
+  "scope": "V3 advisory repository path context for initial generation and grouped repair",
+  "tests": [
+    {
+      "command": "python -m pytest .agents/skills/vdd-execution-plan/scripts/tests/test_ch456*.py -q",
+      "passed": 145,
+      "exit_code": 0
+    },
+    {
+      "command": "validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan",
+      "status": "pass"
+    },
+    {
+      "command": "skill_package_replay.py validate-package",
+      "status": "pass"
+    }
+  ],
+  "live_backend_called": false,
+  "real_semantic": "not-run",
+  "live_blind": "not-run",
+  "final_acceptance": "not-run",
+  "limitations": [
+    "Repository candidates are discovery hints, not semantic owner assignments.",
+    "The captured invalid path shape remains rejected.",
+    "Actual live worker path selection and timeout behavior remain unverified."
+  ]
+}

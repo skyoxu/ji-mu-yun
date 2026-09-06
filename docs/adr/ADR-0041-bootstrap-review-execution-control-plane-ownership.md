@@ -106,6 +106,14 @@ repair path without changing Acceptance semantics or the GREEN predicate.
 - Reviews cannot close with an open accepted P0/P1. Every P2 must have an explicit disposition; high-risk P2 cannot be deferred, and expired deferrals block automatically.
 - This ADR is superseded only when these ownership or authority decisions change. Ordinary execution plans reference it instead of creating another ownership ADR.
 
+V3 initial generation and grouped repair receive a bounded, advisory repository
+file context with content hashes. Candidate discovery supplies existing paths,
+not production-owner assignments or semantic authority. Workers must inspect
+source and tests and may search beyond the incomplete candidate list. Repair
+reuses the initial context when present. Subject labels and future observation
+logs remain invalid substitutes for production entries and RED inputs; existing
+path and coverage validators retain authority. This adds no worker retry.
+
 ## References
 
 - `decision-logs/2026-07-16-bootstrap-review-self-audit-and-hardening-proposal.md`
