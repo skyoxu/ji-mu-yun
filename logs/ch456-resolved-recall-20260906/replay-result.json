@@ -1,0 +1,22 @@
+{
+  "scope": "Completed-worker lifecycle replay with captured outputs and ID/ref-only payload",
+  "source_artifacts": [
+    {
+      "path": "logs/ch456-semantic-plan-archive-3c79066f-r1200-retry1/plan/.compiler-work/v4-atomic-recall-schema-repair-last-message.json",
+      "sha256": "947df3c073b83fd26eaa6b17575a6a909ba8da57549a447d13fc70dd97b9a8a3"
+    },
+    {
+      "path": "logs/ch456-semantic-plan-archive-3c79066f-r1200-retry1/plan/.compiler-work/v4-atomic-recall-last-message.json",
+      "sha256": "e4c4179d7942fe1f9c723f647153f7157086db5f8261efa4f62f4d790fe355e3"
+    }
+  ],
+  "simulated_transport_calls": [
+    "v4-atomic-recall",
+    "v4-atomic-recall-schema-repair"
+  ],
+  "duplicate_judgment_calls": 0,
+  "live_backend_calls": 0,
+  "historical_evidence_unchanged": true,
+  "full_semantic_replay": false,
+  "final_acceptance": "not-run"
+}

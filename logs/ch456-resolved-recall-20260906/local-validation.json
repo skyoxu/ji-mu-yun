@@ -1,0 +1,22 @@
+{
+  "schema": "ch456.local-validation.v1",
+  "base_head": "33ec641ad08ff76e587e1ec7cf9791b45c498fae",
+  "scope": "Reuse completed atomic recall results on identical payload and prompt",
+  "regression": {
+    "passed": 180,
+    "exit_code": 0
+  },
+  "skill_contract": "pass",
+  "skill_package": "pass",
+  "protocol_replay": "replay-result.json",
+  "live_backend_calls": 0,
+  "full_semantic_replay": false,
+  "real_semantic": "not-run",
+  "final_acceptance": "not-run",
+  "historical_failure_reclassified": false,
+  "notes": [
+    "Gap-bearing and invented-bearing valid judgments remain blocking.",
+    "No legacy passing result is selected over a failure.",
+    "This fix does not establish that the original merged obligation was semantically sufficient."
+  ]
+}

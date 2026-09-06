@@ -382,6 +382,42 @@ sc.partition_slices = partition_slices_with_preflight
 sc.validate_semantic_bundle = validate_semantic_bundle_with_preflight
 
 
+def _resolved_atomic_recall_worker(*, root, out_dir, payload, prompt, worker_cache):
+    """ADR-0041: reuse a completed judgment, including a schema-repair result.
+
+    Cache schema-valid failures as well as successes. Never select between old
+    raw and repair caches; this receipt is created only by a completed invocation.
+    Explicit injected fixtures retain precedence and are never persisted here.
+    """
+    stage = "v4-atomic-recall"
+    if worker_cache is not None:
+        return sc.invoke_worker(root=root, out_dir=out_dir, stage=stage, payload=payload,
+                                prompt=prompt, worker_cache=worker_cache)
+    identity = {"schema": "vdd.resolved-atomic-recall.v1", "stage": stage,
+                "input_sha256": sc.sha256_value(payload), "prompt_sha256": sc.sha256_value(prompt)}
+    path = Path(out_dir) / ".compiler-work" / "resolved-atomic-recall" / (sc.sha256_value(identity).split(":")[-1] + ".json")
+    cached = path.is_file()
+    if cached:
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(receipt, Mapping) or any(receipt.get(k) != v for k, v in identity.items()):
+            raise ValueError("resolved atomic recall identity mismatch")
+        raw = receipt.get("result")
+        if receipt.get("result_sha256") != sc.sha256_value(raw):
+            raise ValueError("resolved atomic recall result hash mismatch")
+    else:
+        raw = sc.invoke_worker(root=root, out_dir=out_dir, stage=stage, payload=payload,
+                               prompt=prompt, worker_cache=None)
+    from semantic_worker_v4_domain_patch import _domain_findings
+    if not isinstance(raw, Mapping):
+        raise ValueError("resolved atomic recall result must be object")
+    findings = _worker_schema_findings(stage, raw) + _domain_findings(stage, payload, raw)
+    if findings:
+        raise ValueError("resolved atomic recall contract invalid: " + ";".join(findings))
+    if not cached:
+        sc.atomic_json(path, {**identity, "result": raw, "result_sha256": sc.sha256_value(raw), "authorizes": []})
+    return raw
+
+
 def atomic_recall_alignment(
     *,
     root: Path,
@@ -392,10 +428,9 @@ def atomic_recall_alignment(
 ) -> dict[str, Any]:
     """Independently compare frozen source claims with the V1 obligation set."""
     payload = {"source_index": source_index, "obligations": list(obligations)}
-    raw = sc.invoke_worker(
+    raw = _resolved_atomic_recall_worker(
         root=root,
         out_dir=out_dir,
-        stage="v4-atomic-recall",
         payload=payload,
         worker_cache=worker_cache,
         prompt=(

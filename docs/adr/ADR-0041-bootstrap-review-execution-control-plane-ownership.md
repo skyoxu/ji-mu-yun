@@ -141,6 +141,17 @@ owner and write scopes remain unchanged. A hash-bound projection sidecar records
 the before/after paths; raw worker output and caches remain unchanged. The normal
 execution and semantic validators still run on the projected result.
 
+Atomic recall retains the completed worker result under the exact source/index,
+obligation payload and prompt identity, including results returned by the bounded
+schema-repair path. Later checks of that identical input reuse the result and
+recompute the normal recall gate, rather than obtain another model judgment only
+because the initial transport timed out. Schema-valid source-gap and invented
+findings are retained equally; this is not a passing-result cache. Changed inputs
+or prompts require a new result. Hash, schema and frozen-domain validation remain
+mandatory. Explicit injected fixtures bypass this run-local result store. Legacy
+raw/repair caches are never scanned for a preferred judgment or retrospectively
+promoted; historical failures remain unchanged.
+
 ## References
 
 - `decision-logs/2026-07-16-bootstrap-review-self-audit-and-hardening-proposal.md`
