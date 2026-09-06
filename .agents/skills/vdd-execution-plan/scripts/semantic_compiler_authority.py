@@ -16,6 +16,7 @@ from typing import Any, Mapping, Sequence
 import semantic_compiler_gate as gate
 import semantic_feasibility_patch  # noqa: F401  # installs normative planned-new-file V7 rule
 from semantic_chain_audit import audit_bundle
+from semantic_progress import stage_call
 
 
 def _resolved_backend_metadata(root: Path, *, injected: bool) -> tuple[str, str]:
@@ -210,32 +211,32 @@ def compile_plan(
 
     _explicit_fixture_cache_wins(out_dir, worker_cache)
     root = gate.sc.repository_root(requirements.parent)
-    source_index = gate.sc.build_source_index(root, requirements, companions)
-    preflight = gate.sc.source_preflight(root, source_index)
+    source_index = stage_call(out_dir, "V0", gate.sc.build_source_index, root, requirements, companions)
+    preflight = stage_call(out_dir, "V0A", gate.sc.source_preflight, root, source_index)
     if not preflight["valid"]:
         result = {"status": "repair-vdd", "stage": "V0A", "source_index": source_index, "preflight": preflight}
         _attempt(out_dir, "v0a", result)
         return result
 
-    obligations = gate.sc.compile_obligations(
+    obligations = stage_call(out_dir, "V1", gate.sc.compile_obligations,
         root=root, out_dir=out_dir, source_index=source_index, worker_cache=worker_cache
     )
-    guard = gate.sc.guard_obligations(source_index, obligations)
+    guard = stage_call(out_dir, "V2", gate.sc.guard_obligations, source_index, obligations)
     if not guard["valid"]:
         result = {"status": "repair-vdd", "stage": "V2", "findings": guard["findings"]}
         _attempt(out_dir, "v2", result)
         return result
 
-    acceptances, failures, _hints = gate.sc.compile_acceptances(
+    acceptances, failures, _hints = stage_call(out_dir, "V3", gate.sc.compile_acceptances,
         root=root, out_dir=out_dir, obligations=obligations, worker_cache=worker_cache
     )
-    plan_preflight = gate.sc.semantic_preflight(obligations, acceptances, failures)
+    plan_preflight = stage_call(out_dir, "V3A", gate.sc.semantic_preflight, obligations, acceptances, failures)
     if not plan_preflight["valid"]:
         result = {"status": "repair-vdd", "stage": "V3A", "findings": plan_preflight["findings"]}
         _attempt(out_dir, "v3a", result)
         return result
 
-    recall = gate.atomic_recall_alignment(
+    recall = stage_call(out_dir, "V4-atomic-recall", gate.atomic_recall_alignment,
         root=root,
         out_dir=out_dir,
         source_index=source_index,

@@ -71,6 +71,16 @@ The exact-ID partition, coverage thresholds and single recheck budget remain.
 
 ### Existing Ownership Consequences
 
+Real-semantic evaluation supervises the public compiler CLI with an independent
+whole-compile budget (3600 seconds by default, explicitly configurable). This
+budget is separate from per-worker repair limits. On timeout the supervisor
+terminates its owned process tree and records any cleanup failure; it never
+converts incomplete metrics into success. Compiler stages and actual worker
+invocations append flushed diagnostic checkpoints before and after execution.
+These records are non-authoritative and contain no prompt or backend trace.
+Evaluation retains the run directory, cache, progress, process logs and final
+result on success or failure. Explicit repair limits propagate to the child CLI.
+
 V4 Acceptance alignment and its independent recheck use active obligations as
 their exact proof targets. Deferred/excluded records and unresolved fragments
 remain visible in a separate non-active context field, without acquiring an

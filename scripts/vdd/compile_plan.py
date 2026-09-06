@@ -21,9 +21,16 @@ def main() -> int:
     parser.add_argument("--profile", choices=("standard", "resumable", "self-hosted"), default="standard")
     parser.add_argument("--companion", type=Path, action="append", default=[])
     parser.add_argument("--worker-cache", type=Path)
+    parser.add_argument("--result-json", type=Path, help="Write the compiler result even on a caught failure")
     parser.add_argument("--recommendation-only", action="store_true")
     parser.add_argument("--resume-from", choices=("first-failed-stage",), default=None)
+    parser.add_argument("--repair-timeout-seconds", type=int, help="Explicit per-repair worker budget")
     args = parser.parse_args()
+    if args.repair_timeout_seconds is not None:
+        if args.repair_timeout_seconds <= 0:
+            parser.error("repair timeout must be positive")
+        import semantic_worker_transport_patch as transport
+        transport._REPAIR_TIMEOUT_SECONDS = args.repair_timeout_seconds
     cache = None
     if args.worker_cache:
         value = json.loads(args.worker_cache.read_text(encoding="utf-8"))
@@ -41,8 +48,10 @@ def main() -> int:
             resume_from=args.resume_from,
         )
     except (OSError, UnicodeError, json.JSONDecodeError, ValueError, RuntimeError) as exc:
-        print(json.dumps({"status": "repair-vdd", "reason": str(exc)}, sort_keys=True))
-        return 1
+        result = {"status": "repair-vdd", "reason": str(exc)}
+    if args.result_json:
+        args.result_json.parent.mkdir(parents=True, exist_ok=True)
+        args.result_json.write_text(json.dumps(result, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(result, sort_keys=True))
     return 0 if result.get("status") in {"plan-ready", "recommendation-only"} else 1
 

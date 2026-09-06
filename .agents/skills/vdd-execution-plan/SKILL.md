@@ -42,6 +42,16 @@ py -3 scripts/vdd/compile_plan.py --requirements <requirements.md> --out-dir <ex
 
 For an existing failed compiler directory, add `--resume-from first-failed-stage`. A nonzero exit or any status other than `plan-ready` remains a VDD repair result; no caller may promote it. `--recommendation-only` performs no plan publication and never represents readiness.
 
+For real-worker quality evaluation, `scripts/vdd/evaluate_real_semantic_quality.py`
+supervises the compiler with `--compile-timeout-seconds` (default 3600), distinct
+from the optional `--repair-timeout-seconds` override. It prints the progress
+path at launch and retains the run directory. Inspect
+`plan/.compiler-work/compiler-progress.jsonl` for stage/worker start and return
+events; an unmatched start locates the last observed wait, not its cause.
+Timeout produces `compile-timeout`, never acceptance evidence. Windows process
+cleanup targets only the owned PID tree; inspect `cleanup_error` if termination
+fails. Existing caches and worker outputs remain available for offline diagnosis.
+
 ## Choose The Profile First
 
 Choose the least complex profile that serves a real consumer. Record the selected profile and reason in the plan.

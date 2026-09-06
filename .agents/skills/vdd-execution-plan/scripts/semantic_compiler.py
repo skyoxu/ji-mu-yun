@@ -5,6 +5,8 @@ coverage, partitioning, feasibility, and final artifact publication.
 """
 from __future__ import annotations
 
+from semantic_progress import worker_call, stage_call
+
 import hashlib
 import json
 import os
@@ -237,7 +239,7 @@ def invoke_worker(*, root: Path, out_dir: Path, stage: str, payload: Mapping[str
         "Return JSON only. Do not invent requirements or runtime evidence.\n\n"
         + prompt + "\n\nINPUT:\n" + json.dumps(payload, ensure_ascii=False, sort_keys=True)
     )
-    code, trace, _argv = run_llm_exec(
+    code, trace, _argv = worker_call(run_llm_exec, progress_dir=out_dir, progress_stage=stage,
         backend=resolve_llm_backend(None), root=root, prompt=full_prompt,
         output_last_message=output, timeout_sec=180,
         codex_configs=["model_reasoning_effort=\"high\""], codex_sandbox="read-only",
@@ -722,22 +724,22 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
         return {"status": "repair-vdd", "stage": "V0A", "source_index": source_index, "preflight": preflight}
     if recommendation_only:
         return {"status": "recommendation-only", "recommended_action": "compile-v1", "profile": profile, "source_index_sha256": source_index["sha256"], "model_called": False, "writes_performed": False}
-    obligations = compile_obligations(root=root, out_dir=out_dir, source_index=source_index, worker_cache=worker_cache)
-    guard = guard_obligations(source_index, obligations)
+    obligations = stage_call(out_dir, "V1", compile_obligations, root=root, out_dir=out_dir, source_index=source_index, worker_cache=worker_cache)
+    guard = stage_call(out_dir, "V2", guard_obligations, source_index, obligations)
     if not guard["valid"]:
         return {"status": "repair-vdd", "stage": "V2", "findings": guard["findings"]}
-    acceptances, failures, hints = compile_acceptances(root=root, out_dir=out_dir, obligations=obligations, worker_cache=worker_cache)
-    plan_preflight = semantic_preflight(obligations, acceptances, failures)
+    acceptances, failures, hints = stage_call(out_dir, "V3", compile_acceptances, root=root, out_dir=out_dir, obligations=obligations, worker_cache=worker_cache)
+    plan_preflight = stage_call(out_dir, "V3A", semantic_preflight, obligations, acceptances, failures)
     if not plan_preflight["valid"]:
         return {"status": "repair-vdd", "stage": "V3A", "findings": plan_preflight["findings"]}
-    alignment = semantic_align(root=root, out_dir=out_dir, source_index=source_index, obligations=obligations, acceptances=acceptances, failures=failures, worker_cache=worker_cache)
+    alignment = stage_call(out_dir, "V4", semantic_align, root=root, out_dir=out_dir, source_index=source_index, obligations=obligations, acceptances=acceptances, failures=failures, worker_cache=worker_cache)
     if not alignment["valid"]:
         return {"status": "repair-vdd", "stage": "V4", "findings": alignment["findings"]}
-    pre_edges = exact_cover(obligations, acceptances, failures)
-    slices, hints_by_acceptance = partition_slices(obligations, acceptances, failures, hints)
-    final_edges = final_cover(pre_edges, slices)
-    contexts = agent_contexts(slices, obligations, acceptances, hints_by_acceptance)
-    feasibility_result = feasibility(root, slices, acceptances, failures, hints_by_acceptance)
+    pre_edges = stage_call(out_dir, "V5", exact_cover, obligations, acceptances, failures)
+    slices, hints_by_acceptance = stage_call(out_dir, "V6", partition_slices, obligations, acceptances, failures, hints)
+    final_edges = stage_call(out_dir, "V6A", final_cover, pre_edges, slices)
+    contexts = stage_call(out_dir, "agent-context", agent_contexts, slices, obligations, acceptances, hints_by_acceptance)
+    feasibility_result = stage_call(out_dir, "V7", feasibility, root, slices, acceptances, failures, hints_by_acceptance)
     if not feasibility_result["valid"]:
         return {"status": "repair-vdd", "stage": "V7", "findings": feasibility_result["findings"]}
     plan_id = "PLAN-" + sha256_value({"source": source_index["sha256"], "profile": profile})[7:19].upper()
@@ -747,7 +749,7 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
         "pre_slice_coverage": pre_edges, "slices": slices, "final_plan_coverage": final_edges,
         "agent_contexts": contexts,
     }
-    valid, findings = validate_semantic_bundle(bundle)
+    valid, findings = stage_call(out_dir, "final-validation", validate_semantic_bundle, bundle)
     if not valid:
         return {"status": "repair-vdd", "stage": "final-validation", "findings": findings}
     atomic_json(out_dir / "source-index.v1.json", source_index)

@@ -7,6 +7,8 @@ checks; malformed references are never guessed or silently repaired.
 """
 from __future__ import annotations
 
+from semantic_progress import worker_call, stage_call
+
 import json
 from pathlib import Path
 import sys
@@ -422,7 +424,7 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
     extra_args = ["--output-schema", str(schema_path)] if backend == "codex-cli" else []
 
     def run(extra: list[str]):
-        return run_llm_exec(
+        return worker_call(run_llm_exec, progress_dir=out_dir, progress_stage="v3-schema-repair",
             backend=backend, root=root, prompt=grouped_prompt, output_last_message=output,
             timeout_sec=transport._REPAIR_TIMEOUT_SECONDS,
             codex_configs=['model_reasoning_effort="medium"'], codex_sandbox="read-only", codex_extra_args=extra,

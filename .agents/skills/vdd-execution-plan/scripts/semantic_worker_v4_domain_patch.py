@@ -16,6 +16,8 @@ validators and their one-shot repair semantics are silently bypassed.
 """
 from __future__ import annotations
 
+from semantic_progress import worker_call, stage_call
+
 import json
 from pathlib import Path
 import sys
@@ -208,7 +210,7 @@ def v4_transport_invoke_worker(
         extra_args = ["--output-schema", str(_schema_path(out_dir, stage, schema))]
 
     def execute(extra: list[str]) -> tuple[int, str, list[str]]:
-        return run_llm_exec(
+        return worker_call(run_llm_exec, progress_dir=out_dir, progress_stage=stage,
             backend=backend,
             root=root,
             prompt=full_prompt,

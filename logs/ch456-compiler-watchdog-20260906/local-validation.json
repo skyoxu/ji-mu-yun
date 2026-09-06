@@ -1,0 +1,42 @@
+{
+  "base_commit": "676880cc6d6b64fc580f9796a172172d82e357a7",
+  "adr": "ADR-0041",
+  "scope": "Real-semantic compiler watchdog and stage/worker progress only; no new semantic findings or benchmark changes.",
+  "configuration": {
+    "global_compile_seconds_default": 3600,
+    "repair_timeout_default_unchanged": true,
+    "repair_override_cli": "--repair-timeout-seconds",
+    "global_budget_cli": "--compile-timeout-seconds"
+  },
+  "validation": {
+    "focused_watchdog_tests": "10 passed",
+    "combined_vdd_ch456_and_fresh_lifecycle": "143 passed",
+    "skill_contract": "pass",
+    "skill_package": "pass",
+    "real_hanging_process_tree": "terminated and heartbeat stopped on Linux",
+    "windows_cleanup": "PID-scoped taskkill /T /F command tested with mock; real Windows execution pending",
+    "evaluator_timeout": "failure JSON and progress retained",
+    "public_compiler_cli": "injected fixture reached plan-ready and wrote structured result/progress",
+    "live_backend_calls": 0,
+    "full_windows_suite_run": false,
+    "ch456_final_acceptance_run": false
+  },
+  "limitations": [
+    "This does not establish the original blocked worker stage or resolve backend latency.",
+    "Global supervision is applied by the real-semantic evaluator; direct compile_plan imports are instrumented but not automatically killed."
+  ],
+  "changed_sha256": {
+    ".agents/skills/vdd-execution-plan/SKILL.md": "sha256:c143450891be91f69d471028944b3f025cedcbee95066619ae96e210d3ee1512",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_progress.py": "sha256:8324a3b5afcf6a63123d15482de2b2cf462e811b90cb643c257a322df6490cec",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_compiler.py": "sha256:bba80efbf181c956304a4bafd0fb66eca53fea56b674f94faa9c95f8a025ca6d",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_authority.py": "sha256:1df38cdd554a4aadcef3a2312f07ca1a9ca7ff1b7d49e5451ade0df6f392b7c0",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_transport_patch.py": "sha256:c79629b428a116c2702f871128128dc670bc8db2298aeeecec63dd6bc74f5605",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_repair_patch.py": "sha256:bd8c9b309490253f246d9667aa2f24df72b11ba90b44bab90792ddbe9f980f46",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v4_domain_patch.py": "sha256:de7ddf9ef34727a2fe1ee9cab283b36b6df43db6e2c45520a05edbec615d7522",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compile_watchdog.py": "sha256:51a6d125a40c9cd8f730bcc6ed0d491184e1609f7508073f4386b0cabec2f193",
+    "scripts/vdd/compiler_watchdog.py": "sha256:e4315ce6ac3854fa08a3a3f5ca74ad473d8e778b8c740254b1013fc97f6e13e0",
+    "scripts/vdd/compile_plan.py": "sha256:24df24ba8a754b31e9ed5f4c5ec214363b5f5a05db576ad2574625b0c5fab4e9",
+    "scripts/vdd/evaluate_real_semantic_quality.py": "sha256:d3660c671907b4b7ce676bc3e9b38719ccae5f0bbd66813deea8c5b33a230f80",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "sha256:f1559fa48011045552a198831be29c36acc690e4321dd09b5aec277806321c18"
+  }
+}
