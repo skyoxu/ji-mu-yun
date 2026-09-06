@@ -1,0 +1,69 @@
+{
+  "atomic_behavior_floor_passed": true,
+  "atomic_quality_metrics": {
+    "active_obligation_count": 33,
+    "f1": 1.0,
+    "invented_obligation_count": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "source_gap_count": 0,
+    "supported_obligation_count": 33
+  },
+  "authorizes": [],
+  "availability": {
+    "available": true,
+    "backend": "codex-cli",
+    "blocking_errors": [],
+    "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+  },
+  "backend": "codex-cli",
+  "compile_timeout_seconds": 3600.0,
+  "compiler_findings": [],
+  "compiler_stage": null,
+  "compiler_status": "plan-ready",
+  "execution_attempted": true,
+  "execution_succeeded": true,
+  "fixture": ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md",
+  "minimum_active_obligations": 23,
+  "precision_threshold_passed": true,
+  "progress_file": "C:\\jimuyun\\.tmp-ch456-semantic-quality\\run-syrcl5ku\\plan\\.compiler-work\\compiler-progress.jsonl",
+  "recall_threshold_passed": true,
+  "repair_timeout_seconds_override": 1200,
+  "required_precision": 0.95,
+  "required_recall": 0.95,
+  "run_directory": "C:\\jimuyun\\.tmp-ch456-semantic-quality\\run-syrcl5ku",
+  "schema": "vdd.real-semantic-quality-metric.v1",
+  "source_head": "c6ae33da3ff899706603612063643e581be4ae20",
+  "status": "pass",
+  "watchdog": {
+    "cleanup_error": null,
+    "command": [
+      "C:\\Program Files\\Python312\\python.exe",
+      "C:\\jimuyun\\scripts\\vdd\\compile_plan.py",
+      "--requirements",
+      "C:\\jimuyun\\.agents\\skills\\vdd-execution-plan\\scripts\\fixtures\\ch456-curated-semantic-quality.md",
+      "--out-dir",
+      "C:\\jimuyun\\.tmp-ch456-semantic-quality\\run-syrcl5ku\\plan",
+      "--profile",
+      "standard",
+      "--result-json",
+      "C:\\jimuyun\\.tmp-ch456-semantic-quality\\run-syrcl5ku\\compiler-result.json",
+      "--repair-timeout-seconds",
+      "1200"
+    ],
+    "elapsed_seconds": 1870.311999999998,
+    "exit_code": 0,
+    "last_checkpoint": {
+      "call_id": "c11f19e097e84872978595ae62756f26",
+      "elapsed_seconds": 0.0,
+      "event": "stage-returned",
+      "pid": 4564,
+      "schema": "vdd.compiler-progress.v1",
+      "stage": "final-validation",
+      "timestamp": "2026-09-06T16:44:47.030440+00:00"
+    },
+    "pid": 4564,
+    "timed_out": false,
+    "timeout_seconds": 3600.0
+  }
+}

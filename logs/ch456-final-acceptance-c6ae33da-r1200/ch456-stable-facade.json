@@ -1,0 +1,144 @@
+{
+  "authorizes": [],
+  "candidate_metric_producer": "stable-facade",
+  "expected_actions": [
+    "preflight",
+    "run-preflight",
+    "recommendation",
+    "author-red",
+    "run-red",
+    "implement",
+    "run-green",
+    "run-refactor",
+    "execute-stage",
+    "implementation-handoff",
+    "implementation-finish",
+    "slice-ready",
+    "validate-slice",
+    "run-terminal",
+    "implementation-complete",
+    "recover"
+  ],
+  "proven_routes": 16,
+  "required_route_coverage": 1.0,
+  "route_coverage": 1.0,
+  "routes": [
+    {
+      "action": "preflight",
+      "exit_code": 0,
+      "reason": null,
+      "route_proven": true,
+      "status": "preflight-passed"
+    },
+    {
+      "action": "run-preflight",
+      "exit_code": 0,
+      "reason": null,
+      "route_proven": true,
+      "status": "preflight-passed"
+    },
+    {
+      "action": "recommendation",
+      "exit_code": 0,
+      "reason": "current-snapshot-input-missing",
+      "route_proven": true,
+      "status": null
+    },
+    {
+      "action": "author-red",
+      "exit_code": 1,
+      "reason": "author-red requires --run-dir",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "run-red",
+      "exit_code": 1,
+      "reason": "run-red requires --run-dir",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "implement",
+      "exit_code": 1,
+      "reason": "implement requires --run-dir --snapshot-roots --source-commit",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "run-green",
+      "exit_code": 1,
+      "reason": "run-green requires --run-dir",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "run-refactor",
+      "exit_code": 1,
+      "reason": "run-refactor requires --run-dir",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "execute-stage",
+      "exit_code": 1,
+      "reason": "execute-stage requires --run-dir and --descriptor",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "implementation-handoff",
+      "exit_code": 1,
+      "reason": "implementation-handoff requires --run-dir --snapshot-roots --source-commit",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "implementation-finish",
+      "exit_code": 1,
+      "reason": "implementation-finish requires --run-dir --before-state --snapshot-roots --source-commit",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "slice-ready",
+      "exit_code": 1,
+      "reason": "validate-slice requires --run-dir --snapshot-roots --source-commit --out",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "validate-slice",
+      "exit_code": 1,
+      "reason": "validate-slice requires --run-dir --snapshot-roots --source-commit --out",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "run-terminal",
+      "exit_code": 1,
+      "reason": "run-terminal requires --run-dir",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "implementation-complete",
+      "exit_code": 1,
+      "reason": "implementation-complete requires --snapshot-roots --predecessors --source-commit --out",
+      "route_proven": true,
+      "status": "blocked"
+    },
+    {
+      "action": "recover",
+      "exit_code": 1,
+      "reason": "recover requires --run-dir --recovery-input --snapshot-roots --source-commit",
+      "route_proven": true,
+      "status": "blocked"
+    }
+  ],
+  "schema": "quick-dev.stable-facade-route-metric.v2",
+  "source_head": "c6ae33da3ff899706603612063643e581be4ae20",
+  "threshold_passed": true,
+  "total_actions": 16,
+  "worker_route_semantics_proven_by": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_worker_orchestration.py"
+}

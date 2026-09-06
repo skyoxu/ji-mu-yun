@@ -1,0 +1,318 @@
+{
+  "authorizes": [],
+  "baseline_findings": [],
+  "baseline_valid": true,
+  "candidate_metric_producer": "detached-mutations",
+  "canonical_bundle_schema": "detached-judge-bundle.v1",
+  "expected_failure_families": [
+    "artifact-integrity",
+    "expected-red",
+    "repeated-deterministic-failure",
+    "repo-noise",
+    "semantic-contract-gap",
+    "target-binding-failure",
+    "task-implementation-failure",
+    "test-harness-failure",
+    "timeout-no-observation",
+    "unexpected-green"
+  ],
+  "failure_family_cases": [
+    {
+      "case": "missing-family-artifact-integrity",
+      "findings": [
+        "bundle:failure-family-cover:artifact-integrity"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "missing-family-expected-red",
+      "findings": [
+        "bundle:failure-family-cover:expected-red"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "missing-family-repeated-deterministic-failure",
+      "findings": [
+        "bundle:failure-family-cover:repeated-deterministic-failure"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "missing-family-repo-noise",
+      "findings": [
+        "bundle:failure-family-cover:repo-noise"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "missing-family-semantic-contract-gap",
+      "findings": [
+        "bundle:failure-family-cover:semantic-contract-gap"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "missing-family-target-binding-failure",
+      "findings": [
+        "bundle:failure-family-cover:target-binding-failure"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "missing-family-task-implementation-failure",
+      "findings": [
+        "bundle:failure-family-cover:task-implementation-failure"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "missing-family-test-harness-failure",
+      "findings": [
+        "bundle:failure-family-cover:test-harness-failure"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "missing-family-timeout-no-observation",
+      "findings": [
+        "bundle:failure-family-cover:timeout-no-observation"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "missing-family-unexpected-green",
+      "findings": [
+        "bundle:failure-family-cover:unexpected-green"
+      ],
+      "rejected": true
+    }
+  ],
+  "failure_family_cover": [
+    "artifact-integrity",
+    "expected-red",
+    "repeated-deterministic-failure",
+    "repo-noise",
+    "semantic-contract-gap",
+    "target-binding-failure",
+    "task-implementation-failure",
+    "test-harness-failure",
+    "timeout-no-observation",
+    "unexpected-green"
+  ],
+  "failure_family_leakage_rate": 0.0,
+  "failure_family_leaks": 0,
+  "failure_family_omission_cases": 10,
+  "failure_family_rejected_cases": 10,
+  "fixture_kind_cover": [
+    "mutation",
+    "negative",
+    "positive"
+  ],
+  "required_failure_family_leakage_rate": 0.0,
+  "required_structural_rejection_rate": 0.95,
+  "schema": "quick-dev.detached-mutation-metric.v3",
+  "source_head": "c6ae33da3ff899706603612063643e581be4ae20",
+  "structural_cases": [
+    {
+      "case": "schema-drift",
+      "findings": [
+        "bundle:schema"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "unknown-top-level-field",
+      "findings": [
+        "bundle:closed-schema"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "missing-source_commit",
+      "findings": [
+        "bundle:source_commit"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "missing-source_tree",
+      "findings": [
+        "bundle:source_tree"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "read-only-open-false",
+      "findings": [
+        "bundle:read-only-open"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "promotion-revalidation-false",
+      "findings": [
+        "bundle:promotion-revalidation"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "fixtures-empty",
+      "findings": [
+        "bundle:fixtures",
+        "bundle:fixture-kind-cover:mutation,negative,positive",
+        "bundle:failure-family-cover:artifact-integrity,expected-red,repeated-deterministic-failure,repo-noise,semantic-contract-gap,target-binding-failure,task-implementation-failure,test-harness-failure,timeout-no-observation,unexpected-green"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "judge-identity-empty",
+      "findings": [
+        "bundle:judge-identity"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "judge-extra-field",
+      "findings": [
+        "bundle:judge",
+        "bundle:judge-identity",
+        "judge:hash-shape",
+        "judge:path"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "oracle-extra-field",
+      "findings": [
+        "bundle:oracle",
+        "oracle:hash-shape",
+        "oracle:path"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "fixture-extra-field",
+      "findings": [
+        "fixture[0]:shape",
+        "bundle:fixture-kind-cover:positive"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "artifact-path-empty",
+      "findings": [
+        "judge:path"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "artifact-path-absolute",
+      "findings": [
+        "judge:path"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "artifact-path-parent",
+      "findings": [
+        "judge:path"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "artifact-missing",
+      "findings": [
+        "judge:missing-or-symlink"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "artifact-hash-shape",
+      "findings": [
+        "judge:hash-shape"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "artifact-hash-mismatch",
+      "findings": [
+        "judge:hash"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "artifact-not-read-only",
+      "findings": [
+        "judge:not-read-only"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "candidate-traversal",
+      "findings": [
+        "judge:path"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "judge-imports-current-writer",
+      "findings": [
+        "judge:imports-current-writer"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "fixture-kind-invalid",
+      "findings": [
+        "fixture[0]:fixture-kind",
+        "bundle:fixture-kind-cover:positive"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "unknown-failure-family",
+      "findings": [
+        "fixture[0]:failure-family",
+        "fixture[0]:failure-family-missing",
+        "bundle:fixture-kind-cover:positive"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "negative-family-missing",
+      "findings": [
+        "fixture[0]:failure-family-missing",
+        "bundle:fixture-kind-cover:positive"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "fixture-cover-missing-positive",
+      "findings": [
+        "bundle:fixture-kind-cover:positive"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "fixture-cover-missing-negative",
+      "findings": [
+        "bundle:fixture-kind-cover:negative",
+        "bundle:failure-family-cover:artifact-integrity,repeated-deterministic-failure,semantic-contract-gap,task-implementation-failure,timeout-no-observation"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "fixture-cover-missing-mutation",
+      "findings": [
+        "bundle:fixture-kind-cover:mutation",
+        "bundle:failure-family-cover:expected-red,repo-noise,target-binding-failure,test-harness-failure,unexpected-green"
+      ],
+      "rejected": true
+    }
+  ],
+  "structural_mutation_cases": 26,
+  "structural_rejected_cases": 26,
+  "structural_rejection_rate": 1.0,
+  "threshold_passed": true
+}

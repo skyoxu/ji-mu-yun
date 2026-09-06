@@ -1,0 +1,168 @@
+{
+  "authorizes": [],
+  "backend": "codex-cli",
+  "evidence_dir": "logs/ch456-final-acceptance-c6ae33da-r1200",
+  "failed_steps": [
+    "live-blind-medium"
+  ],
+  "repair_timeout_seconds_override": 1200,
+  "schema": "ch456.local-final-acceptance-run.v1",
+  "status": "blocked",
+  "steps": [
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric",
+        "architecture-reconcile",
+        "--out",
+        "C:\\jimuyun\\logs\\ch456-final-acceptance-c6ae33da-r1200\\ch456-architecture-reconcile.json"
+      ],
+      "exit_code": 0,
+      "label": "architecture-reconcile",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": "12063643e581be4ae20\",\n  \"evidence_path\": \"C:\\\\jimuyun\\\\logs\\\\ch456-final-acceptance-c6ae33da-r1200\\\\ch456-architecture-reconcile.json\",\n  \"evidence_schema\": \"ch456.architecture-deferred-reconcile-check.v1\",\n  \"metric\": \"architecture-reconcile\",\n  \"producer_argv\": [\n    \"C:\\\\Program Files\\\\Python312\\\\python.exe\",\n    \"scripts/vdd/evaluate_architecture_reconcile.py\",\n    \"--out\",\n    \"C:\\\\jimuyun\\\\logs\\\\ch456-final-acceptance-c6ae33da-r1200\\\\ch456-architecture-reconcile.json\"\n  ],\n  \"producer_exit_code\": 0,\n  \"schema\": \"ch456.candidate-bound-metric-run.v1\",\n  \"status\": \"pass\",\n  \"stderr_tail\": \"\",\n  \"stdout_tail\": \"{\\\"authorizes\\\": [], \\\"deferred_count\\\": 16, \\\"dispositions\\\": {\\\"60-minute task measurement\\\": \\\"acceptance-blocked\\\", \\\"comparator types and stdout/stderr normalization\\\": \\\"still-deferred-outside-v1\\\", \\\"concurrency and resource quotas\\\": \\\"still-deferred-outside-v1\\\", \\\"cross-platform execution normalization\\\": \\\"still-deferred-outside-v1\\\", \\\"detached fixture/judge independence procedure\\\": \\\"resolved-by-implementation\\\", \\\"deterministic semantic validator boundary\\\": \\\"resolved-by-implementation\\\", \\\"evidence retention and cleanup\\\": \\\"still-deferred-outside-v1\\\", \\\"judge lifecycle, retention and revocation\\\": \\\"still-deferred-outside-v1\\\", \\\"obligation\\\\u2194Acceptance normalization\\\": \\\"resolved-by-implementation\\\", \\\"profile scope differences\\\": \\\"resolved-by-implementation\\\", \\\"runnable rollback probe interface\\\": \\\"trigger-based-future-decision\\\", \\\"semantic-change partial reuse\\\": \\\"resolved-by-implementation\\\", \\\"slice split/merge thresholds\\\": \\\"resolved-by-implementation\\\", \\\"stop-loss numeric threshold\\\": \\\"resolved-by-implementation\\\", \\\"unexpected-green proof\\\": \\\"trigger-based-future-decision\\\", \\\"v1 compatibility adapter projection\\\": \\\"resolved-by-implementation\\\"}, \\\"findings\\\": [], \\\"frozen_authority_modified\\\": false, \\\"reconciled_count\\\": 16, \\\"schema\\\": \\\"ch456.architecture-deferred-reconcile-check.v1\\\", \\\"status\\\": \\\"pass\\\"}\\n\"\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric",
+        "curated-semantic",
+        "--out",
+        "C:\\jimuyun\\logs\\ch456-final-acceptance-c6ae33da-r1200\\ch456-curated-semantic-quality.json"
+      ],
+      "exit_code": 0,
+      "label": "curated-semantic",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"authorizes\": [],\n  \"candidate_head\": \"c6ae33da3ff899706603612063643e581be4ae20\",\n  \"evidence_path\": \"C:\\\\jimuyun\\\\logs\\\\ch456-final-acceptance-c6ae33da-r1200\\\\ch456-curated-semantic-quality.json\",\n  \"evidence_schema\": \"vdd.curated-semantic-quality-metric.v1\",\n  \"metric\": \"curated-semantic\",\n  \"producer_argv\": [\n    \"C:\\\\Program Files\\\\Python312\\\\python.exe\",\n    \"scripts/vdd/evaluate_semantic_quality.py\",\n    \"--out\",\n    \"C:\\\\jimuyun\\\\logs\\\\ch456-final-acceptance-c6ae33da-r1200\\\\ch456-curated-semantic-quality.json\"\n  ],\n  \"producer_exit_code\": 0,\n  \"schema\": \"ch456.candidate-bound-metric-run.v1\",\n  \"status\": \"pass\",\n  \"stderr_tail\": \"\",\n  \"stdout_tail\": \"{\\n  \\\"authorizes\\\": [],\\n  \\\"controlled_mutation_count\\\": 2,\\n  \\\"controlled_mutation_rejection_rate\\\": 1.0,\\n  \\\"curated_atomic_obligation_count\\\": 30,\\n  \\\"curated_requirement_count\\\": 10,\\n  \\\"execution_mode\\\": \\\"deterministic-curated-independent-oracle\\\",\\n  \\\"live_model_evidence_ref\\\": \\\"ch456-real-worker-probe.json\\\",\\n  \\\"live_model_extraction_quality_proven\\\": false,\\n  \\\"precision\\\": 1.0,\\n  \\\"recall\\\": 1.0,\\n  \\\"required_precision\\\": 0.95,\\n  \\\"required_recall\\\": 0.95,\\n  \\\"schema\\\": \\\"vdd.curated-semantic-quality-metric.v1\\\",\\n  \\\"status\\\": \\\"pass\\\"\\n}\\n\"\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric",
+        "semantic-chain-mutations",
+        "--out",
+        "C:\\jimuyun\\logs\\ch456-final-acceptance-c6ae33da-r1200\\ch456-semantic-chain-mutations.json"
+      ],
+      "exit_code": 0,
+      "label": "semantic-chain-mutations",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": "\\\\ch456-final-acceptance-c6ae33da-r1200\\\\ch456-semantic-chain-mutations.json\"\n  ],\n  \"producer_exit_code\": 0,\n  \"schema\": \"ch456.candidate-bound-metric-run.v1\",\n  \"status\": \"pass\",\n  \"stderr_tail\": \"\",\n  \"stdout_tail\": \"e\\\": \\\"incompatible-verification-lanes\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:slice:S1:incompatible-verification-lanes\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"slice-proof-missing\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:slice:S1:proof-missing\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"proof-acceptance-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:slice:S1:proof-acceptance-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"proof-assertion-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:slice:S1:proof-assertion-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"proof-selector-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:slice:S1:proof-selector-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"acceptance-no-slice\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:v6:acceptance-single-slice-cover\\\",\\n        \\\"chain:v6a:semantic-edge-exact-cover\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"v6a-stage-scope-swallowed\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:v6a:semantic-edge-exact-cover\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"v6a-lane-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:v6a:semantic-edge-exact-cover\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"v6a-terminal-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:v6a:semantic-edge-exact-cover\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    }\\n  ],\\n  \\\"mutation_cases\\\": 21,\\n  \\\"rejected_cases\\\": 21,\\n  \\\"rejection_rate\\\": 1.0,\\n  \\\"required_rejection_rate\\\": 0.95,\\n  \\\"schema\\\": \\\"vdd.semantic-chain-mutation-metric.v1\\\",\\n  \\\"threshold_passed\\\": true\\n}\\n\"\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric",
+        "agent-context-mutations",
+        "--out",
+        "C:\\jimuyun\\logs\\ch456-final-acceptance-c6ae33da-r1200\\ch456-agent-context-mutations.json"
+      ],
+      "exit_code": 0,
+      "label": "agent-context-mutations",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": "\\\\ch456-final-acceptance-c6ae33da-r1200\\\\ch456-agent-context-mutations.json\"\n  ],\n  \"producer_exit_code\": 0,\n  \"schema\": \"ch456.candidate-bound-metric-run.v1\",\n  \"status\": \"pass\",\n  \"stderr_tail\": \"\",\n  \"stdout_tail\": \" true\\n    },\\n    {\\n      \\\"case\\\": \\\"context-duplicate-slice\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:duplicate\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"context-unknown-slice\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:slice-set-mismatch\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"context-shape-missing-contracts\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:shape-incomplete\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"obligation-projection-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:obligation-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"acceptance-projection-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:acceptance-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"selector-projection-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:selector-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"validation-commands-empty\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:validation-commands\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"validation-command-empty-argv\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:validation-commands\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"validation-command-non-string\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:validation-commands\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    }\\n  ],\\n  \\\"mutation_cases\\\": 10,\\n  \\\"rejected_cases\\\": 10,\\n  \\\"rejection_rate\\\": 1.0,\\n  \\\"required_rejection_rate\\\": 0.95,\\n  \\\"schema\\\": \\\"vdd.agent-context-mutation-metric.v1\\\",\\n  \\\"threshold_passed\\\": true\\n}\\n\"\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/vdd/evaluate_real_semantic_quality.py",
+        "--backend",
+        "codex-cli",
+        "--out",
+        "C:\\jimuyun\\logs\\ch456-final-acceptance-c6ae33da-r1200\\ch456-real-semantic-quality.json",
+        "--repair-timeout-seconds",
+        "1200"
+      ],
+      "exit_code": 0,
+      "label": "real-semantic",
+      "passed": true,
+      "stderr_tail": "Compiler progress: C:\\jimuyun\\.tmp-ch456-semantic-quality\\run-syrcl5ku\\plan\\.compiler-work\\compiler-progress.jsonl (global budget 3600.0s)\n",
+      "stdout_tail": "-cli\",\n    \"blocking_errors\": [],\n    \"executable\": \"C:\\\\Users\\\\Administrator\\\\AppData\\\\Roaming\\\\npm\\\\codex.CMD\"\n  },\n  \"backend\": \"codex-cli\",\n  \"compile_timeout_seconds\": 3600.0,\n  \"compiler_findings\": [],\n  \"compiler_stage\": null,\n  \"compiler_status\": \"plan-ready\",\n  \"execution_attempted\": true,\n  \"execution_succeeded\": true,\n  \"fixture\": \".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md\",\n  \"minimum_active_obligations\": 23,\n  \"precision_threshold_passed\": true,\n  \"progress_file\": \"C:\\\\jimuyun\\\\.tmp-ch456-semantic-quality\\\\run-syrcl5ku\\\\plan\\\\.compiler-work\\\\compiler-progress.jsonl\",\n  \"recall_threshold_passed\": true,\n  \"repair_timeout_seconds_override\": 1200,\n  \"required_precision\": 0.95,\n  \"required_recall\": 0.95,\n  \"run_directory\": \"C:\\\\jimuyun\\\\.tmp-ch456-semantic-quality\\\\run-syrcl5ku\",\n  \"schema\": \"vdd.real-semantic-quality-metric.v1\",\n  \"source_head\": \"c6ae33da3ff899706603612063643e581be4ae20\",\n  \"status\": \"pass\",\n  \"watchdog\": {\n    \"cleanup_error\": null,\n    \"command\": [\n      \"C:\\\\Program Files\\\\Python312\\\\python.exe\",\n      \"C:\\\\jimuyun\\\\scripts\\\\vdd\\\\compile_plan.py\",\n      \"--requirements\",\n      \"C:\\\\jimuyun\\\\.agents\\\\skills\\\\vdd-execution-plan\\\\scripts\\\\fixtures\\\\ch456-curated-semantic-quality.md\",\n      \"--out-dir\",\n      \"C:\\\\jimuyun\\\\.tmp-ch456-semantic-quality\\\\run-syrcl5ku\\\\plan\",\n      \"--profile\",\n      \"standard\",\n      \"--result-json\",\n      \"C:\\\\jimuyun\\\\.tmp-ch456-semantic-quality\\\\run-syrcl5ku\\\\compiler-result.json\",\n      \"--repair-timeout-seconds\",\n      \"1200\"\n    ],\n    \"elapsed_seconds\": 1870.311999999998,\n    \"exit_code\": 0,\n    \"last_checkpoint\": {\n      \"call_id\": \"c11f19e097e84872978595ae62756f26\",\n      \"elapsed_seconds\": 0.0,\n      \"event\": \"stage-returned\",\n      \"pid\": 4564,\n      \"schema\": \"vdd.compiler-progress.v1\",\n      \"stage\": \"final-validation\",\n      \"timestamp\": \"2026-09-06T16:44:47.030440+00:00\"\n    },\n    \"pid\": 4564,\n    \"timed_out\": false,\n    \"timeout_seconds\": 3600.0\n  }\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric",
+        "stable-facade",
+        "--out",
+        "C:\\jimuyun\\logs\\ch456-final-acceptance-c6ae33da-r1200\\ch456-stable-facade.json"
+      ],
+      "exit_code": 0,
+      "label": "stable-facade",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": "  \"C:\\\\jimuyun\\\\logs\\\\ch456-final-acceptance-c6ae33da-r1200\\\\ch456-stable-facade.json\"\n  ],\n  \"producer_exit_code\": 0,\n  \"schema\": \"ch456.candidate-bound-metric-run.v1\",\n  \"status\": \"pass\",\n  \"stderr_tail\": \"\",\n  \"stdout_tail\": \"source-commit\\\",\\n      \\\"route_proven\\\": true,\\n      \\\"status\\\": \\\"blocked\\\"\\n    },\\n    {\\n      \\\"action\\\": \\\"implementation-finish\\\",\\n      \\\"exit_code\\\": 1,\\n      \\\"reason\\\": \\\"implementation-finish requires --run-dir --before-state --snapshot-roots --source-commit\\\",\\n      \\\"route_proven\\\": true,\\n      \\\"status\\\": \\\"blocked\\\"\\n    },\\n    {\\n      \\\"action\\\": \\\"slice-ready\\\",\\n      \\\"exit_code\\\": 1,\\n      \\\"reason\\\": \\\"validate-slice requires --run-dir --snapshot-roots --source-commit --out\\\",\\n      \\\"route_proven\\\": true,\\n      \\\"status\\\": \\\"blocked\\\"\\n    },\\n    {\\n      \\\"action\\\": \\\"validate-slice\\\",\\n      \\\"exit_code\\\": 1,\\n      \\\"reason\\\": \\\"validate-slice requires --run-dir --snapshot-roots --source-commit --out\\\",\\n      \\\"route_proven\\\": true,\\n      \\\"status\\\": \\\"blocked\\\"\\n    },\\n    {\\n      \\\"action\\\": \\\"run-terminal\\\",\\n      \\\"exit_code\\\": 1,\\n      \\\"reason\\\": \\\"run-terminal requires --run-dir\\\",\\n      \\\"route_proven\\\": true,\\n      \\\"status\\\": \\\"blocked\\\"\\n    },\\n    {\\n      \\\"action\\\": \\\"implementation-complete\\\",\\n      \\\"exit_code\\\": 1,\\n      \\\"reason\\\": \\\"implementation-complete requires --snapshot-roots --predecessors --source-commit --out\\\",\\n      \\\"route_proven\\\": true,\\n      \\\"status\\\": \\\"blocked\\\"\\n    },\\n    {\\n      \\\"action\\\": \\\"recover\\\",\\n      \\\"exit_code\\\": 1,\\n      \\\"reason\\\": \\\"recover requires --run-dir --recovery-input --snapshot-roots --source-commit\\\",\\n      \\\"route_proven\\\": true,\\n      \\\"status\\\": \\\"blocked\\\"\\n    }\\n  ],\\n  \\\"schema\\\": \\\"quick-dev.stable-facade-route-metric.v2\\\",\\n  \\\"threshold_passed\\\": true,\\n  \\\"total_actions\\\": 16,\\n  \\\"worker_route_semantics_proven_by\\\": \\\".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_worker_orchestration.py\\\"\\n}\\n\"\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric",
+        "detached-mutations",
+        "--out",
+        "C:\\jimuyun\\logs\\ch456-final-acceptance-c6ae33da-r1200\\ch456-detached-mutations.json"
+      ],
+      "exit_code": 0,
+      "label": "detached-mutations",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": "\",\n    \"--out\",\n    \"C:\\\\jimuyun\\\\logs\\\\ch456-final-acceptance-c6ae33da-r1200\\\\ch456-detached-mutations.json\"\n  ],\n  \"producer_exit_code\": 0,\n  \"schema\": \"ch456.candidate-bound-metric-run.v1\",\n  \"status\": \"pass\",\n  \"stderr_tail\": \"\",\n  \"stdout_tail\": \"indings\\\": [\\n        \\\"judge:imports-current-writer\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"fixture-kind-invalid\\\",\\n      \\\"findings\\\": [\\n        \\\"fixture[0]:fixture-kind\\\",\\n        \\\"bundle:fixture-kind-cover:positive\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"unknown-failure-family\\\",\\n      \\\"findings\\\": [\\n        \\\"fixture[0]:failure-family\\\",\\n        \\\"fixture[0]:failure-family-missing\\\",\\n        \\\"bundle:fixture-kind-cover:positive\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"negative-family-missing\\\",\\n      \\\"findings\\\": [\\n        \\\"fixture[0]:failure-family-missing\\\",\\n        \\\"bundle:fixture-kind-cover:positive\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"fixture-cover-missing-positive\\\",\\n      \\\"findings\\\": [\\n        \\\"bundle:fixture-kind-cover:positive\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"fixture-cover-missing-negative\\\",\\n      \\\"findings\\\": [\\n        \\\"bundle:fixture-kind-cover:negative\\\",\\n        \\\"bundle:failure-family-cover:artifact-integrity,repeated-deterministic-failure,semantic-contract-gap,task-implementation-failure,timeout-no-observation\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"fixture-cover-missing-mutation\\\",\\n      \\\"findings\\\": [\\n        \\\"bundle:fixture-kind-cover:mutation\\\",\\n        \\\"bundle:failure-family-cover:expected-red,repo-noise,target-binding-failure,test-harness-failure,unexpected-green\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    }\\n  ],\\n  \\\"structural_mutation_cases\\\": 26,\\n  \\\"structural_rejected_cases\\\": 26,\\n  \\\"structural_rejection_rate\\\": 1.0,\\n  \\\"threshold_passed\\\": true\\n}\\n\"\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric",
+        "selective-replay",
+        "--out",
+        "C:\\jimuyun\\logs\\ch456-final-acceptance-c6ae33da-r1200\\ch456-selective-replay.json"
+      ],
+      "exit_code": 0,
+      "label": "selective-replay",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"authorizes\": [],\n  \"candidate_head\": \"c6ae33da3ff899706603612063643e581be4ae20\",\n  \"evidence_path\": \"C:\\\\jimuyun\\\\logs\\\\ch456-final-acceptance-c6ae33da-r1200\\\\ch456-selective-replay.json\",\n  \"evidence_schema\": \"quick-dev.selective-replay-metric.v1\",\n  \"metric\": \"selective-replay\",\n  \"producer_argv\": [\n    \"C:\\\\Program Files\\\\Python312\\\\python.exe\",\n    \"scripts/quick_dev/evaluate_replay_matrix.py\",\n    \"--out\",\n    \"C:\\\\jimuyun\\\\logs\\\\ch456-final-acceptance-c6ae33da-r1200\\\\ch456-selective-replay.json\"\n  ],\n  \"producer_exit_code\": 0,\n  \"schema\": \"ch456.candidate-bound-metric-run.v1\",\n  \"status\": \"pass\",\n  \"stderr_tail\": \"\",\n  \"stdout_tail\": \"{\\n  \\\"accuracy\\\": 1.0,\\n  \\\"authorizes\\\": [],\\n  \\\"failed_cases\\\": 0,\\n  \\\"failures\\\": [],\\n  \\\"passed_cases\\\": 100,\\n  \\\"required_accuracy\\\": 0.99,\\n  \\\"schema\\\": \\\"quick-dev.selective-replay-metric.v1\\\",\\n  \\\"status\\\": \\\"pass\\\",\\n  \\\"total_cases\\\": 100\\n}\\n\"\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py"
+      ],
+      "exit_code": 0,
+      "label": "fresh-medium-deterministic",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": ".                                                                        [100%]\n1 passed in 2.04s\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_live_blind_benchmark.py",
+        "--backend",
+        "codex-cli",
+        "--require-live",
+        "--out",
+        "C:\\jimuyun\\logs\\ch456-final-acceptance-c6ae33da-r1200\\ch456-live-blind-benchmark.json",
+        "--repair-timeout-seconds",
+        "1200"
+      ],
+      "exit_code": 1,
+      "label": "live-blind-medium",
+      "passed": false,
+      "stderr_tail": "",
+      "stdout_tail": "{\"authorizes\": [], \"backend\": {\"available\": true, \"backend\": \"codex-cli\", \"blocking_errors\": [], \"model\": null, \"version\": null}, \"child_exit_code\": 1, \"error\": \"Q2 RED author failed: {\\\"argv_sha256\\\": \\\"sha256:9858f8bce43e0792abb1cd252c9621cf26a9e173e7079fce32e361a203ac7500\\\", \\\"authorizes\\\": [], \\\"authorizes_evidence\\\": false, \\\"backend\\\": \\\"codex-cli\\\", \\\"changed_paths\\\": [], \\\"exit_code\\\": 124, \\\"output_sha256\\\": null, \\\"required_next_action\\\": \\\"author-red\\\", \\\"schema\\\": \\\"quick-dev.worker-result.v1\\\", \\\"stage\\\": \\\"red-author\\\", \\\"status\\\": \\\"worker-failed\\\", \\\"trace_sha256\\\": \\\"sha256:fed4167a94da518b517cec1dfec171533c0f4b014938adedfd6fe81875d6a817\\\"}\", \"error_type\": \"RuntimeError\", \"execution_attempted\": true, \"limit_seconds\": 3600, \"product_acceptance_proven\": false, \"repair_timeout_seconds_override\": 1200, \"schema\": \"ch456.live-blind-benchmark.v1\", \"source_head\": \"c6ae33da3ff899706603612063643e581be4ae20\", \"status\": \"failed\", \"task_id\": \"CH456-BLIND-IDEMPOTENCY-LEDGER-V1\", \"under_60_minutes\": null}\n"
+    }
+  ],
+  "stopped_on_first_failure": true
+}

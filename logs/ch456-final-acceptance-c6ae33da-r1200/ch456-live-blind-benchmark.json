@@ -1,0 +1,22 @@
+{
+  "authorizes": [],
+  "backend": {
+    "available": true,
+    "backend": "codex-cli",
+    "blocking_errors": [],
+    "model": null,
+    "version": null
+  },
+  "child_exit_code": 1,
+  "error": "Q2 RED author failed: {\"argv_sha256\": \"sha256:9858f8bce43e0792abb1cd252c9621cf26a9e173e7079fce32e361a203ac7500\", \"authorizes\": [], \"authorizes_evidence\": false, \"backend\": \"codex-cli\", \"changed_paths\": [], \"exit_code\": 124, \"output_sha256\": null, \"required_next_action\": \"author-red\", \"schema\": \"quick-dev.worker-result.v1\", \"stage\": \"red-author\", \"status\": \"worker-failed\", \"trace_sha256\": \"sha256:fed4167a94da518b517cec1dfec171533c0f4b014938adedfd6fe81875d6a817\"}",
+  "error_type": "RuntimeError",
+  "execution_attempted": true,
+  "limit_seconds": 3600,
+  "product_acceptance_proven": false,
+  "repair_timeout_seconds_override": 1200,
+  "schema": "ch456.live-blind-benchmark.v1",
+  "source_head": "c6ae33da3ff899706603612063643e581be4ae20",
+  "status": "failed",
+  "task_id": "CH456-BLIND-IDEMPOTENCY-LEDGER-V1",
+  "under_60_minutes": null
+}

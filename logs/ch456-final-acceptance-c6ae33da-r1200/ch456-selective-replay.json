@@ -1,0 +1,13 @@
+{
+  "accuracy": 1.0,
+  "authorizes": [],
+  "candidate_metric_producer": "selective-replay",
+  "failed_cases": 0,
+  "failures": [],
+  "passed_cases": 100,
+  "required_accuracy": 0.99,
+  "schema": "quick-dev.selective-replay-metric.v1",
+  "source_head": "c6ae33da3ff899706603612063643e581be4ae20",
+  "status": "pass",
+  "total_cases": 100
+}
