@@ -1,0 +1,64 @@
+{
+  "atomic_quality_metrics": null,
+  "authorizes": [],
+  "availability": {
+    "available": true,
+    "backend": "codex-cli",
+    "blocking_errors": [],
+    "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+  },
+  "backend": "codex-cli",
+  "compile_timeout_seconds": 3600.0,
+  "compiler_findings": [],
+  "compiler_result": {
+    "reason": "semantic worker v3-schema-repair failed: OpenAI Codex v0.153.4\n--------\nworkdir: C:\\ch456-full-acceptance-17574f16\nmodel: gpt-5.6-terra\nprovider: aicodemirror\napproval: never\nsandbox: read-only\nreasoning effort: medium\nreasoning summaries: none\nsession id: 01a07676-9997-75e3-a15d-5590b7f856c6\n--------\nuser\nCompile observable Acceptance con\n...<trace elided>...\nf29a8860f74efe2d0e157cd4b5fd9f2aeb079ec064662d73f9ef06d469\", \"source_text\": \"# FR-904\\n\\nGREEN and REFACTOR must preserve the RED selector identity, target, fixture, assertion scope, and safe cwd; implementation and refactor changes must remain inside the declared production write set, and changing selector or fixture bytes must invalidate the prior RED lineage.\", \"text_sha256\": \"sha256:fc435acc102b404e3b8c05e3c5916e867a5cf17071386514852d0a173803f74b\"}, {\"repository_relative_source_path\": \".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md\", \"requirement_id\": \"FR-905\", \"source_order\": 5, \"source_ref\": \".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md#FR-905\", \"source_sha256\": \"sha256:f197dbf29a8860f74efe2d0e157cd4b5fd9f2aeb079ec064662d73f9ef06d469\", \"source_text\": \"# FR-905\\n\\nWhole-plan terminal validation must consume explicit hash-bound run-local predecessors, must reject glob/mtime/latest-success history inference, must recompute exact coverage for every active Acceptance, must re-read runtime evidence and the current snapshot before publication, and self-hosted promotion must bind detached positive, negative, and mutation fixtures plus an independent judge outside the candidate tree.\", \"text_sha256\": \"sha256:4aab94e3b97de31e0a239b86fd378f40eb2babc69f37b3542871c5e41e53f725\"}]}, \"original_stage\": \"v3\", \"validator_findings\": [\"worker-call:RuntimeError:semantic worker v3 failed: OpenAI Codex v0.153.4\\n--------\\nworkdir: C:\\\\ch456-full-acceptance-17574f16\\nmodel: gpt-5.6-terra\\nprovider: aicodemirror\\napproval: never\\nsandbox: read-only\\nreasoning effort: high\\n...[trace truncated]...\\ngative, and mutation fixtures plus an independent judge outside the candidate tree.\\\", \\\"text_sha256\\\": \\\"sha256:4aab94e3b97de31e0a239b86fd378f40eb2babc69f37b3542871c5e41e53f725\\\"}]}\\nERROR: Reconnecting... 1/5\\nERROR: Reconnecting... 2/5\\n\\ncodex exec timeout\\ncodex cleanup incomplete: taskkill exit code 255\"]}\nERROR: Reconnecting... 1/5\nERROR: Reconnecting... 2/5\nERROR: Reconnecting... 3/5\nERROR: Reconnecting... 4/5\nERROR: Reconnecting... 5/5\n\ncodex exec timeout\ncodex cleanup incomplete: taskkill exit code 255",
+    "status": "repair-vdd"
+  },
+  "compiler_stage": null,
+  "compiler_status": "repair-vdd",
+  "error": "compiler process failed; inspect retained result/stdout/stderr",
+  "execution_attempted": true,
+  "execution_succeeded": false,
+  "fixture": ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md",
+  "minimum_active_obligations": 23,
+  "progress_file": "C:\\ch456-full-acceptance-17574f16\\.tmp-ch456-semantic-quality\\run-itg85tj_\\plan\\.compiler-work\\compiler-progress.jsonl",
+  "repair_timeout_seconds_override": 900,
+  "required_precision": 0.95,
+  "required_recall": 0.95,
+  "run_directory": "C:\\ch456-full-acceptance-17574f16\\.tmp-ch456-semantic-quality\\run-itg85tj_",
+  "schema": "vdd.real-semantic-quality-metric.v1",
+  "source_head": "17574f160fd8f40994aaf3def9509581371dbf99",
+  "status": "worker-failed",
+  "watchdog": {
+    "cleanup_error": null,
+    "command": [
+      "C:\\Program Files\\Python312\\python.exe",
+      "C:\\ch456-full-acceptance-17574f16\\scripts\\vdd\\compile_plan.py",
+      "--requirements",
+      "C:\\ch456-full-acceptance-17574f16\\.agents\\skills\\vdd-execution-plan\\scripts\\fixtures\\ch456-curated-semantic-quality.md",
+      "--out-dir",
+      "C:\\ch456-full-acceptance-17574f16\\.tmp-ch456-semantic-quality\\run-itg85tj_\\plan",
+      "--profile",
+      "standard",
+      "--result-json",
+      "C:\\ch456-full-acceptance-17574f16\\.tmp-ch456-semantic-quality\\run-itg85tj_\\compiler-result.json",
+      "--repair-timeout-seconds",
+      "900"
+    ],
+    "elapsed_seconds": 1762.7340000000004,
+    "exit_code": 1,
+    "last_checkpoint": {
+      "call_id": "7cc73bb5874c4c229bffe45749cbbee9",
+      "elapsed_seconds": 1081.5780000000013,
+      "error_type": "RuntimeError",
+      "event": "stage-raised",
+      "pid": 6636,
+      "schema": "vdd.compiler-progress.v1",
+      "stage": "V3",
+      "timestamp": "2026-09-06T11:39:39.071595+00:00"
+    },
+    "pid": 6636,
+    "timed_out": false,
+    "timeout_seconds": 3600.0
+  }
+}

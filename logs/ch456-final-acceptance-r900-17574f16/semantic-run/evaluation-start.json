@@ -1,0 +1,27 @@
+{
+  "schema": "vdd.real-semantic-quality-metric.v1",
+  "fixture": ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md",
+  "source_head": "17574f160fd8f40994aaf3def9509581371dbf99",
+  "backend": "codex-cli",
+  "availability": {
+    "backend": "codex-cli",
+    "available": true,
+    "blocking_errors": [],
+    "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+  },
+  "required_precision": 0.95,
+  "required_recall": 0.95,
+  "minimum_active_obligations": 23,
+  "status": "running",
+  "execution_attempted": true,
+  "execution_succeeded": false,
+  "atomic_quality_metrics": null,
+  "compiler_status": null,
+  "compiler_stage": null,
+  "compiler_findings": [],
+  "authorizes": [],
+  "run_directory": "C:\\ch456-full-acceptance-17574f16\\.tmp-ch456-semantic-quality\\run-itg85tj_",
+  "compile_timeout_seconds": 3600.0,
+  "repair_timeout_seconds_override": 900,
+  "progress_file": "C:\\ch456-full-acceptance-17574f16\\.tmp-ch456-semantic-quality\\run-itg85tj_\\plan\\.compiler-work\\compiler-progress.jsonl"
+}

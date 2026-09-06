@@ -1,0 +1,91 @@
+{
+  "authorizes": [],
+  "backend": "codex-cli",
+  "evidence_dir": "logs/ch456-final-acceptance-r900",
+  "failed_steps": [
+    "real-semantic"
+  ],
+  "repair_timeout_seconds_override": 900,
+  "schema": "ch456.local-final-acceptance-run.v1",
+  "status": "blocked",
+  "steps": [
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric",
+        "architecture-reconcile",
+        "--out",
+        "C:\\ch456-full-acceptance-17574f16\\logs\\ch456-final-acceptance-r900\\ch456-architecture-reconcile.json"
+      ],
+      "exit_code": 0,
+      "label": "architecture-reconcile",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": "vidence_path\": \"C:\\\\ch456-full-acceptance-17574f16\\\\logs\\\\ch456-final-acceptance-r900\\\\ch456-architecture-reconcile.json\",\n  \"evidence_schema\": \"ch456.architecture-deferred-reconcile-check.v1\",\n  \"metric\": \"architecture-reconcile\",\n  \"producer_argv\": [\n    \"C:\\\\Program Files\\\\Python312\\\\python.exe\",\n    \"scripts/vdd/evaluate_architecture_reconcile.py\",\n    \"--out\",\n    \"C:\\\\ch456-full-acceptance-17574f16\\\\logs\\\\ch456-final-acceptance-r900\\\\ch456-architecture-reconcile.json\"\n  ],\n  \"producer_exit_code\": 0,\n  \"schema\": \"ch456.candidate-bound-metric-run.v1\",\n  \"status\": \"pass\",\n  \"stderr_tail\": \"\",\n  \"stdout_tail\": \"{\\\"authorizes\\\": [], \\\"deferred_count\\\": 16, \\\"dispositions\\\": {\\\"60-minute task measurement\\\": \\\"acceptance-blocked\\\", \\\"comparator types and stdout/stderr normalization\\\": \\\"still-deferred-outside-v1\\\", \\\"concurrency and resource quotas\\\": \\\"still-deferred-outside-v1\\\", \\\"cross-platform execution normalization\\\": \\\"still-deferred-outside-v1\\\", \\\"detached fixture/judge independence procedure\\\": \\\"resolved-by-implementation\\\", \\\"deterministic semantic validator boundary\\\": \\\"resolved-by-implementation\\\", \\\"evidence retention and cleanup\\\": \\\"still-deferred-outside-v1\\\", \\\"judge lifecycle, retention and revocation\\\": \\\"still-deferred-outside-v1\\\", \\\"obligation\\\\u2194Acceptance normalization\\\": \\\"resolved-by-implementation\\\", \\\"profile scope differences\\\": \\\"resolved-by-implementation\\\", \\\"runnable rollback probe interface\\\": \\\"trigger-based-future-decision\\\", \\\"semantic-change partial reuse\\\": \\\"resolved-by-implementation\\\", \\\"slice split/merge thresholds\\\": \\\"resolved-by-implementation\\\", \\\"stop-loss numeric threshold\\\": \\\"resolved-by-implementation\\\", \\\"unexpected-green proof\\\": \\\"trigger-based-future-decision\\\", \\\"v1 compatibility adapter projection\\\": \\\"resolved-by-implementation\\\"}, \\\"findings\\\": [], \\\"frozen_authority_modified\\\": false, \\\"reconciled_count\\\": 16, \\\"schema\\\": \\\"ch456.architecture-deferred-reconcile-check.v1\\\", \\\"status\\\": \\\"pass\\\"}\\n\"\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric",
+        "curated-semantic",
+        "--out",
+        "C:\\ch456-full-acceptance-17574f16\\logs\\ch456-final-acceptance-r900\\ch456-curated-semantic-quality.json"
+      ],
+      "exit_code": 0,
+      "label": "curated-semantic",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"authorizes\": [],\n  \"candidate_head\": \"17574f160fd8f40994aaf3def9509581371dbf99\",\n  \"evidence_path\": \"C:\\\\ch456-full-acceptance-17574f16\\\\logs\\\\ch456-final-acceptance-r900\\\\ch456-curated-semantic-quality.json\",\n  \"evidence_schema\": \"vdd.curated-semantic-quality-metric.v1\",\n  \"metric\": \"curated-semantic\",\n  \"producer_argv\": [\n    \"C:\\\\Program Files\\\\Python312\\\\python.exe\",\n    \"scripts/vdd/evaluate_semantic_quality.py\",\n    \"--out\",\n    \"C:\\\\ch456-full-acceptance-17574f16\\\\logs\\\\ch456-final-acceptance-r900\\\\ch456-curated-semantic-quality.json\"\n  ],\n  \"producer_exit_code\": 0,\n  \"schema\": \"ch456.candidate-bound-metric-run.v1\",\n  \"status\": \"pass\",\n  \"stderr_tail\": \"\",\n  \"stdout_tail\": \"{\\n  \\\"authorizes\\\": [],\\n  \\\"controlled_mutation_count\\\": 2,\\n  \\\"controlled_mutation_rejection_rate\\\": 1.0,\\n  \\\"curated_atomic_obligation_count\\\": 30,\\n  \\\"curated_requirement_count\\\": 10,\\n  \\\"execution_mode\\\": \\\"deterministic-curated-independent-oracle\\\",\\n  \\\"live_model_evidence_ref\\\": \\\"ch456-real-worker-probe.json\\\",\\n  \\\"live_model_extraction_quality_proven\\\": false,\\n  \\\"precision\\\": 1.0,\\n  \\\"recall\\\": 1.0,\\n  \\\"required_precision\\\": 0.95,\\n  \\\"required_recall\\\": 0.95,\\n  \\\"schema\\\": \\\"vdd.curated-semantic-quality-metric.v1\\\",\\n  \\\"status\\\": \\\"pass\\\"\\n}\\n\"\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric",
+        "semantic-chain-mutations",
+        "--out",
+        "C:\\ch456-full-acceptance-17574f16\\logs\\ch456-final-acceptance-r900\\ch456-semantic-chain-mutations.json"
+      ],
+      "exit_code": 0,
+      "label": "semantic-chain-mutations",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": "4f16\\\\logs\\\\ch456-final-acceptance-r900\\\\ch456-semantic-chain-mutations.json\"\n  ],\n  \"producer_exit_code\": 0,\n  \"schema\": \"ch456.candidate-bound-metric-run.v1\",\n  \"status\": \"pass\",\n  \"stderr_tail\": \"\",\n  \"stdout_tail\": \"e\\\": \\\"incompatible-verification-lanes\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:slice:S1:incompatible-verification-lanes\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"slice-proof-missing\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:slice:S1:proof-missing\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"proof-acceptance-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:slice:S1:proof-acceptance-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"proof-assertion-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:slice:S1:proof-assertion-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"proof-selector-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:slice:S1:proof-selector-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"acceptance-no-slice\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:v6:acceptance-single-slice-cover\\\",\\n        \\\"chain:v6a:semantic-edge-exact-cover\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"v6a-stage-scope-swallowed\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:v6a:semantic-edge-exact-cover\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"v6a-lane-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:v6a:semantic-edge-exact-cover\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"v6a-terminal-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"chain:v6a:semantic-edge-exact-cover\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    }\\n  ],\\n  \\\"mutation_cases\\\": 21,\\n  \\\"rejected_cases\\\": 21,\\n  \\\"rejection_rate\\\": 1.0,\\n  \\\"required_rejection_rate\\\": 0.95,\\n  \\\"schema\\\": \\\"vdd.semantic-chain-mutation-metric.v1\\\",\\n  \\\"threshold_passed\\\": true\\n}\\n\"\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/quick_dev/run_candidate_bound_metric.py",
+        "--metric",
+        "agent-context-mutations",
+        "--out",
+        "C:\\ch456-full-acceptance-17574f16\\logs\\ch456-final-acceptance-r900\\ch456-agent-context-mutations.json"
+      ],
+      "exit_code": 0,
+      "label": "agent-context-mutations",
+      "passed": true,
+      "stderr_tail": "",
+      "stdout_tail": "4f16\\\\logs\\\\ch456-final-acceptance-r900\\\\ch456-agent-context-mutations.json\"\n  ],\n  \"producer_exit_code\": 0,\n  \"schema\": \"ch456.candidate-bound-metric-run.v1\",\n  \"status\": \"pass\",\n  \"stderr_tail\": \"\",\n  \"stdout_tail\": \" true\\n    },\\n    {\\n      \\\"case\\\": \\\"context-duplicate-slice\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:duplicate\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"context-unknown-slice\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:slice-set-mismatch\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"context-shape-missing-contracts\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:shape-incomplete\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"obligation-projection-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:obligation-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"acceptance-projection-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:acceptance-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"selector-projection-drift\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:selector-projection\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"validation-commands-empty\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:validation-commands\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"validation-command-empty-argv\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:validation-commands\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    },\\n    {\\n      \\\"case\\\": \\\"validation-command-non-string\\\",\\n      \\\"findings\\\": [\\n        \\\"agent-context:S1:validation-commands\\\"\\n      ],\\n      \\\"rejected\\\": true\\n    }\\n  ],\\n  \\\"mutation_cases\\\": 10,\\n  \\\"rejected_cases\\\": 10,\\n  \\\"rejection_rate\\\": 1.0,\\n  \\\"required_rejection_rate\\\": 0.95,\\n  \\\"schema\\\": \\\"vdd.agent-context-mutation-metric.v1\\\",\\n  \\\"threshold_passed\\\": true\\n}\\n\"\n}\n"
+    },
+    {
+      "argv": [
+        "C:\\Program Files\\Python312\\python.exe",
+        "scripts/vdd/evaluate_real_semantic_quality.py",
+        "--backend",
+        "codex-cli",
+        "--out",
+        "C:\\ch456-full-acceptance-17574f16\\logs\\ch456-final-acceptance-r900\\ch456-real-semantic-quality.json",
+        "--repair-timeout-seconds",
+        "900"
+      ],
+      "exit_code": 1,
+      "label": "real-semantic",
+      "passed": false,
+      "stderr_tail": "Compiler progress: C:\\ch456-full-acceptance-17574f16\\.tmp-ch456-semantic-quality\\run-itg85tj_\\plan\\.compiler-work\\compiler-progress.jsonl (global budget 3600.0s)\n",
+      "stdout_tail": "s\": \"repair-vdd\"\n  },\n  \"compiler_stage\": null,\n  \"compiler_status\": \"repair-vdd\",\n  \"error\": \"compiler process failed; inspect retained result/stdout/stderr\",\n  \"execution_attempted\": true,\n  \"execution_succeeded\": false,\n  \"fixture\": \".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md\",\n  \"minimum_active_obligations\": 23,\n  \"progress_file\": \"C:\\\\ch456-full-acceptance-17574f16\\\\.tmp-ch456-semantic-quality\\\\run-itg85tj_\\\\plan\\\\.compiler-work\\\\compiler-progress.jsonl\",\n  \"repair_timeout_seconds_override\": 900,\n  \"required_precision\": 0.95,\n  \"required_recall\": 0.95,\n  \"run_directory\": \"C:\\\\ch456-full-acceptance-17574f16\\\\.tmp-ch456-semantic-quality\\\\run-itg85tj_\",\n  \"schema\": \"vdd.real-semantic-quality-metric.v1\",\n  \"source_head\": \"17574f160fd8f40994aaf3def9509581371dbf99\",\n  \"status\": \"worker-failed\",\n  \"watchdog\": {\n    \"cleanup_error\": null,\n    \"command\": [\n      \"C:\\\\Program Files\\\\Python312\\\\python.exe\",\n      \"C:\\\\ch456-full-acceptance-17574f16\\\\scripts\\\\vdd\\\\compile_plan.py\",\n      \"--requirements\",\n      \"C:\\\\ch456-full-acceptance-17574f16\\\\.agents\\\\skills\\\\vdd-execution-plan\\\\scripts\\\\fixtures\\\\ch456-curated-semantic-quality.md\",\n      \"--out-dir\",\n      \"C:\\\\ch456-full-acceptance-17574f16\\\\.tmp-ch456-semantic-quality\\\\run-itg85tj_\\\\plan\",\n      \"--profile\",\n      \"standard\",\n      \"--result-json\",\n      \"C:\\\\ch456-full-acceptance-17574f16\\\\.tmp-ch456-semantic-quality\\\\run-itg85tj_\\\\compiler-result.json\",\n      \"--repair-timeout-seconds\",\n      \"900\"\n    ],\n    \"elapsed_seconds\": 1762.7340000000004,\n    \"exit_code\": 1,\n    \"last_checkpoint\": {\n      \"call_id\": \"7cc73bb5874c4c229bffe45749cbbee9\",\n      \"elapsed_seconds\": 1081.5780000000013,\n      \"error_type\": \"RuntimeError\",\n      \"event\": \"stage-raised\",\n      \"pid\": 6636,\n      \"schema\": \"vdd.compiler-progress.v1\",\n      \"stage\": \"V3\",\n      \"timestamp\": \"2026-09-06T11:39:39.071595+00:00\"\n    },\n    \"pid\": 6636,\n    \"timed_out\": false,\n    \"timeout_seconds\": 3600.0\n  }\n}\n"
+    }
+  ],
+  "stopped_on_first_failure": true
+}

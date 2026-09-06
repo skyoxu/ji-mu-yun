@@ -1,0 +1,6 @@
+{"exit_code": 0, "label": "architecture-reconcile", "passed": true}
+{"exit_code": 0, "label": "curated-semantic", "passed": true}
+{"exit_code": 0, "label": "semantic-chain-mutations", "passed": true}
+{"exit_code": 0, "label": "agent-context-mutations", "passed": true}
+{"exit_code": 1, "label": "real-semantic", "passed": false}
+EXIT_CODE=1

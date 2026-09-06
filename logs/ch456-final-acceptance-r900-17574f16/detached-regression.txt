@@ -1,0 +1,120 @@
+=== llm backend ===
+............                                                         [100%]
+12 passed, 4 subtests passed in 2.35s
+RC=0
+=== ch456 tests ===
+........................................................................ [ 35%]
+........................................................................ [ 70%]
+.............................................................            [100%]
+205 passed in 15.89s
+RC=0
+=== adapter runtime tests ===
+.....................................F.................................. [ 33%]
+..................................................................F..............................................................................                                                    [100%]
+================================== FAILURES ===================================
+_________ CandidateIdentityTests.test_candidate_identity_is_complete __________
+
+self = <test_candidate_identity.CandidateIdentityTests testMethod=test_candidate_identity_is_complete>
+
+    def test_candidate_identity_is_complete(self) -> None:
+>       identity = _legacy_candidate_identity("RMAP-S6")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_candidate_identity.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_candidate_identity.py:24: in _legacy_candidate_identity
+    return module.current_candidate_identity(slice_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+execution-plans\2026-07-15-repository-maintenance-tdd-adapter\tools\validate_all.py:168: in current_candidate_identity
+    index_tree = read_only_index_tree(REPOSITORY_ROOT)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+execution-plans\2026-07-15-repository-maintenance-tdd-adapter\tools\isolated_test_repository.py:75: in read_only_index_tree
+    shutil.copy2(git_directory / "index", index)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+src = WindowsPath('C:/ch456-full-acceptance-17574f16/.git/index')
+dst = WindowsPath('C:/ri1mjkz32h/index'), follow_symlinks = True
+
+    def copy2(src, dst, *, follow_symlinks=True):
+        """Copy data and metadata. Return the file's destination.
+    
+        Metadata is copied with copystat(). Please see the copystat function
+        for more information.
+    
+        The destination may be a directory.
+    
+        If follow_symlinks is false, symlinks won't be followed. This
+        resembles GNU's "cp -P src dst".
+        """
+        if os.path.isdir(dst):
+            dst = os.path.join(dst, os.path.basename(src))
+    
+        if hasattr(_winapi, "CopyFile2"):
+            src_ = os.fsdecode(src)
+            dst_ = os.fsdecode(dst)
+            flags = _winapi.COPY_FILE_ALLOW_DECRYPTED_DESTINATION # for compat
+            if not follow_symlinks:
+                flags |= _winapi.COPY_FILE_COPY_SYMLINK
+            try:
+>               _winapi.CopyFile2(src_, dst_, flags)
+E               FileNotFoundError: [WinError 3] 系统找不到指定的路径。
+
+C:\Program Files\Python312\Lib\shutil.py:460: FileNotFoundError
+_ PlanDirectoryLoopTests.test_builder_expands_run_path_and_serializes_base64_context _
+
+self = <test_plan_directory_loop.PlanDirectoryLoopTests testMethod=test_builder_expands_run_path_and_serializes_base64_context>
+
+    def test_builder_expands_run_path_and_serializes_base64_context(self) -> None:
+        plan = REPOSITORY_ROOT / "execution-plans/2026-07-15-repository-maintenance-tdd-adapter"
+>       result = BUILDER.build(REPOSITORY_ROOT, plan, "RMAP-S0", "RUN-TEST")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_plan_directory_loop.py:904: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.agents\skills\quick-dev-tdd-adapter\tools\build_slice_invocation.py:259: in build
+    identity = _load_candidate_identity(plan, slice_id)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents\skills\quick-dev-tdd-adapter\tools\build_slice_invocation.py:82: in _load_candidate_identity
+    identity = module.current_candidate_identity(slice_id)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+execution-plans\2026-07-15-repository-maintenance-tdd-adapter\tools\validate_all.py:168: in current_candidate_identity
+    index_tree = read_only_index_tree(REPOSITORY_ROOT)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+execution-plans\2026-07-15-repository-maintenance-tdd-adapter\tools\isolated_test_repository.py:75: in read_only_index_tree
+    shutil.copy2(git_directory / "index", index)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+src = WindowsPath('C:/ch456-full-acceptance-17574f16/.git/index')
+dst = WindowsPath('C:/riu8q_w4a7/index'), follow_symlinks = True
+
+    def copy2(src, dst, *, follow_symlinks=True):
+        """Copy data and metadata. Return the file's destination.
+    
+        Metadata is copied with copystat(). Please see the copystat function
+        for more information.
+    
+        The destination may be a directory.
+    
+        If follow_symlinks is false, symlinks won't be followed. This
+        resembles GNU's "cp -P src dst".
+        """
+        if os.path.isdir(dst):
+            dst = os.path.join(dst, os.path.basename(src))
+    
+        if hasattr(_winapi, "CopyFile2"):
+            src_ = os.fsdecode(src)
+            dst_ = os.fsdecode(dst)
+            flags = _winapi.COPY_FILE_ALLOW_DECRYPTED_DESTINATION # for compat
+            if not follow_symlinks:
+                flags |= _winapi.COPY_FILE_COPY_SYMLINK
+            try:
+>               _winapi.CopyFile2(src_, dst_, flags)
+E               FileNotFoundError: [WinError 3] 系统找不到指定的路径。
+
+C:\Program Files\Python312\Lib\shutil.py:460: FileNotFoundError
+=========================== short test summary info ===========================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py::CandidateIdentityTests::test_candidate_identity_is_complete
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py::PlanDirectoryLoopTests::test_builder_expands_run_path_and_serializes_base64_context
+2 failed, 215 passed, 20 subtests passed in 21.80s
+RC=1
+EXIT_CODE=0

@@ -1,0 +1,29 @@
+{
+  "authorizes": [],
+  "candidate_metric_producer": "architecture-reconcile",
+  "deferred_count": 16,
+  "dispositions": {
+    "60-minute task measurement": "acceptance-blocked",
+    "comparator types and stdout/stderr normalization": "still-deferred-outside-v1",
+    "concurrency and resource quotas": "still-deferred-outside-v1",
+    "cross-platform execution normalization": "still-deferred-outside-v1",
+    "detached fixture/judge independence procedure": "resolved-by-implementation",
+    "deterministic semantic validator boundary": "resolved-by-implementation",
+    "evidence retention and cleanup": "still-deferred-outside-v1",
+    "judge lifecycle, retention and revocation": "still-deferred-outside-v1",
+    "obligation↔Acceptance normalization": "resolved-by-implementation",
+    "profile scope differences": "resolved-by-implementation",
+    "runnable rollback probe interface": "trigger-based-future-decision",
+    "semantic-change partial reuse": "resolved-by-implementation",
+    "slice split/merge thresholds": "resolved-by-implementation",
+    "stop-loss numeric threshold": "resolved-by-implementation",
+    "unexpected-green proof": "trigger-based-future-decision",
+    "v1 compatibility adapter projection": "resolved-by-implementation"
+  },
+  "findings": [],
+  "frozen_authority_modified": false,
+  "reconciled_count": 16,
+  "schema": "ch456.architecture-deferred-reconcile-check.v1",
+  "source_head": "17574f160fd8f40994aaf3def9509581371dbf99",
+  "status": "pass"
+}
