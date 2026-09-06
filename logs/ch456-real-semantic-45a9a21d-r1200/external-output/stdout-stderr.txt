@@ -1,0 +1,66 @@
+Compiler progress: C:\ch456-real-semantic-45a9a21d-r1200\.tmp-ch456-semantic-quality\run-7mz3e8qb\plan\.compiler-work\compiler-progress.jsonl (global budget 3600.0s)
+{
+  "atomic_quality_metrics": null,
+  "authorizes": [],
+  "availability": {
+    "available": true,
+    "backend": "codex-cli",
+    "blocking_errors": [],
+    "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+  },
+  "backend": "codex-cli",
+  "compile_timeout_seconds": 3600.0,
+  "compiler_findings": [],
+  "compiler_result": {
+    "reason": "V3 execution-contract validation failed: v3-contract:slice_hints[30]:selector-target-missing-not-planned:.agents/skills/quick-dev-tdd-adapter/tools/test_model_routing.py",
+    "status": "repair-vdd"
+  },
+  "compiler_stage": null,
+  "compiler_status": "repair-vdd",
+  "error": "compiler process failed; inspect retained result/stdout/stderr",
+  "execution_attempted": true,
+  "execution_succeeded": false,
+  "fixture": ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md",
+  "minimum_active_obligations": 23,
+  "progress_file": "C:\\ch456-real-semantic-45a9a21d-r1200\\.tmp-ch456-semantic-quality\\run-7mz3e8qb\\plan\\.compiler-work\\compiler-progress.jsonl",
+  "repair_timeout_seconds_override": 1200,
+  "required_precision": 0.95,
+  "required_recall": 0.95,
+  "run_directory": "C:\\ch456-real-semantic-45a9a21d-r1200\\.tmp-ch456-semantic-quality\\run-7mz3e8qb",
+  "schema": "vdd.real-semantic-quality-metric.v1",
+  "source_head": "45a9a21d373c5f47be000cc025de8b2babc6d456",
+  "status": "worker-failed",
+  "watchdog": {
+    "cleanup_error": null,
+    "command": [
+      "C:\\Program Files\\Python312\\python.exe",
+      "C:\\ch456-real-semantic-45a9a21d-r1200\\scripts\\vdd\\compile_plan.py",
+      "--requirements",
+      "C:\\ch456-real-semantic-45a9a21d-r1200\\.agents\\skills\\vdd-execution-plan\\scripts\\fixtures\\ch456-curated-semantic-quality.md",
+      "--out-dir",
+      "C:\\ch456-real-semantic-45a9a21d-r1200\\.tmp-ch456-semantic-quality\\run-7mz3e8qb\\plan",
+      "--profile",
+      "standard",
+      "--result-json",
+      "C:\\ch456-real-semantic-45a9a21d-r1200\\.tmp-ch456-semantic-quality\\run-7mz3e8qb\\compiler-result.json",
+      "--repair-timeout-seconds",
+      "1200"
+    ],
+    "elapsed_seconds": 2222.155999999999,
+    "exit_code": 1,
+    "last_checkpoint": {
+      "call_id": "eeed5f7ccc184b2f9612fad7200e58cb",
+      "elapsed_seconds": 931.9370000000017,
+      "error_type": "ValueError",
+      "event": "stage-raised",
+      "pid": 2516,
+      "schema": "vdd.compiler-progress.v1",
+      "stage": "V3",
+      "timestamp": "2026-09-06T13:20:54.871824+00:00"
+    },
+    "pid": 2516,
+    "timed_out": false,
+    "timeout_seconds": 3600.0
+  }
+}
+exit_code=1

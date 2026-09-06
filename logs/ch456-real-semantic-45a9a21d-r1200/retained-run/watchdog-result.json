@@ -1,0 +1,32 @@
+{
+  "timeout_seconds": 3600.0,
+  "command": [
+    "C:\\Program Files\\Python312\\python.exe",
+    "C:\\ch456-real-semantic-45a9a21d-r1200\\scripts\\vdd\\compile_plan.py",
+    "--requirements",
+    "C:\\ch456-real-semantic-45a9a21d-r1200\\.agents\\skills\\vdd-execution-plan\\scripts\\fixtures\\ch456-curated-semantic-quality.md",
+    "--out-dir",
+    "C:\\ch456-real-semantic-45a9a21d-r1200\\.tmp-ch456-semantic-quality\\run-7mz3e8qb\\plan",
+    "--profile",
+    "standard",
+    "--result-json",
+    "C:\\ch456-real-semantic-45a9a21d-r1200\\.tmp-ch456-semantic-quality\\run-7mz3e8qb\\compiler-result.json",
+    "--repair-timeout-seconds",
+    "1200"
+  ],
+  "timed_out": false,
+  "cleanup_error": null,
+  "pid": 2516,
+  "exit_code": 1,
+  "elapsed_seconds": 2222.155999999999,
+  "last_checkpoint": {
+    "call_id": "eeed5f7ccc184b2f9612fad7200e58cb",
+    "elapsed_seconds": 931.9370000000017,
+    "error_type": "ValueError",
+    "event": "stage-raised",
+    "pid": 2516,
+    "schema": "vdd.compiler-progress.v1",
+    "stage": "V3",
+    "timestamp": "2026-09-06T13:20:54.871824+00:00"
+  }
+}
