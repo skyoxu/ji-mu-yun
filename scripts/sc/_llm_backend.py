@@ -11,11 +11,77 @@ import importlib.util
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
+import tempfile
+import time
 from pathlib import Path
 
 KNOWN_LLM_BACKENDS = ("codex-cli", "openai-api")
+
+
+def _stop_codex_tree(process, *, windows=None):
+    """ADR-0041: bounded cleanup; never drain inherited output pipes."""
+    windows = os.name == "nt" if windows is None else windows
+    errors = []
+    try:
+        if windows:
+            result = subprocess.run(
+                ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL, timeout=10, check=False,
+            )
+            if result.returncode:
+                errors.append(f"taskkill exit code {result.returncode}")
+        else:
+            os.killpg(process.pid, signal.SIGKILL)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        errors.append(type(exc).__name__)
+    if errors:
+        try:
+            process.kill()
+        except OSError as exc:
+            errors.append(type(exc).__name__)
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        errors.append("process still running after cleanup")
+    return errors
+
+
+def _run_codex_process(cmd, *, root, prompt, timeout_sec):
+    """ADR-0041: file-backed UTF-8 stdin/output keeps timeout independent of EOF."""
+    options = ({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+               if os.name == "nt" else {"start_new_session": True})
+    # Anonymous temporary files avoid workspace deltas and pipe-reader joins.
+    # Do not use Popen's context manager: its exit waits without a deadline.
+    with tempfile.TemporaryFile() as stdin, tempfile.TemporaryFile() as stdout:
+        stdin.write(prompt.encode("utf-8"))
+        stdin.seek(0)
+        started = time.monotonic()
+        process = subprocess.Popen(cmd, cwd=str(root), stdin=stdin, stdout=stdout,
+                                   stderr=subprocess.STDOUT, **options)
+        timed_out = False
+        cleanup_errors = []
+        try:
+            process.wait(timeout=max(0.001, timeout_sec - (time.monotonic() - started)))
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            cleanup_errors = _stop_codex_tree(process)
+        except BaseException:
+            _stop_codex_tree(process)
+            raise
+        # Read only the bytes currently present, even if cleanup was unsuccessful.
+        size = os.fstat(stdout.fileno()).st_size
+        stdout.seek(0)
+        output = stdout.read(size).decode("utf-8", errors="replace")
+        if timed_out:
+            output += "\ncodex exec timeout\n"
+            if cleanup_errors:
+                output += "codex cleanup incomplete: " + "; ".join(cleanup_errors) + "\n"
+            return 124, output
+        return process.returncode or 0, output
 
 
 def _sha256_text(value: str) -> str:
@@ -203,19 +269,7 @@ def run_llm_exec(
         "-",
     ]
     try:
-        proc = subprocess.run(
-            cmd,
-            input=prompt,
-            text=True,
-            encoding="utf-8",
-            errors="ignore",
-            cwd=str(root),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            timeout=timeout_sec,
-        )
-    except subprocess.TimeoutExpired:
-        return 124, "codex exec timeout\n", cmd
+        code, output = _run_codex_process(cmd, root=root, prompt=prompt, timeout_sec=timeout_sec)
     except Exception as exc:  # noqa: BLE001
         return 1, f"codex exec failed to start: {exc}\n", cmd
-    return proc.returncode or 0, proc.stdout or "", cmd
+    return code, output, cmd

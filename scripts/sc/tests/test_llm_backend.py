@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -33,6 +34,69 @@ llm_backend = _load_module("sc_llm_backend_module", "scripts/sc/_llm_backend.py"
 
 
 class LlmBackendTests(unittest.TestCase):
+    # ADR-0041: exercise real child processes without contacting an LLM backend.
+    def test_process_preserves_utf8_stdin_output_and_nonzero_exit(self):
+        prompt = "payload-\u4e2d\u6587"
+        code, output = llm_backend._run_codex_process(
+            [sys.executable, "-c", "import sys; sys.stdout.buffer.write(sys.stdin.buffer.read()); sys.exit(7)"],
+            root=REPO_ROOT, prompt=prompt, timeout_sec=5)
+        self.assertEqual(7, code)
+        self.assertEqual(prompt, output)
+
+    def test_timeout_stops_child_with_inherited_output_handles(self):
+        with tempfile.TemporaryDirectory() as td:
+            heartbeat = Path(td) / "heartbeat"
+            child = (
+                "import time,sys\n"
+                "with open(sys.argv[1], 'ab', buffering=0) as f:\n"
+                " while True:\n"
+                "  f.write(b'x'); time.sleep(.02)\n"
+            )
+            parent = (
+                "import subprocess,sys,time\n"
+                "subprocess.Popen([sys.executable, '-c', sys.argv[1], sys.argv[2]])\n"
+                "print('child launched', flush=True)\n"
+                "time.sleep(60)\n"
+            )
+            started = time.monotonic()
+            code, output = llm_backend._run_codex_process(
+                [sys.executable, "-c", parent, child, str(heartbeat)],
+                root=REPO_ROOT, prompt="", timeout_sec=2)
+            elapsed = time.monotonic() - started
+            self.assertEqual(124, code)
+            self.assertIn("child launched", output)
+            self.assertNotIn("cleanup incomplete", output)
+            self.assertLess(elapsed, 20)
+            size = heartbeat.stat().st_size
+            self.assertGreater(size, 0)
+            time.sleep(.15)
+            self.assertEqual(size, heartbeat.stat().st_size)
+
+    def test_windows_tree_cleanup_is_bounded_and_reports_failure(self):
+        process = mock.Mock(pid=123)
+        process.wait.side_effect = subprocess.TimeoutExpired("worker", 5)
+        with mock.patch.object(llm_backend.subprocess, "run",
+                               side_effect=subprocess.TimeoutExpired("taskkill", 10)) as kill:
+            errors = llm_backend._stop_codex_tree(process, windows=True)
+        self.assertTrue(errors)
+        self.assertEqual(["taskkill", "/PID", "123", "/T", "/F"], kill.call_args.args[0])
+        self.assertEqual(subprocess.DEVNULL, kill.call_args.kwargs["stdout"])
+        self.assertEqual(10, kill.call_args.kwargs["timeout"])
+        process.kill.assert_called_once()
+        process.wait.assert_called_once_with(timeout=5)
+
+    def test_public_backend_preserves_timeout_and_partial_output(self):
+        with mock.patch.object(llm_backend.shutil, "which", return_value="codex"), \
+                mock.patch.object(llm_backend, "_run_codex_process",
+                                  return_value=(124, "partial\ncodex exec timeout\n")):
+            code, output, command = llm_backend.run_llm_exec(
+                backend="codex-cli", root=REPO_ROOT, prompt="hello",
+                output_last_message=REPO_ROOT / "unused.json", timeout_sec=180)
+        self.assertEqual(124, code)
+        self.assertIn("partial", output)
+        self.assertIn("codex exec timeout", output)
+        self.assertEqual("codex", command[0])
+
     def test_inspect_openai_backend_should_publish_non_secret_runtime_identity(self) -> None:
         with mock.patch.dict(
             os.environ,
@@ -91,9 +155,9 @@ class LlmBackendTests(unittest.TestCase):
         self.assertEqual(["codex"], cmd)
 
     def test_run_llm_exec_should_invoke_codex_cli(self) -> None:
-        proc = subprocess.CompletedProcess(args=["codex"], returncode=0, stdout="ok", stderr="")
+        proc = (0, "ok")
         with mock.patch.object(llm_backend.shutil, "which", return_value="codex"), mock.patch.object(
-            llm_backend.subprocess, "run", return_value=proc
+            llm_backend, "_run_codex_process", return_value=proc
         ) as run_mock:
             rc, out, cmd = llm_backend.run_llm_exec(
                 backend="codex-cli",
@@ -112,9 +176,9 @@ class LlmBackendTests(unittest.TestCase):
         run_mock.assert_called_once()
 
     def test_run_llm_exec_should_support_workspace_write_codex_protocol(self) -> None:
-        proc = subprocess.CompletedProcess(args=["codex"], returncode=0, stdout="ok", stderr="")
+        proc = (0, "ok")
         with mock.patch.object(llm_backend.shutil, "which", return_value="codex"), mock.patch.object(
-            llm_backend.subprocess, "run", return_value=proc
+            llm_backend, "_run_codex_process", return_value=proc
         ) as run_mock:
             rc, out, cmd = llm_backend.run_llm_exec(
                 backend="codex-cli",
@@ -142,7 +206,7 @@ class LlmBackendTests(unittest.TestCase):
         self.assertIn("-o", cmd)
         self.assertEqual("-", cmd[-1])
         run_mock.assert_called_once()
-        self.assertEqual("hello", run_mock.call_args.kwargs["input"])
+        self.assertEqual("hello", run_mock.call_args.kwargs["prompt"])
 
     def test_run_llm_exec_should_invoke_openai_backend_and_write_output(self) -> None:
         class _FakeResponses:

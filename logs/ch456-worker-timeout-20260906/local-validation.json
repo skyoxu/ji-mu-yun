@@ -1,0 +1,28 @@
+{
+  "schema": "ch456.local-validation.v1",
+  "base_head": "00f79c3c9e62c55de058c6beb9fa213e9f4930e2",
+  "scope": "Shared Codex subprocess timeout and tree cleanup",
+  "platform": "Linux",
+  "validation": {
+    "command": "python -m pytest scripts/sc/tests/test_llm_backend.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456*.py -q",
+    "passed": 157,
+    "subtests_passed": 4,
+    "exit_code": 0
+  },
+  "coverage": [
+    "UTF-8 stdin/output and nonzero exit",
+    "Real timeout with descendant inheriting output handles; heartbeat stops",
+    "Bounded Windows taskkill failure and fallback (mocked)",
+    "Public backend returns 124 and retains partial output"
+  ],
+  "live_backend_called": false,
+  "windows_real_process_test": "pending local Windows execution",
+  "real_semantic": "not-run",
+  "live_blind": "not-run",
+  "final_acceptance": "not-run",
+  "budgets_changed": false,
+  "notes": [
+    "Captured progress includes an earlier V3 call returning 124 after 749.828 seconds for a 180-second budget, followed by repair and a later unfinished V3 call.",
+    "No semantic contract or gate was changed."
+  ]
+}

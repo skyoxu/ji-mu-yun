@@ -114,6 +114,15 @@ reuses the initial context when present. Subject labels and future observation
 logs remain invalid substitutes for production entries and RED inputs; existing
 path and coverage validators retain authority. This adds no worker retry.
 
+Shared Python Codex execution uses temporary file-backed UTF-8 stdin and output
+instead of pipe communication. A worker deadline triggers process-tree cleanup
+(`taskkill /T /F` on Windows, a private process group on POSIX), with at most
+10 seconds for tree termination and 5 seconds for the direct child to exit.
+Cleanup failures remain explicit timeout diagnostics, never successful worker
+results. Neither pipe EOF nor context-manager exit may introduce an unbounded
+wait. This does not extend worker budgets or authorize another semantic retry;
+the outer compiler watchdog remains the independent total runtime bound.
+
 ## References
 
 - `decision-logs/2026-07-16-bootstrap-review-self-audit-and-hardening-proposal.md`
