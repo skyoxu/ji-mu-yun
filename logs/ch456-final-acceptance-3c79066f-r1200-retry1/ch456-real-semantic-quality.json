@@ -1,0 +1,95 @@
+{
+  "atomic_quality_metrics": {
+    "active_obligation_count": 30,
+    "f1": 0.983607,
+    "invented_obligation_count": 0,
+    "precision": 1.0,
+    "recall": 0.967742,
+    "source_gap_count": 1,
+    "supported_obligation_count": 30
+  },
+  "authorizes": [],
+  "availability": {
+    "available": true,
+    "backend": "codex-cli",
+    "blocking_errors": [],
+    "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+  },
+  "backend": "codex-cli",
+  "compile_timeout_seconds": 3600.0,
+  "compiler_findings": [
+    "atomic-recall:source-gap-count:1"
+  ],
+  "compiler_result": {
+    "atomic_quality_metrics": {
+      "active_obligation_count": 30,
+      "f1": 0.983607,
+      "invented_obligation_count": 0,
+      "precision": 1.0,
+      "recall": 0.967742,
+      "source_gap_count": 1,
+      "supported_obligation_count": 30
+    },
+    "findings": [
+      "atomic-recall:source-gap-count:1"
+    ],
+    "gate": "atomic-source-recall",
+    "source_gap_claims": [
+      {
+        "behavior": "Reject predecessor selection based on glob, mtime, or latest-success history inference.",
+        "reason": "O-1573 specifies consumption of explicit hash-bound run-local predecessors but merges the independently observable rejection of each prohibited history-inference path into that obligation rather than representing it atomically.",
+        "source_ref": ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md#FR-905",
+        "subject": "Whole-plan terminal validation predecessor selection"
+      }
+    ],
+    "stage": "V4",
+    "status": "repair-vdd"
+  },
+  "compiler_stage": "V4",
+  "compiler_status": "repair-vdd",
+  "error": "compiler process failed; inspect retained result/stdout/stderr",
+  "execution_attempted": true,
+  "execution_succeeded": false,
+  "fixture": ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md",
+  "minimum_active_obligations": 23,
+  "progress_file": "C:\\jimuyun\\.tmp-ch456-semantic-quality\\run-nk4_9jli\\plan\\.compiler-work\\compiler-progress.jsonl",
+  "repair_timeout_seconds_override": 1200,
+  "required_precision": 0.95,
+  "required_recall": 0.95,
+  "run_directory": "C:\\jimuyun\\.tmp-ch456-semantic-quality\\run-nk4_9jli",
+  "schema": "vdd.real-semantic-quality-metric.v1",
+  "source_head": "3c79066fea2e1f1b96070985f81bd3e6d91eb607",
+  "status": "worker-failed",
+  "watchdog": {
+    "cleanup_error": null,
+    "command": [
+      "C:\\Program Files\\Python312\\python.exe",
+      "C:\\jimuyun\\scripts\\vdd\\compile_plan.py",
+      "--requirements",
+      "C:\\jimuyun\\.agents\\skills\\vdd-execution-plan\\scripts\\fixtures\\ch456-curated-semantic-quality.md",
+      "--out-dir",
+      "C:\\jimuyun\\.tmp-ch456-semantic-quality\\run-nk4_9jli\\plan",
+      "--profile",
+      "standard",
+      "--result-json",
+      "C:\\jimuyun\\.tmp-ch456-semantic-quality\\run-nk4_9jli\\compiler-result.json",
+      "--repair-timeout-seconds",
+      "1200"
+    ],
+    "elapsed_seconds": 1295.8600000000006,
+    "exit_code": 1,
+    "last_checkpoint": {
+      "call_id": "f3391bce45bc4a3195045483ef2209c9",
+      "elapsed_seconds": 88.07800000000134,
+      "event": "stage-returned",
+      "pid": 7912,
+      "result_status": null,
+      "schema": "vdd.compiler-progress.v1",
+      "stage": "V4-atomic-recall",
+      "timestamp": "2026-09-06T15:25:33.334147+00:00"
+    },
+    "pid": 7912,
+    "timed_out": false,
+    "timeout_seconds": 3600.0
+  }
+}

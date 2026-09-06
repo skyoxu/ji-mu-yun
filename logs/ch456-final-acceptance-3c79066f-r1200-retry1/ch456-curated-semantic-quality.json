@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "candidate_metric_producer": "curated-semantic",
+  "controlled_mutation_count": 2,
+  "controlled_mutation_rejection_rate": 1.0,
+  "curated_atomic_obligation_count": 30,
+  "curated_requirement_count": 10,
+  "execution_mode": "deterministic-curated-independent-oracle",
+  "live_model_evidence_ref": "ch456-real-worker-probe.json",
+  "live_model_extraction_quality_proven": false,
+  "precision": 1.0,
+  "recall": 1.0,
+  "required_precision": 0.95,
+  "required_recall": 0.95,
+  "schema": "vdd.curated-semantic-quality-metric.v1",
+  "source_head": "3c79066fea2e1f1b96070985f81bd3e6d91eb607",
+  "status": "pass"
+}

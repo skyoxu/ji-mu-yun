@@ -1,0 +1,187 @@
+{
+  "authorizes": [],
+  "baseline_chain_coverage": 1.0,
+  "baseline_valid": true,
+  "candidate_metric_producer": "semantic-chain-mutations",
+  "cases": [
+    {
+      "case": "acceptance-source-drift",
+      "findings": [
+        "chain:acceptance:A1:source-ref-drift",
+        "chain:v5:semantic-edge-exact-cover"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "failure-multiple-acceptance",
+      "findings": [
+        "chain:failure:FI1:must-bind-exactly-one-acceptance",
+        "chain:acceptance:A2:red-intent-exact-cover"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "failure-unknown-acceptance",
+      "findings": [
+        "chain:failure:FI1:unknown-acceptance:A404",
+        "chain:acceptance:A1:red-intent-exact-cover"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "red-intent-cover-drift",
+      "findings": [
+        "chain:acceptance:A1:red-intent-exact-cover",
+        "chain:v5:semantic-edge-exact-cover",
+        "chain:slice:S1:failure-projection",
+        "chain:slice:S1:proof-selector-projection"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "assertion-empty",
+      "findings": [
+        "chain:acceptance:A1:assertion-empty",
+        "chain:slice:S1:proof-assertion-projection"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "overbroad-independent-behavior",
+      "findings": [
+        "chain:acceptance:A1:source-ref-drift",
+        "chain:acceptance:A1:overbroad-independent-behavior",
+        "chain:slice:S1:obligation-projection"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "active-obligation-no-acceptance",
+      "findings": [
+        "chain:failure:FI2:unknown-acceptance:A2",
+        "chain:obligation:O2:no-acceptance",
+        "chain:v5:semantic-edge-exact-cover",
+        "chain:slice:S2:obligation-projection",
+        "chain:slice:S2:failure-projection",
+        "chain:slice:S2:proof-assertion-projection",
+        "chain:slice:S2:proof-selector-projection",
+        "chain:v6:acceptance-single-slice-cover"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "v5-edge-missing",
+      "findings": [
+        "chain:v5:semantic-edge-exact-cover",
+        "chain:v6a:semantic-edge-exact-cover"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "v5-edge-duplicate",
+      "findings": [
+        "chain:v5:semantic-edge-exact-cover"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "acceptance-multiple-slices",
+      "findings": [
+        "chain:acceptance:A1:multiple-slices",
+        "chain:slice:S2:obligation-projection",
+        "chain:slice:S2:failure-projection",
+        "chain:slice:S2:incompatible-verification-lanes",
+        "chain:slice:S2:proof-acceptance-projection",
+        "chain:slice:S2:proof-assertion-projection",
+        "chain:slice:S2:proof-selector-projection",
+        "chain:v6a:semantic-edge-exact-cover"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "slice-obligation-projection",
+      "findings": [
+        "chain:slice:S1:obligation-projection"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "slice-failure-projection",
+      "findings": [
+        "chain:slice:S1:failure-projection"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "incompatible-verification-lanes",
+      "findings": [
+        "chain:slice:S1:incompatible-verification-lanes"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "slice-proof-missing",
+      "findings": [
+        "chain:slice:S1:proof-missing"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "proof-acceptance-drift",
+      "findings": [
+        "chain:slice:S1:proof-acceptance-projection"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "proof-assertion-drift",
+      "findings": [
+        "chain:slice:S1:proof-assertion-projection"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "proof-selector-drift",
+      "findings": [
+        "chain:slice:S1:proof-selector-projection"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "acceptance-no-slice",
+      "findings": [
+        "chain:v6:acceptance-single-slice-cover",
+        "chain:v6a:semantic-edge-exact-cover"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "v6a-stage-scope-swallowed",
+      "findings": [
+        "chain:v6a:semantic-edge-exact-cover"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "v6a-lane-drift",
+      "findings": [
+        "chain:v6a:semantic-edge-exact-cover"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "v6a-terminal-drift",
+      "findings": [
+        "chain:v6a:semantic-edge-exact-cover"
+      ],
+      "rejected": true
+    }
+  ],
+  "mutation_cases": 21,
+  "rejected_cases": 21,
+  "rejection_rate": 1.0,
+  "required_rejection_rate": 0.95,
+  "schema": "vdd.semantic-chain-mutation-metric.v1",
+  "source_head": "3c79066fea2e1f1b96070985f81bd3e6d91eb607",
+  "threshold_passed": true
+}

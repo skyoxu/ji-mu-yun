@@ -1,0 +1,85 @@
+{
+  "authorizes": [],
+  "baseline_findings": [],
+  "baseline_valid": true,
+  "candidate_metric_producer": "agent-context-mutations",
+  "cases": [
+    {
+      "case": "context-missing",
+      "findings": [
+        "agent-context:slice-set-mismatch"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "context-duplicate-slice",
+      "findings": [
+        "agent-context:S1:duplicate"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "context-unknown-slice",
+      "findings": [
+        "agent-context:slice-set-mismatch"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "context-shape-missing-contracts",
+      "findings": [
+        "agent-context:S1:shape-incomplete"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "obligation-projection-drift",
+      "findings": [
+        "agent-context:S1:obligation-projection"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "acceptance-projection-drift",
+      "findings": [
+        "agent-context:S1:acceptance-projection"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "selector-projection-drift",
+      "findings": [
+        "agent-context:S1:selector-projection"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "validation-commands-empty",
+      "findings": [
+        "agent-context:S1:validation-commands"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "validation-command-empty-argv",
+      "findings": [
+        "agent-context:S1:validation-commands"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "validation-command-non-string",
+      "findings": [
+        "agent-context:S1:validation-commands"
+      ],
+      "rejected": true
+    }
+  ],
+  "mutation_cases": 10,
+  "rejected_cases": 10,
+  "rejection_rate": 1.0,
+  "required_rejection_rate": 0.95,
+  "schema": "vdd.agent-context-mutation-metric.v1",
+  "source_head": "3c79066fea2e1f1b96070985f81bd3e6d91eb607",
+  "threshold_passed": true
+}
