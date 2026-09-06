@@ -1,0 +1,29 @@
+{
+  "schema": "ch456.v3-hang-evidence.v1",
+  "candidate": "dc3a92347e46acfd1431a84823b067e1635e6b02",
+  "source_worktree": "C:/ch456-full-acceptance-dc3a9234",
+  "run_directory": "C:/ch456-full-acceptance-dc3a9234/.tmp-ch456-semantic-quality/run-kotn639_",
+  "configuration": {
+    "compile_timeout_seconds": 3600,
+    "repair_timeout_seconds": 900,
+    "backend": "codex-cli",
+    "model": "gpt-5.6-terra",
+    "provider": "aicodemirror"
+  },
+  "regression": {"status": "pass", "summary": "196 passed"},
+  "real_semantic": {
+    "status": "terminated-after-hang",
+    "v3_initial_worker_timeout_seconds": 180,
+    "v3_initial_worker_returned": false,
+    "progress_last_event": "worker-started",
+    "manual_termination": true,
+    "watchdog_global_timeout_reached": false
+  },
+  "not_run": ["formal-live-blind", "final-acceptance"],
+  "integrity": {
+    "production_code_modified": false,
+    "gate_modified": false,
+    "cache_modified": false,
+    "source_run_preserved": true
+  }
+}
