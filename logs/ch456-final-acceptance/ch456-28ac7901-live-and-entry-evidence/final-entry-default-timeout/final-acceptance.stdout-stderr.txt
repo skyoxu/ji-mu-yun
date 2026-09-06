@@ -1,0 +1,9 @@
+{"exit_code": 0, "label": "architecture-reconcile", "passed": true}
+{"exit_code": 0, "label": "curated-semantic", "passed": true}
+{"exit_code": 0, "label": "semantic-chain-mutations", "passed": true}
+{"exit_code": 0, "label": "agent-context-mutations", "passed": true}
+{"exit_code": 1, "label": "real-semantic", "passed": false}
+{"exit_code": 0, "label": "stable-facade", "passed": true}
+{"exit_code": 0, "label": "detached-mutations", "passed": true}
+{"exit_code": 0, "label": "selective-replay", "passed": true}
+{"exit_code": 0, "label": "fresh-medium-deterministic", "passed": true}

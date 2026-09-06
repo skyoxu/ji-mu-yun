@@ -1,0 +1,69 @@
+{
+  "atomic_behavior_floor_passed": true,
+  "atomic_quality_metrics": {
+    "active_obligation_count": 40,
+    "f1": 1.0,
+    "invented_obligation_count": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "source_gap_count": 0,
+    "supported_obligation_count": 40
+  },
+  "authorizes": [],
+  "availability": {
+    "available": true,
+    "backend": "codex-cli",
+    "blocking_errors": [],
+    "executable": "C:\\Users\\Administrator\\AppData\\Roaming\\npm\\codex.CMD"
+  },
+  "backend": "codex-cli",
+  "compile_timeout_seconds": 3600.0,
+  "compiler_findings": [],
+  "compiler_stage": null,
+  "compiler_status": "plan-ready",
+  "execution_attempted": true,
+  "execution_succeeded": true,
+  "fixture": ".agents/skills/vdd-execution-plan/scripts/fixtures/ch456-curated-semantic-quality.md",
+  "minimum_active_obligations": 23,
+  "precision_threshold_passed": true,
+  "progress_file": "C:\\ch456-full-acceptance-28ac7901\\.tmp-ch456-semantic-quality\\run-bv4qmcnm\\plan\\.compiler-work\\compiler-progress.jsonl",
+  "recall_threshold_passed": true,
+  "repair_timeout_seconds_override": 900,
+  "required_precision": 0.95,
+  "required_recall": 0.95,
+  "run_directory": "C:\\ch456-full-acceptance-28ac7901\\.tmp-ch456-semantic-quality\\run-bv4qmcnm",
+  "schema": "vdd.real-semantic-quality-metric.v1",
+  "source_head": "28ac79019ddbdc029522bd92808a1190636d44ef",
+  "status": "pass",
+  "watchdog": {
+    "cleanup_error": null,
+    "command": [
+      "C:\\Program Files\\Python312\\python.exe",
+      "C:\\ch456-full-acceptance-28ac7901\\scripts\\vdd\\compile_plan.py",
+      "--requirements",
+      "C:\\ch456-full-acceptance-28ac7901\\.agents\\skills\\vdd-execution-plan\\scripts\\fixtures\\ch456-curated-semantic-quality.md",
+      "--out-dir",
+      "C:\\ch456-full-acceptance-28ac7901\\.tmp-ch456-semantic-quality\\run-bv4qmcnm\\plan",
+      "--profile",
+      "standard",
+      "--result-json",
+      "C:\\ch456-full-acceptance-28ac7901\\.tmp-ch456-semantic-quality\\run-bv4qmcnm\\compiler-result.json",
+      "--repair-timeout-seconds",
+      "900"
+    ],
+    "elapsed_seconds": 2137.219000000001,
+    "exit_code": 0,
+    "last_checkpoint": {
+      "call_id": "95283d2683a44ea2b35ac4a667cec5d7",
+      "elapsed_seconds": 0.0,
+      "event": "stage-returned",
+      "pid": 3580,
+      "schema": "vdd.compiler-progress.v1",
+      "stage": "final-validation",
+      "timestamp": "2026-09-06T09:41:23.988456+00:00"
+    },
+    "pid": 3580,
+    "timed_out": false,
+    "timeout_seconds": 3600.0
+  }
+}

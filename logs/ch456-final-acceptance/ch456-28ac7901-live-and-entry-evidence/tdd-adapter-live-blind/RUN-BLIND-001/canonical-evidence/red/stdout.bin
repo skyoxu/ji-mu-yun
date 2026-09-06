@@ -1,0 +1,142 @@
+FFF                                                                      [100%]
+================================== FAILURES ===================================
+______________ test_fr_301_common_ledger_selector[active_claim] _______________
+
+ledger = <idempotency_ledger.IdempotencyLedger object at 0x00000144BCC7BE30>
+cases = {'duplicate': {'key': 'alpha', 'now': 5, 'ttl_seconds': 10}, 'invalid_ttl': 0, 'missing_release': 'missing'}
+scenario = 'active_claim'
+
+    @pytest.mark.parametrize(
+        "scenario",
+        ["active_claim", "invalid_ttl", "inactive_release"],
+    )
+    def test_fr_301_common_ledger_selector(ledger, cases, scenario):
+        if scenario == "active_claim":
+            duplicate_case = cases["duplicate"]
+            ledger.claim(**duplicate_case)
+            result = ledger.claim(
+                duplicate_case["key"],
+                duplicate_case["now"] + 1,
+                duplicate_case["ttl_seconds"],
+            )
+>           _assert_with_failure_id(result, "duplicate", "ACTIVE_CLAIM_ACCEPTED")
+
+benchmarks\ch456-live-blind\idempotency-ledger-v1\tests\test_idempotency_ledger.py:49: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+actual = 'accepted', expected = 'duplicate'
+failure_id = 'ACTIVE_CLAIM_ACCEPTED'
+
+    def _assert_with_failure_id(actual, expected, failure_id):
+        if actual != expected:
+            print(f"FAILURE_ID:{failure_id}")
+>       assert actual == expected
+E       AssertionError: assert 'accepted' == 'duplicate'
+E         
+E         - duplicate
+E         + accepted
+
+benchmarks\ch456-live-blind\idempotency-ledger-v1\tests\test_idempotency_ledger.py:23: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:ACTIVE_CLAIM_ACCEPTED
+_______________ test_fr_301_common_ledger_selector[invalid_ttl] _______________
+
+ledger = <idempotency_ledger.IdempotencyLedger object at 0x00000144BD4DC200>
+cases = {'duplicate': {'key': 'alpha', 'now': 5, 'ttl_seconds': 10}, 'invalid_ttl': 0, 'missing_release': 'missing'}
+scenario = 'invalid_ttl'
+
+    @pytest.mark.parametrize(
+        "scenario",
+        ["active_claim", "invalid_ttl", "inactive_release"],
+    )
+    def test_fr_301_common_ledger_selector(ledger, cases, scenario):
+        if scenario == "active_claim":
+            duplicate_case = cases["duplicate"]
+            ledger.claim(**duplicate_case)
+            result = ledger.claim(
+                duplicate_case["key"],
+                duplicate_case["now"] + 1,
+                duplicate_case["ttl_seconds"],
+            )
+            _assert_with_failure_id(result, "duplicate", "ACTIVE_CLAIM_ACCEPTED")
+        elif scenario == "invalid_ttl":
+            key = "invalid-ttl"
+            result = ledger.claim(key, now=5, ttl_seconds=cases["invalid_ttl"])
+>           _assert_with_failure_id(result, "invalid-ttl", "INVALID_TTL_ACCEPTED")
+
+benchmarks\ch456-live-blind\idempotency-ledger-v1\tests\test_idempotency_ledger.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+actual = 'accepted', expected = 'invalid-ttl'
+failure_id = 'INVALID_TTL_ACCEPTED'
+
+    def _assert_with_failure_id(actual, expected, failure_id):
+        if actual != expected:
+            print(f"FAILURE_ID:{failure_id}")
+>       assert actual == expected
+E       AssertionError: assert 'accepted' == 'invalid-ttl'
+E         
+E         - invalid-ttl
+E         + accepted
+
+benchmarks\ch456-live-blind\idempotency-ledger-v1\tests\test_idempotency_ledger.py:23: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:INVALID_TTL_ACCEPTED
+____________ test_fr_301_common_ledger_selector[inactive_release] _____________
+
+ledger = <idempotency_ledger.IdempotencyLedger object at 0x00000144BD4DCE60>
+cases = {'duplicate': {'key': 'alpha', 'now': 5, 'ttl_seconds': 10}, 'invalid_ttl': 0, 'missing_release': 'missing'}
+scenario = 'inactive_release'
+
+    @pytest.mark.parametrize(
+        "scenario",
+        ["active_claim", "invalid_ttl", "inactive_release"],
+    )
+    def test_fr_301_common_ledger_selector(ledger, cases, scenario):
+        if scenario == "active_claim":
+            duplicate_case = cases["duplicate"]
+            ledger.claim(**duplicate_case)
+            result = ledger.claim(
+                duplicate_case["key"],
+                duplicate_case["now"] + 1,
+                duplicate_case["ttl_seconds"],
+            )
+            _assert_with_failure_id(result, "duplicate", "ACTIVE_CLAIM_ACCEPTED")
+        elif scenario == "invalid_ttl":
+            key = "invalid-ttl"
+            result = ledger.claim(key, now=5, ttl_seconds=cases["invalid_ttl"])
+            _assert_with_failure_id(result, "invalid-ttl", "INVALID_TTL_ACCEPTED")
+    
+            subsequent_claim = ledger.claim(key, now=5, ttl_seconds=10)
+            _assert_with_failure_id(
+                subsequent_claim,
+                "accepted",
+                "INVALID_TTL_ACCEPTED",
+            )
+        else:
+            result = ledger.release(cases["missing_release"])
+>           _assert_with_failure_id(result, "not-found", "INACTIVE_RELEASE_SUCCEEDS")
+
+benchmarks\ch456-live-blind\idempotency-ledger-v1\tests\test_idempotency_ledger.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+actual = 'released', expected = 'not-found'
+failure_id = 'INACTIVE_RELEASE_SUCCEEDS'
+
+    def _assert_with_failure_id(actual, expected, failure_id):
+        if actual != expected:
+            print(f"FAILURE_ID:{failure_id}")
+>       assert actual == expected
+E       AssertionError: assert 'released' == 'not-found'
+E         
+E         - not-found
+E         + released
+
+benchmarks\ch456-live-blind\idempotency-ledger-v1\tests\test_idempotency_ledger.py:23: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:INACTIVE_RELEASE_SUCCEEDS
+=========================== short test summary info ===========================
+FAILED benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py::test_fr_301_common_ledger_selector[active_claim]
+FAILED benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py::test_fr_301_common_ledger_selector[invalid_ttl]
+FAILED benchmarks/ch456-live-blind/idempotency-ledger-v1/tests/test_idempotency_ledger.py::test_fr_301_common_ledger_selector[inactive_release]
+3 failed in 0.05s
