@@ -1,0 +1,147 @@
+................................................................ [ 26%]
+........................................................................ [ 56%]
+............................................................F................................. [ 95%]
+............                                                             [100%]
+================================== FAILURES ===================================
+_________ test_atomic_source_gap_blocks_plan_ready_and_reduces_recall _________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-12/test_atomic_source_gap_blocks_0')
+
+    def test_atomic_source_gap_blocks_plan_ready_and_reduces_recall(tmp_path: Path) -> None:
+        root, req, owner, selector = _repo(tmp_path)
+        req.write_text(
+            "# FR-1\nThe compiler must emit a deterministic plan. It must also stop after the second identical deterministic failure fingerprint.\n",
+            encoding="utf-8",
+        )
+        cache = _worker_cache("req.md#FR-1", owner, selector)
+        oid = cache["v4-atomic-recall"]["supported_obligation_ids"][0]
+        cache["v4-atomic-recall"] = {
+            "supported_obligation_ids":[oid],
+            "invented_obligation_ids":[],
+            "source_gap_claims":[{
+                "source_ref":"req.md#FR-1",
+                "subject":"compiler retry loop",
+                "behavior":"stop after the second identical deterministic failure fingerprint",
+                "reason":"V1 obligation set only represents deterministic plan emission",
+            }],
+        }
+>       result = compile_plan(requirements=req, out_dir=root / "plan", worker_cache=cache)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_semantic_compiler_ch456.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.agents\skills\vdd-execution-plan\scripts\semantic_compiler_gate.py:586: in compile_plan
+    obligations = sc.compile_obligations(root=root, out_dir=out_dir, source_index=source_index, worker_cache=worker_cache)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents\skills\vdd-execution-plan\scripts\semantic_obligation_gap_repair_patch.py:403: in compile_obligations_with_gap_repair
+    additions = _additional_obligations(
+.agents\skills\vdd-execution-plan\scripts\semantic_obligation_gap_repair_patch.py:275: in _additional_obligations
+    raw = gate._ORIGINAL_INVOKE_WORKER(
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v4_domain_patch.py:142: in v4_transport_invoke_worker
+    return _BASE_TRANSPORT(
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_execution_contract_patch.py:217: in execution_contract_transport
+    value = _BASE_TRANSPORT(
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_explicit_path_contract_patch.py:227: in explicit_path_contract_transport
+    value = _BASE_TRANSPORT(
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_group_safety_patch.py:134: in group_safety_transport
+    value = _BASE_GROUP_TRANSPORT(
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_group_repair_patch.py:451: in group_repair_transport
+    return _BASE_DOMAIN_TRANSPORT(root=root, out_dir=out_dir, stage=stage, payload=payload, prompt=prompt, worker_cache=worker_cache)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_domain_patch.py:126: in domain_transport_invoke_worker
+    value = _BASE_TRANSPORT(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-12/test_atomic_source_gap_blocks_0')
+out_dir = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-12/test_atomic_source_gap_blocks_0/plan')
+stage = 'v1-source-gap-repair'
+payload = {'affected_sources': [{'requirement_id': 'FR-1', 'repository_relative_source_path': 'req.md', 'anchor': 'FR-1', 'sourc...ntical deterministic failure fingerprint', 'reason': 'V1 obligation set only represents deterministic plan emission'}]}
+prompt = 'Add only the atomic obligations independently proven missing by source_gap_claims. Return {"obligations":[...]}; do n... independently observable behavior from a supplied source_gap_claim. Do not invent implementation or runtime evidence.'
+worker_cache = {'v1-FR-1': {'obligations': [{'source_refs': ['req.md#FR-1'], 'subject': 'compiler', 'trigger': 'a requirement is comp...['O-DC2E1B48E5DF'], 'missing_obligation_ids': [], 'invented_obligation_ids': [], 'misaligned_acceptance_ids': [], ...}}
+
+    def transport_invoke_worker(
+        *,
+        root: Path,
+        out_dir: Path,
+        stage: str,
+        payload: Mapping[str, Any],
+        prompt: str,
+        worker_cache: Mapping[str, Any] | None = None,
+    ) -> Mapping[str, Any]:
+        """Mirror the canonical worker seam with bounded structured-output transport."""
+        role_contract = _source_role_contract(stage)
+        cache_payload = {"source_role_contract": role_contract, "input": payload} if role_contract else payload
+        cache_dir = out_dir / ".compiler-cache"
+        cache_path = cache_dir / sc._worker_cache_key(stage, cache_payload)
+        if cache_path.is_file():
+            value = json.loads(cache_path.read_text(encoding="utf-8"))
+            if not isinstance(value, Mapping):
+                raise ValueError("worker cache is malformed")
+            return value
+        if worker_cache and stage in worker_cache:
+            value = worker_cache[stage]
+            if not isinstance(value, Mapping):
+                raise ValueError(f"injected worker cache {stage} must be object")
+            sc.atomic_json(cache_path, value)
+            return value
+    
+        scripts = root / "scripts" / "sc"
+        if str(scripts) not in sys.path:
+            sys.path.insert(0, str(scripts))
+        try:
+            from _llm_backend import run_llm_exec, resolve_llm_backend
+        except ImportError as exc:
+            raise RuntimeError("shared LLM backend is unavailable") from exc
+    
+        work = out_dir / ".compiler-work"
+        output = work / f"{stage}-last-message.json"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        if output.exists():
+            if not output.is_file():
+                raise ValueError(f"semantic worker output path is not a file: {output}")
+            output.unlink()
+    
+        full_prompt = (
+            "You are a read-only semantic compiler worker. Do not modify files. "
+            "Return JSON only. Do not invent requirements or runtime evidence.\n\n"
+            + prompt
+            + role_contract
+            + "\n\nINPUT:\n"
+            + json.dumps(payload, ensure_ascii=False, sort_keys=True)
+        )
+        backend = resolve_llm_backend(None)
+        is_repair = stage.endswith("-schema-repair")
+        timeout_sec = _REPAIR_TIMEOUT_SECONDS if is_repair else _NORMAL_TIMEOUT_SECONDS
+        reasoning = "medium" if is_repair else "high"
+        schema = _worker_output_schema(stage)
+        extra_args: list[str] = []
+        if backend == "codex-cli" and schema is not None:
+            extra_args = ["--output-schema", str(_schema_path(out_dir, stage, schema))]
+    
+        def execute(extra: list[str]) -> tuple[int, str, list[str]]:
+            return worker_call(run_llm_exec, progress_dir=out_dir, progress_stage=stage,
+                backend=backend,
+                root=root,
+                prompt=full_prompt,
+                output_last_message=output,
+                timeout_sec=timeout_sec,
+                codex_configs=[f'model_reasoning_effort="{reasoning}"'],
+                codex_sandbox="read-only",
+                codex_extra_args=extra,
+            )
+    
+        code, trace, argv = execute(extra_args)
+        if code != 0 and extra_args and _unsupported_output_schema(trace):
+            # Compatibility fallback for an older Codex CLI. This is one transport
+            # invocation fallback, not an additional semantic repair attempt.
+            if output.exists():
+                output.unlink()
+            code, trace, argv = execute([])
+        if code != 0 or not output.is_file():
+>           raise RuntimeError(f"semantic worker {stage} failed: {_bounded_trace(trace)}")
+E           RuntimeError: semantic worker v1-source-gap-repair failed: Not inside a trusted directory and --skip-git-repo-check was not specified.
+
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_transport_patch.py:290: RuntimeError
+=========================== short test summary info ===========================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py::test_atomic_source_gap_blocks_plan_ready_and_reduces_recall
+1 failed, 241 passed, 58 subtests passed in 23.65s

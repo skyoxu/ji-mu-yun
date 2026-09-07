@@ -1,0 +1,9 @@
+full_regression_command=python -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests
+full_regression_result=241 passed, 1 failed, 58 subtests passed
+full_regression_failed_test=test_atomic_source_gap_blocks_plan_ready_and_reduces_recall
+full_regression_traceback=full-vdd-regression-output.txt
+single_test_command=command.txt
+single_test_result=passed (exit 0)
+single_test_reproduced_original_failure=false
+candidate_source_matches_current=true
+no_code_cache_gate_or_candidate_binding_modified=true

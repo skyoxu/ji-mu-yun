@@ -1,0 +1,3 @@
+candidate=c6ae33da3ff899706603612063643e581be4ae20
+source=git-show-candidate
+purpose=single-test-diagnostic
