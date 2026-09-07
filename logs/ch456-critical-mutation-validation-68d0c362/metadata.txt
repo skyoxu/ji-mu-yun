@@ -1,0 +1,8 @@
+schema=ch456.critical-mutation-local-validation.v1
+source_head=68d0c362ee5e8b18b912e4733c3f2b6145009127
+status=pass
+result=24 passed in 1.51s
+live_execution_rerun=false
+preserved_success_candidate=c6ae33da3ff899706603612063643e581be4ae20
+preserved_success_evidence=logs/ch456-final-acceptance-c6ae33da-r1200-success
+preserved_success_evidence_modified=false
