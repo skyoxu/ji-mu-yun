@@ -172,6 +172,8 @@ def _inner(*, backend: str, limit_seconds: int) -> dict[str, Any]:
     from semantic_compiler_authority import compile_plan
     from stable_runner import (
         candidate_identity,
+        _execute_named_stage,
+        _materialize_named_descriptor,
         q0_recommendation,
         q1_preflight,
         q2_author_red,
@@ -255,6 +257,15 @@ def _inner(*, backend: str, limit_seconds: int) -> dict[str, Any]:
         backend=backend,
     )
     quick_workers.append(dict(red_author.get("worker") or {}))
+    if "behavior_routing" in bundle and red_author.get("status") == "probe-materialized":
+        # ADR-0041: use the current probe protocol without changing the blind RED gate.
+        if route("probe-materialized").get("recommended_action") != "run-probe":
+            raise RuntimeError("Q0 did not route probe-materialized to run-probe")
+        probe = _execute_named_stage(semantic, run_dir, "probe", "standard")
+        if probe.get("predicate_result") is not True:
+            raise RuntimeError("Behavior probe failed: " + json.dumps(probe, sort_keys=True)[:1200])
+        red_path = _materialize_named_descriptor(semantic, run_dir, "red")
+        red_author = {**red_author, "status": "red-materialized", "descriptor_ref": red_path.relative_to(root).as_posix()}
     if red_author.get("status") != "red-materialized":
         raise RuntimeError("Q2 RED author failed: " + json.dumps(red_author, sort_keys=True)[:1200])
     if route("red-materialized").get("recommended_action") != "run-red":
@@ -301,7 +312,17 @@ def _inner(*, backend: str, limit_seconds: int) -> dict[str, Any]:
     quick_workers.append(dict(refactor.get("worker") or {}))
     if refactor.get("status") != "refactor-observed":
         raise RuntimeError("Q6 refactor failed: " + json.dumps(refactor, sort_keys=True)[:1200])
-    if route("refactor-observed").get("recommended_action") != "validate-slice":
+    if "behavior_routing" in bundle:
+        from behavior_routing import read_route
+        behavior_route = read_route(root, bundle, run_dir, slice_id)
+        if any(row["disposition"] == "present" for row in behavior_route["behavior_dispositions"]):
+            regression = _execute_named_stage(semantic, run_dir, "regression", "standard")
+            if regression.get("predicate_result") is not True:
+                raise RuntimeError("Present behavior regression failed")
+        expected_action = "route-behaviors"
+    else:
+        expected_action = "validate-slice"
+    if route("refactor-observed").get("recommended_action") != expected_action:
         raise RuntimeError("Q0 did not route REFACTOR to slice validation")
 
     # Freeze the terminal descriptor before Q7 so Q7 and Q8 observe the same
@@ -309,15 +330,18 @@ def _inner(*, backend: str, limit_seconds: int) -> dict[str, Any]:
     # after slice-ready, preserving lifecycle order.
     red_descriptor = load_json(red_path)
     current_identity = candidate_identity(root, bundle, slice_id)
-    terminal_descriptor = successor_descriptor(
-        red_descriptor,
-        stage="terminal",
-        run_id=run_dir.name,
-        candidate_hash=current_identity["candidate_hash"],
-        terminal_argv=red_descriptor["argv"],
-    )
-    terminal_path = run_dir / "descriptors" / "terminal.json"
-    create_json(terminal_path, terminal_descriptor)
+    if "behavior_routing" in bundle:
+        terminal_path = _materialize_named_descriptor(semantic, run_dir, "terminal")
+    else:
+        terminal_descriptor = successor_descriptor(
+            red_descriptor,
+            stage="terminal",
+            run_id=run_dir.name,
+            candidate_hash=current_identity["candidate_hash"],
+            terminal_argv=red_descriptor["argv"],
+        )
+        terminal_path = run_dir / "descriptors" / "terminal.json"
+        create_json(terminal_path, terminal_descriptor)
 
     ready_path = run_dir / "slice-ready.json"
     ready = validate_slice_ready(
@@ -539,3 +563,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

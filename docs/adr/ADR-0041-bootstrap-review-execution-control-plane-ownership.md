@@ -194,6 +194,38 @@ Historical receipts and CH456 closure remain unchanged. Single-process pytest
 is supported; retries, parallel execution and other adapters require a later
 explicit contract. CER-R4--R6 and live task validation remain separate work.
 
+### Observed Behavior Routing, Phase 2 (2026-09-07)
+
+The canonical VDD compiler projects per-obligation probe intent into the current
+semantic bundle. It publishes no disposition or execution evidence. Quick Dev
+adds probe and regression stages to its existing dispatcher and stable CLI.
+Probe classification is derived per atomic obligation from the phase-1 case
+report: all required cases pass means present, all satisfy expected behavioral
+RED means missing, and all other combinations are unverifiable. Probe results
+cannot authorize production implementation or stand in for formal RED.
+
+For capability-bearing plans, the frozen four-stage coverage is a possible
+missing-behavior path. Runtime Q7/Q8 derive the required path from the explicitly
+bound probe: missing retains RED/GREEN/REFACTOR/terminal, present requires
+regression/terminal. Every current obligation remains in coverage, including
+mixed slices. Case mappings stay bound to the probe; production/dependency
+hashes bind current regression and final proof. Extra declared regressions,
+profile rules, snapshots and external Acceptance ownership remain unchanged.
+Terminal materialization precedes Q7 snapshotting in the stable entry.
+
+The existing run and immutable artifact model owns recovery. No parallel plan
+state machine, auto-retry, global test discovery, new requirement type, or
+mandatory governance workflow is added. Legacy bundles retain mandatory TDD;
+new plans require controlled probes. Invalidated runs are preserved and a fresh
+run establishes current behavior. An unverified model label has no routing
+power. Static marker inspection only decides whether test authoring is needed.
+
+Typed Deferred records remain in the same intent contract. Internal strategy
+may be implementation-resolvable only with a complete observable/assertion and
+write contract. Current-scope external-owner or blocking prerequisites fail
+closed regardless of author-provided Booleans. Deferral cannot shrink coverage;
+a scope exclusion requires the existing explicit source/scope decision.
+
 ## References
 
 - `decision-logs/2026-07-16-bootstrap-review-self-audit-and-hardening-proposal.md`

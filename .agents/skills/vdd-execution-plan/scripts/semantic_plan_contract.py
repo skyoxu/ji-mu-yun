@@ -83,6 +83,10 @@ def validate_semantic_bundle(bundle: Mapping[str, Any]) -> tuple[bool, list[str]
     if findings:
         return False, findings
 
+    if "behavior_routing" in bundle:
+        from semantic_behavior_contract import validate_routing_intent
+        findings.extend(validate_routing_intent(bundle))
+
     obligation_by_id = _id_index(obligations, "obligation_id", findings, "obligation")
     acceptance_by_id = _id_index(acceptances, "acceptance_id", findings, "acceptance")
     failure_by_id = _id_index(failure_intents, "failure_intent_id", findings, "failure-intent")
@@ -250,3 +254,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

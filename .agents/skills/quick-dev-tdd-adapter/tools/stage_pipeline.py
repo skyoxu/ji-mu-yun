@@ -16,7 +16,7 @@ from regression_gate import run_regression_gate
 from runtime_evidence import build_runtime_edges,create_json,load_json,selector_identity_from_descriptor,sha256_bytes,sha256_value,validate_descriptor
 
 
-def semantic_assertions(bundle: Mapping[str, Any], slice_id: str) -> tuple[set[tuple[str,str]],list[str]]:
+def semantic_assertions(bundle: Mapping[str, Any], slice_id: str, *, allowed=None) -> tuple[set[tuple[str,str]],list[str]]:
     slices,acceptances,failures=bundle.get("slices"),bundle.get("acceptances"),bundle.get("failure_intents")
     if not all(isinstance(x,list) for x in (slices,acceptances,failures)):
         raise ValueError("semantic plan incomplete")
@@ -31,7 +31,8 @@ def semantic_assertions(bundle: Mapping[str, Any], slice_id: str) -> tuple[set[t
         if not isinstance(item,Mapping):
             raise ValueError("Acceptance missing")
         for assertion_id in item.get("assertion_ids",[]):
-            assertions.add((aid,assertion_id))
+            if allowed is None or (aid, assertion_id) in allowed:
+                assertions.add((aid,assertion_id))
     expected=[]
     for fid in selected.get("failure_intent_ids",[]):
         item=fmap.get(fid)
@@ -40,9 +41,9 @@ def semantic_assertions(bundle: Mapping[str, Any], slice_id: str) -> tuple[set[t
         family=item.get("failure_family")
         if not isinstance(family,str) or not family:
             raise ValueError("failure intent family missing")
-        if family=="expected-red":
+        if family=="expected-red" and (allowed is None or set(item.get("acceptance_ids", [])) & {a for a, _ in allowed}):
             expected.append(item["failure_id"])
-    if not assertions or not expected:
+    if not assertions or (not expected and allowed is None):
         raise ValueError("slice semantic bindings incomplete")
     return assertions,sorted(set(expected))
 
@@ -96,10 +97,15 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
     validate_descriptor(descriptor)
     if descriptor["run_id"]!=run_dir.name:
         raise ValueError("descriptor run binding mismatch")
+    from behavior_routing import verify_stage, production_hashes, derive_dispositions
+    route = verify_stage(workspace, bundle, run_dir, descriptor)
+    routed = "behavior_routing" in bundle
+    production_before = production_hashes(workspace, bundle, descriptor["slice_id"]) if routed else None
     predecessor_binding=None
     if descriptor["stage"] in {"green","refactor"}:
         predecessor_binding=validate_nonterminal_successor(run_dir,descriptor)
-    expected_assertions,expected_failures=semantic_assertions(bundle,descriptor["slice_id"])
+    allowed = {(a["acceptance_id"], a["assertion_id"]) for a in descriptor["acceptance_assertions"]} if routed else None
+    expected_assertions,expected_failures=semantic_assertions(bundle,descriptor["slice_id"], allowed=allowed)
     actual_assertions={(a["acceptance_id"],a["assertion_id"]) for a in descriptor["acceptance_assertions"]}
     if actual_assertions!=expected_assertions:
         raise ValueError("descriptor assertion universe differs from semantic plan")
@@ -112,11 +118,14 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
             if sorted(row["expected_failure_ids"]) != failures_by_assertion[(row["acceptance_id"], row["assertion_id"])]:
                 raise ValueError("case-failure-binding-differs-from-semantic-plan")
     receipt=execute_process(workspace,run_dir,descriptor["stage"],descriptor,profile_identity=profile_identity)
-    observation=judge_receipt(run_dir,descriptor["stage"],descriptor,receipt,expected_failure_ids=expected_failures if descriptor["stage"]=="red" else ())
+    if routed and production_before != production_hashes(workspace, bundle, descriptor["slice_id"]):
+        raise ValueError("behavior-routing:production-changed-during-test")
+    dispositions = derive_dispositions(bundle, descriptor, receipt) if descriptor["stage"] == "probe" else None
+    observation=judge_receipt(run_dir,descriptor["stage"],descriptor,receipt,expected_failure_ids=expected_failures if descriptor["stage"]=="red" else (), probe_dispositions=dispositions, behavior_route=route)
 
     regression_binding=None
-    if descriptor["stage"]=="refactor" and observation.get("predicate_result") is True:
-        gate_path=run_dir/"canonical-evidence"/"refactor"/"regression-gate.v1.json"
+    if descriptor["stage"] in {"refactor", "regression"} and observation.get("predicate_result") is True:
+        gate_path=run_dir/"canonical-evidence"/descriptor["stage"]/"regression-gate.v1.json"
         gate=run_regression_gate(
             workspace=workspace,
             bundle=bundle,
@@ -144,6 +153,15 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
         "descriptor_sha256":sha256_value(descriptor),"receipt_sha256":sha256_value(receipt),"observation_sha256":sha256_value(observation),"runtime_edges":refs,
         "verification_outcome":observation["verification_outcome"],"failure_family":observation["failure_family"],"failure_id":observation["failure_id"],"failure_fingerprint":observation.get("failure_fingerprint"),"predicate_result":observation["predicate_result"],"authorizes":[],
     }
+    if routed:
+        result["behavior_plan_sha256"] = sha256_value(bundle)
+        result["production_hashes"] = production_before
+        result["behavior_route"] = descriptor["behavior_route"]
+    if routed and descriptor["stage"] == "regression":
+        result["required_next_action"] = "validate-slice" if observation["predicate_result"] else "repair-vdd"
+    if dispositions is not None:
+        result["behavior_dispositions"] = dispositions
+        result["required_next_action"] = (("run-red" if any(x["disposition"] == "missing" for x in dispositions) else "run-regression") if observation["predicate_result"] else "repair-vdd")
     if predecessor_binding is not None:
         result["red_predecessor_binding"]=predecessor_binding
     if regression_binding is not None:

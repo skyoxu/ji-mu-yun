@@ -28,6 +28,8 @@ The stable CLI defaults to deterministic Q1 preflight. `--recommendation-only` i
 
 ## Current Required Order
 
+For CER-capable plans, use the observed behavior routing below. The RED/GREEN/REFACTOR steps apply to the missing subset; present obligations use the regression branch. Historical plans without that capability retain the mandatory TDD route.
+
 1. Q0 recommendation-only: validate the semantic plan, current snapshot, explicit predecessors and change-impact state without running tests or writing run state.
 2. Q1 preflight: validate plan/slice/candidate identity, environment probe, selector/target/fixture/cwd/argv/timeout, write sets and predecessor state.
 3. Q2 RED materialization: create a frozen shell-free descriptor from VDD intent. A RED author may touch only the declared test write set and must bind a real production entry.
@@ -74,7 +76,41 @@ Current descriptors require `quick-dev.case-contract.v1`. Bind every assertion t
 
 The owned collector records collection, selection and setup/call/teardown outcomes. Every required case must execute with the stage's admissible outcome; stdout assertion IDs, a stage pass or a positive count cannot fill missing proof. RED requires an actual failing AssertionError call with the bound failure ID captured from that call. Skips, deselection, xfail/xpass, setup/teardown errors, missing reports and ambiguous repeated attempts cannot satisfy the contract.
 
-GREEN/REFACTOR must preserve the resolved RED case set as well as the frozen selector. Q4 re-reads RED case proof before handoff. Q7/Q8 re-read every assertion's case evidence, including all terminal assertion edges. Historical stage-only evidence is retained but cannot authorize current implementation or completion. This capability does not yet add CER-R4--R6 disposition, regression-only or Deferred routes.
+GREEN/REFACTOR must preserve the resolved RED case set as well as the frozen selector. Q4 re-reads RED case proof before handoff. Q7/Q8 re-read every assertion's case evidence, including all terminal assertion edges. Historical stage-only evidence is retained but cannot authorize current implementation or completion. CER-R4--R6 use this capability through the observed behavior routing below.
+
+## Observed Behavior Routing (CER-R4--R6)
+
+Read [behavior routing contract](references/behavior-routing-contract.md) for
+current schemas, CLI actions, reuse and Deferred rules. New VDD plans project
+probe intent; only controlled pytest case results assign disposition.
+
+| Observed obligation | Required path |
+| --- | --- |
+| `missing` | Formal RED, bounded implementation, GREEN, REFACTOR, terminal |
+| `present` | Current regression and terminal; no synthetic RED or production authorization |
+| `unverifiable` | Repair/clarify the affected scope; no implementation or completion |
+
+`author-red` now materializes a probe for a CER-capable plan. It invokes the
+bounded test author when paths or current assertion mappings need authoring;
+existing correctly mapped tests are reused. Then `run-probe` returns the next
+action. `run-red` and `run-regression` materialize their descriptors from the
+explicit probe result. A probe never counts as formal RED. Mixed slices retain
+both subsets: implement missing behavior, then run present regression before Q7.
+`route-behaviors` rereads explicit stage artifacts and reports the next action.
+
+The regression stage also consumes required agent-context validation commands
+under the existing profile policy. Production or dependency changes invalidate
+current regression proof. A failed present behavior blocks completion and
+requires a fresh probe/repair before implementation; do not change production
+under a present-only route. Use a fresh run directory for invalidated evidence,
+preserving the old run. Terminal descriptors freeze before Q7's snapshot, then
+execute before Q8. Current probe, plan, case mappings, production/dependency
+hashes and per-disposition assertion coverage are reread at closure.
+
+Deferred rows cannot authorize skipping cases or deleting obligations. Current
+blocking/external-owner prerequisites remain blocked even when their author
+writes a false blocking flag. Only a fully specified internal strategy may be
+resolved during implementation while keeping every proof requirement.
 
 ## Profiles
 

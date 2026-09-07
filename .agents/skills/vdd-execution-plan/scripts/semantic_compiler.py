@@ -749,6 +749,9 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
         "pre_slice_coverage": pre_edges, "slices": slices, "final_plan_coverage": final_edges,
         "agent_contexts": contexts,
     }
+    # ADR-0041: project probe intent without claiming current behavior or running tests.
+    from semantic_behavior_contract import SCHEMA, project_intents
+    bundle["behavior_routing"] = {"schema": SCHEMA, "intents": project_intents(bundle), "deferred": []}
     valid, findings = stage_call(out_dir, "final-validation", validate_semantic_bundle, bundle)
     if not valid:
         return {"status": "repair-vdd", "stage": "final-validation", "findings": findings}
@@ -767,3 +770,4 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
     state = {"schema": "vdd.compiler-state.v1", "plan_id": plan_id, "state": "plan-ready", "completed_stages": ["V0", "V0A", "V1", "V2", "V3", "V3A", "V4", "V5", "V6", "V6A", "V7"], "semantic_plan_sha256": sha256_value(bundle)}
     atomic_json(out_dir / "compiler-state.v1.json", state)
     return {"status": "plan-ready", "plan_id": plan_id, "semantic_plan_sha256": sha256_value(bundle), "slices": [s["slice_id"] for s in slices]}
+

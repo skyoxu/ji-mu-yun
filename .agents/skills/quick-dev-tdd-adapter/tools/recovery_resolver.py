@@ -27,7 +27,7 @@ def recover_explicit_run(*, run_root: Path, recovery_input: Mapping[str, Any]) -
     if run_root.name != recovery_input["run_id"]:
         raise ValueError("recovery run root mismatch")
     stage = recovery_input["stage"]
-    if stage not in {"red", "green", "refactor", "terminal"}:
+    if stage not in {"red", "green", "refactor", "terminal", "regression"}:
         raise ValueError("recovery stage invalid")
     candidate = _hash(recovery_input["candidate_hash"], "candidate_hash")
     _hash(recovery_input["current_snapshot_sha256"], "current_snapshot_sha256")
@@ -50,6 +50,12 @@ def recover_explicit_run(*, run_root: Path, recovery_input: Mapping[str, Any]) -
     if observation.get("evidence_state") not in {"observed-run", "recovered-run"}:
         raise ValueError("recovery predecessor evidence state invalid")
 
+    case_map = None
+    if stage == "regression":
+        from case_evidence import assertion_cases
+        descriptor = load_json(run_root / "descriptors/regression.json")
+        case_map = assertion_cases(descriptor, receipt)
+
     refs = recovery_input["runtime_edges"]
     if not isinstance(refs, list) or not refs:
         raise ValueError("recovery runtime edges missing")
@@ -70,6 +76,8 @@ def recover_explicit_run(*, run_root: Path, recovery_input: Mapping[str, Any]) -
         if edge.get("predicate_result") is not True or edge.get("observed") is not True:
             raise ValueError("recovery runtime edge is not admissible observed evidence")
         key = (str(edge.get("acceptance_id")), str(edge.get("assertion_id")))
+        if case_map is not None and (edge.get("case_ids") != case_map.get(key) or edge.get("case_report_sha256") != receipt.get("case_report_sha256")):
+            raise ValueError("recovery regression case binding stale")
         if key in seen:
             raise ValueError("recovery runtime edge duplicate")
         seen.add(key)

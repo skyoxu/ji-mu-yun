@@ -52,6 +52,31 @@ Timeout produces `compile-timeout`, never acceptance evidence. Windows process
 cleanup targets only the owned PID tree; inspect `cleanup_error` if termination
 fails. Existing caches and worker outputs remain available for offline diagnosis.
 
+## Current Behavior Routing (CER)
+
+New compiler output includes `vdd.behavior-routing-intent.v1` in the existing
+semantic bundle. It projects each obligation's Acceptance/assertions, production
+entry, selector intent, observable, expected result and dependencies. These are
+probe intentions only: VDD does not execute tests or assign present/missing from
+files, model opinion or historical pass records.
+
+Quick Dev's controlled case probe derives `present`, `missing` or `unverifiable`
+per obligation. Present behavior stays in current regression/terminal coverage;
+missing behavior requires real RED/GREEN/REFACTOR; an unverifiable or mixed
+result inside one obligation requires contract/environment repair or finer
+atomic decomposition. Do not remove present obligations from the coverage set.
+The [behavior routing contract](../quick-dev-tdd-adapter/references/behavior-routing-contract.md)
+owns runtime details under ADR-0041.
+
+The optional `behavior_routing.deferred` list records type, reason,
+resolution_owner, resolution_stage and affected_obligation_ids. Only an internal
+implementation strategy with a complete proof/write contract may use
+`implementation-resolvable` at the implementation stage. An unresolved
+`external-owner` or `blocking` item in current scope blocks that scope; an
+artifact author's `blocking=false` cannot override the rule. Deferral never
+subtracts current obligations from final coverage. An actual scope change must
+use the existing explicit source/scope decision path.
+
 ## Choose The Profile First
 
 Choose the least complex profile that serves a real consumer. Record the selected profile and reason in the plan.

@@ -137,7 +137,11 @@ def test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecyc
     run=root/"runs"/"R1"
     candidate0=sha256_bytes(production.read_bytes())
     selector=[sys.executable,"-m","pytest","tests/test_rate_limiter.py","-q"]
-    red=materialize_descriptor(bundle=bundle,slice_id="S1",stage="red",run_id="R1",candidate_hash=candidate0,argv=selector,cwd=".",timeout_seconds=30,target_refs=["tests/test_rate_limiter.py"],fixture_refs=["tests/fixture.txt"])
+    probe=materialize_descriptor(bundle=bundle,slice_id="S1",stage="probe",run_id="R1",candidate_hash=candidate0,argv=selector,cwd=".",timeout_seconds=30,target_refs=["tests/test_rate_limiter.py"],fixture_refs=["tests/fixture.txt"])
+    create_json(run/"descriptors/probe.json",probe)
+    route=execute_stage(workspace=root,semantic_plan=plan/"semantic-plan-bundle.v1.json",run_dir=run,descriptor_path=run/"descriptors/probe.json",profile_identity="standard")
+    assert route["predicate_result"] and all(x["disposition"] == "missing" for x in route["behavior_dispositions"])
+    red=materialize_descriptor(bundle=bundle,slice_id="S1",stage="red",run_id="R1",candidate_hash=candidate0,argv=selector,cwd=".",timeout_seconds=30,target_refs=["tests/test_rate_limiter.py"],fixture_refs=["tests/fixture.txt"],routing_result=route)
     create_json(run/"descriptors"/"red.json",red)
     red_result=execute_stage(workspace=root,semantic_plan=plan/"semantic-plan-bundle.v1.json",run_dir=run,descriptor_path=run/"descriptors"/"red.json",profile_identity="standard")
     assert red_result["predicate_result"] is True and red_result["failure_family"]=="expected-red"
@@ -159,7 +163,7 @@ def test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecyc
     candidate1=sha256_bytes(production.read_bytes())
     green=successor_descriptor(red,stage="green",run_id="R1",candidate_hash=candidate1)
     refactor=successor_descriptor(red,stage="refactor",run_id="R1",candidate_hash=candidate1)
-    terminal=materialize_descriptor(bundle=bundle,slice_id="S1",stage="terminal",run_id="R1",candidate_hash=candidate1,argv=selector,cwd=".",timeout_seconds=30,target_refs=["tests/test_rate_limiter.py"],fixture_refs=["tests/fixture.txt"])
+    terminal=materialize_descriptor(bundle=bundle,slice_id="S1",stage="terminal",run_id="R1",candidate_hash=candidate1,argv=selector,cwd=".",timeout_seconds=30,target_refs=["tests/test_rate_limiter.py"],fixture_refs=["tests/fixture.txt"],routing_result=route)
     for stage,descriptor in (("green",green),("refactor",refactor),("terminal",terminal)):
         create_json(run/"descriptors"/f"{stage}.json",descriptor)
     assert execute_stage(workspace=root,semantic_plan=plan/"semantic-plan-bundle.v1.json",run_dir=run,descriptor_path=run/"descriptors"/"green.json",profile_identity="standard")["predicate_result"] is True

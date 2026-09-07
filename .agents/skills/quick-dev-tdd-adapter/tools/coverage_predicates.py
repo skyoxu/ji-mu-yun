@@ -83,11 +83,19 @@ def _reread_edge(workspace: Path, run_root: Path, ref: Mapping[str, str], *, sli
 def validate_slice_ready(*, workspace: Path, semantic_plan: Path, run_root: Path, slice_id: str, snapshot_roots: Sequence[Mapping[str, str]], source_commit: str, out: Path, base_commit: str | None = None) -> dict[str, Any]:
     bundle = load_json(semantic_plan)
     _selected, expected_assertions = _semantic_index(bundle, slice_id)
+    from behavior_routing import read_route, stage_map, verify_stage, current_result, verify_case_continuity
+    routed = "behavior_routing" in bundle
+    route = read_route(workspace, bundle, run_root, slice_id) if routed else None
+    requirements = stage_map(bundle, slice_id, route) if routed else {aid: ("red", "green", "refactor") for aid in expected_assertions}
     snapshot = current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit)
+    stage_selectors = {}
     selector: str | None = None
     final_candidate: str | None = None
     coverage: dict[str, Any] = {}
-    for stage in ("red", "green", "refactor"):
+    for stage in ("red", "green", "refactor", "regression"):
+        stage_expected = {aid: ids for aid, ids in expected_assertions.items() if stage in requirements[aid]}
+        if not stage_expected:
+            continue
         result = load_json(run_root / "canonical-evidence" / stage / "stage-result.v2.json")
         required_outcome = "fail" if stage == "red" else "pass"
         if result.get("stage") != stage or result.get("slice_id") != slice_id or result.get("predicate_result") is not True or result.get("verification_outcome") != required_outcome:
@@ -95,25 +103,35 @@ def validate_slice_ready(*, workspace: Path, semantic_plan: Path, run_root: Path
         current_selector = result.get("selector_identity")
         if not isinstance(current_selector, str):
             raise ValueError("selector identity missing")
-        if selector is None:
-            selector = current_selector
-        elif selector != current_selector:
-            raise ValueError("RED/GREEN/REFACTOR selector drift")
-        if stage in {"green", "refactor"}:
+        stage_selectors[stage] = current_selector
+        if stage != "regression":
+            if selector is None:
+                selector = current_selector
+            elif selector != current_selector:
+                raise ValueError("RED/GREEN/REFACTOR selector drift")
+        if routed:
+            descriptor = load_json(run_root / "descriptors" / (stage + ".json"))
+            verify_stage(workspace, bundle, run_root, descriptor, require_probe_current=False)
+            verify_case_continuity(descriptor, load_json(run_root / "canonical-evidence" / stage / "process-receipt.v2.json"), route)
+            if stage in {"refactor", "regression"}:
+                current_result(workspace, bundle, slice_id, result)
+        if stage in {"green", "refactor", "regression"}:
+            if routed and stage == "regression" and final_candidate is not None and final_candidate != result.get("candidate_hash"):
+                raise ValueError("behavior-routing:mixed-candidate-drift")
             final_candidate = result.get("candidate_hash")
         refs = result.get("runtime_edges")
         if not isinstance(refs, list) or not refs:
             raise ValueError("runtime edges missing")
-        observed = {aid: {} for aid in expected_assertions}
+        observed = {aid: {} for aid in stage_expected}
         for ref in refs:
-            edge = _reread_edge(workspace, run_root, ref, slice_id=slice_id, stage=stage, selector_identity=selector)
+            edge = _reread_edge(workspace, run_root, ref, slice_id=slice_id, stage=stage, selector_identity=current_selector)
             if edge.get("candidate_hash") != result.get("candidate_hash"):
                 raise ValueError("edge/stage candidate mismatch")
             aid, assertion_id = edge.get("acceptance_id"), edge.get("assertion_id")
-            if aid not in expected_assertions or assertion_id not in expected_assertions[aid] or assertion_id in observed[aid]:
+            if aid not in stage_expected or assertion_id not in stage_expected[aid] or assertion_id in observed[aid]:
                 raise ValueError("assertion edge outside exact universe or duplicate")
             observed[aid][assertion_id] = {"path": ref["path"], "sha256": ref["sha256"]}
-        for aid, expected in expected_assertions.items():
+        for aid, expected in stage_expected.items():
             if set(observed[aid]) != expected:
                 raise ValueError(f"{stage} assertion exact cover failed for {aid}")
         coverage[stage] = {aid: [observed[aid][assertion] for assertion in sorted(observed[aid])] for aid in sorted(observed)}
@@ -130,6 +148,10 @@ def validate_slice_ready(*, workspace: Path, semantic_plan: Path, run_root: Path
         "assertion_coverage": coverage,
         "authorizes": [],
     }
+    if routed:
+        result["behavior_route_sha256"] = sha256_value(route)
+        result["stage_selectors"] = stage_selectors
+        result["selector_identity"] = selector or stage_selectors["regression"]
     create_json(out, result)
     return result
 
@@ -172,7 +194,10 @@ def publish_implementation_complete(
 ) -> dict[str, Any]:
     detached_binding = _validate_detached_binding(detached_promotion_binding, profile)
     bundle = load_json(semantic_plan)
-    expected_keys = expected_tuple_keys(bundle)
+    from behavior_routing import read_route, stage_map, verify_stage, current_result, verify_case_continuity, validate_plan
+    routed = "behavior_routing" in bundle
+    validate_plan(bundle)
+    expected_keys = set() if routed else expected_tuple_keys(bundle)
     before = current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit)
     cover = bundle.get("final_plan_coverage")
     acceptance_by_slice: dict[str, set[str]] = {}
@@ -201,6 +226,13 @@ def publish_implementation_complete(
             raise ValueError("slice-ready predecessor stale")
         if ready.get("current_snapshot_sha256") != before["sha256"]:
             raise ValueError("slice-ready snapshot stale")
+        route = read_route(workspace, bundle, run_root, sid) if routed else None
+        requirements = stage_map(bundle, sid, route) if routed else {aid: ("red", "green", "refactor") for aid in acceptance_by_slice[sid]}
+        if routed:
+            if ready.get("behavior_route_sha256") != sha256_value(route):
+                raise ValueError("behavior-routing:ready-probe-stale")
+            for aid, stages in requirements.items():
+                expected_keys.update(f"{sid}|{aid}|{stage}" for stage in (*stages, "terminal"))
         tdd_selector = ready.get("selector_identity")
         final_candidate = ready.get("candidate_hash")
         if not isinstance(final_candidate, str) or not HASH_RE.fullmatch(final_candidate):
@@ -218,6 +250,9 @@ def publish_implementation_complete(
         terminal = load_json(run_root / "canonical-evidence" / "terminal" / "stage-result.v2.json")
         if terminal.get("predicate_result") is not True or terminal.get("verification_outcome") != "pass" or terminal.get("candidate_hash") != final_candidate:
             raise ValueError("terminal stage not current process pass")
+        if routed:
+            verify_stage(workspace, bundle, run_root, terminal_descriptor)
+            current_result(workspace, bundle, sid, terminal)
         terminal_selector = terminal.get("selector_identity")
         if not isinstance(terminal_selector, str) or not terminal_selector:
             raise ValueError("terminal selector identity missing")
@@ -239,20 +274,30 @@ def publish_implementation_complete(
         if terminal_assertions != required_assertions:
             raise ValueError("terminal assertion exact cover")
         for aid in sorted(acceptance_by_slice.get(sid, set())):
-            for stage in ("red", "green", "refactor"):
+            for stage in requirements[aid]:
+                selector_for_stage = ready.get("stage_selectors", {}).get(stage) if routed else tdd_selector
+                if routed:
+                    stage_result = load_json(run_root / "canonical-evidence" / stage / "stage-result.v2.json")
+                    descriptor = load_json(run_root / "descriptors" / (stage + ".json"))
+                    verify_stage(workspace, bundle, run_root, descriptor, require_probe_current=False)
+                    verify_case_continuity(descriptor, load_json(run_root / "canonical-evidence" / stage / "process-receipt.v2.json"), route)
+                    if stage_result.get("predicate_result") is not True or stage_result.get("selector_identity") != selector_for_stage:
+                        raise ValueError("behavior-routing:stage-result-stale")
+                    if stage in {"refactor", "regression"}:
+                        current_result(workspace, bundle, sid, stage_result)
                 # The tuple remains per Acceptance; re-read every assertion proof.
                 refs = ready.get("assertion_coverage", {}).get(stage, {}).get(aid, [])
                 actual = []
                 for assertion_ref in refs:
                     checked = _reread_edge(workspace, run_root, assertion_ref, slice_id=sid,
-                                           stage=stage, selector_identity=tdd_selector)
+                                           stage=stage, selector_identity=selector_for_stage)
                     if checked["acceptance_id"] != aid:
                         raise ValueError("Q8 assertion Acceptance mismatch")
                     actual.append(checked["assertion_id"])
                 if set(actual) != required_assertions[aid] or len(actual) != len(set(actual)):
                     raise ValueError("Q8 assertion exact cover")
                 ref = _canonical_edge(ready, stage, aid)
-                _reread_edge(workspace, run_root, ref, slice_id=sid, stage=stage, selector_identity=tdd_selector)
+                _reread_edge(workspace, run_root, ref, slice_id=sid, stage=stage, selector_identity=selector_for_stage)
                 tuples.append({
                     "tuple_key": f"{sid}|{aid}|{stage}",
                     "slice_id": sid,
@@ -260,7 +305,7 @@ def publish_implementation_complete(
                     "stage": stage,
                     "runtime_edge_ref": ref["path"],
                     "runtime_edge_sha256": ref["sha256"],
-                    "selector_identity": tdd_selector,
+                    "selector_identity": selector_for_stage,
                     "current_snapshot_sha256": before["sha256"],
                 })
             refs = terminal_index.get(aid, [])

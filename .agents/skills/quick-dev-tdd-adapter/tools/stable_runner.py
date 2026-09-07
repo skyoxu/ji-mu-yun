@@ -221,6 +221,21 @@ def q2_author_red(
     missing = [path for path in sorted(set(target_refs + fixture_refs)) if not (ROOT / path).is_file()]
     planned = set(str(item) for item in selected.get("planned_new_files", []))
     worker_required = bool(missing or planned.intersection(target_refs + fixture_refs))
+    if "behavior_routing" in bundle:
+        # A new plan may bind existing tests with new assertion IDs. This only
+        # decides whether authoring is needed; the probe alone proves behavior.
+        import ast
+        required = {sid for a in bundle["acceptances"] if a["acceptance_id"] in selected["acceptance_ids"] for sid in a["assertion_ids"]}
+        declared = set()
+        for ref in target_refs:
+            try:
+                tree = ast.parse((ROOT / ref).read_text(encoding="utf-8"))
+            except (OSError, SyntaxError):
+                continue
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "cer_assertion":
+                    declared.update(arg.value for arg in node.args if isinstance(arg, ast.Constant) and isinstance(arg.value, str))
+        worker_required = worker_required or not required <= declared
     if worker_required:
         worker = run_red_author(
             workspace=ROOT,
@@ -242,10 +257,11 @@ def q2_author_red(
         if not path.is_file() or path.is_symlink():
             raise ValueError(f"RED author did not materialize bound path: {ref}")
     identity = candidate_identity(ROOT, bundle, slice_id)
+    stage = "probe" if "behavior_routing" in bundle else "red"
     descriptor = materialize_descriptor(
         bundle=bundle,
         slice_id=slice_id,
-        stage="red",
+        stage=stage,
         run_id=run_dir.name,
         candidate_hash=identity["candidate_hash"],
         argv=argv,
@@ -254,16 +270,16 @@ def q2_author_red(
         target_refs=target_refs,
         fixture_refs=fixture_refs,
     )
-    descriptor_path = _stage_descriptor(run_dir, "red")
+    descriptor_path = _stage_descriptor(run_dir, stage)
     create_json(descriptor_path, descriptor)
     return {
         "schema": "quick-dev.red-author-result.v1",
-        "status": "red-materialized",
+        "status": "probe-materialized" if stage == "probe" else "red-materialized",
         "worker": worker,
         "descriptor_ref": descriptor_path.relative_to(ROOT).as_posix(),
         "descriptor_sha256": sha256_value(descriptor),
         "candidate_identity": identity,
-        "required_next_action": "run-red",
+        "required_next_action": "run-probe" if stage == "probe" else "run-red",
         "authorizes_evidence": False,
         "authorizes": [],
     }
@@ -285,6 +301,10 @@ def q4_handoff(
     validate_expected_red(red)
     from case_evidence import reread_stage_cases
     reread_stage_cases(run_dir, "red")
+    if "behavior_routing" in bundle:
+        from behavior_routing import verify_stage, current_result
+        verify_stage(ROOT, bundle, run_dir, load_json(_stage_descriptor(run_dir, "red")))
+        current_result(ROOT, bundle, slice_id, red)
     if red.get("slice_id") != slice_id or red.get("plan_id") != bundle.get("plan_id") or red.get("run_id") != run_dir.name:
         raise ValueError("Q4 RED predecessor lineage mismatch")
     before = begin_q4(
@@ -361,6 +381,7 @@ def q4_implementation_worker(
         semantic_plan=semantic,
         slice_id=slice_id,
         red_stage_result=red,
+        run_dir=run_dir,
         timeout_seconds=timeout_seconds,
         backend=backend,
     )
@@ -399,6 +420,7 @@ def q6_refactor_worker_and_run(
     timeout_seconds: int,
     backend: str | None,
 ) -> dict[str, Any]:
+    from behavior_routing import read_route as read_behavior_route
     run_dir = _inside_root(run_dir, "run-dir")
     green = load_json(run_dir / "canonical-evidence" / "green" / "stage-result.v2.json")
     worker = run_refactor_worker(
@@ -407,6 +429,7 @@ def q6_refactor_worker_and_run(
         semantic_plan=semantic,
         slice_id=slice_id,
         green_stage_result=green,
+        run_dir=run_dir,
         timeout_seconds=timeout_seconds,
         backend=backend,
     )
@@ -430,7 +453,7 @@ def q6_refactor_worker_and_run(
         "status": "refactor-observed" if stage_result.get("predicate_result") is True else "refactor-failed",
         "worker": worker,
         "stage_result": stage_result,
-        "required_next_action": "validate-slice" if stage_result.get("predicate_result") is True else "repair-vdd",
+        "required_next_action": (("run-regression" if "behavior_routing" in bundle and any(row["disposition"] == "present" for row in read_behavior_route(ROOT, bundle, run_dir, slice_id)["behavior_dispositions"]) else "validate-slice") if stage_result.get("predicate_result") is True else "repair-vdd"),
         "authorizes_evidence": False,
         "authorizes": [],
     }
@@ -466,22 +489,32 @@ def _detached_promotion_binding(path: Path, profile: str) -> Mapping[str, Any] |
     }
 
 
-def _execute_named_stage(semantic: Path, run_dir: Path, stage: str, profile: str) -> Mapping[str, Any]:
+def _materialize_named_descriptor(semantic: Path, run_dir: Path, stage: str) -> Path:
     run_dir = _inside_root(run_dir, "run-dir")
     descriptor = _stage_descriptor(run_dir, stage)
     if not descriptor.is_file():
-        if stage != "terminal":
-            raise ValueError(f"{stage} descriptor missing")
         bundle = load_json(semantic)
-        slice_id = load_json(_stage_descriptor(run_dir, "red"))["slice_id"]
+        routed = "behavior_routing" in bundle
+        if stage != "terminal" and not (routed and stage in {"red", "regression"}):
+            raise ValueError(f"{stage} descriptor missing")
+        base = load_json(_stage_descriptor(run_dir, "probe" if routed else "red"))
+        slice_id = base["slice_id"]
+        from behavior_routing import read_route
+        route = read_route(ROOT, bundle, run_dir, slice_id) if routed else None
         argv, target_refs, fixture_refs = _descriptor_inputs(bundle, semantic.parent, slice_id)
         identity = candidate_identity(ROOT, bundle, slice_id)
         terminal = materialize_descriptor(
-            bundle=bundle, slice_id=slice_id, stage="terminal", run_id=run_dir.name,
+            bundle=bundle, slice_id=slice_id, stage=stage, run_id=run_dir.name,
             candidate_hash=identity["candidate_hash"], argv=argv, cwd=".", timeout_seconds=120,
-            target_refs=target_refs, fixture_refs=fixture_refs,
+            target_refs=target_refs, fixture_refs=fixture_refs, routing_result=route,
         )
         create_json(descriptor, terminal)
+    return descriptor
+
+
+def _execute_named_stage(semantic: Path, run_dir: Path, stage: str, profile: str) -> Mapping[str, Any]:
+    run_dir = _inside_root(run_dir, "run-dir")
+    descriptor = _materialize_named_descriptor(semantic, run_dir, stage)
     return execute_stage(
         workspace=ROOT,
         semantic_plan=semantic,
@@ -500,7 +533,7 @@ def main() -> int:
     parser.add_argument(
         "--action",
         choices=(
-            "preflight", "run-preflight", "recommendation", "author-red", "run-red", "implement", "run-green",
+            "run-probe", "run-regression", "route-behaviors", "preflight", "run-preflight", "recommendation", "author-red", "run-red", "implement", "run-green",
             "run-refactor", "execute-stage", "implementation-handoff", "implementation-finish", "slice-ready",
             "validate-slice", "run-terminal", "implementation-complete", "recover",
         ),
@@ -551,10 +584,18 @@ def main() -> int:
                 semantic=semantic, slice_id=args.slice_id, run_dir=args.run_dir, profile=args.profile,
                 timeout_seconds=args.worker_timeout_seconds, backend=args.llm_backend,
             )
-        elif args.action in {"run-red", "run-green", "run-terminal"}:
+        elif args.action == "route-behaviors":
+            from behavior_routing import read_route, next_action
+            if args.run_dir is None:
+                raise ValueError("route-behaviors requires --run-dir")
+            bundle = load_json(semantic)
+            run_root = _inside_root(args.run_dir, "run-dir")
+            route = read_route(ROOT, bundle, run_root, args.slice_id)
+            result = {"status": "probe-observed", "behavior_dispositions": route["behavior_dispositions"], "required_next_action": next_action(ROOT, bundle, run_root, route), "authorizes": []}
+        elif args.action in {"run-red", "run-green", "run-terminal", "run-probe", "run-regression"}:
             if args.run_dir is None:
                 raise ValueError(f"{args.action} requires --run-dir")
-            stage = {"run-red": "red", "run-green": "green", "run-terminal": "terminal"}[args.action]
+            stage = args.action.removeprefix("run-")
             result = _execute_named_stage(semantic, args.run_dir, stage, args.profile)
         elif args.action == "implement":
             if args.run_dir is None or snapshot_roots is None or args.source_commit is None:
@@ -612,6 +653,7 @@ def main() -> int:
         elif args.action in {"slice-ready", "validate-slice"}:
             if args.run_dir is None or snapshot_roots is None or args.source_commit is None or args.out is None:
                 raise ValueError("validate-slice requires --run-dir --snapshot-roots --source-commit --out")
+            _materialize_named_descriptor(semantic, _inside_root(args.run_dir, "run-dir"), "terminal")
             result = validate_slice_ready(workspace=ROOT, semantic_plan=semantic, run_root=_inside_root(args.run_dir, "run-dir"), slice_id=args.slice_id, snapshot_roots=snapshot_roots, source_commit=args.source_commit, base_commit=args.base_commit, out=_inside_root(args.out, "out"))
         elif args.action == "implementation-complete":
             if snapshot_roots is None or args.predecessors is None or args.source_commit is None or args.out is None:

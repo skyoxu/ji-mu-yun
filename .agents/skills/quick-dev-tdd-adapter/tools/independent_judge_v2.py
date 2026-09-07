@@ -34,7 +34,7 @@ def normalized_failure_fingerprint(*, descriptor: Mapping[str, Any], receipt: Ma
     })
 
 
-def judge_receipt(run_dir: Path, stage: str, descriptor: Mapping[str, Any], receipt: Mapping[str, Any], *, expected_failure_ids: Sequence[str] = ()) -> dict[str, Any]:
+def judge_receipt(run_dir: Path, stage: str, descriptor: Mapping[str, Any], receipt: Mapping[str, Any], *, expected_failure_ids: Sequence[str] = (), probe_dispositions=None, behavior_route=None) -> dict[str, Any]:
     evidence = run_dir.resolve()/"canonical-evidence"/stage; integrity_error=False
     try:
         validate_descriptor(descriptor)
@@ -51,7 +51,14 @@ def judge_receipt(run_dir: Path, stage: str, descriptor: Mapping[str, Any], rece
     from case_evidence import assertion_cases, reread_stage_cases
     case_error = None
     try:
-        mapped_cases = assertion_cases(descriptor, receipt)
+        if stage == "probe":
+            if not probe_dispositions or any(r["disposition"] == "unverifiable" for r in probe_dispositions):
+                raise ValueError("behavior-routing:unverifiable:" + str(probe_dispositions))
+            mapped_cases = {}
+        else:
+            mapped_cases = assertion_cases(descriptor, receipt)
+            from behavior_routing import verify_case_continuity
+            verify_case_continuity(descriptor, receipt, behavior_route)
         if stage in {"green", "refactor"} and mapped_cases != reread_stage_cases(run_dir, "red"):
             raise ValueError("case-set-changed-since-red")
     except (OSError, ValueError, KeyError, TypeError) as exc:
@@ -63,6 +70,7 @@ def judge_receipt(run_dir: Path, stage: str, descriptor: Mapping[str, Any], rece
     elif HARNESS_RE.search(output) or not isinstance(exit_code,int) or not isinstance(executions,int) or executions<1 or not isinstance(cases,int) or cases<1: outcome,family,predicate="blocked","test-harness-failure",False
     elif stage=="red" and exit_code==0: outcome,family,predicate="fail","unexpected-green",False
     elif case_error is not None: outcome,family,predicate="blocked","semantic-contract-gap",False
+    elif stage=="probe": outcome,family,predicate="pass",None,True
     elif stage=="red" and declared and observed==declared and exit_code!=0: outcome,family,predicate="fail","expected-red",True
     elif stage=="red": outcome,family,predicate="fail","semantic-contract-gap",False
     elif exit_code==0: outcome,family,predicate="pass",None,True

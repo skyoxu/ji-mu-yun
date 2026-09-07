@@ -95,12 +95,12 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def validate_descriptor(descriptor: Mapping[str, Any]) -> None:
-    if not isinstance(descriptor, Mapping) or set(descriptor) - {"case_contract"} != DESCRIPTOR_FIELDS:
+    if not isinstance(descriptor, Mapping) or set(descriptor) - {"case_contract", "behavior_route"} != DESCRIPTOR_FIELDS:
         raise ValueError("descriptor shape is invalid")
     for field in ("run_id", "plan_id", "slice_id", "stage", "candidate_hash", "cwd"):
         if not isinstance(descriptor.get(field), str) or not descriptor[field]:
             raise ValueError(f"descriptor {field} is invalid")
-    if descriptor["stage"] not in STAGES:
+    if descriptor["stage"] not in (*STAGES, "probe", "regression"):
         raise ValueError("descriptor stage is invalid")
     if not HASH_RE.fullmatch(descriptor["candidate_hash"]):
         raise ValueError("descriptor candidate hash is invalid")
@@ -144,6 +144,7 @@ def selector_identity_from_descriptor(descriptor: Mapping[str, Any]) -> str:
     return sha256_value({
         "argv": descriptor["argv"], "cwd": descriptor["cwd"],
         **({"case_contract": descriptor["case_contract"]} if "case_contract" in descriptor else {}),
+        **({"behavior_route": descriptor["behavior_route"]} if "behavior_route" in descriptor else {}),
         "target_refs": sorted(descriptor["target_refs"]), "fixture_refs": sorted(descriptor["fixture_refs"]),
         "acceptance_assertions": sorted(
             [{"acceptance_id": a["acceptance_id"], "assertion_id": a["assertion_id"], "case_source_ref": a["case_source_ref"]} for a in descriptor["acceptance_assertions"]],
@@ -324,7 +325,7 @@ def build_runtime_edges(*, plan_id: str, plan_hash: str, slice_id: str, run_id: 
     if not isinstance(targets, dict) or not isinstance(fixtures, dict):
         raise ValueError("runtime edge target/fixture hashes are invalid")
     from case_evidence import assertion_cases
-    if observation.get("predicate_result") is not True:
+    if observation.get("predicate_result") is not True or stage == "probe":
         return []
     case_map = assertion_cases(descriptor, receipt)
     result: list[dict[str, Any]] = []

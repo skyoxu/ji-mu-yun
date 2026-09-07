@@ -14,7 +14,7 @@ def validate_runtime_closure(tuples: Sequence[Mapping[str, Any]], expected_keys:
         canonical = f"{item.get('slice_id')}|{item.get('acceptance_id')}|{item.get('stage')}"
         if key != canonical: findings.append(f"tuple[{index}]:tuple-key-mismatch")
         stage = item.get("stage")
-        if stage not in STAGES: findings.append(f"tuple[{index}]:stage-invalid")
+        if stage not in (*STAGES, "regression"): findings.append(f"tuple[{index}]:stage-invalid")
         if not HASH_RE.fullmatch(str(item.get("runtime_edge_sha256", ""))): findings.append(f"tuple[{index}]:edge-hash")
         if item.get("current_snapshot_sha256") != snapshot_sha: findings.append(f"tuple[{index}]:snapshot")
         selector = item.get("selector_identity")

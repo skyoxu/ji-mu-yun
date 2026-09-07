@@ -145,7 +145,7 @@ def _worker_payload(
 def _prompt(stage: str, payload: Mapping[str, Any], *, allowed: Sequence[str], forbidden: Sequence[str]) -> str:
     goals = {
         "red-author": (
-            "Create or minimally edit only the bound test/fixture files so the declared Acceptance fails for the declared real production behavior. "
+            "Create or minimally edit only the bound test/fixture files to check the declared real production behavior. Existing behavior may pass; never force it to fail. "
             "Do not modify production code, plan/evidence, or hard-code an unconditional failure. "
             "Bind each required assertion to its test using @pytest.mark.cer_assertion('ASSERTION_ID'). "
             "Parameter instances carrying that marker are all required, including deselected ones. "
@@ -276,12 +276,23 @@ def run_implementation_worker(
     semantic_plan: Path,
     slice_id: str,
     red_stage_result: Mapping[str, Any],
+    run_dir: Path | None = None,
     timeout_seconds: int = 600,
     backend: str | None = None,
     worker_mutator: WorkerMutator | None = None,
 ) -> dict[str, Any]:
     validate_expected_red(red_stage_result)
     bundle = load_json(semantic_plan)
+    if "behavior_routing" in bundle:
+        from behavior_routing import verify_stage, current_result
+        if run_dir is None:
+            raise ValueError("behavior-routing:worker-requires-explicit-run")
+        descriptor = load_json(run_dir / "descriptors/red.json")
+        recorded = load_json(run_dir / "canonical-evidence/red/stage-result.v2.json")
+        if recorded != red_stage_result:
+            raise ValueError("behavior-routing:worker-predecessor-stale")
+        verify_stage(workspace, bundle, run_dir, descriptor)
+        current_result(workspace, bundle, slice_id, recorded)
     selected = _slice(bundle, slice_id)
     context = _agent_context(plan_dir, slice_id)
     allowed = [str(x) for x in selected.get("allowed_write_paths", [])]
@@ -300,6 +311,7 @@ def run_refactor_worker(
     semantic_plan: Path,
     slice_id: str,
     green_stage_result: Mapping[str, Any],
+    run_dir: Path | None = None,
     timeout_seconds: int = 600,
     backend: str | None = None,
     worker_mutator: WorkerMutator | None = None,
@@ -307,6 +319,16 @@ def run_refactor_worker(
     if green_stage_result.get("stage") != "green" or green_stage_result.get("predicate_result") is not True or green_stage_result.get("verification_outcome") != "pass":
         raise ValueError("refactor worker requires clean GREEN")
     bundle = load_json(semantic_plan)
+    if "behavior_routing" in bundle:
+        from behavior_routing import verify_stage, current_result
+        if run_dir is None:
+            raise ValueError("behavior-routing:worker-requires-explicit-run")
+        descriptor = load_json(run_dir / "descriptors/green.json")
+        recorded = load_json(run_dir / "canonical-evidence/green/stage-result.v2.json")
+        if recorded != green_stage_result:
+            raise ValueError("behavior-routing:worker-predecessor-stale")
+        verify_stage(workspace, bundle, run_dir, descriptor)
+        current_result(workspace, bundle, slice_id, recorded)
     selected = _slice(bundle, slice_id)
     context = _agent_context(plan_dir, slice_id)
     allowed = [str(x) for x in selected.get("allowed_write_paths", [])]

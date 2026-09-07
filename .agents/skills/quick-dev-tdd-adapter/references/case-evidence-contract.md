@@ -104,8 +104,8 @@ requires the explicit capability and current collector digest; current Q4/Q7/Q8
 cannot promote old stage-only evidence. Existing tests must declare a mapping
 before they can support new completion evidence.
 
-This phase does not implement present/missing/unverifiable disposition,
-regression-only completion or Deferred rules (CER-R4--R6). The existing Q6 extra
-regression gate remains an additional guard, not a source of assertion proof.
+[Behavior routing](behavior-routing-contract.md) adds CER-R4--R6 on this case
+capability. The existing extra regression gate remains an additional guard,
+not a source of assertion proof.
 Quick Dev still publishes only implementation-complete, never acceptance-passed.
 No CH456 live re-acceptance or new approval layer is required by this increment.

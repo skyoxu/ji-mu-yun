@@ -13,7 +13,7 @@ if str(TOOLS) not in sys.path:
 from legacy_compat import inspect_legacy_plan
 from runtime_evidence import HASH_RE, environment_probe, load_json, safe_relative, selector_identity_from_descriptor, sha256_value, validate_descriptor
 
-ACTIONS = ("run-preflight", "author-red", "run-red", "implement", "run-green", "run-refactor", "validate-slice", "run-terminal", "repair-vdd", "stop", "environment-blocked")
+ACTIONS = ("run-probe", "run-regression", "route-behaviors", "run-preflight", "author-red", "run-red", "implement", "run-green", "run-refactor", "validate-slice", "run-terminal", "repair-vdd", "stop", "environment-blocked")
 _PREFLIGHT_FIELDS = ("complexity_class", "verification_lane", "context_lookup_required", "context_lookup_reason", "minimum_red_scope", "upgrade_conditions")
 
 
@@ -142,6 +142,14 @@ def recommendation(
     kinds = list(change_kinds) + infer_change_kinds(selected, changed_paths)
     kinds = sorted(set(kinds))
     invalidated_stages = impact_for_kinds(kinds) if kinds else []
+    routed = "behavior_routing" in bundle
+    if routed:
+        from behavior_routing import validate_plan
+        validate_plan(bundle)
+        if "red" in invalidated_stages:
+            invalidated_stages.append("probe")
+        if "green" in invalidated_stages:
+            invalidated_stages.append("regression")
     reusable, invalidated = _observation_projection(
         observations=observation_index,
         slice_id=slice_id,
@@ -149,12 +157,15 @@ def recommendation(
         current_snapshot_sha256=current_snapshot_sha256,
     )
     if "red" in invalidated_stages:
-        action, reason = "run-red", "change-impact-invalidated-red"
+        action, reason = ("author-red" if routed else "run-red"), "change-impact-invalidated-red"
     elif "green" in invalidated_stages:
-        action, reason = "run-green", "change-impact-invalidated-green"
+        action, reason = ("author-red" if routed else "run-green"), "change-impact-invalidated-green"
     else:
         lifecycle = str(state.get("state") or "planned-only")
         mapping = {
+            "probe-materialized": ("run-probe", "current-behavior-unobserved"),
+            "probe-observed": ("route-behaviors", "reread-observed-dispositions"),
+            "regression-observed": ("validate-slice", "regression-ready-for-coverage"),
             "planned-only": ("run-preflight", "plan-not-preflighted"),
             "preflight-passed": ("author-red", "red-not-materialized"),
             "red-materialized": ("run-red", "red-not-observed"),
@@ -166,6 +177,8 @@ def recommendation(
             "whole-plan-terminal": ("stop", "implementation-complete"),
         }
         action, reason = mapping.get(lifecycle, ("repair-vdd", "invalid-lifecycle-state"))
+        if routed and lifecycle == "refactor-observed":
+            action, reason = "route-behaviors", "check-required-regression"
     return {
         "schema": "quick-dev.recommendation.v1",
         "plan_id": bundle.get("plan_id"),
@@ -217,10 +230,10 @@ def preflight(*, workspace: Path, semantic_plan: Path, slice_id: str, candidate_
     return {"status": "preflight-passed" if not errors else "repair-vdd", "errors": errors, "environment": env}
 
 
-def materialize_descriptor(*, bundle: Mapping[str, Any], slice_id: str, stage: str, run_id: str, candidate_hash: str, argv: Sequence[str], cwd: str, timeout_seconds: int, target_refs: Sequence[str], fixture_refs: Sequence[str]) -> dict[str, Any]:
+def materialize_descriptor(*, bundle: Mapping[str, Any], slice_id: str, stage: str, run_id: str, candidate_hash: str, argv: Sequence[str], cwd: str, timeout_seconds: int, target_refs: Sequence[str], fixture_refs: Sequence[str], routing_result: Mapping[str, Any] | None = None) -> dict[str, Any]:
     _assert_hash(candidate_hash, "candidate_hash")
     selected = _slice(bundle, slice_id)
-    if stage not in {"red", "green", "refactor", "terminal"}:
+    if stage not in {"red", "green", "refactor", "terminal", "probe", "regression"}:
         raise ValueError("stage invalid")
     if not argv or any(not isinstance(x, str) or not x for x in argv):
         raise ValueError("argv invalid")
@@ -242,6 +255,15 @@ def materialize_descriptor(*, bundle: Mapping[str, Any], slice_id: str, stage: s
         for assertion_id in item.get("assertion_ids", []):
             assertions.append({"acceptance_id": aid, "assertion_id": assertion_id, "case_source_ref": target_refs[0], "target_ref": target_refs[0], "fixture_ref": fixture_refs[0]})
     descriptor = {"run_id": run_id, "plan_id": bundle["plan_id"], "slice_id": slice_id, "stage": stage, "candidate_hash": candidate_hash, "argv": list(argv), "cwd": cwd, "shell": False, "timeout_seconds": timeout_seconds, "target_refs": list(target_refs), "fixture_refs": list(fixture_refs), "acceptance_assertions": assertions}
+    if "behavior_routing" in bundle:
+        from behavior_routing import SCHEMA, stage_assertions, validate_plan
+        validate_plan(bundle)
+        expected = stage_assertions(bundle, slice_id, stage, routing_result)
+        assertions = [a for a in assertions if (a["acceptance_id"], a["assertion_id"]) in expected]
+        if not assertions:
+            raise ValueError("behavior-routing:no-obligations-for-stage")
+        descriptor["acceptance_assertions"] = assertions
+        descriptor["behavior_route"] = {"schema": SCHEMA, "probe_result_sha256": sha256_value(routing_result) if routing_result else None}
     from case_evidence import contract_for, validate_contract
     descriptor["case_contract"] = contract_for(bundle, assertions)
     validate_contract(descriptor)

@@ -95,7 +95,7 @@ def run_cases(descriptor, cwd):
         return process, report, error, actual_argv
 
 
-def assertion_cases(descriptor, receipt):
+def assertion_cases(descriptor, receipt, *, keys=None, expected=None):
     """Return admissible node IDs per assertion or precise fail-closed diagnostics."""
     from runtime_evidence import sha256_value, sha256_bytes
     validate_contract(descriptor)
@@ -136,6 +136,8 @@ def assertion_cases(descriptor, receipt):
         phases[key] = event
     result = {}
     for row in descriptor["case_contract"]["bindings"]:
+        if keys is not None and (row["acceptance_id"], row["assertion_id"]) not in keys:
+            continue
         nodes = row["case_ids"] or sorted(node for node, marks in collected.items() if row["marker"] in marks)
         if not nodes:
             raise ValueError("assertion-binding-gap:" + row["assertion_id"])
@@ -160,7 +162,7 @@ def assertion_cases(descriptor, receipt):
                 raise ValueError("case-setup-or-teardown-error:" + node)
             if call.get("outcome") == "skipped":
                 raise ValueError("case-skipped:" + node)
-            if descriptor["stage"] == "red":
+            if expected == "red" or (expected is None and descriptor["stage"] == "red"):
                 required = row["expected_failure_ids"]
                 if not isinstance(call.get("failure_ids"), list):
                     raise ValueError("case-failure-identity-invalid:" + node)
