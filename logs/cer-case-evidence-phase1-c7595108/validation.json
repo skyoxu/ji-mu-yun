@@ -1,0 +1,81 @@
+{
+  "schema": "cer.phase1-validation.v1",
+  "base_commit": "c75951086e591b2a1113812ee76edc144da9fce3",
+  "branch": "implementation/vdd-quick-dev-case-evidence",
+  "scope": [
+    "CER-R1",
+    "CER-R2",
+    "CER-R3"
+  ],
+  "pending": [
+    "CER-R4",
+    "CER-R5",
+    "CER-R6",
+    "Windows deterministic confirmation",
+    "real task experience validation"
+  ],
+  "environment": {
+    "platform": "Linux-6.18.35-x86_64-with-glibc2.39",
+    "python": "3.12.13",
+    "pytest": "9.1.1",
+    "SC_LLM_BACKEND": "offline-disabled"
+  },
+  "validation_kind": "selected deterministic tests in reconstructed pinned-source workspace; not full repository regression or detached promotion",
+  "live_backend_calls": 0,
+  "argv": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-m",
+    "pytest",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_red_production_entry_guard.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_worker_orchestration.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py",
+    "-q"
+  ],
+  "test_files": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_red_production_entry_guard.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_worker_orchestration.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py"
+  ],
+  "exit_code": 0,
+  "observed_summary": "63 passed in 11.99s",
+  "changed_file_sha256": {
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md": "sha256:e9087e9ba393144fe6fa57060d947754da17f1ed89e2c53b5caf72826df8a326",
+    ".agents/skills/quick-dev-tdd-adapter/references/case-evidence-contract.md": "sha256:5bd09f695e8403036011c38cdc57d5ec8d81832556fec3fd407c0ea5be35ea85",
+    ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py": "sha256:3d4178b52a9bcb48c11e6772bb9fad674c3e16ea20104742b0c317dec6f4d800",
+    ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py": "sha256:7aef5907053d69557727ae3527e9b86e4fff7909849d0e87ae3349e513ff4d02",
+    ".agents/skills/quick-dev-tdd-adapter/tools/current_router.py": "sha256:d6ab968642d38665017e591ae1d256278ed29b99ed68492391e4d625846db7ce",
+    ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py": "sha256:8c958aaad3764db0a36ac559153cb66a5c6d5f982ec718e22e73edad62c78a03",
+    ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py": "sha256:29ebcd3e19cb6a7418ce170d9aa8e3e71c04fc78b98dc74bf0b933411211d9f2",
+    ".agents/skills/quick-dev-tdd-adapter/tools/pytest_case_collector.py": "sha256:0f3ae151d51951f46bcac21605f35881bd8a02aa76c098f3f297fd4a3cbe7714",
+    ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py": "sha256:30ac523dadce80cbcfc8f2ccc4819f4b0d9cfd6f9908d0aefb36049faf90a3ad",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py": "sha256:80a2d2e20d9f6899d7b55a3765912e82ad2589fdbe85c28a7cc6f9c21846a125",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py": "sha256:99c50aa79cc7371d0d4a1f4ad7f25a046220c77a404f19419c59ceba15c216ad",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py": "sha256:02b7ab7fb9658fe61e19085835b69809b0ae289b92db85e400ebe8861164702c",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py": "sha256:376d84e9eeaa648b8a42121420448043482eb7a38b8074561238bf3cbb97ad08",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py": "sha256:e403737cc246995bc4eada28ae3cfda34dfe6d8f87c30e4465a33b190eed025b",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py": "sha256:14157747b2ced99799ce96aea106c83eabe4bae3fb6f4f93e6c0761e11e3efdf",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py": "sha256:3773f8d7fb2083a92aca0b3011a6e23ad9c259e09b785bb8e1fa20ba91e2e082",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py": "sha256:9287504059f89234f7d520c761f12fb993f347389d4534c0047adc940cbaeeb3",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py": "sha256:64e7e4f3dcafe6bdc913025cb1e6966e5ee49daf4bf0c6a2ba9c9cd53d29a0e8",
+    ".agents/skills/quick-dev-tdd-adapter/tools/worker_orchestrator.py": "sha256:80e452cfcba9b6b1c9c75a3fa959b5e3dd5e167925c138f75030e06dbe6cdf10",
+    "docs/2026-09-07-vdd-quick-dev-case-evidence-and-regression-routing-requirements.md": "sha256:675fc58aedb126218b6158a0e91b35485077f2c4758b7a27908591062148241c",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "sha256:88c6d206925a52781d873d66d6c081f7893726d67e4cd891cbb3a64a4430714a"
+  },
+  "recorded_at": "2026-09-07T10:27:27.594041+00:00"
+}

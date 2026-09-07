@@ -129,22 +129,21 @@ def test_recommendation_fails_closed_without_snapshot_inputs(tmp_path: Path, mon
 
 
 def test_implementation_handoff_requires_clean_expected_red_and_binds_before_snapshot(tmp_path: Path, monkeypatch) -> None:
-    root, semantic, roots = _repo(tmp_path)
+    from test_coverage_predicates import prepare
+    from current_router import materialize_descriptor
+    from stage_pipeline import execute_stage
+    semantic, roots = prepare(tmp_path)
+    root = tmp_path
     monkeypatch.setattr(stable_runner, "ROOT", root)
-    run = root / "runs" / "R1"
-    (run / "canonical-evidence" / "red").mkdir(parents=True)
-    red = {
-        "schema": "quick-dev.stage-result.v2",
-        "plan_id": "PLAN-CLI",
-        "slice_id": "S1",
-        "run_id": "R1",
-        "stage": "red",
-        "candidate_hash": "sha256:" + "1" * 64,
-        "predicate_result": True,
-        "verification_outcome": "fail",
-        "failure_family": "expected-red",
-    }
-    create_json(run / "canonical-evidence" / "red" / "stage-result.v2.json", red)
+    run = root / "RUN-1"
+    descriptor = materialize_descriptor(
+        bundle=json.loads(semantic.read_text()), slice_id="S1", stage="red", run_id="RUN-1",
+        candidate_hash="sha256:" + "1" * 64,
+        argv=[sys.executable, "-m", "pytest", "tests/test_one.py", "-q"], cwd=".",
+        timeout_seconds=30, target_refs=["tests/test_one.py"], fixture_refs=["fixture.txt"])
+    create_json(run / "descriptors/red.json", descriptor)
+    red = execute_stage(workspace=root, semantic_plan=semantic, run_dir=run,
+                        descriptor_path=run / "descriptors/red.json", profile_identity="standard")
     handoff = stable_runner.q4_handoff(
         semantic=semantic,
         slice_id="S1",
@@ -155,7 +154,7 @@ def test_implementation_handoff_requires_clean_expected_red_and_binds_before_sna
     )
     assert handoff["status"] == "implementation-worker-required"
     assert handoff["predecessor_red_sha256"] == sha256_value(red)
-    assert handoff["allowed_production_paths"] == ["src/value.py"]
+    assert handoff["allowed_production_paths"] == ["candidate.txt"]
     assert handoff["before"]["current_snapshot"]["sha256"].startswith("sha256:")
     assert handoff["authorizes_evidence"] is False and handoff["authorizes"] == []
     red["failure_family"] = "unexpected-green"

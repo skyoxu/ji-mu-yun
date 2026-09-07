@@ -99,15 +99,18 @@ def test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecyc
     )
     (root/"tests"/"fixture.txt").write_text("limit=2;window=10\n",encoding="utf-8")
     (root/"tests"/"test_rate_limiter.py").write_text(
-        "from src.rate_limiter import RateLimiter\n\n"
+        "from src.rate_limiter import RateLimiter\nimport pytest\n\n"
+        "@pytest.mark.cer_assertion('ASSERT-RL-1')\n"
         "def test_first_two_are_allowed():\n"
         "    r=RateLimiter(); ok=r.allow(0) and r.allow(1)\n"
         "    if not ok: print('FAILURE_ID:RL-FIRST-TWO')\n"
         "    assert ok\n\n"
+        "@pytest.mark.cer_assertion('ASSERT-RL-2')\n"
         "def test_third_inside_window_is_rejected():\n"
         "    r=RateLimiter(); r.allow(0); r.allow(1); denied=not r.allow(2)\n"
         "    if not denied: print('FAILURE_ID:RL-THIRD-REJECTED')\n"
         "    assert denied\n\n"
+        "@pytest.mark.cer_assertion('ASSERT-RL-3')\n"
         "def test_capacity_resets_after_window():\n"
         "    r=RateLimiter(); r.allow(0); r.allow(1); allowed=r.allow(12)\n"
         "    if not allowed: print('FAILURE_ID:RL-WINDOW-RESET')\n"

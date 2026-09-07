@@ -53,6 +53,22 @@ def _reread_edge(workspace: Path, run_root: Path, ref: Mapping[str, str], *, sli
     descriptor = load_json(descriptor_path)
     if sha256_value(descriptor) != edge.get("descriptor_sha256"):
         raise ValueError("descriptor hash stale")
+    from case_evidence import assertion_cases, reread_stage_cases, VERSION
+    cases = assertion_cases(descriptor, receipt)
+    if stage in {"green", "refactor"} and cases != reread_stage_cases(run_root, "red"):
+        raise ValueError("case-set-changed-since-red")
+    key = (edge.get("acceptance_id"), edge.get("assertion_id"))
+    if (edge.get("case_evidence_schema") != VERSION or key not in cases
+            or edge.get("case_ids") != cases[key]
+            or edge.get("case_report_sha256") != receipt.get("case_report_sha256")):
+        raise ValueError("case-edge-binding-stale")
+    for node in cases[key]:
+        relative = node.split("::", 1)[0]
+        if descriptor["cwd"] != ".":
+            relative = descriptor["cwd"] + "/" + relative
+        case_file = resolve_file(workspace, relative)
+        if sha256_bytes(case_file.read_bytes()) != receipt["target_hashes"].get(relative):
+            raise ValueError("case-target-stale:" + node)
     target = resolve_file(workspace, edge["target_ref"])
     fixture = resolve_file(workspace, edge["fixture_ref"])
     if sha256_bytes(target.read_bytes()) != edge.get("target_sha256"):
@@ -208,13 +224,33 @@ def publish_implementation_complete(
         terminal_selectors[sid] = terminal_selector
         terminal_refs = terminal.get("runtime_edges")
         terminal_index: dict[str, list[Mapping[str, str]]] = {}
+        _selected, required_assertions = _semantic_index(bundle, sid)
+        terminal_assertions: dict[str, set[str]] = {}
         if not isinstance(terminal_refs, list) or not terminal_refs:
             raise ValueError("terminal runtime edges missing")
         for ref in terminal_refs:
             edge = _reread_edge(workspace, run_root, ref, slice_id=sid, stage="terminal", selector_identity=terminal_selector)
+            aid, assertion_id = edge["acceptance_id"], edge["assertion_id"]
+            observed_ids = terminal_assertions.setdefault(aid, set())
+            if assertion_id in observed_ids:
+                raise ValueError("terminal assertion duplicate")
+            observed_ids.add(assertion_id)
             terminal_index.setdefault(edge["acceptance_id"], []).append(ref)
+        if terminal_assertions != required_assertions:
+            raise ValueError("terminal assertion exact cover")
         for aid in sorted(acceptance_by_slice.get(sid, set())):
             for stage in ("red", "green", "refactor"):
+                # The tuple remains per Acceptance; re-read every assertion proof.
+                refs = ready.get("assertion_coverage", {}).get(stage, {}).get(aid, [])
+                actual = []
+                for assertion_ref in refs:
+                    checked = _reread_edge(workspace, run_root, assertion_ref, slice_id=sid,
+                                           stage=stage, selector_identity=tdd_selector)
+                    if checked["acceptance_id"] != aid:
+                        raise ValueError("Q8 assertion Acceptance mismatch")
+                    actual.append(checked["assertion_id"])
+                if set(actual) != required_assertions[aid] or len(actual) != len(set(actual)):
+                    raise ValueError("Q8 assertion exact cover")
                 ref = _canonical_edge(ready, stage, aid)
                 _reread_edge(workspace, run_root, ref, slice_id=sid, stage=stage, selector_identity=tdd_selector)
                 tuples.append({

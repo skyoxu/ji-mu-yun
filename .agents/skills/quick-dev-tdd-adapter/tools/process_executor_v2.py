@@ -30,6 +30,7 @@ def _status_paths(root: Path) -> set[str]:
 
 
 def _counts(output: str, *, timed_out: bool) -> tuple[int, int]:
+    # Historical summary parser only; current execution never uses it as proof.
     if timed_out:
         return 0, 0
     total = sum(int(match.group(1)) for match in PYTEST_COUNT_RE.finditer(output))
@@ -65,19 +66,43 @@ def execute_process(workspace: Path, run_dir: Path, stage: str, descriptor: Mapp
     except (OSError, ValueError):
         receipt = _pre_execution_receipt(descriptor, stage, profile_identity, "TARGET_BINDING")
         create_immutable(evidence/"stdout.bin",b""); create_immutable(evidence/"stderr.bin",b""); create_json(evidence/"process-receipt.v2.json",receipt); return receipt
+    from case_evidence import run_cases, validate_contract
+    try:
+        validate_contract(descriptor)
+    except ValueError:
+        receipt = _pre_execution_receipt(descriptor, stage, profile_identity, "CASE_CONTRACT")
+        create_immutable(evidence/"stdout.bin", b"")
+        create_immutable(evidence/"stderr.bin", b"")
+        create_json(evidence/"process-receipt.v2.json", receipt)
+        return receipt
+    case_report, case_error, actual_argv = None, None, []
     before_status = _status_paths(root)
     started = datetime.now(timezone.utc); stdout = b""; stderr = b""; timed_out = False; exit_code: int | None
     try:
-        completed = subprocess.run(descriptor["argv"], cwd=cwd, shell=False, check=False, capture_output=True, timeout=descriptor["timeout_seconds"])
+        completed, case_report, case_error, actual_argv = run_cases(descriptor, cwd)
         stdout, stderr, exit_code = completed.stdout, completed.stderr, completed.returncode
+    except (OSError, ValueError) as exc:
+        exit_code = None
+        case_error = str(exc)
     except subprocess.TimeoutExpired as exc:
         timed_out, exit_code = True, None; stdout, stderr = exc.stdout or b"", exc.stderr or b""
         if isinstance(stdout,str): stdout=stdout.encode("utf-8",errors="replace")
         if isinstance(stderr,str): stderr=stderr.encode("utf-8",errors="replace")
     ended = datetime.now(timezone.utc); after_status = _status_paths(root); repo_noise_paths = sorted(after_status - before_status)
     create_immutable(evidence/"stdout.bin",stdout); create_immutable(evidence/"stderr.bin",stderr)
-    output = (stdout+b"\n"+stderr).decode("utf-8",errors="replace"); executions,cases = _counts(output,timed_out=timed_out)
+    output = (stdout+b"\n"+stderr).decode("utf-8",errors="replace")
+    if case_report is not None:
+        events = case_report.get("events")
+        calls = [e for e in events if isinstance(e, Mapping) and e.get("phase") == "call"
+                 and isinstance(e.get("node_id"), str)] if isinstance(events, list) else []
+        cases = len({e["node_id"] for e in calls})
+        executions = int(cases > 0)
+    else:
+        cases = executions = 0
     receipt = {
+        "case_report": case_report, "case_report_error": case_error,
+        "case_report_sha256": sha256_value(case_report) if case_report is not None else None,
+        "executed_argv": actual_argv,
         "schema":"quick-dev.process-receipt.v2","stage":stage,"descriptor_ref":"frozen-descriptor","descriptor_sha256":sha256_value(dict(descriptor)),
         "argv":list(descriptor["argv"]),"cwd":descriptor["cwd"],"started_at":started.isoformat().replace("+00:00","Z"),"ended_at":ended.isoformat().replace("+00:00","Z"),
         "process_attempts":1,"test_executions":executions,"cases":cases,"exit_code":exit_code,"timed_out":timed_out,

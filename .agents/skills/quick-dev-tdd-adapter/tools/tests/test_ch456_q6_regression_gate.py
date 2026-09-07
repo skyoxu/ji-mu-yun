@@ -55,6 +55,7 @@ def _prepare(root: Path, bundle: dict) -> tuple[Path, Path]:
     (root / "tests" / "fixture.txt").write_text("fixture\n", encoding="utf-8")
     (root / "tests" / "test_behavior.py").write_text(
         "from pathlib import Path\n"
+        "import pytest\n@pytest.mark.cer_assertion('ASSERT-1')\n"
         "def test_behavior():\n"
         " root=Path(__file__).resolve().parents[1]\n"
         " value=(root/'src'/'value.txt').read_text(encoding='utf-8').strip()\n"

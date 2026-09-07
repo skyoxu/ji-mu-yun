@@ -48,12 +48,21 @@ def judge_receipt(run_dir: Path, stage: str, descriptor: Mapping[str, Any], rece
     stdout=(evidence/"stdout.bin").read_bytes() if (evidence/"stdout.bin").is_file() else b""; stderr=(evidence/"stderr.bin").read_bytes() if (evidence/"stderr.bin").is_file() else b""
     output=(stdout+b"\n"+stderr).decode("utf-8",errors="replace"); observed=sorted(set(receipt.get("observed_failure_ids",[]))) if isinstance(receipt.get("observed_failure_ids"),list) else []
     declared=sorted(set(expected_failure_ids)); exit_code=receipt.get("exit_code"); timed_out=receipt.get("timed_out") is True; executions=receipt.get("test_executions"); cases=receipt.get("cases"); pre_error=receipt.get("pre_execution_error_code"); evidence_state="observed-run"
+    from case_evidence import assertion_cases, reread_stage_cases
+    case_error = None
+    try:
+        mapped_cases = assertion_cases(descriptor, receipt)
+        if stage in {"green", "refactor"} and mapped_cases != reread_stage_cases(run_dir, "red"):
+            raise ValueError("case-set-changed-since-red")
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        case_error = str(exc)
     if integrity_error or pre_error=="ARTIFACT_INTEGRITY": outcome,family,predicate,evidence_state="blocked","artifact-integrity",False,"invalid-run"
     elif pre_error=="TARGET_BINDING": outcome,family,predicate="blocked","target-binding-failure",False
     elif isinstance(receipt.get("repo_noise_paths"),list) and receipt.get("repo_noise_paths"): outcome,family,predicate="blocked","repo-noise",False
     elif timed_out: outcome,family,predicate="blocked","timeout-no-observation",False
     elif HARNESS_RE.search(output) or not isinstance(exit_code,int) or not isinstance(executions,int) or executions<1 or not isinstance(cases,int) or cases<1: outcome,family,predicate="blocked","test-harness-failure",False
     elif stage=="red" and exit_code==0: outcome,family,predicate="fail","unexpected-green",False
+    elif case_error is not None: outcome,family,predicate="blocked","semantic-contract-gap",False
     elif stage=="red" and declared and observed==declared and exit_code!=0: outcome,family,predicate="fail","expected-red",True
     elif stage=="red": outcome,family,predicate="fail","semantic-contract-gap",False
     elif exit_code==0: outcome,family,predicate="pass",None,True
@@ -65,4 +74,5 @@ def judge_receipt(run_dir: Path, stage: str, descriptor: Mapping[str, Any], rece
         "stage":stage,"evidence_state":evidence_state,"verification_outcome":outcome,"process_attempts":receipt.get("process_attempts",0),"test_executions":executions if isinstance(executions,int) else 0,"cases":cases if isinstance(cases,int) else 0,
         "exit_code":exit_code,"timed_out":timed_out,"failure_family":family,"failure_id":failure_id,"failure_fingerprint":failure_fingerprint,"observed_failure_ids":observed,"observed_assertion_ids":receipt.get("observed_assertion_ids",[]),"expected_failure_ids":declared,"predicate_result":predicate,"judge_identity":"quick-dev-independent-judge.v2",
     }
+    observation["case_evidence_error"] = case_error
     create_json(evidence/"observation.v2.json",observation); return observation

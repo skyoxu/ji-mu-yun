@@ -25,11 +25,11 @@ def bundle() -> dict:
         "plan_id": "P1",
         "acceptances": [{"acceptance_id": "A-ONE", "assertion_ids": ["AS-1"]}],
         "failure_intents": [
-            {"failure_intent_id": "FI-RED-1", "failure_id": "EXPECTED-RED", "failure_family": "expected-red"},
+            {"failure_intent_id": "FI-RED-1", "failure_id": "EXPECTED-RED", "failure_family": "expected-red", "acceptance_ids": ["A-ONE"]},
             {"failure_intent_id": "FI-HARNESS", "failure_id": "HARNESS-FAILURE", "failure_family": "test-harness-failure"},
             {"failure_intent_id": "FI-SCOPE", "failure_id": "SCOPE-FAILURE", "failure_family": "artifact-integrity"},
             {"failure_intent_id": "FI-SIGNAL", "failure_id": "SIGNAL-FAILURE", "failure_family": "semantic-contract-gap"},
-            {"failure_intent_id": "FI-RED-2", "failure_id": "EXPECTED-RED", "failure_family": "expected-red"},
+            {"failure_intent_id": "FI-RED-2", "failure_id": "EXPECTED-RED", "failure_family": "expected-red", "acceptance_ids": ["A-ONE"]},
         ],
         "slices": [{
             "slice_id": "S1",
@@ -88,6 +88,7 @@ def test_failure_intent_family_is_required() -> None:
 def test_red_receipt_and_judge_are_separate(tmp_path: Path) -> None:
     semantic = setup(tmp_path)
     (tmp_path / "tests" / "test_one.py").write_text(
+        "import pytest\n@pytest.mark.cer_assertion('AS-1')\n"
         "def test_one():\n"
         "    print('FAILURE_ID:EXPECTED-RED')\n"
         "    assert False\n",
@@ -114,6 +115,7 @@ def test_red_receipt_and_judge_are_separate(tmp_path: Path) -> None:
 def test_red_rejects_extra_guard_failure_marker(tmp_path: Path) -> None:
     semantic = setup(tmp_path)
     (tmp_path / "tests" / "test_one.py").write_text(
+        "import pytest\n@pytest.mark.cer_assertion('AS-1')\n"
         "def test_one():\n"
         "    print('FAILURE_ID:EXPECTED-RED')\n"
         "    print('FAILURE_ID:SCOPE-FAILURE')\n"

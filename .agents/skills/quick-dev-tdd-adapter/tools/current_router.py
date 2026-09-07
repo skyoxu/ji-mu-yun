@@ -242,6 +242,9 @@ def materialize_descriptor(*, bundle: Mapping[str, Any], slice_id: str, stage: s
         for assertion_id in item.get("assertion_ids", []):
             assertions.append({"acceptance_id": aid, "assertion_id": assertion_id, "case_source_ref": target_refs[0], "target_ref": target_refs[0], "fixture_ref": fixture_refs[0]})
     descriptor = {"run_id": run_id, "plan_id": bundle["plan_id"], "slice_id": slice_id, "stage": stage, "candidate_hash": candidate_hash, "argv": list(argv), "cwd": cwd, "shell": False, "timeout_seconds": timeout_seconds, "target_refs": list(target_refs), "fixture_refs": list(fixture_refs), "acceptance_assertions": assertions}
+    from case_evidence import contract_for, validate_contract
+    descriptor["case_contract"] = contract_for(bundle, assertions)
+    validate_contract(descriptor)
     validate_descriptor(descriptor)
     return descriptor
 

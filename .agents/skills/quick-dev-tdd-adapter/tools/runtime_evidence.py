@@ -95,7 +95,7 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def validate_descriptor(descriptor: Mapping[str, Any]) -> None:
-    if not isinstance(descriptor, Mapping) or set(descriptor) != DESCRIPTOR_FIELDS:
+    if not isinstance(descriptor, Mapping) or set(descriptor) - {"case_contract"} != DESCRIPTOR_FIELDS:
         raise ValueError("descriptor shape is invalid")
     for field in ("run_id", "plan_id", "slice_id", "stage", "candidate_hash", "cwd"):
         if not isinstance(descriptor.get(field), str) or not descriptor[field]:
@@ -143,6 +143,7 @@ def selector_identity_from_descriptor(descriptor: Mapping[str, Any]) -> str:
     validate_descriptor(descriptor)
     return sha256_value({
         "argv": descriptor["argv"], "cwd": descriptor["cwd"],
+        **({"case_contract": descriptor["case_contract"]} if "case_contract" in descriptor else {}),
         "target_refs": sorted(descriptor["target_refs"]), "fixture_refs": sorted(descriptor["fixture_refs"]),
         "acceptance_assertions": sorted(
             [{"acceptance_id": a["acceptance_id"], "assertion_id": a["assertion_id"], "case_source_ref": a["case_source_ref"]} for a in descriptor["acceptance_assertions"]],
@@ -322,6 +323,10 @@ def build_runtime_edges(*, plan_id: str, plan_hash: str, slice_id: str, run_id: 
     targets, fixtures = receipt.get("target_hashes"), receipt.get("fixture_hashes")
     if not isinstance(targets, dict) or not isinstance(fixtures, dict):
         raise ValueError("runtime edge target/fixture hashes are invalid")
+    from case_evidence import assertion_cases
+    if observation.get("predicate_result") is not True:
+        return []
+    case_map = assertion_cases(descriptor, receipt)
     result: list[dict[str, Any]] = []
     for assertion in descriptor["acceptance_assertions"]:
         target_ref = assertion.get("target_ref") or descriptor["target_refs"][0]
@@ -344,7 +349,10 @@ def build_runtime_edges(*, plan_id: str, plan_hash: str, slice_id: str, run_id: 
             "actual_stage_outcome": actual_stage_outcome, "predicate_result": observation.get("predicate_result") is True,
             "verification_outcome": observation.get("verification_outcome"), "failure_family": observation.get("failure_family"),
             "failure_id": observation.get("failure_id"), "target_ref": target_ref, "fixture_ref": fixture_ref,
-            "case_source_ref": assertion["case_source_ref"], "producer_identity": "quick-dev-runtime-edge-validator.v2",
+            "case_source_ref": assertion["case_source_ref"],
+            "case_evidence_schema": "quick-dev.case-contract.v1",
+            "case_ids": case_map[(assertion["acceptance_id"], assertion["assertion_id"])],
+            "case_report_sha256": receipt["case_report_sha256"], "producer_identity": "quick-dev-runtime-edge-validator.v2",
             "validator_identity": "quick-dev-runtime-edge-validator.v2", "derived_by": "deterministic-validator",
         })
     if observation.get("predicate_result") is True and not result:

@@ -283,6 +283,8 @@ def q4_handoff(
     selected = _slice(bundle, slice_id)
     red = load_json(run_dir / "canonical-evidence" / "red" / "stage-result.v2.json")
     validate_expected_red(red)
+    from case_evidence import reread_stage_cases
+    reread_stage_cases(run_dir, "red")
     if red.get("slice_id") != slice_id or red.get("plan_id") != bundle.get("plan_id") or red.get("run_id") != run_dir.name:
         raise ValueError("Q4 RED predecessor lineage mismatch")
     before = begin_q4(

@@ -66,7 +66,15 @@ Use the versioned change-impact resolver for Q0/Q4/Q7/Q8/recovery. Selector/fixt
 
 Current classification must distinguish at least: `semantic-contract-gap`, `expected-red`, `unexpected-green`, `task-implementation-failure`, `test-harness-failure`, `target-binding-failure`, `repo-noise`, `timeout-no-observation`, `repeated-deterministic-failure`, and `artifact-integrity`.
 
-A successful lifecycle stage requires real observed execution and nonzero test/case counts. Test/case counts come from the executor's recognized test-runner summary, never from arbitrary SUT markers. Timeout, harness, repo-noise, zero-case, wrong target, unexpected-green and artifact-integrity failures cannot satisfy RED or completion. Deterministic failure fingerprints exclude timestamp/run-duration/output-byte noise; the same fingerprint twice routes `repair-vdd` or `stop`. Rerun is legal only after relevant input changes.
+A successful lifecycle stage requires real observed execution and nonzero test/case counts. Current case counts come from structured pytest call events, never from a summary or arbitrary SUT markers. Counts alone do not authorize an assertion edge. Timeout, harness, repo-noise, zero-case, wrong target, unexpected-green and artifact-integrity failures cannot satisfy RED or completion. Deterministic failure fingerprints exclude timestamp/run-duration/output-byte noise; the same fingerprint twice routes `repair-vdd` or `stop`. Rerun is legal only after relevant input changes.
+
+## Case Evidence Capability (CER-R1--R3)
+
+Current descriptors require `quick-dev.case-contract.v1`. Bind every assertion to explicit pytest node IDs or mark its required tests with `@pytest.mark.cer_assertion('ASSERTION_ID')`; parameter instances resolve individually. The current materializer defaults to this marker mapping. See [case evidence contract](references/case-evidence-contract.md) for the schema, supported invocation and migration rules.
+
+The owned collector records collection, selection and setup/call/teardown outcomes. Every required case must execute with the stage's admissible outcome; stdout assertion IDs, a stage pass or a positive count cannot fill missing proof. RED requires an actual failing AssertionError call with the bound failure ID captured from that call. Skips, deselection, xfail/xpass, setup/teardown errors, missing reports and ambiguous repeated attempts cannot satisfy the contract.
+
+GREEN/REFACTOR must preserve the resolved RED case set as well as the frozen selector. Q4 re-reads RED case proof before handoff. Q7/Q8 re-read every assertion's case evidence, including all terminal assertion edges. Historical stage-only evidence is retained but cannot authorize current implementation or completion. This capability does not yet add CER-R4--R6 disposition, regression-only or Deferred routes.
 
 ## Profiles
 

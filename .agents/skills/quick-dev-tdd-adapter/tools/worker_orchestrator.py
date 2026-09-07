@@ -146,7 +146,11 @@ def _prompt(stage: str, payload: Mapping[str, Any], *, allowed: Sequence[str], f
     goals = {
         "red-author": (
             "Create or minimally edit only the bound test/fixture files so the declared Acceptance fails for the declared real production behavior. "
-            "Do not modify production code, plan/evidence, or hard-code an unconditional failure."
+            "Do not modify production code, plan/evidence, or hard-code an unconditional failure. "
+            "Bind each required assertion to its test using @pytest.mark.cer_assertion('ASSERTION_ID'). "
+            "Parameter instances carrying that marker are all required, including deselected ones. "
+            "Emit the corresponding FAILURE_ID only before the target behavior assertion fails. "
+            "A marker binds a case; it is not execution evidence. Do not use skip/xfail to satisfy a requirement."
         ),
         "implementation": (
             "Implement the smallest production change that fixes the clean expected RED. Do not modify selector, test, fixture, plan, descriptor, or evidence bytes."

@@ -71,6 +71,8 @@ def validate_nonterminal_successor(run_dir: Path, descriptor: Mapping[str, Any])
         raise ValueError("RED predecessor result lineage mismatch")
     if red_result.get("predicate_result") is not True or red_result.get("verification_outcome")!="fail" or red_result.get("failure_family")!="expected-red":
         raise ValueError("GREEN/REFACTOR predecessor is not clean expected-red")
+    from case_evidence import reread_stage_cases
+    reread_stage_cases(run_dir.resolve(), "red")
     red_descriptor_sha=sha256_value(red_descriptor)
     if red_result.get("descriptor_sha256")!=red_descriptor_sha:
         raise ValueError("frozen RED descriptor hash drifted after observation")
@@ -101,6 +103,14 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
     actual_assertions={(a["acceptance_id"],a["assertion_id"]) for a in descriptor["acceptance_assertions"]}
     if actual_assertions!=expected_assertions:
         raise ValueError("descriptor assertion universe differs from semantic plan")
+    if descriptor.get("case_contract") is not None:
+        from case_evidence import contract_for, validate_contract
+        validate_contract(descriptor)
+        expected_bindings = contract_for(bundle, descriptor["acceptance_assertions"])["bindings"]
+        failures_by_assertion = {(row["acceptance_id"], row["assertion_id"]): row["expected_failure_ids"] for row in expected_bindings}
+        for row in descriptor["case_contract"]["bindings"]:
+            if sorted(row["expected_failure_ids"]) != failures_by_assertion[(row["acceptance_id"], row["assertion_id"])]:
+                raise ValueError("case-failure-binding-differs-from-semantic-plan")
     receipt=execute_process(workspace,run_dir,descriptor["stage"],descriptor,profile_identity=profile_identity)
     observation=judge_receipt(run_dir,descriptor["stage"],descriptor,receipt,expected_failure_ids=expected_failures if descriptor["stage"]=="red" else ())
 
@@ -130,6 +140,7 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
         refs.append({"path":path.relative_to(run_dir).as_posix(),"sha256":sha256_value(edge),"acceptance_id":edge["acceptance_id"],"assertion_id":edge["assertion_id"]})
     result={
         "schema":"quick-dev.stage-result.v2","plan_hash":plan_hash,"plan_id":bundle["plan_id"],"slice_id":descriptor["slice_id"],"run_id":descriptor["run_id"],"stage":descriptor["stage"],"candidate_hash":descriptor["candidate_hash"],"selector_identity":selector_hash,
+        "case_evidence_error":observation.get("case_evidence_error"),
         "descriptor_sha256":sha256_value(descriptor),"receipt_sha256":sha256_value(receipt),"observation_sha256":sha256_value(observation),"runtime_edges":refs,
         "verification_outcome":observation["verification_outcome"],"failure_family":observation["failure_family"],"failure_id":observation["failure_id"],"failure_fingerprint":observation.get("failure_fingerprint"),"predicate_result":observation["predicate_result"],"authorizes":[],
     }

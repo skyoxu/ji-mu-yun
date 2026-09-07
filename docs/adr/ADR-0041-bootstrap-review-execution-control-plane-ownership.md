@@ -168,6 +168,32 @@ Historical passing or failing evidence is not rewritten or rebound. Current
 gate validation remains separate from the original live candidate evidence.
 This decision adds no live run, retry, mandatory review or completion authority.
 
+### Case Evidence Capability, Phase 1 (2026-09-07)
+
+CER-R1--R3 extend the current Quick Dev producer, independent judge and Q7/Q8
+consumers. A versioned case contract is embedded in the existing descriptor and
+its selector identity; the report is embedded in the immutable process receipt.
+The repository-owned pytest adapter runs the frozen selector once, recording
+node IDs (including parameters), collection/selection and setup/call/teardown.
+A per-run nonce, descriptor digest, stage and collector digest bind the report;
+missing, incomplete or ambiguous reports fail closed. No summary-parser fallback
+can issue current proof.
+
+Assertion mappings use explicit node IDs or declared cer_assertion markers,
+resolved across the collected set before deselection. All required cases must
+satisfy the stage contract. RED requires a failing AssertionError call and its
+scoped expected failure IDs; GREEN/REFACTOR require passing calls and the same
+resolved case set as RED. Existing semantic/oracle review still owns whether
+an assertion tests the intended behavior. Case identity is not semantic proof.
+
+Q4 rejects stage-only RED predecessors. Q7/Q8 re-read every assertion edge and
+its report, and rehash each mapped test file. Terminal may use its own frozen
+selector. This retains existing write boundaries, snapshots, failure families
+and implementation-complete ownership; it grants no Acceptance authority.
+Historical receipts and CH456 closure remain unchanged. Single-process pytest
+is supported; retries, parallel execution and other adapters require a later
+explicit contract. CER-R4--R6 and live task validation remain separate work.
+
 ## References
 
 - `decision-logs/2026-07-16-bootstrap-review-self-audit-and-hardening-proposal.md`

@@ -64,6 +64,8 @@ def prepare(root: Path):
     (root / "transition.json").write_text("{}\n", encoding="utf-8")
     (root / "tests" / "test_one.py").write_text(
         "from pathlib import Path\n"
+        "import pytest\n"
+        "@pytest.mark.cer_assertion('AS-1', 'AS-2')\n"
         "def test_one():\n"
         " root=Path(__file__).resolve().parents[1]\n"
         " value=(root/'candidate.txt').read_text(encoding='utf-8').strip()\n"
@@ -73,6 +75,8 @@ def prepare(root: Path):
     )
     (root / "tests" / "test_terminal.py").write_text(
         "from pathlib import Path\n"
+        "import pytest\n"
+        "@pytest.mark.cer_assertion('AS-1', 'AS-2')\n"
         "def test_terminal():\n"
         " root=Path(__file__).resolve().parents[1]\n"
         " assert (root/'candidate.txt').read_text(encoding='utf-8').strip()=='green'\n",
