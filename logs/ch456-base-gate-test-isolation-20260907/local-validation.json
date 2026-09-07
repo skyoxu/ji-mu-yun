@@ -1,0 +1,30 @@
+{
+  "schema": "ch456.test-isolation-validation.v1",
+  "base_head": "b3c03e839ba8bd395bf2cec570eb5102026c8c14",
+  "validated_implementation_candidate": "c6ae33da3ff899706603612063643e581be4ae20",
+  "change_scope": "Base-gate test fixture isolation only; no production code or gate changes",
+  "validation": [
+    {
+      "scope": "target module standalone",
+      "passed": 5
+    },
+    {
+      "scope": "CH456 VDD tests plus target module, backend disabled",
+      "passed": 167
+    },
+    {
+      "scope": "full VDD on reconstructed Linux workspace",
+      "passed": 207,
+      "failed": 44,
+      "subtests_passed": 49,
+      "limitations": [
+        "Windows py launcher unavailable",
+        "knowledge_context_validation dependency absent"
+      ],
+      "reported_target_failure_reproduced_after_fix": false
+    }
+  ],
+  "live_backend_calls": 0,
+  "full_windows_vdd_regression": "pending",
+  "historical_evidence_modified": false
+}

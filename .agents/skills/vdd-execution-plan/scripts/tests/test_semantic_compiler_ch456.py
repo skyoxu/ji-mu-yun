@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+import pytest
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
@@ -9,6 +10,31 @@ if str(SCRIPTS) not in sys.path:
 
 from semantic_compiler import _normalize_obligation
 from semantic_compiler_gate import compile_plan
+import semantic_compiler_gate as gate
+
+
+@pytest.fixture(autouse=True)
+def isolate_base_gate_workers(monkeypatch):
+    """ADR-0041: these gate tests observe unresolved gaps, not gap-repair policy.
+
+    Other test modules install the optional repair extension on the shared V1
+    seam during collection. Restore the base compiler for this test only, so
+    standalone and full-suite runs exercise the same gate. Missing injected
+    stages must fail here rather than contacting a real backend.
+    """
+    repair = sys.modules.get("semantic_obligation_gap_repair_patch")
+    if repair is not None:
+        monkeypatch.setattr(gate.sc, "compile_obligations", repair._BASE_COMPILE_OBLIGATIONS)
+    original_transport = gate._ORIGINAL_INVOKE_WORKER
+
+    def injected_only(**kwargs):
+        cache = kwargs.get("worker_cache")
+        stage = kwargs["stage"]
+        if not isinstance(cache, dict) or stage not in cache:
+            raise AssertionError(f"Base gate test requested an uninjected worker stage: {stage}")
+        return original_transport(**kwargs)
+
+    monkeypatch.setattr(gate, "_ORIGINAL_INVOKE_WORKER", injected_only)
 
 
 def _repo(tmp_path: Path) -> tuple[Path, Path, str, str]:
