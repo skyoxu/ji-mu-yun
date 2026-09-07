@@ -1,0 +1,8 @@
+schema=cer.phase1-windows-validation.v1
+source_head=7a9911692779dadd0db4aa5e2eb1e3b5130312ab
+base_commit=c75951086e591b2a1113812ee76edc144da9fce3
+status=pass
+result=63 passed in 29.02s
+live_backend_calls=0
+scope=CER-R1..R3 deterministic Windows confirmation
+phase1_validation_preserved=true
