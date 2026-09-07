@@ -1,0 +1,9 @@
+schema=cer.phase2-windows-validation.v1
+source_head=6e5a20e571ce8a3a6a0a037cc5d655085c377459
+base_commit=e842b00a957eba3510d06931a28d25e6d04f11d9
+status=pass
+result=113 passed, 15 subtests passed in 43.61s
+live_backend_calls=0
+skill_contract_check=included: test_validate_skill_contract.py
+scope=CER-R4..R6 deterministic Windows confirmation
+ch456_live_rerun=false
