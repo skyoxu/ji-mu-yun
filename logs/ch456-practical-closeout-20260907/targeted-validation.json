@@ -1,0 +1,18 @@
+{
+  "schema": "ch456.practical-closeout-validation.v1",
+  "base_commit": "7f350aca7a77995435efe23bfe8ccad5fd532fbd",
+  "status": "pass",
+  "scope": "Targeted deterministic mutation threshold and final gate validation only",
+  "environment": "Online Linux; isolated source subset fetched from the base commit; existing pytest dependencies supplied through PYTHONPATH",
+  "command": "PYTHONPATH=/workspace/scratch/95026fb3ee55/pytest-deps python -m pytest scripts/quick_dev/tests/test_ch456_critical_mutation_thresholds.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_final_completion_gate.py -q",
+  "result": "24 passed in 0.49s",
+  "exit_code": 0,
+  "live_backend_called": false,
+  "real_semantic_rerun": false,
+  "live_blind_rerun": false,
+  "full_final_acceptance_rerun": false,
+  "historical_evidence_modified": false,
+  "windows_confirmation_pending": true,
+  "original_success_archive_pending": true,
+  "authorizes": []
+}

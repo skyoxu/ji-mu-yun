@@ -27,7 +27,8 @@ if str(TOOLS) not in sys.path:
 
 from detached_promotion import FAILURE_FAMILIES, validate_detached_bundle
 
-REQUIRED_REJECTION_RATE = 0.95
+# ADR-0041: every critical anti-false-green mutation must be rejected.
+REQUIRED_REJECTION_RATE = 1.0
 REQUIRED_FAILURE_FAMILY_LEAKAGE_RATE = 0.0
 
 

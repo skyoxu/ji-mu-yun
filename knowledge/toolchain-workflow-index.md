@@ -78,3 +78,11 @@ Chapter 3-7, or release state as a side effect.
   authorized `maintain-knowledge-base` flow may publish a generation.
 - Runtime state, project state, acceptance evidence, and knowledge generations
   retain their separate lifecycle ownership.
+
+## CH456 Current Operating Decision
+
+For CH456 maintenance and completion interpretation, read
+[Practical Closeout and Current Operating Rules](../docs/ch456-practical-closeout.md).
+It records the maintainer-approved topic-specific supersession of earlier
+draft/PRD/Spec wording under ADR-0041. Historical acceptance artifacts retain
+their original candidate bindings and do not become current runtime authority.

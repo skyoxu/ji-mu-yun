@@ -68,6 +68,44 @@ def _threshold_pass(value: Mapping[str, Any]) -> bool:
     return value.get("threshold_passed") is True
 
 
+
+def _all_mutations_rejected(value: Mapping[str, Any], total_key: str,
+                            rejected_key: str, rows_key: str, rate_key: str | None = None) -> bool:
+    """ADR-0041: one leaked critical mutation blocks, even with a passing summary."""
+    total = value.get(total_key)
+    rejected = value.get(rejected_key)
+    rows = value.get(rows_key)
+    return (
+        type(total) is int and total > 0
+        and type(rejected) is int and rejected == total
+        and isinstance(rows, list) and len(rows) == total
+        and all(isinstance(row, Mapping) and row.get("rejected") is True for row in rows)
+        and (rate_key is None or value.get(rate_key) == 1.0)
+    )
+
+
+def _critical_mutations_pass(value: Mapping[str, Any], *, detached: bool = False) -> bool:
+    if not _threshold_pass(value) or value.get("baseline_valid") is not True:
+        return False
+    if not detached:
+        return _all_mutations_rejected(
+            value, "mutation_cases", "rejected_cases", "cases", "rejection_rate"
+        )
+    return (
+        _all_mutations_rejected(
+            value, "structural_mutation_cases", "structural_rejected_cases",
+            "structural_cases", "structural_rejection_rate"
+        )
+        and _all_mutations_rejected(
+            value,
+            "failure_family_omission_cases", "failure_family_rejected_cases",
+            "failure_family_cases"
+        )
+        and value.get("failure_family_leaks") == 0
+        and value.get("failure_family_leakage_rate") == 0.0
+    )
+
+
 def _score_at_least(value: Mapping[str, Any], score: str, required: str) -> bool:
     observed = value.get(score)
     floor = value.get(required)
@@ -211,15 +249,15 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         "all_evidence_candidate_binding": all(candidate_bindings.values()),
         "architecture_reconcile": _status_pass(evidence["architecture_reconcile"]),
         "curated_semantic": _curated_semantic_pass(evidence["curated_semantic"]),
-        "semantic_chain_mutations": _threshold_pass(evidence["semantic_chain_mutations"]),
-        "agent_context_mutations": _threshold_pass(evidence["agent_context_mutations"]),
+        "semantic_chain_mutations": _critical_mutations_pass(evidence["semantic_chain_mutations"]),
+        "agent_context_mutations": _critical_mutations_pass(evidence["agent_context_mutations"]),
         "real_semantic_quality": (
             evidence["real_semantic"].get("status") == "pass"
             and evidence["real_semantic"].get("execution_attempted") is True
             and evidence["real_semantic"].get("execution_succeeded") is True
         ),
         "stable_facade": _threshold_pass(evidence["stable_facade"]),
-        "detached_anti_false_green": _threshold_pass(evidence["detached_mutations"]),
+        "detached_anti_false_green": _critical_mutations_pass(evidence["detached_mutations"], detached=True),
         "selective_replay": _selective_replay_pass(evidence["selective_replay"]),
         "live_blind_under_60_minutes": (
             evidence["live_blind"].get("status") == "pass"

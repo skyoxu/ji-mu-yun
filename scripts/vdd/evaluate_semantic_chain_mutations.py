@@ -14,7 +14,8 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 from semantic_chain_audit import audit_bundle
 
-REQUIRED_REJECTION_RATE = 0.95
+# ADR-0041: every critical anti-false-green mutation must be rejected.
+REQUIRED_REJECTION_RATE = 1.0
 STAGES = ["red", "green", "refactor", "terminal"]
 
 

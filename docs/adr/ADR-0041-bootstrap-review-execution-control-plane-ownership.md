@@ -152,6 +152,22 @@ mandatory. Explicit injected fixtures bypass this run-local result store. Legacy
 raw/repair caches are never scanned for a preferred judgment or retrospectively
 promoted; historical failures remain unchanged.
 
+### CH456 Practical Closeout (2026-09-07)
+
+The maintainer accepts practical behavior/process equivalence rather than literal
+reproduction of the original CH456 draft. The topic-specific supersession table
+in [CH456 practical closeout](../ch456-practical-closeout.md) owns the current
+interpretation of slice cohesion, optional external acceptance, deferred unseen
+task generalization and historical Architecture reconciliation. Other semantic,
+execution and evidence truth floors remain binding.
+
+Critical semantic-chain, agent-context and detached structural/family mutation
+checks now require complete rejection. One leaked case blocks both its metric
+and the final gate even when a legacy summary reports threshold_passed=true.
+Historical passing or failing evidence is not rewritten or rebound. Current
+gate validation remains separate from the original live candidate evidence.
+This decision adds no live run, retry, mandatory review or completion authority.
+
 ## References
 
 - `decision-logs/2026-07-16-bootstrap-review-self-audit-and-hardening-proposal.md`

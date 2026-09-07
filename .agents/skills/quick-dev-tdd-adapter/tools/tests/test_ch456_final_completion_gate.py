@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import pytest
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -54,6 +55,23 @@ def _freeze_manifest(args: SimpleNamespace, tmp_path: Path, head: str) -> Path:
     return manifest
 
 
+
+def _mutation_evidence(*, detached=False) -> dict:
+    # ADR-0041: fixtures include actual case dispositions, not a bare pass flag.
+    result = dict(threshold_passed=True, baseline_valid=True)
+    if detached:
+        result.update(structural_mutation_cases=21, structural_rejected_cases=21,
+                      structural_rejection_rate=1.0,
+                      structural_cases=[{"case": str(i), "rejected": True} for i in range(21)],
+                      failure_family_omission_cases=1, failure_family_rejected_cases=1,
+                      failure_family_cases=[{"case": "family", "rejected": True}],
+                      failure_family_leaks=0, failure_family_leakage_rate=0.0)
+    else:
+        result.update(mutation_cases=21, rejected_cases=21, rejection_rate=1.0,
+                      cases=[{"case": str(i), "rejected": True} for i in range(21)])
+    return result
+
+
 def _args(tmp_path: Path, head: str) -> SimpleNamespace:
     args = SimpleNamespace(
         architecture_reconcile=_write(tmp_path / "architecture.json", _bound(head, schema="architecture.v1", status="pass")),
@@ -70,14 +88,14 @@ def _args(tmp_path: Path, head: str) -> SimpleNamespace:
                 controlled_mutation_rejection_rate=1.0,
             ),
         ),
-        semantic_chain_mutations=_write(tmp_path / "semantic-mutations.json", _bound(head, schema="semantic-mutations.v1", threshold_passed=True)),
-        agent_context_mutations=_write(tmp_path / "agent-context.json", _bound(head, schema="agent-context.v1", threshold_passed=True)),
+        semantic_chain_mutations=_write(tmp_path / "semantic-mutations.json", _bound(head, schema="semantic-mutations.v1", **_mutation_evidence())),
+        agent_context_mutations=_write(tmp_path / "agent-context.json", _bound(head, schema="agent-context.v1", **_mutation_evidence())),
         real_semantic=_write(
             tmp_path / "real-semantic.json",
             _bound(head, schema="real-semantic.v1", status="pass", execution_attempted=True, execution_succeeded=True),
         ),
         stable_facade=_write(tmp_path / "stable.json", _bound(head, schema="stable.v1", threshold_passed=True)),
-        detached_mutations=_write(tmp_path / "detached.json", _bound(head, schema="detached.v1", threshold_passed=True)),
+        detached_mutations=_write(tmp_path / "detached.json", _bound(head, schema="detached.v1", **_mutation_evidence(detached=True))),
         selective_replay=_write(
             tmp_path / "replay.json",
             _bound(head, schema="replay.v1", status="pass", accuracy=1.0, required_accuracy=0.99, failed_cases=0),
@@ -264,3 +282,45 @@ def test_local_runner_decodes_child_output_without_windows_locale_dependency(mon
     assert observed["errors"] == "replace"
     assert result["stdout_tail"] == "semantic → failed"
     assert result["stderr_tail"] == "诊断"
+
+
+@pytest.mark.parametrize("key,check,rows_key,count_key,rate_key", [
+    ("semantic_chain_mutations", "semantic_chain_mutations", "cases", "rejected_cases", "rejection_rate"),
+    ("agent_context_mutations", "agent_context_mutations", "cases", "rejected_cases", "rejection_rate"),
+    ("detached_mutations", "detached_anti_false_green", "structural_cases", "structural_rejected_cases", "structural_rejection_rate"),
+])
+@pytest.mark.parametrize("defect", ["one-leak", "dishonest-summary", "missing-cases"])
+def test_critical_mutation_leak_blocks_even_with_valid_manifest(
+    tmp_path, monkeypatch, key, check, rows_key, count_key, rate_key, defect
+):
+    # ADR-0041: exercise the final predicate, not only the metric's threshold.
+    head = "9" * 40
+    monkeypatch.setattr(GATE, "_head", lambda: head)
+    args = _args(tmp_path, head)
+    path = getattr(args, key)
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if defect == "missing-cases":
+        value.pop(rows_key)
+    else:
+        value[rows_key][0]["rejected"] = False
+        if defect == "one-leak":
+            value[count_key] = 20
+            value[rate_key] = 20 / 21
+    assert value["threshold_passed"] is True
+    _write(path, value)
+    _freeze_manifest(args, tmp_path, head)
+    result = GATE.evaluate(args)
+    assert result["checks"]["final_evidence_manifest"] is True
+    assert result["failed_checks"] == [check]
+    assert result["completion"] == "not-complete"
+
+
+def test_detached_family_leak_blocks_despite_structural_success(tmp_path, monkeypatch):
+    head = "8" * 40
+    monkeypatch.setattr(GATE, "_head", lambda: head)
+    args = _args(tmp_path, head)
+    value = json.loads(args.detached_mutations.read_text(encoding="utf-8"))
+    value["failure_family_cases"][0]["rejected"] = False
+    _write(args.detached_mutations, value)
+    _freeze_manifest(args, tmp_path, head)
+    assert GATE.evaluate(args)["failed_checks"] == ["detached_anti_false_green"]
