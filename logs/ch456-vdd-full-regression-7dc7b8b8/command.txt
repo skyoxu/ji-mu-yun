@@ -1,0 +1,1 @@
+python -m pytest .agents/skills/vdd-execution-plan/scripts/tests -q

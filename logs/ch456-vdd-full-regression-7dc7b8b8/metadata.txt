@@ -1,0 +1,10 @@
+schema=ch456.vdd-full-regression.v1
+source_head=7dc7b8b875eba8c4aeec6533b89967d5364fb734
+status=pass
+result=242 passed, 58 subtests passed in 18.98s
+scope=VDD test isolation regression only
+real_semantic_rerun=false
+live_blind_rerun=false
+preserved_success_candidate=c6ae33da3ff899706603612063643e581be4ae20
+preserved_success_evidence=logs/ch456-final-acceptance-c6ae33da-r1200-success
+candidate_binding_modified=false
