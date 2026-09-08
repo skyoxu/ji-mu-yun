@@ -88,10 +88,14 @@ def _completed_receipts(run_dir: Path, actions: Any, command_registry: Any) -> l
     for action in actions:
         descriptor = resolve_registered_command(command_registry, action["commandId"])
         declared_commands[action["actionId"]] = descriptor["id"]
+    state = _load(run_dir / "run-state.json")
+    lifecycle_hashes = {key: state[key] for key in ("runInputHash", "contractHash", "knowledgeContextHash", "skillInputBindingHash", "skillInputContextHash") if key in state}
     events = []
     for line in (run_dir / "acceptance-events.jsonl").read_text(encoding="utf-8").splitlines():
         event = json.loads(line)
         if event.get("eventType") == "action-completed":
+            if event.get("runId") != state["runId"] or event.get("inputHashes") != lifecycle_hashes:
+                raise InputError("completed action lifecycle binding is stale")
             result_ref = event.get("resultReceipt")
             if not isinstance(result_ref, dict) or set(result_ref) != {"path", "sha256"}:
                 raise InputError("completed action is missing its result receipt binding")
@@ -176,6 +180,16 @@ def _verified_quick_dev_receipt(root: Path, target: Path, prepared: dict[str, An
         raise InputError("prepared implementation receipt binding is stale")
     if not isinstance(receipt_ref, dict) or set(receipt_ref) != {"path", "sha256", "terminalCommandId"}:
         raise InputError("prepared implementation receipt binding is invalid")
+    if "currentQuickDev" in bundle:
+        from current_quick_dev_handoff import verify_current_handoff, OWNER
+        current = bundle["currentQuickDev"]
+        if current.get("receipt") != {"path": receipt_ref["path"], "sha256": receipt_ref["sha256"]}:
+            raise InputError("current Quick Dev receipt binding mismatch")
+        terminal = bundle.get("terminalRunner", {})
+        if terminal.get("sha256") != _sha(OWNER / "coverage_predicates.py"):
+            raise InputError("current Quick Dev validator is stale")
+        result = verify_current_handoff(root, current)
+        return {**receipt_ref, "currentQuickDevResult": result}
     receipt_path = _inside(target, receipt_ref["path"], "Quick Dev implementation receipt")
     if not receipt_path.is_file() or _sha(receipt_path) != receipt_ref["sha256"]:
         raise InputError("Quick Dev implementation receipt is stale")
@@ -282,11 +296,15 @@ def finalize_deterministic_run(
     else:
         implementation_receipt = _verified_native_receipt(target, prepared)
     receipts = _completed_receipts(run_dir, actions, command_registry)
+    current_result = implementation_receipt.pop("currentQuickDevResult", None)
     terminal_command_id = implementation_receipt.get("terminalCommandId")
     terminal = [item for item in receipts if item["commandId"] == terminal_command_id]
-    if not native_mode and len(terminal) != 1:
+    if current_result is None and not native_mode and len(terminal) != 1:
         raise InputError("deterministic finalization requires exactly one bound terminal receipt")
-    if native_mode and not terminal:
+    if current_result is not None:
+        # Q8 remains implementation proof; Acceptance also verifies its own DAG.
+        terminal_result = current_result
+    elif native_mode and not terminal:
         terminal_result = _load(_inside(target, implementation_receipt["path"], "plan-native implementation receipt"))
     else:
         try:
@@ -299,7 +317,7 @@ def finalize_deterministic_run(
         "acceptance-coordinator-efficiency.terminal-result.v2",
         "jimuyun.tc-d1-implementation-validation.v1",
     }
-    if (
+    if current_result is None and (
         terminal_result.get("schema_version") not in expected_schemas
         or terminal_result.get("predicate") != "implementation-complete"
         or terminal_result.get("status") != "pass"
@@ -408,3 +426,4 @@ def finalize_deterministic_run(
         with event_path.open("a", encoding="utf-8", newline="\n") as handle:
             handle.write(json.dumps(event, sort_keys=True) + "\n")
     return {"status": "acceptance-passed", "final": final_ref, "wrapper": {"path": "finalization/acceptance-result-final.v1.json", "sha256": _sha(wrapper_path)}, "authorizes": ["acceptance-passed"]}
+

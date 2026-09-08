@@ -6,7 +6,7 @@ from typing import Any
 
 
 HASH_RE = "sha256:"
-DECISION_VERSION = "v10"
+DECISION_VERSION = "v11"
 POLICY_SCHEMA = "acceptance-semantic-review-trigger-policy.v1"
 WORKFLOW_PROFILE = "bootstrap-skill-route"
 IMPLEMENTATION_PROFILE = "bootstrap-implementation-conformance"
@@ -134,7 +134,7 @@ def decide_review_requirement(inputs: dict[str, Any]) -> dict[str, Any]:
         sources.append("candidateIdentity.changedPaths")
 
     blocked = evidence_status != "passed" or bool(unknown_paths)
-    requirement = None if blocked else ("required" if reason_codes != ["deterministic_low_risk"] else "not_required")
+    requirement = None if blocked else ("required" if intent == "request" else "not_required")
     profile = None if blocked or requirement == "not_required" else (WORKFLOW_PROFILE if workflow_change else IMPLEMENTATION_PROFILE)
     document: dict[str, Any] = {
         "schemaVersion": "acceptance-semantic-review-requirement-decision.v1",
@@ -159,3 +159,4 @@ def decide_review_requirement(inputs: dict[str, Any]) -> dict[str, Any]:
     }
     document["decisionHash"] = _hash(document)
     return document
+

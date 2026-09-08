@@ -94,7 +94,7 @@ def test_coordinator_emits_typed_handoff_without_bootstrap(tmp_path: Path, monke
     (tmp_path / "request.json").write_text("{}\n", encoding="utf-8")
     monkeypatch.setattr(acceptance_cli, "REPOSITORY_ROOT", tmp_path)
     monkeypatch.setattr(acceptance_cli, "_load_current_coordinator_inputs", lambda *_: {
-        "prepared": {"input": {"execution_mode": "evidence_only", "semantic_review_required": True, "actions": [{"actionId": "one", "dependsOn": [], "order": 1, "commandId": "one", "activation": True}]}, "inputHash": "sha256:" + "a" * 64, "knowledgeContext": {"sha256": "sha256:" + "b" * 64}},
+        "maintainer_intent": "request", "prepared": {"input": {"execution_mode": "evidence_only", "semantic_review_required": True, "actions": [{"actionId": "one", "dependsOn": [], "order": 1, "commandId": "one", "activation": True}]}, "inputHash": "sha256:" + "a" * 64, "knowledgeContext": {"sha256": "sha256:" + "b" * 64}},
         "prepared_ref": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64}, "receipt_ref": {"sha256": "sha256:" + "d" * 64}, "contract_ref": {"path": "contract.json", "sha256": "sha256:" + "e" * 64}, "target_plan": "execution-plans/target",
     })
     monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args, **kwargs: {"runId": "run-1", "runDirectory": "execution-plans/target/runs/run-1"})
@@ -133,6 +133,7 @@ def test_v4_coordinator_replay_is_idempotent_for_same_output(tmp_path: Path, mon
     states = iter([
         {"actionStates": {"one": "ready"}, "nextAction": {"actionId": "one"}, "readyActionIds": ["one"]},
         {"actionStates": {"one": "completed"}, "nextAction": None, "readyActionIds": []},
+        {"actionStates": {"one": "completed"}, "nextAction": None, "readyActionIds": []},
     ])
     monkeypatch.setattr(acceptance_cli, "inspect_persisted_run", lambda *args: next(states))
     monkeypatch.setattr(acceptance_cli, "resume_persisted_run", lambda *args: None)
@@ -142,3 +143,4 @@ def test_v4_coordinator_replay_is_idempotent_for_same_output(tmp_path: Path, mon
     first = acceptance_cli.run_coordinator(str(tmp_path / "request.json"), str(tmp_path / "result.json"))
     second = acceptance_cli.run_coordinator(str(tmp_path / "request.json"), str(tmp_path / "result.json"))
     assert first == second
+

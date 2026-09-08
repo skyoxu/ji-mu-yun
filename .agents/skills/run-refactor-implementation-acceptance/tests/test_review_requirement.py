@@ -79,7 +79,7 @@ class ReviewRequirementTests(unittest.TestCase):
                 "knowledgeArtifacts": [],
             }):
                 decision = acceptance_cli.decide_bootstrap_command(str(request), str(root / "out.json"))
-            self.assertEqual("bootstrap-skill-route", decision["profile"])
+            self.assertIsNone(decision["profile"])
 
     def test_real_candidate_manifest_preserves_repository_paths_for_skill_route_decision(self) -> None:
         import acceptance_cli
@@ -127,8 +127,8 @@ class ReviewRequirementTests(unittest.TestCase):
             ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
             identity["changedPaths"],
         )
-        self.assertEqual("required", decision["requirement"])
-        self.assertEqual("bootstrap-skill-route", decision["profile"])
+        self.assertEqual("not_required", decision["requirement"])
+        self.assertIsNone(decision["profile"])
         self.assertIn("workflow_control_plane_changed", decision["reasonCodes"])
 
     def test_prepare_route_rejects_handwritten_decision_when_replay_differs(self) -> None:
@@ -183,7 +183,7 @@ class ReviewRequirementTests(unittest.TestCase):
                 "policy": policy,
             })
 
-    def test_workflow_paths_select_skill_route(self) -> None:
+    def test_workflow_paths_do_not_implicitly_select_skill_route(self) -> None:
         decision = decide_review_requirement({
             "candidateIdentity": {
                 "changedPaths": [".agents/skills/run-phase-bootstrap-review/SKILL.md"],
@@ -192,8 +192,8 @@ class ReviewRequirementTests(unittest.TestCase):
             "deterministicEvidence": {"status": "passed", "hash": "sha256:" + "b" * 64},
             "policy": POLICY,
         })
-        self.assertEqual("required", decision["requirement"])
-        self.assertEqual("bootstrap-skill-route", decision["profile"])
+        self.assertEqual("not_required", decision["requirement"])
+        self.assertIsNone(decision["profile"])
 
     def test_execution_plan_metadata_is_known_low_risk(self) -> None:
         decision = decide_review_requirement({
@@ -207,7 +207,7 @@ class ReviewRequirementTests(unittest.TestCase):
         self.assertEqual("ready", decision["decisionStatus"])
         self.assertEqual("not_required", decision["requirement"])
 
-    def test_repository_authority_paths_require_review(self) -> None:
+    def test_repository_authority_paths_do_not_implicitly_require_review(self) -> None:
         policy = json.loads(
             (
                 Path(__file__).resolve().parents[1]
@@ -224,12 +224,12 @@ class ReviewRequirementTests(unittest.TestCase):
                 "deterministicEvidence": {"status": "passed"},
                 "policy": policy,
             })
-            self.assertEqual("required", decision["requirement"])
+            self.assertEqual("not_required", decision["requirement"])
             self.assertIn(
                 "protected_high_risk_boundary_changed", decision["reasonCodes"]
             )
 
-    def test_typed_public_api_boundary_requires_implementation_conformance(self) -> None:
+    def test_typed_public_api_boundary_does_not_implicitly_require_bootstrap(self) -> None:
         decision = decide_review_requirement({
             "candidateIdentity": {
                 "changedPaths": ["PhaseA.Platform/Program.cs"],
@@ -238,8 +238,8 @@ class ReviewRequirementTests(unittest.TestCase):
             "deterministicEvidence": {"status": "passed"},
             "policy": POLICY,
         })
-        self.assertEqual("required", decision["requirement"])
-        self.assertEqual("bootstrap-implementation-conformance", decision["profile"])
+        self.assertEqual("not_required", decision["requirement"])
+        self.assertIsNone(decision["profile"])
         self.assertIn("public_api_contract_changed", decision["reasonCodes"])
 
     def test_broh_s4_acceptance_owns_review_requirement(self) -> None:
@@ -252,10 +252,10 @@ class ReviewRequirementTests(unittest.TestCase):
             "policy": POLICY,
             "maintainerIntent": "default",
         })
-        self.assertEqual(required["requirement"], "required")
+        self.assertEqual(required["requirement"], "not_required")
         self.assertIn("workflow_control_plane_changed", required["reasonCodes"])
-        self.assertEqual(required["profile"], "bootstrap-skill-route")
-        self.assertEqual(required["decisionVersion"], "v10")
+        self.assertIsNone(required["profile"])
+        self.assertEqual(required["decisionVersion"], "v11")
         self.assertRegex(required["decisionHash"], r"^sha256:[0-9a-f]{64}$")
         self.assertEqual(required["authorizes"], [])
 
@@ -289,3 +289,4 @@ class ReviewRequirementTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

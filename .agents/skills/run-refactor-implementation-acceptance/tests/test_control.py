@@ -82,7 +82,7 @@ class ExecutionControlTests(unittest.TestCase):
             (root / "src" / "input.py").write_text("pass\n", encoding="utf-8", newline="\n")
             with self.assertRaisesRegex(execution_control.ControlError, "duplicated"):
                 execution_control.run_controlled_command(
-                    root, descriptor, input_paths=["src/input.py", "src\\input.py"]
+                    root, descriptor, input_paths=["src/input.py", str(Path("src") / "input.py")]
                 )
 
     def test_controlled_command_records_timeout_as_closed_failure(self) -> None:
@@ -968,3 +968,4 @@ class ExecutionControlTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

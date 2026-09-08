@@ -1,0 +1,45 @@
+{
+  "authorizes": [],
+  "base_commit": "e76c0dfc1a0db7ee46891b1eaf1b70c930c70ab2",
+  "bootstrap_live_runs": 0,
+  "branch": "implementation/acceptance-current-closeout",
+  "ch456_live_runs": 0,
+  "environment": "Linux pinned file snapshot with real isolated Git fixtures",
+  "groups": {
+    "acceptance": 98,
+    "bootstrap_policy": 11,
+    "quick_dev": 39
+  },
+  "live_backend_calls": 0,
+  "not_run": [
+    {
+      "reason": "Historical candidate artifacts and Git history are absent from this reconstructed environment; retained for full-checkout Windows validation.",
+      "test": "test_review_requirement.py::ReviewRequirementTests::test_real_candidate_manifest_preserves_repository_paths_for_skill_route_decision"
+    }
+  ],
+  "passed": 148,
+  "schema": "acceptance-current-closeout-validation.v1",
+  "skill_format_validation": "both passed",
+  "source_files": {
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md": "sha256:e1ad0cff69d8345a82b099371c5f2def2bf76f3a42953c89be526b73d5064f02",
+    ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py": "sha256:0160736a0a2c836f0fc53df7bee259405ce511b63a734a0c5c78a5ba7aba850f",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md": "sha256:04f84438286db45542aba8aedad146b5ee495d627f78fd4a74f74d7cc2a4fdc7",
+    ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-semantic-review-requirement-decision.v1.schema.json": "sha256:69abf1eea4c366f4d05ab13f2d9a415feb8afbd46eedd440c02567bece379782",
+    ".agents/skills/run-refactor-implementation-acceptance/schemas/compact-vdd-acceptance-prerequisite-bundle.v1.schema.json": "sha256:270606a979fc90b9c25e60af78f530f8518454f541b61d79f654eed2ad6e84e8",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py": "sha256:205ca6c31cccf1fab738489a7e9b9a481b57c77c62db246be01a8ae306faddf1",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py": "sha256:e12c2969570ca431f4f5902e55b64e2ed65ed323aacdbe8dc25815e36b800fde",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py": "sha256:7e888e20e922e45571800f42dfdec3fe947848bbf1b87ff9bd00109974d54f04",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py": "sha256:7a5478ebd1d5ab9a9b494eb5852510b9357f6684b0d6bbf8167a6e77e3d9ace6",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/review_requirement.py": "sha256:0666e791babc0116fc013d6eefe80ea07f2fa2164b65fc5ddcd6a5bbf3ce2981",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py": "sha256:cdbb8f57c754425bb226c3cd43fee669c4082be11c4812c9711d47a7c573a513",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py": "sha256:620a1fcf1b34efb5d8ce8b0d8abd02c60063265fb753e7cb2bd8fb67a1aad236",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py": "sha256:91e9dfb582c614653558830afdda3a541641189ac8e4f84c48bbe2b1b730384b",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py": "sha256:80973905d3a3a6f888516f69adca223278dcfe92945b9d5f05205260f7e79485",
+    "docs/acceptance-current-closeout.md": "sha256:996fafc296ed365940ec9954018311899e25e03242be93435f825308e592d527",
+    "docs/adr/ADR-0058-acceptance-coordinator-persisted-evidence-ownership.md": "sha256:3ada611b6648bcff0a89ce29eb1746373e0b98dca82cccbe54b78770cca73cf9",
+    "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/current-equivalence-closeout.md": "sha256:e8f8f059949cd387c3f599345dba53a0dc62d30bfc2db97fce9f618322113e0c",
+    "execution-plans/2026-08-17-acceptance-coordinator-efficiency/current-equivalence-closeout.md": "sha256:e8f8f059949cd387c3f599345dba53a0dc62d30bfc2db97fce9f618322113e0c",
+    "execution-plans/2026-08-18-acceptance-coordinator-trust-recovery/current-equivalence-closeout.md": "sha256:e8f8f059949cd387c3f599345dba53a0dc62d30bfc2db97fce9f618322113e0c"
+  },
+  "windows_validation": "pending"
+}

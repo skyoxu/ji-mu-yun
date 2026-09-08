@@ -3,32 +3,176 @@
   "title": "Compact VDD Acceptance Prerequisite Bundle",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "targetPlan", "runId", "planStateHash", "baselineManifest", "candidateManifest", "candidateSnapshotPath", "runRequest", "actionDag", "commandRegistry", "knowledgeContext", "policy", "bundleHash", "authorizes"],
+  "required": [
+    "schemaVersion",
+    "targetPlan",
+    "runId",
+    "baselineManifest",
+    "candidateManifest",
+    "candidateSnapshotPath",
+    "runRequest",
+    "actionDag",
+    "commandRegistry",
+    "knowledgeContext",
+    "policy",
+    "bundleHash",
+    "authorizes"
+  ],
   "properties": {
-    "schemaVersion": {"const": "compact-vdd-acceptance-prerequisite-bundle.v1"},
-    "targetPlan": {"type": "string"},
-    "runId": {"type": "string"},
-    "planStateHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
-    "baselineManifest": {"$ref": "#/$defs/ref"},
-    "candidateManifest": {"$ref": "#/$defs/ref"},
-    "runRequest": {"$ref": "#/$defs/ref"},
-    "actionDag": {"$ref": "#/$defs/ref"},
-    "commandRegistry": {"$ref": "#/$defs/ref"},
-    "knowledgeContext": {"$ref": "#/$defs/ref"},
-    "policy": {"$ref": "#/$defs/ref"},
-    "candidateSnapshotPath": {"type": "string"},
-    "bundleHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
-    "authorizes": {"const": []}
+    "schemaVersion": {
+      "const": "compact-vdd-acceptance-prerequisite-bundle.v1"
+    },
+    "targetPlan": {
+      "type": "string"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "planStateHash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "baselineManifest": {
+      "$ref": "#/$defs/ref"
+    },
+    "candidateManifest": {
+      "$ref": "#/$defs/ref"
+    },
+    "runRequest": {
+      "$ref": "#/$defs/ref"
+    },
+    "actionDag": {
+      "$ref": "#/$defs/ref"
+    },
+    "commandRegistry": {
+      "$ref": "#/$defs/ref"
+    },
+    "knowledgeContext": {
+      "$ref": "#/$defs/ref"
+    },
+    "policy": {
+      "$ref": "#/$defs/ref"
+    },
+    "candidateSnapshotPath": {
+      "type": "string"
+    },
+    "bundleHash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "authorizes": {
+      "const": []
+    },
+    "terminalRunner": {
+      "$ref": "#/$defs/ref"
+    },
+    "implementationReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "terminalCommandId"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "terminalCommandId": {
+          "type": "string"
+        }
+      }
+    },
+    "currentQuickDev": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "semanticPlan",
+        "receipt",
+        "snapshotRoots",
+        "sourceCommit",
+        "baseCommit"
+      ],
+      "properties": {
+        "semanticPlan": {
+          "$ref": "#/$defs/ref"
+        },
+        "receipt": {
+          "$ref": "#/$defs/ref"
+        },
+        "snapshotRoots": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "root_kind",
+              "repository_relative_posix_path",
+              "inclusion_reason"
+            ],
+            "properties": {
+              "root_kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "repository_relative_posix_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "inclusion_reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "sourceCommit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "baseCommit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        }
+      }
+    }
   },
   "$defs": {
     "ref": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "sha256"],
+      "required": [
+        "path",
+        "sha256"
+      ],
       "properties": {
-        "path": {"type": "string"},
-        "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
       }
     }
-  }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "planStateHash"
+      ]
+    },
+    {
+      "required": [
+        "implementationReceipt",
+        "terminalRunner"
+      ]
+    }
+  ]
 }

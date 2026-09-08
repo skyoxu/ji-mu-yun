@@ -87,6 +87,7 @@ def _validate_request(value: dict[str, Any]) -> None:
         "implementationReceiptHash", "commands", "actions", "authorizes",
     }
     allowed = {frozenset(required), frozenset(required | {"baselineOverlaySources"}), frozenset(required | {"candidateRevision"}), frozenset(required | {"candidateRevision", "baselineOverlaySources"})}
+    allowed |= {fields | {"currentQuickDev"} for fields in list(allowed)}
     if set(value) not in allowed or value.get("schemaVersion") != "compact-vdd-acceptance-projection-request.v1" or value.get("authorizes") != []:
         raise InputError("compact VDD projection request fields are invalid")
     if not isinstance(value.get("runId"), str) or RUN_PATTERN.fullmatch(value["runId"]) is None:
@@ -294,8 +295,27 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
         raise InputError("compact VDD target escapes repository root") from exc
     if not target.is_dir():
         raise InputError("compact VDD target is missing")
-    receipt_path, receipt, validator = _implementation_handoff(root, target, request)
-    manifest = _load(target / str(receipt["candidate_source_manifest"]["path"]))
+    current = request.get("currentQuickDev")
+    if current is not None:
+        if not isinstance(current, dict):
+            raise InputError("current Quick Dev handoff binding is invalid")
+        from current_quick_dev_handoff import verify_current_handoff, OWNER
+        if current.get("receipt") != {"path": request["implementationReceiptPath"], "sha256": request["implementationReceiptHash"]}:
+            raise InputError("current Quick Dev receipt binding does not match projection")
+        verify_current_handoff(root, current)
+        receipt_path = (root / request["implementationReceiptPath"]).resolve()
+        validator = OWNER / "coverage_predicates.py"
+        entries = [{"path": path, "role": "implementation", "slice_ids": [],
+                    "sha256": _hash_bytes(_candidate_payload(root, request, path)) if _candidate_payload(root, request, path) is not None else None}
+                   for path in request["changedPaths"]]
+        manifest = {"schema_version": "jimuyun.candidate-source-manifest.v1", "entries": entries,
+                    "candidate_source_root": _hash_bytes(json.dumps(entries, sort_keys=True, separators=(",", ":")).encode("utf-8"))}
+        manifest_bytes = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        receipt = {"candidate_source_manifest": {"path": f"acceptance-inputs/{request['runId']}/candidate-source-manifest.v1.json",
+                   "sha256": _hash_bytes(manifest_bytes), "candidate_source_root": manifest["candidate_source_root"]}}
+    else:
+        receipt_path, receipt, validator = _implementation_handoff(root, target, request)
+        manifest = _load(target / str(receipt["candidate_source_manifest"]["path"]))
     manifest_paths = [entry["path"] for entry in manifest["entries"]]
     try:
         manifest_paths = require_candidate_content(manifest_paths)
@@ -389,6 +409,8 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
         ):
             path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
         policy_path.write_bytes(policy_source.read_bytes())
+        if current is not None:
+            (stage_input / "candidate-source-manifest.v1.json").write_bytes(manifest_bytes)
         for path, payload in present_payloads.items():
             destination = stage_snapshot / path
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -449,14 +471,14 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
                 # The prerequisite bundle is consumed from the target root.
                 # Preserve a replayable target-relative reference rather than
                 # leaking the request's repository-relative transport path.
-                "path": receipt_path.relative_to(target).as_posix(),
+                "path": receipt_path.relative_to(root if current is not None else target).as_posix(),
                 "sha256": request["implementationReceiptHash"],
             "terminalCommandId": receipt.get("terminal_command_id")
             or (receipt.get("terminal_result") or {}).get("command_id")
             or "terminal-full",
             },
             "terminalRunner": {
-                "path": validator.relative_to(target).as_posix(),
+                "path": validator.relative_to(root if current is not None else target).as_posix(),
                 "sha256": _hash_bytes(validator.read_bytes()),
             },
             "baselineManifest": staged_ref(baseline_path, input_relative / baseline_path.name),
@@ -469,6 +491,8 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
             "policy": staged_ref(policy_path, input_relative / policy_path.name),
             "authorizes": [],
         }
+        if current is not None:
+            bundle["currentQuickDev"] = current
         bundle["bundleHash"] = canonical_hash(bundle)
         (stage_input / "compact-vdd-acceptance-prerequisite-bundle.v1.json").write_text(
             json.dumps(bundle, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"

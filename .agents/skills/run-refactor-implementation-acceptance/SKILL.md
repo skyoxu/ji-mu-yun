@@ -40,26 +40,34 @@ target plan and an explicit VDD or Quick Dev handoff. For an
 `implementation-complete` compact VDD target, run
 `scripts/compact_vdd_projection.py` only with an explicit sorted changed-path
 list, consumer refs, commands, actions, policy, and Acceptance-owned knowledge
-context. The projector must consume Quick Dev's current
-`quick-dev-implementation-complete.v1` receipt, validate it against the
-target's current implementation contract, command registry, and declared
-terminal runner, and never require VDD or maintainer `plan-state` to publish
-`implementation-complete`. The projector must not enumerate the dirty
-worktree to infer scope.
+context. For current Quick Dev Q8, supply `currentQuickDev` on the projection request:
+`semanticPlan` and `receipt` are repository-relative file references with byte
+SHA-256 hashes; `snapshotRoots`, `sourceCommit`, and `baseCommit` are the exact
+Q8 invocation inputs. The result schema is
+`quick-dev.implementation-complete-result.v2`. Acceptance invokes the Quick Dev
+owner's read-only proof replay, including runtime roots, all assertion/case
+edges, behavior routes and deferred gates. It does not rerun tests or a model.
+The current terminal input must contain the owner-produced snapshot manifest;
+historical results without it are not silently upgraded or rebound.
+
+The compact projection retains explicit changed paths and baseline/candidate
+custody. It does not require a current plan to manufacture legacy
+`implementation-contract.v1.json` or a plan-local terminal runner. Existing
+legacy `quick-dev-implementation-complete.v2` handoffs keep their validation
+path. Neither result format grants Acceptance authority. Acceptance must also
+execute and validate every required registered action before finalization.
+
 The orchestrator may otherwise materialize prerequisites
 deterministically from those bindings and immutable Git bytes, but must not
 guess scope, revisions, changed paths, commands, or acceptance actions. If a
 required source is missing or ambiguous, report `prerequisite_blocked` with the
 missing artifacts and stop before `start-or-resume`.
 
-When the Quick Dev implementation receipt is absent or stale only because its
-candidate/terminal binding changed, automatically return to
-`quick-dev-tdd-adapter` for the declared target's controlled terminal loop,
-publish a successor `implementation-complete` receipt, then rebuild the compact
-projection from that receipt. This is an owner handoff, not an Acceptance-owned
-terminal command and not a Bootstrap route. Stop only when Quick Dev's terminal
-program fails, its contract/runner is missing, or the new receipt cannot bind
-the current declared terminal contract.
+When a current Q8 receipt is absent or stale, return the exact missing or stale
+binding to the current Quick Dev public entry (`scripts/quick_dev/run.py`).
+Preserve the predecessor and use its explicit stage recovery requirements;
+do not invoke a plan-local legacy terminal loop for current semantic bundles.
+Legacy targets retain their declared controlled terminal recovery route.
 
 Treat candidate assembly as one evidence transaction. Complete every
 VDD/source-freeze mutation, then publish the knowledge catalog, then create
@@ -302,7 +310,32 @@ shared launcher revalidates the canonical policy before execution and rejects
 caller-supplied policy substitutions; any capability-gated route must replay
 policy-bound producer and representative execution receipts.
 
+## Current Coordinator Entry
+
+Use `acceptance_cli.py run-coordinator --request <request> --out <result>`.
+The `jimuyun.acceptance-coordinator-request.v3` contains `targetPlan`, hash-bound
+`preparedRunInput`, `skillInputReceipt`, `skillInputContract`, and `authorizes=[]`.
+References are relative to the request directory. The prepared input comes from
+`prepare-run`, using the projection's prerequisite bundle and its knowledge
+context. The Coordinator validates the real ready gate and copies that prepared
+input into its binding-derived persisted run. It reads actions and commands
+from the bound bundle, not caller route or action overrides.
+
+Identical reentry revalidates Q8, candidate custody, Skill input, action events,
+receipts and finalization. A failed registered action stops after that attempt;
+a waiting result does not authorize an automatic retry. Stale/incomplete proof
+requires explicit recovery or a new bound input; historical artifacts remain.
+For an explicit user request for Bootstrap only, set `maintainerIntent=request`.
+That returns a typed handoff without executing the DAG or launching Bootstrap.
+Omission means `default`, which uses deterministic Acceptance.
+
 ## Bootstrap Routing
+
+Bootstrap is explicit-only. Decision v11 retains risk classifications as
+context, but only `maintainerIntent=request` can require a review. A control
+plane or high-risk path alone never requires or launches Bootstrap. Incomplete
+Acceptance evidence remains blocked; Bootstrap cannot substitute for it.
+
 
 When the immutable Bootstrap requirement decision is `required`, deterministic
 validation must publish an append-only route through `prepare-bootstrap`. The
@@ -481,3 +514,4 @@ Use this repository-owned command for Skill package validation:
 ```text
 py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/run-refactor-implementation-acceptance --capability scripts/sc/config/skill-package-validator-capability.v1.json
 ```
+

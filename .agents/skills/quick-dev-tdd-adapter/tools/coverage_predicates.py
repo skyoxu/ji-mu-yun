@@ -180,6 +180,29 @@ def _validate_detached_binding(binding: Mapping[str, Any] | None, profile: str) 
     return dict(binding)
 
 
+def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_input):
+    """Recheck frozen runtime roots; Acceptance's new evidence is not runtime input."""
+    from runtime_evidence import ROOT_KINDS, hash_path, safe_relative
+    snapshot = terminal_input.get("snapshot_manifest")
+    if not isinstance(snapshot, dict) or snapshot.get("sha256") != sha256_value({k: v for k, v in snapshot.items() if k != "sha256"}):
+        raise ValueError("completion snapshot manifest missing or stale")
+    frozen = snapshot.get("roots", [])
+    expected = {r["root_kind"]: r for r in roots}
+    if set(expected) != set(ROOT_KINDS) or len(roots) != 8 or len(frozen) != 8 or {r["root_kind"] for r in frozen} != set(expected):
+        raise ValueError("completion snapshot roots mismatch")
+    if snapshot.get("git_delta", {}).get("base_commit") != (base_commit or source_commit):
+        raise ValueError("completion snapshot base mismatch")
+    for row in frozen:
+        spec = expected[row["root_kind"]]
+        if any(row.get(k) != spec.get(k) for k in ("repository_relative_posix_path", "inclusion_reason")) or row.get("source_commit") != source_commit:
+            raise ValueError("completion snapshot identity mismatch")
+        path = (workspace / safe_relative(row["repository_relative_posix_path"])).resolve()
+        path.relative_to(workspace.resolve())
+        if hash_path(path) != row["content_sha256"]:
+            raise ValueError("completion runtime root stale: " + row["root_kind"])
+    return snapshot
+
+
 def publish_implementation_complete(
     *,
     workspace: Path,
@@ -191,6 +214,7 @@ def publish_implementation_complete(
     base_commit: str | None = None,
     detached_promotion_binding: Mapping[str, Any] | None = None,
     profile: str = "standard",
+    verify_existing: bool = False,
 ) -> dict[str, Any]:
     detached_binding = _validate_detached_binding(detached_promotion_binding, profile)
     bundle = load_json(semantic_plan)
@@ -198,7 +222,9 @@ def publish_implementation_complete(
     routed = "behavior_routing" in bundle
     validate_plan(bundle)
     expected_keys = set() if routed else expected_tuple_keys(bundle)
-    before = current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit)
+    frozen_input = load_json(out.with_name("terminal-input.v2.json")) if verify_existing else None
+    before = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input)
+              if verify_existing else current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit))
     cover = bundle.get("final_plan_coverage")
     acceptance_by_slice: dict[str, set[str]] = {}
     if not isinstance(cover, list):
@@ -335,6 +361,7 @@ def publish_implementation_complete(
     predicates = sorted({str(item.get("terminal_predicate")) for item in slices if isinstance(item, Mapping) and item.get("terminal_predicate")})
     terminal_input = {
         "schema": "quick-dev.terminal-input.v2",
+        "snapshot_manifest": before,
         "plan_id": bundle.get("plan_id"),
         "plan_sha256": sha256_bytes(semantic_plan.read_bytes()),
         "v6_partition_manifest_sha256": sha256_value(slices),
@@ -351,12 +378,12 @@ def publish_implementation_complete(
         "detached_promotion_binding": detached_binding,
     }
 
-    after = current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit)
+    after = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input)
+             if verify_existing else current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit))
     if after["sha256"] != before["sha256"]:
         raise ValueError("current snapshot changed during Q8")
     terminal_input["current_snapshot_sha256"] = after["sha256"]
     terminal_input_path = out.with_name("terminal-input.v2.json")
-    create_json(terminal_input_path, terminal_input)
     result = {
         "schema": "quick-dev.implementation-complete-result.v2",
         "predicate": "implementation-complete",
@@ -373,5 +400,11 @@ def publish_implementation_complete(
         "evaluator_identity": "quick-dev-terminal-predicate.v2",
         "authorizes": [],
     }
-    create_json(out, result)
+    if verify_existing:
+        # ADR-0058: rederive Q8 proof without executing a process or publishing.
+        if load_json(terminal_input_path) != terminal_input or load_json(out) != result:
+            raise ValueError("implementation completion replay mismatch")
+    else:
+        create_json(terminal_input_path, terminal_input)
+        create_json(out, result)
     return result

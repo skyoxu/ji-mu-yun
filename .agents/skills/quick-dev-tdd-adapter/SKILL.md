@@ -43,6 +43,17 @@ For CER-capable plans, use the observed behavior routing below. The RED/GREEN/RE
 
 Stop at `implementation-complete`, `repair-vdd`, `environment-blocked`, or repeated deterministic failure. Never publish `acceptance-passed` here.
 
+Current Q8 terminal inputs also retain the full frozen snapshot manifest for
+Acceptance's read-only replay. Hand off the native completion result, semantic
+plan and exact snapshot-root/source/base inputs; do not manufacture a legacy
+plan-local terminal receipt. Acceptance rechecks runtime roots and every current
+case/edge proof without running a process, then applies its own registered checks.
+For a historical Q8 summary without the snapshot manifest, publish a fresh Q8
+summary in a new output directory from the explicitly bound predecessors. This
+is deterministic evidence evaluation, not a new RED/GREEN or model run; invalid
+predecessors still require normal recovery. See `docs/acceptance-current-closeout.md`.
+
+
 ## Evidence Ownership
 
 | Artifact | Sole current writer |

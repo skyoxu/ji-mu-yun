@@ -4,7 +4,7 @@
   "required": ["schemaVersion", "decisionVersion", "producer", "decisionStatus", "requirement", "profile", "reasonCodes", "requirementSources", "inputHashes", "policyHash", "candidateIdentityHash", "deterministicEvidenceHash", "maintainerIntent", "requiredCompanionCapabilityExpectations", "authorizes", "decisionHash"],
   "properties": {
     "schemaVersion": {"const": "acceptance-semantic-review-requirement-decision.v1"},
-    "decisionVersion": {"const": "v10"},
+    "decisionVersion": {"const": "v11"},
     "producer": {"const": "refactor-implementation-acceptance"},
     "decisionStatus": {"enum": ["ready", "blocked"]},
     "requirement": {"type": ["string", "null"], "enum": ["required", "not_required", null]},
@@ -22,3 +22,4 @@
   },
   "additionalProperties": false
 }
+

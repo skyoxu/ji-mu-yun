@@ -102,7 +102,7 @@ def _validate_current_review_decision(decision: object) -> dict:
     }
     if set(decision) != required | ({"profile"} if "profile" in decision else set()):
         raise InputError("current decision contract is incomplete")
-    if decision.get("schemaVersion") != "acceptance-semantic-review-requirement-decision.v1" or decision.get("decisionVersion") != "v10" or decision.get("producer") != "refactor-implementation-acceptance":
+    if decision.get("schemaVersion") != "acceptance-semantic-review-requirement-decision.v1" or decision.get("decisionVersion") != "v11" or decision.get("producer") != "refactor-implementation-acceptance":
         raise InputError("current decision contract revision is invalid")
     if decision.get("authorizes") != [] or decision.get("maintainerIntent") not in {"default", "request"}:
         raise InputError("current decision provenance is invalid")
@@ -358,7 +358,14 @@ def prepare_run(input_path: str, output_path: str, knowledge_context_path: str |
             or not isinstance(implementation_receipt["terminalCommandId"], str)
         ):
             raise InputError("prerequisite bundle implementation receipt is invalid")
-        receipt_path = target_file(implementation_receipt["path"], "implementation receipt")
+        receipt_path = ((REPOSITORY_ROOT / implementation_receipt["path"]).resolve()
+                        if "currentQuickDev" in bundle else target_file(implementation_receipt["path"], "implementation receipt"))
+        if "currentQuickDev" in bundle:
+            from current_quick_dev_handoff import verify_current_handoff
+            receipt_path.relative_to(REPOSITORY_ROOT.resolve())
+            if bundle["currentQuickDev"].get("receipt") != {"path": implementation_receipt["path"], "sha256": implementation_receipt["sha256"]}:
+                raise InputError("current Quick Dev receipt binding mismatch")
+            verify_current_handoff(REPOSITORY_ROOT, bundle["currentQuickDev"])
         if not receipt_path.is_file() or _file_hash(receipt_path) != implementation_receipt["sha256"]:
             raise InputError("prerequisite bundle implementation receipt is stale")
         prerequisite_binding = {
@@ -1082,7 +1089,7 @@ def _load_current_coordinator_inputs(request_path: Path, request: object) -> dic
         raise InputError("coordinator request is invalid")
     if _COORDINATOR_FORBIDDEN_CALLER_FIELDS & set(request):
         raise InputError("coordinator caller control fields are forbidden")
-    if set(request) != required or request.get("schemaVersion") != "jimuyun.acceptance-coordinator-request.v3" or request.get("authorizes") != []:
+    if set(request) not in (required, required | {"maintainerIntent"}) or request.get("maintainerIntent", "default") not in {"default", "request"} or request.get("schemaVersion") != "jimuyun.acceptance-coordinator-request.v3" or request.get("authorizes") != []:
         raise InputError("coordinator request is invalid")
     if not isinstance(request.get("targetPlan"), str) or not request["targetPlan"]:
         raise InputError("coordinator target plan is invalid")
@@ -1119,10 +1126,51 @@ def _load_current_coordinator_inputs(request_path: Path, request: object) -> dic
     context_ref = receipt.get("context_artifact")
     if not isinstance(context_ref, dict) or set(context_ref) != {"path", "sha256"}:
         raise InputError("coordinator Skill input context reference is invalid")
-    context_path = (source.parent / str(context_ref["path"])).resolve()
-    if not context_path.is_file() or _file_hash(context_path) != context_ref["sha256"]:
+    context_path = (request_path.parent / request["skillInputReceipt"]["path"]).parent.joinpath(str(context_ref["path"])).resolve()
+    if not context_path.is_file() or canonical_hash(_read_json(str(context_path))) != context_ref["sha256"]:
         raise InputError("coordinator Skill input context is stale")
-    return {"prepared": prepared, "prepared_ref": prepared_ref, "receipt_ref": receipt_ref, "receipt": receipt, "contract_ref": contract_ref, "skill_context_ref": {"path": context_path, "sha256": context_ref["sha256"]}, "target_plan": request["targetPlan"]}
+    try:
+        ready = require_ready_skill_input(
+            receipt_path=(request_path.parent / request["skillInputReceipt"]["path"]).resolve(),
+            repository_root=REPOSITORY_ROOT,
+            contract_path=(request_path.parent / request["skillInputContract"]["path"]).resolve(),
+            consumer="run-refactor-implementation-acceptance", operation="acceptance",
+        )
+        relative_context = context_path.relative_to(REPOSITORY_ROOT.resolve()).as_posix()
+    except (ValueError, OSError) as exc:
+        raise InputError("coordinator Skill input is invalid: " + str(exc)) from exc
+    if receipt.get("target") != request["targetPlan"]:
+        raise InputError("coordinator Skill input target mismatch")
+    run_input = prepared.get("input")
+    validate_run_input(run_input)
+    if {"semantic_review_required", "actions", "deterministicSourceSufficient"} & set(run_input):
+        raise InputError("coordinator prepared caller route or action override is forbidden")
+    if run_input.get("target") != request["targetPlan"] or prepared.get("inputHash") != canonical_hash(run_input) or prepared.get("authorizes") != []:
+        raise InputError("coordinator prepared target or input hash mismatch")
+    target = (REPOSITORY_ROOT / request["targetPlan"]).resolve()
+    try:
+        target.relative_to(REPOSITORY_ROOT.resolve())
+    except ValueError as exc:
+        raise InputError("coordinator target escapes repository") from exc
+    for field, validator in (("baseline", validate_baseline_manifest), ("candidate", None)):
+        relative = run_input[field + "_content_manifest_path"]
+        path = (target / relative).resolve()
+        path.relative_to(target)
+        value = _read_json(str(path))
+        if canonical_hash(value) != run_input[field + "_content_manifest_hash"]:
+            raise InputError("coordinator candidate manifest is stale")
+        if field == "baseline":
+            baseline = value
+            validator(value)
+        else:
+            candidate = value
+            validate_candidate_manifest(value, baseline)
+    if verify_manifest_bytes(target, run_input, baseline, candidate) != prepared.get("candidateCustody"):
+        raise InputError("coordinator candidate custody is stale")
+    knowledge = prepared.get("knowledgeContext")
+    if not isinstance(knowledge, dict) or freeze_knowledge_context(target, knowledge.get("path")) != knowledge:
+        raise InputError("coordinator knowledge context is stale")
+    return {"maintainer_intent": request.get("maintainerIntent", "default"), "prepared": prepared, "prepared_ref": prepared_ref, "receipt_ref": receipt_ref, "receipt": receipt, "contract_ref": contract_ref, "skill_context_ref": {"path": relative_context, "sha256": ready["context_artifact_hash"]}, "target_plan": request["targetPlan"]}
 
 
 def _append_coordinator_telemetry(run_dir: Path, value: dict) -> None:
@@ -1160,50 +1208,68 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
     target_root = (REPOSITORY_ROOT / loaded["target_plan"]).resolve()
     action_path = target_root / "action-dag.v1.json"
     registry_path = target_root / "command-registry.v1.json"
-    actions = run_input.get("actions")
-    if not isinstance(actions, list) or not actions:
-        if not action_path.is_file():
-            raise InputError("coordinator action DAG is unavailable")
-        action_doc = _read_json(str(action_path))
-        actions = action_doc.get("actions") if isinstance(action_doc, dict) else action_doc
+    prerequisite = prepared.get("prerequisiteBundle")
+    if prerequisite is not None:
+        bundle_path = (target_root / prerequisite["path"]).resolve()
+        bundle_path.relative_to(target_root)
+        if _file_hash(bundle_path) != prerequisite["sha256"]:
+            raise InputError("coordinator prerequisite bundle is stale")
+        bundle = _read_json(str(bundle_path))
+        if bundle.get("bundleHash") != prerequisite["bundleHash"] or canonical_hash({k: v for k, v in bundle.items() if k != "bundleHash"}) != prerequisite["bundleHash"]:
+            raise InputError("coordinator prerequisite bundle hash mismatch")
+        for field in ("actionDag", "commandRegistry"):
+            ref = bundle[field]
+            path = (target_root / ref["path"]).resolve()
+            path.relative_to(target_root)
+            if _file_hash(path) != ref["sha256"]:
+                raise InputError("coordinator persisted " + field + " is stale")
+            if field == "actionDag":
+                action_path = path
+            else:
+                registry_path = path
+    action_doc = _read_json(str(action_path))
+    actions = action_doc.get("actions") if isinstance(action_doc, dict) else action_doc
     if not isinstance(actions, list) or not actions:
         raise InputError("coordinator action DAG is invalid")
-    if not registry_path.is_file():
-        raise InputError("coordinator command registry is unavailable")
     command_registry = _read_json(str(registry_path))
     output = Path(output_path)
-    expected_action_hash = canonical_hash({"actions": actions})
-    identity = derive_target_run_identity(REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash)
+    expected_action_hash = canonical_hash({"actions": actions, "commandRegistry": command_registry})
+    skill_kwargs = {}
+    if isinstance(skill_binding_hash, str) and isinstance(skill_context_ref, dict) and isinstance(skill_context_hash, str):
+        skill_kwargs = {"skill_input_binding_hash": skill_binding_hash,
+                        "skill_input_context_hash": skill_context_hash,
+                        "skill_input_context_path": skill_context_ref["path"]}
+    identity = derive_target_run_identity(REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash, **skill_kwargs)
     expected_binding = _coordinator_binding({"runId": identity["runId"], "runDirectory": identity["runDirectory"]}, run_input_hash, contract_hash, knowledge_hash, expected_action_hash)
-    if output.exists():
-        existing = _read_json(str(output))
-        if (
-            not isinstance(existing, dict)
-            or existing.get("schemaVersion") != "acceptance-coordinator-result.v4"
-            or existing.get("runBinding") != expected_binding["runBinding"]
-            or existing.get("runBindingHash") != expected_binding["runBindingHash"]
-        ):
+    existing = _read_json(str(output)) if output.exists() else None
+    if existing is not None:
+        if (not isinstance(existing, dict) or existing.get("schemaVersion") != "acceptance-coordinator-result.v4"
+                or existing.get("runBinding") != expected_binding["runBinding"]
+                or existing.get("runBindingHash") != expected_binding["runBindingHash"]):
             raise InputError("coordinator replay binding does not match existing result")
-        run_dir = identity["runDirectoryPath"]
-        if not (run_dir / "run-state.json").is_file():
-            raise InputError("coordinator replay run state is missing")
-        state = _read_json(str(run_dir / "run-state.json"))
-        required_state = (("runId", identity["runId"]), ("runInputHash", run_input_hash), ("contractHash", contract_hash), ("knowledgeContextHash", knowledge_hash))
-        if any(state.get(key) != value for key, value in required_state):
-            raise InputError("coordinator replay run state binding does not match")
+    entry = start_or_resume_target_run(REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash, **skill_kwargs)
+    run_dir = (REPOSITORY_ROOT / entry["runDirectory"]).resolve()
+    persisted = run_dir / "prepare-run.v1.json"
+    if persisted.exists():
+        if _read_json(str(persisted)) != prepared:
+            raise InputError("coordinator persisted prepared input is stale")
+    else:
+        if existing is not None:
+            raise InputError("coordinator persisted prepared input is missing")
+        _publish_new_json(str(persisted), prepared)
+    if existing is not None:
+        if (existing.get("status") == "semantic_handoff_required") != (loaded.get("maintainer_intent", "default") == "request"):
+            raise InputError("coordinator replay review intent changed")
+        inspection = inspect_persisted_run(run_dir, actions, run_input_hash, contract_hash, knowledge_hash)
+        if existing.get("status") == "completed":
+            finalization = finalize_deterministic_run(REPOSITORY_ROOT, run_dir, persisted, actions, command_registry)
+            if finalization != existing.get("finalization"):
+                raise InputError("coordinator replay finalization mismatch")
+        elif existing.get("status") != "semantic_handoff_required" and inspection != existing.get("persistedActionState"):
+            raise InputError("coordinator waiting state changed; use a successor output")
         _append_coordinator_telemetry(run_dir, {"route": existing.get("route"), "replayed": True, "elapsedMs": 0, "waitMs": 0, "interventionCount": 0, "executedActionCount": 0})
         return existing
-    if isinstance(skill_binding_hash, str) and isinstance(skill_context_ref, dict) and isinstance(skill_context_hash, str):
-        entry = start_or_resume_target_run(
-            REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash,
-            skill_input_binding_hash=skill_binding_hash,
-            skill_input_context_hash=skill_context_hash,
-            skill_input_context_path=skill_context_ref["path"],
-        )
-    else:
-        entry = start_or_resume_target_run(REPOSITORY_ROOT, loaded["target_plan"], run_input_hash, contract_hash, knowledge_hash)
-    run_dir = (REPOSITORY_ROOT / entry["runDirectory"]).resolve()
-    semantic = bool(run_input.get("semantic_review_required", False))
+    semantic = loaded.get("maintainer_intent", "default") == "request"
     if semantic:
         # Semantic routes are a typed handoff boundary. They must not inspect,
         # resume, or finalize the action DAG before handing control upstream.
@@ -1235,13 +1301,20 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
     replayed = not bool(initial.get("readyActionIds")) and initial.get("nextAction") is None
     executed = 0
     inspection = initial
-    while inspection.get("nextAction") is not None:
-        resume_persisted_run(
+    events_path = run_dir / "acceptance-events.jsonl"
+    prior_failure = events_path.is_file() and any(
+        json.loads(line).get("eventType") == "action-failed"
+        for line in events_path.read_text(encoding="utf-8").splitlines() if line.strip()
+    )
+    while inspection.get("nextAction") is not None and not prior_failure:
+        resumed = resume_persisted_run(
             REPOSITORY_ROOT, run_dir, actions, command_registry,
             run_input_hash, contract_hash, knowledge_hash,
         )
         executed += 1
         inspection = inspect_persisted_run(run_dir, actions, run_input_hash, contract_hash, knowledge_hash)
+        if resumed and resumed.get("receipt", {}).get("exitCode") != 0:
+            break
     if inspection.get("actionStates") and all(state in {"completed", "not-applicable"} for state in inspection["actionStates"].values()):
         finalization = None
         if run_input.get("execution_mode", "evidence_only") == "evidence_only":
@@ -1249,8 +1322,8 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
                 finalization = finalize_deterministic_run(
                     REPOSITORY_ROOT, run_dir, run_dir / "prepare-run.v1.json", actions, command_registry,
                 )
-            except (InputError, ControlError, FileNotFoundError):
-                finalization = {"status": "not-ready", "authorizes": []}
+            except (InputError, ControlError, FileNotFoundError) as exc:
+                finalization = {"status": "not-ready", "reason": str(exc), "authorizes": []}
         route, status = "deterministic_only", "completed" if finalization and finalization.get("status") == "acceptance-passed" else "waiting"
     else:
         finalization = None
