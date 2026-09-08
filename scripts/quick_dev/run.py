@@ -48,6 +48,8 @@ def _inside_root(raw: str, label: str) -> Path:
 
 def _public_repeat_guard() -> int | None:
     """Block a third identical deterministic failure before process launch."""
+    if _peek_value("--action") != "execute-stage":
+        return None
     history_raw = _consume_value("--failure-history")
     if history_raw is None:
         return None

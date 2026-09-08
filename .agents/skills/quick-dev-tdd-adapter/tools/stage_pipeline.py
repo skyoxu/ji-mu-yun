@@ -91,12 +91,19 @@ def validate_nonterminal_successor(run_dir: Path, descriptor: Mapping[str, Any])
     }
 
 
-def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_path:Path,profile_identity:str)->dict[str,Any]:
+def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_path:Path,profile_identity:str,failure_history=None)->dict[str,Any]:
     bundle=load_json(semantic_plan)
     descriptor=load_json(descriptor_path)
     validate_descriptor(descriptor)
     if descriptor["run_id"]!=run_dir.name:
         raise ValueError("descriptor run binding mismatch")
+    from stage_reentry import existing_result, input_binding, check_history
+    prior = existing_result(workspace, bundle, run_dir, descriptor, profile_identity)
+    if prior is not None:
+        return prior
+    decision = check_history(run_dir, descriptor, failure_history)
+    if decision['status'] == 'blocked':
+        return decision
     from behavior_routing import verify_stage, production_hashes, derive_dispositions
     route = verify_stage(workspace, bundle, run_dir, descriptor)
     routed = "behavior_routing" in bundle
@@ -117,6 +124,11 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
         for row in descriptor["case_contract"]["bindings"]:
             if sorted(row["expected_failure_ids"]) != failures_by_assertion[(row["acceptance_id"], row["assertion_id"])]:
                 raise ValueError("case-failure-binding-differs-from-semantic-plan")
+    evidence_dir = run_dir / 'canonical-evidence' / descriptor['stage']
+    binding = input_binding(workspace, bundle, descriptor, profile_identity)
+    # Atomic reservation also prevents concurrent or interrupted duplicate launches.
+    evidence_dir.mkdir(parents=True, exist_ok=False)
+    create_json(evidence_dir / 'execution-input.v1.json', binding)
     receipt=execute_process(workspace,run_dir,descriptor["stage"],descriptor,profile_identity=profile_identity)
     if routed and production_before != production_hashes(workspace, bundle, descriptor["slice_id"]):
         raise ValueError("behavior-routing:production-changed-during-test")
@@ -167,6 +179,7 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
     if regression_binding is not None:
         result["regression_gate"]=regression_binding
     create_json(run_dir/"canonical-evidence"/descriptor["stage"]/"stage-result.v2.json",result)
+    create_json(evidence_dir / 'execution-complete.v1.json', {'result_sha256': sha256_value(result), 'input_sha256': sha256_value(binding)})
     return result
 
 

@@ -135,3 +135,26 @@ Legacy compatibility tests may load their explicitly named historical fixtures, 
 - Never let governance bytes become runtime truth by default.
 - Never use artifact existence or plan status strings as completion proof.
 - Never invoke Stock BMAD Quick Dev as authoritative fallback after strict routing.
+
+## Stage Reentry And Failure History
+
+Current stages check their explicit run-local evidence before launching tests.
+A completed stage with matching plan, descriptor, profile, runtime code and
+candidate/target/fixture bytes returns its original result, including a recorded
+failure. It does not rerun tests or overwrite history. Partial or stale evidence
+returns `stage-reentry-blocked`; preserve it and use explicit recovery or a new
+run. Results created before the reentry binding protocol require a new run for
+execution; their historical evidence remains readable.
+
+The shared stage dispatcher applies repeat stop-loss to `probe`, `red`, `green`,
+`refactor`, `regression` and `terminal`. Pass an ordered JSON history through
+`--failure-history`, or place it explicitly at `<run-dir>/failure-history.json`.
+Each row binds `failure_fingerprint`, `candidate_hash` and `selector_identity`.
+No history scan or latest-run inference is performed; absent history does not
+claim knowledge of other runs. Two matching prior failures block the third
+attempt before execution. Refactor reentry checks precede its model worker.
+
+For the bounded 8-17 closeout, run the test files listed in
+`logs/quick-dev-stage-recovery-closeout-23cf4937/validation.json`, including
+`test_stage_reentry.py`, `test_ch456_recovery_mutations.py` and
+`test_ch456_public_repeat_guard.py`. No live CH456 run is required.

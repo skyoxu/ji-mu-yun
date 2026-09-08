@@ -231,3 +231,18 @@ a scope exclusion requires the existing explicit source/scope decision.
 - `decision-logs/2026-07-16-bootstrap-review-self-audit-and-hardening-proposal.md`
 - `docs/standards/bootstrap-review-control-plane.md`
 - `execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md`
+
+
+## 2026-09-08: bounded Quick Dev stage recovery closeout
+
+Current stage execution reserves an immutable run-local input binding before
+starting its process and publishes a result seal only after complete stage
+publication. Reentry verifies the original bytes and current inputs before
+reusing a result. Incomplete or stale runs stop before process launch and retain
+all history. The protocol does not manufacture completion from partial receipts.
+The existing two-failure stop-loss applies at the common stage dispatcher using
+explicit ordered history; no history discovery or second lifecycle is added.
+Refactor checks reentry before worker invocation. Historical results without
+these bindings are not silently upgraded. This decision is limited to 8-17
+reentry, stop-loss wiring and CER-compatible recovery fixtures; 8-13 advanced
+sharding and CH456 live acceptance are outside scope.

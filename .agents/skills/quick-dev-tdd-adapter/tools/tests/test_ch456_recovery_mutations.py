@@ -17,7 +17,7 @@ from stage_pipeline import validate_nonterminal_successor
 
 
 def _bundle() -> dict:
-    return {"plan_id":"PLAN-X","acceptances":[{"acceptance_id":"A-X","assertion_ids":["ASSERT-X"]}],"slices":[{"slice_id":"S1","acceptance_ids":["A-X"],"failure_intent_ids":[],"execution_snapshot_paths":["tests/selector.py","tests/fixture.txt"],"allowed_write_paths":["src/value.txt"]}]}
+    return {"failure_intents":[{"failure_intent_id":"FI-X","failure_family":"expected-red","failure_id":"EXPECTED","acceptance_ids":["A-X"]}],"plan_id":"PLAN-X","acceptances":[{"acceptance_id":"A-X","assertion_ids":["ASSERT-X"]}],"slices":[{"slice_id":"S1","acceptance_ids":["A-X"],"failure_intent_ids":["FI-X"],"execution_snapshot_paths":["tests/selector.py","tests/fixture.txt"],"allowed_write_paths":["src/value.txt"]}]}
 
 
 def _descriptor(*, run_id: str = "R1", stage: str = "red", argv: list[str] | None = None, timeout_seconds: int = 30) -> dict:
@@ -41,7 +41,7 @@ def _prepare(root: Path, selector_source: str, *, run_ids: tuple[str, ...] = ("R
     for run_id in run_ids:
         (root/"runs"/run_id).mkdir(parents=True)
     (root/"tests"/"fixture.txt").write_text("fixture\n",encoding="utf-8")
-    (root/"tests"/"selector.py").write_text(selector_source,encoding="utf-8")
+    (root/"tests"/"selector.py").write_text("import pytest\npytestmark = pytest.mark.cer_assertion('ASSERT-X')\n" + selector_source,encoding="utf-8")
 
 
 def _git_init(root: Path) -> None:
@@ -136,13 +136,19 @@ def test_repeated_deterministic_failure_fingerprint_is_stable_and_stops(tmp_path
 
 
 def _write_clean_red_predecessor(run: Path, red: dict) -> None:
+    root = run.parents[1]
+    _prepare(root, "def test_behavior():\n    print('FAILURE_ID:EXPECTED')\n    assert False\n", run_ids=())
     create_json(run/"descriptors"/"red.json",red)
+    receipt = execute_process(root, run, "red", red, profile_identity="standard")
+    observation = judge_receipt(run, "red", red, receipt, expected_failure_ids=["EXPECTED"])
+    assert observation["predicate_result"] is True
     create_json(run/"canonical-evidence"/"red"/"stage-result.v2.json",{
         "schema":"quick-dev.stage-result.v2",
         "plan_id":red["plan_id"],
         "slice_id":red["slice_id"],
         "run_id":red["run_id"],
         "stage":"red",
+        "receipt_sha256":sha256_value(receipt),
         "descriptor_sha256":sha256_value(red),
         "selector_identity":selector_identity_from_descriptor(red),
         "predicate_result":True,

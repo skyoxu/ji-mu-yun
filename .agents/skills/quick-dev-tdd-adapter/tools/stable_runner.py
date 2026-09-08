@@ -419,9 +419,35 @@ def q6_refactor_worker_and_run(
     profile: str,
     timeout_seconds: int,
     backend: str | None,
+    failure_history=None,
 ) -> dict[str, Any]:
     from behavior_routing import read_route as read_behavior_route
     run_dir = _inside_root(run_dir, "run-dir")
+    from stage_reentry import existing_result, check_history
+    bundle = load_json(semantic)
+    def resumed_refactor(result):
+        next_action = "repair-vdd"
+        if result.get("predicate_result") is True:
+            from behavior_routing import next_action as route_next
+            next_action = route_next(ROOT, bundle, run_dir, read_behavior_route(ROOT, bundle, run_dir, slice_id)) if "behavior_routing" in bundle else "validate-slice"
+        return {"schema": "quick-dev.refactor-worker-result.v1", "status": "refactor-observed" if result.get("predicate_result") else "refactor-failed", "stage_result": result, "worker": {"status": "not-invoked-existing-descriptor"}, "required_next_action": next_action, "authorizes_evidence": False, "authorizes": []}
+    refactor_path = _stage_descriptor(run_dir, "refactor")
+    if refactor_path.is_file():
+        descriptor = load_json(refactor_path)
+        prior = existing_result(ROOT, bundle, run_dir, descriptor, profile)
+        if prior is not None:
+            return resumed_refactor(prior)
+        # Descriptor already materialized: resume its test, not the model worker.
+        stage_result = execute_stage(workspace=ROOT, semantic_plan=semantic, run_dir=run_dir, descriptor_path=refactor_path, profile_identity=profile, failure_history=failure_history)
+        return resumed_refactor(stage_result)
+    if (run_dir / "canonical-evidence/refactor").exists():
+        raise ValueError("stage-reentry-blocked: incomplete refactor evidence; recover or use a new run")
+    red_descriptor = load_json(_stage_descriptor(run_dir, "red"))
+    candidate = candidate_identity(ROOT, bundle, slice_id)
+    prospective = successor_descriptor(red_descriptor, stage="refactor", run_id=run_dir.name, candidate_hash=candidate["candidate_hash"])
+    decision = check_history(run_dir, prospective, failure_history)
+    if decision["status"] == "blocked":
+        return decision
     green = load_json(run_dir / "canonical-evidence" / "green" / "stage-result.v2.json")
     worker = run_refactor_worker(
         workspace=ROOT,
@@ -446,7 +472,7 @@ def q6_refactor_worker_and_run(
         semantic_plan=semantic,
         run_dir=run_dir,
         descriptor_path=refactor_path,
-        profile_identity=profile,
+        profile_identity=profile, failure_history=failure_history,
     )
     return {
         "schema": "quick-dev.refactor-worker-result.v1",
@@ -512,7 +538,7 @@ def _materialize_named_descriptor(semantic: Path, run_dir: Path, stage: str) -> 
     return descriptor
 
 
-def _execute_named_stage(semantic: Path, run_dir: Path, stage: str, profile: str) -> Mapping[str, Any]:
+def _execute_named_stage(semantic: Path, run_dir: Path, stage: str, profile: str, failure_history=None) -> Mapping[str, Any]:
     run_dir = _inside_root(run_dir, "run-dir")
     descriptor = _materialize_named_descriptor(semantic, run_dir, stage)
     return execute_stage(
@@ -520,7 +546,7 @@ def _execute_named_stage(semantic: Path, run_dir: Path, stage: str, profile: str
         semantic_plan=semantic,
         run_dir=run_dir,
         descriptor_path=descriptor,
-        profile_identity=profile,
+        profile_identity=profile, failure_history=failure_history,
     )
 
 
@@ -539,6 +565,7 @@ def main() -> int:
         ),
         default="preflight",
     )
+    parser.add_argument("--failure-history", type=Path)
     parser.add_argument("--state", type=Path)
     parser.add_argument("--changed-path", action="append", default=[])
     parser.add_argument("--change-kind", action="append", default=[])
@@ -558,6 +585,7 @@ def main() -> int:
     parser.add_argument("--llm-backend")
     args = parser.parse_args()
     try:
+        failure_history = _load_json_list(args.failure_history, "failure-history") if args.failure_history else None
         profile_contract(args.profile)
         semantic = _semantic_plan(args.plan)
         snapshot_roots = _load_json_list(args.snapshot_roots, "snapshot-roots") if args.snapshot_roots else None
@@ -596,7 +624,7 @@ def main() -> int:
             if args.run_dir is None:
                 raise ValueError(f"{args.action} requires --run-dir")
             stage = args.action.removeprefix("run-")
-            result = _execute_named_stage(semantic, args.run_dir, stage, args.profile)
+            result = _execute_named_stage(semantic, args.run_dir, stage, args.profile, failure_history)
         elif args.action == "implement":
             if args.run_dir is None or snapshot_roots is None or args.source_commit is None:
                 raise ValueError("implement requires --run-dir --snapshot-roots --source-commit")
@@ -610,12 +638,12 @@ def main() -> int:
                 raise ValueError("run-refactor requires --run-dir")
             result = q6_refactor_worker_and_run(
                 semantic=semantic, slice_id=args.slice_id, run_dir=args.run_dir, profile=args.profile,
-                timeout_seconds=args.worker_timeout_seconds, backend=args.llm_backend,
+                timeout_seconds=args.worker_timeout_seconds, backend=args.llm_backend, failure_history=failure_history,
             )
         elif args.action == "execute-stage":
             if args.run_dir is None or args.descriptor is None:
                 raise ValueError("execute-stage requires --run-dir and --descriptor")
-            result = execute_stage(workspace=ROOT, semantic_plan=semantic, run_dir=_inside_root(args.run_dir, "run-dir"), descriptor_path=_inside_root(args.descriptor, "descriptor"), profile_identity=args.profile)
+            result = execute_stage(workspace=ROOT, semantic_plan=semantic, run_dir=_inside_root(args.run_dir, "run-dir"), descriptor_path=_inside_root(args.descriptor, "descriptor"), profile_identity=args.profile, failure_history=failure_history)
         elif args.action == "implementation-handoff":
             if args.run_dir is None or snapshot_roots is None or args.source_commit is None:
                 raise ValueError("implementation-handoff requires --run-dir --snapshot-roots --source-commit")

@@ -1,0 +1,90 @@
+{
+  "source_base": "23cf4937c51f8f7a4f7bc67bd1ed88e6a97c3d83",
+  "branch": "implementation/quick-dev-stage-recovery-closeout",
+  "scope": [
+    "stage reentry",
+    "explicit repeat stop-loss",
+    "CER recovery fixtures"
+  ],
+  "test_files": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_public_repeat_guard.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_red_production_entry_guard.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_worker_orchestration.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_semantic_plan_contract.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py"
+  ],
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-m",
+    "pytest",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_public_repeat_guard.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_red_production_entry_guard.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_worker_orchestration.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_lifecycle.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_semantic_plan_contract.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
+    "-q"
+  ],
+  "exit_code": 0,
+  "platform": "Linux-6.18.35-x86_64-with-glibc2.39",
+  "python": "3.12.13 (main, Aug  7 2026, 02:25:39) [Clang 22.1.3 ]",
+  "live_backend_calls": 0,
+  "validation_kind": "selected deterministic regression; controlled real pytest cases and CLI calls",
+  "pending": [
+    "Windows deterministic confirmation"
+  ],
+  "changed_file_sha256": {
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md": "96f38a669907ce8f3a76d178b9668d398055f45a01daeb6980cc0ced5718a93a",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py": "974213d9d761eac6cb72cb05c82e65f1e499f6bf3198517e446a693856a3f218",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py": "8ad659279c81b05902fac813a50eb8ecf736f1d918a9d9be47e604db67d539d8",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stage_reentry.py": "73bc14cdda75960ea2d7df6904594523bcb77aeb03b4411e9d29c6ee7289dbd7",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py": "97e119fe21f97a58de19e6097c0ce4e6a82baa5d5c635b23f71c45ee50eededb",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py": "fb514bc3e3e085ec3dcc3623e031677cddd656715c683c44c363820cd7a15518",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "81feec3f374681ed5af83ad4a8a5356e5430bd2fd46a4f8733d4107b58330ffe",
+    "scripts/quick_dev/run.py": "3fdde69d44daed3edbc7a20c71e5ed08a784a2c1142cde119d29650c7ac9de10"
+  },
+  "full_suite_changed_file_sha256": {
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md": "96f38a669907ce8f3a76d178b9668d398055f45a01daeb6980cc0ced5718a93a",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py": "6777b954ddf1a71a4ae3a1d995d3af0a4f85c1497d2736213d807aad458312fa",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py": "8ad659279c81b05902fac813a50eb8ecf736f1d918a9d9be47e604db67d539d8",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stage_reentry.py": "73bc14cdda75960ea2d7df6904594523bcb77aeb03b4411e9d29c6ee7289dbd7",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py": "97e119fe21f97a58de19e6097c0ce4e6a82baa5d5c635b23f71c45ee50eededb",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py": "d458f8d4b3608b462a19757e91c9552554e8360922d767968a97d83c30a6df51",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "81feec3f374681ed5af83ad4a8a5356e5430bd2fd46a4f8733d4107b58330ffe",
+    "scripts/quick_dev/run.py": "3fdde69d44daed3edbc7a20c71e5ed08a784a2c1142cde119d29650c7ac9de10"
+  },
+  "followup": {
+    "reason": "Preserve next action on refactor result reuse",
+    "test_files": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_worker_orchestration.py"
+    ],
+    "result": "22 passed in 5.13s",
+    "exit_code": 0
+  }
+}
