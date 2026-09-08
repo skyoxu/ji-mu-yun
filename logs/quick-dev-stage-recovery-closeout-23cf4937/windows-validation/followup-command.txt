@@ -1,0 +1,1 @@
+py -3 -m pytest .agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_worker_orchestration.py -q

@@ -1,0 +1,8 @@
+schema=quick-dev-stage-recovery-closeout.windows-validation.v1
+source_head=d46de0a208039fd6ef45cae267766a6b75632b06
+source_base=23cf4937c51f8f7a4f7bc67bd1ed88e6a97c3d83
+status=pass
+main_result=142 passed, 15 subtests passed in 52.49s
+followup_result=22 passed in 4.73s
+live_backend_calls=0
+ch456_live_rerun=false
