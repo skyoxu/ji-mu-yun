@@ -5,6 +5,17 @@ acceptance-coordinator trust review. It is separate from the
 `acceptance-coordinator-trust-recovery` implementation plan and does not alter
 the 2026-08-17 historical plans.
 
+
+## Current direct repair
+
+The maintainer authorized direct online implementation of the complete W0-W6
+scope without the formal execution chain. Current implementation and local
+verification instructions are in [Direct closeout](direct-closeout.md).
+The new shared entry is `scripts/python/skill_input_v2.py`; run
+`py -3 scripts/python/verify_toolchain_workflow_repair.py` for direct validation.
+Windows validation remains pending. The older lifecycle statement below and
+formal receipts are historical, not current direct-closeout evidence.
+
 ## Scope
 
 - W0: typed source selection and authority/read-set projection.
@@ -27,3 +38,4 @@ plan-ready validation and an explicit maintainer receipt. Implementation may
 begin only through the declared Quick Dev TDD route; this plan does not
 authorize implementation completion, Knowledge publication, Bootstrap, or
 acceptance.
+

@@ -282,37 +282,15 @@ def build_typed_source_selection_v2(
     consumer: str = "quick-dev-tdd-adapter",
     policy_revision: str = "v2",
 ) -> dict[str, str]:
-    """Build independently verifiable selection and content identities."""
-    normalized: list[dict[str, str]] = []
-    for source in sources:
-        if not isinstance(source, dict):
-            raise SkillInputError("typed source selection entry is invalid")
-        required = ("role", "path", "module", "resource_set", "sha256")
-        if any(not isinstance(source.get(key), str) or not source[key] for key in required):
-            raise SkillInputError("typed source selection entry is incomplete")
-        if not SHA256_PATTERN.fullmatch(source["sha256"]):
-            raise SkillInputError("typed source selection content hash is invalid")
-        normalized.append({key: source[key] for key in required})
-    normalized.sort(key=lambda item: (item["role"], item["path"], item["module"], item["resource_set"]))
-    selection_projection = {
-        "schema_version": "typed-source-selection.v2",
-        "projection_kind": "selection",
-        "consumer": consumer,
-        "policy_revision": policy_revision,
-        "sources": [
-            {key: item[key] for key in ("role", "path", "module", "resource_set")}
-            for item in normalized
-        ],
-    }
-    content_projection = {
-        **selection_projection,
-        "projection_kind": "content",
-        "sources": normalized,
-    }
-    return {
-        "sourceSelectionHash": canonical_hash(selection_projection),
-        "sourceContentHash": canonical_hash(content_projection),
-    }
+    """Compatibility facade for the strict ADR-0060 typed selector."""
+    try:
+        from .skill_input_selection import selection_identity
+    except ImportError:
+        from skill_input_selection import selection_identity
+    try:
+        return selection_identity(sources, consumer=consumer, policy_revision=policy_revision)
+    except ValueError as exc:
+        raise SkillInputError(str(exc)) from exc
 
 
 def selected_source_content_root(sources: Iterable[tuple[Path, str]]) -> str:
@@ -1012,3 +990,4 @@ def line_ranges(raw: bytes) -> tuple[int, list[dict[str, int | str]]]:
 
 def now_utc() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+

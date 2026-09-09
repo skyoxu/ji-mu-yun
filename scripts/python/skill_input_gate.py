@@ -19,6 +19,11 @@ def require_ready_skill_input(
     operation: str,
 ) -> dict[str, Any]:
     """Fail closed unless a receipt is ready for this exact Skill operation."""
+    # v2 consumers resolve a pointer, never a caller-selected generation file.
+    if receipt_path.name == "current.v1.json":
+        from skill_input_v2 import require_current
+        return require_current(repository_root, receipt_path, consumer=consumer,
+                               operation=operation, contract_path=contract_path)
     result = validate_receipt(receipt_path.resolve(), repository_root.resolve(), contract_path.resolve(), require_ready=True)
     receipt = read_json(receipt_path.resolve())
     if receipt.get("consumer") != consumer or receipt.get("operation") != operation:
@@ -33,3 +38,4 @@ def require_ready_skill_input(
         "context_artifact_hash": context_ref["sha256"],
         "binding_hash": receipt["binding_hash"],
     }
+

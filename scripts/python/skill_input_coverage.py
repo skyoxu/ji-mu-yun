@@ -30,3 +30,20 @@ def evaluate_coverage(
         if source_hash != observed_source_hash:
             return {"status": "stale-source", "missing": missing, "duplicates": duplicates, "unexpected": unexpected, "required": required}
     return {"status": "complete" if not missing and not duplicates and not unexpected else "insufficient", "missing": missing, "duplicates": duplicates, "unexpected": unexpected, "required": required}
+
+
+
+def prove_ranges(sources, observed, *, page_bytes):
+    """Recompute every range from adapter-read bytes; summaries have no authority."""
+    try:
+        from .skill_input_transport import pages_for
+        from .skill_input_protocol import identity
+    except ImportError:
+        from skill_input_transport import pages_for
+        from skill_input_protocol import identity
+    expected = pages_for(sources, page_bytes=page_bytes, max_snapshot_bytes=max(1, sum(map(len, sources.values()))))
+    if observed != expected:
+        raise ValueError('coverage missing, conflicting, stale or out of order')
+    return {'status': 'complete', 'pages_hash': identity(expected),
+            'source_hash': identity({k: __import__('hashlib').sha256(v).hexdigest() for k, v in sorted(sources.items())}),
+            'page_count': len(expected), 'byte_count': sum(map(len, sources.values())), 'authorizes': []}

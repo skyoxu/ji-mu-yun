@@ -321,6 +321,19 @@ def _validate_child_request_binding(
 
 
 def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: Path, require_ready: bool = False) -> dict[str, Any]:
+    if receipt_path.name == "current.v1.json":
+        from skill_input_v2 import require_current
+        contract = read_json(contract_path)
+        from skill_input_current import resolve_current
+        from skill_input_generation import read_generation
+        pointer = resolve_current(receipt_path.parent)
+        if pointer is None:
+            raise ReceiptValidationError("current generation is missing")
+        operation = read_generation(receipt_path.parent, pointer["generation_id"])["receipt"]["operation"]
+        if operation not in contract.get("operations", {}):
+            raise ReceiptValidationError("operation is not declared by contract")
+        return require_current(repository_root, receipt_path, consumer=contract["consumer"],
+                               operation=operation, contract_path=contract_path)
     _reject_symlink_components(receipt_path, "receipt")
     try:
         receipt_path.resolve().relative_to((repository_root.resolve() / "logs").resolve())
@@ -710,3 +723,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

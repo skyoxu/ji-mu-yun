@@ -86,3 +86,12 @@ For CH456 maintenance and completion interpretation, read
 It records the maintainer-approved topic-specific supersession of earlier
 draft/PRD/Spec wording under ADR-0041. Historical acceptance artifacts retain
 their original candidate bindings and do not become current runtime authority.
+
+
+## Skill-input direct v2 route
+
+For typed source selection, paged delivery, immutable current receipts and
+retention, use [Skill-input v2](../docs/workflows/skill-input-v2.md) and
+`scripts/python/skill_input_v2.py`. The shared Skill gate accepts its canonical
+current pointer and revalidates source/binding bytes. V1 remains an explicit
+historical compatibility input and is never automatically promoted.

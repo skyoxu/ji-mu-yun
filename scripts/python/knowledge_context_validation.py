@@ -15,7 +15,10 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from _knowledge_locator_core import require_fresh_catalog, verify_current_publication
+try:
+    from ._knowledge_locator_core import require_fresh_catalog, verify_current_publication
+except ImportError:
+    from _knowledge_locator_core import require_fresh_catalog, verify_current_publication
 
 
 CATALOG_RELATIVE = Path("knowledge/catalogs/repository-knowledge-catalog.v2.json")
@@ -546,3 +549,4 @@ def validate_context(
             except ValueError as exc:
                 return str(exc)
     return None
+
