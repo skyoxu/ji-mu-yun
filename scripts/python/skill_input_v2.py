@@ -251,6 +251,10 @@ def require_current(repository_root, pointer_path, *, consumer, operation, contr
 
 
 def main():
+    # JSON Lines is a UTF-8 wire protocol, independent of the host locale.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, 'reconfigure'):
+            stream.reconfigure(encoding='utf-8', errors='strict')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repository-root', type=Path, default=Path.cwd())
     commands = parser.add_subparsers(dest='command', required=True)

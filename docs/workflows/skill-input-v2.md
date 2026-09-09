@@ -146,3 +146,10 @@ JUnit/stdout/stderr/current source hashes, and appends a fresh directory under
 `logs/toolchain-workflow-repair-direct/`. It grants no formal lifecycle state.
 Windows includes the existing junction regression; non-Windows explicitly
 excludes that one Windows-only case and records Windows verification pending.
+
+### CLI stream encoding
+
+The CLI emits UTF-8 JSON Lines on stdout and UTF-8 diagnostics on stderr,
+independent of Windows locale or inherited PYTHONIOENCODING. Subprocess
+callers must decode captured output explicitly with encoding="utf-8" and
+errors="strict"; text=True alone uses the parent locale and is insufficient.

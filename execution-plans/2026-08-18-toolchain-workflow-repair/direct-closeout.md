@@ -71,3 +71,24 @@ supersedes that procedure and has executable online tests.
   `test_intermediate_junction_is_rejected_when_supported` on Windows.
 - Earlier 127-case evidence is retained separately; use the 133-case directory
   for this delivered source set. Historical formal receipts are not resealed.
+
+## Windows encoding correction (2026-09-09)
+
+The maintainer reported Windows validation of 04900158 as 133 passed and
+1 failed, with no skips, stable sources and no live backend calls. The CLI
+E2E reader used the Windows default GBK codec and raised UnicodeDecodeError.
+Reported evidence remains in the maintainer checkout at
+`logs/toolchain-workflow-repair-direct/20260909T173411Z-6c910824/`;
+these local artifacts have not been independently inspected or uploaded here.
+
+The CLI now explicitly configures stdout/stderr as strict UTF-8, and its E2E
+subprocess reader explicitly decodes strict UTF-8. The test covers inherited
+UTF-8, GBK and CP1252 streams with Python UTF-8 mode disabled and verifies
+exact Unicode page reconstruction before finishing and validating current.
+
+Corrected online suite: **135 passed, 1 Windows-only test deselected**.
+Evidence: `logs/toolchain-workflow-repair-direct/20260909T174023Z-0a2570cb/`.
+This supersedes the earlier online result for the corrected sources. Windows
+validation and final direct closeout remain pending. Rerun the same direct
+verification command on the corrected branch; Windows should collect 136
+cases, with no platform exclusions. Preserve the failed Windows evidence.

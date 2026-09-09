@@ -248,15 +248,21 @@ def test_retention_reports_expiry_and_requires_bound_approval(tmp_path):
     assert len(list((store / 'cleanup-receipts').glob('*.json'))) == 2
 
 
-def test_cli_prepare_consume_finish_validate_without_model(tmp_path):
+@pytest.mark.parametrize('stdio_encoding', ['utf-8', 'gbk', 'cp1252'])
+def test_cli_prepare_consume_finish_validate_without_model(tmp_path, stdio_encoding):
     request = fixture(tmp_path)
     request_path = tmp_path / 'request.json'; request_path.write_text(json.dumps(request))
     entry = Path(v2.__file__).resolve()
+    env = dict(os.environ, PYTHONIOENCODING=stdio_encoding, PYTHONUTF8='0')
+    delivered = []
     def run(*argv):
-        result = subprocess.run([sys.executable, str(entry), '--repository-root', str(tmp_path), *argv], capture_output=True, text=True, check=True)
-        return json.loads(result.stdout.splitlines()[-1])
+        result = subprocess.run([sys.executable, str(entry), '--repository-root', str(tmp_path), *argv], capture_output=True, text=True, encoding='utf-8', errors='strict', env=env, check=True)
+        records = [json.loads(line) for line in result.stdout.splitlines()]
+        delivered.extend(record['content'] for record in records if 'page' in record)
+        return records[-1]
     start = run('prepare', '--request', str(request_path))
     assert run('consume', '--plan-id', 'repair', '--attempt-id', start['attempt_id'])['status'] == 'complete'
+    assert ''.join(delivered) == (tmp_path / 'requirements.md').read_text(encoding='utf-8')
     assert run('finish', '--plan-id', 'repair', '--attempt-id', start['attempt_id'])['status'] == 'ready'
     assert run('validate', '--pointer', str(tmp_path / request['storage'] / 'current.v1.json'), '--consumer', request['consumer'], '--operation', 'execute', '--contract', str(tmp_path / 'contract.json'))['ready'] is True
 
