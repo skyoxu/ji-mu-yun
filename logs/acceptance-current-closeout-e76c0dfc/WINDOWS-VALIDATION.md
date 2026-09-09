@@ -13,6 +13,7 @@ Git line-ending policy so inherited autocrlf cannot invalidate catalog byte hash
 
 ```powershell
 $acceptanceTests = @(
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_operator_support.py",
   ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
   ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
   ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator_s0.py",
@@ -38,7 +39,7 @@ if ($LASTEXITCODE -ne 0) { throw "Quick Dev adjacent checks failed" }
 
 There are two pytest groups above; the three Linux result files split the
 Bootstrap policy tests from the other Acceptance tests. Windows runs that full
-policy file with the Acceptance group. Expected total: 150 tests (111 Acceptance and 39 Quick Dev) if collection
+policy file with the Acceptance group. Expected total: 154 tests (115 Acceptance and 39 Quick Dev) if collection
 matches the pinned candidate; test results, not the expected count, determine pass.
 
 The 2026-09-09 follow-up adds one CRLF/autocrlf reproduction test. Its RED

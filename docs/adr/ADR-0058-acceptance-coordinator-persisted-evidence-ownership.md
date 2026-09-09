@@ -65,3 +65,14 @@ snapshot manifest is not upgraded in place: publish a new Q8 summary in a new ou
 directory using explicit existing predecessors; this rechecks evidence without
 rerunning RED/GREEN or calling a model. Invalid predecessors still require the
 current Quick Dev recovery route.
+
+## 2026-09-09: Single-Maintainer Operator Support
+
+The public Coordinator additionally projects non-authorizing operator/reviewer
+sidecars from the current invocation. Reports live under content-addressed logs;
+immutable Acceptance results and stdout contracts remain unchanged. Support
+errors cannot mask Coordinator failures or grant completion. One-hop consumer
+and test suggestions include provenance and limits and never replace required
+checks or claim complete coverage. External review materials bind observed input
+files and hash-checked candidate diff bytes; no review is launched or transmitted.
+This adds no authorization, concurrency, automatic retry or Bootstrap route.

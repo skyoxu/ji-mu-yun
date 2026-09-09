@@ -1,0 +1,25 @@
+{
+  "acceptance_tests": 115,
+  "authorizes": [],
+  "base_commit": "d28ef7c48696de43df9be4e29c10adf8dd8d6a45",
+  "environment": "Linux pinned source snapshot and real isolated Git fixtures",
+  "final_metadata_reference_change_recheck": 4,
+  "limitations": [
+    "One-hop source hints are incomplete; no automatic test execution or coverage authority.",
+    "Reviewer prompt and hash-bound references require supplying referenced files to an external reviewer."
+  ],
+  "live_backend_calls": 0,
+  "quick_dev_tests": 39,
+  "recorded_at": "2026-09-09T12:11:27.113390+00:00",
+  "schema": "acceptance-operator-support-validation.v1",
+  "skill_format": "passed",
+  "source_files": {
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md": "sha256:063cb4ffaeec3bdac3a0ffe203e83d4d15087e5c76169d5ec05888a24100f4e9",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py": "sha256:ac3f070688f3e817238eff6658070977c6aa5cc309999a5c96e329b5ce23cfe5",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/operator_support.py": "sha256:2ed89717ebe2c30542b10cc39b444275dc5015265cb4fe09d70625918f4772a2",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_operator_support.py": "sha256:b4134a6e36ff4df782d3ac12ae10fe029031561ad42b74f2613efe97fcadd4cb",
+    "docs/adr/ADR-0058-acceptance-coordinator-persisted-evidence-ownership.md": "sha256:bb6990234e961a04a20d560a2a7407a39cf5e5a0014d26d6a475e3b3053b9010",
+    "logs/acceptance-current-closeout-e76c0dfc/WINDOWS-VALIDATION.md": "sha256:cd40f8d9d7eb55d971c0faa7924019f16aa3e0f41afdbd157dd734a20766c74b"
+  },
+  "windows_confirmation": "pending for this enhancement"
+}

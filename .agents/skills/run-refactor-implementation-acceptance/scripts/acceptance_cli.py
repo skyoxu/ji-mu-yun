@@ -1525,7 +1525,23 @@ def main() -> int:
         print(json.dumps(prepare_run(args.input, args.out, args.knowledge_context, args.prerequisite_bundle), sort_keys=True))
         return 0
     if args.command == "run-coordinator":
-        print(json.dumps(run_coordinator(args.request, args.out), sort_keys=True))
+        from operator_support import publish_support
+        result = None
+        failure = None
+        try:
+            result = run_coordinator(args.request, args.out)
+        except (ValueError, OSError, KeyError, TypeError) as exc:
+            failure = str(exc)
+            raise
+        finally:
+            try:
+                support = publish_support(REPOSITORY_ROOT, Path(args.request), result, failure)
+                print("Acceptance support: " + support + "/summary.md", file=sys.stderr)
+            except (ValueError, OSError, KeyError, TypeError) as exc:
+                print("Acceptance support unavailable: " + str(exc), file=sys.stderr)
+                if failure:
+                    print("Acceptance blocked: " + failure + "; repair the named input before retrying.", file=sys.stderr)
+        print(json.dumps(result, sort_keys=True))
         return 0
     if args.command == "project-compact-vdd":
         print(json.dumps(project_compact_vdd_command(args.repository_root, args.request, args.out), sort_keys=True))
