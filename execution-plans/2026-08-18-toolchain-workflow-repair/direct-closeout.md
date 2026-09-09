@@ -92,3 +92,23 @@ This supersedes the earlier online result for the corrected sources. Windows
 validation and final direct closeout remain pending. Rerun the same direct
 verification command on the corrected branch; Windows should collect 136
 cases, with no platform exclusions. Preserve the failed Windows evidence.
+
+## Source newline oracle correction (2026-09-09)
+
+The maintainer reported 133 passed and 3 failed on Windows at 6f7c9e29,
+with stable sources and no skips or live backend calls. Reported evidence is
+`logs/toolchain-workflow-repair-direct/20260909T174908Z-d5b74696/` in the
+maintainer checkout; it has not been independently inspected or uploaded here.
+
+The CLI correctly preserved source CRLF bytes. The test expectation incorrectly
+used read_text(), which normalizes CRLF to LF. Under ADR-0060, coverage binds
+original source bytes, so the assertion now compares UTF-8 encoded delivery
+with read_bytes(), without normalizing either side. Explicit LF and CRLF
+fixtures cross all three inherited stdio encodings on every platform.
+Before correcting the assertion, these fixtures reproduced 3 failures and
+3 passes online; the corrected full suite reports **138 passed, 1 Windows-only
+test deselected**. Evidence is
+`logs/toolchain-workflow-repair-direct/20260909T175254Z-d8baa600/`.
+No production transport change was necessary. This result supersedes the prior
+online count. Windows should collect 139 cases; Windows revalidation and final
+direct closeout remain pending. Preserve both failed Windows evidence bundles.

@@ -21,10 +21,10 @@ from scripts.python.knowledge_gate_projection import project_knowledge_gates
 CONSUMERS = ('vdd-execution-plan', 'quick-dev-tdd-adapter', 'run-phase-bootstrap-review', 'run-refactor-implementation-acceptance')
 
 
-def fixture(root, consumer='quick-dev-tdd-adapter'):
+def fixture(root, consumer='quick-dev-tdd-adapter', source_newline=None):
     root.mkdir(exist_ok=True)
     operation = {'vdd-execution-plan': 'create', 'quick-dev-tdd-adapter': 'execute', 'run-phase-bootstrap-review': 'review', 'run-refactor-implementation-acceptance': 'acceptance'}[consumer]
-    (root / 'requirements.md').write_text(('Requirements and observable behavior\n' * 10) + '\u5b8c\u6574\u8bfb\u53d6\n', encoding='utf-8')
+    (root / 'requirements.md').write_text(('Requirements and observable behavior\n' * 10) + '\u5b8c\u6574\u8bfb\u53d6\n', encoding='utf-8', newline=source_newline)
     for filename, value in [('contract.json', {'consumer': consumer, 'operations': {operation: {}}}), ('registry.json', {'commands': ['test']}), ('authority.json', {'adr': 'ADR-0060'}), ('freeze.json', {'authorizes': []})]:
         (root / filename).write_text(json.dumps(value), encoding='utf-8')
     bindings = {key: {'path': path, 'sha256': digest((root / path).read_bytes())} for key, path in [('contract', 'contract.json'), ('registry', 'registry.json'), ('authority', 'authority.json'), ('knowledge_freeze', 'freeze.json')]}
@@ -249,8 +249,9 @@ def test_retention_reports_expiry_and_requires_bound_approval(tmp_path):
 
 
 @pytest.mark.parametrize('stdio_encoding', ['utf-8', 'gbk', 'cp1252'])
-def test_cli_prepare_consume_finish_validate_without_model(tmp_path, stdio_encoding):
-    request = fixture(tmp_path)
+@pytest.mark.parametrize('source_newline', ['\n', '\r\n'], ids=['lf', 'crlf'])
+def test_cli_prepare_consume_finish_validate_without_model(tmp_path, stdio_encoding, source_newline):
+    request = fixture(tmp_path, source_newline=source_newline)
     request_path = tmp_path / 'request.json'; request_path.write_text(json.dumps(request))
     entry = Path(v2.__file__).resolve()
     env = dict(os.environ, PYTHONIOENCODING=stdio_encoding, PYTHONUTF8='0')
@@ -262,7 +263,8 @@ def test_cli_prepare_consume_finish_validate_without_model(tmp_path, stdio_encod
         return records[-1]
     start = run('prepare', '--request', str(request_path))
     assert run('consume', '--plan-id', 'repair', '--attempt-id', start['attempt_id'])['status'] == 'complete'
-    assert ''.join(delivered) == (tmp_path / 'requirements.md').read_text(encoding='utf-8')
+    # ADR-0060 coverage binds original bytes, including source line endings.
+    assert ''.join(delivered).encode('utf-8') == (tmp_path / 'requirements.md').read_bytes()
     assert run('finish', '--plan-id', 'repair', '--attempt-id', start['attempt_id'])['status'] == 'ready'
     assert run('validate', '--pointer', str(tmp_path / request['storage'] / 'current.v1.json'), '--consumer', request['consumer'], '--operation', 'execute', '--contract', str(tmp_path / 'contract.json'))['ready'] is True
 
