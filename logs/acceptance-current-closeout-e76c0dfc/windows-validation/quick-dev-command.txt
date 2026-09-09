@@ -1,0 +1,1 @@
+py -3 -m pytest .agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py .agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py -q

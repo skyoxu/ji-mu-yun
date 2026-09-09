@@ -1,0 +1,9 @@
+schema=acceptance-current-closeout.windows-validation.v2
+source_head=49cf324a63c4d9d0a32d61750cf43c83aba734b8
+acceptance_status=pass
+acceptance_result=111 passed in 65.45s
+quick_dev_status=pass
+quick_dev_result=39 passed in 21.87s
+combined_result=150 passed
+live_backend_calls=0
+ch456_live_rerun=false
