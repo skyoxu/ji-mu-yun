@@ -1,0 +1,66 @@
+{
+  "schema_version": "toolchain-workflow-repair.environment-check.v1",
+  "source_commit": "c19adde1e8973f2a6fe8e155963c5e025f4b5b0e",
+  "branch": "codex/complete-8-18-toolchain-workflow-repair",
+  "requested_scope": [
+    "W0",
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "W6"
+  ],
+  "requested_outcome": "Complete all requirements, including attempt leases, retention and approval-gated garbage collection, with current implementation and acceptance evidence.",
+  "status": "environment-blocked",
+  "authorizes": [],
+  "observations": {
+    "github_connector_read": "succeeded",
+    "github_branch_creation": "succeeded",
+    "git_clone": {
+      "command": [
+        "git",
+        "clone",
+        "--filter=blob:none",
+        "--no-checkout",
+        "https://github.com/skyoxu/ji-mu-yun.git",
+        "ji-mu-yun"
+      ],
+      "exit_code": 128,
+      "error": "fatal: could not read Username for 'https://github.com': No such device or address"
+    },
+    "available_tools": {
+      "fastctx": false,
+      "git": true,
+      "codex": false,
+      "pwsh": false,
+      "powershell": false,
+      "dotnet": false,
+      "pytest": false
+    },
+    "legacy_inspection": {
+      "method": "Executed the unchanged repository legacy_compat.inspect_legacy_plan against the fetched implementation contract in an isolated local directory; not a full repository runtime invocation.",
+      "route": "compatibility",
+      "repair_required": true,
+      "reason": "historical v1 lacks current atomic obligation/V5/V6/V6A authority",
+      "authorizes_current_evidence": false
+    }
+  },
+  "controlling_sources": [
+    "AGENTS.md",
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    ".agents/skills/quick-dev-tdd-adapter/tools/legacy_compat.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md"
+  ],
+  "next_steps": [
+    "Resume on this branch in an authenticated repository checkout with the repository-supported worker backend and test environment.",
+    "Read required VDD references and run the canonical scripts/vdd/compile_plan.py repair entry for the existing plan; preserve historical evidence and all W0-W6 obligations.",
+    "Use the current Quick Dev controlled probe/RED/GREEN/REFACTOR and terminal routes; do not use the historical plan-local terminal as current completion authority.",
+    "Complete typed selection migration, transport/coverage, Knowledge gates, immutable generation/current validation, attempt leases and retention/GC, and real end-to-end acceptance.",
+    "Publish current implementation-complete and separately owned Acceptance results only after their required runtime evidence validates."
+  ],
+  "production_changes": false,
+  "tests_or_compiler_run": false,
+  "note": "This is an environment checkpoint, not a plan-state transition, implementation receipt, acceptance result, or scope reduction."
+}
