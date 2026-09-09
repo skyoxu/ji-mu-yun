@@ -1,0 +1,68 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf _____
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_current_handoff_preserves0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f6c565d2de0>
+
+    def test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf(tmp_path, monkeypatch):
+        # ADR-0058: byte-bound fixture sources must not inherit Git conversion.
+        config = tmp_path / "user.gitconfig"
+        config.write_text("[core]\n\tautocrlf = true\n", encoding="utf-8", newline="\n")
+        monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(config))
+        root = tmp_path / "repo"
+        root.mkdir()
+>       request, output, _ = build(root, monkeypatch, knowledge_newline="\r\n")
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:193: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:132: in build
+    knowledge(root, target, baseline)
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:90: in knowledge
+    return freeze_knowledge_context(target, "knowledge.json")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+target_root = PosixPath('/tmp/pytest-of-root/pytest-0/test_current_handoff_preserves0/repo/execution-plans/target')
+raw_path = 'knowledge.json'
+
+    def freeze_knowledge_context(target_root: Path, raw_path: str) -> dict[str, Any]:
+        relative = Path(raw_path)
+        if relative.is_absolute() or ".." in relative.parts:
+            raise InputError("knowledge context path must stay inside the target root")
+        path = (target_root / relative).resolve()
+        try:
+            path.relative_to(target_root)
+        except ValueError as exc:
+            raise InputError("knowledge context path escapes the target root") from exc
+        try:
+            context_bytes = path.read_bytes()
+            document = json.loads(context_bytes.decode("utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise InputError("knowledge context is unreadable") from exc
+        repository_root = _repository_root(target_root)
+        validation = _validator(repository_root)
+        failure_code = validation.validate_context(
+            document,
+            repository_root=repository_root,
+            verify_catalog=True,
+            verify_sources=True,
+            expected_consumer="refactor-acceptance",
+            require_selection=True,
+            require_preflight=True,
+        )
+        if failure_code:
+>           raise InputError(f"knowledge context is invalid: {failure_code}")
+E           acceptance_core.InputError: knowledge context is invalid: catalog_stale
+
+.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py:72: InputError
+----------------------------- Captured stderr call -----------------------------
+warning: in the working copy of '.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'candidate.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/python/_knowledge_locator_core.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/python/knowledge_context_validation.py', LF will be replaced by CRLF the next time Git touches it
+=========================== short test summary info ============================
+FAILED .agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf
+1 failed, 14 deselected in 0.84s

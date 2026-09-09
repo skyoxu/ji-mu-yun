@@ -1,0 +1,32 @@
+{
+  "authority": "ADR-0058",
+  "authorizes": [],
+  "base_commit": "9b68dc40f7eaad6d9cf5b690b9cad633e9d9e198",
+  "changes": "Test fixture isolation and validation instructions only; production predicates unchanged",
+  "recorded_at": "2026-09-09T11:39:44.643384+00:00",
+  "reported_windows_result": {
+    "failed": 12,
+    "passed": 98,
+    "quick_dev": "not run",
+    "raw_log_available_in_this_session": false
+  },
+  "reproduction": {
+    "after": "passed",
+    "before": "1 failed: knowledge context is invalid: catalog_stale",
+    "environment": "Linux with CRLF catalog source and inherited core.autocrlf=true"
+  },
+  "schema": "acceptance-windows-fixture-repair.v1",
+  "source_files": {
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py": "sha256:a504444d779c5f999d753a43bc16b144d9529719263952ee761ca9da7fa18158",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py": "sha256:6a44040923598860ccef035a6b91e2826bafb1bed1e23c6541c4693d45e9cd55",
+    "docs/acceptance-current-closeout.md": "sha256:75e7dfe05d850c6e88bebeb69e3ec828b6e72438cf36e1748fbb01a86b6d56ee",
+    "logs/acceptance-current-closeout-e76c0dfc/WINDOWS-VALIDATION.md": "sha256:ec0a4c2158905a4167a6cd660d11e36d7947ffbd04c1a18507f456f8885c765c"
+  },
+  "validation": {
+    "acceptance_passed": 111,
+    "deselected": 0,
+    "environment": "Linux",
+    "quick_dev_passed": 39,
+    "windows_confirmation": "pending"
+  }
+}

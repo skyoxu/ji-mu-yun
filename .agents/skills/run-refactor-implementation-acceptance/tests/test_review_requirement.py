@@ -84,32 +84,50 @@ class ReviewRequirementTests(unittest.TestCase):
     def test_real_candidate_manifest_preserves_repository_paths_for_skill_route_decision(self) -> None:
         import acceptance_cli
 
-        repository_root = Path(__file__).resolve().parents[4]
-        prepared_relative = (
-            "execution-plans/2026-08-01-workflow-model-routing-control-plane/"
-            "acceptance-run-input.workflow-model-routing-ria-r4.v1.json"
-        )
-        prepared = json.loads(
-            (repository_root / prepared_relative).read_text(encoding="utf-8")
-        )
-        policy = json.loads(
-            (
-                repository_root
-                / ".agents/skills/run-refactor-implementation-acceptance/policies/"
-                "semantic-review-trigger-policy.v1.json"
-            ).read_text(encoding="utf-8")
-        )
+        from test_run_input import _git, _run_input, _sha256, _write_prepare_inputs
 
-        # This historical fixture predates the current catalog; isolate that
-        # unrelated freshness blocker while exercising the real identity producer.
-        with mock.patch.object(
-            acceptance_cli,
-            "freeze_knowledge_context",
-            return_value=prepared["knowledgeContext"],
-        ):
-            identity = acceptance_cli.load_current_candidate_identity(
-                repository_root, prepared_relative
-            )
+        # ADR-0058: preserve the real Git custody/path test without depending on
+        # an old remote commit that may be absent from a shallow/local checkout.
+        with tempfile.TemporaryDirectory() as directory:
+            repository_root = Path(directory).resolve()
+            _git(repository_root, "init", "--quiet")
+            _git(repository_root, "config", "core.autocrlf", "false")
+            _git(repository_root, "config", "user.email", "acceptance@example.invalid")
+            _git(repository_root, "config", "user.name", "Acceptance Test")
+            _git(repository_root, "commit", "--allow-empty", "-qm", "baseline")
+            baseline_revision = _git(repository_root, "rev-parse", "HEAD")
+            source_relative = ".agents/skills/quick-dev-tdd-adapter/SKILL.md"
+            source = repository_root / source_relative
+            source.parent.mkdir(parents=True)
+            payload = b"# Quick Dev fixture\n"
+            source.write_bytes(payload)
+            _git(repository_root, "add", source_relative)
+            _git(repository_root, "commit", "-qm", "candidate")
+            candidate_revision = _git(repository_root, "rev-parse", "HEAD")
+            baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1",
+                        "status": "complete", "coverageGaps": [], "files": [], "authorizes": []}
+            candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1",
+                         "status": "complete", "coverageGaps": [], "authorizes": [],
+                         "files": [{"change_type": "added", "roles": ["implementation"],
+                                    "baseline_path": None, "baseline_sha256": None,
+                                    "candidate_path": source_relative, "candidate_sha256": _sha256(payload),
+                                    "inclusion_reason": "candidate commit"}]}
+            target = repository_root / "execution-plans/2026-08-01-workflow-model-routing-control-plane"
+            run_input = _run_input(target, baseline, candidate,
+                                   baseline_revision=baseline_revision, candidate_revision=candidate_revision)
+            _write_prepare_inputs(target, baseline, candidate, run_input)
+            knowledge_path = target / "knowledge.json"
+            knowledge_path.write_bytes(b"{}\n")
+            context = {"path": "knowledge.json", "sha256": _sha256(knowledge_path.read_bytes()),
+                       "acceptedDecisions": []}
+            prepared_path = target / "prepared.json"
+            # Catalog freshness is independent of repository-relative path identity.
+            # Git bytes, manifest validation and the identity producer remain real.
+            with mock.patch.object(acceptance_cli, "freeze_knowledge_context", return_value=context):
+                acceptance_cli.prepare_run(str(target / "input.json"), str(prepared_path), "knowledge.json")
+                identity = acceptance_cli.load_current_candidate_identity(
+                    repository_root, prepared_path.relative_to(repository_root).as_posix())
+            policy = POLICY
 
         from review_requirement import decide_review_requirement
 

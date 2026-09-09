@@ -90,16 +90,18 @@ def knowledge(root, target, commit):
     return freeze_knowledge_context(target, "knowledge.json")
 
 
-def build(root, monkeypatch, present=(True, True), command_exit=0):
+def build(root, monkeypatch, present=(True, True), command_exit=0, knowledge_newline=None):
     semantic, roots = fixture(root, present)
     (root / ".gitignore").write_text("*\n!candidate.py\n!.gitignore\n", encoding="utf-8")
-    (root / "rules.md").write_text("# Rules\nVerify current candidate behavior.\n", encoding="utf-8")
+    (root / "rules.md").write_text("# Rules\nVerify current candidate behavior.\n", encoding="utf-8", newline=knowledge_newline)
     for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py",
                      ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py"):
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, path)
     git(root, "init", "-q", "-b", "main")
+    # Keep worktree hashes and committed fixture bytes identical on Windows.
+    git(root, "config", "core.autocrlf", "false")
     git(root, "config", "user.email", "test@example.invalid")
     git(root, "config", "user.name", "Test")
     git(root, "add", "-f", "candidate.py", ".gitignore", "rules.md", "scripts", ".agents")
@@ -181,6 +183,20 @@ def test_current_q8_projection_and_real_coordinator_close_and_replay(tmp_path, m
     receipt.write_text(receipt.read_text() + " ", encoding="utf-8")
     with pytest.raises((ValueError, cli.ControlError), match="receipt.*stale"):
         cli.run_coordinator(str(request), str(output))
+
+
+def test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf(tmp_path, monkeypatch):
+    # ADR-0058: byte-bound fixture sources must not inherit Git conversion.
+    config = tmp_path / "user.gitconfig"
+    config.write_text("[core]\n\tautocrlf = true\n", encoding="utf-8", newline="\n")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(config))
+    root = tmp_path / "repo"
+    root.mkdir()
+    request, output, _ = build(root, monkeypatch, knowledge_newline="\r\n")
+    assert b"\r\n" in (root / "rules.md").read_bytes()
+    committed = subprocess.check_output(["git", "show", "main:rules.md"], cwd=root)
+    assert committed == (root / "rules.md").read_bytes()
+    assert cli.run_coordinator(str(request), str(output))["status"] == "completed"
 
 
 def test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass(tmp_path, monkeypatch):

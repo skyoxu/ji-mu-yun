@@ -7,8 +7,9 @@ No live backend, Bootstrap review or CH456 live run is needed.
 Record the implementation HEAD and raw output under a new `windows-validation/`
 subdirectory here, then append the validation result. Preserve historical evidence.
 A failed check stops this confirmation; report its exact traceback before changing
-code or expanding scope. The policy group includes the historical candidate test
-that could not run in the reconstructed Linux environment.
+code or expanding scope. The policy group now constructs its own real Git baseline/candidate commits;
+no historical remote commit is required. The integration fixture fixes its local
+Git line-ending policy so inherited autocrlf cannot invalidate catalog byte hashes.
 
 ```powershell
 $acceptanceTests = @(
@@ -37,5 +38,10 @@ if ($LASTEXITCODE -ne 0) { throw "Quick Dev adjacent checks failed" }
 
 There are two pytest groups above; the three Linux result files split the
 Bootstrap policy tests from the other Acceptance tests. Windows runs that full
-policy file with the Acceptance group. Expected total: 149 tests if collection
+policy file with the Acceptance group. Expected total: 150 tests (111 Acceptance and 39 Quick Dev) if collection
 matches the pinned candidate; test results, not the expected count, determine pass.
+
+The 2026-09-09 follow-up adds one CRLF/autocrlf reproduction test. Its RED
+result and subsequent Linux results are preserved in `windows-fixture-repair/`.
+Windows execution remains a separate confirmation; prior failed output is not
+reclassified as a pass.

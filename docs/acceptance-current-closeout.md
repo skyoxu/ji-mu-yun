@@ -93,5 +93,9 @@ test helper; it performs no live call. Production predicates are not mocked.
 
 This session uses pinned repository file snapshots plus the explicit changed set,
 not a full Git checkout. Integration fixtures create real isolated Git repositories.
-The one historical 8-01 candidate test needs repository artifacts/history unavailable
-in that snapshot environment; it remains in the Windows follow-up list.
+The 2026-09-09 fixture repair replaces the historical 8-01 candidate dependency
+with a self-contained real Git baseline/candidate pair while retaining the path
+identity assertions. Fixture-local `core.autocrlf=false` keeps catalog source bytes
+identical in the worktree and Git. A CRLF source plus inherited autocrlf regression
+reproduces the reported Windows failure before this repair. Production predicates
+are unchanged; Windows confirmation remains required after the fixture repair.
