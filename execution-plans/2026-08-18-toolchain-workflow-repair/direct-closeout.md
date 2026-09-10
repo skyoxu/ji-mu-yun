@@ -129,15 +129,20 @@ The maintainer reported successful local Windows verification in this session:
 - Reported evidence:
   `logs/toolchain-workflow-repair-direct/20260909T175543Z-8c83853f/validation.json`.
 
-Evidence provenance: these results and the path were supplied by the maintainer
-from the local checkout. The online agent has not independently read the raw
-Windows report; this documentation does not recreate or upload it. Preserve
-that bundle and both failed Windows bundles, and commit the original artifacts
-from the local checkout for repository archival.
+Evidence provenance: the maintainer generated these artifacts locally and
+archived all three original Windows bundles in commit
+`cea4871fb5d1552381afcf4863d80cb544b370e1`, whose parent is the preserved closeout
+commit `c4ac1e3df3d567e83dce1b04bdfa7eb67f9a3c96`. The online agent subsequently
+read all twelve archived files from that commit. The successful validation.json,
+stdout and JUnit agree on 139 cases passing, zero failures/errors/skips, source
+HEAD 86faa3e0, stable sources, no platform exclusions, no live backend calls,
+and no formal workflow invocation. stderr is empty. Both earlier failed runs
+remain archived with their original one-failure and three-failure results.
+This inspection verifies the archived reports; it is not a new Windows run.
 
 The originally requested complete W0-W6 direct repair is therefore recorded as
 closed on this branch. The two observed Windows defects were corrected before
 this passing run. This documentation-only closeout does not change the tested
 implementation, merge the branch, publish Knowledge, or generate formal
-acceptance/lifecycle receipts. Raw Windows evidence archival remains a handoff
-item, distinct from the reported successful implementation verification.
+acceptance/lifecycle receipts. Raw Windows evidence archival is complete. There are no outstanding Windows
+verification or evidence archival handoff items for this direct closeout.
