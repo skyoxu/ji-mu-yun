@@ -14,8 +14,12 @@ changes, live v2 entry enforcement, and automatic native-use retention.
 Implementation, test scope and migration instructions are recorded in
 [Direct closeout](direct-closeout.md) and [Skill-input v2](../../docs/workflows/skill-input-v2.md).
 
-Online verification: 164 passed, one Windows-only case deselected. Fresh
-Windows verification of this revision is pending (165 cases expected).
+The W3 stale-context successor path is also corrected: frozen evidence is
+preserved while catalog membership and current source bytes are verified for
+a derived successor.
+
+Online verification: 178 passed, one Windows-only case deselected. Fresh
+Windows verification of this revision is pending (179 cases expected).
 Earlier 139-case success and closeout records remain historical; they do not
 validate the new source. No formal workflow or live backend was invoked.
 
@@ -43,5 +47,6 @@ plan-ready validation and an explicit maintainer receipt. Implementation may
 begin only through the declared Quick Dev TDD route; this plan does not
 authorize implementation completion, Knowledge publication, Bootstrap, or
 acceptance.
+
 
 

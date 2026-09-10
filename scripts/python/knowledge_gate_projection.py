@@ -69,15 +69,49 @@ def observe_knowledge(repository_root, freeze_path, *, selection_hash):
         from .knowledge_context_validation import validate_context, validate_catalog_freshness, refresh_context_read_set
     except ImportError:
         from knowledge_context_validation import validate_context, validate_catalog_freshness, refresh_context_read_set
-    error = validate_context(context, repository_root=Path(repository_root), verify_catalog=True, verify_sources=False, require_selection=True)
+    # Validate the frozen envelope before recomputing derived freshness. Never
+    # repair a failed preflight, forged hash, missing decision or widened scope.
+    error = validate_context(context, require_selection=True)
     if error:
         raise ValueError('Knowledge context blocked: ' + error)
-    refreshed = refresh_context_read_set(context, Path(repository_root))
-    error = validate_context(refreshed, repository_root=Path(repository_root), verify_catalog=True, verify_sources=True, require_selection=True)
-    if error:
-        raise ValueError('Knowledge source verification blocked: ' + error)
+    preflight = context.get('preflight')
+    if isinstance(preflight, dict) and ('knowledge_freshness' in preflight or 'catalog_failure_code' in preflight):
+        prior = preflight.get('knowledge_freshness')
+        if prior not in {'current', 'degraded'} or preflight.get('catalog_failure_code') != ('catalog_stale' if prior == 'degraded' else None):
+            raise ValueError('Knowledge context blocked: preflight_catalog_freshness_invalid')
     freshness = validate_catalog_freshness(Path(repository_root))
     if freshness not in (None, 'catalog_stale'):
         raise ValueError('Knowledge publication blocked: ' + freshness)
+    import copy
+    successor = copy.deepcopy(context)
+    if isinstance(successor.get('preflight'), dict):
+        successor['preflight']['knowledge_freshness'] = 'degraded' if freshness == 'catalog_stale' else 'current'
+        successor['preflight']['catalog_failure_code'] = freshness
+        successor['preflight']['context_sha256'] = identity({k: v for k, v in successor.items() if k != 'preflight'})
+    # Even a previously refreshed stale context must match today's published
+    # catalog, policy, projection and read-set membership before rehashing bytes.
+    error = validate_context(successor, repository_root=Path(repository_root), verify_catalog=True,
+                             verify_sources=False, require_selection=True, require_catalog_membership=True)
+    if error:
+        raise ValueError('Knowledge context blocked: ' + error)
+    before_sources = _accepted_sources(successor)
+    refreshed = refresh_context_read_set(successor, Path(repository_root))
+    error = validate_context(refreshed, repository_root=Path(repository_root), verify_catalog=True,
+                             verify_sources=True, require_selection=True, require_catalog_membership=True)
+    if error:
+        raise ValueError('Knowledge source verification blocked: ' + error)
+    if validate_catalog_freshness(Path(repository_root)) != freshness:
+        raise ValueError('Knowledge publication changed during successor verification')
     return {'mode': 'locator', 'catalog_stale': freshness == 'catalog_stale',
-            'source_refreshed': identity(context) != identity(refreshed), 'context_hash': identity(refreshed)}
+            'source_refreshed': before_sources != _accepted_sources(refreshed),
+            'context_hash': identity(refreshed), 'successor_context': refreshed}
+
+
+def _accepted_sources(context):
+    """Compare source bytes, not derived preflight fields or read-set spelling."""
+    accepted = {(d['candidate']['path'], d['candidate']['source_sha256'])
+                for d in context['decisions'] if d['decision'] == 'accepted'}
+    return sorted((item['path'], item['source_sha256'])
+                  for c in context['locator_result']['candidates']
+                  if (c['path'], c['source_sha256']) in accepted
+                  for item in c.get('read_set', [{'path': c['path'], 'source_sha256': c['source_sha256']}]))

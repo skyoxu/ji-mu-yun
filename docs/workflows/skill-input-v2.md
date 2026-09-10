@@ -201,3 +201,20 @@ its next argument check. These tests prove the migrated entry boundary without
 starting formal workflows or models; they do not claim complete workflow runs.
 Current Quick Dev staged execution that does not adopt Skill-input retains its
 independent governance/snapshot policy.
+
+## Stale Knowledge successor behavior
+
+A valid frozen preflight can describe an earlier current catalog. When the
+catalog becomes stale, the adapter validates the original envelope first and
+recomputes only freshness metadata in an in-memory successor. It enforces
+catalog, policy, consumer projection and read-set membership before and after
+source refresh. The original request must permit stale catalog use. Invalid
+publication, failed preflight, selection/policy drift or missing sources remain
+blocking; the adapter does not publish Knowledge or invent review approval.
+
+The immutable Skill-input receipt embeds knowledge.successor_context and its
+context_hash. Original freeze/context/publication files remain unchanged.
+Freshness-only changes yield degraded-continuation; actual selected-byte
+changes yield successor-refresh. Reusing the same original freeze recomputes
+the same successor when the underlying evidence is unchanged.
+

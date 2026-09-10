@@ -308,6 +308,7 @@ def validate_context(
     expected_consumer: str | None = None,
     require_selection: bool = False,
     require_preflight: bool = False,
+    require_catalog_membership: bool = False,
 ) -> str | None:
     """Return a stable failure code, or ``None`` for a complete bound context."""
     if not isinstance(payload, dict) or payload.get("schema_version") not in CONTEXT_SCHEMAS:
@@ -436,7 +437,7 @@ def validate_context(
                     return "preflight_catalog_freshness_invalid"
             elif catalog_freshness == "catalog_stale" and require_preflight:
                 return "preflight_catalog_freshness_missing"
-        if source_refresh and catalog_freshness == "catalog_stale":
+        if source_refresh and catalog_freshness == "catalog_stale" and not require_catalog_membership:
             # A controlled successor preserves the previously verified
             # selection and rebinds its current read-set bytes.  Its locator
             # snapshot cannot equal a stale catalog's current snapshot by

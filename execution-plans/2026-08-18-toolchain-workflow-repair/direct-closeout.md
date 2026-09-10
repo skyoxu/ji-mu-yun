@@ -9,8 +9,8 @@ consumer migration, and automatic native-reference retention. The earlier
 those requirements. Historical closeout statements below are superseded here.
 
 The four corrections are implemented on this branch under the maintainer's
-direct authorization, without VDD/Quick Dev/Acceptance orchestration. Online
-verification now reports **164 passed, 1 Windows-only case deselected**.
+direct authorization, without VDD/Quick Dev/Acceptance orchestration. The subsequent W3 stale-context successor correction is also implemented.
+Online verification now reports **178 passed, 1 Windows-only case deselected**.
 Fresh Windows verification of the corrected source remains pending; do not
 call this revision closed solely from earlier evidence.
 
@@ -193,4 +193,47 @@ Expected Windows collection is **165 cases**, with zero failures/skips,
 source_stable=true, platform_exclusions=[] and
 windows_verification_pending=false. New verification evidence is required
 before recording another final closeout.
+
+
+## W3 stale-context successor correction (2026-09-10)
+
+A second source review found that an originally valid preflight marked
+knowledge_freshness=current was rejected after the catalog became stale,
+before the adapter could verify a controlled successor. This is corrected in
+knowledge_gate_projection.observe_knowledge.
+
+The adapter first validates the frozen envelope, hashes and preflight status.
+It checks publication integrity, then recomputes freshness only in a deep copy.
+Both the pre-refresh and post-refresh validation require catalog membership,
+including policy, consumer projection, module and read-set checks, even for a
+previously refreshed stale context. The source-refresh marker cannot bypass
+membership. Source hashes are refreshed only after those checks. No frozen
+context, freeze or Knowledge publication artifact is rewritten, and a failed
+preflight or disallowed stale request is not promoted to ready.
+
+The observation now carries the verified successor_context plus its hash into
+the immutable Skill-input receipt. source_refreshed compares actual selected
+source identities, not freshness metadata, so unchanged selected bytes use
+degraded-continuation and changed selected bytes use successor-refresh.
+Identical readback is deterministic, and a separately frozen verified successor
+can be reused without modifying its predecessor.
+
+New regression: test_knowledge_successor_v2.py, **14 cases**. Tests construct
+real Git history and publication-shaped fixture artifacts, use the real
+freshness/catalog/source validators, and do not mock gate facts. They cover
+current, stale-unselected, stale-selected, full v2 degraded publication,
+successor reuse, failed preflight, hash/publication corruption, missing sources,
+selection/policy drift, disallowed staleness, malformed freshness and forged
+source-refresh markers. All artifacts are temporary fixtures; no live Knowledge
+publication, model or formal workflow is invoked.
+
+Final online evidence:
+`logs/toolchain-workflow-repair-direct/20260910T083752Z-f1beb77e/`.
+Result: **178 passed**, zero skipped, one Windows-only deselection,
+source_stable=true. This supersedes the prior 164-case source set.
+
+Windows handoff for this revision: run
+`py -3 scripts/python/verify_toolchain_workflow_repair.py` after updating the
+branch. Expect **179 cases**, zero failures/skips, no platform exclusions and
+stable sources. Final closeout remains pending that fresh Windows result.
 

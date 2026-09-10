@@ -18,6 +18,7 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 TESTS = [
+    'scripts/python/tests/test_knowledge_successor_v2.py',
     'scripts/python/tests/test_skill_input_consumer_migration.py',
     'scripts/python/tests/test_toolchain_workflow_repair_e2e.py',
     'scripts/python/tests/test_skill_input_selection_v2.py',
