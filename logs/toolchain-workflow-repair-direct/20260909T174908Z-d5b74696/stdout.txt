@@ -1,0 +1,104 @@
+......................................FFF............................... [ 52%]
+................................................................         [100%]
+================================== FAILURES ===================================
+________ test_cli_prepare_consume_finish_validate_without_model[utf-8] ________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-35/test_cli_prepare_consume_finis0')
+stdio_encoding = 'utf-8'
+
+    @pytest.mark.parametrize('stdio_encoding', ['utf-8', 'gbk', 'cp1252'])
+    def test_cli_prepare_consume_finish_validate_without_model(tmp_path, stdio_encoding):
+        request = fixture(tmp_path)
+        request_path = tmp_path / 'request.json'; request_path.write_text(json.dumps(request))
+        entry = Path(v2.__file__).resolve()
+        env = dict(os.environ, PYTHONIOENCODING=stdio_encoding, PYTHONUTF8='0')
+        delivered = []
+        def run(*argv):
+            result = subprocess.run([sys.executable, str(entry), '--repository-root', str(tmp_path), *argv], capture_output=True, text=True, encoding='utf-8', errors='strict', env=env, check=True)
+            records = [json.loads(line) for line in result.stdout.splitlines()]
+            delivered.extend(record['content'] for record in records if 'page' in record)
+            return records[-1]
+        start = run('prepare', '--request', str(request_path))
+        assert run('consume', '--plan-id', 'repair', '--attempt-id', start['attempt_id'])['status'] == 'complete'
+>       assert ''.join(delivered) == (tmp_path / 'requirements.md').read_text(encoding='utf-8')
+E       AssertionError: assert 'Requirements...r\r\n完整读取\r\n' == 'Requirements...avior\n完整读取\n'
+E         
+E         - Requirements and observable behavior
+E         + Requirements and observable behavior
+E         ?                                     +
+E         - Requirements and observable behavior
+E         + Requirements and observable behavior
+E         ?                                     +...
+E         
+E         ...Full output truncated (27 lines hidden), use '-vv' to show
+
+scripts\python\tests\test_toolchain_workflow_repair_e2e.py:265: AssertionError
+_________ test_cli_prepare_consume_finish_validate_without_model[gbk] _________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-35/test_cli_prepare_consume_finis1')
+stdio_encoding = 'gbk'
+
+    @pytest.mark.parametrize('stdio_encoding', ['utf-8', 'gbk', 'cp1252'])
+    def test_cli_prepare_consume_finish_validate_without_model(tmp_path, stdio_encoding):
+        request = fixture(tmp_path)
+        request_path = tmp_path / 'request.json'; request_path.write_text(json.dumps(request))
+        entry = Path(v2.__file__).resolve()
+        env = dict(os.environ, PYTHONIOENCODING=stdio_encoding, PYTHONUTF8='0')
+        delivered = []
+        def run(*argv):
+            result = subprocess.run([sys.executable, str(entry), '--repository-root', str(tmp_path), *argv], capture_output=True, text=True, encoding='utf-8', errors='strict', env=env, check=True)
+            records = [json.loads(line) for line in result.stdout.splitlines()]
+            delivered.extend(record['content'] for record in records if 'page' in record)
+            return records[-1]
+        start = run('prepare', '--request', str(request_path))
+        assert run('consume', '--plan-id', 'repair', '--attempt-id', start['attempt_id'])['status'] == 'complete'
+>       assert ''.join(delivered) == (tmp_path / 'requirements.md').read_text(encoding='utf-8')
+E       AssertionError: assert 'Requirements...r\r\n完整读取\r\n' == 'Requirements...avior\n完整读取\n'
+E         
+E         - Requirements and observable behavior
+E         + Requirements and observable behavior
+E         ?                                     +
+E         - Requirements and observable behavior
+E         + Requirements and observable behavior
+E         ?                                     +...
+E         
+E         ...Full output truncated (27 lines hidden), use '-vv' to show
+
+scripts\python\tests\test_toolchain_workflow_repair_e2e.py:265: AssertionError
+_______ test_cli_prepare_consume_finish_validate_without_model[cp1252] ________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-35/test_cli_prepare_consume_finis2')
+stdio_encoding = 'cp1252'
+
+    @pytest.mark.parametrize('stdio_encoding', ['utf-8', 'gbk', 'cp1252'])
+    def test_cli_prepare_consume_finish_validate_without_model(tmp_path, stdio_encoding):
+        request = fixture(tmp_path)
+        request_path = tmp_path / 'request.json'; request_path.write_text(json.dumps(request))
+        entry = Path(v2.__file__).resolve()
+        env = dict(os.environ, PYTHONIOENCODING=stdio_encoding, PYTHONUTF8='0')
+        delivered = []
+        def run(*argv):
+            result = subprocess.run([sys.executable, str(entry), '--repository-root', str(tmp_path), *argv], capture_output=True, text=True, encoding='utf-8', errors='strict', env=env, check=True)
+            records = [json.loads(line) for line in result.stdout.splitlines()]
+            delivered.extend(record['content'] for record in records if 'page' in record)
+            return records[-1]
+        start = run('prepare', '--request', str(request_path))
+        assert run('consume', '--plan-id', 'repair', '--attempt-id', start['attempt_id'])['status'] == 'complete'
+>       assert ''.join(delivered) == (tmp_path / 'requirements.md').read_text(encoding='utf-8')
+E       AssertionError: assert 'Requirements...r\r\n完整读取\r\n' == 'Requirements...avior\n完整读取\n'
+E         
+E         - Requirements and observable behavior
+E         + Requirements and observable behavior
+E         ?                                     +
+E         - Requirements and observable behavior
+E         + Requirements and observable behavior
+E         ?                                     +...
+E         
+E         ...Full output truncated (27 lines hidden), use '-vv' to show
+
+scripts\python\tests\test_toolchain_workflow_repair_e2e.py:265: AssertionError
+=========================== short test summary info ===========================
+FAILED scripts/python/tests/test_toolchain_workflow_repair_e2e.py::test_cli_prepare_consume_finish_validate_without_model[utf-8]
+FAILED scripts/python/tests/test_toolchain_workflow_repair_e2e.py::test_cli_prepare_consume_finish_validate_without_model[gbk]
+FAILED scripts/python/tests/test_toolchain_workflow_repair_e2e.py::test_cli_prepare_consume_finish_validate_without_model[cp1252]
+3 failed, 133 passed in 23.04s
