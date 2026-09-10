@@ -282,3 +282,19 @@ The online source extraction has no Git HEAD; per-source hashes bind the result.
 Fresh Windows verification of this repair is pending: expect **187 passed**,
 zero skipped, no platform exclusions and stable sources using the existing
 direct verifier. Earlier failure and success evidence is preserved unchanged.
+
+## Coordinator v2 Windows validation (2026-09-10)
+
+The requested Windows verification was run from commit
+`eb7825112d9efaec6a0fd25b3f05b32f8f29ba8e` with
+`py -3 scripts/python/verify_toolchain_workflow_repair.py`.
+
+- Result: **187 passed**, zero skipped or failed.
+- `source_stable=true`.
+- `platform_exclusions=[]`.
+- `windows_verification_pending=false`.
+- No live backend or formal workflow was invoked.
+- Raw evidence: `logs/toolchain-workflow-repair-direct/20260910T134123Z-71905052/`.
+
+This closes the Windows verification for the coordinator v2 migration; all
+earlier failure and success bundles remain preserved unchanged.
