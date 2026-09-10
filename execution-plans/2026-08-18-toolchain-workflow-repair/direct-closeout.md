@@ -237,3 +237,18 @@ Windows handoff for this revision: run
 branch. Expect **179 cases**, zero failures/skips, no platform exclusions and
 stable sources. Final closeout remains pending that fresh Windows result.
 
+## Final Windows validation (2026-09-10)
+
+The requested Windows verification was run from commit
+`4b052a7203a7bbc7b59a494c1c59e39d64993f89` with
+`py -3 scripts/python/verify_toolchain_workflow_repair.py`.
+
+- Result: **179 passed**, zero skipped or failed.
+- `source_stable=true`.
+- `platform_exclusions=[]`.
+- `windows_verification_pending=false`.
+- No live backend or formal workflow was invoked.
+- Raw evidence: `logs/toolchain-workflow-repair-direct/20260910T122218Z-acdb64a8/`.
+
+This evidence is a fresh Windows validation of the successor W3 correction;
+the earlier failed and successful bundles remain preserved unchanged.
