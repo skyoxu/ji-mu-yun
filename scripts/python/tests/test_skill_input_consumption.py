@@ -961,9 +961,9 @@ class SkillInputConsumptionTests(unittest.TestCase):
         publish_ready(receipt, child_request, decision, context, root, contract)
         self.assertFalse((root / "run" / "snapshot" / "requirements.md").exists())
         self.assertEqual("ready", validate_receipt(receipt, root, contract, require_ready=True)["status"])
-        gated = require_ready_skill_input(receipt_path=receipt, repository_root=root, contract_path=contract, consumer="demo-skill", operation="create")
-        self.assertEqual(context.resolve(), gated["context_artifact"])
-        self.assertEqual(artifact_identity_hash(context), gated["context_artifact_hash"])
+        # ADR-0060: historical validation remains available, live entry is v2-only.
+        with self.assertRaisesRegex(ValueError, "v2 current pointer"):
+            require_ready_skill_input(receipt_path=receipt, repository_root=root, contract_path=contract, consumer="demo-skill", operation="create")
         with self.assertRaises(ValueError):
             require_ready_skill_input(receipt_path=receipt, repository_root=root, contract_path=contract, consumer="other-skill", operation="create")
 
@@ -1459,3 +1459,4 @@ class SkillInputConsumptionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

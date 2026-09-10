@@ -18,6 +18,7 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 TESTS = [
+    'scripts/python/tests/test_skill_input_consumer_migration.py',
     'scripts/python/tests/test_toolchain_workflow_repair_e2e.py',
     'scripts/python/tests/test_skill_input_selection_v2.py',
     'scripts/python/tests/test_skill_input_transport_auto.py',
@@ -49,6 +50,14 @@ def main():
         'scripts/python/validate_skill_input_consumption.py', 'scripts/python/launch_skill_input_consumer.py',
         'scripts/python/verify_toolchain_workflow_repair.py', 'scripts/sc/_llm_backend.py',
         'execution-plans/2026-08-18-toolchain-workflow-repair/tools/terminal_full.py']))
+    for consumer in ('vdd-execution-plan', 'quick-dev-tdd-adapter', 'run-phase-bootstrap-review', 'run-refactor-implementation-acceptance'):
+        skill = ROOT / '.agents' / 'skills' / consumer
+        for subdir in ('scripts', 'tools'):
+            files.extend(p.relative_to(ROOT).as_posix() for p in (skill / subdir).glob('*.py'))
+        files.append((skill / 'references' / 'skill-input-contract.v1.json').relative_to(ROOT).as_posix())
+    files.extend(p.relative_to(ROOT).as_posix() for p in (ROOT / 'scripts' / 'toolchain').rglob('*.py') if 'tests' not in p.parts)
+    files.append('.agents/skills/run-phase-bootstrap-review/policies/bootstrap-runtime/runtime-policy.v1.json')
+    files = sorted(set(files))
     for path in files:
         before[path] = hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
     head = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True, text=True, shell=False)

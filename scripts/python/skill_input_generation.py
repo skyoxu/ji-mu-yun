@@ -69,7 +69,7 @@ def read_generation(root, generation_id):
     receipt = payload['receipt']
     if not isinstance(receipt, dict) or receipt.get('schema_version') != 'skill-input-receipt.v2' or receipt.get('ready') is not True or receipt.get('authorizes') != []:
         raise ValueError('generation receipt is not ready')
-    required = {'schema_version', 'plan_id', 'consumer', 'operation', 'policy_revision', 'selection', 'bindings', 'candidate_hash', 'validator_hash', 'coverage', 'transport', 'gates', 'knowledge', 'context_hash', 'ready', 'authorizes'}
+    required = {'schema_version', 'plan_id', 'consumer', 'operation', 'policy_revision', 'selection', 'bindings', 'candidate_hash', 'candidate', 'inputs', 'storage', 'validator_hash', 'coverage', 'transport', 'gates', 'knowledge', 'context_hash', 'ready', 'authorizes'}
     if set(receipt) != required or receipt['coverage'].get('status') != 'complete' or receipt['gates'].get('execution_allowed') is not True:
         raise ValueError('generation receipt is incomplete')
     if receipt.get('context_hash') != identity(payload['context']):

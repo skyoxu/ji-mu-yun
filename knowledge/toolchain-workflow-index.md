@@ -93,5 +93,7 @@ their original candidate bindings and do not become current runtime authority.
 For typed source selection, paged delivery, immutable current receipts and
 retention, use [Skill-input v2](../docs/workflows/skill-input-v2.md) and
 `scripts/python/skill_input_v2.py`. The shared Skill gate accepts its canonical
-current pointer and revalidates source/binding bytes. V1 remains an explicit
-historical compatibility input and is never automatically promoted.
+current pointer and revalidates source/binding bytes. Live gates now require v2 current pointers and automatically register native
+consumer-use retention. V1 is available only through historical validation or
+explicit --historical-v1 CLI replay; it cannot satisfy a live gate.
+

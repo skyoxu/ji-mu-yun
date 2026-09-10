@@ -16,7 +16,7 @@ def project_knowledge_gates(*, catalog_stale, read_set_same, source_bytes_same,
              publication_integrity_valid, lkg_valid, required_sources_present)
     if any(type(v) is not bool for v in flags):
         raise ValueError('Knowledge gate facts must be boolean')
-    paths = [relative(p) for p in changed_paths]
+    paths = [relative(p).casefold() for p in changed_paths]
     self_change = any(p.startswith(KNOWLEDGE_PREFIXES) or p == 'scripts/python/knowledge_gate_projection.py' for p in paths)
     failure = next((code for valid, code in (
         (publication_integrity_valid, 'publication-integrity-failure'),

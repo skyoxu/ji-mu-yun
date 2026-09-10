@@ -195,3 +195,28 @@ def apply_retention(root, *, approval, repository_root=None, plan_id='default', 
     finally:
         immutable_json(receipt_dir / (run + '.result.json'), result)
     return result
+
+
+def register_consumer_use(root, repository_root, *, consumer, operation, generation_id):
+    """Persist native gate custody before a consumer receives context (ADR-0060).
+
+    Conservative durable protection survives consumer failure and current advance.
+    Repeated use of the same generation/consumer/operation is idempotent.
+    """
+    kinds = {'vdd-execution-plan': 'lifecycle', 'quick-dev-tdd-adapter': 'authorization',
+             'run-phase-bootstrap-review': 'terminal', 'run-refactor-implementation-acceptance': 'acceptance'}
+    if consumer not in kinds:
+        raise ValueError('unknown live consumer')
+    current = resolve_current(root)
+    if current is None or current['generation_id'] != generation_id:
+        raise ValueError('consumer current changed before protection')
+    use = {'schema_version': 'skill-input-consumer-use.v2', 'consumer': consumer,
+           'operation': operation, 'generation_id': current['generation_id'],
+           'receipt_hash': current['receipt_hash'], 'authorizes': []}
+    reference_id = identity(use).split(':', 1)[1]
+    path = contained(root, 'consumer-uses/' + reference_id + '.json')
+    immutable_json(path, use)
+    register_reference(root, repository_root, reference_id=reference_id,
+                       kind=kinds[consumer], artifact_path=path.relative_to(repository_root).as_posix(),
+                       generation_ids=[current['generation_id']])
+    return {**use, 'reference_id': reference_id}

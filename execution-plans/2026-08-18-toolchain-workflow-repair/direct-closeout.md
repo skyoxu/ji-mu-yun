@@ -2,18 +2,17 @@
 
 ## Current disposition
 
-The maintainer explicitly requested online direct implementation and GitHub
-commits, without VDD, Quick Dev or Acceptance execution. The full W0-W6 scope
-is retained. This instruction supersedes the historical execution procedure
-for this repair, not the behavioral requirements or historical evidence.
+Reopened after the 2026-09-10 source audit found four gaps in the earlier
+closeout: required-input enforcement, trusted changed-set derivation, live v2
+consumer migration, and automatic native-reference retention. The earlier
+139-case Windows result remains valid for its tested source, but did not prove
+those requirements. Historical closeout statements below are superseded here.
 
-The full W0-W6 package is closed under the maintainer-authorized direct route,
-based on the implemented requirement mapping below and the maintainer-reported
-Windows validation of source commit 86faa3e0 (139 passed, zero skipped).
-This disposition supersedes the pending statements in the historical entries
-below. Historical formal lifecycle receipts remain unchanged; no formal
-acceptance is claimed. No formal model/worker, Bootstrap, Knowledge publication,
-or real historical GC was run online.
+The four corrections are implemented on this branch under the maintainer's
+direct authorization, without VDD/Quick Dev/Acceptance orchestration. Online
+verification now reports **164 passed, 1 Windows-only case deselected**.
+Fresh Windows verification of the corrected source remains pending; do not
+call this revision closed solely from earlier evidence.
 
 ## Requirement mapping
 
@@ -146,3 +145,52 @@ this passing run. This documentation-only closeout does not change the tested
 implementation, merge the branch, publish Knowledge, or generate formal
 acceptance/lifecycle receipts. Raw Windows evidence archival is complete. There are no outstanding Windows
 verification or evidence archival handoff items for this direct closeout.
+
+## Four-gap implementation correction (2026-09-10)
+
+- W0: skill_input_requirements.verify_inputs requires every operation input,
+  checks allowed root kinds, selected-source membership and typed directory
+  coverage. The normalized mapping is immutable and revalidated on current.
+- W3: skill_input_candidate observes tracked changes, deletions and untracked
+  files against an authority-bound Git baseline. Ignored Knowledge paths cannot
+  hide self-change. Caller changed_paths is optional assertion-only. Missing
+  baselines, hidden scope and candidate-byte changes fail closed.
+- W4/W6: the shared live gate accepts only v2 current pointers. Existing
+  prepare/launch CLI names default to v2; --historical-v1 explicitly retains
+  replay only. Four real Skill-input entry functions are exercised in isolated
+  processes using the actual contracts. Non-adopting Quick Dev staged runtime
+  keeps its separate governance policy.
+- W5: native gate use writes consumer/operation/generation/receipt custody
+  before handoff and registers the durable lifecycle/authorization/terminal/
+  acceptance reference automatically. Successor current and expired attempts
+  cannot collect a consumed generation. Native custody tampering blocks GC.
+- Also enforce the existing max_context_bytes contract at publication/readback.
+  Oversized context blocks; no incomplete context is promoted.
+
+Validation evidence:
+`logs/toolchain-workflow-repair-direct/20260910T040103Z-7d9cf1a9/`.
+The preceding 035935Z run is preserved; the final source additionally fixes
+the entry-probe subprocess stream encoding explicitly for Windows.
+This final run verifies unchanged consumer dependencies against remote Git
+blob bytes; source_stable=true and skipped_cases=0. The intermediate run at
+`logs/toolchain-workflow-repair-direct/20260910T035418Z-b377a199/` is preserved
+as source-extraction evidence, not the final source binding.
+The preceding failing development run is preserved separately at
+`logs/toolchain-workflow-repair-direct/20260910T035252Z-c9d07b25/`.
+That failure exposed an old test expecting live v1 acceptance; the test now
+preserves historical validation and asserts live rejection under ADR-0060.
+
+The new test module adds 26 cases. Entry tests use real input/current/retention
+code, but deliberately replace downstream VDD evaluation and Acceptance run
+creation or stop Bootstrap at its next argument check. No live backend or
+formal workflow is invoked. They prove the entry boundary, not full formal
+workflow execution. Online validation uses a source extraction with source_head
+null and records hashes of actual consumer executable dependencies.
+
+Windows handoff: update this branch, preserve all prior bundles, and run
+`py -3 scripts/python/verify_toolchain_workflow_repair.py`.
+Expected Windows collection is **165 cases**, with zero failures/skips,
+source_stable=true, platform_exclusions=[] and
+windows_verification_pending=false. New verification evidence is required
+before recording another final closeout.
+

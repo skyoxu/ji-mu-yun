@@ -316,7 +316,7 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
     return {"status": "candidate", "ready": False, "receipt": receipt_path.as_posix(), "source_manifest": manifest_path.as_posix()}
 
 
-def main() -> int:
+def _historical_main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
     parser.add_argument("--contract", required=True, type=Path)
@@ -338,5 +338,20 @@ def main() -> int:
     return 0
 
 
+def main() -> int:
+    # ADR-0060: new CLI work uses v2; history requires an explicit opt-in.
+    if "--historical-v1" in sys.argv:
+        sys.argv.remove("--historical-v1")
+        return _historical_main()
+    from skill_input_v2 import main as v2_main
+    routing = argparse.ArgumentParser(add_help=False)
+    routing.add_argument("--repository-root", default=str(Path.cwd()))
+    args, remaining = routing.parse_known_args()
+    remaining = ["--request" if arg == "--request-json" else arg for arg in remaining]
+    sys.argv = [sys.argv[0], "--repository-root", args.repository_root, "prepare", *remaining]
+    return v2_main()
+
+
 if __name__ == "__main__":
     raise SystemExit(main())
+

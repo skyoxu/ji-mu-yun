@@ -1,0 +1,61 @@
+........................................................................ [ 45%]
+................................................................F....... [ 90%]
+...............                                                          [100%]
+=================================== FAILURES ===================================
+_ SkillInputConsumptionTests.test_publish_ready_binds_sidecars_and_recomputes_gate _
+
+self = <test_skill_input_consumption.SkillInputConsumptionTests testMethod=test_publish_ready_binds_sidecars_and_recomputes_gate>
+
+    def test_publish_ready_binds_sidecars_and_recomputes_gate(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        source_path = payload["sources"][0]["path"]
+        output_root = root / "run" / "output"
+        output_root.mkdir()
+        child_request = root / "run" / "skill-input-child-request.v1.json"
+        child_request.write_text(json.dumps({
+            "schema_version": "skill-input-child-request.v1", "consumer": "demo-skill", "operation": "create",
+            "contract_hash": payload["contract_hash"], "source_manifest_hash": payload["source_manifest"]["sha256"],
+            "snapshot_root": "run/snapshot", "output_root": "run/output", "execution_identity": "sha256:" + "1" * 64,
+            "max_context_bytes": 512,
+            "max_snapshot_bytes": 262144, "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"], "authorizes": [],
+        }), encoding="utf-8")
+        decision = output_root / "semantic-decision.v1.json"
+        context = output_root / "skill-input-context.v1.json"
+        context.write_text(json.dumps({"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"}), encoding="utf-8")
+        context_hash = artifact_identity_hash(context)
+        decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []}), encoding="utf-8")
+        publish_ready(receipt, child_request, decision, context, root, contract)
+        self.assertFalse((root / "run" / "snapshot" / "requirements.md").exists())
+        self.assertEqual("ready", validate_receipt(receipt, root, contract, require_ready=True)["status"])
+>       gated = require_ready_skill_input(receipt_path=receipt, repository_root=root, contract_path=contract, consumer="demo-skill", operation="create")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+scripts/python/tests/test_skill_input_consumption.py:964: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+receipt_path = PosixPath('/tmp/tmp7dav5jy9/run/receipt.json')
+repository_root = PosixPath('/tmp/tmp7dav5jy9')
+contract_path = PosixPath('/tmp/tmp7dav5jy9/contract.json')
+consumer = 'demo-skill', operation = 'create'
+
+    def require_ready_skill_input(
+        *,
+        receipt_path: Path,
+        repository_root: Path,
+        contract_path: Path,
+        consumer: str,
+        operation: str,
+    ) -> dict[str, Any]:
+        """Fail closed unless a receipt is ready for this exact Skill operation."""
+        # ADR-0060: live consumers cannot opt into historical v1 by filename.
+        if receipt_path.name != "current.v1.json":
+>           raise ValueError("live consumer requires a v2 current pointer; v1 is historical only")
+E           ValueError: live consumer requires a v2 current pointer; v1 is historical only
+
+scripts/python/skill_input_gate.py:24: ValueError
+=========================== short test summary info ============================
+FAILED scripts/python/tests/test_skill_input_consumption.py::SkillInputConsumptionTests::test_publish_ready_binds_sidecars_and_recomputes_gate
+1 failed, 158 passed, 1 deselected in 8.92s

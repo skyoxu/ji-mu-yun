@@ -76,19 +76,20 @@ the projection. The projection atomically publishes the manifests, snapshot,
 run request, and prerequisite bundle. Historical snapshots, `in/` artifacts,
 and prior Acceptance inputs are never copied into a successor candidate.
 
-Before `start-or-resume`, load
-`references/skill-input-contract.v1.json` and prepare an `acceptance` receipt
-with the explicit implementation-target and acceptance-requirements paths.
-Use `scripts/python/launch_skill_input_consumer.py --create-request` with the
-candidate receipt and actual backend/model, then run semantic consumption with
-that generated request through the same typed boundary. Never hand-author its
-execution identity. Require
-`scripts/python/validate_skill_input_consumption.py --require-ready`. A stale
-but reconstructible input is automatically regenerated through the same typed
-Skill-input workflow, then consumed as a new binding; partial or unredacted
-input remains `prerequisite_blocked` and cannot be replaced with a log or
-historical summary. Pass the receipt to `start-or-resume` with
-`--skill-input-receipt` and `--skill-input-contract`.
+Before `start-or-resume`, bind `implementation_target` and
+`acceptance_requirements` for the `acceptance` operation.
+Use the v2 request and commands in `docs/workflows/skill-input-v2.md`
+(ADR-0060). Bind the real consumer contract, explicit required-input roots,
+registry, authority envelope with `skill_input_baseline`, and Knowledge freeze.
+The adapter derives candidate changes from Git; never supply an empty changed
+set to conceal Knowledge changes. Run `skill_input_v2.py prepare`, consume all
+pages, then `finish`. Pass only `<storage>/current.v1.json` as
+`--skill-input-receipt`, with the bound `--skill-input-contract`.
+The live gate revalidates inputs/candidate and automatically persists a
+non-authorizing consumer-use reference before handing off context. V1 CLI
+replay requires `--historical-v1`; its output cannot enter a live consumer.
+Transport coverage is not semantic approval and does not replace downstream
+Knowledge, review, lifecycle, or authorization requirements.
 
 Create the knowledge context only through the canonical Locator and bind the
 adapter to exactly one explicit `--target-plan`. `catalog_stale` alone is a
@@ -123,7 +124,7 @@ py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_c
   --repository-root <repo> --target-plan <execution-plans/target> \
   --run-input-hash <sha256:...> --contract-hash <sha256:...> \
   --knowledge-context-hash <sha256:...> \
-  --skill-input-receipt <binding-relative-or-absolute-receipt> \
+  --skill-input-receipt <storage>/current.v1.json \
   --skill-input-contract .agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json
 ```
 
@@ -539,3 +540,4 @@ The diff uses hash-checked frozen snapshot or commit bytes, while consumer hints
 reflect explicitly labeled current worktree bytes. Missing inputs, binary diffs
 and truncation remain visible limitations. No model is launched, review is not
 sent automatically, and reviewer text never grants Acceptance authority.
+

@@ -59,17 +59,20 @@ Bind every required context class to real in-scope artifacts. For implementation
 
 ## Skill Input Gate
 
-After closure selection and before Artifact View freeze or reviewer launch, load
-`references/skill-input-contract.v1.json` and prepare a `review` receipt with
-the explicit closure and authority paths. Create the child request through
-`scripts/python/launch_skill_input_consumer.py --create-request` using the
-candidate receipt and actual backend/model, then launch that generated request
-through the same entry point. Never hand-author its execution identity. Validate the
-result with `scripts/python/validate_skill_input_consumption.py --require-ready`.
-If the gate is not ready, stop before freezing Artifact View and route the
-missing or stale input to the existing repair path. Logs remain evidence only,
-never recovery input. The `prepare` command accepts the validated receipt via
-`--skill-input-receipt` and `--skill-input-contract`.
+After closure selection and before Artifact View freeze or reviewer launch,
+bind `closure_inputs` and `authority` for the `review` operation.
+Use the v2 request and commands in `docs/workflows/skill-input-v2.md`
+(ADR-0060). Bind the real consumer contract, explicit required-input roots,
+registry, authority envelope with `skill_input_baseline`, and Knowledge freeze.
+The adapter derives candidate changes from Git; never supply an empty changed
+set to conceal Knowledge changes. Run `skill_input_v2.py prepare`, consume all
+pages, then `finish`. Pass only `<storage>/current.v1.json` as
+`--skill-input-receipt`, with the bound `--skill-input-contract`.
+The live gate revalidates inputs/candidate and automatically persists a
+non-authorizing consumer-use reference before handing off context. V1 CLI
+replay requires `--historical-v1`; its output cannot enter a live consumer.
+Transport coverage is not semantic approval and does not replace downstream
+Knowledge, review, lifecycle, or authorization requirements.
 
 ## Inspect Before Starting
 
@@ -462,3 +465,4 @@ py -3 C:/Users/Administrator/.codex/skills/.system/skill-creator/scripts/quick_v
 ```
 
 Then run a fresh `bootstrap-skill-route` review over the repository Skill, external thin route, standard, ADR, compatibility adapter, profiles, schemas, tests, operator guide, repository rules, and usage evidence.
+

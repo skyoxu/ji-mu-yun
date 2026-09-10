@@ -19,23 +19,15 @@ def require_ready_skill_input(
     operation: str,
 ) -> dict[str, Any]:
     """Fail closed unless a receipt is ready for this exact Skill operation."""
-    # v2 consumers resolve a pointer, never a caller-selected generation file.
-    if receipt_path.name == "current.v1.json":
-        from skill_input_v2 import require_current
-        return require_current(repository_root, receipt_path, consumer=consumer,
-                               operation=operation, contract_path=contract_path)
-    result = validate_receipt(receipt_path.resolve(), repository_root.resolve(), contract_path.resolve(), require_ready=True)
-    receipt = read_json(receipt_path.resolve())
-    if receipt.get("consumer") != consumer or receipt.get("operation") != operation:
-        raise ValueError("skill input receipt consumer or operation does not match route")
-    context_ref = receipt["context_artifact"]
-    context_path = (receipt_path.resolve().parent / context_ref["path"]).resolve()
-    if not context_path.is_file():
-        raise ValueError("ready Skill input context artifact is missing")
-    return {
-        **result,
-        "context_artifact": context_path,
-        "context_artifact_hash": context_ref["sha256"],
-        "binding_hash": receipt["binding_hash"],
-    }
-
+    # ADR-0060: live consumers cannot opt into historical v1 by filename.
+    if receipt_path.name != "current.v1.json":
+        raise ValueError("live consumer requires a v2 current pointer; v1 is historical only")
+    from skill_input_v2 import require_current
+    from skill_input_retention import register_consumer_use
+    result = require_current(repository_root, receipt_path, consumer=consumer,
+                             operation=operation, contract_path=contract_path)
+    # Persist protection before returning control to any downstream producer.
+    use = register_consumer_use(receipt_path.parent, repository_root,
+                               consumer=consumer, operation=operation, generation_id=result["generation_id"])
+    return {**result, "generation_id": use["generation_id"],
+            "retention_reference": use["reference_id"]}

@@ -222,20 +222,21 @@ explicit current sources required by the plan.
 
 ## Skill Input Gate
 
-When governance is enabled, after route selection and authority reads, load
-`references/skill-input-contract.v1.json` and run the shared adapter
-`scripts/python/prepare_skill_input_consumption.py` for `create` or `repair`.
-The adapter must receive the explicit requirements/target-plan/finding paths;
-it must not discover them from logs. Launch the typed semantic child only through
-`scripts/python/launch_skill_input_consumer.py`: first use `--create-request`
-with the candidate receipt and actual backend/model, then use
-`--run-semantic-child` with that generated request. Never hand-author its
-execution identity. Then run
-`scripts/python/validate_skill_input_consumption.py --require-ready` before the
-knowledge freeze or any plan artifact is generated. A candidate or failed gate
-routes to clarification/repair and cannot be returned as raw source content.
-When using `vdd_knowledge_preflight.py`, pass the same receipt with
-`--skill-input-receipt` and `--skill-input-operation`.
+When governance is enabled, after route selection and authority reads, bind
+`requirements` for create, or `target_plan` and `repair_finding` for repair.
+Use the v2 request and commands in `docs/workflows/skill-input-v2.md`
+(ADR-0060). Bind the real consumer contract, explicit required-input roots,
+registry, authority envelope with `skill_input_baseline`, and Knowledge freeze.
+The adapter derives candidate changes from Git; never supply an empty changed
+set to conceal Knowledge changes. Run `skill_input_v2.py prepare`, consume all
+pages, then `finish`. Pass only `<storage>/current.v1.json` as
+`--skill-input-receipt`, with the bound `--skill-input-contract`.
+The live gate revalidates inputs/candidate and automatically persists a
+non-authorizing consumer-use reference before handing off context. V1 CLI
+replay requires `--historical-v1`; its output cannot enter a live consumer.
+Transport coverage is not semantic approval and does not replace downstream
+Knowledge, review, lifecycle, or authorization requirements.
+Use the same operation with `vdd_knowledge_preflight.py --skill-input-operation`.
 
 ## Candidate, Review, And Reports
 
@@ -304,3 +305,4 @@ Use this repository-owned command for Skill package validation:
 ```text
 py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/vdd-execution-plan --capability scripts/sc/config/skill-package-validator-capability.v1.json
 ```
+

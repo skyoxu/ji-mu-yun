@@ -131,6 +131,25 @@ Execution profiles are `fast-ship`, `standard`, and `self-hosted`. Profiles may 
 
 The implementation worker may change only declared production paths after expected RED. It must not modify selector, fixture, Acceptance, plan contract, historical evidence or terminal predicate to manufacture GREEN. Model/backend text is never evidence authority.
 
+## Skill-input Adopting Routes
+
+For routes that explicitly adopt Skill-input, including `adapter.py`
+`prepare_with_skill_input`, bind `plan_directory` and `target_files` for
+`execute`. The current staged runtime's separate governance policy is unchanged;
+this does not inject governance artifacts into its default runtime snapshot.
+Use the v2 request and commands in `docs/workflows/skill-input-v2.md`
+(ADR-0060). Bind the real consumer contract, explicit required-input roots,
+registry, authority envelope with `skill_input_baseline`, and Knowledge freeze.
+The adapter derives candidate changes from Git; never supply an empty changed
+set to conceal Knowledge changes. Run `skill_input_v2.py prepare`, consume all
+pages, then `finish`. Pass only `<storage>/current.v1.json` as
+`--skill-input-receipt`, with the bound `--skill-input-contract`.
+The live gate revalidates inputs/candidate and automatically persists a
+non-authorizing consumer-use reference before handing off context. V1 CLI
+replay requires `--historical-v1`; its output cannot enter a live consumer.
+Transport coverage is not semantic approval and does not replace downstream
+Knowledge, review, lifecycle, or authorization requirements.
+
 ## Legacy Compatibility
 
 Historical v1 plans are read-only compatibility inputs. `tools/legacy_compat.py` may report reusable identities or required current projection, but legacy combined receipt/observation fields, aggregate execution counters and plan-local terminal status cannot directly become current v2 evidence or completion authority. `scripts/quick_dev/replay_legacy_tdd.py` is a regression harness only: it may prove a historical RED baseline and current GREEN with the same declared selector/failure identities, but it never authorizes current evidence.
@@ -169,3 +188,4 @@ For the bounded 8-17 closeout, run the test files listed in
 `logs/quick-dev-stage-recovery-closeout-23cf4937/validation.json`, including
 `test_stage_reentry.py`, `test_ch456_recovery_mutations.py` and
 `test_ch456_public_repeat_guard.py`. No live CH456 run is required.
+

@@ -14,6 +14,8 @@ import uuid
 try:
     from .skill_input_protocol import contained, digest, encoded, identity, read_json, immutable_json, atomic_json, name, check_hash
     from .skill_input_selection import verify_selection, READ_ROLES
+    from .skill_input_requirements import verify_inputs
+    from .skill_input_candidate import observe_candidate
     from .skill_input_transport import plan_transport, pages_for, continuation, validate_continuation
     from .skill_input_coverage import prove_ranges
     from .skill_input_generation import publish_receipt, read_generation
@@ -24,6 +26,8 @@ try:
 except ImportError:
     from skill_input_protocol import contained, digest, encoded, identity, read_json, immutable_json, atomic_json, name, check_hash
     from skill_input_selection import verify_selection, READ_ROLES
+    from skill_input_requirements import verify_inputs
+    from skill_input_candidate import observe_candidate
     from skill_input_transport import plan_transport, pages_for, continuation, validate_continuation
     from skill_input_coverage import prove_ranges
     from skill_input_generation import publish_receipt, read_generation
@@ -33,7 +37,7 @@ except ImportError:
     from skill_input_consumption import redact_bytes
 
 BINDINGS = {'contract', 'registry', 'authority', 'knowledge_freeze'}
-MODULES = ('skill_input_protocol.py', 'skill_input_selection.py', 'skill_input_transport.py',
+MODULES = ('skill_input_requirements.py', 'skill_input_candidate.py', 'skill_input_gate.py', 'skill_input_protocol.py', 'skill_input_selection.py', 'skill_input_transport.py',
            'skill_input_coverage.py', 'skill_input_generation.py', 'skill_input_current.py',
            'skill_input_retention.py', 'knowledge_gate_projection.py', 'knowledge_context_validation.py', '_knowledge_locator_core.py', 'skill_input_v2.py', 'skill_input_consumption.py')
 
@@ -72,13 +76,13 @@ def source_bytes(repository_root, selection):
 
 
 def _storage(repository_root, storage):
-    if storage.startswith(('logs/', '.skill-input-work/')):
+    if storage.split('/')[0].casefold() in {'logs', '.skill-input-work', 'knowledge', 'scripts', '.agents', 'docs'} or 'skill-input-v2' not in storage.split('/'):
         raise ValueError('storage must not overlap runtime evidence or attempts')
     return contained(repository_root, storage)
 
 
 def prepare(repository_root, request, *, allow_refresh=False):
-    required = {'schema_version', 'plan_id', 'consumer', 'operation', 'policy_revision', 'storage', 'sources', 'bindings'}
+    required = {'schema_version', 'plan_id', 'consumer', 'operation', 'policy_revision', 'storage', 'sources', 'bindings', 'inputs'}
     optional = {'page_bytes', 'max_snapshot_bytes', 'max_retries', 'changed_paths'}
     if not isinstance(request, dict) or not required <= set(request) or set(request) - required - optional or request['schema_version'] != 'skill-input-request.v2':
         raise ValueError('invalid v2 request')
@@ -89,6 +93,11 @@ def prepare(repository_root, request, *, allow_refresh=False):
     if contract.get('consumer') != request['consumer'] or request['operation'] not in contract.get('operations', {}):
         raise ValueError('consumer or operation is outside bound contract')
     selection = verify_selection(repository_root, request['sources'], consumer=request['consumer'], policy_revision=request['policy_revision'], allow_refresh=allow_refresh)
+    _storage(repository_root, request['storage'])
+    inputs = verify_inputs(repository_root, contract, request['operation'], request['inputs'], selection['sources'])
+    candidate = observe_candidate(repository_root, contained(repository_root, request['bindings']['authority']['path']), request['storage'])
+    if 'changed_paths' in request and sorted(request['changed_paths']) != candidate['changed_paths']:
+        raise ValueError('caller changed_paths differs from observed candidate')
     store = _storage(repository_root, request['storage'])
     # Typed sources may never include the adapter output, regardless of filename.
     if any(p == request['storage'] or p.startswith(request['storage'] + '/') for p in selection['read_set']):
@@ -97,13 +106,13 @@ def prepare(repository_root, request, *, allow_refresh=False):
     previous_receipt = read_generation(store, previous['generation_id'])['receipt'] if previous else None
     same = previous_receipt is None or previous_receipt['selection']['sourceSelectionHash'] == selection['sourceSelectionHash']
     authority_same = previous_receipt is None or previous_receipt['bindings']['authority'] == request['bindings']['authority']
-    if not same:
+    if not same or (previous_receipt is not None and previous_receipt['inputs'] != inputs):
         raise ValueError('selection-drift')
     if not authority_same:
         raise ValueError('authority-drift')
     knowledge = observe_knowledge(repository_root, contained(repository_root, request['bindings']['knowledge_freeze']['path']), selection_hash=selection['sourceSelectionHash'])
     gates = project_knowledge_gates(catalog_stale=knowledge['catalog_stale'], read_set_same=same,
-        source_bytes_same=not selection['refreshed'] and not knowledge['source_refreshed'], authority_same=authority_same, changed_paths=request.get('changed_paths', []))
+        source_bytes_same=not selection['refreshed'] and not knowledge['source_refreshed'], authority_same=authority_same, changed_paths=candidate['changed_paths'])
     if not gates['execution_allowed']:
         raise ValueError(gates['failure'] or gates['route'])
     raw = source_bytes(repository_root, selection)
@@ -121,7 +130,7 @@ def prepare(repository_root, request, *, allow_refresh=False):
     attempt = attempt_path(repository_root, request['plan_id'], attempt_id)
     prepared = {'schema_version': 'skill-input-prepared.v2', 'request': request, 'selection': selection,
                 'transport': transport, 'pages': pages, 'previous_current': previous,
-                'gates': gates, 'knowledge': knowledge, 'validator_hash': validator_identity(), 'authorizes': []}
+                'inputs': inputs, 'candidate': candidate, 'gates': gates, 'knowledge': knowledge, 'validator_hash': validator_identity(), 'authorizes': []}
     immutable_json(attempt / 'prepared.json', prepared)
     atomic_json(attempt / 'observed.json', {'prepared_hash': identity(prepared), 'pages': [],
                 'continuation': continuation(transport, pages)})
@@ -140,6 +149,9 @@ def _load(repository_root, plan_id, attempt_id):
         raise ValueError('prepared selection changed')
     if observe_knowledge(repository_root, contained(repository_root, request['bindings']['knowledge_freeze']['path']), selection_hash=selection['sourceSelectionHash']) != prepared['knowledge']:
         raise ValueError('Knowledge context changed during transport')
+    candidate = observe_candidate(repository_root, contained(repository_root, request['bindings']['authority']['path']), request['storage'])
+    if candidate != prepared['candidate']:
+        raise ValueError('candidate changed during transport')
     raw = source_bytes(repository_root, selection)
     expected_pages = pages_for(raw, page_bytes=prepared['transport']['page_bytes'], max_snapshot_bytes=prepared['transport']['max_snapshot_bytes'])
     if expected_pages != prepared['pages']:
@@ -196,12 +208,16 @@ def finish(repository_root, plan_id, attempt_id):
     receipt = {'schema_version': 'skill-input-receipt.v2', 'plan_id': plan_id,
                'consumer': request['consumer'], 'operation': request['operation'], 'policy_revision': request['policy_revision'],
                'selection': {k: v for k, v in prepared['selection'].items() if k != 'refreshed'},
-               'bindings': request['bindings'], 'candidate_hash': prepared['selection']['sourceContentHash'],
+               'bindings': request['bindings'], 'candidate_hash': prepared['candidate']['candidate_hash'],
+               'candidate': prepared['candidate'], 'inputs': prepared['inputs'], 'storage': request['storage'],
                'validator_hash': prepared['validator_hash'], 'coverage': coverage,
                'transport': prepared['transport'], 'gates': prepared['gates'], 'knowledge': prepared['knowledge'],
                'context_hash': identity(context), 'ready': True, 'authorizes': []}
     store = _storage(repository_root, request['storage'])
     update_attempt(repository_root, plan_id, attempt_id)
+    contract = read_json(contained(repository_root, request['bindings']['contract']['path']))
+    if len(encoded(context)) > contract.get('max_context_bytes', 6000):
+        raise ValueError('context exceeds consumer contract budget')
     generation_id = publish_receipt(store, receipt, context)
     # Protect the generation by lease before the pointer changes.
     update_attempt(repository_root, plan_id, attempt_id, generation_ids=[generation_id])
@@ -226,9 +242,19 @@ def validate_generation(repository_root, store, generation_id, *, consumer, oper
     knowledge = observe_knowledge(repository_root, contained(repository_root, receipt['bindings']['knowledge_freeze']['path']), selection_hash=verified['sourceSelectionHash'])
     if knowledge != receipt['knowledge']:
         raise ValueError('current Knowledge context changed')
+    contract = read_json(Path(contract_path))
+    if verify_inputs(repository_root, contract, operation, receipt['inputs']['inputs'], verified['sources']) != receipt['inputs']:
+        raise ValueError('generation input mapping changed')
+    candidate = observe_candidate(repository_root, contained(repository_root, receipt['bindings']['authority']['path']), receipt['storage'])
+    if candidate != receipt['candidate'] or receipt['candidate_hash'] != candidate['candidate_hash']:
+        raise ValueError('generation candidate changed')
+    expected_gates = project_knowledge_gates(catalog_stale=knowledge['catalog_stale'], read_set_same=True,
+        source_bytes_same=receipt['gates']['route'] != 'successor-refresh', changed_paths=candidate['changed_paths'])
+    if expected_gates != receipt['gates']:
+        raise ValueError('generation gates do not match observed candidate')
     raw = source_bytes(repository_root, verified)
     expected_context = {'schema_version': 'skill-input-context.v2', 'sources': [{'path': p, 'content': v.decode('utf-8')} for p, v in sorted(raw.items())], 'authorizes': []}
-    if payload['context'] != expected_context or receipt['candidate_hash'] != verified['sourceContentHash']:
+    if payload['context'] != expected_context or len(encoded(expected_context)) > contract.get('max_context_bytes', 6000):
         raise ValueError('generation content or candidate mismatch')
     transport = receipt['transport']
     pages = pages_for(raw, page_bytes=transport['page_bytes'], max_snapshot_bytes=transport['max_snapshot_bytes'])
@@ -242,11 +268,12 @@ def require_current(repository_root, pointer_path, *, consumer, operation, contr
     if pointer_path.name != 'current.v1.json':
         raise ValueError('v2 consumer requires the canonical current pointer')
     pointer_path.resolve().relative_to(Path(repository_root).resolve())
+    _storage(repository_root, pointer_path.parent.resolve().relative_to(Path(repository_root).resolve()).as_posix())
     current = resolve_current(pointer_path.parent)
     if current is None:
         raise ValueError('current generation is missing')
     receipt = validate_generation(repository_root, pointer_path.parent, current['generation_id'], consumer=consumer, operation=operation, contract_path=contract_path)
-    return {'status': 'ready', 'ready': True, 'context_artifact': pointer_path.parent / 'skill-input-generations' / current['generation_id'] / 'context.json',
+    return {'status': 'ready', 'ready': True, 'generation_id': current['generation_id'], 'context_artifact': pointer_path.parent / 'skill-input-generations' / current['generation_id'] / 'context.json',
             'context_artifact_hash': receipt['context_hash'], 'binding_hash': current['receipt_hash'], 'authorizes': []}
 
 

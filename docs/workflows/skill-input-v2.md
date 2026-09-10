@@ -21,8 +21,11 @@ consumer and operation. Pass the canonical `current.v1.json` to
 `skill_input_gate.require_ready_skill_input` or
 `validate_skill_input_consumption.validate_receipt`. The shared gate resolves
 and revalidates the immutable generation against current sources and bindings.
-V1 receipt paths still use the existing explicit compatibility behavior. No
-existing V1 receipt is copied, renamed, or promoted into V2 current authority.
+Live Skill-input gates accept only v2 current pointers. Historical v1 receipt
+validation remains available through validate_receipt; it cannot satisfy a
+live gate. The old prepare/launch CLI names now default to v2 prepare/consume.
+Use --historical-v1 only for intentional historical replay. No existing receipt
+is copied, renamed, or promoted into v2 current authority.
 Existing workflow orchestrators are not invoked by this direct route.
 
 ## Explicit request
@@ -34,14 +37,35 @@ A `skill-input-request.v2` object has these required fields:
   and operation, for example `execution-plans/example/skill-input-v2/quick-dev`.
 - `sources`: explicit file rows, each with `role`, `path`, `module`,
   `resource_set`, `authority`, `sha256` (`sha256:` plus 64 lowercase hex digits).
+- `inputs`: map contract selector names to nonempty lists of repository-relative
+  file/directory roots. Every operation-required selector must be present and
+  backed by selected readable sources. Root kinds follow source_roles; all
+  payload directory members need explicit typed roles, and every selected
+  readable source must belong to a mapped input. Non-payload plan directory
+  roots identify their explicitly selected plan inputs.
 - `bindings`: exactly `contract`, `registry`, `authority`, `knowledge_freeze`,
   each a repository-relative `path` and hash of the file's exact bytes.
 
 Optional integer budgets: `page_bytes` (default 32768, at least 4),
 `max_snapshot_bytes` (default 8388608), `max_retries` (default 2, maximum 10).
-`changed_paths` is the explicit candidate changed set used for Knowledge
-self-change review routing; include additions, edits and deletions, not only
-selected input files. Do not pass a caller-authored `knowledge_self_change` flag.
+The bound authority JSON must contain `skill_input_baseline`: a full 40-hex
+Git commit already chosen by the owning route/maintainer as the candidate
+baseline. The commit must be an ancestor of HEAD. Use a new direct authority
+envelope when migrating; do not rewrite historical formal envelopes or choose
+a newer baseline merely to hide pending Knowledge changes.
+
+The adapter computes candidate changes against that baseline from tracked
+worktree changes, deletions and untracked files. Ignored Knowledge-authority
+files are checked too. Runtime logs, attempts and the dedicated output storage
+are outside candidate authority. Storage must contain a `skill-input-v2` path
+segment and cannot be rooted in Knowledge, scripts, skills or docs. Missing Git
+or baseline data blocks the request. Receipts bind hashes of changed bytes,
+including unselected files, and recheck them during transport and current reads.
+
+Optional `changed_paths` is only an assertion: if supplied it must exactly
+match the adapter-observed set. Omitting it does not disable self-change
+review. A Knowledge change blocks on review-required; this direct adapter does
+not invent review approval or invoke a reviewer.
 
 Every source has one role: normative_source, authority_source,
 implementation_input, lifecycle_projection, derived_context,
@@ -92,6 +116,9 @@ After lease expiration or terminal failure, prepare a new attempt rather than
 editing the old attempt metadata. Attempts are under
 `.skill-input-work/<plan-id>/<attempt-id>/` and have a 300-second renewable lease.
 
+The complete context must fit the bound max_context_bytes budget; oversized
+context blocks rather than silently truncating it.
+
 Finish recomputes exact byte/line/hash coverage from current redacted source
 bytes. It writes a complete immutable generation under
 `<storage>/skill-input-generations/<content-hash>/`, validates it, then
@@ -103,8 +130,17 @@ storage root.
 
 ## References and retention
 
-Before retiring current or handing a generation to lifecycle/authorization/
-terminal/acceptance evidence, register the native artifact reference:
+The four Skill-input entry boundaries automatically create an immutable
+`<storage>/consumer-uses/<hash>.json` and register it before returning context.
+It binds consumer, operation, generation and receipt. VDD maps to lifecycle,
+Quick Dev to authorization, Bootstrap review to terminal and Acceptance to
+acceptance retention. These are custody records, never lifecycle authority.
+A downstream failure leaves protection intact; identical uses are idempotent.
+Current pointer advancement and attempt expiry do not remove that protection.
+Durable use references intentionally do not expire automatically.
+
+For additional external artifacts beyond these native gate uses, register the
+artifact reference before it can outlive current:
 
 ```powershell
 py -3 scripts/python/skill_input_v2.py reference --storage <storage> --reference-id handoff-1 --kind terminal --artifact <repo-relative-artifact.json> --generation-id <id>
@@ -115,8 +151,8 @@ The native artifact must actually contain the declared generation_id or
 generation_ids. Registration is immutable and binds its bytes. Stale references
 block GC; they are not silently dropped. Current, explicit references,
 unexpired leases, retention-window objects and incomplete staging are protected.
-Never infer external references by searching unrelated log trees. Consumers
-must register external ownership before the generation ceases to be current.
+Never infer external references by searching unrelated log trees. The shared gate registers its ownership automatically. Other external owners
+use the explicit registration command before the generation ceases to be current.
 
 GC defaults to dry-run. Apply requires a separately supplied JSON approval with
 exact fields: schema_version=`skill-input-gc-approval.v1`,
@@ -153,3 +189,15 @@ The CLI emits UTF-8 JSON Lines on stdout and UTF-8 diagnostics on stderr,
 independent of Windows locale or inherited PYTHONIOENCODING. Subprocess
 callers must decode captured output explicitly with encoding="utf-8" and
 errors="strict"; text=True alone uses the parent locale and is insufficient.
+
+## Migration verification scope
+
+`test_skill_input_consumer_migration.py` calls the actual VDD preflight main,
+Quick Dev prepare_with_skill_input, Bootstrap command_prepare and Acceptance
+start-or-resume dispatch in isolated processes. The Skill-input gate, current
+validation and native retention writes are real. Downstream VDD evaluation and
+Acceptance run creation are substituted, while Bootstrap deliberately stops at
+its next argument check. These tests prove the migrated entry boundary without
+starting formal workflows or models; they do not claim complete workflow runs.
+Current Quick Dev staged execution that does not adopt Skill-input retains its
+independent governance/snapshot policy.

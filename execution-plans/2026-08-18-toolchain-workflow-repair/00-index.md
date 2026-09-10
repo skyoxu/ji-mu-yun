@@ -8,17 +8,16 @@ the 2026-08-17 historical plans.
 
 ## Current direct repair
 
-The maintainer authorized direct online implementation of the complete W0-W6
-scope without the formal execution chain. Current implementation and local
-verification instructions are in [Direct closeout](direct-closeout.md).
-The new shared entry is `scripts/python/skill_input_v2.py`; run
-`py -3 scripts/python/verify_toolchain_workflow_repair.py` for direct validation.
-The full W0-W6 direct repair is closed based on the maintainer-reported Windows
-validation of 86faa3e0: 139 passed, zero skipped, stable sources, and no platform
-exclusions. See Direct closeout for the evidence location and provenance.
-This closes the authorized direct repair on this branch; it is not a merge or
-a formal workflow acceptance. The older lifecycle statement below and formal
-receipts are historical, not current direct-closeout evidence.
+The 2026-09-10 source audit reopened the earlier direct closeout. Four gaps
+have now been corrected: required-input mapping, authority-bound candidate
+changes, live v2 entry enforcement, and automatic native-use retention.
+Implementation, test scope and migration instructions are recorded in
+[Direct closeout](direct-closeout.md) and [Skill-input v2](../../docs/workflows/skill-input-v2.md).
+
+Online verification: 164 passed, one Windows-only case deselected. Fresh
+Windows verification of this revision is pending (165 cases expected).
+Earlier 139-case success and closeout records remain historical; they do not
+validate the new source. No formal workflow or live backend was invoked.
 
 ## Scope
 
@@ -44,4 +43,5 @@ plan-ready validation and an explicit maintainer receipt. Implementation may
 begin only through the declared Quick Dev TDD route; this plan does not
 authorize implementation completion, Knowledge publication, Bootstrap, or
 acceptance.
+
 

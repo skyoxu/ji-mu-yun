@@ -36,6 +36,30 @@ ordering, and cannot describe adapter-owned page coverage or retention safely.
   Deleting committed evidence requires explicit maintainer approval and a
   non-authorizing cleanup receipt.
 
+## Implementation clarification (2026-09-10)
+
+The v2 consumer request explicitly maps operation-required contract selectors
+to file/directory roots. A source hash alone does not prove required-input
+coverage. Normalized input mappings and complete typed directory membership
+are verified before preparation and again when reading current.
+
+The bound authority envelope supplies a full `skill_input_baseline` Git commit.
+The adapter observes changed paths and current bytes against that ancestor;
+caller changed_paths can only assert agreement, never define the candidate.
+Untracked and ignored Knowledge changes remain review inputs. Only runtime
+logs, attempts and dedicated Skill-input output storage are outside candidate
+authority. Absent Git/baseline facts fail closed.
+
+Live Skill-input gates require v2 pointers. Explicit historical CLI replay
+cannot produce a live gate input. Consumers that adopt the shared gate acquire
+immutable native-use custody and durable retention registration before context
+handoff. These records protect generation lifetime without granting lifecycle,
+authorization, terminal or acceptance authority. They do not impose governance
+on a separate runtime that does not adopt Skill-input.
+
+The existing consumer context budget is enforced independently of transport
+coverage; complete delivery does not permit oversized context publication.
+
 ## Consequences
 
 The workflow repair must migrate all consumers to v2 before 8-18 can create a
@@ -48,3 +72,4 @@ Bootstrap.
 
 This extends ADR-0048, ADR-0050, ADR-0057, ADR-0058, and ADR-0059. It
 supersedes only their v1 Skill-input selection/current-resolution practices.
+

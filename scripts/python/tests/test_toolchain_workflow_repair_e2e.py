@@ -23,16 +23,19 @@ CONSUMERS = ('vdd-execution-plan', 'quick-dev-tdd-adapter', 'run-phase-bootstrap
 
 def fixture(root, consumer='quick-dev-tdd-adapter', source_newline=None):
     root.mkdir(exist_ok=True)
+    subprocess.run(['git', 'init', '-q', str(root)], check=True, capture_output=True)
+    subprocess.run(['git', '-C', str(root), '-c', 'user.name=fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--allow-empty', '-qm', 'baseline'], check=True, capture_output=True)
+    baseline = subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD']).decode('ascii').strip()
     operation = {'vdd-execution-plan': 'create', 'quick-dev-tdd-adapter': 'execute', 'run-phase-bootstrap-review': 'review', 'run-refactor-implementation-acceptance': 'acceptance'}[consumer]
     (root / 'requirements.md').write_text(('Requirements and observable behavior\n' * 10) + '\u5b8c\u6574\u8bfb\u53d6\n', encoding='utf-8', newline=source_newline)
-    for filename, value in [('contract.json', {'consumer': consumer, 'operations': {operation: {}}}), ('registry.json', {'commands': ['test']}), ('authority.json', {'adr': 'ADR-0060'}), ('freeze.json', {'authorizes': []})]:
+    for filename, value in [('contract.json', {'consumer': consumer, 'operations': {operation: {'required_inputs': ['requirements']}}, 'source_roles': {'requirements': {'allowed_kinds': ['file']}}}), ('registry.json', {'commands': ['test']}), ('authority.json', {'adr': 'ADR-0060', 'skill_input_baseline': baseline}), ('freeze.json', {'authorizes': []})]:
         (root / filename).write_text(json.dumps(value), encoding='utf-8')
     bindings = {key: {'path': path, 'sha256': digest((root / path).read_bytes())} for key, path in [('contract', 'contract.json'), ('registry', 'registry.json'), ('authority', 'authority.json'), ('knowledge_freeze', 'freeze.json')]}
     source = {'role': 'normative_source', 'path': 'requirements.md', 'module': 'requirements', 'resource_set': 'core', 'authority': 'repository', 'sha256': digest((root / 'requirements.md').read_bytes())}
     freeze = {'schema_version': 'skill-input-direct-source-freeze.v2', 'sourceSelectionHash': selection_identity([source], consumer=consumer, policy_revision='v2')['sourceSelectionHash'], 'authorizes': []}
     (root / 'freeze.json').write_text(json.dumps(freeze), encoding='utf-8')
     bindings['knowledge_freeze']['sha256'] = digest((root / 'freeze.json').read_bytes())
-    return {'schema_version': 'skill-input-request.v2', 'plan_id': 'repair', 'consumer': consumer, 'operation': operation, 'policy_revision': 'v2', 'storage': 'plan/skill-input-v2', 'sources': [source], 'bindings': bindings, 'page_bytes': 32, 'max_snapshot_bytes': 8192, 'max_retries': 1}
+    return {'schema_version': 'skill-input-request.v2', 'plan_id': 'repair', 'consumer': consumer, 'operation': operation, 'policy_revision': 'v2', 'storage': 'plan/skill-input-v2', 'sources': [source], 'inputs': {'requirements': ['requirements.md']}, 'bindings': bindings, 'page_bytes': 32, 'max_snapshot_bytes': 8192, 'max_retries': 1}
 
 
 def complete(root, request):
@@ -365,6 +368,26 @@ def test_actual_repository_contract_is_consumed(tmp_path, consumer, operation):
     (tmp_path / 'contract.json').write_bytes(contract_path.read_bytes())
     request['bindings']['contract']['sha256'] = digest(contract_path.read_bytes())
     request['operation'] = operation
+    actual = read_json(contract_path)
+    request['inputs'] = {}
+    for selector in actual['operations'][operation]['required_inputs']:
+        spec = actual['source_roles'][selector]
+        if 'file' in spec['allowed_kinds']:
+            request['inputs'][selector] = ['requirements.md']
+        else:
+            directory = tmp_path / selector
+            directory.mkdir()
+            source_path = directory / 'input.md'
+            source_path.write_text('Required plan input', encoding='utf-8')
+            row = dict(request['sources'][0], path=source_path.relative_to(tmp_path).as_posix(), sha256=digest(source_path.read_bytes()))
+            request['sources'].append(row)
+            request['inputs'][selector] = [selector]
+    if 'requirements.md' not in [p for paths in request['inputs'].values() for p in paths]:
+        request['sources'] = [row for row in request['sources'] if row['path'] != 'requirements.md']
+    freeze = read_json(tmp_path / 'freeze.json')
+    freeze['sourceSelectionHash'] = selection_identity(request['sources'], consumer=consumer, policy_revision='v2')['sourceSelectionHash']
+    (tmp_path / 'freeze.json').write_text(json.dumps(freeze), encoding='utf-8')
+    request['bindings']['knowledge_freeze']['sha256'] = digest((tmp_path / 'freeze.json').read_bytes())
     _, result, _ = complete(tmp_path, request)
     assert result['status'] == 'ready'
 
