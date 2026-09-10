@@ -13,8 +13,12 @@ scope without the formal execution chain. Current implementation and local
 verification instructions are in [Direct closeout](direct-closeout.md).
 The new shared entry is `scripts/python/skill_input_v2.py`; run
 `py -3 scripts/python/verify_toolchain_workflow_repair.py` for direct validation.
-Windows validation remains pending. The older lifecycle statement below and
-formal receipts are historical, not current direct-closeout evidence.
+The full W0-W6 direct repair is closed based on the maintainer-reported Windows
+validation of 86faa3e0: 139 passed, zero skipped, stable sources, and no platform
+exclusions. See Direct closeout for the evidence location and provenance.
+This closes the authorized direct repair on this branch; it is not a merge or
+a formal workflow acceptance. The older lifecycle statement below and formal
+receipts are historical, not current direct-closeout evidence.
 
 ## Scope
 
@@ -33,7 +37,9 @@ formal receipts are historical, not current direct-closeout evidence.
 - No Bootstrap startup or lifecycle publication.
 - No changes to Phase runtime or user-sandbox state.
 
-The plan is currently `implementation-authorized`, following VDD-owned
+## Historical formal lifecycle (superseded procedure)
+
+The historical formal plan state is `implementation-authorized`, following VDD-owned
 plan-ready validation and an explicit maintainer receipt. Implementation may
 begin only through the declared Quick Dev TDD route; this plan does not
 authorize implementation completion, Knowledge publication, Bootstrap, or

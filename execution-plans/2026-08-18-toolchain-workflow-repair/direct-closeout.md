@@ -7,10 +7,13 @@ commits, without VDD, Quick Dev or Acceptance execution. The full W0-W6 scope
 is retained. This instruction supersedes the historical execution procedure
 for this repair, not the behavioral requirements or historical evidence.
 
-Implementation is delivered for local verification. Do not call the package
-closed or change its historical formal lifecycle to acceptance-passed until
-the maintainer's local validation is recorded. No formal model/worker,
-Bootstrap, Knowledge publication, or real historical GC was run online.
+The full W0-W6 package is closed under the maintainer-authorized direct route,
+based on the implemented requirement mapping below and the maintainer-reported
+Windows validation of source commit 86faa3e0 (139 passed, zero skipped).
+This disposition supersedes the pending statements in the historical entries
+below. Historical formal lifecycle receipts remain unchanged; no formal
+acceptance is claimed. No formal model/worker, Bootstrap, Knowledge publication,
+or real historical GC was run online.
 
 ## Requirement mapping
 
@@ -112,3 +115,29 @@ test deselected**. Evidence is
 No production transport change was necessary. This result supersedes the prior
 online count. Windows should collect 139 cases; Windows revalidation and final
 direct closeout remain pending. Preserve both failed Windows evidence bundles.
+
+## Final Windows validation and direct closeout (2026-09-10)
+
+The maintainer reported successful local Windows verification in this session:
+
+- Branch: `codex/complete-8-18-toolchain-workflow-repair`.
+- Tested source HEAD: `86faa3e0ed4807211bfd76e997d5971c3871c9c0`.
+- Result: **139 passed**, skipped=0.
+- source_stable=true; platform_exclusions=[].
+- windows_verification_pending=false.
+- Live backend and formal workflow were not invoked.
+- Reported evidence:
+  `logs/toolchain-workflow-repair-direct/20260909T175543Z-8c83853f/validation.json`.
+
+Evidence provenance: these results and the path were supplied by the maintainer
+from the local checkout. The online agent has not independently read the raw
+Windows report; this documentation does not recreate or upload it. Preserve
+that bundle and both failed Windows bundles, and commit the original artifacts
+from the local checkout for repository archival.
+
+The originally requested complete W0-W6 direct repair is therefore recorded as
+closed on this branch. The two observed Windows defects were corrected before
+this passing run. This documentation-only closeout does not change the tested
+implementation, merge the branch, publish Knowledge, or generate formal
+acceptance/lifecycle receipts. Raw Windows evidence archival remains a handoff
+item, distinct from the reported successful implementation verification.
