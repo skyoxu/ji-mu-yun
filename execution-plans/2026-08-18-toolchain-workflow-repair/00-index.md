@@ -23,7 +23,12 @@ is archived in `logs/toolchain-workflow-repair-direct/20260910T122218Z-acdb64a8/
 A subsequent audit found and repaired the Acceptance coordinator's legacy
 receipt loader. Its v2 pointer and target binding now have eight direct regressions.
 Current online verification: 186 passed, one Windows-only case deselected.
-Fresh Windows verification of the coordinator repair is pending (187 expected).
+Windows verification of the coordinator repair passed: **187 passed**, zero
+skipped, `source_stable=true`, no platform exclusions, and no pending Windows
+verification. Raw evidence is archived in
+`logs/toolchain-workflow-repair-direct/20260910T134123Z-71905052/`.
+W0-W6 are closed within the maintainer-approved direct implementation and
+validation scope; see Direct closeout for the validation boundaries.
 Earlier 139-case success and closeout records remain historical; they do not
 validate the new source. No formal workflow or live backend was invoked.
 
