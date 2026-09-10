@@ -218,3 +218,15 @@ Freshness-only changes yield degraded-continuation; actual selected-byte
 changes yield successor-refresh. Reusing the same original freeze recomputes
 the same successor when the underlying evidence is unchanged.
 
+
+## Acceptance coordinator input
+
+The current `run-coordinator` request keeps its `skillInputReceipt` reference
+field, but that reference must hash and name the canonical `current.v1.json`
+v2 pointer. The coordinator resolves context through the shared gate and the
+immutable generation; legacy `ready`, `context_artifact` and `target` receipt
+fields are not a current input protocol. `targetPlan` must exactly match one
+normalized root in the generation's `inputs.inputs.implementation_target`.
+Select the target plan directory as that input root when coordinating a plan.
+Pointer mutation during input resolution fails closed. Downstream prepared-input,
+candidate and Knowledge validation still applies.

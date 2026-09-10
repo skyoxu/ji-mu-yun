@@ -18,8 +18,12 @@ The W3 stale-context successor path is also corrected: frozen evidence is
 preserved while catalog membership and current source bytes are verified for
 a derived successor.
 
-Online verification: 178 passed, one Windows-only case deselected. Fresh
-Windows verification of this revision is pending (179 cases expected).
+The W3 revision passed Windows verification: 179 passed, zero skipped; evidence
+is archived in `logs/toolchain-workflow-repair-direct/20260910T122218Z-acdb64a8/`.
+A subsequent audit found and repaired the Acceptance coordinator's legacy
+receipt loader. Its v2 pointer and target binding now have eight direct regressions.
+Current online verification: 186 passed, one Windows-only case deselected.
+Fresh Windows verification of the coordinator repair is pending (187 expected).
 Earlier 139-case success and closeout records remain historical; they do not
 validate the new source. No formal workflow or live backend was invoked.
 

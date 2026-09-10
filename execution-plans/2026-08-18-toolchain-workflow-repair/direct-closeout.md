@@ -252,3 +252,33 @@ The requested Windows verification was run from commit
 
 This evidence is a fresh Windows validation of the successor W3 correction;
 the earlier failed and successful bundles remain preserved unchanged.
+
+## Acceptance coordinator v2 migration correction (2026-09-10)
+
+The 179-case Windows result above remains valid for its recorded source commit.
+A later source audit reproduced a missed live input path: `run-coordinator`
+required legacy receipt fields before invoking the v2-only gate. A valid current
+pointer was rejected as not ready. The prior consumer probe covered
+`start-or-resume`, not the coordinator loader.
+
+Under ADR-0060, the coordinator now resolves its request-bound current pointer
+through the shared validator and native retention gate, reads context from the
+validated generation, and checks that `targetPlan` exactly matches a normalized
+`implementation_target` input root. It rechecks the pointer hash and generation
+after resolution to reject a pointer changed during handoff. Prepared run input,
+candidate custody and Knowledge checks remain in place.
+
+Eight new direct regressions cover valid v2 resolution, target mismatch, stale
+pointer binding, legacy input, corrupt generation context, source drift,
+invalid prepared schema, and pointer replacement during resolution. They invoke
+the real coordinator input loader and real shared gates. The subsequent run-input
+validator is a stop sentinel; no action DAG, model or formal workflow is run.
+These tests prove input migration, not full Acceptance execution.
+
+Direct Linux verification: **186 passed**, zero skipped, one Windows-only case
+deselected; `source_stable=true`. Raw evidence:
+`logs/toolchain-workflow-repair-direct/20260910T133241Z-7bbd45e2/`.
+The online source extraction has no Git HEAD; per-source hashes bind the result.
+Fresh Windows verification of this repair is pending: expect **187 passed**,
+zero skipped, no platform exclusions and stable sources using the existing
+direct verifier. Earlier failure and success evidence is preserved unchanged.

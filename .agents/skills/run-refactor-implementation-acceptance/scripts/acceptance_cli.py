@@ -1115,31 +1115,31 @@ def _load_current_coordinator_inputs(request_path: Path, request: object) -> dic
         return value, {"path": raw.replace("\\", "/"), "sha256": reference["sha256"]}
 
     prepared, prepared_ref = load("preparedRunInput")
-    receipt, receipt_ref = load("skillInputReceipt")
+    pointer, receipt_ref = load("skillInputReceipt")
     contract, contract_ref = load("skillInputContract")
     if prepared.get("schemaVersion") != "acceptance-run-input.v1":
         raise InputError("coordinator prepared run input is invalid")
-    if receipt.get("ready") is not True or receipt.get("authorizes") not in (None, []):
-        raise InputError("coordinator Skill input receipt is not ready")
     if contract.get("schema_version") != "skill-input-contract.v1":
         raise InputError("coordinator Skill input contract is invalid")
-    context_ref = receipt.get("context_artifact")
-    if not isinstance(context_ref, dict) or set(context_ref) != {"path", "sha256"}:
-        raise InputError("coordinator Skill input context reference is invalid")
-    context_path = (request_path.parent / request["skillInputReceipt"]["path"]).parent.joinpath(str(context_ref["path"])).resolve()
-    if not context_path.is_file() or canonical_hash(_read_json(str(context_path))) != context_ref["sha256"]:
-        raise InputError("coordinator Skill input context is stale")
+    # ADR-0060: the request binds a current pointer, not a legacy receipt.
+    # Resolve context and target membership from the validated generation.
+    pointer_path = (request_path.parent / request["skillInputReceipt"]["path"]).resolve()
     try:
         ready = require_ready_skill_input(
-            receipt_path=(request_path.parent / request["skillInputReceipt"]["path"]).resolve(),
+            receipt_path=pointer_path,
             repository_root=REPOSITORY_ROOT,
             contract_path=(request_path.parent / request["skillInputContract"]["path"]).resolve(),
             consumer="run-refactor-implementation-acceptance", operation="acceptance",
         )
+        from skill_input_generation import read_generation
+        if _file_hash(pointer_path) != receipt_ref["sha256"] or pointer.get("generation_id") != ready["generation_id"]:
+            raise ValueError("coordinator current pointer changed during resolution")
+        receipt = read_generation(pointer_path.parent, ready["generation_id"])["receipt"]
+        context_path = Path(ready["context_artifact"]).resolve()
         relative_context = context_path.relative_to(REPOSITORY_ROOT.resolve()).as_posix()
     except (ValueError, OSError) as exc:
         raise InputError("coordinator Skill input is invalid: " + str(exc)) from exc
-    if receipt.get("target") != request["targetPlan"]:
+    if request["targetPlan"] not in receipt["inputs"]["inputs"].get("implementation_target", []):
         raise InputError("coordinator Skill input target mismatch")
     run_input = prepared.get("input")
     validate_run_input(run_input)

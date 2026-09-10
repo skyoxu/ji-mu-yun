@@ -248,3 +248,77 @@ def test_native_custody_tampering_blocks_gc(tmp_path):
     use.write_text('{}', encoding='utf-8')
     with pytest.raises(ValueError, match='stale retention reference'):
         retention.plan_retention(store, repository_root=tmp_path, plan_id='repair', retention_seconds=0)
+
+
+@pytest.mark.parametrize('case', ['ready', 'target', 'pointer-hash', 'legacy',
+                                'context', 'source', 'prepared', 'pointer-race'])
+def test_coordinator_resolves_v2_before_run_validation(tmp_path, monkeypatch, case):
+    """Exercise the actual coordinator loader; never start an action DAG.
+
+    Only the subsequent run-input validator is replaced by a stop sentinel.
+    Pointer, generation, contract, source and retention checks are real.
+    """
+    consumer = 'run-refactor-implementation-acceptance'
+    request = actual_request(tmp_path, consumer)
+    target = 'input-implementation_target'
+    request['inputs']['implementation_target'] = [target]
+    complete(tmp_path, request)
+    store = tmp_path / request['storage']
+    pointer = store / 'current.v1.json'
+    prepared = store / 'coordinator-prepared.json'
+    prepared.write_text(json.dumps({'schemaVersion': 'acceptance-run-input.v1', 'input': {}}), encoding='utf-8')
+    monkeypatch.syspath_prepend(str(ROOT / '.agents' / 'skills' / consumer / 'scripts'))
+    entry = importlib.import_module('acceptance_cli')
+    monkeypatch.setattr(entry, 'REPOSITORY_ROOT', tmp_path)
+    refs = {key: {'path': path.relative_to(tmp_path).as_posix(), 'sha256': entry._file_hash(path)}
+            for key, path in [('preparedRunInput', prepared), ('skillInputReceipt', pointer),
+                              ('skillInputContract', tmp_path / 'contract.json')]}
+    coordinator = {'schemaVersion': 'jimuyun.acceptance-coordinator-request.v3',
+                   'targetPlan': target, 'authorizes': [], **refs}
+    expected = None
+    if case == 'target':
+        coordinator['targetPlan'] = 'another-plan'
+        expected = 'target mismatch'
+    elif case == 'pointer-hash':
+        coordinator['skillInputReceipt']['sha256'] = 'sha256:' + '0' * 64
+        expected = 'skillInputReceipt is stale'
+    elif case == 'legacy':
+        pointer.write_text(json.dumps({'ready': True, 'authorizes': []}), encoding='utf-8')
+        coordinator['skillInputReceipt']['sha256'] = entry._file_hash(pointer)
+        expected = 'pointer schema'
+    elif case == 'context':
+        generation = read_json(pointer)['generation_id']
+        (store / 'skill-input-generations' / generation / 'context.json').write_text('{}', encoding='utf-8')
+        expected = 'generation integrity'
+    elif case == 'source':
+        (tmp_path / request['sources'][0]['path']).write_text('Changed source', encoding='utf-8')
+        expected = 'drift'
+    elif case == 'prepared':
+        prepared.write_text('{}', encoding='utf-8')
+        coordinator['preparedRunInput']['sha256'] = entry._file_hash(prepared)
+        expected = 'prepared run input is invalid'
+    elif case == 'pointer-race':
+        real_gate = entry.require_ready_skill_input
+        def gate_then_change(**kwargs):
+            ready = real_gate(**kwargs)
+            pointer.write_text('{}', encoding='utf-8')
+            return ready
+        monkeypatch.setattr(entry, 'require_ready_skill_input', gate_then_change)
+        expected = 'pointer changed'
+
+    class ReachedRunValidation(Exception):
+        pass
+
+    def stop_after_input_resolution(value):
+        assert value == {}
+        raise ReachedRunValidation()
+
+    monkeypatch.setattr(entry, 'validate_run_input', stop_after_input_resolution)
+    if expected:
+        with pytest.raises(entry.InputError, match=expected):
+            entry._load_current_coordinator_inputs(tmp_path / 'request.json', coordinator)
+    else:
+        with pytest.raises(ReachedRunValidation):
+            entry._load_current_coordinator_inputs(tmp_path / 'request.json', coordinator)
+        uses = list((store / 'consumer-uses').glob('*.json'))
+        assert len(uses) == 1 and read_json(uses[0])['authorizes'] == []
