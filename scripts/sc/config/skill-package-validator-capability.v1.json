@@ -3,7 +3,9 @@
   "capability_id": "skill-package-validator",
   "allowed_root": ".agents/skills/run-refactor-implementation-acceptance",
   "validator_entrypoint": "scripts/acceptance_cli.py",
-  "probe_args": ["validate-package"],
+  "probe_args": ["validate-package", "--skill-root", "{target}"],
+  "validator_sha256": "sha256:3d77c289e37aac15b3bec6ef069b5ca6e3a9032f3eb83b34e79249c126bf945c",
   "package_identity": "acceptance-package-v1",
+  "state": "active",
   "authorizes": []
 }

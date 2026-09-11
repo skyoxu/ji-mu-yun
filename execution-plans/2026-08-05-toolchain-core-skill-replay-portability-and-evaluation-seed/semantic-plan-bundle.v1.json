@@ -1,0 +1,97 @@
+{
+  "schema_version": "vdd.semantic-plan-bundle.v1",
+  "plan_id": "toolchain-core-skill-replay-portability-and-evaluation-seed-round-5",
+  "obligations": [
+    {
+      "obligation_id": "RMAP-FIX-O1",
+      "requirement_id": "TC-D1-REAL-REPLAY",
+      "source_refs": ["repair/round-5/README.md"],
+      "subject": "Skill package replay",
+      "trigger": "validate or replay a package",
+      "state_before": "target or validator behavior can be substituted",
+      "state_after": "target and validator identity are bound to real executions",
+      "expected_behavior": "invalid, missing, drifted, disabled, and rolled-back inputs fail closed",
+      "observable_result": "real subprocess exits and hashes are recorded",
+      "forbidden_result": ["prefilled probe result", "copied matrix expectation"],
+      "requirement_type": "Toolchain",
+      "obligation_kind": "behavior",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    }
+  ],
+  "acceptances": [
+    {
+      "acceptance_id": "RMAP-FIX-A1",
+      "obligation_ids": ["RMAP-FIX-O1"],
+      "source_refs": ["repair/round-5/README.md"],
+      "given": "a target package, bounded capability, and executable matrix",
+      "when": "the repository replay entrypoint runs",
+      "then": "the requested target is validated and every probe or case is actually executed",
+      "oracle": {"observable": "process", "expected": "seven defect tests pass", "forbidden": ["zero executed cases", "validator identity drift"]},
+      "assertion_ids": ["RMAP-FIX-ASSERTIONS"],
+      "red_intent_ids": ["RMAP-FIX-FI1"]
+    }
+  ],
+  "failure_intents": [
+    {
+      "failure_intent_id": "RMAP-FIX-FI1",
+      "acceptance_ids": ["RMAP-FIX-A1"],
+      "failure_id": "RMAP-REAL-EXECUTION-MISSING",
+      "failure_family": "expected-red",
+      "selector_intent": "scripts/sc/tests/test_skill_package_replay.py",
+      "expected_outcome": "fail"
+    }
+  ],
+  "pre_slice_coverage": [
+    {"requirement_id": "TC-D1-REAL-REPLAY", "obligation_id": "RMAP-FIX-O1", "acceptance_id": "RMAP-FIX-A1", "source_ref": "repair/round-5/README.md", "failure_intent_id": "RMAP-FIX-FI1"}
+  ],
+  "slices": [
+    {
+      "slice_id": "RMAP-FIX-1",
+      "slice_input_hash": "sha256:6d7a52075c906f6efa110b86d5b0219442d50ed664ca5ea76c9db6c6fd9c262a",
+      "obligation_ids": ["RMAP-FIX-O1"],
+      "acceptance_ids": ["RMAP-FIX-A1"],
+      "failure_intent_ids": ["RMAP-FIX-FI1"],
+      "production_owners": ["scripts/sc/skill_package_replay.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", "scripts/sc/config/skill-package-validator-capability.v1.json"],
+      "verification_lane": "unit",
+      "behavior_change": "replace synthetic replay results with target-bound real execution",
+      "affected_subjects": ["Skill validation", "replay matrix", "capability rollback"],
+      "state_transition": "synthetic replay to observed replay",
+      "proof": {"acceptance_ids": ["RMAP-FIX-A1"], "selector_intents": ["scripts/sc/tests/test_skill_package_replay.py"], "assertion_ids": ["RMAP-FIX-ASSERTIONS"]},
+      "rollback_scope": {"production_paths": ["scripts/sc/skill_package_replay.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", "scripts/sc/config/skill-package-validator-capability.v1.json"], "state_or_schema_compatibility": "capability state fails closed"},
+      "allowed_write_paths": ["scripts/sc/skill_package_replay.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", "scripts/sc/config/skill-package-validator-capability.v1.json", "scripts/sc/tests/test_skill_package_replay.py", "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-plan-bundle.v1.json", "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json", "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-5"],
+      "execution_snapshot_paths": ["scripts/sc/tests/test_skill_package_replay.py", "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-5/fixtures/invalid-package/SKILL.md", "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json"],
+      "planned_new_files": [],
+      "terminal_predicate": "all real replay tests and executable matrix cases pass"
+      ,"complexity_class": "complex"
+      ,"context_lookup_required": false
+      ,"context_lookup_reason": "bounded repository-owned replay implementation"
+      ,"minimum_red_scope": "one bound replay test suite"
+      ,"upgrade_conditions": ["shared validator contract changes outside the declared package"]
+    }
+  ],
+  "final_plan_coverage": [
+    {"requirement_id": "TC-D1-REAL-REPLAY", "obligation_id": "RMAP-FIX-O1", "acceptance_id": "RMAP-FIX-A1", "source_ref": "repair/round-5/README.md", "failure_intent_id": "RMAP-FIX-FI1", "slice_id": "RMAP-FIX-1", "verification_lane": "unit", "terminal_predicate": "all real replay tests and executable matrix cases pass", "stage_scope": ["red", "green", "refactor", "terminal"]}
+  ],
+  "agent_contexts": [
+    {"slice_id": "RMAP-FIX-1", "requirement_ids": ["TC-D1-REAL-REPLAY"], "obligation_ids": ["RMAP-FIX-O1"], "acceptance_ids": ["RMAP-FIX-A1"], "source_refs": ["repair/round-5/README.md"], "contracts": ["implementation-contract.v1.json"], "allowed_paths": ["scripts/sc/skill_package_replay.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", "scripts/sc/config/skill-package-validator-capability.v1.json", "scripts/sc/tests/test_skill_package_replay.py"], "forbidden_paths": ["execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd"], "selector_intents": ["scripts/sc/tests/test_skill_package_replay.py"], "validation_commands": [["py", "-3", "-B", "scripts/sc/tests/test_skill_package_replay.py"]]}
+  ],
+  "behavior_routing": {
+    "schema": "vdd.behavior-routing-intent.v1",
+    "intents": [
+      {
+        "obligation_id": "RMAP-FIX-O1",
+        "acceptance_ids": ["RMAP-FIX-A1"],
+        "assertion_ids": ["RMAP-FIX-ASSERTIONS"],
+        "production_owners": [".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", "scripts/sc/config/skill-package-validator-capability.v1.json", "scripts/sc/skill_package_replay.py"],
+        "allowed_write_paths": [".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-5", "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-plan-bundle.v1.json", "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json", "scripts/sc/config/skill-package-validator-capability.v1.json", "scripts/sc/skill_package_replay.py", "scripts/sc/tests/test_skill_package_replay.py"],
+        "selector_intents": ["scripts/sc/tests/test_skill_package_replay.py"],
+        "observable": "real subprocess exits and hashes are recorded",
+        "expected_result": "invalid, missing, drifted, disabled, and rolled-back inputs fail closed",
+        "depends_on": []
+      }
+    ],
+    "deferred": []
+  }
+}

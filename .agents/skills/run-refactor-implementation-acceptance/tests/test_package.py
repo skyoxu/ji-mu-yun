@@ -20,6 +20,7 @@ sys.path.insert(0, str(SKILL_ROOT.parents[2]))
 from scripts.python.tests.test_skill_input_consumer_migration import actual_request
 from scripts.python.tests.test_toolchain_workflow_repair_e2e import complete
 from scripts.python import skill_input_v2 as v2
+from scripts.python.skill_input_requirements import verify_inputs
 
 
 def ready_current(repository, consumer="run-refactor-implementation-acceptance"):
@@ -48,6 +49,34 @@ def invoke_current(repository, pointer):
 
 
 class PackageTests(unittest.TestCase):
+    def test_implementation_plan_root_is_non_payload(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory)
+            plan = repository / "execution-plans" / "feature-a"
+            plan.mkdir(parents=True)
+            selected = plan / "semantic-plan.json"
+            selected.write_text("{}\n", encoding="utf-8")
+            (plan / "historical-evidence.json").write_text("{}\n", encoding="utf-8")
+            requirements = plan / "requirements.md"
+            requirements.write_text("# Requirement\n", encoding="utf-8")
+            contract = json.loads(
+                (SKILL_ROOT / "references" / "skill-input-contract.v1.json").read_text(encoding="utf-8")
+            )
+
+            verify_inputs(
+                repository,
+                contract,
+                "acceptance",
+                {
+                    "implementation_target": ["execution-plans/feature-a"],
+                    "acceptance_requirements": ["execution-plans/feature-a/requirements.md"],
+                },
+                [
+                    {"path": "execution-plans/feature-a/semantic-plan.json", "role": "implementation_input"},
+                    {"path": "execution-plans/feature-a/requirements.md", "role": "normative_source"},
+                ],
+            )
+
     def test_start_or_resume_consumes_real_ready_skill_input_context(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repository = Path(directory) / "repo"
