@@ -87,3 +87,26 @@ Each mapping is bidirectional: the historical duty names its dedicated AO and
 each AO names its exact historical source. A missing, substituted, escaping,
 drifted, or incompatible witness therefore cannot be represented by a generic
 "file missing" result.
+
+## SP-H1 Atomic Expansion
+
+Grouped AO rows are not acceptance units. The following stable IDs provide one-to-one obligations and witnesses; command/runtime bindings remain pending Architecture.
+
+- AO-01a/b/c: FR-1 missing, non-directory, escaping targets; each rejects invalid-input with its own absent/file/traversal fixture; A03/CAP-1.
+- AO-02a/b: FR-1 unsupported target and minimum VDD/Acceptance set; each rejects with separate unsupported/policy-removal fixtures; A03/A04/CAP-1.
+- AO-03a: FR-2 wrong effective target; instrumented adapter proves mismatch rejection; A06-A07/CAP-1.
+- AO-04a/b/c: FR-3 missing, substituted, escaping validator; separate resolver fixtures and identity-invalid rejection; A05-A07/CAP-2.
+- AO-05a/b/c: FR-3 validator-content drift, dependency drift, incompatibility; separate mutation fixtures and stale/identity-invalid rejection; A06-A07/CAP-2.
+- AO-06a/b/c: FR-3 candidate self-selection, forged version, always-success validator; separate fixtures and trust/result rejection; A05-A07/CAP-2.
+- AO-07a/AO-08a: FR-4 detached positive must pass; detached negative must fail for declared defect/category; infrastructure failures are separate non-negative outcomes; A06-A07/CAP-2.
+- AO-09a/b/c/d/e/f: FR-5 historical bytes, validator identity, original command, wrapper replay, binding, and authority limit; each has distinct frozen/mutation/no-launch/forged-authority witness; A01/A02/A08/CAP-3.
+- AO-10a/b/c/d/e/f: FR-6 seed uniqueness, provenance, missing, drift, classification, baseline promotion; each has separate cardinality/provenance/mutation/classification witness; A09-A11/CAP-3.
+- AO-11a/b and AO-12a/b/c/d: FR-7 Stable provenance/immutability and FR-8 six cases with two-sided execution; each source, identity, case and missing-side witness is distinct; A12/CAP-4.
+- AO-13a/b/c and AO-14a/b/c/d: FR-9 workflow/VDD/Acceptance consumers and FR-10 enable/disable/rollback/re-enable; each real call and baseline condition is separately observed; A13/A15/CAP-5.
+- AO-15a: FR-11 Exact Cover; every source and evidence node has bidirectional mapping and orphan witness; A01-A17/CAP-6.
+- AO-16a: FR-12 snapshot freshness and invalidation; mutation/reconstruction pair; A06/A08/CAP-7.
+- AO-17a/b: FR-13 empty authorization and foreign lifecycle rejection; forged authorization/state fixtures; A14/CAP-8.
+- AO-18a-g: NFR-1 through NFR-7 respectively cover fail-closed, auditability, reproducibility, isolation, historical immutability, platform boundary, and bounded execution; each has its own violation witness; NFR-1..7/CAP-6/7/8.
+- AO-18h-l: guardrails respectively cover installed-path prohibition, roadmap separation, promotion prohibition, Miner/Curator prohibition, and autonomous modification/ranking/RL prohibition; each has a separate scope/write witness; A16-A17/CAP-8.
+
+Historical reverse mapping is explicit: A01/A02->AO-09a; A03->AO-01a/b/c,02a,03a; A04->AO-02b,13b/c; A05->AO-04a/b/c,06a/b; A06->AO-03a,05a/b/c,07a,08a; A07->AO-01a through 08a; A08->AO-09b/c/d/e/f; A09->AO-10a/b; A10->AO-10c/d; A11->AO-10e/f; A12->AO-11a/b,12a/b/c/d; A13->AO-13a; A14->AO-17a/b; A15->AO-14a/b/c/d; A16->AO-16a plus 18h; A17->AO-18i/j/k/l. Many-to-many reuse is valid only where the listed witness independently observes each source duty.
