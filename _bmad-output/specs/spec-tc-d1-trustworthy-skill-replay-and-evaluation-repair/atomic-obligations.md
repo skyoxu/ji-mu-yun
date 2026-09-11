@@ -71,5 +71,13 @@ Each row is an independent acceptance unit. Commands and runtime receipts are pe
 | AO-18s | A17 no Miner/Curator | feature requested | reject | feature fixture | A17/CAP-8 |
 | AO-18t | A17 no autonomous/ranking/RL | autonomy requested | reject | autonomy fixture | A17/CAP-8 |
 
+| AO-03b | FR-3 successful receipt provenance | validator executes successfully | receipt records trusted content identity and descriptive validator version | remove version/content fields | A06/CAP-2 |
+| AO-10g | FR-6 seed applicability | seed applicability omitted or false | seed record rejected | applicability deletion fixture | A09/CAP-3 |
+| AO-10h | FR-6 seed missing label | missing label omitted | seed record rejected | missing-label fixture | A10/CAP-3 |
+| AO-10i | FR-6 seed counterexample | counterexample/explicit absence omitted | seed record rejected | counterexample deletion fixture | A10/CAP-3 |
+| AO-18u | New PRD guardrail no replacement tree | alternate TC-D1 directory created | scope rejected | directory-injection fixture | guardrail/CAP-8 |
+| AO-18v | New PRD guardrail Skill-input v2 | v1/current-pointer redesign proposed | scope rejected | protocol-redesign fixture | guardrail/CAP-8 |
+| AO-18w | New PRD guardrail defect-revealing tests | production change lacks prior real RED test | change rejected | missing-RED fixture | guardrail/CAP-6 |
+
 ## Bidirectional mapping
-Every FR consequence, NFR, guardrail, and retained A01-A17 duty maps to one or more rows above; every row names its exact source and acceptance ID. Reuse is many-to-many only when the witness independently observes the listed duty. Historical mapping: A01→AO-09a; A02→AO-09a; A03→AO-01a/b/c,AO-02a,AO-03a; A04→AO-02b,AO-13b/c; A05→AO-04a/b/c,AO-06a/b; A06→AO-03a,AO-05a/b/c,AO-07a,AO-08a; A07→AO-01a–AO-08a; A08→AO-09b/c/d/e/f; A09→AO-10a/b; A10→AO-10c/d; A11→AO-10e/f; A12→AO-11a/b,AO-12a/b/c/d; A13→AO-13a; A14→AO-17a/b; A15→AO-14a/b/c/d; A16→AO-18h,l–p; A17→AO-18q–t.
+Every FR consequence, NFR, guardrail, and retained A01-A17 duty maps to one or more rows above; every row names its exact source and acceptance ID. Reuse is many-to-many only when the witness independently observes the listed duty. Historical mapping: A01→AO-09a; A02→AO-09a; A03→AO-01a/b/c,AO-02a,AO-03a; A04→AO-02b,AO-13b/c; A05→AO-04a/b/c,AO-06a/b; A06→AO-03a,AO-05a/b/c,AO-07a,AO-08a; A07→AO-01a–AO-08a; A08→AO-09b/c/d/e/f; A09→AO-10a/b; A10→AO-10c/d; A11→AO-10e/f; A12→AO-11a/b,AO-12a/b/c,AO-12d1/d2/d3; A13→AO-13a; A14→AO-17a/b; A15→AO-14a/b/c/d; A16→AO-18h,l–p; A17→AO-18q–t.
