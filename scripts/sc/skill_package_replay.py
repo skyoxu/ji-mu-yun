@@ -84,7 +84,8 @@ def main() -> int:
         observed = run_validator(validator, value, target)
         expected = case["expected_exit"]
         matched = observed.returncode != 0 if expected == "nonzero" else observed.returncode == expected
-        results.append({"case_id": case["case_id"], "status": "pass" if matched else "fail", "executed": True, "observed_exit_code": observed.returncode, "stdout_sha256": "sha256:" + hashlib.sha256(observed.stdout.encode()).hexdigest(), "stderr_sha256": "sha256:" + hashlib.sha256(observed.stderr.encode()).hexdigest()})
+        observed_result = "exit-zero" if observed.returncode == 0 else "exit-nonzero"
+        results.append({"case_id": case["case_id"], "category": case.get("category"), "validation_surface": case.get("validation_surface"), "status": "pass" if matched else "fail", "executed": True, "observed_result": observed_result, "observed_exit_code": observed.returncode, "stdout_sha256": "sha256:" + hashlib.sha256(observed.stdout.encode()).hexdigest(), "stderr_sha256": "sha256:" + hashlib.sha256(observed.stderr.encode()).hexdigest()})
     status = "pass" if all(item["status"] == "pass" for item in results) else "fail"
     print(json.dumps({"status": status, "exit_code": 0 if status == "pass" else 1, "case_results": results, "authorizes": [], "runner_entrypoint": "scripts/sc/skill_package_replay.py", "command": ["py", "-3", "-B", "scripts/sc/skill_package_replay.py", "replay-matrix", "--matrix", args.matrix], "matrix_path": args.matrix, "matrix_sha256": digest(matrix_path)}, sort_keys=True)); return 0 if status == "pass" else 1
 if __name__ == "__main__": raise SystemExit(main())
