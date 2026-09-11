@@ -10,6 +10,8 @@ companions:
     role: normative_companion
   - path: _bmad-output/specs/spec-tc-d1-trustworthy-skill-replay-and-evaluation-repair/atomic-obligations.md
     role: normative_companion
+  - path: _bmad-output/planning-artifacts/architecture/architecture-tc-d1-trustworthy-skill-replay-and-evaluation-repair-2026-09-12/ARCHITECTURE-SPINE.md
+    role: adopted_companion
   - path: _bmad-output/planning-artifacts/prds/prd-jimuyun-2026-09-11/addendum.md
     role: adopted_companion
 sources:
