@@ -1,0 +1,51 @@
+{
+  "baseline": "d77e3403052ae6fe06d2c14f9194cbfe94fefd3e",
+  "scope": "Operation-specific instruction loading for VDD, Quick Dev TDD and Acceptance",
+  "runtime_changes": false,
+  "checks": {
+    "vdd_contract": "passed",
+    "vdd_contract_regressions": {
+      "passed": 22,
+      "failed": 0,
+      "runner": "unittest"
+    },
+    "acceptance_package_closure": "passed",
+    "skill_frontmatter": {
+      "passed": 3
+    },
+    "relative_markdown_links": {
+      "broken": 0
+    },
+    "instruction_relocation": "Original procedure paragraphs preserved; entry reading instruction replaced and Acceptance numbered flow split at explicit Bootstrap step."
+  },
+  "environment": "Linux scratch checkout of exact baseline package inputs; not a Windows or live workflow run",
+  "live_backend_called": false,
+  "formal_workflow_called": false,
+  "entry_characters": {
+    "vdd-execution-plan": {
+      "before": 21492,
+      "after": 11266
+    },
+    "quick-dev-tdd-adapter": {
+      "before": 16499,
+      "after": 5884
+    },
+    "run-refactor-implementation-acceptance": {
+      "before": 34887,
+      "after": 5462
+    }
+  },
+  "changed_files": [
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    ".agents/skills/quick-dev-tdd-adapter/references/compatibility-operation.md",
+    ".agents/skills/quick-dev-tdd-adapter/references/execution-operation.md",
+    ".agents/skills/quick-dev-tdd-adapter/references/recovery-operation.md",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/references/bootstrap-operation.md",
+    ".agents/skills/run-refactor-implementation-acceptance/references/operator-results.md",
+    ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/references/governance-operation.md",
+    ".agents/skills/vdd-execution-plan/references/planning-operation.md"
+  ]
+}

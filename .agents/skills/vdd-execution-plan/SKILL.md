@@ -7,7 +7,14 @@ description: Create or repair a complete verification-driven execution-plan dire
 
 Create plans that make observable behavior and current validation decide completion. This repository is maintained by one trusted person and an AI assistant: do not add multi-writer, signer, reviewer-identity, or adversarial-custody controls unless a separate requirement explicitly needs them.
 
-Before acting, read [references/solo-maintainer-vdd-standard.md](references/solo-maintainer-vdd-standard.md), [references/clarification-gate.md](references/clarification-gate.md), and [references/lifecycle-state-contract.md](references/lifecycle-state-contract.md). When maintaining this Skill, also run `py -3 scripts/validate_skill_contract.py --skill-root <skill-root>` and its unit tests.
+Select the operation before loading detailed guidance. For create or repair, read [the planning guide](references/planning-operation.md), [the solo-maintainer standard](references/solo-maintainer-vdd-standard.md), [clarification rules](references/clarification-gate.md), and [lifecycle rules](references/lifecycle-state-contract.md). In the standard, read Governance Activation and Required Controls for both modes, Freshness And Repair when repairing, and Optional Controls only when that control is selected. For Skill maintenance, inspect the affected operation's references and run the package checks below; do not start a plan compiler merely to edit this Skill.
+
+| Operation | Additional reading |
+| --- | --- |
+| Create a complete directory | Planning guide and common rules below |
+| Repair or resume compilation | Planning guide; preserve the original target and inspect the first failed stage |
+| Governance enabled | [Governance operations](references/governance-operation.md), including knowledge and Skill-input gates, before publication |
+| Governance disabled | Current sources and planning rules; do not load governance procedures |
 
 ## Phase Service State And Governance Mode
 
@@ -52,31 +59,6 @@ Timeout produces `compile-timeout`, never acceptance evidence. Windows process
 cleanup targets only the owned PID tree; inspect `cleanup_error` if termination
 fails. Existing caches and worker outputs remain available for offline diagnosis.
 
-## Current Behavior Routing (CER)
-
-New compiler output includes `vdd.behavior-routing-intent.v1` in the existing
-semantic bundle. It projects each obligation's Acceptance/assertions, production
-entry, selector intent, observable, expected result and dependencies. These are
-probe intentions only: VDD does not execute tests or assign present/missing from
-files, model opinion or historical pass records.
-
-Quick Dev's controlled case probe derives `present`, `missing` or `unverifiable`
-per obligation. Present behavior stays in current regression/terminal coverage;
-missing behavior requires real RED/GREEN/REFACTOR; an unverifiable or mixed
-result inside one obligation requires contract/environment repair or finer
-atomic decomposition. Do not remove present obligations from the coverage set.
-The [behavior routing contract](../quick-dev-tdd-adapter/references/behavior-routing-contract.md)
-owns runtime details under ADR-0041.
-
-The optional `behavior_routing.deferred` list records type, reason,
-resolution_owner, resolution_stage and affected_obligation_ids. Only an internal
-implementation strategy with a complete proof/write contract may use
-`implementation-resolvable` at the implementation stage. An unresolved
-`external-owner` or `blocking` item in current scope blocks that scope; an
-artifact author's `blocking=false` cannot override the rule. Deferral never
-subtracts current obligations from final coverage. An actual scope change must
-use the existing explicit source/scope decision path.
-
 ## Choose The Profile First
 
 Choose the least complex profile that serves a real consumer. Record the selected profile and reason in the plan.
@@ -88,29 +70,6 @@ Choose the least complex profile that serves a real consumer. Record the selecte
 | `self-hosted` | The work changes VDD, Quick Dev, acceptance/review routing, or a controlling validator | `resumable` plus only the protocol fixtures and migration checks consumed by the changed workflow. Stabilize the changed layer with targeted checks before one end-to-end replay. |
 
 Do not create fixed `00-08`/`96-99` books, custom schemas, a custom validator, mutation fixtures, a 95 report, Bootstrap Review, trust roots, attempt ledgers, or effect-fold records for a `standard` plan unless a concrete consumer cannot use an existing repository command or contract. One owner artifact may map requirements, sources, acceptance, and coverage.
-
-## Model Route Decision
-
-Select `standard`, `resumable`, or `self-hosted` entirely from the profile table
-before model routing. Then pass that already-selected profile to
-`scripts/model_routing.py`; do not add another VDD complexity classifier.
-All three ordinary profiles currently request Sol/high. Only a closed typed
-complex-recovery trigger may request Sol/max, and that route remains blocked
-until an exact backend/model/effort/sandbox capability probe and its shadow
-predicate both pass. Free-form recovery reasons fail closed.
-
-The emitted route decision is hash-bound and non-authorizing. The shared
-workflow launcher alone may start a child process. In `observe_only`, continue
-planning in the current caller session; the decision neither launches a child
-nor replaces that session's model.
-
-The canonical policy owns VDD's independent consumer enablement. A disabled
-VDD consumer emits `disabled` without changing Quick Dev or Refactor
-Acceptance. Sol/max recovery evidence is loaded only from policy-bound
-path/hash references under the controlled capability-evidence root. Callers
-cannot supply or synthesize a capability-proof dictionary; activation requires
-the bound producer receipt, its successful process result, and representative
-shadow execution receipts to replay against the requested route identity.
 
 ## Clarify Only Material Boundaries
 
@@ -148,110 +107,9 @@ artifact that a newly created or repaired VDD plan may publish.
 
 During repair, first stabilize the smallest affected layer. A slice-local change invalidates that slice and its declared downstream dependents only. A shared lifecycle contract, global validator semantic, baseline identity, or dependency used by every slice requires one terminal full replay after targeted stabilization. Targeted validation never authorizes completion. Before publishing `implementation-complete`, run one current terminal full validation.
 
-## In-Place Repair Rounds
-
-The review lineage, semantic-round, callsite-attestation, and repair-closure
-rules in this section apply only when governance is enabled. In development,
-repair the current plan in place, preserve actual historical TDD evidence, and
-invalidate only affected slices and declared downstream dependents; do not
-materialize governance successors.
-
-An explicit VDD `repair` updates the original execution-plan directory. Append
-each repair under `repair/round-<n>/`, binding the exact finalized finding set,
-predecessor review, bounded repair slices, RED/GREEN/regression commands, and
-a hash-bound `repair-closure.json`. Initial slices and historical evidence stay
-immutable. The original directory remains the only acceptance target; use a
-successor only after an explicit supersede or incompatible-scope decision.
-
-When the plan opts into Bootstrap implementation review, declare one stable `lineageFamilyId` derived from the original plan target. Keep that family for
-all in-place repairs and successor history that still evaluates the same
-acceptance target. The default budget is two semantic rounds and the hard
-limit is three. A successor does not reset that budget. Round 3 requires one
-typed trigger: `novel_p0_p1`, `authority_context_graph_changed`, or
-`high_risk_boundary_changed`; exhaustion routes to `manual_pause`.
-Require a current hash-bound `inspect-lineage` projection even when it reports zero rounds; omission must not create a fresh budget.
-If approved legacy `changeId` history predates the target-derived family,
-require an explicit Bootstrap `adopt-lineage` record bound to an Accepted ADR
-or decision. Never solve migration by editing historical review manifests or
-automatically absorbing every run under the plan directory.
-
-Before a repaired target can re-enter review, generate a read-only root-cause callsite inventory from the affected source roots. Every discovered sibling
-callsite must be changed or carry an explicit exclusion. Run at least one
-registered producer/consumer composition command and bind its successful
-controlled receipt. Handwritten callsite counts and unit-only producer or
-consumer checks do not establish repair completeness.
-Derive the complete changed set from hash-bound baseline and candidate content
-manifests. Bind each present changed path by content hash and each deleted path
-by its baseline hash. Composition receipts must bind the current producer and
-consumer bytes as controlled-command input paths.
-Require each composition check to cover a changed path, declare its consumer as a direct consumer, and expose its receipt as a validation reference.
-Require the generated review scope to contain every repair path, inventory match,
-composition binding, command registry, receipt, targeted test, and validation
-reference; keep consumers and tests in their named context classes.
-
-## Knowledge Preflight
-
-When governance is enabled, after mandatory authority reads and before freezing
-plan sources, run the mandatory knowledge-consumption sequence in
-`references/knowledge-consumption.md`. The sequence invokes
-`scripts/python/knowledge_locator.py` through JSON stdin, then invokes this
-Skill's `scripts/vdd_knowledge_preflight.py` with the request, result, and
-adapter-owned decisions. A required module without a matched, reread,
-hash-verified Locator candidate blocks `plan-ready`; optional insufficient
-matches remain explicit and non-authorizing. `catalog_stale` alone does not
-block: the context records `knowledge_freshness=degraded` and continues only
-after the same source/read-set verification. Invalid publication and every
-selection-shape or Locator integrity failure remain blocking. A hash-only drift of
-an already selected read-set is refreshed automatically without widening its
-catalog path/module/resource selection; unavailable sources or a selection-shape
-change remain blocking.
-
-Use `scripts/prepare_knowledge_context.py` to create the request and frozen
-Locator result. Its `--accept` arguments are explicit adapter decisions; it
-requires `--target-plan execution-plans/<one-plan>`, rejects output outside
-that exact directory, and never promotes a search result automatically. Run
-`vdd_knowledge_preflight.py` on the emitted context before publishing
-`plan-ready`.
-
-The producer writes no formal context or receipt when preflight is blocked.
-Ready output is restricted to one `execution-plans/<plan>/` directory, stages
-complete bytes before publication, and can finish an identical orphan context
-by publishing its missing receipt after an interrupted first attempt. When
-governance is disabled, do not run this receipt/freeze protocol; read only the
-explicit current sources required by the plan.
-
-## Skill Input Gate
-
-When governance is enabled, after route selection and authority reads, bind
-`requirements` for create, or `target_plan` and `repair_finding` for repair.
-Use the v2 request and commands in `docs/workflows/skill-input-v2.md`
-(ADR-0060). Bind the real consumer contract, explicit required-input roots,
-registry, authority envelope with `skill_input_baseline`, and Knowledge freeze.
-The adapter derives candidate changes from Git; never supply an empty changed
-set to conceal Knowledge changes. Run `skill_input_v2.py prepare`, consume all
-pages, then `finish`. Pass only `<storage>/current.v1.json` as
-`--skill-input-receipt`, with the bound `--skill-input-contract`.
-The live gate revalidates inputs/candidate and automatically persists a
-non-authorizing consumer-use reference before handing off context. V1 CLI
-replay requires `--historical-v1`; its output cannot enter a live consumer.
-Transport coverage is not semantic approval and does not replace downstream
-Knowledge, review, lifecycle, or authorization requirements.
-Use the same operation with `vdd_knowledge_preflight.py --skill-input-operation`.
-
 ## Candidate, Review, And Reports
 
-Use a declared Git baseline plus current scoped worktree identity for functional
-TDD freshness. When governance is enabled, freeze the commit range or complete
-scoped identity, bind current contracts, implementation, and validators, and
-exclude append-only logs and explanatory reports from normative hashes.
-Preserve old evidence as historical after invalidation.
-
-Review exists only when governance is enabled and is then optional unless
-requested by the maintainer or a protected-path rule requires it. Batch
-accepted findings, run deterministic targeted checks, and do not rerun a
-complete semantic review for P2-only findings automatically. Review validates
-the supplied requirements or implementation; it is not an unbounded discovery
-loop.
+Use current scoped Git identity for TDD freshness and preserve invalidated evidence as historical. Only when governance is enabled, read [governance operations](references/governance-operation.md) before freezing inputs or preparing review/report artifacts. That guide preserves a stable `lineageFamilyId` derived from the original plan target. A successor does not reset that budget; require a hash-bound `inspect-lineage` projection even when it reports zero rounds and a root-cause callsite inventory before review re-entry.
 
 Bootstrap history indexes, cost-calibration candidates, and synthetic shadow
 corpora are non-authorizing operational inputs. VDD may use their cost signal
@@ -260,40 +118,6 @@ similar sample, or prior clean run as current plan readiness. Exact finalized-
 envelope reuse belongs to the consuming acceptance workflow and requires a
 fresh Bootstrap validation plus byte-identical current candidate binding; VDD
 does not select or import that envelope.
-
-When a plan includes Bootstrap Review, freeze a `minimal-complete-closure`,
-not an entire repository area by default. For implementation conformance, list
-the changed production files, direct consumers, targeted tests and acceptance,
-plan acceptance authority, referenced standards, repository rules, and current
-runtime or acceptance evidence as explicit files. A directory scope requires a
-written assertion that it is itself the minimal complete closure.
-
-Separate transport attempts from semantic rounds. Malformed child JSON, an
-invalid Artifact View receipt, or a failed Codex process retries the same role
-inside the same run and does not create a repair round or successor lineage.
-P2-only findings are disposed in that run and closed or rechecked with targeted
-deterministic validation; they do not start another complete semantic review.
-Repair evidence stays under the original execution-plan directory, which
-remains the acceptance target unless an explicit supersede or incompatible-
-scope decision says otherwise.
-
-Round 1 reviews the minimal complete implementation-conformance closure.
-After a P0/P1 repair, Round 2 defaults to the repair delta: changed files,
-direct consumers, targeted tests, and validation references, while retaining
-reachable authority context. After two consumed rounds, a passing repair
-completeness audit with no typed Round 3 trigger routes to deterministic
-closure instead of another full review. P2-only repair never opens a new
-semantic round.
-
-When governance is enabled, `resumable` and `self-hosted` plans create
-`95-*.md` before implementation and add its entry to
-`execution-plans/95-implementation-report-index.v1.json` in the same change.
-The report is append-only, non-authorizing, records corrections and the final
-implementation result, and is excluded from candidate hashes. `standard` may
-omit it unless requested. When governance is disabled, every profile omits this
-report and index entry.
-
-Keep the package generic. Never read a mutable live execution-plan directory or embed dated plan names, plan-local paths, RMAP IDs, live plan hashes, user-profile paths, or machine-specific paths. Detached fixtures prove package behavior; repository-level tools own live 95-index containment and existence checks.
 
 ## Completion
 
@@ -306,3 +130,5 @@ Use this repository-owned command for Skill package validation:
 py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/vdd-execution-plan --capability scripts/sc/config/skill-package-validator-capability.v1.json
 ```
 
+
+For Skill maintenance also run `py -3 .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan` and its unit tests.

@@ -15,102 +15,89 @@ TEST_SUPPORT = SKILL_ROOT.parents[2] / "scripts" / "python" / "tests"
 if str(TEST_SUPPORT) not in sys.path:
     sys.path.insert(0, str(TEST_SUPPORT))
 
-from skill_input_composition_support import publish_ready_receipt  # noqa: E402
+# ADR-0060: exercise the real v2 producer and current-pointer gate.
+sys.path.insert(0, str(SKILL_ROOT.parents[2]))
+from scripts.python.tests.test_skill_input_consumer_migration import actual_request
+from scripts.python.tests.test_toolchain_workflow_repair_e2e import complete
+from scripts.python import skill_input_v2 as v2
+
+
+def ready_current(repository, consumer="run-refactor-implementation-acceptance"):
+    repository.mkdir(parents=True)
+    (repository / "execution-plans" / "feature-a").mkdir(parents=True)
+    request = actual_request(repository, consumer)
+    complete(repository, request)
+    pointer = repository / request["storage"] / "current.v1.json"
+    context = v2.require_current(repository, pointer, consumer=consumer,
+        operation=request["operation"], contract_path=repository / "contract.json")
+    return request, pointer, context["context_artifact"]
+
+
+def invoke_current(repository, pointer):
+    return subprocess.run([
+        sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"),
+        "start-or-resume", "--repository-root", str(repository),
+        "--target-plan", "execution-plans/feature-a",
+        "--run-input-hash", "sha256:" + "a" * 64,
+        "--contract-hash", "sha256:" + "b" * 64,
+        "--knowledge-context-hash", "sha256:" + "c" * 64,
+        "--skill-input-receipt", str(pointer),
+        "--skill-input-contract", str(repository / "contract.json"),
+    ], capture_output=True, text=True, encoding="utf-8", check=False)
+
 
 
 class PackageTests(unittest.TestCase):
     def test_start_or_resume_consumes_real_ready_skill_input_context(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repository = Path(directory) / "repo"
-            plan = repository / "execution-plans" / "feature-a"
-            plan.mkdir(parents=True)
-            implementation = plan / "implementation.py"
-            requirements = plan / "acceptance.md"
-            implementation.write_text("VALUE = 1\n", encoding="utf-8", newline="\n")
-            requirements.write_text("# Acceptance\n", encoding="utf-8", newline="\n")
-            artifacts = publish_ready_receipt(
-                repository,
-                consumer="run-refactor-implementation-acceptance",
-                operation="acceptance",
-                target="execution-plans/feature-a",
-                role_paths={
-                    "implementation_target": ["execution-plans/feature-a/implementation.py"],
-                    "acceptance_requirements": ["execution-plans/feature-a/acceptance.md"],
-                },
-            )
-            command = [
-                sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"),
-                "start-or-resume", "--repository-root", str(repository),
-                "--target-plan", "execution-plans/feature-a",
-                "--run-input-hash", "sha256:" + "a" * 64,
-                "--contract-hash", "sha256:" + "b" * 64,
-                "--knowledge-context-hash", "sha256:" + "c" * 64,
-                "--skill-input-receipt", str(artifacts["receipt"]),
-                "--skill-input-contract", str(artifacts["contract"]),
-            ]
-            completed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", check=False)
+            request, pointer, context = ready_current(repository)
+            completed = invoke_current(repository, pointer)
             self.assertEqual(0, completed.returncode, completed.stderr)
             result = json.loads(completed.stdout)
-            self.assertEqual(
-                artifacts["context"].resolve().relative_to(repository.resolve()).as_posix(),
-                result["skillInputContextSourcePath"],
-            )
+            self.assertEqual(context.resolve().relative_to(repository.resolve()).as_posix(),
+                             result["skillInputContextSourcePath"])
             state = json.loads((repository / result["runDirectory"] / "run-state.json").read_text(encoding="utf-8"))
             custody = repository / result["skillInputContextPath"]
-            self.assertTrue(custody.is_file())
+            self.assertEqual(context.read_bytes(), custody.read_bytes())
             self.assertEqual(state["skillInputContextPath"], custody.relative_to(repository / result["runDirectory"]).as_posix())
+            uses = list((pointer.parent / "consumer-uses").glob("*.json"))
+            self.assertEqual(1, len(uses))
+            use = json.loads(uses[0].read_text(encoding="utf-8"))
+            self.assertEqual(json.loads(pointer.read_text(encoding="utf-8"))["generation_id"], use["generation_id"])
 
     def test_start_or_resume_blocks_missing_wrong_and_stale_ready_receipts(self) -> None:
+        for case in ("missing", "wrong", "stale"):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory:
+                repository = Path(directory) / "repo"
+                consumer = "quick-dev-tdd-adapter" if case == "wrong" else "run-refactor-implementation-acceptance"
+                request, pointer, _ = ready_current(repository, consumer)
+                if case == "missing":
+                    pointer.unlink()
+                elif case == "stale":
+                    (repository / request["sources"][0]["path"]).write_text("Changed input", encoding="utf-8")
+                rejected = invoke_current(repository, pointer)
+                self.assertNotEqual(0, rejected.returncode)
+                expected = {
+                    "missing": "current generation is missing",
+                    "wrong": "generation consumer, operation or validator changed",
+                    "stale": "source or authority drift",
+                }
+                self.assertIn(expected[case], rejected.stderr)
+                self.assertNotIn("v1 is historical only", rejected.stderr)
+                self.assertFalse((repository / "execution-plans/feature-a/acceptance-runs").exists())
+                self.assertFalse((pointer.parent / "consumer-uses").exists())
+
+    def test_start_or_resume_rejects_historical_v1_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repository = Path(directory) / "repo"
-            plan = repository / "execution-plans" / "feature-a"
-            plan.mkdir(parents=True)
-            implementation = plan / "implementation.py"
-            requirements = plan / "acceptance.md"
-            implementation.write_text("VALUE = 1\n", encoding="utf-8", newline="\n")
-            requirements.write_text("# Acceptance\n", encoding="utf-8", newline="\n")
-            artifacts = publish_ready_receipt(
-                repository,
-                consumer="run-refactor-implementation-acceptance",
-                operation="acceptance",
-                target="execution-plans/feature-a",
-                role_paths={
-                    "implementation_target": ["execution-plans/feature-a/implementation.py"],
-                    "acceptance_requirements": ["execution-plans/feature-a/acceptance.md"],
-                },
-            )
-
-            def invoke(receipt_path: Path, contract_path: Path) -> subprocess.CompletedProcess[str]:
-                return subprocess.run([
-                    sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"),
-                    "start-or-resume", "--repository-root", str(repository),
-                    "--target-plan", "execution-plans/feature-a",
-                    "--run-input-hash", "sha256:" + "a" * 64,
-                    "--contract-hash", "sha256:" + "b" * 64,
-                    "--knowledge-context-hash", "sha256:" + "c" * 64,
-                    "--skill-input-receipt", str(receipt_path),
-                    "--skill-input-contract", str(contract_path),
-                ], capture_output=True, text=True, encoding="utf-8", check=False)
-
-            self.assertNotEqual(0, invoke(repository / "missing.json", artifacts["contract"]).returncode)
-            self.assertNotEqual(
-                0,
-                invoke(artifacts["candidate_receipt"], artifacts["contract"]).returncode,
-            )
-            wrong = publish_ready_receipt(
-                repository,
-                consumer="wrong-acceptance-consumer",
-                operation="acceptance",
-                target="execution-plans/feature-a",
-                role_paths={
-                    "implementation_target": ["execution-plans/feature-a/implementation.py"],
-                    "acceptance_requirements": ["execution-plans/feature-a/acceptance.md"],
-                },
-                protocol_name=".skill-input-composition-wrong",
-            )
-            self.assertNotEqual(0, invoke(wrong["receipt"], wrong["contract"]).returncode)
-            implementation.write_text("VALUE = 2\n", encoding="utf-8", newline="\n")
-            self.assertNotEqual(0, invoke(artifacts["receipt"], artifacts["contract"]).returncode)
+            _, pointer, _ = ready_current(repository)
+            legacy = pointer.parent / "legacy-receipt.json"
+            legacy.write_text(json.dumps({"schema_version": "skill-input-consumption.v1", "ready": True}), encoding="utf-8")
+            rejected = invoke_current(repository, legacy)
+            self.assertNotEqual(0, rejected.returncode)
+            self.assertIn("v1 is historical only", rejected.stderr)
+            self.assertFalse((pointer.parent / "consumer-uses").exists())
 
     def test_package_validator_requires_all_slice_modules(self) -> None:
         import package_validation

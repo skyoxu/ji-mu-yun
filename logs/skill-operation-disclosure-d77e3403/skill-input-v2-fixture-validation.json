@@ -1,0 +1,30 @@
+{
+  "candidate": "ad37901c9487d5ca329bd35e8ee81c1ccb3ac5c2",
+  "authority": "ADR-0060",
+  "scope": "Acceptance package live-consumer test fixtures only; runtime and v1 rejection unchanged",
+  "environment": "Linux; Windows rerun pending",
+  "checks": [
+    {
+      "command": "python -m pytest .agents/skills/run-refactor-implementation-acceptance/tests/test_package.py .agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py -q -x",
+      "passed": 32,
+      "subtests_passed": 18,
+      "failed": 0
+    },
+    {
+      "command": "python -m pytest scripts/python/tests/test_skill_input_consumer_migration.py -q -x -k 'each_real_contract_required_input_is_enforced and run-refactor-implementation-acceptance'",
+      "passed": 1,
+      "deselected": 33,
+      "failed": 0
+    }
+  ],
+  "coverage": [
+    "Real v2 prepare/consume/finish and live Acceptance start-or-resume",
+    "Context custody bytes and consumer-use generation retention",
+    "Missing pointer, wrong consumer and stale source rejected for their expected reasons",
+    "Historical v1 receipt explicitly rejected"
+  ],
+  "live_backend_called": false,
+  "formal_workflow_called": false,
+  "windows_verification_pending": true,
+  "remote_test_bytes_verified": true
+}
