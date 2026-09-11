@@ -163,6 +163,15 @@ Capability before relying on its result.
 **Consequences:**
 
 - Missing, substituted, drifted, escaping, or incompatible validators fail.
+- Historical requirement `TC-D1-003` remains retained. Its `A05` sub-duty is
+  narrowed only with respect to the identity of the permitted source root: a
+  Validator Capability source remains bounded, cannot escape its approved
+  root, and cannot be selected or substituted by the candidate itself.
+- The historical Skill Creator root remains the permitted source unless a
+  different source is first coordinated under the existing owner and Accepted
+  ADR model and receives an independent Trust Approval bound to the exact
+  source and content. This PRD revision approves no alternate source and does
+  not prescribe the mechanism by which Architecture may represent one.
 - Semantic Dependencies are identity-bound.
 - Trust Approval is independent of the candidate and is frozen before
   evaluation. Candidate changes to the validator, descriptor, dependencies,
@@ -453,8 +462,10 @@ an unsuccessful diagnostic result and never reduces required coverage.
 - Do not implement TC-E0 or TC-D2 through TC-D6.
 - Do not modify Phase service, runtime, browser/API, accounts, hosted workspaces,
   or user-sandbox behavior.
-- Do not modify installed BMAD/GDS Skill files outside the repository-owned
-  Toolchain scope.
+- Do not modify installed BMAD/GDS files under `_bmad/**`,
+  `.agents/skills/bmad-*/**`, or `.agents/skills/gds-*/**`. Permission to repair
+  repository replay or Consumer code does not authorize writes to those paths.
+  This revision does not expand the historical implementation write set.
 - Do not promote seeds, baselines, candidates, or Skill versions.
 - Do not introduce autonomous Skill modification, SkillOS, learned ranking,
   percentage canaries, or RL.
@@ -544,13 +555,27 @@ an unsuccessful diagnostic result and never reduces required coverage.
 
 ## 10. Stakeholders and Approval
 
-- [ASSUMPTION: Under the current repository ownership model, the Toolchain
-  Maintainer owns product scope and implementation authorization.]
+- The historical 08-05 implementation contract assigns
+  `implementation-authorized` to the maintainer and
+  `implementation-complete` to the Quick Dev TDD adapter. These assignments do
+  not grant product-scope, Trust Approval, Consumer-exception, Acceptance,
+  release, or archive authority.
 - An Independent Reviewer supplies formal review evidence but no Acceptance
   authority.
 - The deterministic Acceptance owner alone publishes `acceptance-passed`.
-- Accepted ADR owners govern changes to durable authority, security, lifecycle,
-  or replay contracts.
+- ADR-0041 assigns durable semantics and authority to the owning standard,
+  executable protocol to the repository Skill, plan-specific predicates to the
+  execution plan, and business acceptance to the plan-local validator. The
+  runner has no acceptance, done, commit, handoff, or release authority.
+- ADR-0053 preserves separate Bootstrap semantic-review and Acceptance
+  lifecycles. ADR-0058 replay evidence and ADR-0060 Skill-input records grant no
+  lifecycle authority.
+- Existing sources reviewed for this PRD do not identify an authority that may
+  approve TC-D1 product scope, a new Trust Approval, or a Consumer exception.
+  Those decisions require confirmation by an already-authorized repository or
+  ADR owner before the first use of the claimed approval, or before Spec or
+  Architecture freezes the affected downstream rule, whichever occurs first.
+  This PRD creates no approval role or process.
 
 ## 11. Open Questions
 
@@ -561,10 +586,17 @@ an unsuccessful diagnostic result and never reduces required coverage.
    without changing Semantic Reproduction? Owner: Architecture, with Independent
    Reviewer approval. Revisit condition: snapshot identity design is reviewed;
    absence of a decision remains fail-closed.
-3. Does current repository governance confirm the Toolchain Maintainer ownership
-   assumed in Section 10, or must an existing ADR owner approve product scope?
-   Owner: repository maintainer. Revisit before the PRD is used as lifecycle
-   authority; this PRD itself grants none.
+3. Which existing authorized repository or ADR owner may approve TC-D1 product
+   scope? Confirmation is required before that approval is first relied upon or
+   before downstream Spec/Architecture scope is frozen, whichever is earlier.
+4. Which existing authorized repository or ADR owner may issue a Trust Approval
+   for a validator source different from the historical Skill Creator root?
+   Confirmation and a content-matched independent approval are required before
+   such a source is allowed or its downstream design is frozen.
+5. Which existing authorized repository or ADR owner may approve an exception
+   to the complete Consumer Manifest? Confirmation and an explicit exception
+   are required before a Consumer is omitted or the downstream manifest rule is
+   frozen. In the absence of confirmation, no exception exists.
 
 ## 12. Assumptions Index
 
@@ -572,5 +604,5 @@ an unsuccessful diagnostic result and never reduces required coverage.
   users of this capability.
 - NFR-7: process and aggregate-run budgets will be selected from measured current
   behavior before implementation authorization.
-- Section 10: current Toolchain Maintainer ownership is inferred from repository
-  practice and must be confirmed against governing ADRs before lifecycle use.
+- Section 10: no product-scope, Trust Approval, or Consumer-exception authority
+  is inferred from role names or repository practice.

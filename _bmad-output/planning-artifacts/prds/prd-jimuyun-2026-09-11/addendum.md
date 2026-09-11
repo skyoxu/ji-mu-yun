@@ -79,7 +79,7 @@ This addendum preserves technical context for `bmad-spec` and
 | --- | --- | --- |
 | `TC-D1-001` | retained | FR-5 and NFR-5 preserve historical membership and bytes while permitting append-only repair evidence. |
 | `TC-D1-002` | retained | FR-1 and FR-2 retain the repository-owned entrypoint outcome and strengthen effective-target proof. |
-| `TC-D1-003` | retained | FR-3 and FR-4 retain bounded resolution and receipts while strengthening dependency and execution identity. |
+| `TC-D1-003` | retained | FR-3 and FR-4 retain bounded resolution and receipts while strengthening dependency and execution identity. Only the historical `A05` source-root sub-duty is narrowed under the conditions stated in normative FR-3. |
 | `TC-D1-004` | retained | FR-3 and SM-2 retain all fail-closed capability cases and add always-success and dependency drift. |
 | `TC-D1-005` | retained | FR-5 preserves the original machine-bound command, native identities, and a bounded current observation. |
 | `TC-D1-006` | retained | FR-6 retains the three named repair families and strengthens provenance and counterexample status. |
@@ -88,7 +88,7 @@ This addendum preserves technical context for `bmad-spec` and
 | `TC-D1-009` | retained | FR-9 retains the workflow-model-routing observation and places it in the complete Consumer Manifest. |
 | `TC-D1-010` | retained | FR-13 requires machine-verifiable non-authority for all derived outputs. |
 | `TC-D1-011` | retained | FR-10 strengthens disable/rollback from state rejection to restored Consumer-observed behavior. |
-| `TC-D1-012` | retained | Sections 6 and 7 preserve the Phase, runtime, workspace, account, and sandbox boundary. |
+| `TC-D1-012` | retained | Sections 6 and 7 preserve the Phase, runtime, workspace, account, and sandbox boundary and the full historical installed BMAD/GDS forbidden paths. |
 | `TC-D1-013` | retained | Sections 6 and 7 preserve TC-E0/D2-D6 separation and exclude Miner, Curator, autonomous changes, ranking, and RL. |
 
 No historical requirement is silently removed. The one-time act of creating
@@ -105,7 +105,7 @@ repair and conformance against the rebuilt FRs.
 | `A02` | retained | FR-5 and NFR-5 prohibit historical writes and permit only append-only repair paths. |
 | `A03` | retained | FR-1/FR-2 retain repository-relative Windows-capable validation of supported packages. |
 | `A04` | retained | FR-1/FR-9 require current VDD and Acceptance package routes through the shared capability. |
-| `A05` | narrowed | FR-3 retains bounded, non-escaping capability resolution; the historical Skill Creator root is evidence of the old design, while the new Trust Approval owns any current allowed source. |
+| `A05` | narrowed | Normative FR-3 retains bounded, non-escaping, non-self-substitutable capability resolution. The historical Skill Creator root remains permitted unless an alternate source is first coordinated under existing owner/ADR authority and receives independent Trust Approval bound to matching content; this revision approves no alternate source. |
 | `A06` | retained | FR-2/FR-3/FR-4/SM-5 retain target, validator, version, content, command, probe, exit, and empty-authority provenance and add dependency/trust bindings. |
 | `A07` | retained and strengthened | FR-1 through FR-4 and SM-2 retain all old failures and add wrong-target, always-success, and jointly drifted dependency witnesses. |
 | `A08` | retained | FR-5 preserves the native command and hashes, records equivalence limits, and forbids authority promotion. |
@@ -116,11 +116,13 @@ repair and conformance against the rebuilt FRs.
 | `A13` | retained | FR-9 requires current workflow-model-routing terminal execution as one observation. |
 | `A14` | retained and strengthened | FR-13 requires machine-verifiable empty authorization for all TC-D1 derived evidence and forbids every foreign lifecycle state. |
 | `A15` | retained and strengthened | FR-10 requires all current Consumers to observe four route transitions and restored Prior Behavior Baseline. |
-| `A16` | retained | Section 6 preserves Phase/runtime/workspace/account/sandbox and installed BMAD/GDS write boundaries. |
+| `A16` | retained | Section 6 preserves Phase/runtime/workspace/account/sandbox boundaries and forbids writes to `_bmad/**`, `.agents/skills/bmad-*/**`, and `.agents/skills/gds-*/**`; replay/Consumer repair permission does not override them. |
 | `A17` | retained | Sections 6/7 preserve first-class roadmap separation and prohibit promotion, Miner/Curator, autonomous modification, ranking, and RL. |
 
-The `A05` narrowing requires Architecture and ADR reconciliation before a new
-Trust Approval is accepted; it does not authorize an arbitrary validator root.
+The `A05` narrowing takes effect for an alternate source only after the
+conditions in normative FR-3 are met. Architecture and ADR reconciliation alone
+do not constitute Trust Approval and cannot authorize an arbitrary validator
+root.
 
 ## Normative Constraints Mirrored From The PRD
 
