@@ -16,6 +16,29 @@
 - **Semantic Reproduction:** equality of terminal verdict, diagnostic categories, Exact Cover, and required identity/evidence relationships from the same pinned inputs.
 - **Trust Approval:** an explicitly authorized, candidate-external binding of Validator Capability content, Semantic Dependencies, support policy, and scope before evaluation.
 
+## Semantic Dependency Closure
+
+The closure includes every executable, data artifact, policy, configuration value, and environment representation that can affect target selection, verdict, diagnostic category, or evidence validity. Probe reachability neither defines nor narrows this closure. Discovery and fixed-point algorithms are deferred to Architecture; implementations may not choose a smaller product boundary.
+
+## Probe Oracle
+
+The detached positive Probe must pass. The detached negative Probe must fail for its declared defect and expected diagnostic category. Import errors, missing dependencies, timeout, non-start, or other infrastructure failures are infrastructure failures, never successful negative validation. Each Probe independently binds input, actual target, command, result, and output evidence; the Matrix invalid-package case does not substitute for this oracle.
+
+## Route Transition Contract
+
+| Transition | Preconditions | Required call | Postcondition |
+| --- | --- | --- | --- |
+| enable | Candidate identity and applicable approvals are current and bound | Real Consumer invokes Candidate Route | Candidate behavior and evidence are observed. |
+| disable | Candidate was enabled; no approved applicability omission | Real Consumer invokes Prior Route | Prior Route identity and Prior Behavior Baseline verdict/category are reproduced for every applicable fixture. |
+| rollback | Candidate route is disabled or failed; rollback fixture is applicable | Real Consumer invokes Prior Route, not merely a state setter | Same Prior Route identity, verdict, and diagnostic category are observed; rejection/error/configuration-only changes do not qualify. |
+| re-enable | Candidate remains approved and current; any exception is pre-approved and bound | Real Consumer invokes Candidate Route | Candidate Route is actually called and its current result is captured. |
+
+An applicability exception must be approved and bound before execution; implementations cannot skip a transition themselves.
+
+## Stable Eligibility
+
+Stable represents source-supported existing behavior, with a verifiable provenance reference and immutable identity bound before the run. Architecture chooses the concrete commit/package binding. A temporary package constructed for this run cannot qualify merely because it differs from Candidate. Stable eligibility does not create a new quality baseline or Acceptance authority; Candidate must contain the real change under evaluation and both subjects execute with all invariants enforced.
+
 ## Target and Validator Invariants
 
 - Supported targets are existing repository-contained Toolchain Skill packages. VDD and Acceptance are the irreducible minimum; candidate policy cannot remove them.
