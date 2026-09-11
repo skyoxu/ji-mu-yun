@@ -32,3 +32,58 @@ or more AO rows; every AO row maps back to its exact source and acceptance ID.
 Many-to-many reuse is valid only where the row states why the witness observes
 that duty independently. Concrete commands, selectors, and runtime receipts are
 **pending binding**, never implied by this register.
+
+## Atomic Sub-obligations
+
+The AO rows above are groups only. These stable sub-IDs are the individually
+accepted units; each has its own witness and verdict. Concrete commands remain
+pending Architecture/implementation binding.
+
+| ID | Exact source | Trigger and observable behavior | Success / rejection | Independent witness | Acceptance / capability |
+| --- | --- | --- | --- | --- | --- |
+| AO-04a | FR-3 missing validator | resolver cannot locate validator | identity-invalid; no trusted result | remove validator fixture | A05-A07 / CAP-2 |
+| AO-04b | FR-3 substituted validator | resolver selects undeclared validator | substitution rejected | alternate-content fixture | A05-A07 / CAP-2 |
+| AO-04c | FR-3 escaping validator | resolved path escapes approved root | escape rejected | traversal fixture | A05-A07 / CAP-2 |
+| AO-05a | FR-3 content drift | bound validator content changes | stale/identity-invalid | mutate validator bytes | A06-A07 / CAP-2 |
+| AO-05b | FR-3 dependency drift | semantic dependency changes | stale/identity-invalid | mutate one dependency | A06-A07 / CAP-2 |
+| AO-05c | FR-3 incompatibility | validator does not satisfy contract | incompatible rejected | incompatible capability fixture | A06-A07 / CAP-2 |
+| AO-06a | FR-3 candidate self-selection | candidate chooses validator identity | self-selection rejected | candidate-controlled descriptor | A05-A07 / CAP-2 |
+| AO-06b | FR-3 self-reported version | only version text supports trust | trust not established | forged version output | A05-A07 / CAP-2 |
+| AO-06c | FR-3 always-success validator | validator passes every input | no successful Replay Result | always-pass implementation with invalid Probe | A07 / CAP-2 |
+| AO-09a | NFR-5, A01-A02 historical bytes | repair run writes frozen file | mutation rejected | frozen blob comparison | A01-A02 / CAP-3 |
+| AO-09b | FR-5, A08 historical authority | historical result used as current authority | authority promotion rejected | forged historical acceptance handoff | A08 / CAP-3 |
+| AO-18a | NFR-1 fail-closed | unknown/missing/stale/ambiguous fact | unsuccessful terminal state | delete or corrupt bound fact | NFR-1 / CAP-6 |
+| AO-18b | NFR-2 auditability | verdict lacks traceable identity/evidence | evidence-invalid | remove one binding edge | NFR-2 / CAP-6 |
+| AO-18c | NFR-3 reproducibility | fresh checkout differs semantically | reproduction fails closed | reconstruct from pinned inputs | NFR-3 / CAP-7 |
+| AO-18d | NFR-4 isolation | mutable evidence shared across subjects/cases | aggregate rejected | cross-case evidence substitution | NFR-4 / CAP-4 |
+| AO-18e | NFR-5 historical immutability | frozen tracked member changed | write rejected | attempt rename/delete/byte mutation | NFR-5 / CAP-3 |
+| AO-18f | NFR-6 platform boundary | unsupported platform behavior or profile authority | compatibility/authority rejected | Windows path and profile-source fixtures | NFR-6 / CAP-1 |
+| AO-18g | NFR-7 bounded execution | timeout/output budget exhausted | execution unsuccessful; coverage unchanged | timeout and oversized-output fixtures | NFR-7 / CAP-4 |
+| AO-18h | Guardrail installed files | write targets `_bmad/**`, `bmad-*`, or `gds-*` | forbidden write rejected | protected-path write attempt | guardrail/A16 / CAP-8 |
+| AO-18i | Guardrail roadmap separation | TC-E0 or D2-D6 scope introduced | out-of-scope change rejected | scope-injection fixture | guardrail/A17 / CAP-8 |
+| AO-18j | Guardrail no promotion/autonomy | seed/package/skill promoted or autonomous mutation requested | promotion rejected | promotion/autonomous-change fixture | guardrail/A17 / CAP-8 |
+
+### Historical one-to-one expansion
+
+| Historical duty | Dedicated obligation |
+| --- | --- |
+| A03 | AO-01, AO-02, AO-03 |
+| A04 | AO-02, AO-13 |
+| A05 | AO-04a, AO-04b, AO-04c, AO-06a, AO-06b |
+| A06 | AO-03, AO-05a, AO-05b, AO-05c, AO-07, AO-08 |
+| A07 | AO-01 through AO-08, with each witness kept distinct by trigger |
+| A08 | AO-09b |
+| A09 | AO-10 seed identity/provenance checks |
+| A10 | AO-10 missing/drift checks |
+| A11 | AO-10 classification checks |
+| A12 | AO-11, AO-12 |
+| A13 | AO-13 workflow-model-routing observation |
+| A14 | AO-17 |
+| A15 | AO-14 transition sub-obligations |
+| A16 | AO-18h plus boundary obligations in AO-18e |
+| A17 | AO-18i, AO-18j |
+
+Each mapping is bidirectional: the historical duty names its dedicated AO and
+each AO names its exact historical source. A missing, substituted, escaping,
+drifted, or incompatible witness therefore cannot be represented by a generic
+"file missing" result.
