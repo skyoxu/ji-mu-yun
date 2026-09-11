@@ -100,10 +100,14 @@ game developers, account operators, or automated Skill promotion systems.
   acceptance assertion, selector, command, and runtime evidence item.
 - **Current Snapshot**: the reconstructible identity of every current input that
   determines a Replay Result.
-- **Supported Target Package**: a Target Package admitted by the frozen target
-  policy bound to the current run; absence from that policy is unsupported.
-- **Semantic Dependency**: any executable or data input whose byte change can
-  alter the Validator Capability verdict for the frozen Probe set.
+- **Supported Target Package**: a repository Toolchain Skill package consumed
+  through the shared package-validation capability. The minimum set contains
+  the current VDD and Acceptance Skill packages; a frozen policy may add targets
+  but cannot remove this minimum set without an approved product-scope revision.
+- **Semantic Dependency**: any executable, data, policy, configuration, or
+  environment representation within the supported capability scope that can
+  affect target selection, a verdict, a diagnostic category, or evidence
+  validity. Probe reachability does not define or limit this closure.
 - **Consumer Manifest**: the complete, maintainer-approved and version-bound set
   of current Consumers frozen before independent review.
 - **Prior Behavior Baseline**: the Prior Route identity and its expected verdict
@@ -111,6 +115,12 @@ game developers, account operators, or automated Skill promotion systems.
 - **Semantic Reproduction**: equality of the terminal verdict, diagnostic
   categories, Exact Cover, and all identity/evidence relationships required by
   this PRD when reconstructed from the same pinned inputs.
+- **Trust Approval**: a current, explicitly authorized binding created outside
+  the Candidate Package change set that freezes Validator Capability content,
+  Semantic Dependencies, support policy, and scope before evaluation.
+- **Atomic Obligation**: one independently decidable behavior, consequence,
+  non-functional constraint, guardrail, or retained upstream duty with a
+  distinct violation or failure witness.
 
 ## 4. Features And Functional Requirements
 
@@ -128,6 +138,10 @@ repository-contained, Supported Target Package.
 **Consequences:**
 
 - Missing, non-directory, escaping, and unsupported targets are rejected.
+- The minimum Supported Target Package set cannot be reduced by candidate-owned
+  policy or by relabeling a required package as unsupported.
+- The shared repository capability remains usable by both current VDD and
+  Acceptance package-validation routes.
 - No successful Replay Result is created for a rejected target.
 
 #### FR-2: Prove actual target inspection
@@ -150,6 +164,13 @@ Capability before relying on its result.
 
 - Missing, substituted, drifted, escaping, or incompatible validators fail.
 - Semantic Dependencies are identity-bound.
+- Trust Approval is independent of the candidate and is frozen before
+  evaluation. Candidate changes to the validator, descriptor, dependencies,
+  support policy, or scope cannot approve themselves.
+- Any jointly changed capability inputs require a new matching Trust Approval;
+  that approval makes results bound to the prior approval stale.
+- A successful result records validator version as descriptive provenance in
+  addition to trusted content identity.
 - Self-reported version text alone cannot establish trust.
 - An always-success validator cannot produce a successful Replay Result.
 
@@ -179,6 +200,8 @@ current equivalent replay without treating history as newly executed authority.
 **Consequences:**
 
 - Historical 08-01 and prior 08-05 tracked evidence remains unchanged.
+- The original machine-bound historical command is retained as an auditable
+  native fact but is neither current execution authority nor portability proof.
 - Native historical references and content identities are verifiable.
 - Current replay evidence states the equivalence boundary and remains
   non-authorizing.
@@ -202,6 +225,9 @@ The stable seed identities are `candidate-baseline-contamination`,
 
 - Each seed binds native evidence, content identity, applicability, missing
   labels, and a counterexample or explicit absence.
+- Each stable seed identity occurs exactly once and uses only the approved
+  non-baseline classifications: `anchor_candidate`, `challenge_candidate`, or
+  `non_baseline_exploratory_candidate`.
 - A seed cannot become a quality baseline or evaluation-set member in TC-D1.
 - Missing or drifted seed evidence cannot be converted to success.
 
@@ -216,8 +242,11 @@ and Candidate Package subjects.
 - Comparison fails when distinct subjects are required but resolve to the same
   identity.
 - Both sides execute for every Matrix Case.
-- Their content identities differ and each case declares a real delta capable
-  of affecting that case's observation; different hashes alone are insufficient.
+- Their content identities differ, and the Candidate Package contains the real
+  change under evaluation; different hashes alone are insufficient.
+- The overall comparison must include a change relevant to at least one Matrix
+  Case. Unaffected cases are expected to demonstrate preserved behavior and do
+  not require artificial per-case differences.
 
 #### FR-8: Execute six materially distinct Matrix Cases
 
@@ -238,6 +267,15 @@ architecture-index gap behaviors.
   execution, evidence, or an unexpected verdict makes the whole run invalid.
 - Infrastructure failure, timeout, stale input, or undeclared diagnostic aborts
   the aggregate rather than being counted as a Stable/Candidate difference.
+- Frozen expectations cannot waive these invariants: valid packages are handled
+  according to their declared contract; invalid packages are rejected for the
+  intended defect; historical limits are stated without authority promotion;
+  dirty baselines cannot contaminate candidate identity; knowledge read-set
+  collisions are detected without self-reference; and closed-policy gaps fail
+  until the required policy/index relationship is satisfied.
+- A changed Candidate behavior is acceptable only when the frozen requirement
+  calls for that change and every invariant remains satisfied. An expected
+  difference cannot pre-approve a regression.
 
 ### 4.4 Consumer Closure and Behavioral Rollback
 
@@ -255,6 +293,10 @@ actual package validation interface.
 - The Consumer Manifest is frozen before review. The Toolchain Maintainer owns
   additions and removals; any change requires renewed approval and makes prior
   results stale.
+- Completeness is checked against the current repository call surface as well
+  as the manifest. At minimum it includes the VDD package route, Acceptance
+  package route, and workflow-model-routing terminal observation. A candidate
+  cannot shrink this denominator by editing only the manifest.
 - Each Consumer has attributable input, command, result, and output evidence.
 - Omitting one Consumer or making a route check unreachable on success fails
   terminal validation.
@@ -268,7 +310,10 @@ rollback to the Prior Route, and re-enablement in isolation.
 
 **Consequences:**
 
-- A real Consumer observes which route executes at each transition.
+- Every Consumer in the non-empty frozen Consumer Manifest observes applicable
+  enable, disable, rollback, and re-enable transitions through its real call
+  surface. Any product-approved non-applicable transition is explicit and bound
+  before execution.
 - Disable and rollback restore the Prior Behavior Baseline: the same Prior Route
   identity and the same verdict/diagnostic category for every rollback fixture.
 - A configuration-only change without restored execution behavior fails.
@@ -288,7 +333,14 @@ requirement and its assertions, selectors, commands, and runtime evidence.
 
 **Consequences:**
 
-- Every requirement has at least one independently observable failure.
+- Every FR consequence, NFR, guardrail, and retained upstream sub-duty is
+  decomposed into Atomic Obligations before implementation.
+- Every behavioral Atomic Obligation has its own independently observable fault
+  witness; a representative failure cannot cover non-equivalent duties.
+- Non-behavioral Atomic Obligations have a deterministic violation witness and
+  need not manufacture a meaningless process test.
+- Many-to-many reuse is allowed only when evidence proves each Atomic Obligation
+  separately; coverage is not scored by raw test count.
 - Orphan requirements, assertions, commands, and aggregate-only assertions fail.
 - Coverage is computed against the rebuilt source requirements, not the old
   four-slice round-6 plan.
@@ -302,11 +354,20 @@ checkout and the declared current inputs.
 
 - The Current Snapshot covers all code, fixtures, contracts, Consumers, and
   tests that determine the verdict.
+- It binds the current Git baseline and current Skill-input v2 selection and
+  content identities as freshness inputs.
 - A change to a bound target, validator, dependency, source, or evidence input
   marks the prior result stale.
 - Reconstruction must satisfy Semantic Reproduction. Until Architecture defines
   a portable-field exclusion rule, an unexplained byte difference in a bound
   Current Snapshot input fails closed.
+- Reconstruction first restores exact original input identities and verifies
+  existing evidence; a replay then creates new process evidence bound to those
+  inputs. New timestamps and process identifiers need not reproduce old output
+  bytes, but may vary only when they cannot affect target selection, observation,
+  diagnostic, evidence validity, or authority.
+- Any normalization/exclusion policy is itself versioned and snapshot-bound;
+  changing it requires review and makes affected results stale.
 
 #### FR-13: Preserve lifecycle authority separation
 
@@ -315,11 +376,21 @@ evidence and makes a fresh decision from current Skill-input v2 inputs.
 
 **Consequences:**
 
-- Replay, seed, matrix, review, and Quick Dev outputs cannot grant Acceptance.
-- Independent `bmad-review` approval plus an explicit Toolchain Maintainer
-  approval artifact is required before deterministic Acceptance.
+- Every TC-D1 replay, seed, matrix, review, and Quick Dev evidence artifact has
+  a machine-verifiable empty authorization set. It cannot publish plan-ready,
+  implementation-complete, acceptance-passed, release, archive, or another
+  owner's state.
+- Quick Dev may report its own implementation predicate; a lifecycle owner must
+  publish any state transition separately under the current repository contract.
+- An independent formal review conclusion and explicit Toolchain Maintainer
+  approval of its scope and bound candidate are required before deterministic
+  Acceptance. The current review Skill may provide that conclusion, but this PRD
+  does not create a new approval system or require one Skill name.
 - Only the Acceptance lifecycle owner can produce a new `acceptance-passed`.
 - Historical Acceptance and round-6 Q8 cannot satisfy the new decision.
+- Where an old implementation contract conflicts with this source brief or an
+  Accepted ADR, repository authority order applies and the conflict must be
+  explicitly repaired rather than inherited.
 
 ## 5. Cross-Cutting Non-Functional Requirements
 
@@ -331,6 +402,10 @@ must prevent success. Operator-facing terminal categories are `pass`,
 `stale`, `execution-failed`, and `timed-out`. A Matrix Case may additionally
 record `expected-difference`, but the aggregate passes only when that category
 was frozen for that case and all execution/evidence gates passed.
+
+These category names are stable product vocabulary for TC-D1 interoperability.
+Spec may define their serialized representation and compatibility aliases but
+cannot merge failure categories into success or silently reinterpret them.
 
 ### NFR-2: Auditability
 
@@ -378,9 +453,15 @@ an unsuccessful diagnostic result and never reduces required coverage.
 - Do not implement TC-E0 or TC-D2 through TC-D6.
 - Do not modify Phase service, runtime, browser/API, accounts, hosted workspaces,
   or user-sandbox behavior.
+- Do not modify installed BMAD/GDS Skill files outside the repository-owned
+  Toolchain scope.
 - Do not promote seeds, baselines, candidates, or Skill versions.
 - Do not introduce autonomous Skill modification, SkillOS, learned ranking,
   percentage canaries, or RL.
+- Before changing production behavior, establish and execute defect-revealing
+  tests for each planned behavioral Atomic Obligation. Brownfield behavior that
+  already passes needs a truthful characterization result plus a distinct fault
+  witness; fabricated RED evidence and post-hoc failure records are forbidden.
 
 ## 7. MVP Scope
 
@@ -409,9 +490,10 @@ an unsuccessful diagnostic result and never reduces required coverage.
 
 ### Primary
 
-- **SM-1: Requirement coverage** - 100% of rebuilt requirements have
-  bidirectional Exact Cover and at least one real, independently observable
-  failure; zero orphan assertions or evidence. Validates FR-11.
+- **SM-1: Requirement coverage** - 100% of Atomic Obligations derived from FR
+  consequences, NFRs, guardrails, and retained upstream duties have
+  bidirectional Exact Cover and their required fault/violation witnesses; zero
+  orphan obligations, assertions, commands, or evidence. Validates FR-11.
 - **SM-2: False-success resistance** - all required adversarial target,
   validator, dependency, invalid-package, unexecuted-case, reused-evidence,
   skipped-Consumer, stale-input, and foreign-authority tests reject success.
@@ -419,9 +501,10 @@ an unsuccessful diagnostic result and never reduces required coverage.
 - **SM-3: Matrix execution completeness** - all six Matrix Cases execute their
   declared distinct inputs and both required subjects; any missing execution
   makes the aggregate fail. Validates FR-7 and FR-8.
-- **SM-4: Behavioral rollback** - 100% of declared Consumers exercised by the
-  rollback test observe the Prior Route and its expected behavior after rollback,
-  with no historical evidence loss. Validates FR-10.
+- **SM-4: Behavioral rollback** - 100% of the non-empty frozen Consumer Manifest
+  completes every applicable enable, disable, rollback, and re-enable transition
+  and observes the Prior Behavior Baseline after rollback, with no historical
+  evidence loss. Validates FR-10.
 
 ### Secondary
 
@@ -461,7 +544,8 @@ an unsuccessful diagnostic result and never reduces required coverage.
 
 ## 10. Stakeholders and Approval
 
-- The Toolchain Maintainer owns product scope and implementation authorization.
+- [ASSUMPTION: Under the current repository ownership model, the Toolchain
+  Maintainer owns product scope and implementation authorization.]
 - An Independent Reviewer supplies formal review evidence but no Acceptance
   authority.
 - The deterministic Acceptance owner alone publishes `acceptance-passed`.
@@ -477,6 +561,10 @@ an unsuccessful diagnostic result and never reduces required coverage.
    without changing Semantic Reproduction? Owner: Architecture, with Independent
    Reviewer approval. Revisit condition: snapshot identity design is reviewed;
    absence of a decision remains fail-closed.
+3. Does current repository governance confirm the Toolchain Maintainer ownership
+   assumed in Section 10, or must an existing ADR owner approve product scope?
+   Owner: repository maintainer. Revisit before the PRD is used as lifecycle
+   authority; this PRD itself grants none.
 
 ## 12. Assumptions Index
 
@@ -484,3 +572,5 @@ an unsuccessful diagnostic result and never reduces required coverage.
   users of this capability.
 - NFR-7: process and aggregate-run budgets will be selected from measured current
   behavior before implementation authorization.
+- Section 10: current Toolchain Maintainer ownership is inferred from repository
+  practice and must be confirmed against governing ADRs before lifecycle use.

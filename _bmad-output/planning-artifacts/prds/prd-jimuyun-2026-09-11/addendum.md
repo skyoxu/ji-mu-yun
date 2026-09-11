@@ -15,8 +15,8 @@ This addendum preserves technical context for `bmad-spec` and
   retention.
 - Round-6 Quick Dev evidence at commit `0dce7806`; useful as implementation
   history but insufficient as rebuilt requirement coverage.
-- External review input `docs/fix80501.txt`; informative, non-authorizing, and
-  intentionally outside this PRD workspace.
+- External review input `docs/fix80501.txt`; informative and non-authorizing. It
+  must be preserved in the next candidate tree so the source set is reproducible.
 
 ## Architecture Decisions Needed
 
@@ -30,8 +30,9 @@ This addendum preserves technical context for `bmad-spec` and
    maintainer-approved Consumer Manifest.
 6. Define Prior Route capture, atomic route transitions, isolated rollback
    exercise, and behavioral equivalence observations.
-7. Define Current Snapshot roots and semantic reconstruction across fresh
-   checkouts while excluding incidental temporary-path identity.
+7. Define Current Snapshot roots, exact source-input restoration, fresh replay
+   evidence, and any portable runtime-metadata normalization. No exclusion may
+   hide a semantic, target, evidence-validity, or authority input.
 8. Define how Exact Cover is generated, validated bidirectionally, and linked to
    runtime evidence without letting generated mappings become source authority.
 
@@ -96,7 +97,35 @@ than requirements in `requirements.v1.json`; ADR-0060 owns current Skill-input
 v2 behavior. Initial creation of artifacts that already exist is narrowed to
 repair and conformance against the rebuilt FRs.
 
-## Downstream Contract Constraints
+### Historical acceptance sub-duty disposition
+
+| Historical acceptance | Disposition | Rebuilt coverage |
+| --- | --- | --- |
+| `A01` | retained | NFR-5 freezes exact historical tracked membership, paths, and content. |
+| `A02` | retained | FR-5 and NFR-5 prohibit historical writes and permit only append-only repair paths. |
+| `A03` | retained | FR-1/FR-2 retain repository-relative Windows-capable validation of supported packages. |
+| `A04` | retained | FR-1/FR-9 require current VDD and Acceptance package routes through the shared capability. |
+| `A05` | narrowed | FR-3 retains bounded, non-escaping capability resolution; the historical Skill Creator root is evidence of the old design, while the new Trust Approval owns any current allowed source. |
+| `A06` | retained | FR-2/FR-3/FR-4/SM-5 retain target, validator, version, content, command, probe, exit, and empty-authority provenance and add dependency/trust bindings. |
+| `A07` | retained and strengthened | FR-1 through FR-4 and SM-2 retain all old failures and add wrong-target, always-success, and jointly drifted dependency witnesses. |
+| `A08` | retained | FR-5 preserves the native command and hashes, records equivalence limits, and forbids authority promotion. |
+| `A09` | retained | FR-6 requires the three stable seed identities exactly once with native evidence identity. |
+| `A10` | retained | FR-6 rejects missing and drifted seed evidence. |
+| `A11` | retained | FR-6 requires the repaired requirement's closed set of non-baseline candidate classifications and forbids accepted-baseline output. |
+| `A12` | retained and strengthened | FR-7/FR-8 require two-sided execution, six distinct states, immutable identities, invariants, and non-regression comparison. |
+| `A13` | retained | FR-9 requires current workflow-model-routing terminal execution as one observation. |
+| `A14` | retained and strengthened | FR-13 requires machine-verifiable empty authorization for all TC-D1 derived evidence and forbids every foreign lifecycle state. |
+| `A15` | retained and strengthened | FR-10 requires all current Consumers to observe four route transitions and restored Prior Behavior Baseline. |
+| `A16` | retained | Section 6 preserves Phase/runtime/workspace/account/sandbox and installed BMAD/GDS write boundaries. |
+| `A17` | retained | Sections 6/7 preserve first-class roadmap separation and prohibit promotion, Miner/Curator, autonomous modification, ranking, and RL. |
+
+The `A05` narrowing requires Architecture and ADR reconciliation before a new
+Trust Approval is accepted; it does not authorize an arbitrary validator root.
+
+## Normative Constraints Mirrored From The PRD
+
+This section is a design aide and adds no independent requirement. If it
+conflicts with `prd.md`, the PRD controls.
 
 - The append-only repair round binds a current Git baseline as a freshness input.
 - Replay, seed, matrix, review, and Quick Dev outputs must declare their empty
