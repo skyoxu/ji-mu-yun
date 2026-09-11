@@ -76,3 +76,9 @@ The implementation worker may change only declared production paths after expect
 Before any stage reentry, consult the recovery guide. Matching completed evidence is reused, including failures; stale or partial evidence blocks. Preserve explicit failure history: two matching prior failures block a third attempt. Never scan for a latest run.
 
 Completion remains Q7 exact case/assertion coverage plus Q8 whole-plan terminal proof. Hand the native Q8 result and snapshot inputs to Acceptance; only Acceptance may publish `acceptance-passed`.
+
+## Current Runtime Boundaries
+
+Historical v1 plans are read-only compatibility inputs. The legacy combined receipt/observation fields cannot become current completion authority. The historical replay harness never authorizes current evidence. Read the compatibility guide only when handling those inputs.
+
+Q6 uses `tools/regression_gate.py`. `standard` and `self-hosted` must consume the slice `agent-context.validation_commands`; missing context, an empty required command set, timeout, nonzero exit, or zero-case pytest regression blocks publication before REFACTOR runtime edges/stage result. `fast-ship` may omit extra regressions but never the primary selector truth floor. Read the execution guide before running stages.
