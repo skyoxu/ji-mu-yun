@@ -1,5 +1,10 @@
 # Phase B/C Identity Isolation and Workspace Recovery
 
+> Current repair entry: [implementation-repair-input.md](implementation-repair-input.md) and [LOCAL-HANDOFF.md](LOCAL-HANDOFF.md).
+> The 2026-09-11 code review found incomplete semantic coverage and disconnected production boundaries.
+> Complete canonical VDD repair before Quick Dev; the historical lifecycle/next-action text below does not establish readiness for this repaired scope.
+> This navigation update publishes no lifecycle transition. Historical mapping, authorization and terminal evidence remain unchanged.
+
 - Title: Phase B/C Identity Isolation and Workspace Recovery
 - Status: implementation-authorized
 - Profile: `resumable` — dependent identity, Runner, Snapshot, Restore, and API slices cross sessions but do not modify the VDD/Quick Dev/Acceptance control plane.
