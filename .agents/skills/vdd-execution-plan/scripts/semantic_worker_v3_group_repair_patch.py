@@ -22,6 +22,20 @@ from semantic_repository_context import enrich_repository_context, PATH_CONTEXT_
 sc = gate.sc
 _BASE_DOMAIN_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
 _GROUP_STAGE = "v3-schema-repair-group-v5-inline-context"
+
+
+def _write_refreshable_json(path: Path, value: Mapping[str, Any]) -> None:
+    """Preserve an invalid cache as sidecar before publishing its replacement."""
+    if path.exists():
+        payload = sc.canonical_bytes(value)
+        if path.read_bytes() != payload:
+            sidecar = path.with_name(path.name + ".stale-p1-round-7-refresh")
+            suffix = 1
+            while sidecar.exists():
+                sidecar = path.with_name(path.name + f".stale-p1-round-7-refresh-{suffix}")
+                suffix += 1
+            path.rename(sidecar)
+    sc.atomic_json(path, value)
 # A full TC-D1 package can contain enough independent obligations for one
 # exact-key schema to exceed the practical response budget of the read-only
 # worker. Each chunk remains exact; the final projection still checks the full
@@ -464,7 +478,9 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         cached = json.loads(cache_path.read_text(encoding="utf-8"))
         if not isinstance(cached, Mapping):
             raise ValueError("V3 group repair cache is malformed")
-        return _project_current_output(cached, refs_by_oid)
+        projected = _project_current_output(cached, refs_by_oid)
+        if not sc._v3_cache_requires_contract_refresh(projected, root):
+            return projected
 
     grouped_prompt = (
         prompt
@@ -480,6 +496,23 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         "a partition constraint. Do not assume the required result in given or claim future checks already ran. "
         "The compiler attaches frozen IDs and source refs; V4 independently judges semantic alignment. "
         "Verification contracts remain independent even when execution contexts match."
+        "\n\nTARGETED REPAIR RULES: This is a Toolchain-only plan. For any obligation whose natural"
+        " description mentions Phase service, Hosted routes, auth, metadata, or Codex process"
+        " behavior, do not name the PhaseA.Platform implementation; bind the verification to the"
+        " repository Toolchain owner and its tests (for example scripts/sc/skill_package_replay.py,"
+        " scripts/sc/_semantic_gate_all_runtime.py, or an existing .agents/skills/** script)."
+        " Never put PhaseA.Platform or runtime/phase-a in production_owners, allowed_write_paths,"
+        " or execution_snapshot_paths. If the required candidate identity fixture is absent, put"
+        " exactly .agents/skills/quick-dev-tdd-adapter/tools/fixtures/candidate-identity.v1.json"
+        " in planned_new_files and do not use it as an existing snapshot."
+        " For FR-9 obligations, the acceptance/oracle must require a complete Consumer Manifest"
+        " reconciled bidirectionally against the repository real-call surface, including VDD,"
+        " Acceptance, and workflow-model-routing consumers; do not reduce FR-9 to route reachability"
+        " or omitted-caller checks alone. For the FR-5 replay-binding obligation, the acceptance"
+        " must state that verification first rebuilds the original binding identity and then replays"
+        " with that same identity; a changed identity is rejected. For obligation O-B9EAA8169232"
+        " specifically, include the literal original-binding reconstruction step, same-identity"
+        " replay step, and identity-mismatch rejection in behavior_change and terminal_predicate."
     )
     backend = resolve_llm_backend(None)
     def request_chunk(ids: list[str], label: str) -> dict[str, Any]:
@@ -489,8 +522,33 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         chunk_cache = cache_dir / sc._worker_cache_key(chunk_stage, chunk_payload)
         if chunk_cache.is_file():
             raw = json.loads(chunk_cache.read_text(encoding="utf-8"))
-            _project_current_output(raw, _obligation_refs(chunk_payload))
-            return raw
+            projected = _project_current_output(raw, _obligation_refs(chunk_payload))
+            if not sc._v3_cache_requires_contract_refresh(projected, root):
+                return raw
+        # A prior grouped request may have timed out after each exact child was
+        # successfully cached. Recompose that parent deterministically before
+        # asking the worker again; child caches are validated against their own
+        # frozen domains, so this is a cache replay, not a semantic shortcut.
+        if len(ids) > 1:
+            recovered: dict[str, Any] = {}
+            for index, oid in enumerate(ids, start=1):
+                child_payload = _narrow_repair_payload(payload, [oid])
+                child_stage = f"{_GROUP_STAGE}-chunk-{label}-{index}"
+                child_cache = cache_dir / sc._worker_cache_key(child_stage, child_payload)
+                if not child_cache.is_file():
+                    recovered = {}
+                    break
+                child = json.loads(child_cache.read_text(encoding="utf-8"))
+                projected_child = _project_current_output(child, _obligation_refs(child_payload))
+                if sc._v3_cache_requires_contract_refresh(projected_child, root):
+                    recovered = {}
+                    break
+                recovered.update(child["obligation_contracts"])
+            if len(recovered) == len(ids):
+                raw = {"obligation_contracts": recovered}
+                _project_current_output(raw, _obligation_refs(chunk_payload))
+                _write_refreshable_json(chunk_cache, raw)
+                return raw
         output = out_dir / ".compiler-work" / f"{chunk_stage}-last-message.json"
         output.parent.mkdir(parents=True, exist_ok=True)
         schema_path = transport._schema_path(out_dir, chunk_stage, _group_schema(chunk_payload))
@@ -517,7 +575,7 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
             if code == 0 and output.is_file():
                 raw = sc._parse_json_output(output.read_text(encoding="utf-8"))
                 _project_current_output(raw, _obligation_refs(chunk_payload))
-                sc.atomic_json(chunk_cache, raw)
+                _write_refreshable_json(chunk_cache, raw)
                 return raw
             traces.append(f"attempt {attempt}: {_trace_summary(trace)}")
         if len(ids) > 1:
@@ -537,6 +595,9 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         chunk_cache = cache_dir / sc._worker_cache_key(chunk_stage, chunk_payload)
         if chunk_cache.is_file():
             raw_chunk = json.loads(chunk_cache.read_text(encoding="utf-8"))
+            projected_chunk = _project_current_output(raw_chunk, _obligation_refs(chunk_payload))
+            if sc._v3_cache_requires_contract_refresh(projected_chunk, root):
+                raw_chunk = request_chunk(ids, f"{chunk_index:02d}")
         else:
             output = out_dir / ".compiler-work" / f"{chunk_stage}-last-message.json"
             output.parent.mkdir(parents=True, exist_ok=True)
@@ -570,7 +631,7 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
             raise ValueError("V3 group repair chunks duplicate frozen obligations: " + ",".join(sorted(overlap)))
         merged.update(contracts)
     raw = {"obligation_contracts": merged}
-    sc.atomic_json(cache_path, raw)
+    _write_refreshable_json(cache_path, raw)
     projected = _project_current_output(raw, refs_by_oid)
     return projected
 
@@ -579,11 +640,14 @@ def group_repair_transport(*, root, out_dir, stage: str, payload: Mapping[str, A
     if stage != "v3-schema-repair":
         return _BASE_DOMAIN_TRANSPORT(root=root, out_dir=out_dir, stage=stage, payload=payload, prompt=prompt, worker_cache=worker_cache)
     refs_by_oid = _obligation_refs(payload)
-    if worker_cache and stage in worker_cache:
+    if worker_cache and stage in worker_cache and not sc._v3_cache_requires_contract_refresh(
+            _project(worker_cache[stage], refs_by_oid=refs_by_oid) if isinstance(worker_cache[stage], Mapping) else {}, Path(root)):
         raw = worker_cache[stage]
         if not isinstance(raw, Mapping):
             raise ValueError("injected V3 repair cache must be object")
         value = _project(raw, refs_by_oid=refs_by_oid) if "groups" in raw or "obligation_contracts" in raw else dict(raw)
+        if sc._v3_cache_requires_contract_refresh(value, Path(root)):
+            value = _live_group_repair(root=Path(root), out_dir=Path(out_dir), payload=payload, prompt=prompt)
     else:
         value = _live_group_repair(root=Path(root), out_dir=Path(out_dir), payload=payload, prompt=prompt)
     findings = v3_domain._domain_findings(stage, payload, value)

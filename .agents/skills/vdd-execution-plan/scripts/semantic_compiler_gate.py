@@ -134,8 +134,19 @@ def normative_invoke_worker(
     worker_cache: Mapping[str, Any] | None = None,
 ) -> Mapping[str, Any]:
     """Invoke one read-only semantic worker with schema repair and stop-loss."""
+    effective_worker_cache = worker_cache
+    if stage == "v3" and worker_cache:
+        # Do not let a pre-contract V3 fixture bypass the current path guard.
+        # Other stage caches remain eligible for normal resume reuse.
+        cache_text = json.dumps(worker_cache, ensure_ascii=False, sort_keys=True)
+        if ("PhaseA.Platform/" in cache_text or "runtime/phase-a/" in cache_text or
+                "candidate-identity.v1.json" in cache_text):
+            effective_worker_cache = {
+                key: value for key, value in worker_cache.items()
+                if key not in {"v3", "v3-schema-repair"}
+            }
     started = time.perf_counter()
-    injected = bool(worker_cache and stage in worker_cache)
+    injected = bool(effective_worker_cache and stage in effective_worker_cache)
     repair_attempted = False
     raw: Mapping[str, Any] | None = None
     findings: list[str] = []
@@ -147,7 +158,7 @@ def normative_invoke_worker(
                 stage=stage,
                 payload=payload,
                 prompt=prompt,
-                worker_cache=worker_cache,
+                worker_cache=effective_worker_cache,
             )
             findings = _worker_schema_findings(stage, raw)
         except (ValueError, RuntimeError) as first_error:
@@ -174,7 +185,7 @@ def normative_invoke_worker(
                 stage=f"{stage}-schema-repair",
                 payload={"original_stage": stage, "input": payload, "validator_findings": findings},
                 prompt=repair_prompt,
-                worker_cache=worker_cache,
+                worker_cache=effective_worker_cache,
             )
             second_findings = _worker_schema_findings(stage, repaired)
             second_fingerprint = sc.sha256_value({

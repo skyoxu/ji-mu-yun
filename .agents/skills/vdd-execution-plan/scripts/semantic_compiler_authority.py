@@ -149,6 +149,35 @@ def _attempt(out_dir: Path, label: str, value: Mapping[str, Any]) -> None:
     gate.sc.atomic_json(out_dir / ".compiler-attempts" / f"{label}-{digest}.json", dict(value))
 
 
+def _archive_repair_publications(out_dir: Path) -> None:
+    """Move prior canonical publications aside before an append-only repair publish."""
+    names = (
+        "source-index.v1.json", "obligations.v1.json", "acceptances.v1.json",
+        "failure-intents.v1.json", "pre-slice-coverage.v1.json", "slices.v1.json",
+        "final-plan-coverage.v1.json", "semantic-alignment.v1.json", "feasibility.v1.json",
+        "semantic-plan-bundle.v1.json", "compiler-state.v1.json",
+    )
+    for name in names:
+        path = out_dir / name
+        if not path.is_file():
+            continue
+        sidecar = path.with_name(path.name + ".stale-p1-round-7-refresh")
+        suffix = 1
+        while sidecar.exists():
+            sidecar = path.with_name(path.name + f".stale-p1-round-7-refresh-{suffix}")
+            suffix += 1
+        path.rename(sidecar)
+    context_root = out_dir / "agent-context"
+    if context_root.is_dir():
+        for path in context_root.glob("*/agent-context.json"):
+            sidecar = path.with_name(path.name + ".stale-p1-round-7-refresh")
+            suffix = 1
+            while sidecar.exists():
+                sidecar = path.with_name(path.name + f".stale-p1-round-7-refresh-{suffix}")
+                suffix += 1
+            path.rename(sidecar)
+
+
 def _explicit_fixture_cache_wins(out_dir: Path, worker_cache: Mapping[str, Any] | None) -> None:
     """An explicitly supplied deterministic worker fixture supersedes old cache.
 
@@ -198,6 +227,7 @@ def compile_plan(
         if completed is not None:
             audit = _plan_chain_audit(out_dir)
             return {**completed, "semantic_chain_metrics": audit["metrics"]}
+        _archive_repair_publications(out_dir)
 
     if recommendation_only:
         return gate._ORIGINAL_COMPILE_PLAN(

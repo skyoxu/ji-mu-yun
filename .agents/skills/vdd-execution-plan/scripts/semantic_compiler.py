@@ -210,6 +210,34 @@ def _parse_json_output(text: str) -> Mapping[str, Any]:
     return value
 
 
+def _v3_cache_requires_contract_refresh(value: Mapping[str, Any], root: Path) -> bool:
+    """Bypass only V3 caches that violate the current execution contract."""
+    hints = value.get("slice_hints")
+    if not isinstance(hints, list) and isinstance(value.get("obligation_contracts"), Mapping):
+        hints = [item.get("slice_hint") for item in value["obligation_contracts"].values()
+                 if isinstance(item, Mapping)]
+    if not isinstance(hints, list):
+        return False
+    for hint in hints:
+        if not isinstance(hint, Mapping):
+            continue
+        paths = []
+        for field in ("production_owners", "allowed_write_paths", "execution_snapshot_paths", "planned_new_files"):
+            raw = hint.get(field)
+            if isinstance(raw, list):
+                paths.extend(item for item in raw if isinstance(item, str))
+        if any(path == "PhaseA.Platform" or path.startswith("PhaseA.Platform/") or
+               path == "runtime/phase-a" or path.startswith("runtime/phase-a/") for path in paths):
+            return True
+        planned = set(hint.get("planned_new_files") or [])
+        for snapshot in hint.get("execution_snapshot_paths") or []:
+            if isinstance(snapshot, str):
+                candidate = root / Path(snapshot)
+                if not candidate.is_file() and snapshot not in planned:
+                    return True
+    return False
+
+
 def invoke_worker(*, root: Path, out_dir: Path, stage: str, payload: Mapping[str, Any], prompt: str, worker_cache: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
     cache_dir = out_dir / ".compiler-cache"
     cache_path = cache_dir / _worker_cache_key(stage, payload)
@@ -217,13 +245,15 @@ def invoke_worker(*, root: Path, out_dir: Path, stage: str, payload: Mapping[str
         value = json.loads(cache_path.read_text(encoding="utf-8"))
         if not isinstance(value, Mapping):
             raise ValueError("worker cache is malformed")
-        return value
+        if stage != "v3" or not _v3_cache_requires_contract_refresh(value, root):
+            return value
     if worker_cache and stage in worker_cache:
         value = worker_cache[stage]
         if not isinstance(value, Mapping):
             raise ValueError(f"injected worker cache {stage} must be object")
-        atomic_json(cache_path, value)
-        return value
+        if stage != "v3" or not _v3_cache_requires_contract_refresh(value, root):
+            atomic_json(cache_path, value)
+            return value
     sc = root / "scripts" / "sc"
     if str(sc) not in sys.path:
         sys.path.insert(0, str(sc))
