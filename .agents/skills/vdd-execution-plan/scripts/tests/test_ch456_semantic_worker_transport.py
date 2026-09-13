@@ -31,6 +31,25 @@ def test_v1_and_v3_have_native_structured_output_schemas() -> None:
     assert "semantic-contract-gap" in family["enum"]
 
 
+def test_codex_worker_isolation_disables_each_configured_mcp_without_changing_provider(
+    tmp_path: Path, monkeypatch
+) -> None:
+    config = tmp_path / "config.toml"
+    config.write_text(
+        "[mcp_servers.context7]\ncommand = 'context7'\n"
+        "[mcp_servers.\"sequential-thinking\"]\ncommand = 'thinking'\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(transport, "_codex_config_path", lambda: config)
+
+    args = transport.codex_worker_isolation_args()
+
+    assert args[:3] == ["-c", "features.skills=false", "--ignore-rules"]
+    assert "mcp_servers.context7.enabled=false" in args
+    assert "mcp_servers.sequential-thinking.enabled=false" in args
+    assert "--ignore-user-config" not in args
+
+
 def test_schema_repair_transport_uses_bounded_longer_timeout_and_medium_reasoning(tmp_path: Path, monkeypatch) -> None:
     calls: list[dict] = []
 
@@ -64,6 +83,7 @@ def test_schema_repair_transport_uses_bounded_longer_timeout_and_medium_reasonin
     call = calls[0]
     assert call["timeout_sec"] == 300
     assert 'model_reasoning_effort="medium"' in call["codex_configs"]
+    assert "features.skills=false" in call["codex_extra_args"]
     assert "--output-schema" in call["codex_extra_args"]
     schema_path = Path(call["codex_extra_args"][call["codex_extra_args"].index("--output-schema") + 1])
     assert schema_path.is_file()
@@ -75,7 +95,7 @@ def test_old_codex_without_output_schema_falls_back_only_at_transport_layer(tmp_
     def run_llm_exec(**kwargs):
         extra = list(kwargs.get("codex_extra_args") or [])
         calls.append(extra)
-        if extra:
+        if "--output-schema" in extra:
             return 2, "error: unexpected argument '--output-schema'", ["codex", "exec"]
         output = kwargs["output_last_message"]
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -98,4 +118,5 @@ def test_old_codex_without_output_schema_falls_back_only_at_transport_layer(tmp_
     assert result["obligations"][0]["subject"] == "x"
     assert len(calls) == 2
     assert "--output-schema" in calls[0]
-    assert calls[1] == []
+    assert "--output-schema" not in calls[1]
+    assert "features.skills=false" in calls[1]

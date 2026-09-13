@@ -22,6 +22,11 @@ from semantic_repository_context import enrich_repository_context, PATH_CONTEXT_
 sc = gate.sc
 _BASE_DOMAIN_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
 _GROUP_STAGE = "v3-schema-repair-group-v5-inline-context"
+# A full TC-D1 package can contain enough independent obligations for one
+# exact-key schema to exceed the practical response budget of the read-only
+# worker. Each chunk remains exact; the final projection still checks the full
+# frozen domain before any result can be published.
+_MAX_CONTRACTS_PER_WORKER = 4
 
 
 def _string_array(*, nonempty: bool = False, enum: list[str] | None = None) -> dict[str, Any]:
@@ -52,6 +57,59 @@ def _obligation_refs(payload: Mapping[str, Any]) -> dict[str, list[str]]:
         if isinstance(oid, str) and oid and isinstance(refs, list):
             result[oid] = sorted({str(ref) for ref in refs if isinstance(ref, str) and ref})
     return result
+
+
+def _narrow_repair_payload(payload: Mapping[str, Any], obligation_ids: list[str]) -> dict[str, Any]:
+    """Keep a worker request bounded without changing its frozen source domain."""
+    original = payload.get("input")
+    if not isinstance(original, Mapping):
+        raise ValueError("V3 group repair has no frozen input")
+    source = dict(original)
+    values = source.get("obligations")
+    wanted = set(obligation_ids)
+    if not isinstance(values, list) or not wanted:
+        raise ValueError("V3 group repair has no active frozen obligations")
+    narrowed = [
+        dict(item)
+        for item in values
+        if isinstance(item, Mapping) and item.get("obligation_id") in wanted
+    ]
+    found = {
+        str(item.get("obligation_id"))
+        for item in narrowed
+        if isinstance(item.get("obligation_id"), str)
+    }
+    if found != wanted:
+        raise ValueError("V3 group repair chunk differs from frozen obligations")
+    source["obligations"] = narrowed
+    refs = {
+        ref
+        for item in narrowed
+        for ref in item.get("source_refs", [])
+        if isinstance(ref, str) and ref
+    }
+    contracts = source.get("source_contracts")
+    if isinstance(contracts, list):
+        source["source_contracts"] = [
+            dict(item)
+            for item in contracts
+            if isinstance(item, Mapping) and item.get("source_ref") in refs
+        ]
+    return {
+        "original_stage": "v3",
+        "input": source,
+        "validator_findings": [
+            "v3 chunked repair: return contracts only for the supplied frozen obligations"
+        ],
+    }
+
+
+def _repair_chunks(payload: Mapping[str, Any]) -> list[list[str]]:
+    ids = sorted(_obligation_refs(payload))
+    if not ids:
+        raise ValueError("V3 group repair has no active frozen obligations")
+    return [ids[index:index + _MAX_CONTRACTS_PER_WORKER]
+            for index in range(0, len(ids), _MAX_CONTRACTS_PER_WORKER)]
 
 
 def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
@@ -376,6 +434,12 @@ def _trace_summary(trace: str) -> str:
 
 
 def _project_current_output(value: Mapping[str, Any], refs_by_oid: Mapping[str, list[str]]) -> dict[str, Any]:
+    # A composed transport may call this guard after the inline wire has
+    # already been projected into the compiler's normalized result shape.
+    # Preserve that deterministic internal form; legacy group wire remains
+    # rejected below and worker/cache boundaries still require inline keys.
+    if set(value) == {"acceptances", "failure_intents", "slice_hints"}:
+        return dict(value)
     if set(value) != {"obligation_contracts"}:
         raise ValueError("V3 current repair output requires inline obligation_contracts")
     # Keep the installed owner/write-set projection wrapper on the live path.
@@ -402,11 +466,6 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
             raise ValueError("V3 group repair cache is malformed")
         return _project_current_output(cached, refs_by_oid)
 
-    output = out_dir / ".compiler-work" / f"{_GROUP_STAGE}-last-message.json"
-    output.parent.mkdir(parents=True, exist_ok=True)
-    if output.exists():
-        output.unlink()
-    schema_path = transport._schema_path(out_dir, _GROUP_STAGE, _group_schema(payload))
     grouped_prompt = (
         prompt
         + "\n\nV3 REPAIR OUTPUT CONTRACT: return only obligation_contracts{}. It must contain every "
@@ -421,28 +480,98 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         "a partition constraint. Do not assume the required result in given or claim future checks already ran. "
         "The compiler attaches frozen IDs and source refs; V4 independently judges semantic alignment. "
         "Verification contracts remain independent even when execution contexts match."
-        + "\n\nINPUT:\n" + json.dumps(payload, ensure_ascii=False, sort_keys=True)
     )
     backend = resolve_llm_backend(None)
-    extra_args = ["--output-schema", str(schema_path)] if backend == "codex-cli" else []
+    def request_chunk(ids: list[str], label: str) -> dict[str, Any]:
+        """Request one exact chunk, bisecting only a timed-out multi-item request."""
+        chunk_payload = _narrow_repair_payload(payload, ids)
+        chunk_stage = f"{_GROUP_STAGE}-chunk-{label}"
+        chunk_cache = cache_dir / sc._worker_cache_key(chunk_stage, chunk_payload)
+        if chunk_cache.is_file():
+            raw = json.loads(chunk_cache.read_text(encoding="utf-8"))
+            _project_current_output(raw, _obligation_refs(chunk_payload))
+            return raw
+        output = out_dir / ".compiler-work" / f"{chunk_stage}-last-message.json"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        schema_path = transport._schema_path(out_dir, chunk_stage, _group_schema(chunk_payload))
+        extra_args = ["--output-schema", str(schema_path)] if backend == "codex-cli" else []
+        chunk_prompt = (grouped_prompt + "\n\nCHUNK BINDING: return contracts for these and only these frozen obligation IDs: "
+                        + ",".join(ids) + "\n\nINPUT:\n" + json.dumps(chunk_payload, ensure_ascii=False, sort_keys=True))
 
-    def run(extra: list[str]):
-        return worker_call(run_llm_exec, progress_dir=out_dir, progress_stage="v3-schema-repair",
-            backend=backend, root=root, prompt=grouped_prompt, output_last_message=output,
-            timeout_sec=transport._REPAIR_TIMEOUT_SECONDS,
-            codex_configs=['model_reasoning_effort="medium"'], codex_sandbox="read-only", codex_extra_args=extra,
-        )
+        def run(extra: list[str]):
+            return worker_call(run_llm_exec, progress_dir=out_dir, progress_stage=f"v3-schema-repair-chunk-{label}",
+                backend=backend, root=root, prompt=chunk_prompt, output_last_message=output,
+                timeout_sec=transport._REPAIR_TIMEOUT_SECONDS, codex_configs=['model_reasoning_effort="medium"'],
+                codex_sandbox="read-only", codex_extra_args=[*transport.codex_worker_isolation_args(), *extra])
 
-    code, trace, _argv = run(extra_args)
-    if code != 0 and extra_args and transport._unsupported_output_schema(trace):
-        if output.exists():
-            output.unlink()
-        code, trace, _argv = run([])
-    if code != 0 or not output.is_file():
-        raise RuntimeError(f"semantic worker v3-schema-repair failed: {_trace_summary(trace)}")
-    raw = sc._parse_json_output(output.read_text(encoding="utf-8"))
-    projected = _project_current_output(raw, refs_by_oid)
+        attempts = 1 if len(ids) > 1 else transport._MAX_TRANSPORT_ATTEMPTS
+        traces: list[str] = []
+        for attempt in range(1, attempts + 1):
+            if output.exists():
+                output.unlink()
+            code, trace, _argv = run(extra_args)
+            if code != 0 and extra_args and transport._unsupported_output_schema(trace):
+                if output.exists():
+                    output.unlink()
+                code, trace, _argv = run([])
+            if code == 0 and output.is_file():
+                raw = sc._parse_json_output(output.read_text(encoding="utf-8"))
+                _project_current_output(raw, _obligation_refs(chunk_payload))
+                sc.atomic_json(chunk_cache, raw)
+                return raw
+            traces.append(f"attempt {attempt}: {_trace_summary(trace)}")
+        if len(ids) > 1:
+            # A timed-out grouped request has no semantic result. Re-request each
+            # exact obligation independently, retaining all successful siblings.
+            contracts: dict[str, Any] = {}
+            for index, oid in enumerate(ids, start=1):
+                child = request_chunk([oid], f"{label}-{index}")
+                contracts.update(child["obligation_contracts"])
+            return {"obligation_contracts": contracts}
+        raise RuntimeError("semantic worker v3-schema-repair failed after " + str(attempts) + " attempts: " + "\n".join(traces))
+
+    merged: dict[str, Any] = {}
+    for chunk_index, ids in enumerate(_repair_chunks(payload), start=1):
+        chunk_payload = _narrow_repair_payload(payload, ids)
+        chunk_stage = f"{_GROUP_STAGE}-chunk-{chunk_index:02d}"
+        chunk_cache = cache_dir / sc._worker_cache_key(chunk_stage, chunk_payload)
+        if chunk_cache.is_file():
+            raw_chunk = json.loads(chunk_cache.read_text(encoding="utf-8"))
+        else:
+            output = out_dir / ".compiler-work" / f"{chunk_stage}-last-message.json"
+            output.parent.mkdir(parents=True, exist_ok=True)
+            if output.exists():
+                output.unlink()
+            schema_path = transport._schema_path(out_dir, chunk_stage, _group_schema(chunk_payload))
+            extra_args = ["--output-schema", str(schema_path)] if backend == "codex-cli" else []
+            chunk_prompt = (
+                grouped_prompt
+                + "\n\nCHUNK BINDING: return contracts for these and only these frozen obligation IDs: "
+                + ",".join(ids)
+                + "\n\nINPUT:\n" + json.dumps(chunk_payload, ensure_ascii=False, sort_keys=True)
+            )
+
+            def run(extra: list[str]):
+                return worker_call(run_llm_exec, progress_dir=out_dir,
+                    progress_stage=f"v3-schema-repair-chunk-{chunk_index:02d}",
+                    backend=backend, root=root, prompt=chunk_prompt, output_last_message=output,
+                    timeout_sec=transport._REPAIR_TIMEOUT_SECONDS,
+                    codex_configs=['model_reasoning_effort="medium"'], codex_sandbox="read-only",
+                    codex_extra_args=[*transport.codex_worker_isolation_args(), *extra],
+                )
+
+            raw_chunk = request_chunk(ids, f"{chunk_index:02d}")
+        _project_current_output(raw_chunk, _obligation_refs(chunk_payload))
+        contracts = raw_chunk.get("obligation_contracts") if isinstance(raw_chunk, Mapping) else None
+        if not isinstance(contracts, Mapping):
+            raise ValueError("V3 group repair chunk has no obligation contracts")
+        overlap = set(merged) & set(contracts)
+        if overlap:
+            raise ValueError("V3 group repair chunks duplicate frozen obligations: " + ",".join(sorted(overlap)))
+        merged.update(contracts)
+    raw = {"obligation_contracts": merged}
     sc.atomic_json(cache_path, raw)
+    projected = _project_current_output(raw, refs_by_oid)
     return projected
 
 

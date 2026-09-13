@@ -135,7 +135,8 @@ def test_live_transport_uses_inline_schema_then_reuses_cache_without_backend(tmp
     calls = []
     def fake_exec(**kwargs):
         calls.append(kwargs)
-        schema = json.loads(Path(kwargs["codex_extra_args"][1]).read_text(encoding="utf-8"))
+        schema_arg = kwargs["codex_extra_args"].index("--output-schema") + 1
+        schema = json.loads(Path(kwargs["codex_extra_args"][schema_arg]).read_text(encoding="utf-8"))
         assert set(schema["properties"]) == {"obligation_contracts"}
         assert "Each value must reference one returned group_id" not in kwargs["prompt"]
         kwargs["output_last_message"].write_text(json.dumps(raw), encoding="utf-8")
@@ -148,6 +149,33 @@ def test_live_transport_uses_inline_schema_then_reuses_cache_without_backend(tmp
     second = grouped._live_group_repair(**args)
     assert first == second == grouped._project(raw, refs_by_oid=_refs(raw))
     assert len(calls) == 1
+
+
+def test_live_transport_chunks_large_exact_domain_without_losing_contracts(tmp_path, monkeypatch):
+    monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
+    import _llm_backend
+    raw = _inline(grouped._MAX_CONTRACTS_PER_WORKER + 1)
+    calls = []
+
+    def fake_exec(**kwargs):
+        calls.append(kwargs)
+        schema_arg = kwargs["codex_extra_args"].index("--output-schema") + 1
+        schema = json.loads(Path(kwargs["codex_extra_args"][schema_arg]).read_text(encoding="utf-8"))
+        ids = schema["properties"]["obligation_contracts"]["required"]
+        assert 0 < len(ids) <= grouped._MAX_CONTRACTS_PER_WORKER
+        assert "CHUNK BINDING" in kwargs["prompt"]
+        subset = {oid: raw["obligation_contracts"][oid] for oid in ids}
+        kwargs["output_last_message"].write_text(
+            json.dumps({"obligation_contracts": subset}), encoding="utf-8")
+        return 0, "OK", []
+
+    monkeypatch.setattr(_llm_backend, "resolve_llm_backend", lambda _: "codex-cli")
+    monkeypatch.setattr(_llm_backend, "run_llm_exec", fake_exec)
+    args = dict(root=tmp_path, out_dir=tmp_path / "plan", prompt="Repair.",
+                payload={"input": {"obligations": [_obligation(oid) for oid in _refs(raw)]}})
+    result = grouped._live_group_repair(**args)
+    assert result == grouped._project(raw, refs_by_oid=_refs(raw))
+    assert len(calls) == 2
 
 
 def test_historical_dangling_assignments_still_fail_closed():
@@ -167,3 +195,8 @@ def test_historical_dangling_assignments_still_fail_closed():
 def test_current_wire_cannot_fall_back_to_legacy_group_contract():
     with pytest.raises(ValueError, match="requires inline obligation_contracts"):
         grouped._project_current_output({"groups": [_raw_group(["O-000"])]}, {"O-000": ["req.md#FR-1"]})
+
+
+def test_current_output_accepts_already_projected_composed_transport_result():
+    projected = {"acceptances": [], "failure_intents": [], "slice_hints": []}
+    assert grouped._project_current_output(projected, {}) == projected

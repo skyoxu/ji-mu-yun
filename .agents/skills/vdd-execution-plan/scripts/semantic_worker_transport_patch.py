@@ -1,19 +1,22 @@
-"""Harden live semantic-worker transport without adding semantic retries.
+"""Harden live semantic-worker transport with bounded transient retries.
 
 The canonical compiler and its one-shot semantic repair lane remain authoritative.
 This compatibility layer only makes the Codex transport reliable for machine-
 readable V1/V3 output: it requests native structured output when supported,
 uses a larger but bounded timeout for schema repair, lowers repair reasoning cost,
-and removes stale output before each invocation. It never guesses or rewrites
-malformed JSON locally.
+removes stale output before each invocation, and retries transient worker exits
+up to ten times. It never guesses or rewrites malformed JSON locally.
 """
 from __future__ import annotations
 
 from semantic_progress import worker_call, stage_call
 
 import json
+import os
 from pathlib import Path
+import re
 import sys
+import tomllib
 from typing import Any, Mapping
 
 import semantic_compiler_gate as gate
@@ -22,7 +25,36 @@ sc = gate.sc
 _BASE_INVOKE_WORKER = gate._ORIGINAL_INVOKE_WORKER
 _NORMAL_TIMEOUT_SECONDS = 180
 _REPAIR_TIMEOUT_SECONDS = 300
+_MAX_TRANSPORT_ATTEMPTS = 11  # initial call plus ten retries
 _TRACE_LIMIT = 500
+
+
+def _codex_config_path() -> Path:
+    """Return the active user config without treating its contents as VDD input."""
+    home = os.environ.get("CODEX_HOME")
+    return Path(home) / "config.toml" if home else Path.home() / ".codex" / "config.toml"
+
+
+def codex_worker_isolation_args() -> list[str]:
+    """Disable configured MCP tools while retaining model/provider configuration."""
+    names: list[str] = []
+    try:
+        document = tomllib.loads(_codex_config_path().read_text(encoding="utf-8"))
+        configured = document.get("mcp_servers")
+        if isinstance(configured, dict):
+            names = sorted(name for name in configured if isinstance(name, str) and name)
+    except (OSError, tomllib.TOMLDecodeError):
+        pass
+
+    # This CLI version does not expose `skills` as a feature flag accepted by
+    # `--disable`; use the equivalent typed configuration override instead.
+    args = ["-c", "features.skills=false", "--ignore-rules"]
+    for name in names:
+        # Codex v0.153.4 accepts dotted overrides for TOML bare keys but
+        # misparses quoted keys here as incomplete MCP transport tables.
+        if re.fullmatch(r"[A-Za-z0-9_-]+", name):
+            args.extend(["-c", f"mcp_servers.{name}.enabled=false"])
+    return args
 
 
 def _bounded_trace(trace: str) -> str:
@@ -276,18 +308,28 @@ def transport_invoke_worker(
             timeout_sec=timeout_sec,
             codex_configs=[f'model_reasoning_effort="{reasoning}"'],
             codex_sandbox="read-only",
-            codex_extra_args=extra,
+            codex_extra_args=[*codex_worker_isolation_args(), *extra],
         )
 
-    code, trace, argv = execute(extra_args)
-    if code != 0 and extra_args and _unsupported_output_schema(trace):
-        # Compatibility fallback for an older Codex CLI. This is one transport
-        # invocation fallback, not an additional semantic repair attempt.
+    traces: list[str] = []
+    code = 1
+    trace = ""
+    argv: list[str] = []
+    for attempt in range(1, _MAX_TRANSPORT_ATTEMPTS + 1):
         if output.exists():
             output.unlink()
-        code, trace, argv = execute([])
+        code, trace, argv = execute(extra_args)
+        if code != 0 and extra_args and _unsupported_output_schema(trace):
+            # Compatibility fallback for an older Codex CLI. This remains a
+            # transport fallback inside the same attempt.
+            if output.exists():
+                output.unlink()
+            code, trace, argv = execute([])
+        if code == 0 and output.is_file():
+            break
+        traces.append(f"attempt {attempt}: {_bounded_trace(trace)}")
     if code != 0 or not output.is_file():
-        raise RuntimeError(f"semantic worker {stage} failed: {_bounded_trace(trace)}")
+        raise RuntimeError(f"semantic worker {stage} failed after {_MAX_TRANSPORT_ATTEMPTS} attempts: " + "\n".join(traces))
 
     value = sc._parse_json_output(output.read_text(encoding="utf-8"))
     sc.atomic_json(cache_path, value)

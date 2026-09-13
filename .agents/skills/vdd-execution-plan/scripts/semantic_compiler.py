@@ -282,6 +282,13 @@ def _normalize_obligation(entry: Mapping[str, Any], raw: Mapping[str, Any]) -> d
     status = raw.get("status", "active")
     if status not in {"active", "deferred", "not_applicable"}:
         raise ValueError("obligation status is invalid")
+    # A witness pending future Quick Dev execution is a planned verification
+    # activity, not an unresolved requirement. Keep it in the active plan so
+    # it receives a real RED/GREEN route instead of becoming an unrouteable
+    # deferred obligation.
+    if status == "deferred" and unresolved == ["pending independent witness"]:
+        status = "active"
+        unresolved = []
     return {
         "obligation_id": obligation_id, "requirement_id": entry["requirement_id"],
         "source_refs": list(source_refs), "subject": semantics["subject"], "trigger": semantics["trigger"],
@@ -302,7 +309,7 @@ def compile_obligations(*, root: Path, out_dir: Path, source_index: Mapping[str,
             root=root, out_dir=out_dir, stage=stage, payload=payload, worker_cache=worker_cache,
             prompt=(
                 "Extract all atomic obligations from the one requirement. Return {\"obligations\":[...]}. "
-                "Each obligation must contain source_refs (exactly the supplied source_ref), subject, trigger, state_before, state_after, expected_behavior, observable_result, forbidden_result[], requirement_type Product|Platform|Governance, obligation_kind behavior|quality|constraint|governance, unresolved_fragments[], status active|deferred|not_applicable, depends_on[]. Split independent behaviors; do not collapse multiple observable rules into one obligation."
+                "Each obligation must contain source_refs (exactly the supplied source_ref), subject, trigger, state_before, state_after, expected_behavior, observable_result, forbidden_result[], requirement_type Product|Platform|Governance, obligation_kind behavior|quality|constraint|governance, unresolved_fragments[], status active|deferred|not_applicable, depends_on[]. A future independent witness is planned implementation work: use status=active and unresolved_fragments=[]; reserve deferred for a genuinely unresolved requirement dependency. Split independent behaviors; do not collapse multiple observable rules into one obligation."
             ),
         )
         items = raw.get("obligations")
@@ -367,7 +374,7 @@ def compile_acceptances(*, root: Path, out_dir: Path, obligations: Sequence[Mapp
             "Acceptance: obligation_ids[], source_refs[], given, when, then, oracle{observable,expected,forbidden[]}, assertion_ids[]. Do not include acceptance_id or red_intent_ids; they are assigned deterministically. "
             "Failure intent: obligation_ids[] identifying the Acceptance it serves, failure_family from the allowed taxonomy, selector_intent, expected_outcome='fail', failure_id uppercase token. "
             "Treat expected-red as a runtime observation role, never as a generic label for RED-process guards. It is eligible only when every bound frozen obligation has obligation_kind behavior or quality and requirement_type is not Governance. Constraint/governance obligations and rules about RED construction, failure-marker emission, validation commands, write scope, fixtures, or harness integrity must retain a failure intent but use the appropriate non-expected-red family. "
-            "Each slice_hint: obligation_ids[], production_owners[], verification_lane unit|integration|matrix|runtime, behavior_change, affected_subjects[], state_transition, rollback_scope{production_paths[],state_or_schema_compatibility}, allowed_write_paths[], execution_snapshot_paths[], planned_new_files[], terminal_predicate, forbidden_paths[], validation_commands as argv arrays. Paths must be repository-relative POSIX."
+            "Each slice_hint: obligation_ids[], production_owners[], verification_lane unit|integration|matrix|runtime, behavior_change, affected_subjects[], state_transition, rollback_scope{production_paths[],state_or_schema_compatibility}, allowed_write_paths[], execution_snapshot_paths[], planned_new_files[], terminal_predicate, forbidden_paths[], validation_commands as argv arrays. Paths must be repository-relative POSIX. Production owners and execution snapshots must point to real existing repository files; inspect the repository and never invent a missing helper path. If the obligation truly requires a new file, put that exact path in planned_new_files (and do not claim it is an existing production owner)."
         ),
     )
     raw_acceptances = raw.get("acceptances")
@@ -770,4 +777,3 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
     state = {"schema": "vdd.compiler-state.v1", "plan_id": plan_id, "state": "plan-ready", "completed_stages": ["V0", "V0A", "V1", "V2", "V3", "V3A", "V4", "V5", "V6", "V6A", "V7"], "semantic_plan_sha256": sha256_value(bundle)}
     atomic_json(out_dir / "compiler-state.v1.json", state)
     return {"status": "plan-ready", "plan_id": plan_id, "semantic_plan_sha256": sha256_value(bundle), "slices": [s["slice_id"] for s in slices]}
-

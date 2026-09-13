@@ -69,6 +69,21 @@ def _worker_cache(source_ref: str, owner: str, selector: str) -> dict:
     }
 
 
+def test_pending_independent_witness_normalizes_to_active_planned_work() -> None:
+    source_ref = "req.md#FR-1"
+    raw = {
+        "source_refs": [source_ref], "subject": "validator identity", "trigger": "fixture runs",
+        "state_before": "fixture is pending", "state_after": "fixture result is recorded",
+        "expected_behavior": "reject an invalid validator", "observable_result": "identity-invalid",
+        "forbidden_result": ["trusted replay result"], "requirement_type": "Platform",
+        "obligation_kind": "behavior", "unresolved_fragments": ["pending independent witness"],
+        "status": "deferred", "depends_on": [],
+    }
+    normalized = _normalize_obligation({"requirement_id": "FR-1", "source_ref": source_ref}, raw)
+    assert normalized["status"] == "active"
+    assert normalized["unresolved_fragments"] == []
+
+
 def test_full_v0_to_v7_compilation_with_injected_readonly_workers(tmp_path: Path) -> None:
     root, req, owner, selector = _repo(tmp_path)
     cache = _worker_cache("req.md#FR-1", owner, selector)
