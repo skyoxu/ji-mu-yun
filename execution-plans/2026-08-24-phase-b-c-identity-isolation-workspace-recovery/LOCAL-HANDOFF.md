@@ -1,68 +1,103 @@
-# Local Handoff: Repair VDD Before Quick Dev
+# 8-24 direct Quick Dev handoff
 
-The online delivery is [implementation-repair-input.md](implementation-repair-input.md).
-It restores the implementation input, not canonical plan readiness. Read it before any historical next-action pointer. The old plan-state/resume-state, Round-3 mapping, implementation contract and terminal handoff are historical context for this repair, not permission to skip current compilation/probing.
+The maintainer requested direct repair and no further VDD run. Target branch:
+`implementation/8-24-identity-isolation-recovery-v2`.
 
-## Local sequence
+## One deterministic preparation step
 
-1. Fetch and check out the repair branch from a clean working tree. Preserve local changes; do not reset them.
-2. Read the current VDD Skill repair guidance. Use the original 8-24 target directory and resumable profile, with development governance disabled. No Bootstrap is requested.
-3. Compile the repaired input with the canonical process entry below. This can invoke model workers; it was not run online.
-4. Inspect compiler exit/result and generated behavior/Acceptance coverage. A nonzero exit or any result other than plan-ready stays VDD repair; stop before Quick Dev.
-5. Verify all 53 input cases, 40 PIWR IDs, 18 acceptance IDs, 7 NFRs and 13 Architecture rules remain covered. Every exclusion must cite an actual source non-goal. Do not accept a new blanket not_applicable disposition.
-6. Start the locally installed current Quick Dev TDD Skill with the newly compiled 8-24 directory. It must derive current behavior via controlled probes, retaining present behavior as regression and resolving mixed rows into finer obligations.
-7. Resolve production protected-path authorization in the local implementation session. This online task explicitly did not authorize or perform those writes.
-8. After implementation and current terminal validation, obtain external code/semantic review and run Acceptance. Preserve failed evidence. Do not equate a compiler pass or a test count with product completion.
+Large semantic-bundle publication was interrupted. The exact recovered slice
+and Acceptance inputs are committed under `rebuild-inputs/`; the small,
+reviewable assembly script produces the ordinary current bundle and projections.
+Until assembly passes, existing root-level plan JSON is the historical baseline
+and must not be used to start implementation.
 
-## Canonical compile command
-
-Run from the repository root in PowerShell. The CLI at the reviewed baseline supports --requirements, repeated --companion, --out-dir, --profile and --result-json; it does not expose a --governance-mode argument. Select governance through the documented environment variable.
+From a clean synchronized repository worktree, run in PowerShell:
 
 ```powershell
-$planPath = "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery"
-$specPath = "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery"
-$architecturePath = "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md"
-$evidencePath = "logs/phase-b-c-input-repair/local-" + (Get-Date -Format "yyyyMMddTHHmmss")
-$previousGovernance = $env:JIMUYUN_GOVERNANCE_MODE
-try {
-    $env:JIMUYUN_GOVERNANCE_MODE = "off"
-    py -3 scripts/vdd/compile_plan.py `
-        --requirements "$planPath/implementation-repair-input.md" `
-        --companion "$specPath/SPEC.md" `
-        --companion "$architecturePath" `
-        --companion "$specPath/identity-and-ownership.md" `
-        --companion "$specPath/runner-isolation.md" `
-        --companion "$specPath/workspace-recovery-contract.md" `
-        --companion "$specPath/api-evolution-and-operations.md" `
-        --companion "$specPath/requirements-and-acceptance.md" `
-        --out-dir "$planPath" `
-        --profile resumable `
-        --result-json "$evidencePath/compiler-result.json"
-    if ($LASTEXITCODE -ne 0) { throw "VDD repair failed; do not start Quick Dev." }
-    $compileResult = Get-Content "$evidencePath/compiler-result.json" -Raw -Encoding UTF8 | ConvertFrom-Json
-    if ($compileResult.status -ne "plan-ready") { throw "VDD did not publish plan-ready." }
-} finally {
-    $env:JIMUYUN_GOVERNANCE_MODE = $previousGovernance
-}
+py -3 execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/tools/rebuild_current_input.py
+if ($LASTEXITCODE -ne 0) { throw "Input repair validation failed; stop here." }
 ```
 
-Do not supply an old worker cache. On the first compile of these changed inputs, do not add --resume-from simply because historical plan-state exists. If this compile actually fails and the current compiler records a resumable failed stage, use its documented --resume-from first-failed-stage with the same current inputs. Do not manufacture completed stages or reuse old RED/terminal receipts.
+This is not VDD: no compiler, model, Bootstrap, live backend or Phase test is
+invoked. It first runs the tool guard regressions, preserves original product
+IDs, assembles 73 slices / 351 obligations, checks native semantic/routing and
+CER descriptor contracts, and runs public Q1 for every slice. It creates no
+Phase production code or target tests. It stops on failure. Evidence is appended
+under `logs/phase-b-c-input-repair/local-rebuild/`.
 
-The full source package is passed explicitly. If the local compiler cannot preserve companion authority or cannot handle this legacy target without rewriting historical evidence, stop as VDD repair with the exact error; do not manually patch the semantic output to green.
+The baseline Git object `9cd87d3ab780f7087b9fd470dc2843968b208eca` must be
+available locally; fetch full branch history if a shallow clone lacks it.
+Existing local plan changes are preserved by refusing to overwrite them.
+A materialization marker allows identical prepared inputs to be reverified;
+changed prepared inputs are never silently overwritten.
 
-## Expected implementation routing
+The assembly generates normal tracked plan changes. Commit them after the
+checks pass and before starting implementation, so the candidate identity is
+stable. Do not rerun this preparation after Phase implementation starts.
+Prior claims of 29 tests and 73 public preflights are historical; this rebuilt
+revision requires the actual local run above. No previous result is reused.
 
-| Observed result | Next action |
+## Current input and order
+
+The 73 product slices retain 347 original product obligations and their assertion
+identities, plus four source-grounded cases. Fourteen instruction/non-goal rows
+move to explicit dispositions; S70 setup is retained inside S69.
+Use `implementation-order.v1.json` and `implementation-case-map.v1.json`
+after assembly. First slice: **S12**. Preserve IDs rather than renumbering.
+
+Historical compiler, alignment, feasibility, source-freeze and lifecycle files
+remain historical. They do not prove this maintainer-authored revision.
+Assembly does not manufacture plan-ready, implementation-complete or
+acceptance-passed.
+
+## Q2 authoring and execution
+
+Read the current Quick Dev Skill execution guide and selected agent-context.
+Use `standard`, governance off. In a fresh explicitly named run under
+`logs/phase-b-c-implementation/`, author the declared Python wrapper, C# boundary
+test and helper. Follow current author-red / run-probe routing.
+
+Each obligation maps to a distinct pytest node and .NET FullyQualifiedName.
+Mark every bound assertion with `pytest.mark.cer_assertion`. Invoke the real
+.NET test using literal `subprocess.run` argv with explicit `shell=False`,
+`dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`, exact
+`--filter FullyQualifiedName=<mapped case>`, and `--logger trx`.
+The frozen Fact/Theory source calls a declared production owner or a real
+`WebApplicationFactory<Program>` host plus client. The test project references
+the production project. Static admission is not execution or semantic proof.
+
+Parse fresh invocation-specific TRX, verify exact method and all parameter cases,
+and assert the real product observation. Build/discovery/setup/timeout/privilege
+failures are harness errors, never product AssertionError/RED. Reject missing,
+stale, skipped and inconclusive results. A nonzero exit alone is not causal RED.
+Emit the planned FAILURE ID only from its actual bound product assertion.
+
+Freeze wrappers, C# cases, helpers, fixtures and selectors before formal RED.
+Declare every execution dependency before freezing; GREEN/REFACTOR cannot change
+the plan or tests. Preserve correct production when repairing test inputs.
+
+| Actual observation | Required path |
 | --- | --- |
-| Present through the real production entry | Current regression and terminal; no artificial RED |
-| Missing behavior with valid executable oracle | Quick Dev owns actual RED, then GREEN and REFACTOR on the same selector |
-| Mixed coverage in one case | Split into finer obligations before execution |
-| Missing test/host/OS privilege or other unverifiable input | Repair the harness/environment and re-probe; no success or causal RED |
-| Targeted checks pass, required terminal category absent | Incomplete; produce the missing actual check |
-| Current compiler and implementation evidence complete | External review, then Acceptance on the same current implementation |
+| Present | Regression and terminal; no artificial RED |
+| Missing | Causal RED, bounded GREEN, same-selector REFACTOR and terminal |
+| Mixed | Preserve present regression and implement the missing subset |
+| Unverifiable | Repair the harness/environment; no pass or production authorization |
+| Dependency changed | Re-probe affected slices and downstream consumers |
 
-The test class/method names in the input are intent, not existing test evidence. The local implementation must materialize them, verify discovery and connect them to production. Existing marker/helper tests remain regressions but cannot substitute the new boundary tests.
+Use real restricted Windows identities, ACL denial, Job Object lifetime,
+SQLite restart, authenticated operations and retained Snapshot content.
+Use disposable roots and harmless workloads to isolate unrelated model behavior.
 
-## Online validation scope
+## Terminal boundary
 
-Online checks cover complete ID mapping, Architecture rule mapping, source/relative-link existence, command argument compatibility and the change boundary. No compiler/model worker, .NET test, Windows permission fixture, production backend, Quick Dev or Acceptance run occurred online. No new lifecycle state or historical evidence was manufactured.
+A18 uses an independent-process reader authored in the test helper; it reads
+explicit current isolation, permissions, round-trip, fault, migration and
+redaction artifacts. It is not a generic evaluation system.
+
+After targeted stabilization, execute the full PhaseA.Platform.Tests project.
+Required terminal evidence also covers real Windows OS boundaries, restart/fault
+recovery, authenticated Snapshot/Restore/readback/controlled Run, legacy-data
+upgrade/reuse and independent A18 verification. Bind current predecessors to
+Q7/Q8. Counts alone cannot close the plan; Acceptance remains the separate final
+consumer. No live workspace, runtime/Caddy, shared Skill or historical evidence
+changes are authorized for the subsequent Phase implementation.
