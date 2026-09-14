@@ -192,10 +192,18 @@ def compile_plan(
         raise ValueError("unsupported VDD resume mode")
     if recommendation_only and resume_from is not None:
         raise ValueError("recommendation-only cannot be combined with resume")
+    root = gate.sc.repository_root(requirements.parent)
+    source_index = gate.sc.build_source_index(root, requirements, companions)
 
     if resume_from == "first-failed-stage":
-        completed = gate._completed_resume(out_dir)
+        completed = gate._completed_resume(
+            out_dir,
+            source_index_sha256=source_index["sha256"],
+            profile=profile,
+        )
         if completed is not None:
+            if completed.get("status") != "plan-ready":
+                return completed
             audit = _plan_chain_audit(out_dir)
             return {**completed, "semantic_chain_metrics": audit["metrics"]}
 
@@ -210,8 +218,6 @@ def compile_plan(
         )
 
     _explicit_fixture_cache_wins(out_dir, worker_cache)
-    root = gate.sc.repository_root(requirements.parent)
-    source_index = stage_call(out_dir, "V0", gate.sc.build_source_index, root, requirements, companions)
     preflight = stage_call(out_dir, "V0A", gate.sc.source_preflight, root, source_index)
     if not preflight["valid"]:
         result = {"status": "repair-vdd", "stage": "V0A", "source_index": source_index, "preflight": preflight}

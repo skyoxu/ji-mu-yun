@@ -399,36 +399,44 @@ def compile_obligations_with_gap_repair(
     if recall.get("valid") or not _only_source_gaps(recall):
         return obligations
 
-    gaps = [item for item in recall.get("source_gap_claims", []) if isinstance(item, Mapping)]
-    additions = _additional_obligations(
-        root=root,
-        out_dir=out_dir,
-        source_index=source_index,
-        obligations=obligations,
-        gaps=gaps,
-        worker_cache=worker_cache,
-    )
-    existing_ids = {str(item.get("obligation_id")) for item in obligations}
-    if any(str(item.get("obligation_id")) in existing_ids for item in additions):
-        raise ValueError("V1 source-gap repair produced an existing obligation identity")
-    repaired = sorted(
-        [*obligations, *additions],
-        key=lambda item: (str(item.get("requirement_id")), str(item.get("obligation_id"))),
-    )
-    guard = sc.guard_obligations(source_index, repaired)
-    if not guard.get("valid"):
-        raise ValueError("V1 source-gap repair failed V2: " + ",".join(str(x) for x in guard.get("findings", [])))
-    recheck = gate.atomic_recall_alignment(
-        root=root,
-        out_dir=out_dir,
-        source_index=source_index,
-        obligations=repaired,
-        worker_cache=worker_cache,
-    )
-    if not recheck.get("valid"):
-        # Fail closed. The stable authority will surface this attempt rather than
-        # accepting a locally guessed source repair.
-        return repaired
+    repaired = list(obligations)
+    current_recall = recall
+    # A worker can correctly identify a second-order gap after the first
+    # additions. Bound the repair loop so a malformed source/worker pair cannot
+    # turn compilation into an unbounded semantic retry.
+    for _round in range(2):
+        gaps = [item for item in current_recall.get("source_gap_claims", []) if isinstance(item, Mapping)]
+        additions = _additional_obligations(
+            root=root,
+            out_dir=out_dir,
+            source_index=source_index,
+            obligations=repaired,
+            gaps=gaps,
+            worker_cache=worker_cache,
+        )
+        existing_ids = {str(item.get("obligation_id")) for item in repaired}
+        if any(str(item.get("obligation_id")) in existing_ids for item in additions):
+            raise ValueError("V1 source-gap repair produced an existing obligation identity")
+        repaired = sorted(
+            [*repaired, *additions],
+            key=lambda item: (str(item.get("requirement_id")), str(item.get("obligation_id"))),
+        )
+        guard = sc.guard_obligations(source_index, repaired)
+        if not guard.get("valid"):
+            raise ValueError("V1 source-gap repair failed V2: " + ",".join(str(x) for x in guard.get("findings", [])))
+        current_recall = gate.atomic_recall_alignment(
+            root=root,
+            out_dir=out_dir,
+            source_index=source_index,
+            obligations=repaired,
+            worker_cache=worker_cache,
+        )
+        if current_recall.get("valid"):
+            return repaired
+        if not _only_source_gaps(current_recall):
+            return repaired
+    # Fail closed after the bounded repair budget; the stable authority will
+    # surface the remaining source gaps rather than accepting a guessed plan.
     return repaired
 
 

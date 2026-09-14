@@ -1,4 +1,4 @@
-"""ADR-0041: exact frozen contracts do not depend on worker-authored group joins.
+﻿"""ADR-0041: exact frozen contracts do not depend on worker-authored group joins.
 
 These are synthetic reproduction fixtures, not the uncollected live output.
 """
@@ -73,6 +73,27 @@ def test_37_inline_contracts_compile_once_and_keep_one_cohesive_slice(tmp_path, 
     assert len(receipts) == 1 and receipts[0]["schema_repair_attempted"] is True
 
 
+def test_aggregated_group_result_grounds_legacy_restore_owner(tmp_path):
+    canonical = tmp_path / "PhaseA.Platform/Workspaces/RestoreService.cs"
+    canonical.parent.mkdir(parents=True)
+    canonical.write_text("class RestoreService {}\\n", encoding="utf-8")
+    oid = "O-restore"
+    obligation = {"obligation_id": oid, "source_refs": ["req.md#FR-1"]}
+    payload = {"input": {"obligations": [obligation], "source_contracts": [{
+        "source_ref": "req.md#FR-1", "source_text": "RestoreBoundaryTests"
+    }]}}
+    value = {"slice_hints": [{
+        "obligation_ids": [oid],
+        "production_owners": ["PhaseA.Platform/Services/RestoreService.cs"],
+        "execution_snapshot_paths": ["PhaseA.Platform.Tests/Repair/RestoreBoundaryTests.cs"],
+        "planned_new_files": [],
+    }]}
+    grounded = grouped._ground_group_result(tmp_path, payload, value)
+    hint = grounded["slice_hints"][0]
+    assert hint["production_owners"] == ["PhaseA.Platform/Workspaces/RestoreService.cs"]
+    assert hint["execution_snapshot_paths"] == ["PhaseA.Platform.Tests/PhaseB/Repair/RestoreBoundaryTests.cs"]
+
+
 @pytest.mark.parametrize("mutation", ["missing", "extra", "no-context", "mixed-format", "null"])
 def test_inline_invalid_domain_or_context_fails_before_projection(mutation):
     raw = _inline()
@@ -131,7 +152,7 @@ def test_missing_only_completion_consumes_inline_contract_without_rewriting_exis
 def test_live_transport_uses_inline_schema_then_reuses_cache_without_backend(tmp_path, monkeypatch):
     monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
     import _llm_backend
-    raw = _inline()
+    raw = _inline(1)
     calls = []
     def fake_exec(**kwargs):
         calls.append(kwargs)
@@ -167,3 +188,138 @@ def test_historical_dangling_assignments_still_fail_closed():
 def test_current_wire_cannot_fall_back_to_legacy_group_contract():
     with pytest.raises(ValueError, match="requires inline obligation_contracts"):
         grouped._project_current_output({"groups": [_raw_group(["O-000"])]}, {"O-000": ["req.md#FR-1"]})
+
+
+def test_live_repair_chunks_large_frozen_obligation_sets(tmp_path: Path, monkeypatch) -> None:
+    obligations = [_obligation(f"O-{index:03d}") for index in range(17)]
+    calls: list[list[str]] = []
+
+    def live_chunk(*, root, out_dir, payload, prompt, **_kwargs):
+        chunk = grouped._repair_obligations(payload)
+        calls.append([item["obligation_id"] for item in chunk])
+        contracts = {}
+        for item in chunk:
+            oid = item["obligation_id"]
+            contracts[oid] = _raw_group([oid])
+            contracts[oid].pop("obligation_ids", None)
+        return grouped._project_current_output(
+            {"obligation_contracts": contracts}, grouped._obligation_refs(payload)
+        )
+
+    monkeypatch.setattr(grouped, "_MAX_OBLIGATIONS_PER_CALL", 8)
+    monkeypatch.setattr(grouped, "_live_group_repair_one", live_chunk)
+    combined = grouped._live_group_repair(
+        root=tmp_path,
+        out_dir=tmp_path,
+        payload={"input": {"obligations": obligations}},
+        prompt="p",
+    )
+
+    assert [len(call) for call in calls] == [8, 8, 1]
+    assert len(combined["acceptances"]) == 17
+
+
+def test_large_v3_call_uses_bounded_transport_before_full_worker(tmp_path: Path, monkeypatch) -> None:
+    obligations = [_obligation(f"O-{index:03d}") for index in range(5)]
+    projected = {
+        "acceptances": [{"obligation_ids": [item["obligation_id"]]} for item in obligations],
+        "failure_intents": [{"obligation_ids": [item["obligation_id"]]} for item in obligations],
+        "slice_hints": [{"obligation_ids": [item["obligation_id"]]} for item in obligations],
+    }
+    calls: list[dict] = []
+
+    def bounded(**kwargs):
+        calls.append(kwargs["payload"])
+        return projected
+
+    monkeypatch.setattr(grouped, "_MAX_OBLIGATIONS_PER_CALL", 4)
+    monkeypatch.setattr(grouped, "_live_group_repair", bounded)
+    monkeypatch.setattr(grouped.v3_domain, "_domain_findings", lambda *args: [])
+
+    result = grouped.group_repair_transport(
+        root=tmp_path,
+        out_dir=tmp_path,
+        stage="v3",
+        payload={"obligations": obligations},
+        prompt="compile",
+    )
+
+    assert result == projected
+    assert calls[0]["original_stage"] == "v3"
+    assert calls[0]["input"]["obligations"] == obligations
+
+
+def test_default_group_size_bounds_schema_without_single_obligation_serialization() -> None:
+    assert grouped._MAX_OBLIGATIONS_PER_CALL == 4
+
+
+def test_live_group_repair_retries_transient_worker_failure(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
+    import _llm_backend
+    raw = _inline(1)
+    attempts = []
+
+    def fake_exec(**kwargs):
+        attempts.append(kwargs)
+        if len(attempts) == 1:
+            return 124, "temporary transport timeout", []
+        kwargs["output_last_message"].write_text(json.dumps(raw), encoding="utf-8")
+        return 0, "OK", []
+
+    monkeypatch.setattr(_llm_backend, "resolve_llm_backend", lambda _: "codex-cli")
+    monkeypatch.setattr(_llm_backend, "run_llm_exec", fake_exec)
+    result = grouped._live_group_repair(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        prompt="Repair.",
+        payload={"input": {"obligations": [_obligation(oid) for oid in _refs(raw)]}},
+    )
+    assert result == grouped._project(raw, refs_by_oid=_refs(raw))
+    assert len(attempts) == 2
+
+
+def test_transient_multi_obligation_group_degrades_to_smaller_exact_groups(tmp_path: Path, monkeypatch) -> None:
+    obligations = [_obligation("O-001"), _obligation("O-002")]
+    calls: list[tuple[list[str], int | None]] = []
+
+    def fake_one(*, root, out_dir, payload, prompt, max_attempts=None):
+        chunk = grouped._repair_obligations(payload)
+        ids = [item["obligation_id"] for item in chunk]
+        calls.append((ids, max_attempts))
+        if len(ids) > 1:
+            raise grouped.TransientV3WorkerFailure("timeout")
+        raw = {"obligation_contracts": {ids[0]: _raw_group(ids)}}
+        raw["obligation_contracts"][ids[0]].pop("obligation_ids", None)
+        return grouped._project_current_output(raw, grouped._obligation_refs(payload))
+
+    monkeypatch.setattr(grouped, "_live_group_repair_one", fake_one)
+    result = grouped._live_group_repair(
+        root=tmp_path, out_dir=tmp_path, prompt="p",
+        payload={"input": {"obligations": obligations}}, max_obligations=2,
+    )
+    assert [item["obligation_ids"] for item in result["slice_hints"]] == [["O-001"], ["O-002"]]
+    assert calls[0] == (["O-001", "O-002"], 2)
+    assert [ids for ids, _ in calls[1:]] == [["O-001"], ["O-002"]]
+
+
+def test_group_cache_identity_ignores_discovery_context_and_repair_wrapper() -> None:
+    semantic = {"obligations": [_obligation("O-001")], "source_contracts": [{"source_ref": "req.md#1"}]}
+    direct = {**semantic, "repository_path_context": {"files": [{"path": "a.cs", "sha256": "one"}]}}
+    repaired = {
+        "original_stage": "v3",
+        "validator_findings": ["path spelling"],
+        "input": {**semantic, "repository_path_context": {"files": [{"path": "a.cs", "sha256": "two"}]}},
+    }
+    direct_identity = grouped.group_cache_identity_payload(direct)
+    repaired_identity = grouped.group_cache_identity_payload(repaired)
+    assert direct_identity == repaired_identity
+    assert direct_identity["projection_contract"] == "vdd-v3-path-grounding-v2"
+    assert {
+        key: value for key, value in direct_identity.items() if key != "projection_contract"
+    } == semantic
+
+
+def test_group_cache_identity_changes_when_frozen_obligation_changes() -> None:
+    first = {"obligations": [_obligation("O-001")]}
+    second = {"obligations": [_obligation("O-002")]}
+    assert grouped.group_cache_identity_payload(first) != grouped.group_cache_identity_payload(second)

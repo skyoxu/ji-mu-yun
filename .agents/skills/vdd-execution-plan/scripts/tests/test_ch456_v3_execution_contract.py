@@ -9,7 +9,12 @@ if str(SCRIPTS) not in sys.path:
 
 import semantic_compiler_gate as gate
 import semantic_feasibility_patch  # noqa: F401  # installs stable V3 repair chain
-from semantic_worker_v3_execution_contract_patch import _findings
+from semantic_worker_v3_execution_contract_patch import (
+    _authorized_planned_test_paths,
+    _findings,
+    _normalize_production_write_sets,
+)
+from semantic_worker_v3_path_grounding_patch import ground_v3_paths
 from semantic_worker_v3_write_set_projection_patch import project_with_owner_write_set
 
 
@@ -155,3 +160,133 @@ def test_repaired_owner_overlap_is_removed_from_forbidden() -> None:
     result = project_with_owner_write_set(raw)
     assert result["slice_hints"][0]["allowed_write_paths"] == ["src/owner.py"]
     assert result["slice_hints"][0]["forbidden_paths"] == []
+
+
+def _repair_payload(*, source_text: str = "PhaseB.Repair.IdentityBoundaryTests", snapshot: str = "PhaseA.Platform.Tests/PhaseB/Repair/IdentityBoundaryTests.cs") -> tuple[dict, dict]:
+    obligation = _obligation("O-1")
+    obligation["source_refs"] = ["repair.md#S0"]
+    payload = {
+        "obligations": [obligation],
+        "source_contracts": [{"source_ref": "repair.md#S0", "source_text": source_text}],
+    }
+    value = {"slice_hints": [{**_hint(["O-1"], allowed=["src/owner.py"], planned=[]), "execution_snapshot_paths": [snapshot]}]}
+    return payload, value
+
+
+def test_authorized_future_repair_test_is_planned_but_not_treated_as_evidence() -> None:
+    payload, value = _repair_payload()
+    projected = _authorized_planned_test_paths("v3", payload, value)
+    hint = projected["slice_hints"][0]
+    assert hint["planned_new_files"] == ["PhaseA.Platform.Tests/PhaseB/Repair/IdentityBoundaryTests.cs"]
+    assert hint["execution_snapshot_paths"] == ["PhaseA.Platform.Tests/PhaseB/Repair/IdentityBoundaryTests.cs"]
+
+
+def test_unlisted_or_directory_repair_paths_are_not_authorized() -> None:
+    for snapshot in (
+        "PhaseA.Platform.Tests/",
+        "PhaseA.Platform.Tests/Workspaces/RestoreServiceTests.cs",
+        "PhaseA.Platform.Tests/PhaseB/Repair/OtherBoundaryTests.cs",
+    ):
+        payload, value = _repair_payload(snapshot=snapshot)
+        projected = _authorized_planned_test_paths("v3", payload, value)
+        assert projected == value
+
+
+def test_matching_path_without_frozen_lane_authority_is_not_authorized() -> None:
+    payload, value = _repair_payload(source_text="PhaseB.Repair.OtherTests")
+    projected = _authorized_planned_test_paths("v3", payload, value)
+    assert projected == value
+
+
+def test_missing_production_owner_remains_a_contract_failure(tmp_path: Path) -> None:
+    obligations = [_obligation("O-1")]
+    candidate = {"slice_hints": [_hint(["O-1"], allowed=["src/owner.py"], planned=["tests/test_owner.py"])]}
+    findings = _findings(tmp_path, "v3", {"obligations": obligations}, candidate)
+    assert any(item.startswith("v3-contract:slice_hints[0]:no-real-production-entry") for item in findings)
+
+
+def test_path_grounding_projects_only_explicit_legacy_repair_test_path(tmp_path: Path) -> None:
+    payload, value = _repair_payload(
+        source_text="PhaseB.Repair.RestoreBoundaryTests",
+        snapshot="PhaseA.Platform.Tests/Workspaces/RestoreServiceTests.cs",
+    )
+    value["slice_hints"][0]["planned_new_files"] = ["PhaseA.Platform.Tests/Repair/RestoreBoundaryTests.cs"]
+    grounded, changes = ground_v3_paths(tmp_path, payload, value)
+    hint = grounded["slice_hints"][0]
+    expected = "PhaseA.Platform.Tests/PhaseB/Repair/RestoreBoundaryTests.cs"
+    assert hint["execution_snapshot_paths"] == [expected]
+    assert hint["planned_new_files"] == [expected]
+    assert changes
+
+
+def test_path_grounding_does_not_guess_by_basename_or_map_directory_without_authority(tmp_path: Path) -> None:
+    payload, value = _repair_payload(
+        source_text="unrelated source",
+        snapshot="PhaseA.Platform.Tests/",
+    )
+    grounded, changes = ground_v3_paths(tmp_path, payload, value)
+    assert grounded == value
+    assert changes == []
+    payload, value = _repair_payload(snapshot="PhaseA.Platform.Tests/Other/RestoreBoundaryTests.cs")
+    grounded, changes = ground_v3_paths(tmp_path, payload, value)
+    assert grounded == value
+    assert changes == []
+
+
+def test_path_grounding_drops_test_owner_but_never_invents_production_owner(tmp_path: Path) -> None:
+    payload, value = _repair_payload()
+    hint = value["slice_hints"][0]
+    hint["production_owners"] = ["PhaseA.Platform.Tests/PhaseB/Repair/IdentityBoundaryTests.cs"]
+    value = _authorized_planned_test_paths("v3", payload, value)
+    value = _normalize_production_write_sets(tmp_path, value)
+    grounded, _ = ground_v3_paths(tmp_path, payload, value)
+    assert grounded["slice_hints"][0]["production_owners"] == []
+    assert any(item.startswith("v3-contract:slice_hints[0]:no-real-production-entry") for item in _findings(tmp_path, "v3", payload, grounded))
+
+
+def test_existing_route_operation_governance_test_uses_real_evidence_owners(tmp_path: Path) -> None:
+    for path in (
+        "PhaseA.Platform/Workflow/RouteOperationPreflight.cs",
+        "PhaseA.Platform/Workflow/SecretRedactionPolicy.cs",
+    ):
+        target = tmp_path / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("class ProductionEntry {}\n", encoding="utf-8")
+    payload, value = _repair_payload(
+        source_text="SM-A08 Evidence_CorrelatesAndRedactsAllOperations",
+        snapshot="PhaseA.Platform.Tests/Workflow/RouteOperationGovernanceTests.cs",
+    )
+    value["slice_hints"][0]["production_owners"] = [
+        "PhaseA.Platform.Tests/Workflow/RouteOperationGovernanceTests.cs"
+    ]
+    value = _authorized_planned_test_paths("v3", payload, value)
+    value = _normalize_production_write_sets(tmp_path, value)
+    grounded, _ = ground_v3_paths(tmp_path, payload, value)
+    hint = grounded["slice_hints"][0]
+    assert hint["production_owners"] == [
+        "PhaseA.Platform/Workflow/RouteOperationPreflight.cs",
+        "PhaseA.Platform/Workflow/SecretRedactionPolicy.cs",
+    ]
+    assert hint["planned_new_files"] == []
+
+
+def test_path_grounding_only_maps_explicit_stale_production_path(tmp_path: Path) -> None:
+    production = tmp_path / "PhaseA.Platform" / "Workspaces"
+    production.mkdir(parents=True)
+    (production / "RestoreService.cs").write_text("class RestoreService {}\n", encoding="utf-8")
+    payload, value = _repair_payload()
+    value["slice_hints"][0]["production_owners"] = ["PhaseA.Platform/Services/RestoreService.cs"]
+    grounded, _ = ground_v3_paths(tmp_path, payload, value)
+    assert grounded["slice_hints"][0]["production_owners"] == ["PhaseA.Platform/Workspaces/RestoreService.cs"]
+
+
+def test_path_grounding_maps_restore_recovery_selector_only_for_sm_r07(tmp_path: Path) -> None:
+    payload, value = _repair_payload(
+        source_text="SM-R07 RestoreBoundaryTests",
+        snapshot="PhaseA.Platform.Tests/Security/RestoreRecoveryTests.cs",
+    )
+    grounded, changes = ground_v3_paths(tmp_path, payload, value)
+    assert grounded["slice_hints"][0]["execution_snapshot_paths"] == [
+        "PhaseA.Platform.Tests/PhaseB/Repair/RestoreBoundaryTests.cs"
+    ]
+    assert changes

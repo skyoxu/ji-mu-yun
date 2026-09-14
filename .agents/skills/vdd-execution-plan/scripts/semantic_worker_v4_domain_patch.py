@@ -188,7 +188,7 @@ def v4_transport_invoke_worker(
     frozen_contract = (
         "\n\nFROZEN V4 ID DOMAIN: supported_obligation_ids and invented_obligation_ids may contain ONLY these exact ids: "
         + json.dumps(ids, ensure_ascii=False)
-        + ". Do not create, rewrite, abbreviate, duplicate, or infer identifier tokens. source_gap_claims.source_ref may contain ONLY: "
+        + ". Each identifier may appear at most once in each array; do not create, rewrite, abbreviate, duplicate, or infer identifier tokens. source_gap_claims.source_ref may contain ONLY: "
         + json.dumps(refs, ensure_ascii=False)
         + ". An empty source_gap_claims array is valid when no independently observable source behavior is missing."
     )

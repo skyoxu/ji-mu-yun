@@ -41,6 +41,7 @@ def test_v4_structured_schema_is_closed_over_frozen_active_ids_and_source_refs()
     assert "uniqueItems" not in schema["properties"]["invented_obligation_ids"]
 
 
+
 def test_unknown_supported_id_routes_through_existing_single_repair(tmp_path: Path) -> None:
     payload = _payload()
     invalid = {

@@ -50,3 +50,17 @@ def test_alignment_scopes_worker_input_without_filtering_judgment(monkeypatch, t
     if missing:
         assert f"v4:missing:{missing}" in result["findings"]
         assert result["worker"]["missing_obligation_ids"] == [missing]
+
+
+def test_alignment_payload_compacts_only_oversized_inputs() -> None:
+    from semantic_compiler import alignment_payload
+
+    obligations = [{
+        "obligation_id": f"O-{index}", "status": "active", "requirement_id": "SM-I01",
+        "source_refs": ["req#SM-I01"], "subject": "x", "trigger": "t",
+        "state_before": "b", "state_after": "a", "expected_behavior": "x" * 5000,
+        "observable_result": "x" * 5000, "large_unused": "x" * 4000,
+    } for index in range(100)]
+    payload = alignment_payload({"schema": "source-index.v1", "entries": []}, obligations, [], [])
+    assert payload["transport_projection"] == "vdd-v4-alignment-compact-v1"
+    assert "large_unused" not in payload["obligations"][0]

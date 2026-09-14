@@ -8,7 +8,7 @@ SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from semantic_compiler import _normalize_obligation
+from semantic_compiler import _normalize_obligation, build_source_index, source_preflight
 from semantic_compiler_gate import compile_plan
 import semantic_compiler_gate as gate
 
@@ -147,3 +147,79 @@ def test_missing_requirement_anchor_fails_closed(tmp_path: Path) -> None:
         assert "requirement" in str(exc).lower()
     else:
         raise AssertionError("missing requirement anchor must fail")
+
+
+def test_repair_case_table_owns_atomic_ids_and_companions_are_frozen_context(tmp_path: Path) -> None:
+    root = tmp_path
+    (root / ".agents").mkdir()
+    (root / "AGENTS.md").write_text("x", encoding="utf-8")
+    requirements = root / "repair.md"
+    requirements.write_text(
+        "# Repair\n\n"
+        "| Case | PIWR parents | Acceptance | Lane | Source | Behavior |\n"
+        "| --- | --- | --- | --- | --- | --- |\n"
+        "| I01 | PIWR-001 | PIWR-A01 | S0 | identity.md | Resolve server context. |\n"
+        "| W03 | PIWR-023 | PIWR-A09 | S2 | recovery.md | Retain immutable bytes. |\n"
+        "\nNFR-001 and FR-001 remain normative companion references.\n",
+        encoding="utf-8",
+    )
+    spec = root / "SPEC.md"
+    spec.write_text("# Canonical\nFR-001 and NFR-001 are normative.\n", encoding="utf-8")
+    companion = root / "identity.md"
+    companion.write_text("PIWR-001 binds server identity.\n", encoding="utf-8")
+
+    index = build_source_index(root, requirements, [spec, companion])
+
+    assert [entry["requirement_id"] for entry in index["entries"]][:3] == [
+        "SM-I01", "SM-W03", "SM-REPAIR-CONSTRAINTS"
+    ]
+    assert len(index["entries"]) == 3
+    assert "NFR-001 and FR-001" in index["entries"][2]["source_text"]
+    assert [entry["repository_relative_source_path"] for entry in index["companions"]] == [
+        "SPEC.md",
+        "identity.md",
+    ]
+    assert index["companions"][0]["source_text"].startswith("# Canonical")
+    assert source_preflight(root, index)["valid"] is True
+
+
+def test_companion_byte_change_invalidates_source_preflight(tmp_path: Path) -> None:
+    root = tmp_path
+    (root / ".agents").mkdir()
+    (root / "AGENTS.md").write_text("x", encoding="utf-8")
+    requirements = root / "repair.md"
+    requirements.write_text("| I01 | PIWR-001 | PIWR-A01 | S0 | source | behavior |\n", encoding="utf-8")
+    companion = root / "SPEC.md"
+    companion.write_text("FR-001 initial\n", encoding="utf-8")
+    index = build_source_index(root, requirements, [companion])
+
+    companion.write_text("FR-001 changed\n", encoding="utf-8")
+
+    result = source_preflight(root, index)
+    assert result["valid"] is False
+    assert "companion[0]:stale-source-hash" in result["findings"]
+
+
+def test_v1_wrong_source_ref_uses_one_schema_repair(tmp_path: Path, monkeypatch) -> None:
+    payload = {"source": {"source_ref": "repair.md#SM-I11"}}
+    calls: list[str] = []
+
+    def worker(**kwargs):
+        calls.append(kwargs["stage"])
+        ref = "PIWR-A03" if len(calls) == 1 else "repair.md#SM-I11"
+        return {"obligations": [{"source_refs": [ref], "subject": "subject", "trigger": "trigger",
+            "state_before": "before", "state_after": "after", "expected_behavior": "behavior",
+            "observable_result": "result", "forbidden_result": [], "unresolved_fragments": [],
+            "depends_on": [], "requirement_type": "Product"}]}
+
+    monkeypatch.setattr(gate, "_ORIGINAL_INVOKE_WORKER", worker)
+    result = gate.normative_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v1-SM-I11",
+        payload=payload,
+        prompt="compile",
+    )
+
+    assert calls == ["v1-SM-I11", "v1-SM-I11-schema-repair"]
+    assert result["obligations"][0]["source_refs"] == ["repair.md#SM-I11"]
