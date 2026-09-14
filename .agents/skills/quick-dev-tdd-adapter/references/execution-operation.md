@@ -75,3 +75,23 @@ resolved during implementation while keeping every proof requirement.
 ## Profiles
 
 Execution profiles are `fast-ship`, `standard`, and `self-hosted`. Profiles may change scope/cost only; none may bypass real execution, selector identity, exact cover, failure classification, current snapshot or terminal truth. `self-hosted` additionally requires the detached promotion/judge contract when promotion is requested. Its detached bundle must contain external read-only `positive`, `negative`, and `mutation` fixture kinds and must exactly cover every current failure family; missing/unknown family coverage, candidate-local judge/oracle bytes, mutable artifacts, or current evidence-writer imports block promotion. This execution profile is distinct from any older VDD plan-shape profile such as `resumable`.
+
+## Conditional .NET boundary tests through pytest
+
+For a C# owner, retain the current `python -m pytest` CER adapter.
+The RED entry guard accepts a literal `subprocess.run` argv list with explicit
+`shell=False`, `dotnet test <repository-relative test.csproj>`, one exact
+`--filter FullyQualifiedName=<namespace.class.method>` and `--logger trx`.
+The project declares `IsTestProject=true` and references the production project.
+Freeze the C# Fact/Theory source and all helpers in execution_snapshot_paths
+before RED. It must call a declared production type or construct its real
+`WebApplicationFactory<Program>` host and client. Dynamic command tables,
+substring filters and test-local lookalikes are not admitted.
+
+This is bounded static admission, not .NET execution or semantic proof.
+The pytest case must parse fresh invocation-specific TRX, identify the exact
+method and all required parameters, and assert the actual product outcome.
+Build/discovery/setup/timeout/privilege failures are harness errors. Missing,
+stale, skipped or inconclusive results cannot pass or supply causal RED.
+Only a real bound product assertion may emit its planned failure ID.
+Freeze wrappers, C# cases, helpers and selectors through GREEN/REFACTOR.
