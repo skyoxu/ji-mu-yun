@@ -3,6 +3,8 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[5]
 SCRIPT = ROOT / ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
@@ -40,6 +42,7 @@ def _candidate_repo(tmp_path: Path) -> tuple[Path, Path, dict]:
     return root, plan, {"candidate_commit":candidate,"candidate_tree_hash":"sha256:" + tree}
 
 
+@pytest.mark.cer_assertion("A-B148C5C61A99-repository-relative-paths-unchanged")
 def test_candidate_allows_evidence_and_exact_plan_state_transition(tmp_path: Path) -> None:
     root, plan, receipt = _candidate_repo(tmp_path)
     assert _route()._candidate_commit_is_current(root, plan, receipt)
@@ -50,3 +53,15 @@ def test_candidate_rejects_other_post_candidate_production_change(tmp_path: Path
     (plan / "tools").mkdir(); (plan / "tools" / "producer.py").write_text("changed\n", encoding="utf-8")
     _commit(root, "unauthorized production change")
     assert not _route()._candidate_commit_is_current(root, plan, receipt)
+
+
+@pytest.mark.cer_assertion("A-B148C5C61A99-repository-relative-paths-unchanged")
+def test_worker_delta_rejects_a_renamed_repository_relative_path() -> None:
+    worker = importlib.import_module("worker_orchestrator")
+    with pytest.raises(ValueError, match="write-set violation"):
+        worker._validate_delta(
+            ["tools/before.py", "tools/after.py"],
+            allowed=["tools/after.py"],
+            forbidden=[],
+            label="red-author",
+        )
