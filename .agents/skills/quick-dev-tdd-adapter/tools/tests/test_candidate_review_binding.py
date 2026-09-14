@@ -1,7 +1,10 @@
 import hashlib
 import importlib.util
 import json
+import subprocess
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[5]
@@ -215,3 +218,33 @@ def test_candidate_binding_accepts_only_complete_repair_successor_lineage(tmp_pa
         json.loads((tmp_path / "successor-binding.json").read_text(encoding="utf-8")),
         successor_receipt,
     )
+
+
+@pytest.mark.cer_assertion("A-FR7-MATRIX-STABLE-CANDIDATE")
+def test_replay_matrix_receipt_proves_both_subjects_and_identity_bounds() -> None:
+    matrix = ROOT / "execution-plans" / "2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed" / "stable-candidate-replay-matrix.v1.json"
+    replay = ROOT / "scripts" / "sc" / "skill_package_replay.py"
+    result = subprocess.run(
+        ["py", "-3", "-B", str(replay), "replay-matrix", "--matrix", str(matrix)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    receipt = json.loads(result.stdout)
+    assert receipt.get("authorizes") == []
+    rows = receipt.get("case_results", [])
+    assert len(rows) == 6
+    for row in rows:
+        if "subjects" not in row:
+            print("FAILURE_ID:F-FR7-MISSING-SUBJECT-RUN")
+        assert "subjects" in row
+        subjects = row["subjects"]
+        assert {item.get("name") for item in subjects} == {"stable", "candidate"}
+        for subject in subjects:
+            assert subject.get("start_identity_sha256") == subject.get("end_identity_sha256")
+            assert subject.get("executed") is True
+        assert row.get("case_id") == row.get("attribution", {}).get("case_id")
