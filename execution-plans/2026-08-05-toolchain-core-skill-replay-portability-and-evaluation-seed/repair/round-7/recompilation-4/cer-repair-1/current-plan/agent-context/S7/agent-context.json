@@ -1,0 +1,187 @@
+{
+  "acceptance_ids": [
+    "A-020549DE55A7",
+    "A-08F0A6DFA85C",
+    "A-0AA5C6078659",
+    "A-1838A65E1E17",
+    "A-271C42138118",
+    "A-28DAE7A2742B",
+    "A-3A529B821D0E",
+    "A-4905381404D4",
+    "A-5BE811BF36CA",
+    "A-70D9AD693875",
+    "A-84ED07237472",
+    "A-8506F3D2008E",
+    "A-9039731E981F",
+    "A-B0BE38EC8E00",
+    "A-BCD3E36375D0",
+    "A-C8AA1C34D996",
+    "A-E126F4DB0269",
+    "A-F0D3875FCC19"
+  ],
+  "allowed_paths": [
+    "scripts/sc/_semantic_gate_all_runtime.py",
+    "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+    "scripts/sc/skill_package_replay.py",
+    "scripts/sc/tests/tc_d1_cer/test_s7.py",
+    "scripts/sc/tests/test_805_round6_full_replay.py",
+    "scripts/sc/tests/test_skill_package_replay.py",
+    "scripts/toolchain/candidate_content_paths.py"
+  ],
+  "contracts": [
+    "vdd.semantic-plan-bundle.v1",
+    "(A replay receipt can report success only when every listed component's evidence identity is independent and no cross-component mutable-evidence alias is present.) AND (A reproduction claim is possible only when fresh and pinned diagnostics are equal.) AND (A reproduction claim is possible only when fresh and pinned terminal verdicts are equal.) AND (A successful replay result is accepted only when its receipt contains an independently verified Consumer binding; a missing binding fails the downstream replay assertion.) AND (Consumer closure validation proves both manifest-to-caller and caller-to-manifest coverage.) AND (Distinctness validator confirms non-equal fixture identities and non-overlapping state namespaces for Stable versus Candidate.) AND (Every emitted successful replay verdict contains verifiable current source identity and per-case real execution traceability; an unbound verdict is non-success.) AND (Every replay receipt produced for a platform-dependent execution includes the explicit platform-behavior declaration; omission fails the targeted assertion.) AND (For every applicable Consumer exercised by the lifecycle selector, rollback has a real Prior Route call receipt whose route identity, verdict, and diagnostic category equal that Consumer fixture's recorded Prior Behavior Baseline; the rejection-only/configuration-only fixture fails.) AND (Fresh-process replay evidence binds the exact reconstructed snapshot identities.) AND (No aggregate containing non-executed matrix evidence has status pass or exit code zero.) AND (On Windows, the bounded replay receipt proves supported-platform status and passing detached package validation without reporting Windows as unsupported.) AND (Reconciliation reports zero missing transitions and exactly 100% completion across non-empty entries.) AND (Replay receipts prove equality of every required binding.) AND (The aggregate is non-success whenever an adversarial validator case is evaluated, even if its raw validator process exits zero.) AND (The existing invalid-package case is executed, observes a nonzero validator exit, and any exit-zero invalid-package observation makes replay-matrix fail.) AND (The supported VDD route resolves and returns package content; a missing route fails.) AND (Validation passes only when all three named occurrences have exactly one allowed outcome; any missing outcome fails.)",
+    "Test-author entry: scripts/sc/tests/tc_d1_cer/test_s7.py. Create real tests for every assertion in this slice, using @pytest.mark.cer_assertion for exact assertion IDs. Read the actual production behavior and bound oracle. Never create unconditional RED, skip/xfail, empty cases or prewritten execution receipts. Missing markers are authoring work; only an actual probe decides present/missing."
+  ],
+  "forbidden_paths": [
+    ".agents/skills/bmad-*/**",
+    ".agents/skills/gds-*/**",
+    "PhaseA.Platform",
+    "PhaseA.Platform/**",
+    "_bmad/**",
+    "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/**",
+    "logs/**",
+    "logs/phase-a-innernet",
+    "logs/phase-a-innernet/**",
+    "runtime/phase-a",
+    "runtime/phase-a/**"
+  ],
+  "obligation_ids": [
+    "O-01FA0DFAC7D7",
+    "O-254C4E8B4C4A",
+    "O-2601E49E5C8F",
+    "O-27B7552328F0",
+    "O-633041A99BFB",
+    "O-6E42F4FC1B03",
+    "O-AE90B39B0CEF",
+    "O-BE33AC230A51",
+    "O-C2DAB74BCBB8",
+    "O-C4C975467FC7",
+    "O-CA342F0FD723",
+    "O-CA8B83A27DD6",
+    "O-DE783F6F3DF4",
+    "O-E35AF0C09011",
+    "O-E6AF6B812B2C",
+    "O-EB0672424FD1",
+    "O-FE8E2DC01674",
+    "O-FEC69CA8A599"
+  ],
+  "requirement_ids": [
+    "FR-10",
+    "FR-2",
+    "FR-6",
+    "FR-7",
+    "FR-8",
+    "FR-9",
+    "NFR-2",
+    "NFR-4",
+    "NFR-6",
+    "SM-2",
+    "SM-4",
+    "SM-5",
+    "SM-6"
+  ],
+  "selector_intents": [
+    "Cause fresh replay diagnostics to differ from the pinned categories.",
+    "Cause fresh replay to emit a terminal verdict different from the pinned result.",
+    "Configure Stable and Candidate to reference the same fixture or state namespace and run the distinction validator; require failure identifying the collision.",
+    "Delete both the counterexample and explicit-absence fields for one named seed while retaining the occurrence entry.",
+    "Exercise a declared matrix case without an execution attestation and require aggregate invalidation.",
+    "Exercise a matrix fixture whose component bindings alias one mutable evidence identity and require the isolation guard to reject it.",
+    "Exercise a produced replay verdict with a missing or unbound real-execution trace and require fail-closed rejection.",
+    "Exercise an adversarial validator matrix case and require the success evaluator to reject its success classification.",
+    "Remove one applicable transition result for a non-empty manifest entry and run reconciliation; require failure identifying the missing transition.",
+    "Remove or omit a required VDD, Acceptance, or workflow-model-routing caller from the reconciled Consumer Manifest.",
+    "Replace one required identity or evidence binding in the fresh replay receipt.",
+    "Run route resolution with the supported VDD route removed or unregistered; the check must fail because the route is unavailable.",
+    "Run the existing invalid-package matrix case against an always-successful validator and require replay-matrix to reject its success.",
+    "Run the isolated rollback fixture through the Consumer lifecycle with rejection-only or configuration-only rollback substituted; the runtime observation must fail because no real Prior Route call restores the recorded identity, verdict, and diagnostic category.",
+    "Run the mapped cases against the unchanged real production owner. Required observable: Bidirectional Consumer Manifest-to-route transition report with per-entry completion status and aggregate 100%. Required result: The manifest reconciliation report shows every non-empty entry mapped to all applicable route transitions with 100% completion, including no omitted transitions. Emit CER-A-28DAE7A2742B-BEHAVIOR only immediately before a genuine assertion failure demonstrating this unmet behavior. Do not emit it for setup/import/timeout/missing-marker failures, and do not force already-present behavior to fail.",
+    "Run the mapped cases against the unchanged real production owner. Required observable: Deterministic route-resolution result and successful package readback from the VDD route. Required result: Route resolution returns the supported VDD package handler and the package can be accessed. Emit CER-A-5BE811BF36CA-BEHAVIOR only immediately before a genuine assertion failure demonstrating this unmet behavior. Do not emit it for setup/import/timeout/missing-marker failures, and do not force already-present behavior to fail.",
+    "Run the mapped cases against the unchanged real production owner. Required observable: The replay receipt contains auditable source-identity and per-case execution-trace bindings for the produced verdict. Required result: The verdict binds current source identity and the real process execution records that produced or verified its case results. Emit CER-A-020549DE55A7-BEHAVIOR only immediately before a genuine assertion failure demonstrating this unmet behavior. Do not emit it for setup/import/timeout/missing-marker failures, and do not force already-present behavior to fail.",
+    "Substitute a bound identity before fresh replay.",
+    "Target a successful replay receipt lacking its independent Consumer-verification binding and require the downstream replay assertion to fail.",
+    "Target the Windows replay-support assertion while the receipt lacks the supported Windows platform declaration.",
+    "Target the receipt-structure assertion after removing the explicit platform-behavior declaration."
+  ],
+  "slice_id": "S7",
+  "source_refs": [
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-10",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-2",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-6",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-7",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-8",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-9",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#NFR-2",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#NFR-4",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#NFR-6",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#SM-2",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#SM-4",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#SM-5",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#SM-6"
+  ],
+  "validation_commands": [
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/tc_d1_cer/test_s7.py"
+    ],
+    [
+      "py",
+      "-3",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/test_skill_package_replay.py"
+    ],
+    [
+      "py",
+      "-3",
+      "-m",
+      "pytest",
+      "-q",
+      "scripts/sc/tests/test_skill_package_replay.py",
+      "scripts/sc/tests/test_805_round6_full_replay.py"
+    ],
+    [
+      "py",
+      "-3",
+      "-B",
+      "scripts/sc/tests/test_skill_package_replay.py"
+    ],
+    [
+      "python",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py"
+    ],
+    [
+      "python",
+      "scripts/sc/_semantic_gate_all_runtime.py",
+      "--help"
+    ],
+    [
+      "python",
+      "-m",
+      "pytest",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py"
+    ],
+    [
+      "python",
+      "scripts/sc/skill_package_replay.py",
+      "--help"
+    ],
+    [
+      "py",
+      "-3",
+      "-B",
+      "scripts/sc/tests/test_805_round6_full_replay.py"
+    ],
+    [
+      "py",
+      "-3",
+      "-B",
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+      "--slice",
+      "RMAP-S3"
+    ]
+  ]
+}

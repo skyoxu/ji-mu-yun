@@ -1,0 +1,48 @@
+{
+  "acceptance_ids": [
+    "A-2ED4F060CED6"
+  ],
+  "allowed_paths": [
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py",
+    "scripts/sc/tests/tc_d1_cer/test_s3.py"
+  ],
+  "contracts": [
+    "vdd.semantic-plan-bundle.v1",
+    "A target with an identity different from the requested package is rejected, and no target-dependent operation accepts or uses it.",
+    "Test-author entry: scripts/sc/tests/tc_d1_cer/test_s3.py. Create real tests for every assertion in this slice, using @pytest.mark.cer_assertion for exact assertion IDs. Read the actual production behavior and bound oracle. Never create unconditional RED, skip/xfail, empty cases or prewritten execution receipts. Missing markers are authoring work; only an actual probe decides present/missing."
+  ],
+  "forbidden_paths": [
+    "PhaseA.Platform",
+    "logs/phase-a-innernet",
+    "runtime/phase-a"
+  ],
+  "obligation_ids": [
+    "O-0795BA09F6F1"
+  ],
+  "requirement_ids": [
+    "FR-1"
+  ],
+  "selector_intents": [
+    "Run package validation against a fixture whose declared package identity conflicts with the requested package and assert that acceptance is impossible.",
+    "Run the mapped cases against the unchanged real production owner. Required observable: The package-validation result identifies the target-identity mismatch and records rejection without an accepted target path. Required result: Identity verification rejects the target before inspection or target-dependent operation, with a wrong-target rejection result. Emit CER-A-2ED4F060CED6-BEHAVIOR only immediately before a genuine assertion failure demonstrating this unmet behavior. Do not emit it for setup/import/timeout/missing-marker failures, and do not force already-present behavior to fail."
+  ],
+  "slice_id": "S3",
+  "source_refs": [
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-1"
+  ],
+  "validation_commands": [
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/tc_d1_cer/test_s3.py"
+    ],
+    [
+      "python",
+      "-m",
+      "pytest",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py"
+    ]
+  ]
+}

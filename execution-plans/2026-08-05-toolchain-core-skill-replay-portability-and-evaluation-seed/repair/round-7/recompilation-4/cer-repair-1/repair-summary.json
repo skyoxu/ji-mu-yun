@@ -1,0 +1,150 @@
+{
+  "base_commit": "b4d922a9c4a0cd87741fef7b1a35bfc33431260f",
+  "base_bundle_sha256": "sha256:72906d0bb7e89fdd9d0384da7bd1e0b3955cb4795f1e64cc4d5fab909f6aec0b",
+  "additions": [
+    "FI-B03651A3A6F2",
+    "FI-CE3707D0CB79",
+    "FI-6228A9AA1BDF",
+    "FI-D1D2B61A1294",
+    "FI-07AB456901BA",
+    "FI-7DC2F42449DF",
+    "FI-7426B3E51A6D",
+    "FI-DCA7DF25C67A",
+    "FI-98EAE7FD3FA6",
+    "FI-B49C0B3EDD08",
+    "FI-4EA13EAC6F40",
+    "FI-7D130CF2C9B2",
+    "FI-74BB66F10E26",
+    "FI-1618FE68A168",
+    "FI-C04FEEC4B65A",
+    "FI-97473CC1C1A9",
+    "FI-C411053C0CE5",
+    "FI-6CC3052503D2",
+    "FI-E04E6EFEEB52",
+    "FI-1D18797A99DC",
+    "FI-1FAD71E78CAC",
+    "FI-18B972269E28",
+    "FI-C8F399B3D0C1",
+    "FI-E80C0C6B2738",
+    "FI-9E3F9C85F9A2",
+    "FI-34B2F54538EA",
+    "FI-C7E2A4BE7BD4",
+    "FI-2EB9719C2647",
+    "FI-07CAFEC1C886"
+  ],
+  "bundle_sha256": "sha256:8284d921a325ec05dd741a18d5fce7e5d61185596aadce96b267452758f58548",
+  "newTests": [
+    "scripts/sc/tests/tc_d1_cer/test_s2.py",
+    "scripts/sc/tests/tc_d1_cer/test_s3.py",
+    "scripts/sc/tests/tc_d1_cer/test_s4.py",
+    "scripts/sc/tests/tc_d1_cer/test_s5.py",
+    "scripts/sc/tests/tc_d1_cer/test_s6.py",
+    "scripts/sc/tests/tc_d1_cer/test_s7.py",
+    "scripts/sc/tests/tc_d1_cer/test_s8.py",
+    "scripts/sc/tests/tc_d1_cer/test_s9.py",
+    "scripts/sc/tests/tc_d1_cer/test_s10.py",
+    "scripts/sc/tests/tc_d1_cer/test_s11.py",
+    "scripts/sc/tests/tc_d1_cer/test_s12.py",
+    "scripts/sc/tests/tc_d1_cer/test_s13.py",
+    "scripts/sc/tests/tc_d1_cer/test_s14.py",
+    "scripts/sc/tests/tc_d1_cer/test_s15.py",
+    "scripts/sc/tests/tc_d1_cer/test_s16.py",
+    "scripts/sc/tests/tc_d1_cer/test_s17.py",
+    "scripts/sc/tests/tc_d1_cer/test_s18.py",
+    "scripts/sc/tests/tc_d1_cer/test_s19.py",
+    "scripts/sc/tests/tc_d1_cer/test_s20.py",
+    "scripts/sc/tests/tc_d1_cer/test_s21.py",
+    "scripts/sc/tests/tc_d1_cer/test_s22.py",
+    "scripts/sc/tests/tc_d1_cer/test_s23.py",
+    "scripts/sc/tests/tc_d1_cer/test_s24.py",
+    "scripts/sc/tests/tc_d1_cer/test_s25.py",
+    "scripts/sc/tests/tc_d1_cer/test_s26.py",
+    "scripts/sc/tests/tc_d1_cer/test_s27.py",
+    "scripts/sc/tests/tc_d1_cer/test_s28.py",
+    "scripts/sc/tests/tc_d1_cer/test_s29.py",
+    "scripts/sc/tests/tc_d1_cer/test_s30.py",
+    "scripts/sc/tests/tc_d1_cer/test_s31.py",
+    "scripts/sc/tests/tc_d1_cer/test_s32.py",
+    "scripts/sc/tests/tc_d1_cer/test_s33.py",
+    "scripts/sc/tests/tc_d1_cer/test_s34.py",
+    "scripts/sc/tests/tc_d1_cer/test_s35.py",
+    "scripts/sc/tests/tc_d1_cer/test_s36.py",
+    "scripts/sc/tests/tc_d1_cer/test_s37.py",
+    "scripts/sc/tests/tc_d1_cer/test_s38.py",
+    "scripts/sc/tests/tc_d1_cer/test_s39.py",
+    "scripts/sc/tests/tc_d1_cer/test_s40.py",
+    "scripts/sc/tests/tc_d1_cer/test_s41.py",
+    "scripts/sc/tests/tc_d1_cer/test_s42.py"
+  ],
+  "overlaps": [
+    {
+      "removed": [
+        "scripts/sc/_git_snapshot.py"
+      ],
+      "slice": "S6"
+    },
+    {
+      "removed": [
+        "scripts/sc/_semantic_gate_all_contract.py"
+      ],
+      "slice": "S14"
+    },
+    {
+      "removed": [
+        "scripts/sc/skill_package_replay.py",
+        "scripts/vdd/probe_real_worker.py"
+      ],
+      "slice": "S15"
+    },
+    {
+      "removed": [
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py"
+      ],
+      "slice": "S17"
+    },
+    {
+      "removed": [
+        "scripts/sc/skill_package_replay.py"
+      ],
+      "slice": "S22"
+    },
+    {
+      "removed": [
+        "scripts/sc/skill_package_replay.py"
+      ],
+      "slice": "S24"
+    },
+    {
+      "removed": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py"
+      ],
+      "slice": "S30"
+    },
+    {
+      "removed": [
+        "scripts/vdd/probe_real_worker.py"
+      ],
+      "slice": "S39"
+    },
+    {
+      "removed": [
+        "scripts/sc/skill_package_replay.py"
+      ],
+      "slice": "S41"
+    }
+  ],
+  "static_checks": [
+    "obligations unchanged",
+    "acceptance semantics unchanged",
+    "historical failure intents preserved",
+    "S1 unchanged",
+    "no production snapshot overlap",
+    "failure references resolve",
+    "41 authoring paths declared",
+    "new expected reds eligible",
+    "coverage row counts agree"
+  ],
+  "runtime_behavior_verified": false,
+  "compiler_readiness_granted": false,
+  "authorizes": []
+}

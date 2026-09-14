@@ -1,0 +1,55 @@
+{
+  "acceptance_ids": [
+    "A-FE13B3D622EC"
+  ],
+  "allowed_paths": [
+    "scripts/sc/_semantic_gate_all_runtime.py",
+    "scripts/sc/skill_package_replay.py",
+    "scripts/sc/tests/tc_d1_cer/test_s11.py",
+    "scripts/vdd/probe_real_worker.py"
+  ],
+  "contracts": [
+    "vdd.semantic-plan-bundle.v1",
+    "Exactly one deterministic terminal state is persisted; no run remains indeterminate and budget exhaustion is unsuccessful.",
+    "Test-author entry: scripts/sc/tests/tc_d1_cer/test_s11.py. Create real tests for every assertion in this slice, using @pytest.mark.cer_assertion for exact assertion IDs. Read the actual production behavior and bound oracle. Never create unconditional RED, skip/xfail, empty cases or prewritten execution receipts. Missing markers are authoring work; only an actual probe decides present/missing."
+  ],
+  "forbidden_paths": [
+    "PhaseA.Platform",
+    "logs/phase-a-innernet",
+    "runtime/phase-a"
+  ],
+  "obligation_ids": [
+    "O-7F60D4FAF050"
+  ],
+  "requirement_ids": [
+    "NFR-7"
+  ],
+  "selector_intents": [
+    "Force aggregate timeout or conflicting terminal transitions and verify the execution is rejected unless one deterministic unsuccessful terminal state is recorded.",
+    "Run the mapped cases against the unchanged real production owner. Required observable: The execution result contains a single terminal-state record with deterministic classification, completion reason, and budget outcome. Required result: The aggregate records one deterministic terminal state within the configured time/output budget; budget exhaustion is unsuccessful. Emit CER-A-FE13B3D622EC-BEHAVIOR only immediately before a genuine assertion failure demonstrating this unmet behavior. Do not emit it for setup/import/timeout/missing-marker failures, and do not force already-present behavior to fail."
+  ],
+  "slice_id": "S11",
+  "source_refs": [
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#NFR-7"
+  ],
+  "validation_commands": [
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/tc_d1_cer/test_s11.py"
+    ],
+    [
+      "python",
+      "-m",
+      "pytest",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py"
+    ],
+    [
+      "python",
+      "-m",
+      "pytest",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py"
+    ]
+  ]
+}
