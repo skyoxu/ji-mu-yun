@@ -479,7 +479,7 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         if not isinstance(cached, Mapping):
             raise ValueError("V3 group repair cache is malformed")
         projected = _project_current_output(cached, refs_by_oid)
-        if not sc._v3_cache_requires_contract_refresh(projected, root):
+        if not sc._v3_cache_requires_contract_refresh(projected, root, payload):
             return projected
 
     grouped_prompt = (
@@ -513,6 +513,15 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         " with that same identity; a changed identity is rejected. For obligation O-B9EAA8169232"
         " specifically, include the literal original-binding reconstruction step, same-identity"
         " replay step, and identity-mismatch rejection in behavior_change and terminal_predicate."
+        " For constraint obligations, especially requirement_type Governance, never use failure_family"
+        " expected-red: expected-red is reserved for executable behavior/quality obligations that"
+        " represent a runtime marker. Use semantic-contract-gap, artifact-integrity, target-binding-failure,"
+        " or another non-runtime family matching the actual constraint instead."
+        " Use only verified repository paths for selectors and production owners. The real worker probe is"
+        " scripts/vdd/probe_real_worker.py (not scripts/sc/probe_real_worker.py). There is no"
+        " .agents/skills/vdd-conformance-exact-cover/tests/validators/semantic_handoff_negative.py;"
+        " use an existing validator such as .agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py"
+        " when a negative validator fixture is required, or declare a genuinely new file in planned_new_files."
     )
     backend = resolve_llm_backend(None)
     def request_chunk(ids: list[str], label: str) -> dict[str, Any]:
@@ -523,7 +532,7 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         if chunk_cache.is_file():
             raw = json.loads(chunk_cache.read_text(encoding="utf-8"))
             projected = _project_current_output(raw, _obligation_refs(chunk_payload))
-            if not sc._v3_cache_requires_contract_refresh(projected, root):
+            if not sc._v3_cache_requires_contract_refresh(projected, root, chunk_payload):
                 return raw
         # A prior grouped request may have timed out after each exact child was
         # successfully cached. Recompose that parent deterministically before
@@ -540,7 +549,7 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
                     break
                 child = json.loads(child_cache.read_text(encoding="utf-8"))
                 projected_child = _project_current_output(child, _obligation_refs(child_payload))
-                if sc._v3_cache_requires_contract_refresh(projected_child, root):
+                if sc._v3_cache_requires_contract_refresh(projected_child, root, child_payload):
                     recovered = {}
                     break
                 recovered.update(child["obligation_contracts"])
@@ -596,7 +605,7 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         if chunk_cache.is_file():
             raw_chunk = json.loads(chunk_cache.read_text(encoding="utf-8"))
             projected_chunk = _project_current_output(raw_chunk, _obligation_refs(chunk_payload))
-            if sc._v3_cache_requires_contract_refresh(projected_chunk, root):
+            if sc._v3_cache_requires_contract_refresh(projected_chunk, root, chunk_payload):
                 raw_chunk = request_chunk(ids, f"{chunk_index:02d}")
         else:
             output = out_dir / ".compiler-work" / f"{chunk_stage}-last-message.json"
@@ -641,12 +650,12 @@ def group_repair_transport(*, root, out_dir, stage: str, payload: Mapping[str, A
         return _BASE_DOMAIN_TRANSPORT(root=root, out_dir=out_dir, stage=stage, payload=payload, prompt=prompt, worker_cache=worker_cache)
     refs_by_oid = _obligation_refs(payload)
     if worker_cache and stage in worker_cache and not sc._v3_cache_requires_contract_refresh(
-            _project(worker_cache[stage], refs_by_oid=refs_by_oid) if isinstance(worker_cache[stage], Mapping) else {}, Path(root)):
+            _project(worker_cache[stage], refs_by_oid=refs_by_oid) if isinstance(worker_cache[stage], Mapping) else {}, Path(root), payload):
         raw = worker_cache[stage]
         if not isinstance(raw, Mapping):
             raise ValueError("injected V3 repair cache must be object")
         value = _project(raw, refs_by_oid=refs_by_oid) if "groups" in raw or "obligation_contracts" in raw else dict(raw)
-        if sc._v3_cache_requires_contract_refresh(value, Path(root)):
+        if sc._v3_cache_requires_contract_refresh(value, Path(root), payload):
             value = _live_group_repair(root=Path(root), out_dir=Path(out_dir), payload=payload, prompt=prompt)
     else:
         value = _live_group_repair(root=Path(root), out_dir=Path(out_dir), payload=payload, prompt=prompt)

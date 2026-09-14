@@ -210,7 +210,9 @@ def _parse_json_output(text: str) -> Mapping[str, Any]:
     return value
 
 
-def _v3_cache_requires_contract_refresh(value: Mapping[str, Any], root: Path) -> bool:
+def _v3_cache_requires_contract_refresh(
+    value: Mapping[str, Any], root: Path, payload: Mapping[str, Any] | None = None,
+) -> bool:
     """Bypass only V3 caches that violate the current execution contract."""
     hints = value.get("slice_hints")
     if not isinstance(hints, list) and isinstance(value.get("obligation_contracts"), Mapping):
@@ -218,6 +220,44 @@ def _v3_cache_requires_contract_refresh(value: Mapping[str, Any], root: Path) ->
                  if isinstance(item, Mapping)]
     if not isinstance(hints, list):
         return False
+    # A cached inline V3 response does not carry the frozen obligation kind in
+    # its failure intent.  Re-evaluate only a cache that binds expected-red to
+    # a current constraint/Governance obligation; other successful chunks stay
+    # reusable after this eligibility rule was added.
+    obligations = payload.get("obligations") if isinstance(payload, Mapping) else None
+    if not isinstance(obligations, list) and isinstance(payload, Mapping):
+        nested = payload.get("input")
+        obligations = nested.get("obligations") if isinstance(nested, Mapping) else None
+    known = {
+        item.get("obligation_id"): item
+        for item in obligations or []
+        if isinstance(item, Mapping) and isinstance(item.get("obligation_id"), str)
+    }
+    failures = value.get("failure_intents")
+    if isinstance(failures, list) and known:
+        for failure in failures:
+            if not isinstance(failure, Mapping) or failure.get("failure_family") != "expected-red":
+                continue
+            ids = failure.get("obligation_ids")
+            if not isinstance(ids, list):
+                continue
+            for oid in ids:
+                obligation = known.get(oid)
+                if (isinstance(obligation, Mapping)
+                        and (obligation.get("obligation_kind") not in {"behavior", "quality"}
+                             or obligation.get("requirement_type") == "Governance")):
+                    return True
+    contracts = value.get("obligation_contracts")
+    if isinstance(contracts, Mapping):
+        for oid, contract in contracts.items():
+            obligation = known.get(oid)
+            failures = contract.get("failure_intents") if isinstance(contract, Mapping) else None
+            if (isinstance(obligation, Mapping) and isinstance(failures, list)
+                    and any(isinstance(failure, Mapping) and failure.get("failure_family") == "expected-red"
+                            for failure in failures)
+                    and (obligation.get("obligation_kind") not in {"behavior", "quality"}
+                         or obligation.get("requirement_type") == "Governance")):
+                return True
     for hint in hints:
         if not isinstance(hint, Mapping):
             continue
@@ -245,13 +285,13 @@ def invoke_worker(*, root: Path, out_dir: Path, stage: str, payload: Mapping[str
         value = json.loads(cache_path.read_text(encoding="utf-8"))
         if not isinstance(value, Mapping):
             raise ValueError("worker cache is malformed")
-        if stage != "v3" or not _v3_cache_requires_contract_refresh(value, root):
+        if stage != "v3" or not _v3_cache_requires_contract_refresh(value, root, payload):
             return value
     if worker_cache and stage in worker_cache:
         value = worker_cache[stage]
         if not isinstance(value, Mapping):
             raise ValueError(f"injected worker cache {stage} must be object")
-        if stage != "v3" or not _v3_cache_requires_contract_refresh(value, root):
+        if stage != "v3" or not _v3_cache_requires_contract_refresh(value, root, payload):
             atomic_json(cache_path, value)
             return value
     sc = root / "scripts" / "sc"
