@@ -219,8 +219,11 @@ def q2_author_red(
     argv, target_refs, fixture_refs = _descriptor_inputs(bundle, plan_dir, slice_id)
     selected = _slice(bundle, slice_id)
     missing = [path for path in sorted(set(target_refs + fixture_refs)) if not (ROOT / path).is_file()]
-    planned = set(str(item) for item in selected.get("planned_new_files", []))
-    worker_required = bool(missing or planned.intersection(target_refs + fixture_refs))
+    # A planned-new path requires authoring only until it has been materialized.
+    # On recovery, its current bytes are an explicit candidate input; repeatedly
+    # invoking a model author merely because the plan retains its declaration
+    # prevents a bounded probe from resuming after a test-only repair.
+    worker_required = bool(missing)
     if "behavior_routing" in bundle:
         # A new plan may bind existing tests with new assertion IDs. This only
         # decides whether authoring is needed; the probe alone proves behavior.
