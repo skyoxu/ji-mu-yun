@@ -49,3 +49,8 @@ path/hash references under the controlled capability-evidence root. Callers
 cannot supply or synthesize a capability-proof dictionary; activation requires
 the bound producer receipt, its successful process result, and representative
 shadow execution receipts to replay against the requested route identity.
+
+## Bounded V3 cache repair
+
+For an unchanged frozen input, resume the original failed output directory with the canonical compiler's `--resume-from first-failed-stage`. Keep its disk caches; `--worker-cache` is explicit fixture injection and is not a resume-cache selector. An invalid inline V3 chunk is checked per obligation so valid peer contracts are retained and only invalid contracts are requested again. Invalid cache bytes remain in sidecars. Missing-selector diagnostics guide the worker but never create path authority or relax execution-contract validation. A changed source identity still requires its affected stages to be revalidated; there is no V3-only bypass.
+

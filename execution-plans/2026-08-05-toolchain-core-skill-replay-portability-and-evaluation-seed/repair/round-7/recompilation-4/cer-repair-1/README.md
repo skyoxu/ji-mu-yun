@@ -1,5 +1,20 @@
 # CER execution-contract repair candidate
 
+## Current continuation: selective V3 cache repair
+
+This section supersedes the new-input compilation command below for the reported V3 selector failure. Do not continue the interrupted `compiler-requirements.md` attempt merely to repair old V3 selectors. Retain that attempt and its partial progress as historical.
+
+The repository V3 group repair now retains individually valid contracts from an invalid cached chunk and requests only its invalid obligation IDs. The worker receives the rejected missing selector names as diagnostic context, not authority to create arbitrary files. Existing domain, path, expected-red eligibility and V4 checks still apply. Prior invalid cache bytes are retained in sidecars.
+
+In the local checkout, locate the **original failed attempt** that produced the c3f814e2 V3 error. Verify its source index refers to the original `recompilation-4/assembled-requirements.md`, and retain that attempt's `.compiler-cache` and `.compiler-work`. Those uncommitted files are not available remotely, so no exact local attempt path or cache-hit count is asserted here. Do not use the interrupted new-input attempt or mix caches across input identities.
+
+Resume through `scripts/vdd/compile_plan.py` using that original requirements path, that same original failed `--out-dir`, its original profile/companions, and `--resume-from first-failed-stage`. Write the new `--result-json` to a fresh path under `logs/08-05-real-skill-replay/`. Do not pass `--worker-cache`: that option is explicit fixture injection, not ordinary resume, and clears the disk replay cache.
+
+V0/V2 and other deterministic checks may run again; unchanged V1 worker calls use their existing matching caches. This is not a V3-only bypass. If an unrelated V1 request actually launches, stop and compare its input/cache identity instead of deleting caches or widening the source. If the original failed attempt/cache is unavailable, this targeted recovery cannot be promised; preserve the evidence and report that specific gap.
+
+Only a real canonical result can grant plan-ready. The online tests exercise the repair orchestration with a fixture backend; they do not run the private local attempt or live semantic workers. C3 stays OPEN, authorizes=[] and current-run evidence must be rebound after actual publication.
+
+
 Base commit: `b4d922a9c4a0cd87741fef7b1a35bfc33431260f`.
 
 This candidate addresses the blocked Quick Dev handoff. It does not publish a plan-ready result, authorize production changes, or claim runtime verification. The original current-plan and current-run evidence remain unchanged.

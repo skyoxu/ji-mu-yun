@@ -524,8 +524,8 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         " when a negative validator fixture is required, or declare a genuinely new file in planned_new_files."
     )
     backend = resolve_llm_backend(None)
-    def request_chunk(ids: list[str], label: str) -> dict[str, Any]:
-        """Request one exact chunk, bisecting only a timed-out multi-item request."""
+    def request_chunk(ids: list[str], label: str, rejected=None) -> dict[str, Any]:
+        """Repair invalid cached contracts individually; retain valid peers."""
         chunk_payload = _narrow_repair_payload(payload, ids)
         chunk_stage = f"{_GROUP_STAGE}-chunk-{label}"
         chunk_cache = cache_dir / sc._worker_cache_key(chunk_stage, chunk_payload)
@@ -533,6 +533,25 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
             raw = json.loads(chunk_cache.read_text(encoding="utf-8"))
             projected = _project_current_output(raw, _obligation_refs(chunk_payload))
             if not sc._v3_cache_requires_contract_refresh(projected, root, chunk_payload):
+                return raw
+            rejected = raw
+        if len(ids) > 1 and isinstance(rejected, Mapping):
+            contracts = rejected.get("obligation_contracts")
+            if isinstance(contracts, Mapping):
+                # ADR-0041: validate the complete frozen domain before narrowing;
+                # never silently discard foreign or missing cached obligations.
+                _project_current_output(rejected, _obligation_refs(chunk_payload))
+                repaired = {}
+                for index, oid in enumerate(ids, start=1):
+                    single = {"obligation_contracts": {oid: contracts[oid]}}
+                    single_payload = _narrow_repair_payload(payload, [oid])
+                    projected = _project_current_output(single, _obligation_refs(single_payload))
+                    if sc._v3_cache_requires_contract_refresh(projected, root, single_payload):
+                        single = request_chunk([oid], f"{label}-{index}", rejected=single)
+                    repaired.update(single["obligation_contracts"])
+                raw = {"obligation_contracts": repaired}
+                _project_current_output(raw, _obligation_refs(chunk_payload))
+                _write_refreshable_json(chunk_cache, raw)
                 return raw
         # A prior grouped request may have timed out after each exact child was
         # successfully cached. Recompose that parent deterministically before
@@ -563,7 +582,23 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         schema_path = transport._schema_path(out_dir, chunk_stage, _group_schema(chunk_payload))
         extra_args = ["--output-schema", str(schema_path)] if backend == "codex-cli" else []
         chunk_prompt = (grouped_prompt + "\n\nCHUNK BINDING: return contracts for these and only these frozen obligation IDs: "
-                        + ",".join(ids) + "\n\nINPUT:\n" + json.dumps(chunk_payload, ensure_ascii=False, sort_keys=True))
+                        + ",".join(ids))
+        if isinstance(rejected, Mapping):
+            rejected_projection = _project_current_output(rejected, _obligation_refs(chunk_payload))
+            missing = sorted({
+                path for hint in rejected_projection["slice_hints"]
+                for path in hint.get("execution_snapshot_paths", [])
+                if path not in hint.get("planned_new_files", []) and not (root / path).is_file()
+            })
+            if missing:
+                chunk_prompt += (
+                    "\nREJECTED SELECTOR TARGETS (absent and not planned): " + json.dumps(missing)
+                    + ". Read the actual repository tests and select a semantically appropriate existing entry, "
+                    "or declare an exact new test only when supported by the frozen source and write boundary. "
+                    "Keep validation_commands and snapshot/planned/write fields consistent. Do not create placeholders, "
+                    "weaken the oracle, or treat file presence as behavior evidence."
+                )
+        chunk_prompt += "\n\nINPUT:\n" + json.dumps(chunk_payload, ensure_ascii=False, sort_keys=True)
 
         def run(extra: list[str]):
             return worker_call(run_llm_exec, progress_dir=out_dir, progress_stage=f"v3-schema-repair-chunk-{label}",
