@@ -296,6 +296,9 @@ def verify_materialization():
 
 
 def main():
+    if (PLAN / "rebuild-inputs/prepared-inputs.tar.xz").is_file():
+        subprocess.run([sys.executable, "-B", str(PLAN / "tools/restore_prepared_input.py")], cwd=ROOT, shell=False, check=True)
+        return
     guard_tests()
     if not MARKER.exists():
         assemble()

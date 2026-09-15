@@ -1,0 +1,937 @@
+{
+  "archive_sha256": "b55adb57fd7223398c6315a5cad2374a350e57bc7884af6a73643b9839b1a915",
+  "authorizes": [],
+  "baseline_commit": "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+  "ci_attempt": {
+    "conclusion": "failure",
+    "executed_steps": 0,
+    "log_available": false,
+    "reason": "Not established by available API output; not counted as validation",
+    "run_id": 34936745493
+  },
+  "delivery": "Complete prepared input archive; restore before using root-level machine projections",
+  "formal_workflow_called": false,
+  "guard_code_ref": "acc058e0c88b578546f735444d45cf4b63980d03",
+  "guard_regression_output": ".............................                                            [100%]\n29 passed in 0.17s\n",
+  "model_called": false,
+  "negative_checks": [
+    "undeclared-test-path",
+    "acceptance-projection-drift"
+  ],
+  "phase_tests_executed": false,
+  "product_completion_claim": false,
+  "production_baseline_commit": "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+  "production_owners_unchanged_from_git_baseline": true,
+  "production_sha256": {
+    "PhaseA.Platform/Data/AdminAccountAuditEvent.cs": "sha256:e843aeff082f649b74e7870dbc8424205b7d858ad3c0b70f9c3d702dca019d45",
+    "PhaseA.Platform/Data/PhaseAMetadataStore.cs": "sha256:8eae283f747174ff87a2fab0e23d50d0edacf730ed07f1fdf90d1380565ba0f3",
+    "PhaseA.Platform/Data/SqliteMetadataSchema.cs": "sha256:dd812e61e009e7064e1a89e0e48a08731dccc454ae04735e8e81a7172626cd3b",
+    "PhaseA.Platform/Data/SqliteMigrationService.cs": "sha256:75a2064dba7938ba7f8ac02e7d439216e6dd829e5570144d19574f9c52cdf819",
+    "PhaseA.Platform/Program.cs": "sha256:bda047c916281fd94fc1156c7ec37acca7a3d5e9495705b5aa5c55bf19d248cc",
+    "PhaseA.Platform/Projects/ProjectCreationService.cs": "sha256:47a7c390cce2d67743df842eb916d41b16aa90b331bef5f25b8e1b9b90fb15c8",
+    "PhaseA.Platform/Readback/ArtifactReadbackService.cs": "sha256:d18a3bc7acb2e15cfca4483cba7a9e116c88251b17c6068169eb54ba261e66e8",
+    "PhaseA.Platform/Readback/ProjectAssetPreviewTicketService.cs": "sha256:ccb7ff6877f2933df4fc62cbaf0c12beb09292259ff8c83fd9e8f510e2e3665a",
+    "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs": "sha256:3268425fdd6209efc92842ceacf53aa22a8d05eaee81cf0afad4b3b135798669",
+    "PhaseA.Platform/Runs/HeavyRunnerQueueService.cs": "sha256:89cc5774800376f2536501fe99e4150f87e0351a8e0685c11fbea21a9222dbc7",
+    "PhaseA.Platform/Runs/HostedProcessRunner.cs": "sha256:bdfa2fb9a0fbd9b1faeaafa0ae257832558790fa33d45b838ddb5f26eaccb216",
+    "PhaseA.Platform/Runs/RunCancellationService.cs": "sha256:df739684513e3850cbc74373f8b16f65e0c53b229fa09e4244db0d5c75a04a6f",
+    "PhaseA.Platform/Security/PhaseAAuth.cs": "sha256:561237da2cdd1156c6f195ed3d722a7d6b4bf4f784dff0d29479e13ca9bc3e28",
+    "PhaseA.Platform/Security/RequestContext.cs": "sha256:15371d1c07bb036b5fc5a387cf03ca0dbf52b00a02639bcf373badc3106d07e4",
+    "PhaseA.Platform/Security/RunnerIsolationPolicy.cs": "sha256:efada5047a2523fac980dde1b4660f3a4f3157cb612cf796bb2088212411ba9a",
+    "PhaseA.Platform/Workflow/SecretRedactionPolicy.cs": "sha256:d64c592a6f7b4f10f4ed5ec8a50e7536de9e23c2a9587293d0020c37c227e926",
+    "PhaseA.Platform/Workspaces/RestoreAttempt.cs": "sha256:48f0cf301b496c3ae5568ada44e37f0b4a1567b4cc0bf0707d7e14693dadcca1",
+    "PhaseA.Platform/Workspaces/RestoreService.cs": "sha256:f98408491f1622a9c2ae5fc51966dce5d998b1de0f11f711f60abfe7de18f9bd",
+    "PhaseA.Platform/Workspaces/SnapshotManifest.cs": "sha256:6492044c28fa0d4f5866b28eafc05e4208341bef5520d51145f628c93321cfd6",
+    "PhaseA.Platform/Workspaces/WorkspacePathPolicy.cs": "sha256:29f8b5573b3b551f319de66a92054780d434508c852e0b30fd160370ea95de27",
+    "PhaseA.Platform/Workspaces/WorkspaceStorageService.cs": "sha256:7fcff2ac1bd054c920070664483128f6084df9795d92de9d4c71ab6cdae7c471"
+  },
+  "projection_consistency": "passed",
+  "public_preflight": [
+    {
+      "profile": "standard",
+      "slice_id": "S12",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S47",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S69",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S66",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S29",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S79",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S11",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S15",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S18",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S39",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S55",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S38",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S58",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S76",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S9",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S10",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S23",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S2",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S54",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S43",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S68",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S78",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S3",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S22",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S33",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S57",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S67",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S21",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S63",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S35",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S50",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S56",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S61",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S73",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S80",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S20",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S30",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S48",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S59",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S75",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S6",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S8",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S60",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S74",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S40",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S4",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S19",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S24",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S26",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S31",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S34",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S37",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S52",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S65",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S14",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S16",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S17",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S28",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S44",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S49",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S51",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S62",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S1",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S13",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S25",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S32",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S42",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S45",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S64",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S5",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S27",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S53",
+      "status": "preflight-passed"
+    },
+    {
+      "profile": "standard",
+      "slice_id": "S46",
+      "status": "preflight-passed"
+    }
+  ],
+  "routing_contract": "passed",
+  "schema": "phase-b-c.direct-input-validation.v1",
+  "scope": "Prepared input only; no Phase implementation completion",
+  "semantic_bundle_sha256": "sha256:7bbb68881d4fefe8ed329880e6fb9d98cef77fd3ef5a488b22d25ff11293970b",
+  "semantic_contract": "passed",
+  "slices": [
+    {
+      "bound_assertions": 4,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S12"
+    },
+    {
+      "bound_assertions": 4,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S47"
+    },
+    {
+      "bound_assertions": 5,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S69"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S66"
+    },
+    {
+      "bound_assertions": 3,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S29"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S79"
+    },
+    {
+      "bound_assertions": 4,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S11"
+    },
+    {
+      "bound_assertions": 4,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S15"
+    },
+    {
+      "bound_assertions": 6,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S18"
+    },
+    {
+      "bound_assertions": 3,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S39"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S55"
+    },
+    {
+      "bound_assertions": 3,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S38"
+    },
+    {
+      "bound_assertions": 8,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S58"
+    },
+    {
+      "bound_assertions": 3,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S76"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S9"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S10"
+    },
+    {
+      "bound_assertions": 3,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S23"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S2"
+    },
+    {
+      "bound_assertions": 13,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S54"
+    },
+    {
+      "bound_assertions": 19,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S43"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S68"
+    },
+    {
+      "bound_assertions": 28,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S78"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S3"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S22"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S33"
+    },
+    {
+      "bound_assertions": 3,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S57"
+    },
+    {
+      "bound_assertions": 3,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S67"
+    },
+    {
+      "bound_assertions": 18,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S21"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S63"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S35"
+    },
+    {
+      "bound_assertions": 19,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S50"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S56"
+    },
+    {
+      "bound_assertions": 5,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S61"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S73"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S80"
+    },
+    {
+      "bound_assertions": 4,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S20"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S30"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S48"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S59"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S75"
+    },
+    {
+      "bound_assertions": 3,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S6"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S8"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S60"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S74"
+    },
+    {
+      "bound_assertions": 11,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S40"
+    },
+    {
+      "bound_assertions": 34,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S4"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S19"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S24"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S26"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S31"
+    },
+    {
+      "bound_assertions": 14,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S34"
+    },
+    {
+      "bound_assertions": 7,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S37"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S52"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S65"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S14"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S16"
+    },
+    {
+      "bound_assertions": 12,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S17"
+    },
+    {
+      "bound_assertions": 3,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S28"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S44"
+    },
+    {
+      "bound_assertions": 15,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S49"
+    },
+    {
+      "bound_assertions": 2,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S51"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S62"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S1"
+    },
+    {
+      "bound_assertions": 6,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S13"
+    },
+    {
+      "bound_assertions": 3,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S25"
+    },
+    {
+      "bound_assertions": 6,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S32"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S42"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S45"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S64"
+    },
+    {
+      "bound_assertions": 31,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S5"
+    },
+    {
+      "bound_assertions": 1,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S27"
+    },
+    {
+      "bound_assertions": 9,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S53"
+    },
+    {
+      "bound_assertions": 3,
+      "dependency_fingerprint": "passed",
+      "planned_preflight": "passed",
+      "probe_descriptor_contract": "passed",
+      "slice_id": "S46"
+    }
+  ],
+  "source_manifest": "passed",
+  "source_refs_checked": 56,
+  "status": "input-checks-passed"
+}

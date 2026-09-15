@@ -1,0 +1,461 @@
+{
+  "baseline_commit": "acc058e0c88b578546f735444d45cf4b63980d03",
+  "delete": [
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S7/agent-context.json",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S36/agent-context.json",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S41/agent-context.json",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S70/agent-context.json",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S71/agent-context.json",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S72/agent-context.json",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S77/agent-context.json"
+  ],
+  "files": [
+    {
+      "bytes": 2355,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/implementation-slices.md",
+      "sha256": "3e6cbc41012c2d99bbdfda02d8d6a7c929cb1434f23970d8fd0d2ecb467fd098"
+    },
+    {
+      "bytes": 207044,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/final-plan-coverage.v1.json",
+      "sha256": "69d6921a1ed9dd5d618856af79331d743a9dd8416508bfbbc0ae5455439208b9"
+    },
+    {
+      "bytes": 11698,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/input-repair-dispositions.v1.json",
+      "sha256": "fa02ff9bec469f67bc2e4c7e642e560c4c5a6e2a769dbe00ce87b33fee64472f"
+    },
+    {
+      "bytes": 179907,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/failure-intents.v1.json",
+      "sha256": "e2ddf867fe444eef7f57fc3635030839a762f869dc3e53ae620b052eda6c9333"
+    },
+    {
+      "bytes": 134048,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/input-repair-failure-intents.v1.json",
+      "sha256": "a635e749412c48254a3a4f9e86c26a1aa8cbd51fac6a5093bb28507f479380e1"
+    },
+    {
+      "bytes": 7492,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/LOCAL-HANDOFF.md",
+      "sha256": "6d59d23cfb19bfd6c7983a739fd202d6b8697879794b0d7719699216148efc90"
+    },
+    {
+      "bytes": 1956,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/implementation-order.v1.json",
+      "sha256": "c998ea0e7cbc79ce5d2b0af8091a2fb85a2b4ecdd6520d0314b72628c8a98cc5"
+    },
+    {
+      "bytes": 415465,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/slices.v1.json",
+      "sha256": "88d8339fa1eb8b7e7512d150e56dec133345b23190d70cd730fdecd19b959b79"
+    },
+    {
+      "bytes": 95740,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/pre-slice-coverage.v1.json",
+      "sha256": "062174b95a0f2b7c3b8af2817b15ca732848020b782160630c40c9d567adb053"
+    },
+    {
+      "bytes": 2166,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/input-repair-source-index.v1.json",
+      "sha256": "63daa4675c549522e7f1685936097e1825ce69d5cae1dfbf069f2c251d0ecd65"
+    },
+    {
+      "bytes": 3987136,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/semantic-plan-bundle.v1.json",
+      "sha256": "7bbb68881d4fefe8ed329880e6fb9d98cef77fd3ef5a488b22d25ff11293970b"
+    },
+    {
+      "bytes": 223163,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/implementation-case-map.v1.json",
+      "sha256": "02295742ce88b69e7d36ebec76b871d71ef74e0f80c8b5af18ba4cb414f47799"
+    },
+    {
+      "bytes": 513126,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/acceptances.v1.json",
+      "sha256": "76872ee06b0792300a4b74ce240bd26bb96f97f8f7d2bd5966bfb11838008521"
+    },
+    {
+      "bytes": 34943,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/implementation-repair-input.md",
+      "sha256": "e0be2cbeaab3197a45cfe8f763c4ebb836e885daf3904f0a809b99bab75067cd"
+    },
+    {
+      "bytes": 1499,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/00-index.md",
+      "sha256": "e906f59ff01057ef3b0c2d05aa9c23fcf6aee8e4efdecc34cdd57e7213233909"
+    },
+    {
+      "bytes": 379177,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/obligations.v1.json",
+      "sha256": "83a0ee67a40cd88327508f3e8f0443e6416cfb188a28282949a9d02e71c5a194"
+    },
+    {
+      "bytes": 4299,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S42/agent-context.json",
+      "sha256": "742c83a0eb92f2fd5f8df6fb33f2cb17f0ab73bda31d9f39ffda3cde980b1add"
+    },
+    {
+      "bytes": 5287,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S47/agent-context.json",
+      "sha256": "987c6cd851b6a77013871d6e841bccbabc810b856b9df894c66901d962834086"
+    },
+    {
+      "bytes": 5738,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S69/agent-context.json",
+      "sha256": "5ee096fd53b2f0343f4170419b3e16cd523eb10a080de5751dace8f64fbc4cd5"
+    },
+    {
+      "bytes": 4298,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S10/agent-context.json",
+      "sha256": "ffe06e5396b9b7cc4ee327ab3a8b2e8deb7621e8dff6a637785fabfd8fc88bfa"
+    },
+    {
+      "bytes": 8858,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S54/agent-context.json",
+      "sha256": "4b8f9e3be85045e314dea8647ba86dd8d75254b52cde5ed5ed209977412dbb84"
+    },
+    {
+      "bytes": 10107,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S21/agent-context.json",
+      "sha256": "aa1214ac2dbda4607babb8dd7a457e065370f296aea5b42a767551ad446139ea"
+    },
+    {
+      "bytes": 5366,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S12/agent-context.json",
+      "sha256": "9f156fa8250c5eb1a12c68ab14b0364662829fef7f01e1266b3fe68408ad5210"
+    },
+    {
+      "bytes": 4361,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S44/agent-context.json",
+      "sha256": "d9eb24b30f6012dd55cd97b946d7892008507f77e9ad0a36116caaa35b0f20e5"
+    },
+    {
+      "bytes": 8111,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S34/agent-context.json",
+      "sha256": "800d750a32f254e99247bdc90462f54b944d68e865934037aa7e4c867940e100"
+    },
+    {
+      "bytes": 5469,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S20/agent-context.json",
+      "sha256": "7b897648c02f906a260c8c2dda0205d06722292307225890ddf0c8ccce6fecdf"
+    },
+    {
+      "bytes": 4702,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S73/agent-context.json",
+      "sha256": "f69526f5f225c6b54f7ba24f80b2a6c03883835c9e91e5b4c6dd5ec0bb3832c4"
+    },
+    {
+      "bytes": 4334,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S27/agent-context.json",
+      "sha256": "251a8d804ad7f6744a40b16a989ffdf8e19c8cfdfd1936a4f56c51b0b9ac2e50"
+    },
+    {
+      "bytes": 16561,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S4/agent-context.json",
+      "sha256": "9f01a9a8e39db34c354a3a0457b7747c52fac268cbd9ff66374f06aea2e136a4"
+    },
+    {
+      "bytes": 5992,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S61/agent-context.json",
+      "sha256": "57462486812b668be45589e4ad763573d64a73f491be3d25a43834708e4981b1"
+    },
+    {
+      "bytes": 4842,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S57/agent-context.json",
+      "sha256": "42c14aef089d16e6c089998534e9b921ab768cb55448198c18a184aa947c07f7"
+    },
+    {
+      "bytes": 4344,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S74/agent-context.json",
+      "sha256": "7e4e255e81e78861713f44857d5c146893c3218c01b2c40e1af05d31484cc0ff"
+    },
+    {
+      "bytes": 4285,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S2/agent-context.json",
+      "sha256": "00a941b291446090f0d3ae7e195cb5525deadea7e64b5cdae489085187d1fc2d"
+    },
+    {
+      "bytes": 8159,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S40/agent-context.json",
+      "sha256": "ec3aeab5ad33894f23d2e6b448ca4920c75cd03e026ae7369aa5b131e6f5aef0"
+    },
+    {
+      "bytes": 4354,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S31/agent-context.json",
+      "sha256": "8887d3b934213f9a872b3b30e2b01943b0bcfb7e64dc9749d69c48e5464ba9f9"
+    },
+    {
+      "bytes": 4283,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S62/agent-context.json",
+      "sha256": "7eb8c385388b86a241783170508c4ba6775bfcabe9eca268a5fcc0220e6fd289"
+    },
+    {
+      "bytes": 4873,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S39/agent-context.json",
+      "sha256": "ac231a6752fa214d7edc6c22b30aa19200a9121a94598166f5ddafd7bf78a861"
+    },
+    {
+      "bytes": 4936,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S59/agent-context.json",
+      "sha256": "2e32fb4f392eeabc7100a5ac4347d3aeafc9fbbb416e6003afcf19e0e25aa3a2"
+    },
+    {
+      "bytes": 7200,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S32/agent-context.json",
+      "sha256": "82156b4108d3e9dfad807a43bfe5911094ab65082a048ed9a2f312978d94294a"
+    },
+    {
+      "bytes": 5304,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S6/agent-context.json",
+      "sha256": "a59f3e8c8b05fa9fd738817e157b2b1e8e3f122a34666532ae40f549f5d21ab6"
+    },
+    {
+      "bytes": 4864,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S60/agent-context.json",
+      "sha256": "c0a3a62349193c360a0f70df01b235b710710f73b3abcfbbb1e5b3579cc4159b"
+    },
+    {
+      "bytes": 4306,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S35/agent-context.json",
+      "sha256": "eb8e9ce4a4cc0ebaad3c1e9d2cf9e4c7a75de4b695d3794a366692aff00456df"
+    },
+    {
+      "bytes": 4264,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S19/agent-context.json",
+      "sha256": "1e51957512fe9544ca21ea78cc57c5886763b29c693e70599885e0888297aa62"
+    },
+    {
+      "bytes": 4258,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S64/agent-context.json",
+      "sha256": "52dce8fa885f0f37da0723086d8fb15ea1db1124cb7e9a28e511c67afc9de731"
+    },
+    {
+      "bytes": 9503,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S17/agent-context.json",
+      "sha256": "43e58062a9ce8c523eb0453cbc68b30885d2341691b330e3cc571e9b159904c2"
+    },
+    {
+      "bytes": 4887,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S23/agent-context.json",
+      "sha256": "101da7027ce68c7c142b1643cec2c69162b5a171a2093c779929fe3700442c2c"
+    },
+    {
+      "bytes": 4576,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S16/agent-context.json",
+      "sha256": "32c94c6df30d85b6b5c038c1a97341eef6c08237b28032f0373f8a02228b4dda"
+    },
+    {
+      "bytes": 13918,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S5/agent-context.json",
+      "sha256": "1061e4a0cd800672ebcdfa262dd71123469fcbc9a1ca7f560e6a7bab7f04484e"
+    },
+    {
+      "bytes": 4802,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S9/agent-context.json",
+      "sha256": "c3bf867df80459ab16b7ed95bd0b47b965984427b8960b9d92326c2fdcb1ffea"
+    },
+    {
+      "bytes": 5101,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S29/agent-context.json",
+      "sha256": "07dbdd0b01f10321fcc5e74f2a358c87e9291c2656cd86c6d2f5c11066c6ba53"
+    },
+    {
+      "bytes": 6004,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S37/agent-context.json",
+      "sha256": "b0e2b53abc93b073fc7dd2ff1a73bbf06b598ef2c5f7f6d6602576f32bd4b350"
+    },
+    {
+      "bytes": 4257,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S8/agent-context.json",
+      "sha256": "6867647bff50b5bc4d704c173eb3d82c9c789222669a5cdbe06bacc8a5a76307"
+    },
+    {
+      "bytes": 4625,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S14/agent-context.json",
+      "sha256": "4f544fd3abf2d10242902d49f87edfcf99ea006300c8cd729c869c6fba1f21e4"
+    },
+    {
+      "bytes": 4891,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S66/agent-context.json",
+      "sha256": "1a204cba4acc19b7743e15f6369883986ca05aba7f2a735339d5e3e40e109b8c"
+    },
+    {
+      "bytes": 5752,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S25/agent-context.json",
+      "sha256": "d0a2c11106450107f245685d24f6b218e35bebb914787d5a9e48c35d45946c83"
+    },
+    {
+      "bytes": 4284,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S56/agent-context.json",
+      "sha256": "f018688768c7684d343ff3868e27148c12f830cf597076405e2ed9399ee433ff"
+    },
+    {
+      "bytes": 13317,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S78/agent-context.json",
+      "sha256": "38df08e8fc11ea432ed86d2bd8584f4074533d36a11c30fba28b5632ed336ad5"
+    },
+    {
+      "bytes": 5853,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S18/agent-context.json",
+      "sha256": "05dabb7dde3750837f83d0db793e9b077be8396b56334f9b5843dc5e4823d68f"
+    },
+    {
+      "bytes": 5055,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S67/agent-context.json",
+      "sha256": "96ef3050f0ee399157d4bed71933c8d6503ed3a8d49de25dc61672dcadbef2c9"
+    },
+    {
+      "bytes": 7406,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S53/agent-context.json",
+      "sha256": "fafdb1458c46d393b0edc810bf62b85a370b4693c9954c619d2d3254e87f2861"
+    },
+    {
+      "bytes": 5596,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S13/agent-context.json",
+      "sha256": "90befa16d84aaeda93fd4acbb7b7007ae7aadc23953e7a4f21b2f522af5c7e73"
+    },
+    {
+      "bytes": 4263,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S26/agent-context.json",
+      "sha256": "689965ee30d307a6c16e057f228eba597b6f1e6e8f46ff58dd9f5af8b85d5e47"
+    },
+    {
+      "bytes": 4241,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S79/agent-context.json",
+      "sha256": "cd7ea5ccedc17cd3d70f83e1e486abc249741062313c121c29db16be780e8f04"
+    },
+    {
+      "bytes": 4819,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S76/agent-context.json",
+      "sha256": "48b01eb2394907a2ccc94ac3b394f0e3261ef57ca9b565449e2d63234bd127c5"
+    },
+    {
+      "bytes": 4577,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S33/agent-context.json",
+      "sha256": "8dc7753a0d1b2a6321a27380bef73d1e01ed973dc8ca5052b70a9b17eab91766"
+    },
+    {
+      "bytes": 4536,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S24/agent-context.json",
+      "sha256": "09f6a0c86ff34d598e910a99c075c7c43d2cbe7e35aa49893767289cca34e801"
+    },
+    {
+      "bytes": 11184,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S50/agent-context.json",
+      "sha256": "f66a46bdcde1a2da07fff1fe0f5de16e3e0a6dc54b9856186421cf745fd84404"
+    },
+    {
+      "bytes": 4255,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S1/agent-context.json",
+      "sha256": "7bdf14452bec98c78170586375771ca633fc6defb9a39bd751cc4780e0ae563f"
+    },
+    {
+      "bytes": 5066,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S28/agent-context.json",
+      "sha256": "ab8f2cc57174c5ca4312a661f4ca0b18f97e3dbc76b2a812cf84cab37e72dccf"
+    },
+    {
+      "bytes": 4500,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S22/agent-context.json",
+      "sha256": "ce29ff871ef6b2983a44fdeb8bb9196307001fca8f5a8fdede80d804260229f0"
+    },
+    {
+      "bytes": 4367,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S48/agent-context.json",
+      "sha256": "5a8968854bf76793887e37b9257c3627a02d394712ce663959365afc3d5b60ac"
+    },
+    {
+      "bytes": 5282,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S38/agent-context.json",
+      "sha256": "469617f88086b5d0648870010feacab19bb4eeb504baa89a2bbddeb05becb56c"
+    },
+    {
+      "bytes": 4275,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S65/agent-context.json",
+      "sha256": "5bd812a20079fc2e5facc1e01d6dd38124c7e1075bac65a2463837775c667394"
+    },
+    {
+      "bytes": 9780,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S43/agent-context.json",
+      "sha256": "cd4e62bfa2b196bfefb9ab4b81f535322014cf2cafa6155aec0a6b2e6dda1150"
+    },
+    {
+      "bytes": 4197,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S3/agent-context.json",
+      "sha256": "15796f9cf785860aa676d9cd33c9027abbff37937262f656704f9d7e4872828c"
+    },
+    {
+      "bytes": 6055,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S46/agent-context.json",
+      "sha256": "01745cc95c10498eb44b72288f89b0ad36f0715ba9da8189e327e7e4cd23b112"
+    },
+    {
+      "bytes": 5283,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S15/agent-context.json",
+      "sha256": "d5a90cc8300cf14f5eb5771f7b90c53fadab8e1d530f0e540d9306049da6ff20"
+    },
+    {
+      "bytes": 9164,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S49/agent-context.json",
+      "sha256": "bb274d59b4448c9a394453c33207e18c59dc3ba736987258532cd36a58ccdf61"
+    },
+    {
+      "bytes": 4287,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S45/agent-context.json",
+      "sha256": "494f0427c05b8a741bd1191c301a9fefb07419297291f98ccc8b546086ef715c"
+    },
+    {
+      "bytes": 4545,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S55/agent-context.json",
+      "sha256": "136bc3e892cc7aa19a3f84ebd78f6082f3b03a22416ff07f9ac2b21a4bdbb2c8"
+    },
+    {
+      "bytes": 4385,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S30/agent-context.json",
+      "sha256": "a2a72933acb9ec154fcaf5f0c068500688b8c9ea867b556f1bac7aa26147174f"
+    },
+    {
+      "bytes": 5871,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S11/agent-context.json",
+      "sha256": "20a41c69589ec386745c7f841f0aef4fbfad3bf29df22086175ab56c3a248158"
+    },
+    {
+      "bytes": 4345,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S51/agent-context.json",
+      "sha256": "1f97511450fe0cc0fc604f68bda79702cd4f4a8b024029de00880a22fb66af43"
+    },
+    {
+      "bytes": 4630,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S75/agent-context.json",
+      "sha256": "924f5b328444477c113d2f26e2e28ca5883f037afe9f487fc13963493c84e917"
+    },
+    {
+      "bytes": 4269,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S52/agent-context.json",
+      "sha256": "fcab131a84b65917f86eeebf5c7f285cd437ce401f25149ed3d4f8f5a5a58a9c"
+    },
+    {
+      "bytes": 4236,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S63/agent-context.json",
+      "sha256": "320b63f5d97a4c73b6cdf4cf7c485b19681fe8473de309b92c3cc92e42079f97"
+    },
+    {
+      "bytes": 6824,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S58/agent-context.json",
+      "sha256": "070edd47b1839c031487a57e9079e4901f32b9599825c5d63aa28d031dd5490e"
+    },
+    {
+      "bytes": 4751,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S68/agent-context.json",
+      "sha256": "d371052109a230d94a8bd49de241fe8de2675c609be15652bf8ab0a9a05d5dbd"
+    },
+    {
+      "bytes": 4592,
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context/S80/agent-context.json",
+      "sha256": "88894ea771752914e5a7932d4370502515ead70beebc817ffa883df5de0b1251"
+    }
+  ],
+  "schema": "phase-b-c.prepared-input-archive.v1",
+  "scope": "Current plan input only; no Phase behavior, Skill code or historical evidence"
+}

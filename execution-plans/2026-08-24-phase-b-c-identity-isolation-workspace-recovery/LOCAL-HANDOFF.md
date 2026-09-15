@@ -3,13 +3,14 @@
 The maintainer requested direct repair and no further VDD run. Target branch:
 `implementation/8-24-identity-isolation-recovery-v2`.
 
-## One deterministic preparation step
+## Restore the verified prepared input
 
-Large semantic-bundle publication was interrupted. The exact recovered slice
-and Acceptance inputs are committed under `rebuild-inputs/`; the small,
-reviewable assembly script produces the ordinary current bundle and projections.
-Until assembly passes, existing root-level plan JSON is the historical baseline
-and must not be used to start implementation.
+The complete verified plan is now preserved in
+`rebuild-inputs/prepared-inputs.tar.xz`, including its file hashes and retired
+projection list. The existing preparation command restores those exact bytes
+and reruns the native checks; it does not regenerate them through VDD.
+Until restoration passes, root-level machine JSON remains the historical
+baseline and must not be used to start implementation.
 
 From a clean synchronized repository worktree, run in PowerShell:
 
@@ -25,8 +26,8 @@ CER descriptor contracts, and runs public Q1 for every slice. It creates no
 Phase production code or target tests. It stops on failure. Evidence is appended
 under `logs/phase-b-c-input-repair/local-rebuild/`.
 
-The baseline Git object `9cd87d3ab780f7087b9fd470dc2843968b208eca` must be
-available locally; fetch full branch history if a shallow clone lacks it.
+The prepared-archive route does not require the old Git baseline object.
+The reconstruction fallback remains available only when the archive is absent.
 Existing local plan changes are preserved by refusing to overwrite them.
 A materialization marker allows identical prepared inputs to be reverified;
 changed prepared inputs are never silently overwritten.
@@ -34,8 +35,9 @@ changed prepared inputs are never silently overwritten.
 The assembly generates normal tracked plan changes. Commit them after the
 checks pass and before starting implementation, so the candidate identity is
 stable. Do not rerun this preparation after Phase implementation starts.
-Prior claims of 29 tests and 73 public preflights are historical; this rebuilt
-revision requires the actual local run above. No previous result is reused.
+The complete archive restoration path has been exercised online with 29 guard
+tests and all 73 public Q1 preflights. The local command rechecks these against
+your checkout and environment; it does not reuse historical runtime proof.
 
 ## Current input and order
 
