@@ -1,6 +1,6 @@
 # 8-24 Implementation Input Repair
 
-Purpose: maintainer-repaired implementation input for current Quick Dev TDD. No further VDD run is requested.
+Purpose: maintainer-repaired implementation input for the current Quick Dev TDD consumer. The user explicitly requested direct online repair and no further VDD Skill run.
 Target: `execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery`.
 Review baseline: `d8219f5a867e2a1bb2ed22c86f0437367617da06`.
 Profile: resumable; dependent Windows identity/storage/recovery work crosses sessions.
@@ -9,7 +9,7 @@ This is a repair of the existing scope, not a new product requirement or a repla
 
 ## Source authority and preservation
 
-The implementation input preserves the following current sources together, including unnumbered normative prose:
+The compiler must consume the following current sources together, including unnumbered normative prose:
 
 - [SPEC.md](../../_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md)
 - [ARCHITECTURE-SPINE.md](../../_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md)
@@ -21,9 +21,9 @@ The implementation input preserves the following current sources together, inclu
 
 The 8-22 requirements and 8-23 PRD remain provenance as declared by SPEC; the refreshed SPEC and its six companions are the direct normative package. Preserve FR-001..FR-026 (including PRD variant intent FR-018a/FR-022a/FR-022b through their canonical companion clauses), NFR-001..NFR-007, PIWR-001..PIWR-040, PIWR-A01..PIWR-A18, CAP-1..CAP-7 and AD-1..AD-13. Do not turn a source into not_applicable because its Rule or paragraph lacks an independent PIWR ID.
 
-The historical Round-3 mapping excluded all thirteen Architecture Rule paragraphs. Its dispositions are not a semantic waiver of the current Spec. Preserve historical files byte-for-byte; rebuild current coverage from the preserved atomic mapping and this repair input. Each excluded normative clause must now map to a behavior below, or to an explicit source-grounded non-goal. A broad acceptance reference alone is insufficient. If equivalent obligations merge, retain the original source clause and its distinct assertions.
+The historical Round-3 mapping excluded all thirteen Architecture Rule paragraphs. Its dispositions are not a semantic waiver of the current Spec. Preserve historical files byte-for-byte; recompile current coverage from source and this repair input. Each excluded normative clause must now map to a behavior below, or to an explicit source-grounded non-goal. A broad acceptance reference alone is insufficient. If equivalent obligations merge, retain the original source clause and its distinct assertions.
 
-No new source-freeze, signatures, Bootstrap review or authorization receipts are requested. Existing repair rounds, terminal results and TDD observations remain historical and cannot prove the repaired candidate. The user explicitly supersedes the former compiler-only next step for this repair. The deterministic repair script assembles current projections; it does not publish compiler success, plan-ready or runtime proof.
+No new source-freeze, signatures, Bootstrap review or authorization receipts are requested. Existing repair rounds, terminal results and TDD observations remain historical and cannot prove the repaired candidate. The original compiler run remains historical. This revision is an explicit maintainer-authorized input repair, not a new compiler run or a fabricated plan-ready/implementation result. Current Quick Dev consumes the repaired semantic bundle after its native preflight.
 
 ## Observed code gaps to guide controlled probes
 
@@ -48,7 +48,7 @@ Each row supplies a source, parent PIWR obligation, acceptance target, productio
 
 For each row, the failure intent is the negation of its stated observable result at the named production boundary. Missing selectors, build/import/tool failures, unsupported OS privileges and timeout are harness/environment blockers, not causal RED. A helper returning a constant or a marker file cannot satisfy a boundary oracle.
 
-The repair script preserves the existing behavior-routing intent contract. Quick Dev probes current behavior: present -> regression plus terminal; missing -> causal RED/GREEN/REFACTOR plus terminal; mixed within a row -> finer atomic decomposition; unverifiable -> blocked. No observations are preassigned here.
+The compiler must emit the existing behavior-routing intent contract. Quick Dev probes current behavior: present -> regression plus terminal; missing -> causal RED/GREEN/REFACTOR plus terminal; mixed within a row -> finer atomic decomposition; unverifiable -> blocked. No observations are preassigned here.
 
 Selectors are proposed new test methods in the lane classes below. They must be implemented against real production entrypoints before controlled probes. Until created and discovered they are not runnable acceptance evidence.
 
@@ -146,7 +146,7 @@ A18 is an evidence-consumer requirement across all behaviors, not a substitute f
 
 ## Dependency-scoped implementation lanes
 
-These lanes explain product dependencies; current slice IDs and execution order come from the repaired projections. Move necessary foundation schema/endpoint work into its earliest consuming lane; L4 validates integration and compatibility rather than withholding all wiring until the end.
+These lanes guide compiler decomposition; they do not overwrite the compiler-owned current contract. Move necessary foundation schema/endpoint work into its earliest consuming lane; L4 validates integration and compatibility rather than withholding all wiring until the end.
 
 | Lane | Behavior | Dependencies | Production entry / owner | Proposed targeted test class |
 | --- | --- | --- | --- | --- |
@@ -160,9 +160,9 @@ Each emitted slice must contain exact active obligation/case IDs, source refs, p
 
 ## Write boundaries and recovery
 
-This authorized repair changes implementation inputs/projections, deterministic assembly and verification, and the necessary bounded Quick Dev .NET entry guard with tests. It does not change Phase production behavior, executable target behavior tests or historical execution evidence.
+The authorized online repair updates this input, current semantic/coverage/agent-context projections, case and dependency maps, handoff/navigation and deterministic validation sidecars. It also adds the necessary bounded .NET test binding to the Quick Dev RED entry guard, its regression tests and execution guide. It does not change Phase production code, executable target behavior tests or historical execution evidence.
 
-The deterministic repair script writes current plan/selector/contract projections only; no local VDD run is required. Before Quick Dev RED, no target production behavior is implemented. Concrete behavior tests belong to the controlled Quick Dev probe/RED stage; GREEN and REFACTOR repeat the same selector and assert the same obligation.
+No local VDD rerun is required for this revision. Quick Dev Q2 authors the declared test/fixture files; before a controlled probe and valid causal RED, no target production behavior is implemented. Concrete behavior tests belong to the controlled Quick Dev probe/RED stage; GREEN and REFACTOR repeat the same selector and assert the same obligation.
 
 Future implementation owners are the existing Phase Security, Data, Runs, Workspaces and Readback modules plus narrow Program.cs endpoint/composition changes; not a whole-file Program.cs refactor. Future tests use disposable roots and SQLite data, the existing PhaseA.Platform.Tests project and bounded test utilities. Follow nearest AGENTS and ADR-0061 plus adopted ADR-0033..0038. Current input-repair authorization does not authorize protected auth/shared-runner production writes or live changes; the local implementation session must resolve applicable protected-path authorization before those edits.
 
@@ -172,13 +172,13 @@ After a local failure, preserve diagnostics, restore only disposable fixtures an
 
 ## Validation and terminal contract
 
-Targeted Windows command template, after actual test discovery:
+Underlying .NET verification template, after actual test discovery (the current CER primary selector is the planned pytest wrapper):
 
 ```powershell
 dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj --filter "FullyQualifiedName~PhaseB.Repair.IdentityBoundaryTests" --logger "trx"
 ```
 
-Replace the class with the exact lane class above; use exact method selectors for causal RED/GREEN/REFACTOR. Compiler output must materialize concrete commands rather than leaving placeholders. Avoid --no-build unless the current-source build artifact is verified. Test discovery and TRX must establish a nonzero count and the expected case IDs; localized console strings, return code alone or a silent early return are insufficient.
+Replace the class with the exact lane class above; use exact method selectors for causal RED/GREEN/REFACTOR. The current case map and agent-context materialize concrete pytest commands; Q2 creates their real .NET boundary cases and validates exact discovery/TRX before formal RED. Avoid --no-build unless the current-source build artifact is verified. Test discovery and TRX must establish a nonzero count and the expected case IDs; localized console strings, return code alone or a silent early return are insufficient.
 
 Terminal full command after targeted stabilization:
 
@@ -200,25 +200,34 @@ Do not defer current single-node OS isolation, durable fencing, current identity
 
 ## Output boundary
 
-This input is complete when its coverage and source references are checked. It is not plan-ready, implementation-complete or acceptance-passed. The next local action is deterministic input assembly and validation using [LOCAL-HANDOFF.md](LOCAL-HANDOFF.md), followed by current Quick Dev; no VDD or model is called by assembly.
+This input is complete when its coverage and source references are checked. It is not plan-ready, implementation-complete or acceptance-passed. The next local action is current Quick Dev preflight and test authoring using [LOCAL-HANDOFF.md](LOCAL-HANDOFF.md). The user explicitly superseded the earlier requirement to re-run VDD. Native consumer validation and observed case evidence remain mandatory.
 
-## Maintainer clarification for this repair
+## Direct implementation repair clarifications
 
-- S14 must continue admitted Snapshot/Restore/ACL operations to their business
-  outcome after browser disconnection. A retained inert record is insufficient.
-- S22 verifies actual nonempty at-rest protection and recovery with its selected
-  profile, not merely a key-reference field.
-- S50 restart reconciliation preserves logical release of soft-deleted Project
-  quota even while retained physical bytes remain.
-- S30 distinguishes prohibited retained payload from legitimate exclusion-policy
-  metadata. Metadata naming a prohibited extension is not prohibited content.
-- T11 success measurements bind to the same real successful drill samples.
-  No new fixture minimum or arbitrary sample threshold is introduced.
-- AD-4 includes denial of parent Account-root enumeration by the actual Project
-  Runner while its own root stays usable.
-- Snapshot captures supported plan/project work and approved supported assets
-  under the security/extension policy. Approval cannot bypass exclusions.
-- RPO recovery uses the last successfully published verified Snapshot after an
-  interrupted successor. Unpublished content is never recovery truth.
-- A18 independent verification is test-owned and reads explicit current evidence;
-  fix missing product evidence at its producer. No Taskmaster or scoring system.
+These clarify existing upstream duties; they do not expand product scope.
+The seven canonical source files remain normative; planning instructions are
+recorded in `input-repair-dispositions.v1.json`, outside the product runtime
+obligation universe. Existing obligation and assertion IDs remain stable.
+
+- AD-4: the real per-Project Runner must also be denied enumeration of the
+  parent Account root while retaining access to its own authorized root.
+- W06: explicitly include supported execution-plan/project work files and
+  approved persistent user assets, under the same safety and extension policy.
+- W03/RPO: an interrupted unpublished next Snapshot cannot replace the last
+  successfully published integrity-verified recovery point.
+- A01: browser disconnection must not terminate durable execution; a remaining
+  cancelled or inert record alone is insufficient proof.
+- W12: verify actual at-rest protection and successful recovery under the
+  accepted key-reference profile, not merely a key-reference field.
+- W09/W10: restarting quota reconciliation must preserve the exactly-once
+  logical release for a soft-deleted Project even while physical bytes remain.
+- W07: scan prohibited retained payload separately from legitimate policy and
+  normalized exclusion metadata.
+- T11: bind successful checks and timing to the same actual drill samples.
+  Retain the existing fixture bounds and P95 target without inventing new
+  minimum fixture size or sample-count requirements.
+
+`implementation-case-map.v1.json` binds each atomic obligation to a planned
+pytest node, assertions, failure intent and underlying .NET test identity.
+`implementation-order.v1.json` defines actual slice dependencies; L0-L4 above
+remain conceptual lane labels. No task is preclassified as present or missing.

@@ -1,0 +1,46 @@
+{
+  "compiler_invoked": false,
+  "schema": "phase-b-c.input-repair-source-index.v1",
+  "sources": [
+    {
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/implementation-repair-input.md",
+      "role": "implementation-input",
+      "sha256": "sha256:e0be2cbeaab3197a45cfe8f763c4ebb836e885daf3904f0a809b99bab75067cd"
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md",
+      "role": "canonical-source",
+      "sha256": "sha256:408e339a8247d1ff394dd8323180e89d5d17935f462f7077e0e9d86c4dd2fdba"
+    },
+    {
+      "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md",
+      "role": "canonical-source",
+      "sha256": "sha256:4ff2b0d9f5ef450ca473620a70e6fe52456c8751b9899fe311053e31f5b6e5ff"
+    },
+    {
+      "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/api-evolution-and-operations.md",
+      "role": "canonical-source",
+      "sha256": "sha256:da118e84d7cd50b813feac63ff765eb9e18a662808c271416daf9547a64e7fe3"
+    },
+    {
+      "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/identity-and-ownership.md",
+      "role": "canonical-source",
+      "sha256": "sha256:b408f5c4aed1ebb67f73e07b4a8477866520221d784ef83d958a20a092022b82"
+    },
+    {
+      "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/requirements-and-acceptance.md",
+      "role": "canonical-source",
+      "sha256": "sha256:660064e89b5bd27b275cc56cb3d7484b110ccc11a6f1acccc244bbb87d7cdc83"
+    },
+    {
+      "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/runner-isolation.md",
+      "role": "canonical-source",
+      "sha256": "sha256:353bb90b540dede17c9955e46872da8a8b6b91820e677055de2bbfd6abe307c4"
+    },
+    {
+      "path": "_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/workspace-recovery-contract.md",
+      "role": "canonical-source",
+      "sha256": "sha256:ff55f33f49df813d7ec4e6d0c21d0a857060fd82703bf727cb9c9672a421fc8e"
+    }
+  ]
+}

@@ -1,19 +1,22 @@
 # 8-24 Phase B/C Identity Isolation and Workspace Recovery
 
-Read [LOCAL-HANDOFF.md](LOCAL-HANDOFF.md). No VDD rerun is required.
+Current next action: **Quick Dev TDD directly, starting at S12**.
+The maintainer requested online input repair and no further VDD Skill run.
+This directory contains implementation intent, not product completion proof.
 
-The complete prepared input is stored in a hash-bound archive because large
-plain-text blob publication was interrupted. The restored path has passed
-29 guard tests, 73 public Q1 preflights, and native input/coverage checks.
-Run the documented preparation command once after synchronization. It restores
-the exact verified bytes and rechecks your local environment. Until then,
-root-level machine projections remain historical and must not start Quick Dev.
+| Read | Purpose |
+| --- | --- |
+| [Local handoff](LOCAL-HANDOFF.md) | Direct entry, Q2 pytest/.NET bridge, runtime boundaries |
+| [Implementation input](implementation-repair-input.md) | Source-grounded behavior matrix and non-goals |
+| [Semantic bundle](semantic-plan-bundle.v1.json) | Current Quick Dev input; 351 obligations, 73 slices |
+| [Slice order](implementation-order.v1.json) | Dependencies and first slice |
+| [Case map](implementation-case-map.v1.json) | Atomic assertion and intended test identities |
+| [Repair dispositions](input-repair-dispositions.v1.json) | Workflow instructions moved out of product scope |
+| [Failure-intent mapping](input-repair-failure-intents.v1.json) | Prior IDs and conditional product RED intents |
+| [Current source manifest](input-repair-source-index.v1.json) | Exact input/source hashes for this revision |
 
-- [Implementation input](implementation-repair-input.md)
-- [73-slice navigation](implementation-slices.md)
-- [Preparation entry](tools/rebuild_current_input.py)
-- [Prepared archive manifest](rebuild-inputs/prepared-input-manifest.json)
-
-After successful preparation and committing the generated plan files, start S12
-with the current Quick Dev standard profile, governance off. No Phase production
-behavior or historical execution evidence was modified by this input repair.
+The seven canonical upstream documents remain unchanged. Governance is off;
+Bootstrap is not requested. Historical compiler, Round-3, v1 contract, source
+freeze and terminal records remain available at their paths and in Git history,
+but cannot authorize or prove this repaired candidate. Follow the current
+handoff instead of old S0 or compiler-first navigation.

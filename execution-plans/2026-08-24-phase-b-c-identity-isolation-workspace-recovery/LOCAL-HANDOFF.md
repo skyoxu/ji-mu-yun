@@ -1,105 +1,129 @@
-# 8-24 direct Quick Dev handoff
+# Local Handoff: Enter Quick Dev Directly
 
-The maintainer requested direct repair and no further VDD run. Target branch:
-`implementation/8-24-identity-isolation-recovery-v2`.
+The maintainer explicitly authorized direct online repair of this input and
+requested **no further VDD Skill run**. This instruction supersedes the earlier
+compiler-first handoff. Source baseline: `9cd87d3ab780f7087b9fd470dc2843968b208eca`.
 
-## Restore the verified prepared input
+## Current input and scope
 
-The complete verified plan is now preserved in
-`rebuild-inputs/prepared-inputs.tar.xz`, including its file hashes and retired
-projection list. The existing preparation command restores those exact bytes
-and reruns the native checks; it does not regenerate them through VDD.
-Until restoration passes, root-level machine JSON remains the historical
-baseline and must not be used to start implementation.
+| Item | Current contract |
+| --- | --- |
+| Consumer | `.agents/skills/quick-dev-tdd-adapter/SKILL.md`, current execution guide |
+| Entry | `scripts/quick_dev/run.py`; current semantic bundle, not historical v1 |
+| First slice | `S12` (real schema/startup foundation) |
+| Remaining order | `implementation-order.v1.json` |
+| Product coverage | 351 atomic obligations / Acceptances, 73 stable-ID slices |
+| Runtime routing | Real probe decides present, missing or unverifiable |
+| Profile | `standard`, development governance off |
+| Compiler/model run online | None; input repair and deterministic validation only |
+| Target production/tests online | Unchanged; declared new test files are Q2 work |
+| Completion | Quick Dev Q7/Q8, then external review and Acceptance |
 
-From a clean synchronized repository worktree, run in PowerShell:
+The semantic bundle plus its synchronized projections are the current input.
+Read `input-repair-dispositions.v1.json` for the exact relocation of workflow
+instructions and explicit non-goals. No product obligation was dropped.
+S70 test preparation is retained in S69. The original IDs of the other product
+obligations and assertions are retained; four source-grounded cases are added.
+
+Historical `compiler-state.v1.json`, `plan-state.v1.json`, `resume-state.v1.json`,
+`implementation-contract.v1.json`, `command-registry.v1.json`, source freeze,
+compiler source index/alignment/feasibility and old terminal/repair directories
+remain records of their original run. Do not use their S0 pointer, compiler
+hash or completion wording as current authority. The current source manifest
+is `input-repair-source-index.v1.json`. No old runtime proof is reusable for
+this changed semantic bundle. Do not rewrite the historical records.
+
+## Local start
+
+Synchronize the pushed branch in a clean worktree, preserving any local changes.
+Use the current Quick Dev Skill and its execution/recovery guides. From the
+repository root, PowerShell:
 
 ```powershell
-py -3 execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/tools/rebuild_current_input.py
-if ($LASTEXITCODE -ne 0) { throw "Input repair validation failed; stop here." }
+$planPath = "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery"
+py -3 scripts/quick_dev/run.py --plan $planPath --slice S12 --profile standard
 ```
 
-This is not VDD: no compiler, model, Bootstrap, live backend or Phase test is
-invoked. It first runs the tool guard regressions, preserves original product
-IDs, assembles 73 slices / 351 obligations, checks native semantic/routing and
-CER descriptor contracts, and runs public Q1 for every slice. It creates no
-Phase production code or target tests. It stops on failure. Evidence is appended
-under `logs/phase-b-c-input-repair/local-rebuild/`.
+Inspect the returned JSON **status**, not only the process exit code:
+`preflight-passed` admits test authoring; `environment-blocked` requires fixing
+the named environment prerequisite. A preflight pass is not product proof.
+The agent then creates a fresh explicitly named run under
+`logs/phase-b-c-implementation/` and follows the current Skill's `author-red`
+(CER probe authoring), `run-probe`, and observed routing. Do not invoke VDD,
+Bootstrap, legacy combined writers or an old plan-local terminal shortcut.
 
-The prepared-archive route does not require the old Git baseline object.
-The reconstruction fallback remains available only when the archive is absent.
-Existing local plan changes are preserved by refusing to overwrite them.
-A materialization marker allows identical prepared inputs to be reverified;
-changed prepared inputs are never silently overwritten.
+The online checks exercise the native planned preflight for all slices. Local
+Windows/.NET, actual permissions, host fixtures and product outcomes still
+belong to implementation; no successful runtime disposition is preassigned.
 
-The assembly generates normal tracked plan changes. Commit them after the
-checks pass and before starting implementation, so the candidate identity is
-stable. Do not rerun this preparation after Phase implementation starts.
-The complete archive restoration path has been exercised online with 29 guard
-tests and all 73 public Q1 preflights. The local command rechecks these against
-your checkout and environment; it does not reuse historical runtime proof.
+## Q2 test authoring contract
 
-## Current input and order
+1. Read the selected agent-context and its rows in
+   `implementation-case-map.v1.json`. Respect the declared predecessor order.
+2. Materialize only that slice's declared pytest file, C# boundary class and
+   fixture helper. These paths are deliberately planned, not missing evidence
+   to paper over. Do not change production to make test discovery/build pass.
+3. The current CER adapter accepts `python -m pytest`. The pytest case must
+   call the real .NET boundary test in
+   `PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj` and read a fresh TRX
+   bound to that invocation. Use a literal `subprocess.run` argv list with
+   explicit `shell=False`, `dotnet test` plus the project path, exact
+   `--filter FullyQualifiedName=<mapped case>` and `--logger trx`. The frozen
+   C# Fact/Theory source must call a real declared production owner, or use
+   `WebApplicationFactory<Program>` plus `CreateClient` for the real host.
+   The test project must reference the production project. These static
+   bindings admit execution; they do not prove the .NET result. Test code
+   and helpers use disposable roots/DBs.
+4. Discover the exact method and parameter cases. Verify every required case
+   executes; reject missing, stale, malformed, skipped, inconclusive or extra
+   ambiguous TRX results. Build failure, missing host/privilege, timeout or
+   undiscovered cases are harness errors, never product AssertionError/RED.
+5. Preserve the original typed SUT failure and expected failure family. Emit
+   the mapped `FAILURE-...` only when a real bound product assertion fails.
+   `expected-red` in the plan is a conditional intent, not a forced outcome.
+6. Mark each pytest case with its exact `cer_assertion` IDs. Shared markers
+   cannot cover unexecuted parameter cases. Keep the real production call
+   attributable; source-string checks or unconditional markers cannot prove
+   runtime behavior. Direction-only duties use meaningful contract/composition
+   checks and do not require deployment of an external OIDC provider.
+7. Freeze pytest, C# cases, helpers and fixtures before formal RED. Do not
+   change them, their selectors or the plan during GREEN/REFACTOR. Any additional
+   execution dependency must be declared before that freeze; retain correct
+   production when repairing test inputs.
 
-The 73 product slices retain 347 original product obligations and their assertion
-identities, plus four source-grounded cases. Fourteen instruction/non-goal rows
-move to explicit dispositions; S70 setup is retained inside S69.
-Use `implementation-order.v1.json` and `implementation-case-map.v1.json`
-after assembly. First slice: **S12**. Preserve IDs rather than renumbering.
+A18 uses a test-owned independent-process reader authored in the slice fixture
+helper. It checks the real current isolation, permission, round-trip, fault,
+migration and redaction artifacts; it does not read Taskmaster or call a help
+command as evidence. Fix missing/broken product evidence at its real producer.
+This does not introduce a general evaluation or scoring system.
 
-Historical compiler, alignment, feasibility, source-freeze and lifecycle files
-remain historical. They do not prove this maintainer-authored revision.
-Assembly does not manufacture plan-ready, implementation-complete or
-acceptance-passed.
+## Implementation and terminal
 
-## Q2 authoring and execution
-
-Read the current Quick Dev Skill execution guide and selected agent-context.
-Use `standard`, governance off. In a fresh explicitly named run under
-`logs/phase-b-c-implementation/`, author the declared Python wrapper, C# boundary
-test and helper. Follow current author-red / run-probe routing.
-
-Each obligation maps to a distinct pytest node and .NET FullyQualifiedName.
-Mark every bound assertion with `pytest.mark.cer_assertion`. Invoke the real
-.NET test using literal `subprocess.run` argv with explicit `shell=False`,
-`dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`, exact
-`--filter FullyQualifiedName=<mapped case>`, and `--logger trx`.
-The frozen Fact/Theory source calls a declared production owner or a real
-`WebApplicationFactory<Program>` host plus client. The test project references
-the production project. Static admission is not execution or semantic proof.
-
-Parse fresh invocation-specific TRX, verify exact method and all parameter cases,
-and assert the real product observation. Build/discovery/setup/timeout/privilege
-failures are harness errors, never product AssertionError/RED. Reject missing,
-stale, skipped and inconclusive results. A nonzero exit alone is not causal RED.
-Emit the planned FAILURE ID only from its actual bound product assertion.
-
-Freeze wrappers, C# cases, helpers, fixtures and selectors before formal RED.
-Declare every execution dependency before freezing; GREEN/REFACTOR cannot change
-the plan or tests. Preserve correct production when repairing test inputs.
-
-| Actual observation | Required path |
+| Observed condition | Action |
 | --- | --- |
-| Present | Regression and terminal; no artificial RED |
-| Missing | Causal RED, bounded GREEN, same-selector REFACTOR and terminal |
-| Mixed | Preserve present regression and implement the missing subset |
-| Unverifiable | Repair the harness/environment; no pass or production authorization |
-| Dependency changed | Re-probe affected slices and downstream consumers |
+| Present | Regression and terminal; no artificial RED or production change |
+| Missing, valid oracle | Formal causal RED, bounded GREEN, same-selector REFACTOR |
+| Mixed | Retain present regression and implement only the observed missing subset |
+| Harness/environment gap | Repair the identified prerequisite and re-probe; no pass/RED |
+| Changed dependency | Revalidate the affected slice and downstream proof |
+| Required terminal category absent | Incomplete, even if another suite is green |
 
-Use real restricted Windows identities, ACL denial, Job Object lifetime,
-SQLite restart, authenticated operations and retained Snapshot content.
-Use disposable roots and harmless workloads to isolate unrelated model behavior.
+Retain narrow production write boundaries and existing protected-path rules.
+No live metadata, Hosted workspace, runtime/Caddy, shared Skill, upstream scope
+or historical evidence edits are authorized for the subsequent Phase implementation. Do not start
+an unrelated governance/reviewer workflow or reopen VDD automatically.
 
-## Terminal boundary
+After targeted stabilization, execute the real full project suite and retain
+its fresh structured results:
 
-A18 uses an independent-process reader authored in the test helper; it reads
-explicit current isolation, permissions, round-trip, fault, migration and
-redaction artifacts. It is not a generic evaluation system.
+```powershell
+dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj --logger trx
+```
 
-After targeted stabilization, execute the full PhaseA.Platform.Tests project.
-Required terminal evidence also covers real Windows OS boundaries, restart/fault
-recovery, authenticated Snapshot/Restore/readback/controlled Run, legacy-data
-upgrade/reuse and independent A18 verification. Bind current predecessors to
-Q7/Q8. Counts alone cannot close the plan; Acceptance remains the separate final
-consumer. No live workspace, runtime/Caddy, shared Skill or historical evidence
-changes are authorized for the subsequent Phase implementation.
+The terminal evidence must also prove non-skipped real Windows OS identity,
+ACL and Job Object boundaries; durable restart/fault behavior; authenticated
+Snapshot-to-Restore-to-route/readback-to-controlled-Run; old-data upgrade/reuse;
+and independent A18 validation. Tie explicit current predecessors to Q7/Q8.
+Neither this handoff, the input validator nor a full-suite count can publish
+implementation-complete or acceptance-passed. External review follows actual
+implementation; Acceptance remains its separate final consumer.
