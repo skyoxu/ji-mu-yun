@@ -1,11 +1,14 @@
 """Apply one bounded Acceptance-only repair after independent V4 misalignment.
 
-V4 remains the semantic judge.  A repair is permitted only when V4 reports
-misaligned Acceptance semantics and no missing/invented/coverage failure.  The
-repair worker may change only Given/When/Then/oracle/assertion semantics for the
-named Acceptance IDs; obligation/source binding, RED selector/family, hints,
-owners and write sets remain frozen.  Deterministic IDs are recomputed and a
-second independent V4 worker must accept the repaired candidates.
+V4 remains the semantic judge. A repair is permitted for an isolated
+Acceptance semantic gap: either no coverage finding exists, or every missing
+and uncovered active obligation is bound only to the reported misaligned
+Acceptances. Invented or unknown IDs, and every other coverage failure, remain
+non-repairable. The repair worker may change only Given/When/Then/oracle/assertion
+semantics for the named Acceptance IDs; obligation/source binding, RED
+selector/family, hints, owners and write sets remain frozen. Deterministic IDs
+are recomputed and a second independent V4 worker must accept the repaired
+candidates.
 """
 from __future__ import annotations
 
@@ -102,6 +105,45 @@ def _repair_map(raw: Mapping[str, Any], targets: set[str]) -> dict[str, Mapping[
     if set(result) != targets:
         raise ValueError("V4 acceptance repair does not exactly cover misaligned Acceptance IDs")
     return result
+
+
+def _isolated_acceptance_semantic_gap(
+    raw: Mapping[str, Any],
+    obligations: Sequence[Mapping[str, Any]],
+    acceptances: Sequence[Mapping[str, Any]],
+) -> bool:
+    """Permit repair only when V4 localizes all coverage loss to its own targets."""
+    targets = {
+        str(item)
+        for item in raw.get("misaligned_acceptance_ids", [])
+        if isinstance(item, str) and item
+    }
+    if not targets:
+        return False
+    by_acceptance = {
+        str(item.get("acceptance_id")): item
+        for item in acceptances
+        if isinstance(item, Mapping) and isinstance(item.get("acceptance_id"), str)
+    }
+    if not targets <= set(by_acceptance):
+        return False
+    active = {
+        str(item.get("obligation_id"))
+        for item in obligations
+        if isinstance(item, Mapping) and item.get("status") == "active" and isinstance(item.get("obligation_id"), str)
+    }
+    target_obligations = {
+        str(oid)
+        for aid in targets
+        for oid in by_acceptance[aid].get("obligation_ids", [])
+        if isinstance(oid, str)
+    }
+    covered = {str(item) for item in raw.get("covered_obligation_ids", []) if isinstance(item, str)}
+    missing = {str(item) for item in raw.get("missing_obligation_ids", []) if isinstance(item, str)}
+    invented = {str(item) for item in raw.get("invented_obligation_ids", []) if isinstance(item, str)}
+    if invented or not missing <= active or not covered <= active:
+        return False
+    return missing == active - covered and missing <= target_obligations
 
 
 def _apply_repairs(
@@ -212,13 +254,18 @@ def semantic_align_with_bounded_repair(
     if first.get("valid"):
         return first
     findings = [str(item) for item in first.get("findings", [])]
-    if not findings or any(not item.startswith("v4:misaligned-acceptance:") for item in findings):
+    if not findings or any(
+        not item.startswith(("v4:misaligned-acceptance:", "v4:active-not-covered:", "v4:missing:"))
+        for item in findings
+    ):
         return first
     if not isinstance(acceptances, list) or not isinstance(failures, list):
         return first
 
     raw_first = first.get("worker")
     if not isinstance(raw_first, Mapping):
+        return first
+    if not _isolated_acceptance_semantic_gap(raw_first, obligations, acceptances):
         return first
     targets = {
         str(aid)

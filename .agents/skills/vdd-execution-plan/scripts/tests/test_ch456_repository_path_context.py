@@ -35,7 +35,11 @@ def test_context_contains_existing_relevant_paths_and_excludes_evidence(tmp_path
     assert len(limited["repository_path_context"]["files"]) == 1
 
 
-def test_unavailable_discovery_does_not_invent_file_candidates(tmp_path):
+def test_unavailable_discovery_does_not_invent_file_candidates(tmp_path, monkeypatch):
+    def unavailable(*_args, **_kwargs):
+        raise OSError("repository file discovery unavailable")
+
+    monkeypatch.setattr("semantic_repository_context.subprocess.run", unavailable)
     result = enrich_repository_context(tmp_path, {"obligations": [{"subject": "VDD compiler"}]})
     assert result["repository_path_context"]["status"] == "discovery-unavailable"
     assert result["repository_path_context"]["files"] == []

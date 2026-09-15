@@ -48,6 +48,19 @@ def _v3_payload(oid: str) -> dict:
     }
 
 
+def _v3_inline_repair_payload(oid: str) -> dict:
+    payload = _v3_payload(oid)
+    return {
+        "obligation_contracts": {
+            oid: {
+                "acceptance": payload["acceptances"][0],
+                "failure_intents": payload["failure_intents"],
+                "slice_hint": payload["slice_hints"][0],
+            }
+        }
+    }
+
+
 def test_unknown_v3_obligation_routes_through_existing_single_repair(tmp_path: Path) -> None:
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "ledger.py").write_text("VALUE = 1\n", encoding="utf-8")
@@ -68,7 +81,7 @@ def test_unknown_v3_obligation_routes_through_existing_single_repair(tmp_path: P
         prompt="Compile Acceptance contracts.",
         worker_cache={
             "v3": _v3_payload("O-UNKNOWN"),
-            "v3-schema-repair": repaired,
+            "v3-schema-repair": _v3_inline_repair_payload("O-1"),
         },
     )
     assert result == repaired
@@ -213,3 +226,67 @@ def test_v4_missing_semantics_never_invokes_acceptance_repair(monkeypatch, tmp_p
     )
     assert result["valid"] is False
     assert "v4:missing:O-1" in result["findings"]
+
+
+def test_v4_isolated_missing_bound_to_misaligned_acceptance_gets_repaired(monkeypatch, tmp_path: Path) -> None:
+    obligations = [{"obligation_id": "O-1", "status": "active", "subject": "ledger", "source_refs": ["req.md#FR-1"]}]
+    acceptance = _acceptance()
+    failure = _failure(acceptance["acceptance_id"])
+    acceptance["red_intent_ids"] = [failure["failure_intent_id"]]
+    old_aid = acceptance["acceptance_id"]
+
+    monkeypatch.setattr(
+        alignment,
+        "_BASE_SEMANTIC_ALIGN",
+        lambda **_kwargs: {
+            "valid": False,
+            "findings": [
+                "v4:active-not-covered:O-1",
+                "v4:missing:O-1",
+                f"v4:misaligned-acceptance:{old_aid}",
+            ],
+            "worker": {
+                "covered_obligation_ids": [],
+                "missing_obligation_ids": ["O-1"],
+                "invented_obligation_ids": [],
+                "misaligned_acceptance_ids": [old_aid],
+                "oracle_alignment": {},
+                "repairs": ["make the Acceptance describe the bound ledger behavior"],
+            },
+        },
+    )
+
+    def worker(**kwargs):
+        if kwargs["stage"] == "v4-acceptance-repair":
+            return {"acceptance_repairs": [{
+                "acceptance_id": old_aid,
+                "given": "the ledger has no active claim for the key",
+                "when": "the key is claimed",
+                "then": "the claim is accepted within the declared ledger boundary",
+                "oracle": {"observable": "claim result", "expected": "accepted", "forbidden": ["error"]},
+                "assertion_ids": ["ASSERT-CLAIM-BOUNDARY"],
+            }]}
+        if kwargs["stage"] == "v4-recheck":
+            repaired_aid = kwargs["payload"]["acceptances"][0]["acceptance_id"]
+            return {
+                "covered_obligation_ids": ["O-1"],
+                "missing_obligation_ids": [],
+                "invented_obligation_ids": [],
+                "misaligned_acceptance_ids": [],
+                "oracle_alignment": {repaired_aid: "aligned"},
+                "repairs": [],
+            }
+        raise AssertionError(kwargs["stage"])
+
+    monkeypatch.setattr(gate.sc, "invoke_worker", worker)
+    result = alignment.semantic_align_with_bounded_repair(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        source_index={"entries": [{"source_ref": "req.md#FR-1"}]},
+        obligations=obligations,
+        acceptances=[acceptance],
+        failures=[failure],
+        worker_cache=None,
+    )
+    assert result["valid"] is True
+    assert result["repair_attempted"] is True
