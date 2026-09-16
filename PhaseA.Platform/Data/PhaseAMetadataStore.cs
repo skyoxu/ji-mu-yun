@@ -82,30 +82,46 @@ public sealed class PhaseAMetadataStore
         ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
-        command.CommandText =
-            """
-            SELECT id, username, is_admin, is_disabled
-            FROM accounts
-            WHERE token_hash = $token_hash
-              AND is_disabled = 0
-              AND (valid_until_utc IS NULL OR valid_until_utc > $now_utc)
-            LIMIT 1;
-            """;
-        command.Parameters.AddWithValue("$token_hash", tokenHash);
-        command.Parameters.AddWithValue("$now_utc", DateTimeOffset.UtcNow.ToString("O"));
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        if (!await reader.ReadAsync(cancellationToken))
+        AccountSnapshot account;
+        await using (var command = connection.CreateCommand())
         {
-            return null;
+            command.CommandText =
+                """
+                SELECT id, username, is_admin, is_disabled
+                FROM accounts
+                WHERE token_hash = @token_hash
+                  AND is_disabled = 0
+                  AND (valid_until_utc IS NULL OR valid_until_utc > @now_utc)
+                LIMIT 1;
+                """;
+            command.Parameters.AddWithValue("@token_hash", tokenHash);
+            command.Parameters.AddWithValue("@now_utc", DateTimeOffset.UtcNow.ToString("O"));
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                return null;
+            }
+
+            account = new AccountSnapshot(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetInt64(2) == 1,
+                reader.GetInt64(3) == 1);
         }
 
-        return new AccountSnapshot(
-            reader.GetString(0),
-            reader.GetString(1),
-            reader.GetInt64(2) == 1,
-            reader.GetInt64(3) == 1);
+        await using var update = connection.CreateCommand();
+        update.CommandText =
+            """
+            UPDATE accounts
+            SET last_used_utc = @last_used_utc
+            WHERE id = @account_id;
+            """;
+        update.Parameters.AddWithValue("@last_used_utc", DateTimeOffset.UtcNow.ToString("O"));
+        update.Parameters.AddWithValue("@account_id", account.AccountId);
+        await update.ExecuteNonQueryAsync(cancellationToken);
+
+        return account;
     }
 
     public async Task<AdminCreateUserResult> CreateUserAccountAsync(
@@ -6195,8 +6211,44 @@ public sealed class PhaseAMetadataStore
         await using var command = connection.CreateCommand();
         command.CommandText = "PRAGMA foreign_keys = ON;";
         await command.ExecuteNonQueryAsync(cancellationToken);
+        await EnsureCredentialLifecycleColumnsAsync(connection, cancellationToken);
 
         return connection;
+    }
+
+    private static async Task EnsureCredentialLifecycleColumnsAsync(
+        SqliteConnection connection,
+        CancellationToken cancellationToken)
+    {
+        await using var columnsCommand = connection.CreateCommand();
+        columnsCommand.CommandText = "PRAGMA table_info(accounts);";
+        await using var reader = await columnsCommand.ExecuteReaderAsync(cancellationToken);
+        var hasLastUsedColumn = false;
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            if (string.Equals(reader.GetString(1), "last_used_utc", StringComparison.OrdinalIgnoreCase))
+            {
+                hasLastUsedColumn = true;
+                break;
+            }
+        }
+
+        if (hasLastUsedColumn)
+        {
+            return;
+        }
+
+        await reader.DisposeAsync();
+        await using var alterCommand = connection.CreateCommand();
+        alterCommand.CommandText = "ALTER TABLE accounts ADD COLUMN last_used_utc TEXT NULL;";
+        try
+        {
+            await alterCommand.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (SqliteException ex) when (ex.SqliteErrorCode == 1 && ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
+        {
+            // Another connection completed the additive migration concurrently.
+        }
     }
 
     private static async Task UpsertProjectLimitAsync(SqliteConnection connection, string accountId, int projectLimit, string now, CancellationToken cancellationToken)
