@@ -33,7 +33,8 @@ def test_o_14e737aa22e2() -> None:
     ids=["drift-blocked", "repaired-published"],
 )
 def test_o_6d37e601f3eb(assertion_id: str, expected_observation: str) -> None:
-    result = invoke_boundary_test(f"{CASE_PREFIX}.O_6D37E601F3EB")
+    suffix = "DriftBlocked" if assertion_id.endswith("-1") else "RepairedPublished"
+    result = invoke_boundary_test(f"{CASE_PREFIX}.O_6D37E601F3EB_{suffix}")
     assert_behavior(result, expected_observation, "FAILURE-O-6D37E601F3EB")
 
 
@@ -54,7 +55,8 @@ def test_o_6d37e601f3eb(assertion_id: str, expected_observation: str) -> None:
     ids=["drift-blocked", "repaired-published"],
 )
 def test_o_8736d23a1baf(assertion_id: str, expected_observation: str) -> None:
-    result = invoke_boundary_test(f"{CASE_PREFIX}.O_8736D23A1BAF")
+    suffix = "DriftBlocked" if assertion_id.endswith("-1") else "RepairedPublished"
+    result = invoke_boundary_test(f"{CASE_PREFIX}.O_8736D23A1BAF_{suffix}")
     assert_behavior(result, expected_observation, "FAILURE-O-8736D23A1BAF")
 
 

@@ -15,7 +15,7 @@ public sealed class RestoreService
         if (!string.IsNullOrWhiteSpace(connectionString))
         {
             using var connection = new SqliteConnection(connectionString); connection.Open(); using var command = connection.CreateCommand();
-            command.CommandText = "CREATE TABLE IF NOT EXISTS runner_leases (lease_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, fence INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS restore_attempts (attempt_id TEXT PRIMARY KEY, idempotency_key TEXT NOT NULL UNIQUE, snapshot_id TEXT NOT NULL, workspace_id TEXT NOT NULL, account_id TEXT NOT NULL, project_id TEXT NOT NULL, status TEXT NOT NULL, fence INTEGER NOT NULL, updated_utc TEXT NOT NULL)"; command.ExecuteNonQuery();
+            command.CommandText = "CREATE TABLE IF NOT EXISTS runner_leases (lease_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, fence INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS restore_attempts (attempt_id TEXT PRIMARY KEY, idempotency_key TEXT NOT NULL UNIQUE, snapshot_id TEXT NOT NULL, workspace_id TEXT NOT NULL, account_id TEXT NOT NULL, project_id TEXT NOT NULL, status TEXT NOT NULL, fence INTEGER NOT NULL, updated_utc TEXT NOT NULL); CREATE TABLE IF NOT EXISTS restore_runtime_credentials (workspace_id TEXT PRIMARY KEY, credential_id TEXT NOT NULL)"; command.ExecuteNonQuery();
         }
     }
 
@@ -28,6 +28,7 @@ public sealed class RestoreService
         if (manifest.ProjectId != lease.ProjectId || manifest.AccountId != lease.AccountId)
             throw new UnauthorizedAccessException("restore lease ownership does not match snapshot");
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
+        DemandCurrentRuntimeCredential(context, manifest.WorkspaceId);
         DemandAuthoritativeLease(lease);
         var existing = LoadAttempt(idempotencyKey) ?? (_inMemoryAttempts.TryGetValue(idempotencyKey, out var remembered) ? remembered : null);
         if (existing is not null) return existing;
@@ -54,7 +55,9 @@ public sealed class RestoreService
             if (Directory.Exists(published)) Directory.Move(published, backup);
             try { Directory.Move(staging, published); }
             catch { if (Directory.Exists(backup) && !Directory.Exists(published)) Directory.Move(backup, published); throw; }
-            var result = attempt.Advance(RestoreAttemptStatus.Published); _inMemoryAttempts[idempotencyKey] = result; PersistAttempt(result, idempotencyKey, lease, manifest.AccountId, manifest.ProjectId); return result;
+            var result = attempt.Advance(RestoreAttemptStatus.Published);
+            PersistCurrentRuntimeCredential(context, manifest.WorkspaceId);
+            _inMemoryAttempts[idempotencyKey] = result; PersistAttempt(result, idempotencyKey, lease, manifest.AccountId, manifest.ProjectId); return result;
         }
         catch
         {
@@ -90,5 +93,28 @@ public sealed class RestoreService
         using var reader = command.ExecuteReader();
         if (!reader.Read() || reader.GetString(0) != lease.AccountId || reader.GetString(1) != lease.ProjectId || reader.GetInt64(2) != lease.Fence)
             throw new InvalidOperationException("runner lease is not authoritative");
+    }
+
+    private void DemandCurrentRuntimeCredential(RequestContext context, string workspaceId)
+    {
+        if (string.IsNullOrWhiteSpace(_connectionString)) return;
+        using var connection = new SqliteConnection(_connectionString); connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT credential_id FROM restore_runtime_credentials WHERE workspace_id=$workspace";
+        command.Parameters.AddWithValue("$workspace", workspaceId);
+        var currentCredential = command.ExecuteScalar()?.ToString();
+        if (currentCredential is not null && !StringComparer.Ordinal.Equals(currentCredential, context.CredentialId))
+            throw new UnauthorizedAccessException("restore runtime credential is no longer authoritative");
+    }
+
+    private void PersistCurrentRuntimeCredential(RequestContext context, string workspaceId)
+    {
+        if (string.IsNullOrWhiteSpace(_connectionString)) return;
+        using var connection = new SqliteConnection(_connectionString); connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO restore_runtime_credentials(workspace_id,credential_id) VALUES($workspace,$credential) ON CONFLICT(workspace_id) DO UPDATE SET credential_id=$credential";
+        command.Parameters.AddWithValue("$workspace", workspaceId);
+        command.Parameters.AddWithValue("$credential", context.CredentialId);
+        command.ExecuteNonQuery();
     }
 }

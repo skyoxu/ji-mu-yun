@@ -105,6 +105,7 @@ public sealed class WorkspaceStorageService
         command.CommandText = """
             CREATE TABLE IF NOT EXISTS workspace_quotas (account_id TEXT PRIMARY KEY, limit_bytes INTEGER NOT NULL, used_bytes INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS workspace_snapshots (snapshot_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, manifest_path TEXT NOT NULL, size_bytes INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0);
+            CREATE TABLE IF NOT EXISTS workspace_publication_blocks (project_id TEXT PRIMARY KEY, owner_drift_detected INTEGER NOT NULL DEFAULT 0);
             """;
         command.ExecuteNonQuery();
     }
@@ -161,6 +162,36 @@ public sealed class WorkspaceStorageService
         if (string.IsNullOrWhiteSpace(_connectionString)) return;
         using var connection = new SqliteConnection(_connectionString); connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "SELECT account_id FROM projects WHERE id=$id"; command.Parameters.AddWithValue("$id", projectId);
         var owner = command.ExecuteScalar()?.ToString() ?? throw new UnauthorizedAccessException("project ownership is unknown");
-        context.DemandAccount(owner);
+        if (!StringComparer.Ordinal.Equals(owner, context.AccountId))
+        {
+            RecordOwnerDrift(connection, projectId);
+            throw new UnauthorizedAccessException("project ownership mismatch");
+        }
+        if (OwnerDriftRequiresRepair(connection, projectId))
+            throw new UnauthorizedAccessException("project publication requires protected audited repair");
+    }
+
+    private static void RecordOwnerDrift(SqliteConnection connection, string projectId)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO workspace_publication_blocks(project_id,owner_drift_detected) VALUES($project,1) ON CONFLICT(project_id) DO UPDATE SET owner_drift_detected=1";
+        command.Parameters.AddWithValue("$project", projectId);
+        command.ExecuteNonQuery();
+    }
+
+    private static bool OwnerDriftRequiresRepair(SqliteConnection connection, string projectId)
+    {
+        using var block = connection.CreateCommand();
+        block.CommandText = "SELECT owner_drift_detected FROM workspace_publication_blocks WHERE project_id=$project";
+        block.Parameters.AddWithValue("$project", projectId);
+        if (Convert.ToInt32(block.ExecuteScalar() ?? 0) == 0) return false;
+
+        using var audit = connection.CreateCommand();
+        audit.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='workspace_repair_audit'";
+        if (Convert.ToInt32(audit.ExecuteScalar()) != 1) return true;
+        using var repair = connection.CreateCommand();
+        repair.CommandText = "SELECT COUNT(*) FROM workspace_repair_audit WHERE project_id=$project AND action='protected-owner-repair'";
+        repair.Parameters.AddWithValue("$project", projectId);
+        return Convert.ToInt32(repair.ExecuteScalar()) == 0;
     }
 }

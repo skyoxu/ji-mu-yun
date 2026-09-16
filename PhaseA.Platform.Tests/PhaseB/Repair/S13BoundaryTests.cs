@@ -20,6 +20,7 @@ public sealed class S13BoundaryTests
     {
         var source = Directory.CreateTempSubdirectory("s13-secret-source");
         var destination = Directory.CreateTempSubdirectory("s13-secret-destination");
+        var databasePath = Path.Combine(Path.GetTempPath(), $"s13-secret-{Guid.NewGuid():N}.db");
         try
         {
             File.WriteAllText(Path.Combine(source.FullName, "project.godot"), "restored");
@@ -42,23 +43,31 @@ public sealed class S13BoundaryTests
                 "correlation-current");
             var lease = new RunnerLease("lease-secret", "account-secret", "project-secret", 1);
 
-            var oldRejected = false;
-            try
+            var connectionString = $"Data Source={databasePath}";
+            using (var connection = new SqliteConnection(connectionString))
             {
-                new RestoreService().Restore(oldSecret, manifest, source.FullName, destination.FullName, lease, "old-secret");
+                connection.Open();
+                using var command = connection.CreateCommand();
+                command.CommandText = "CREATE TABLE runner_leases (lease_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, fence INTEGER NOT NULL); INSERT INTO runner_leases VALUES ('lease-secret', 'account-secret', 'project-secret', 1);";
+                command.ExecuteNonQuery();
             }
-            catch (UnauthorizedAccessException)
-            {
-                oldRejected = true;
-            }
-
-            var currentAttempt = new RestoreService().Restore(
+            var service = new RestoreService(connectionString);
+            var currentAttempt = service.Restore(
                 currentSecret,
                 manifest,
                 source.FullName,
                 destination.FullName,
                 lease,
                 "current-secret");
+            var oldRejected = false;
+            try
+            {
+                service.Restore(oldSecret, manifest, source.FullName, destination.FullName, lease, "old-secret");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                oldRejected = true;
+            }
             var currentEnabled = currentAttempt.Status == RestoreAttemptStatus.Published &&
                 File.ReadAllText(Path.Combine(destination.FullName, ".restore-current", "project.godot")) == "restored";
             if (oldRejected)
@@ -68,21 +77,35 @@ public sealed class S13BoundaryTests
         }
         finally
         {
+            SqliteConnection.ClearAllPools();
             source.Delete(true);
             destination.Delete(true);
+            if (File.Exists(databasePath)) File.Delete(databasePath);
         }
     }
 
     [Fact]
-    public void O_6D37E601F3EB()
+    public void O_6D37E601F3EB_DriftBlocked()
     {
-        RunDriftScenario("O-6D37E601F3EB", "move-policy");
+        RunDriftScenario("O-6D37E601F3EB", "move-policy", requireRepairedPublication: false);
     }
 
     [Fact]
-    public void O_8736D23A1BAF()
+    public void O_6D37E601F3EB_RepairedPublished()
     {
-        RunDriftScenario("O-8736D23A1BAF", "upgrade-policy");
+        RunDriftScenario("O-6D37E601F3EB", "move-policy", requireRepairedPublication: true);
+    }
+
+    [Fact]
+    public void O_8736D23A1BAF_DriftBlocked()
+    {
+        RunDriftScenario("O-8736D23A1BAF", "upgrade-policy", requireRepairedPublication: false);
+    }
+
+    [Fact]
+    public void O_8736D23A1BAF_RepairedPublished()
+    {
+        RunDriftScenario("O-8736D23A1BAF", "upgrade-policy", requireRepairedPublication: true);
     }
 
     [Fact]
@@ -153,7 +176,7 @@ public sealed class S13BoundaryTests
         }
     }
 
-    private void RunDriftScenario(string observationId, string policyVersion)
+    private void RunDriftScenario(string observationId, string policyVersion, bool requireRepairedPublication)
     {
         var databasePath = Path.Combine(Path.GetTempPath(), $"s13-drift-{Guid.NewGuid():N}.db");
         var root = Directory.CreateTempSubdirectory("s13-drift-root");
@@ -192,9 +215,12 @@ public sealed class S13BoundaryTests
             if (driftRejected && retryRejected && unrepairedRejected && repairedPublished && auditRecorded)
                 _output.WriteLine($"S13-OBSERVATION {observationId} repaired-published");
             Require(driftRejected, $"FAILURE-{observationId}", "Permission drift was publishable.");
-            Require(retryRejected, $"FAILURE-{observationId}", "A retry bypassed the drift block.");
-            Require(unrepairedRejected, $"FAILURE-{observationId}", "Owner restoration without an audited repair released publication.");
-            Require(repairedPublished && auditRecorded, $"FAILURE-{observationId}", "Audited repair did not release publication.");
+            if (requireRepairedPublication)
+            {
+                Require(retryRejected, $"FAILURE-{observationId}", "A retry bypassed the drift block.");
+                Require(unrepairedRejected, $"FAILURE-{observationId}", "Owner restoration without an audited repair released publication.");
+                Require(repairedPublished && auditRecorded, $"FAILURE-{observationId}", "Audited repair did not release publication.");
+            }
         }
         finally
         {
