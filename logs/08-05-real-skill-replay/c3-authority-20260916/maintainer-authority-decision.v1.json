@@ -1,0 +1,95 @@
+{
+  "schema_version": "tc-d1.c3-maintainer-authority-decision.v1",
+  "decision_id": "C3-AUTH-20260916-001",
+  "record_kind": "append_only_governance_decision",
+  "recorded_at": "2026-09-16T21:01:57+08:00",
+  "repository": "C:/buildgame/jimuyun",
+  "branch": "fix/08-05-real-skill-replay",
+  "candidate_commit": "e2a87446d3edbfc329d9c9ce24f744dfcc4424e0",
+  "canonical_plan": {
+    "plan_id": "PLAN-2D462DE421F6",
+    "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/current-plan",
+    "semantic_plan_sha256": "sha256:ec5388e48c1ed0930c7a0edd1ba6aa934979d4b8cfba887f1e1300796e2fc882",
+    "semantic_chain_audit_sha256": "sha256:0d67ba5c13aebbb04f655570badee0685af34e737c2e7e038a29a55c8f70c3b6",
+    "source_index_sha256": "sha256:e246e7bb10f9105bc5460a7806dd268ab6e9551f3e67c9c5453cbd945b1d1d1d",
+    "requirements_sha256": "sha256:d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+    "compiler_status": "plan-ready",
+    "obligation_count": 114,
+    "acceptance_count": 114,
+    "slice_count": 45,
+    "semantic_edge_count": 136
+  },
+  "human_maintainer": {
+    "identity": "skyoxu",
+    "git_identity": "skyoxu <skyoxu@hotmail.com>",
+    "authority_basis": [
+      "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md"
+    ],
+    "decision_source": "explicit maintainer instruction in the current repository session",
+    "ai_role": "executor_and_recorder_only"
+  },
+  "decisions": {
+    "product_scope": {
+      "approved": true,
+      "scope": "TC-D1 current canonical Spec package and its existing 08-05 repair target only",
+      "spec_identity": "SPEC-tc-d1-trustworthy-skill-replay-and-evaluation-repair",
+      "exclusions": [
+        "no replacement TC-D1 requirements directory",
+        "no roadmap expansion",
+        "no PhaseA/runtime/Hosted workspace or installed BMAD/GDS boundary change",
+        "no Acceptance, release, archive, or merge approval"
+      ]
+    },
+    "trust_approval": {
+      "approved": true,
+      "approval_type": "candidate_external_content_matched_trust_approval",
+      "source_policy": "historical Skill Creator root remains the permitted source; no alternate source is approved",
+      "validator_capability": {
+        "descriptor_path": "scripts/sc/config/skill-package-validator-capability.v1.json",
+        "descriptor_sha256": "sha256:304981674348f2831e8bfc550e48f48eec6dece50e8ee6cf9dfb3bd6a08297ac",
+        "allowed_root": ".agents/skills/run-refactor-implementation-acceptance",
+        "validator_entrypoint": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "validator_sha256": "sha256:3d77c289e37aac15b3bec6ef069b5ca6e3a9032f3eb83b34e79249c126bf945c",
+        "source_root_sha256": "sha256:694999128dfe183c74a5c89ef8e93bcb379273074b1fd89a505291099c981552",
+        "source_root_file_count": 95,
+        "package_identity": "acceptance-package-v1"
+      },
+      "semantic_dependency_closure": {
+        "plan_bundle_sha256": "sha256:ec5388e48c1ed0930c7a0edd1ba6aa934979d4b8cfba887f1e1300796e2fc882",
+        "chain_audit_sha256": "sha256:0d67ba5c13aebbb04f655570badee0685af34e737c2e7e038a29a55c8f70c3b6",
+        "support_policy_paths": [
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          ".agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json",
+          "scripts/sc/config/workflow_model_routes.v1.json"
+        ],
+        "support_policy_sha256": {
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md": "sha256:dce429788d71ad95c087d563b1ae753b3ea721f6300a6951914113bdbfb29110",
+          ".agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc",
+          "scripts/sc/config/workflow_model_routes.v1.json": "sha256:355e5d4b39ec84c1818fefdbdc366b3b873bf8f694c2a15422598ddcd0ffa912"
+        }
+      },
+      "approved_scope": [
+        "current canonical plan semantic closure",
+        "VDD package validation target declared by capability",
+        "Acceptance package validation target declared by capability",
+        "workflow-model-routing consumer evidence"
+      ]
+    },
+    "consumer_manifest": {
+      "exception_approved": false,
+      "omitted_consumers": [],
+      "required_consumers": ["VDD", "Acceptance", "workflow-model-routing"],
+      "decision": "no omission or exception is approved; every applicable Consumer remains mandatory",
+      "manifest_identity_source": "canonical plan Consumer Manifest and bidirectional repository call-surface reconciliation"
+    }
+  },
+  "c3_gate": {
+    "status": "satisfied_for_current_canonical_scope",
+    "resolved_questions": [3, 4, 5],
+    "open_boundary": "C3 approval does not authorize implementation completion, Acceptance, release, archive, or merge",
+    "implementation_authorization": "not_granted_by_this_record"
+  },
+  "authorizes": [],
+  "non_authorizing_note": "This record is a maintainer governance decision. Derived plan, replay, seed, matrix, review, and Quick Dev artifacts must continue to expose authorizes=[]; this record does not replace their lifecycle authority."
+}
