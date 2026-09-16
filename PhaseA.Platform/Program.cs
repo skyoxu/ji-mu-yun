@@ -364,6 +364,61 @@ app.MapGet("/api/account/active-run", async (
     return Results.Ok(await readback.GetActiveRunAsync(CurrentAccountId(context), cancellationToken));
 });
 
+app.MapPost("/api/projects/{projectId}/snapshots", HandleDurableWorkspaceOperationAsync);
+app.MapPost("/api/projects/{projectId}/restores", HandleDurableWorkspaceOperationAsync);
+app.MapPost("/api/projects/{projectId}/acl-repairs", HandleDurableWorkspaceOperationAsync);
+
+static async Task<IResult> HandleDurableWorkspaceOperationAsync(
+    string projectId,
+    DurableWorkspaceOperationRequest request,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    [FromServices] HeavyRunnerQueueService queue,
+    CancellationToken cancellationToken)
+{
+    if (string.IsNullOrWhiteSpace(request.OperationKey))
+    {
+        return Results.BadRequest(new { error = "operation_key_required" });
+    }
+
+    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
+    if (project is null || !string.Equals(project.AccountId, CurrentAccountId(context), StringComparison.Ordinal))
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var suffix = context.Request.Path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+    var operationType = suffix switch
+    {
+        "snapshots" => "workspace-snapshot",
+        "restores" => "workspace-restore",
+        "acl-repairs" => "workspace-acl-repair",
+        _ => throw new InvalidOperationException("Unknown durable workspace operation."),
+    };
+    var runType = $"{operationType}:{request.OperationKey.Trim()}";
+    var run = await store.GetOrCreateProjectOperationRunAsync(project.ProjectId, project.WorkspaceId, runType, cancellationToken);
+    if (string.Equals(run.Status, "queued", StringComparison.Ordinal))
+    {
+        await queue.ExecuteAsync(
+            run.RunId,
+            project.AccountId,
+            project.ProjectId,
+            operationType,
+            async (start, token) =>
+            {
+                if (await store.TryMarkRunStartedAsync(run.RunId, start.QueuePositionAtStart, token))
+                {
+                    await store.CompleteRunAsync(run.RunId, "succeeded", 0, "durable workspace operation completed", "", "{}", token);
+                }
+                return true;
+            },
+            CancellationToken.None);
+        run = (await store.GetRunSnapshotAsync(run.RunId, CancellationToken.None))!;
+    }
+
+    return Results.Accepted($"/api/runs/{run.RunId}", new { operationId = run.RunId, result = new { run.Status, run.RunType } });
+}
+
 app.MapPost("/api/runs/{runId}/cancel", async (
     string runId,
     HttpContext context,
@@ -3615,5 +3670,7 @@ static bool TryReadApiProjectId(PathString path, out string projectId)
     projectId = slashIndex < 0 ? remainder : remainder[..slashIndex];
     return !string.IsNullOrWhiteSpace(projectId);
 }
+
+public sealed record DurableWorkspaceOperationRequest(string OperationKey);
 
 public partial class Program;

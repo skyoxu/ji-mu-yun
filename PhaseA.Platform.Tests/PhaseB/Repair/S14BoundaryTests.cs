@@ -16,7 +16,9 @@ namespace PhaseA.Platform.Tests.PhaseB.Repair;
 [Collection("PhaseA process HTTP")]
 public sealed class S14BoundaryTests
 {
-    private static readonly string RepositoryRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+    private static readonly string RepositoryRoot = Environment.GetEnvironmentVariable("PHASEA_TEST_REPOSITORY_ROOT")
+        ?? FindRepositoryRoot(Directory.GetCurrentDirectory());
+    private static readonly string PlatformAssemblyPath = typeof(Program).Assembly.Location;
     private readonly ITestOutputHelper _output;
 
     public S14BoundaryTests(ITestOutputHelper output)
@@ -133,9 +135,9 @@ public sealed class S14BoundaryTests
 
     private static Process StartServer(string url, string databasePath, string workspaceRoot)
     {
-        var start = new ProcessStartInfo("dotnet", $"\"{Path.Combine(AppContext.BaseDirectory, "PhaseA.Platform.dll")}\"")
+        var start = new ProcessStartInfo("dotnet", $"\"{PlatformAssemblyPath}\"")
         {
-            WorkingDirectory = Path.Combine(RepositoryRoot, "PhaseA.Platform"),
+            WorkingDirectory = Path.GetDirectoryName(PlatformAssemblyPath)!,
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardOutput = true,
@@ -147,6 +149,7 @@ public sealed class S14BoundaryTests
         start.Environment["PHASEA_METADATA_DB_PATH"] = databasePath;
         start.Environment["HOSTED_WORKSPACE_ROOT"] = workspaceRoot;
         start.Environment["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot;
+        start.Environment["ASPNETCORE_CONTENTROOT"] = Path.Combine(RepositoryRoot, "PhaseA.Platform");
         return Process.Start(start) ?? throw new InvalidOperationException("Failed to start PhaseA.Platform.");
     }
 
@@ -182,6 +185,19 @@ public sealed class S14BoundaryTests
         var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();
         return port;
+    }
+
+    private static string FindRepositoryRoot(string startingDirectory)
+    {
+        for (var directory = new DirectoryInfo(startingDirectory); directory is not null; directory = directory.Parent)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "PhaseA.Platform", "PhaseA.Platform.csproj")))
+            {
+                return directory.FullName;
+            }
+        }
+
+        throw new DirectoryNotFoundException("Repository root containing PhaseA.Platform was not found.");
     }
 
     private static async Task DeleteDirectoryWithRetryAsync(string path)

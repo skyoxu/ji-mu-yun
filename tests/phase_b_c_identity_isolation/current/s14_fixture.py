@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -38,6 +39,8 @@ def invoke_boundary_test(case_name: str) -> BoundaryResult:
             results_directory,
         ]
         try:
+            environment = os.environ.copy()
+            environment["PHASEA_TEST_REPOSITORY_ROOT"] = str(REPOSITORY_ROOT)
             completed = subprocess.run(
                 argv,
                 cwd=REPOSITORY_ROOT,
@@ -48,6 +51,7 @@ def invoke_boundary_test(case_name: str) -> BoundaryResult:
                 encoding="utf-8",
                 errors="replace",
                 timeout=180,
+                env=environment,
             )
         except subprocess.TimeoutExpired as error:
             raise RuntimeError(f"S14 harness timeout for {case_name}") from error

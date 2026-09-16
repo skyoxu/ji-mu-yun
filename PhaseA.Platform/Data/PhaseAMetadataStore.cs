@@ -2749,6 +2749,59 @@ public sealed class PhaseAMetadataStore
         return runId;
     }
 
+    public async Task<RunSnapshot> GetOrCreateProjectOperationRunAsync(
+        string projectId,
+        string workspaceId,
+        string runType,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(workspaceId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(runType);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        await using var existing = connection.CreateCommand();
+        existing.Transaction = transaction;
+        existing.CommandText = """
+            SELECT id, project_id, workspace_id, run_type, status, created_utc, started_utc, finished_utc,
+                   queue_position_at_start, exit_code, stdout_text, stderr_text, evidence_json,
+                   progress_step, progress_substep, progress_label, progress_updated_utc,
+                   llm_gateway, llm_request_id, llm_model, llm_cost_json
+            FROM runs
+            WHERE project_id = $project_id AND run_type = $run_type
+            ORDER BY created_utc DESC, id DESC
+            LIMIT 1;
+            """;
+        existing.Parameters.AddWithValue("$project_id", projectId);
+        existing.Parameters.AddWithValue("$run_type", runType);
+        await using var reader = await existing.ExecuteReaderAsync(cancellationToken);
+        if (await reader.ReadAsync(cancellationToken))
+        {
+            var snapshot = ReadRunSnapshot(reader);
+            await transaction.CommitAsync(cancellationToken);
+            return snapshot;
+        }
+
+        await reader.DisposeAsync();
+        var runId = NewId();
+        await using var create = connection.CreateCommand();
+        create.Transaction = transaction;
+        create.CommandText = """
+            INSERT INTO runs (id, project_id, workspace_id, run_type, status, created_utc)
+            VALUES ($id, $project_id, $workspace_id, $run_type, 'queued', $created_utc);
+            """;
+        create.Parameters.AddWithValue("$id", runId);
+        create.Parameters.AddWithValue("$project_id", projectId);
+        create.Parameters.AddWithValue("$workspace_id", workspaceId);
+        create.Parameters.AddWithValue("$run_type", runType);
+        var createdUtc = DateTimeOffset.UtcNow.ToString("O");
+        create.Parameters.AddWithValue("$created_utc", createdUtc);
+        await create.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return new RunSnapshot(runId, projectId, workspaceId, runType, "queued", createdUtc, null, null, null, null, null, null, null);
+    }
+
     public async Task MarkRunStartedAsync(string runId, CancellationToken cancellationToken = default)
     {
         await MarkRunStartedAsync(runId, null, cancellationToken);
