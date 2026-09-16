@@ -8,6 +8,16 @@ This is execution metadata for the existing requirement above, not an additional
 Use the following exact per-obligation test-author entries. Original slice IDs are locators only; canonical compilation owns new slice grouping and identities. Preserve each independent oracle and assertion, including all behavior RED and non-runtime failure-family distinctions.
 Do not invent alternate test filenames. A planned test is not an existing test and cannot establish present/missing until Quick Dev authors and executes its real assertions. Keep the exact entry in planned_new_files, execution_snapshot_paths and allowed_write_paths for its corresponding hint. Keep production owners outside frozen test snapshots.
 
+### S1 execution context repair
+
+Bound existing obligation: O-0975596C598C.
+This is a selector/collector compatibility correction only; it does not add an obligation, change the FR-3 oracle, or authorize candidate trust.
+Real production entry point: `.agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py`.
+Quick Dev test selector: `py -3 -m pytest .agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py`.
+The selector must remain pytest-based because the current CER collector requires pytest case events; the existing unittest spelling is not a valid current-run selector.
+Retain existing fixture `.agents/skills/quick-dev-tdd-adapter/tools/tests/fixtures/candidate-identity.v1.json` only for its actual declared role; file existence alone proves no behavior.
+Retain existing test `.agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py` only for its actual declared role; authoring and execution evidence remain required.
+
 ### S3 execution context
 
 Bound existing obligations: O-0795BA09F6F1.
@@ -93,6 +103,7 @@ Retain existing fixture `.agents/skills/vdd-conformance-exact-cover/tests/valida
 Retain existing fixture `scripts/toolchain/tests/test_candidate_content_paths.py` only for its actual declared role; file existence alone proves no behavior.
 
 <!-- selector-repair-binding-end -->
+
 
 # FR-2
 Supported VDD and Acceptance package routes remain available and successful evidence binds the effective inspected content.
@@ -2001,4 +2012,3 @@ Retain existing fixture `scripts/sc/tests/test_git_snapshot.py` only for its act
 Retain existing fixture `scripts/sc/tests/test_skill_package_replay.py` only for its actual declared role; file existence alone proves no behavior.
 
 <!-- selector-repair-binding-end -->
-
