@@ -311,10 +311,17 @@ def run_llm_exec(
         *[str(item) for item in (codex_extra_args or [])],
         "-",
     ]
+    # ADR-0041: timeout_sec is a whole worker-call budget, not a budget per
+    # transient retry.  Retrying with the original timeout can multiply a
+    # 180-second VDD worker limit into an eighteen-minute stall.
     retries = 0
+    deadline = time.monotonic() + timeout_sec
     while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return 124, "codex exec timeout\n", cmd
         try:
-            code, output = _run_codex_process(cmd, root=root, prompt=prompt, timeout_sec=timeout_sec)
+            code, output = _run_codex_process(cmd, root=root, prompt=prompt, timeout_sec=remaining)
         except Exception as exc:  # noqa: BLE001
             return 1, f"codex exec failed to start: {exc}\n", cmd
         if not _is_transient_failure(code, output) or retries >= TRANSIENT_RETRY_LIMIT:
@@ -323,4 +330,6 @@ def run_llm_exec(
             return code, output, cmd
         retries += 1
         _clear_output_file(output_last_message)
+        if deadline - time.monotonic() <= 0:
+            return 124, "codex exec timeout\n", cmd
         _retry_pause(retries)
