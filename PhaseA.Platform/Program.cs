@@ -2121,8 +2121,19 @@ app.MapPost("/api/admin/users/{accountId}/status", async (
     CancellationToken cancellationToken) =>
 {
     ApplyNoStore(context);
-    if (!CurrentIdentity(context).IsAdmin)
+    var identity = CurrentIdentity(context);
+    if (!identity.IsAdmin)
     {
+        await store.RecordAdminAccountAuditEventAsync(
+            identity.AccountId,
+            request.Disabled ? "user_disabled" : "user_enabled",
+            accountId,
+            AdminLifecycleAuditMetadata(
+                request.Disabled ? "user_disabled" : "user_enabled",
+                accountId,
+                "denied",
+                "admin_required"),
+            cancellationToken);
         return AdminForbidden();
     }
 
@@ -2135,10 +2146,14 @@ app.MapPost("/api/admin/users/{accountId}/status", async (
     if (updated)
     {
         await store.RecordAdminAccountAuditEventAsync(
-            CurrentAccountId(context),
+            identity.AccountId,
             request.Disabled ? "user_disabled" : "user_enabled",
             accountId,
-            new { disabled = request.Disabled },
+            AdminLifecycleAuditMetadata(
+                request.Disabled ? "user_disabled" : "user_enabled",
+                accountId,
+                "authorized",
+                "completed"),
             cancellationToken);
     }
     return updated ? Results.Ok(new { accountId, disabled = request.Disabled }) : Results.NotFound(new { error = "user_not_found" });
@@ -2151,8 +2166,15 @@ app.MapPost("/api/admin/users/{accountId}/rotate-token", async (
     CancellationToken cancellationToken) =>
 {
     ApplyNoStore(context);
-    if (!CurrentIdentity(context).IsAdmin)
+    var identity = CurrentIdentity(context);
+    if (!identity.IsAdmin)
     {
+        await store.RecordAdminAccountAuditEventAsync(
+            identity.AccountId,
+            "user_token_rotated",
+            accountId,
+            AdminLifecycleAuditMetadata("user_token_rotated", accountId, "denied", "admin_required"),
+            cancellationToken);
         return AdminForbidden();
     }
 
@@ -2165,10 +2187,10 @@ app.MapPost("/api/admin/users/{accountId}/rotate-token", async (
     if (result is not null)
     {
         await store.RecordAdminAccountAuditEventAsync(
-            CurrentAccountId(context),
+            identity.AccountId,
             "user_token_rotated",
             accountId,
-            new { username = result.Username },
+            AdminLifecycleAuditMetadata("user_token_rotated", accountId, "authorized", "completed"),
             cancellationToken);
     }
     return result is null ? Results.NotFound(new { error = "user_not_found" }) : Results.Ok(result);
@@ -3422,6 +3444,24 @@ static string CurrentAccountId(HttpContext context)
 static IResult AdminForbidden()
 {
     return Results.Json(new { error = "admin_required" }, statusCode: StatusCodes.Status403Forbidden);
+}
+
+static Dictionary<string, string> AdminLifecycleAuditMetadata(
+    string action,
+    string accountId,
+    string outcome,
+    string operationOutcome)
+{
+    return new Dictionary<string, string>
+    {
+        ["operation_id"] = Guid.NewGuid().ToString("N"),
+        ["account_id"] = accountId,
+        ["correlation_id"] = Guid.NewGuid().ToString("N"),
+        ["action"] = action,
+        ["status"] = outcome,
+        ["outcome"] = outcome,
+        [outcome == "denied" ? "denial_outcome" : "drain_outcome"] = operationOutcome
+    };
 }
 
 static IResult CancelledRunResult()

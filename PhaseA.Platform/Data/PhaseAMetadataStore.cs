@@ -6349,6 +6349,8 @@ public sealed class PhaseAMetadataStore
         string projectId,
         CancellationToken cancellationToken)
     {
+        await EnsureProjectOwnershipLineageTableAsync(connection, cancellationToken);
+
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
@@ -6361,9 +6363,58 @@ public sealed class PhaseAMetadataStore
                   SELECT 1
                   FROM accounts
                   WHERE accounts.id = projects.account_id
-              );
+              )
+              AND bootstrap_status <> 'quarantined';
             """;
         command.Parameters.AddWithValue("$project_id", projectId);
+        if (await command.ExecuteNonQueryAsync(cancellationToken) == 0)
+        {
+            return;
+        }
+
+        await using var lineage = connection.CreateCommand();
+        lineage.CommandText =
+            """
+            INSERT INTO project_ownership_lineage (
+                project_id,
+                sequence_number,
+                decision,
+                correlation_id,
+                created_utc)
+            VALUES (
+                $project_id,
+                COALESCE((
+                    SELECT MAX(sequence_number) + 1
+                    FROM project_ownership_lineage
+                    WHERE project_id = $project_id
+                ), 1),
+                'quarantined',
+                $correlation_id,
+                $created_utc);
+            """;
+        lineage.Parameters.AddWithValue("$project_id", projectId);
+        lineage.Parameters.AddWithValue("$correlation_id", Guid.NewGuid().ToString("N"));
+        lineage.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
+        await lineage.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static async Task EnsureProjectOwnershipLineageTableAsync(
+        SqliteConnection connection,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            CREATE TABLE IF NOT EXISTS project_ownership_lineage (
+                project_id TEXT NOT NULL,
+                sequence_number INTEGER NOT NULL,
+                decision TEXT NOT NULL,
+                correlation_id TEXT NOT NULL,
+                created_utc TEXT NOT NULL,
+                PRIMARY KEY (project_id, sequence_number),
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+            );
+            """;
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
