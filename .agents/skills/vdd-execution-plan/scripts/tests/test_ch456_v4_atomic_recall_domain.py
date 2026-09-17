@@ -92,3 +92,12 @@ def test_duplicate_ids_remain_a_deterministic_domain_failure() -> None:
         },
     )
     assert findings == ["supported_obligation_ids:duplicate-frozen-id:O-1"]
+
+
+def test_incomplete_frozen_partition_requires_repair() -> None:
+    findings = v4_domain._domain_findings(
+        "v4-atomic-recall",
+        _payload(),
+        {"supported_obligation_ids": ["O-1"], "invented_obligation_ids": [], "source_gap_claims": []},
+    )
+    assert findings == ["obligation-partition-incomplete:O-2"]

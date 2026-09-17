@@ -111,6 +111,13 @@ def _domain_findings(stage: str, payload: Mapping[str, Any], value: Mapping[str,
         unknown = sorted({str(item) for item in raw if isinstance(item, str)} - allowed_ids)
         if unknown:
             findings.append(f"{field}:unknown-frozen-id:" + ",".join(unknown))
+    supported = set(value.get("supported_obligation_ids") or [])
+    invented = set(value.get("invented_obligation_ids") or [])
+    missing = sorted(allowed_ids - (supported | invented))
+    if missing:
+        # ADR-0041: an incomplete classification cannot be reused as an
+        # independent source-recall judgment.
+        findings.append("obligation-partition-incomplete:" + ",".join(missing))
     gaps = value.get("source_gap_claims")
     if isinstance(gaps, list):
         for index, raw_gap in enumerate(gaps):
@@ -190,7 +197,7 @@ def v4_transport_invoke_worker(
         + json.dumps(ids, ensure_ascii=False)
         + ". Do not create, rewrite, abbreviate, duplicate, or infer identifier tokens. source_gap_claims.source_ref may contain ONLY: "
         + json.dumps(refs, ensure_ascii=False)
-        + ". An empty source_gap_claims array is valid when no independently observable source behavior is missing."
+        + ". Classify every frozen obligation exactly once as supported or invented. An empty source_gap_claims array is valid when no independently observable source behavior is missing."
     )
     full_prompt = (
         "You are a read-only semantic compiler worker. Do not modify files. "
