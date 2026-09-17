@@ -1301,6 +1301,8 @@ public sealed class PhaseAMetadataStore
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
+        await QuarantineAmbiguousProjectOwnershipAsync(connection, projectId, cancellationToken);
+
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
@@ -1316,13 +1318,13 @@ public sealed class PhaseAMetadataStore
                 p.bootstrap_status,
                 p.bootstrap_error,
                 p.game_type_match_json,
-                w.id,
-                w.root_path,
-                w.repo_path,
-                w.runtime_path,
-                w.meta_path
+                COALESCE(w.id, ''),
+                COALESCE(w.root_path, ''),
+                COALESCE(w.repo_path, ''),
+                COALESCE(w.runtime_path, ''),
+                COALESCE(w.meta_path, '')
             FROM projects p
-            INNER JOIN workspaces w ON w.project_id = p.id
+            LEFT JOIN workspaces w ON w.project_id = p.id
             WHERE p.id = $project_id;
             """;
         command.Parameters.AddWithValue("$project_id", projectId);
@@ -6339,6 +6341,29 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$username", _options.AdminUsername);
         command.Parameters.AddWithValue("$password_hash", (object?)_options.AdminPasswordHash ?? DBNull.Value);
         command.Parameters.AddWithValue("$token_hash", (object?)_options.AdminTokenHash ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static async Task QuarantineAmbiguousProjectOwnershipAsync(
+        SqliteConnection connection,
+        string projectId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE projects
+            SET bootstrap_status = 'quarantined',
+                bootstrap_error = COALESCE(bootstrap_error, 'Project ownership is ambiguous.')
+            WHERE id = $project_id
+              AND instr(account_id, '|') > 0
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM accounts
+                  WHERE accounts.id = projects.account_id
+              );
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
