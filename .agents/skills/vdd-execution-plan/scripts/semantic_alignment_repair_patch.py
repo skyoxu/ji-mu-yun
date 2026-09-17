@@ -14,11 +14,51 @@ from __future__ import annotations
 
 from typing import Any, Mapping, Sequence
 
+import json
+
 import semantic_compiler_gate as gate
 import semantic_worker_v3_domain_patch  # noqa: F401  # preserve frozen V3 domain first
 
 sc = gate.sc
 _BASE_SEMANTIC_ALIGN = sc.semantic_align
+_MAX_V4_ALIGNMENT_INPUT_CHARS = 900_000
+
+
+def _chunked_alignment(
+    *, root, out_dir, source_index, obligations, acceptances, failures, worker_cache,
+) -> dict[str, Any]:
+    """ADR-0041: split only an input that cannot fit the worker transport."""
+    entries = [item for item in source_index.get("entries", []) if isinstance(item, Mapping)]
+    by_acceptance = {str(item.get("acceptance_id")): item for item in acceptances if isinstance(item, Mapping)}
+    merged = {key: [] for key in ("covered_obligation_ids", "missing_obligation_ids", "invented_obligation_ids", "misaligned_acceptance_ids", "repairs")}
+    for index, entry in enumerate(entries, start=1):
+        ref = entry.get("source_ref")
+        if not isinstance(ref, str):
+            continue
+        scoped_obligations = [item for item in obligations if ref in item.get("source_refs", [])]
+        ids = {str(item.get("obligation_id")) for item in scoped_obligations}
+        scoped_acceptances = [item for item in acceptances if ids.intersection(str(x) for x in item.get("obligation_ids", []))]
+        aids = {str(item.get("acceptance_id")) for item in scoped_acceptances}
+        scoped_failures = [item for item in failures if aids.intersection(str(x) for x in item.get("acceptance_ids", []))]
+        payload = sc.alignment_payload({"entries": [entry]}, scoped_obligations, scoped_acceptances, scoped_failures)
+        raw = sc.invoke_worker(
+            root=root, out_dir=out_dir, stage=f"v4-source-chunk-{index:02d}", payload=payload, worker_cache=worker_cache,
+            prompt=(
+                "Independently align this frozen source partition to its supplied obligations, Acceptance and RED intents. "
+                "Return covered_obligation_ids[], missing_obligation_ids[], invented_obligation_ids[], "
+                "misaligned_acceptance_ids[], oracle_alignment object, repairs[]. A boolean valid is not authoritative."
+                + sc.ALIGNMENT_SCOPE_PROMPT
+            ),
+        )
+        for key in merged:
+            value = raw.get(key)
+            if not isinstance(value, list):
+                raise ValueError(f"V4 source chunk {index} missing {key}")
+            merged[key].extend(value)
+    for key in merged:
+        if key != "repairs":
+            merged[key] = sorted(set(str(value) for value in merged[key] if isinstance(value, str)))
+    return {**merged, "oracle_alignment": {"mode": "source-partitioned"}}
 
 
 def _string_list(value: Any, *, nonempty: bool = False) -> bool:
@@ -242,15 +282,18 @@ def semantic_align_with_bounded_repair(
     failures: Sequence[Mapping[str, Any]],
     worker_cache: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
-    first = _BASE_SEMANTIC_ALIGN(
-        root=root,
-        out_dir=out_dir,
-        source_index=source_index,
-        obligations=obligations,
-        acceptances=acceptances,
-        failures=failures,
-        worker_cache=worker_cache,
-    )
+    payload = sc.alignment_payload(source_index, obligations, acceptances, failures)
+    if len(json.dumps(payload, ensure_ascii=False, sort_keys=True)) > _MAX_V4_ALIGNMENT_INPUT_CHARS:
+        raw = _chunked_alignment(root=root, out_dir=out_dir, source_index=source_index,
+                                 obligations=obligations, acceptances=acceptances,
+                                 failures=failures, worker_cache=worker_cache)
+        first = {"valid": not _alignment_findings(raw, obligations, acceptances),
+                 "findings": _alignment_findings(raw, obligations, acceptances), "worker": raw}
+    else:
+        first = _BASE_SEMANTIC_ALIGN(
+            root=root, out_dir=out_dir, source_index=source_index, obligations=obligations,
+            acceptances=acceptances, failures=failures, worker_cache=worker_cache,
+        )
     if first.get("valid"):
         return first
     findings = [str(item) for item in first.get("findings", [])]
