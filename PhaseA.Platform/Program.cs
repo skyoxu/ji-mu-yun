@@ -289,7 +289,10 @@ app.Use(async (context, next) =>
     context.Items["phasea.role"] = identity.Role;
     context.Items["phasea.accountId"] = identity.AccountId;
     context.Items["phasea.username"] = identity.Username;
-    PersistAccessTokenCookie(context);
+    if (!identity.IsAdmin)
+    {
+        PersistAccessTokenCookie(context);
+    }
     await next(context);
 });
 
