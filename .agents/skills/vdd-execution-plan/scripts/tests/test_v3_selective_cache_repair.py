@@ -107,12 +107,31 @@ class SelectiveCacheRepairTests(unittest.TestCase):
         findings = _findings(self.root, 'v3-schema-repair', payload, result)
         assert any('selector-target-missing-not-planned' in f for f in findings)
 
-    def test_changed_frozen_input_does_not_reuse_old_chunk(self):
+    def test_changed_group_input_reuses_each_executable_contract(self):
+        payload, original, cache, out, calls = setup_run(self.root, self, bad=False)
+        payload['input']['frozen_source_index_sha256'] = 'sha256:new-input'
+        repair._live_group_repair(root=self.root, out_dir=out, payload=payload, prompt='Repair.')
+        assert calls == []
+        assert json.loads(cache.read_text()) == original
+
+    def test_changed_group_input_requests_only_the_unusable_contract(self):
         payload, original, cache, out, calls = setup_run(self.root, self)
         payload['input']['frozen_source_index_sha256'] = 'sha256:new-input'
         repair._live_group_repair(root=self.root, out_dir=out, payload=payload, prompt='Repair.')
-        assert [ids for ids, _ in calls] == [['O-1', 'O-2']]
-        assert json.loads(cache.read_text()) == original
+        assert [ids for ids, _ in calls] == [['O-2']]
+
+    def test_governance_failure_intent_does_not_invalidate_an_executable_contract(self):
+        payload, original, cache, out, calls = setup_run(self.root, self, bad=False)
+        payload['input']['obligations'][0].update({'requirement_type': 'Governance', 'obligation_kind': 'constraint'})
+        repair._live_group_repair(root=self.root, out_dir=out, payload=payload, prompt='Repair.')
+        assert calls == []
+
+    def test_phase_path_is_not_a_cache_refresh_reason(self):
+        payload, original, cache, out, calls = setup_run(self.root, self, bad=False)
+        original['obligation_contracts']['O-1']['slice_hint']['production_owners'] = ['PhaseA.Platform/Program.cs']
+        cache.write_text(json.dumps(original), encoding='utf-8')
+        repair._live_group_repair(root=self.root, out_dir=out, payload=payload, prompt='Repair.')
+        assert calls == []
 
     def test_unknown_cached_obligation_is_not_silently_dropped(self):
         payload, original, cache, out, calls = setup_run(self.root, self)

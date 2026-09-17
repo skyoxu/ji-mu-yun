@@ -126,6 +126,39 @@ def _repair_chunks(payload: Mapping[str, Any]) -> list[list[str]]:
             for index in range(0, len(ids), _MAX_CONTRACTS_PER_WORKER)]
 
 
+def _reusable_prior_contracts(
+    *, root: Path, cache_dir: Path, payload: Mapping[str, Any], ids: list[str],
+) -> dict[str, Any]:
+    """Recover usable per-obligation contracts across changed group payloads.
+
+    ADR-0041: chunk labels are positional presentation only.  A changed full V3 domain
+    may move a still-valid obligation into a new group and therefore produce a
+    different group-cache key.  Reuse the individual contract when its own
+    current execution snapshot is usable; only missing/unusable obligations
+    may cause a fresh worker request.
+    """
+    wanted = set(ids)
+    recovered: dict[str, Any] = {}
+    for path in sorted(cache_dir.glob(_GROUP_STAGE + "-chunk-*.json")):
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            contracts = raw.get("obligation_contracts") if isinstance(raw, Mapping) else None
+            if not isinstance(contracts, Mapping):
+                continue
+            for oid in sorted(wanted - set(recovered)):
+                contract = contracts.get(oid)
+                if not isinstance(contract, Mapping):
+                    continue
+                single_payload = _narrow_repair_payload(payload, [oid])
+                single = {"obligation_contracts": {oid: contract}}
+                projected = _project_current_output(single, _obligation_refs(single_payload))
+                if not sc._v3_cache_requires_contract_refresh(projected, root, single_payload):
+                    recovered[oid] = contract
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+            continue
+    return recovered
+
+
 def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
     obligations = _repair_obligations(payload)
     known_ids = sorted({
@@ -643,6 +676,25 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
             if sc._v3_cache_requires_contract_refresh(projected_chunk, root, chunk_payload):
                 raw_chunk = request_chunk(ids, f"{chunk_index:02d}")
         else:
+            # The full group payload can change when a bounded V3 repair adds
+            # unrelated obligations.  Reuse every individually executable
+            # contract from prior groups before asking a worker for the actual
+            # missing members.
+            recovered = _reusable_prior_contracts(root=root, cache_dir=cache_dir, payload=payload, ids=ids)
+            if recovered:
+                for index, oid in enumerate(ids, start=1):
+                    if oid not in recovered:
+                        child = request_chunk([oid], f"{chunk_index:02d}-{index}")
+                        recovered.update(child["obligation_contracts"])
+                raw_chunk = {"obligation_contracts": recovered}
+                _project_current_output(raw_chunk, _obligation_refs(chunk_payload))
+                _write_refreshable_json(chunk_cache, raw_chunk)
+                contracts = raw_chunk["obligation_contracts"]
+                overlap = set(merged) & set(contracts)
+                if overlap:
+                    raise ValueError("V3 group repair chunks duplicate frozen obligations: " + ",".join(sorted(overlap)))
+                merged.update(contracts)
+                continue
             output = out_dir / ".compiler-work" / f"{chunk_stage}-last-message.json"
             output.parent.mkdir(parents=True, exist_ok=True)
             if output.exists():

@@ -213,62 +213,23 @@ def _parse_json_output(text: str) -> Mapping[str, Any]:
 def _v3_cache_requires_contract_refresh(
     value: Mapping[str, Any], root: Path, payload: Mapping[str, Any] | None = None,
 ) -> bool:
-    """Bypass only V3 caches that violate the current execution contract."""
+    """Refresh only a V3 contract whose declared execution target is unusable.
+
+    ADR-0041: a V3 worker payload may gain unrelated obligations during a bounded repair.
+    That changes a group cache key, but it does not make an already-produced
+    per-obligation contract unusable.  Governance classification, write scope,
+    and failure-family policy are validated by their owning compiler gates; they
+    must not discard an otherwise executable contract from the V3 cache.
+    """
     hints = value.get("slice_hints")
     if not isinstance(hints, list) and isinstance(value.get("obligation_contracts"), Mapping):
         hints = [item.get("slice_hint") for item in value["obligation_contracts"].values()
                  if isinstance(item, Mapping)]
     if not isinstance(hints, list):
         return False
-    # A cached inline V3 response does not carry the frozen obligation kind in
-    # its failure intent.  Re-evaluate only a cache that binds expected-red to
-    # a current constraint/Governance obligation; other successful chunks stay
-    # reusable after this eligibility rule was added.
-    obligations = payload.get("obligations") if isinstance(payload, Mapping) else None
-    if not isinstance(obligations, list) and isinstance(payload, Mapping):
-        nested = payload.get("input")
-        obligations = nested.get("obligations") if isinstance(nested, Mapping) else None
-    known = {
-        item.get("obligation_id"): item
-        for item in obligations or []
-        if isinstance(item, Mapping) and isinstance(item.get("obligation_id"), str)
-    }
-    failures = value.get("failure_intents")
-    if isinstance(failures, list) and known:
-        for failure in failures:
-            if not isinstance(failure, Mapping) or failure.get("failure_family") != "expected-red":
-                continue
-            ids = failure.get("obligation_ids")
-            if not isinstance(ids, list):
-                continue
-            for oid in ids:
-                obligation = known.get(oid)
-                if (isinstance(obligation, Mapping)
-                        and (obligation.get("obligation_kind") not in {"behavior", "quality"}
-                             or obligation.get("requirement_type") == "Governance")):
-                    return True
-    contracts = value.get("obligation_contracts")
-    if isinstance(contracts, Mapping):
-        for oid, contract in contracts.items():
-            obligation = known.get(oid)
-            failures = contract.get("failure_intents") if isinstance(contract, Mapping) else None
-            if (isinstance(obligation, Mapping) and isinstance(failures, list)
-                    and any(isinstance(failure, Mapping) and failure.get("failure_family") == "expected-red"
-                            for failure in failures)
-                    and (obligation.get("obligation_kind") not in {"behavior", "quality"}
-                         or obligation.get("requirement_type") == "Governance")):
-                return True
     for hint in hints:
         if not isinstance(hint, Mapping):
             continue
-        paths = []
-        for field in ("production_owners", "allowed_write_paths", "execution_snapshot_paths", "planned_new_files"):
-            raw = hint.get(field)
-            if isinstance(raw, list):
-                paths.extend(item for item in raw if isinstance(item, str))
-        if any(path == "PhaseA.Platform" or path.startswith("PhaseA.Platform/") or
-               path == "runtime/phase-a" or path.startswith("runtime/phase-a/") for path in paths):
-            return True
         planned = set(hint.get("planned_new_files") or [])
         for snapshot in hint.get("execution_snapshot_paths") or []:
             if isinstance(snapshot, str):
