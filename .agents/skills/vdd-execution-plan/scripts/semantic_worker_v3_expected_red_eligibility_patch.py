@@ -6,9 +6,10 @@ execution role, not a generic label for every constraint mentioned near a RED
 requirement.
 
 This patch composes with the existing frozen-domain validator. A failure intent
-may use ``expected-red`` only when every bound frozen obligation describes an
-executable behavior/quality and is not governance. Constraint/governance
-obligations remain in the semantic plan, but must use the non-expected family
+may use ``expected-red`` only when every non-governance bound frozen obligation
+describes an executable behavior/quality. Governance obligations are retained
+but do not participate in this runtime-marker eligibility decision. Constraints
+outside governance remain in the semantic plan, but must use the non-expected family
 that describes their actual guard (for example artifact integrity, target
 binding, harness failure, or semantic contract gap).
 
@@ -63,10 +64,10 @@ def _expected_red_eligibility_findings(
                 continue
             kind = obligation.get("obligation_kind")
             requirement_type = obligation.get("requirement_type")
-            if (
-                kind not in _RUNTIME_EXPECTED_RED_KINDS
-                or requirement_type == "Governance"
-            ):
+            # ADR-0041: governance obligations retain their contract but are
+            # deliberately outside runtime-marker eligibility and must not
+            # invalidate an executable V3 result.
+            if kind not in _RUNTIME_EXPECTED_RED_KINDS and requirement_type != "Governance":
                 ineligible.append(
                     f"{raw_oid}={kind or 'missing-kind'}/{requirement_type or 'missing-type'}"
                 )

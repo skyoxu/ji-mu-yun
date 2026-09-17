@@ -41,9 +41,8 @@ def _live_group_repair(*, root, out_dir, payload, prompt):
         "or evidence folders as selector snapshots. Honor explicit semantics that require compatible behaviors to share "
         "one bounded/cohesive slice or the same selector family; do not create artificial hint differences that fragment "
         "otherwise compatible work. Treat expected-red as an executable runtime observation role: each obligation "
-        "whose own failure intent uses expected-red must have frozen obligation_kind behavior or quality "
-        "and requirement_type other than Governance. Constraint/governance and RED-construction, marker, validation, "
-        "write-scope, fixture, or harness guards must keep a failure intent under the appropriate non-expected-red family; "
+        "whose non-Governance failure intent uses expected-red must have frozen obligation_kind behavior or quality. "
+        "Constraint and RED-construction, marker, validation, write-scope, fixture, or harness guards must keep a failure intent under the appropriate non-expected-red family; "
         "do not copy expected-red intents from another obligation. Never weaken lifecycle, owner, write-set, oracle, or "
         "failure semantics merely to make grouping easier."
     )
