@@ -61,6 +61,16 @@ def _chunked_alignment(
     return {**merged, "oracle_alignment": {"mode": "source-partitioned"}}
 
 
+def _alignment_worker_result(*, root, out_dir, source_index, obligations, acceptances, failures, worker_cache, stage: str, prompt: str) -> Mapping[str, Any]:
+    payload = sc.alignment_payload(source_index, obligations, acceptances, failures)
+    if len(json.dumps(payload, ensure_ascii=False, sort_keys=True)) > _MAX_V4_ALIGNMENT_INPUT_CHARS:
+        return _chunked_alignment(root=root, out_dir=out_dir, source_index=source_index,
+                                  obligations=obligations, acceptances=acceptances,
+                                  failures=failures, worker_cache=worker_cache)
+    return sc.invoke_worker(root=root, out_dir=out_dir, stage=stage, payload=payload,
+                            worker_cache=worker_cache, prompt=prompt)
+
+
 def _string_list(value: Any, *, nonempty: bool = False) -> bool:
     return (
         isinstance(value, list)
@@ -253,14 +263,9 @@ def _independent_recheck(
     failures: Sequence[Mapping[str, Any]],
     worker_cache: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
-    payload = sc.alignment_payload(source_index, obligations, acceptances, failures)
-    raw = sc.invoke_worker(
-        root=root,
-        out_dir=out_dir,
-        stage="v4-recheck",
-        payload=payload,
-        worker_cache=worker_cache,
-        prompt=(
+    raw = _alignment_worker_result(
+        root=root, out_dir=out_dir, source_index=source_index, obligations=obligations,
+        acceptances=acceptances, failures=failures, worker_cache=worker_cache, stage="v4-recheck", prompt=(
             "Independently re-evaluate the frozen source against the repaired Acceptance candidates. "
             "Do not trust the repair worker or any prior V4 conclusion. Return covered_obligation_ids[], "
             "missing_obligation_ids[], invented_obligation_ids[], misaligned_acceptance_ids[], "
@@ -284,16 +289,16 @@ def semantic_align_with_bounded_repair(
 ) -> dict[str, Any]:
     payload = sc.alignment_payload(source_index, obligations, acceptances, failures)
     if len(json.dumps(payload, ensure_ascii=False, sort_keys=True)) > _MAX_V4_ALIGNMENT_INPUT_CHARS:
-        raw = _chunked_alignment(root=root, out_dir=out_dir, source_index=source_index,
-                                 obligations=obligations, acceptances=acceptances,
-                                 failures=failures, worker_cache=worker_cache)
-        first = {"valid": not _alignment_findings(raw, obligations, acceptances),
-                 "findings": _alignment_findings(raw, obligations, acceptances), "worker": raw}
+        raw = _alignment_worker_result(root=root, out_dir=out_dir, source_index=source_index,
+                                       obligations=obligations, acceptances=acceptances,
+                                       failures=failures, worker_cache=worker_cache, stage="v4",
+                                       prompt="source-partitioned alignment")
+        findings = _alignment_findings(raw, obligations, acceptances)
+        first = {"valid": not findings, "findings": findings, "worker": raw}
     else:
-        first = _BASE_SEMANTIC_ALIGN(
-            root=root, out_dir=out_dir, source_index=source_index, obligations=obligations,
-            acceptances=acceptances, failures=failures, worker_cache=worker_cache,
-        )
+        first = _BASE_SEMANTIC_ALIGN(root=root, out_dir=out_dir, source_index=source_index,
+                                     obligations=obligations, acceptances=acceptances,
+                                     failures=failures, worker_cache=worker_cache)
     if first.get("valid"):
         return first
     findings = [str(item) for item in first.get("findings", [])]
