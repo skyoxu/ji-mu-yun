@@ -334,7 +334,7 @@ Retain existing fixture `scripts/sc/tests/test_skill_package_replay.py` only for
 <!-- selector-repair-binding-end -->
 
 # FR-6
-The three named evaluation seeds occur exactly once with provenance, applicability, missing labels, counterexample or explicit absence, and approved non-baseline classification.
+The three named evaluation seeds `candidate-baseline-contamination`, `self-hosted-knowledge-read-set-collision`, and `toolchain-policy-architecture-index-gap` occur exactly once with provenance, applicability, missing labels, counterexample or explicit absence, and approved non-baseline classification.
 
 <!-- selector-repair-binding-start -->
 ## Compiler execution-path binding
@@ -764,7 +764,7 @@ Retain existing fixture `.agents/skills/run-refactor-implementation-acceptance/t
 <!-- selector-repair-binding-end -->
 
 # NFR-1
-Unknown, missing, stale, ambiguous, or unverifiable identity and execution facts prevent success.
+Unknown, missing, stale, ambiguous, or unverifiable identity and execution facts prevent success. For the corresponding seed-manifest and detached-Probe execution hints, `scripts/sc/tests/test_evaluation_seed_manifest.py` and `scripts/sc/tests/test_detached_probe_execution.py` are the exact planned test paths; each corresponding hint must project its unchanged path in `planned_new_files`, `execution_snapshot_paths`, and `allowed_write_paths`. These are planned Quick Dev test-author paths, not existing tests or execution evidence.
 
 <!-- selector-repair-binding-start -->
 ## Compiler execution-path binding

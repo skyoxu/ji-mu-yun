@@ -11,12 +11,66 @@ ADR-0041 without weakening the precision or recall gate.
 from __future__ import annotations
 
 from typing import Any, Mapping, Sequence
+import json
+from pathlib import Path
+import time
 
 import semantic_compiler_gate as gate
 import semantic_atomic_recall_result_patch  # noqa: F401  # exact recall diagnostics first
 
 sc = gate.sc
 _BASE_COMPILE_OBLIGATIONS = sc.compile_obligations
+_pending_post_v4_source_gaps: list[dict[str, Any]] = []
+_post_v4_feedback_sequence = 0
+
+
+def configure_pending_post_v4_source_gaps(gaps: Sequence[Mapping[str, Any]], *, out_dir: Path | None = None) -> None:
+    """Carry only independently reported, bounded source gaps into the next V1 pass."""
+    global _pending_post_v4_source_gaps, _post_v4_feedback_sequence
+    normalized = [dict(item) for item in gaps if isinstance(item, Mapping)]
+    if not normalized:
+        raise ValueError("post-V4 source-gap feedback is empty")
+    _pending_post_v4_source_gaps = normalized
+    if out_dir is not None:
+        _post_v4_feedback_sequence += 1
+        receipt = {
+            "schema": "vdd.post-v4-source-gap-feedback.v1",
+            "feedback_sequence": _post_v4_feedback_sequence,
+            "created_at_ns": time.time_ns(),
+            "source_gap_claims": normalized,
+        }
+        name = "post-v4-source-gaps-" + sc.sha256_value(receipt)[7:31] + ".json"
+        sc.atomic_json(out_dir / ".compiler-work" / "post-v4-source-gap-feedback" / name, receipt)
+
+
+def _persisted_post_v4_source_gaps(out_dir: Path) -> list[dict[str, Any]]:
+    """Reload the newest complete V4 feedback while retaining older receipts."""
+    paths = list((out_dir / ".compiler-work" / "post-v4-source-gap-feedback").glob("*.json"))
+    if not paths:
+        return []
+    # The directory is audit history, not an accumulating requirements source.
+    # A later V4 judgment supersedes its predecessor for the next V1 repair.
+    def order(candidate: Path) -> tuple[int, int, str]:
+        try:
+            value = json.loads(candidate.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            value = {}
+        sequence = value.get("feedback_sequence") if isinstance(value, Mapping) else None
+        created = value.get("created_at_ns") if isinstance(value, Mapping) else None
+        return (
+            sequence if isinstance(sequence, int) else -1,
+            created if isinstance(created, int) else candidate.stat().st_mtime_ns,
+            candidate.name,
+        )
+    path = max(paths, key=order)
+    try:
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return []
+    gaps = receipt.get("source_gap_claims") if isinstance(receipt, Mapping) else None
+    if not isinstance(gaps, list):
+        return []
+    return [dict(item) for item in gaps if isinstance(item, Mapping)]
 
 
 def _only_source_gaps(recall: Mapping[str, Any]) -> bool:
@@ -332,6 +386,25 @@ def compile_obligations_with_gap_repair(
             worker_cache=worker_cache,
         )
     )
+    # A final V4 source-gap finding is semantic feedback, not a reason to throw
+    # away V3 contracts for unaffected obligations.  Consume it once on the
+    # next compiler pass; V2 and an independent atomic recall still decide
+    # whether the enlarged candidate is usable.
+    global _pending_post_v4_source_gaps
+    persisted = _persisted_post_v4_source_gaps(out_dir)
+    if _pending_post_v4_source_gaps or persisted:
+        gaps = [*_pending_post_v4_source_gaps, *persisted]
+        _pending_post_v4_source_gaps = []
+        unique = {sc.sha256_value(item): item for item in gaps}
+        gaps = [unique[key] for key in sorted(unique)]
+        additions = _additional_obligations(
+            root=root, out_dir=out_dir, source_index=source_index,
+            obligations=obligations, gaps=gaps, worker_cache=worker_cache,
+        )
+        existing_ids = {str(item.get("obligation_id")) for item in obligations}
+        if any(str(item.get("obligation_id")) in existing_ids for item in additions):
+            raise ValueError("post-V4 source-gap repair produced an existing obligation identity")
+        obligations = sorted([*obligations, *additions], key=lambda item: (str(item.get("requirement_id")), str(item.get("obligation_id"))))
     recall = gate.atomic_recall_alignment(
         root=root,
         out_dir=out_dir,
@@ -380,7 +453,13 @@ def compile_obligations_with_gap_repair(
 
     invented_ids = _exact_invented_partition(recall, obligations)
     if invented_ids:
-        projected = _project_invented_candidates(obligations, invented_ids)
+        # An exact V4 invented-only partition is an independent negative
+        # judgment over the complete active domain. Keeping a sole candidate
+        # merely to satisfy V1's per-requirement heuristic would re-publish an
+        # obligation V4 has proved unsupported.
+        projected = _project_invented_candidates(
+            obligations, invented_ids, preserve_requirement_coverage=False,
+        )
         if projected is None:
             return obligations
         guard = sc.guard_obligations(source_index, projected)

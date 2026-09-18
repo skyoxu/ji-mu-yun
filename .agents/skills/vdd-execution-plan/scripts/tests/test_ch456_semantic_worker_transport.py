@@ -31,6 +31,10 @@ def test_v1_and_v3_have_native_structured_output_schemas() -> None:
     assert "semantic-contract-gap" in family["enum"]
 
 
+def test_transport_retry_budget_is_three_attempts() -> None:
+    assert transport._MAX_TRANSPORT_ATTEMPTS == 3
+
+
 def test_codex_worker_isolation_disables_each_configured_mcp_without_changing_provider(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -67,7 +71,9 @@ def test_schema_repair_transport_uses_bounded_longer_timeout_and_medium_reasonin
     )
     monkeypatch.setitem(sys.modules, "_llm_backend", fake)
 
-    stale = tmp_path / "plan" / ".compiler-work" / "v3-schema-repair-last-message.json"
+    payload = {"original_stage": "v3", "input": {"obligations": []}, "validator_findings": ["x"]}
+    output_name = transport.sc._worker_cache_key("v3-schema-repair", payload)[:-5] + "-last-message.json"
+    stale = tmp_path / "plan" / ".compiler-work" / output_name
     stale.parent.mkdir(parents=True, exist_ok=True)
     stale.write_text("stale", encoding="utf-8")
 
@@ -75,11 +81,12 @@ def test_schema_repair_transport_uses_bounded_longer_timeout_and_medium_reasonin
         root=tmp_path,
         out_dir=tmp_path / "plan",
         stage="v3-schema-repair",
-        payload={"original_stage": "v3", "input": {"obligations": []}, "validator_findings": ["x"]},
+        payload=payload,
         prompt="Repair the V3 JSON object.",
     )
     assert set(result) == {"acceptances", "failure_intents", "slice_hints"}
     assert len(calls) == 1
+    assert list(stale.parent.glob(stale.stem + ".prior-*.json")), "prior diagnostic must be retained"
     call = calls[0]
     assert call["timeout_sec"] == 300
     assert 'model_reasoning_effort="medium"' in call["codex_configs"]

@@ -141,5 +141,77 @@ class SelectiveCacheRepairTests(unittest.TestCase):
             repair._live_group_repair(root=self.root, out_dir=out, payload=payload, prompt='Repair.')
         assert calls == []
 
+    def test_semantically_identical_renamed_obligation_is_rebound_without_worker(self):
+        (self.root / 'tests').mkdir()
+        (self.root / 'tests/test_real.py').write_text('def test_real(): assert True\n')
+        payload = {'original_stage': 'v3', 'input': {'obligations': [{
+            'obligation_id': 'O-NEW', 'source_refs': ['req.md#FR-1'], 'status': 'active',
+            'subject': 'input', 'expected_behavior': 'reject invalid input',
+            'observable_result': 'verdict is rejected',
+        }]}}
+        cached = contract('tests/test_real.py')
+        cached['acceptance'].update({
+            'source_refs': ['req.md#FR-1'], 'given': 'input is invalid',
+            'when': 'the operation runs', 'then': 'reject invalid input',
+        })
+        cached['acceptance']['oracle'].update({
+            'observable': 'verdict is rejected', 'expected': 'rejected',
+        })
+        cached['slice_hint']['affected_subjects'] = ['input']
+        out = self.root / 'plan'
+        cache_dir = out / '.compiler-cache'
+        cache_dir.mkdir(parents=True)
+        path = cache_dir / (repair._GROUP_STAGE + '-chunk-01.json')
+        repair.sc.atomic_json(path, {'obligation_contracts': {'O-OLD': cached}})
+        recovered = repair._reusable_prior_contracts(
+            root=self.root, cache_dir=cache_dir, payload=payload, ids=['O-NEW'])
+        assert set(recovered) == {'O-NEW'}
+        assert recovered['O-NEW']['acceptance']['source_refs'] == ['req.md#FR-1']
+
+    def test_semantic_mismatch_or_ambiguous_match_is_not_rebound(self):
+        payload = {'original_stage': 'v3', 'input': {'obligations': [{
+            'obligation_id': 'O-NEW', 'source_refs': ['req.md#FR-1'], 'status': 'active',
+            'subject': 'input', 'expected_behavior': 'reject invalid input',
+            'observable_result': 'verdict is rejected',
+        }]}}
+        first = contract('tests/test_real.py')
+        first['acceptance'].update({'source_refs': ['req.md#FR-1'], 'then': 'reject invalid input'})
+        first['acceptance']['oracle']['observable'] = 'verdict is rejected'
+        first['slice_hint']['affected_subjects'] = ['input']
+        second = json.loads(json.dumps(first))
+        out = self.root / 'plan'; cache_dir = out / '.compiler-cache'; cache_dir.mkdir(parents=True)
+        repair.sc.atomic_json(cache_dir / (repair._GROUP_STAGE + '-chunk-01.json'),
+                              {'obligation_contracts': {'O-A': first, 'O-B': second}})
+        assert repair._reusable_prior_contracts(
+            root=self.root, cache_dir=cache_dir, payload=payload, ids=['O-NEW']) == {}
+
+    def test_global_v3_validation_identifies_only_bad_cached_contract_ids(self):
+        payload = {'original_stage': 'v3', 'input': {'obligations': [
+            {'obligation_id': 'O-1', 'source_refs': ['req.md#FR-1'], 'status': 'active',
+             'subject': 'first', 'trigger': 'run', 'state_before': 'before', 'state_after': 'after',
+             'expected_behavior': 'first behavior', 'observable_result': 'first result',
+             'obligation_kind': 'constraint', 'requirement_type': 'Platform'},
+            {'obligation_id': 'O-2', 'source_refs': ['req.md#FR-1'], 'status': 'active',
+             'subject': 'second', 'trigger': 'run', 'state_before': 'before', 'state_after': 'after',
+             'expected_behavior': 'second behavior', 'observable_result': 'second result',
+             'obligation_kind': 'behavior', 'requirement_type': 'Platform'},
+        ]}}
+        first, second = contract('tests/test_real.py'), contract('tests/test_real.py')
+        for item in (first, second):
+            item['acceptance']['source_refs'] = ['req.md#FR-1']
+            item['acceptance']['assertion_ids'] = ['SHARED']
+            item['failure_intents'][0]['failure_family'] = 'expected-red'
+        bad = repair._invalid_contract_ids(payload, {'O-1': first, 'O-2': second})
+        assert bad == {'O-1', 'O-2'}
+
+    def test_missing_candidate_identity_fixture_is_declared_planned(self):
+        value = {'slice_hint': {
+            'execution_snapshot_paths': ['.agents/skills/quick-dev-tdd-adapter/tools/fixtures/candidate-identity.v1.json'],
+            'planned_new_files': [],
+        }}
+        repair._declare_supported_missing_fixture(value)
+        assert value['slice_hint']['planned_new_files'] == [
+            '.agents/skills/quick-dev-tdd-adapter/tools/fixtures/candidate-identity.v1.json']
+
 if __name__ == "__main__":
     unittest.main()

@@ -243,7 +243,7 @@ def _repair_map(raw: Mapping[str, Any], targets: set[str]) -> dict[str, Mapping[
 
 
 def _repair_targets(
-    raw: Mapping[str, Any], acceptances: Sequence[Mapping[str, Any]],
+    raw: Mapping[str, Any], acceptances: Sequence[Mapping[str, Any]], *, findings: Sequence[str] = (),
 ) -> set[str]:
     """Use compiler-owned bindings when a worker reports an incomplete association.
 
@@ -266,6 +266,15 @@ def _repair_targets(
         for item in raw.get("missing_obligation_ids", [])
         if isinstance(item, str) and item
     }
+    # V4's worker lists explicit missing IDs separately from its coverage
+    # projection.  Treat a compiler-confirmed active-not-covered ID as the
+    # same bounded repair input when the worker omitted it from that list;
+    # otherwise a local Acceptance repair is incorrectly rejected solely due
+    # to two inconsistent diagnostic projections.
+    for finding in findings:
+        prefix = "v4:active-not-covered:"
+        if isinstance(finding, str) and finding.startswith(prefix):
+            missing.update(item for item in finding[len(prefix):].split(",") if item)
     # A missing obligation is a compiler-owned binding problem.  Do not let a
     # worker's potentially stale association pull a peer Acceptance into this
     # bounded repair. The next independent recheck can surface an unrelated
@@ -294,9 +303,11 @@ def _isolated_acceptance_semantic_gap(
     raw: Mapping[str, Any],
     obligations: Sequence[Mapping[str, Any]],
     acceptances: Sequence[Mapping[str, Any]],
+    *,
+    findings: Sequence[str] = (),
 ) -> bool:
     """Permit repair only when V4 localizes all coverage loss to its own targets."""
-    targets = _repair_targets(raw, acceptances)
+    targets = _repair_targets(raw, acceptances, findings=findings)
     if not targets:
         return False
     by_acceptance = {
@@ -461,9 +472,11 @@ def semantic_align_with_bounded_repair(
         raw_candidate = candidate.get("worker")
         if not isinstance(raw_candidate, Mapping):
             return candidate
-        if not _isolated_acceptance_semantic_gap(raw_candidate, obligations, acceptances):
+        if not _isolated_acceptance_semantic_gap(
+            raw_candidate, obligations, acceptances, findings=candidate_findings,
+        ):
             return candidate
-        targets = _repair_targets(raw_candidate, acceptances)
+        targets = _repair_targets(raw_candidate, acceptances, findings=candidate_findings)
         current_ids = {str(item.get("acceptance_id")) for item in acceptances if isinstance(item, Mapping)}
         if not targets or not targets <= current_ids:
             return candidate

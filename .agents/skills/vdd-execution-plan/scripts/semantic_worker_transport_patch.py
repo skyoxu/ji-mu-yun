@@ -5,7 +5,7 @@ This compatibility layer only makes the Codex transport reliable for machine-
 readable V1/V3 output: it requests native structured output when supported,
 uses a larger but bounded timeout for schema repair, lowers repair reasoning cost,
 removes stale output before each invocation, and retries transient worker exits
-up to ten times. It never guesses or rewrites malformed JSON locally.
+at most three times. It never guesses or rewrites malformed JSON locally.
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ sc = gate.sc
 _BASE_INVOKE_WORKER = gate._ORIGINAL_INVOKE_WORKER
 _NORMAL_TIMEOUT_SECONDS = 180
 _REPAIR_TIMEOUT_SECONDS = 300
-_MAX_TRANSPORT_ATTEMPTS = 11  # initial call plus ten retries
+_MAX_TRANSPORT_ATTEMPTS = 3  # user-approved automatic retry budget
 _TRACE_LIMIT = 500
 
 
@@ -65,6 +65,20 @@ def _bounded_trace(trace: str) -> str:
     tail_length = 300
     head_length = _TRACE_LIMIT - len(marker) - tail_length
     return text[:head_length] + marker + text[-tail_length:]
+
+
+def _preserve_prior_output(output: Path) -> None:
+    """Make a previous diagnostic append-only before another transport attempt."""
+    if not output.exists():
+        return
+    if not output.is_file():
+        raise ValueError(f"semantic worker output path is not a file: {output}")
+    suffix = 1
+    historical = output.with_name(f"{output.stem}.prior-{suffix}.json")
+    while historical.exists():
+        suffix += 1
+        historical = output.with_name(f"{output.stem}.prior-{suffix}.json")
+    output.rename(historical)
 
 
 def _schema_kind(stage: str) -> str | None:
@@ -275,12 +289,12 @@ def transport_invoke_worker(
         raise RuntimeError("shared LLM backend is unavailable") from exc
 
     work = out_dir / ".compiler-work"
-    output = work / f"{stage}-last-message.json"
+    # Output messages are diagnostics, not cache authority.  Bind the filename
+    # to the exact worker input so a later selective repair cannot overwrite a
+    # retained message from a different semantic input for the same stage.
+    output = work / f"{sc._worker_cache_key(stage, payload)[:-5]}-last-message.json"
     output.parent.mkdir(parents=True, exist_ok=True)
-    if output.exists():
-        if not output.is_file():
-            raise ValueError(f"semantic worker output path is not a file: {output}")
-        output.unlink()
+    _preserve_prior_output(output)
 
     full_prompt = (
         "You are a read-only semantic compiler worker. Do not modify files. "
@@ -316,14 +330,12 @@ def transport_invoke_worker(
     trace = ""
     argv: list[str] = []
     for attempt in range(1, _MAX_TRANSPORT_ATTEMPTS + 1):
-        if output.exists():
-            output.unlink()
+        _preserve_prior_output(output)
         code, trace, argv = execute(extra_args)
         if code != 0 and extra_args and _unsupported_output_schema(trace):
             # Compatibility fallback for an older Codex CLI. This remains a
             # transport fallback inside the same attempt.
-            if output.exists():
-                output.unlink()
+            _preserve_prior_output(output)
             code, trace, argv = execute([])
         if code == 0 and output.is_file():
             break

@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import re
+import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -12,6 +14,31 @@ SCRIPTS = ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 import semantic_feasibility_patch  # noqa: F401  # installs normative planned-new-file V7 rule
 from semantic_compiler_authority import compile_plan
+import semantic_compiler as semantic_compiler
+
+
+def _configure_v1_reuse_from_git(ref: str, requirements: Path) -> None:
+    """Bind V1 peer reuse to exact predecessor anchor text, never only a file path."""
+    if not re.fullmatch(r"[A-Za-z0-9._/-]+", ref):
+        raise ValueError("V1 reuse Git reference is invalid")
+    relative = requirements.resolve().relative_to(ROOT.resolve()).as_posix()
+    completed = subprocess.run(
+        ["git", "-C", str(ROOT), "show", f"{ref}:{relative}"],
+        check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    if completed.returncode != 0:
+        raise ValueError("V1 reuse predecessor source is unavailable")
+    try:
+        text = completed.stdout.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError("V1 reuse predecessor source is not UTF-8") from exc
+    identities = {
+        f"{relative}#{requirement_id}": semantic_compiler.sha256_bytes(source_text.encode("utf-8"))
+        for requirement_id, source_text, _line in semantic_compiler._sections(text)
+    }
+    if not identities:
+        raise ValueError("V1 reuse predecessor has no requirement anchors")
+    semantic_compiler.configure_v1_reuse_predecessor_text_hashes(identities)
 
 
 def main() -> int:
@@ -24,6 +51,14 @@ def main() -> int:
     parser.add_argument("--result-json", type=Path, help="Write the compiler result even on a caught failure")
     parser.add_argument("--recommendation-only", action="store_true")
     parser.add_argument("--resume-from", choices=("first-failed-stage",), default=None)
+    parser.add_argument(
+        "--v1-reuse-from-git-ref",
+        help="Explicit Git predecessor whose unchanged requirement-anchor text may reuse V1 cache entries",
+    )
+    parser.add_argument(
+        "--v1-reuse-from-plan", type=Path,
+        help="Explicit plan-ready predecessor bundle whose V4-supported V1 obligations may be rebound per unchanged anchor",
+    )
     parser.add_argument("--repair-timeout-seconds", type=int, help="Explicit per-repair worker budget")
     parser.add_argument(
         "--approved-v4-repair-cycles", type=int, default=0,
@@ -47,6 +82,16 @@ def main() -> int:
         parser.error("approved V4 repair cycles require --v4-repair-approval-reference")
     if args.v4_repair_approval_reference and not args.approved_v4_repair_cycles:
         parser.error("V4 repair approval reference requires approved V4 repair cycles")
+    if args.v1_reuse_from_git_ref:
+        try:
+            _configure_v1_reuse_from_git(args.v1_reuse_from_git_ref, args.requirements)
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            parser.error(str(exc))
+    if args.v1_reuse_from_plan:
+        try:
+            semantic_compiler.configure_v1_reuse_predecessor_plan(args.v1_reuse_from_plan.resolve())
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            parser.error(str(exc))
     import semantic_alignment_repair_patch as alignment
     alignment.configure_approved_v4_repair_cycles(args.approved_v4_repair_cycles)
     cache = None

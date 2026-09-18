@@ -435,6 +435,17 @@ def test_v4_repair_targets_drop_a_stale_worker_acceptance_id() -> None:
     assert alignment._repair_targets(raw, acceptances) == {"A-BOUND"}
 
 
+def test_v4_repair_targets_include_compiler_uncovered_obligation_closure() -> None:
+    acceptances = [
+        {"acceptance_id": "A-MISSING", "obligation_ids": ["O-MISSING"]},
+        {"acceptance_id": "A-UNCOVERED", "obligation_ids": ["O-UNCOVERED"]},
+    ]
+    raw = {"missing_obligation_ids": ["O-MISSING"], "misaligned_acceptance_ids": []}
+    assert alignment._repair_targets(
+        raw, acceptances, findings=["v4:active-not-covered:O-MISSING,O-UNCOVERED"]
+    ) == {"A-MISSING", "A-UNCOVERED"}
+
+
 def test_v4_source_chunk_retries_only_its_stale_acceptance_scope(monkeypatch, tmp_path: Path) -> None:
     payload = {"acceptances": [{"acceptance_id": "A-CURRENT"}]}
     stage = "v4-source-chunk-09"
