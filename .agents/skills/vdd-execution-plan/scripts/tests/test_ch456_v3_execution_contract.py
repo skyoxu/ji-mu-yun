@@ -12,6 +12,7 @@ import semantic_feasibility_patch  # noqa: F401  # installs stable V3 repair cha
 from semantic_worker_v3_execution_contract_patch import (
     _authorized_planned_test_paths,
     _findings,
+    _normalize_expected_red_for_product_behavior,
     _normalize_production_write_sets,
 )
 from semantic_worker_v3_path_grounding_patch import ground_v3_paths
@@ -205,6 +206,64 @@ def test_missing_production_owner_remains_a_contract_failure(tmp_path: Path) -> 
     assert any(item.startswith("v3-contract:slice_hints[0]:no-real-production-entry") for item in findings)
 
 
+def test_s4_terminal_evidence_selector_gets_only_its_existing_test_project_owner(tmp_path: Path) -> None:
+    project = tmp_path / "PhaseA.Platform.Tests" / "PhaseA.Platform.Tests.csproj"
+    project.parent.mkdir(parents=True)
+    project.write_text("<Project />\n", encoding="utf-8")
+    selector = tmp_path / "tests" / "phase_b_c_identity_isolation" / "test_s4_migration_evidence.py"
+    selector.parent.mkdir(parents=True)
+    selector.write_text("def test_evidence(): pass\n", encoding="utf-8")
+    value = {"slice_hints": [{
+        **_hint(["O-1"], allowed=["tests/phase_b_c_identity_isolation/test_s4_migration_evidence.py"], planned=[]),
+        "production_owners": [],
+        "execution_snapshot_paths": ["tests/phase_b_c_identity_isolation/test_s4_migration_evidence.py"],
+    }]}
+    projected = _normalize_production_write_sets(tmp_path, value)
+    hint = projected["slice_hints"][0]
+    assert hint["production_owners"] == ["PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj"]
+    assert "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj" in hint["allowed_write_paths"]
+    assert not any("no-real-production-entry" in item for item in _findings(tmp_path, "v3", {"obligations": [_obligation("O-1")]}, projected))
+
+
+def test_known_operations_selector_repairs_a_missing_owner_only_from_its_canonical_mapping(tmp_path: Path) -> None:
+    for path in ("PhaseA.Platform/Program.cs", "PhaseA.Platform/Data/PhaseAMetadataStore.cs"):
+        target = tmp_path / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("class Entry {}\n", encoding="utf-8")
+    value = {"slice_hints": [{
+        **_hint(["O-1"], allowed=[], planned=[]),
+        "production_owners": [],
+        "execution_snapshot_paths": ["PhaseA.Platform.Tests/PhaseB/Repair/OperationsBoundaryTests.cs"],
+    }]}
+    projected = _normalize_production_write_sets(tmp_path, value)
+    assert projected["slice_hints"][0]["production_owners"] == [
+        "PhaseA.Platform/Program.cs", "PhaseA.Platform/Data/PhaseAMetadataStore.cs"
+    ]
+
+
+def test_product_behavior_failure_is_a_causal_expected_red_with_frozen_negation() -> None:
+    obligation = _obligation("O-1")
+    obligation["expected_behavior"] = "protected administrator change creates an auditable new active policy version"
+    value = {"failure_intents": [{
+        "obligation_ids": ["O-1"], "failure_family": "test-harness-failure",
+        "selector_intent": "select policy boundary test", "expected_outcome": "fail", "failure_id": "OLD",
+    }]}
+    result = _normalize_expected_red_for_product_behavior("v3", {"obligations": [obligation]}, value)
+    failure = result["failure_intents"][0]
+    assert failure["failure_family"] == "expected-red"
+    assert "Negate required behavior: protected administrator change creates an auditable new active policy version" in failure["selector_intent"]
+
+
+def test_constraint_failure_family_is_not_promoted_to_expected_red() -> None:
+    obligation = _obligation("O-1")
+    obligation["obligation_kind"] = "constraint"
+    value = {"failure_intents": [{
+        "obligation_ids": ["O-1"], "failure_family": "test-harness-failure",
+        "selector_intent": "select evidence test", "expected_outcome": "fail", "failure_id": "OLD",
+    }]}
+    assert _normalize_expected_red_for_product_behavior("v3", {"obligations": [obligation]}, value) == value
+
+
 def test_path_grounding_projects_only_explicit_legacy_repair_test_path(tmp_path: Path) -> None:
     payload, value = _repair_payload(
         source_text="PhaseB.Repair.RestoreBoundaryTests",
@@ -268,6 +327,73 @@ def test_existing_route_operation_governance_test_uses_real_evidence_owners(tmp_
         "PhaseA.Platform/Workflow/SecretRedactionPolicy.cs",
     ]
     assert hint["planned_new_files"] == []
+
+
+def test_existing_admin_review_queue_http_selector_uses_route_and_metadata_owners(tmp_path: Path) -> None:
+    for path in (
+        "PhaseA.Platform/Program.cs",
+        "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+    ):
+        target = tmp_path / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("class ProductionEntry {}\n", encoding="utf-8")
+    payload, value = _repair_payload(
+        source_text="SM-A01 private admin review queue API authorization and no-store behavior",
+        snapshot="PhaseA.Platform.Tests/Browser/AdminReviewQueueHttpIntegrationTests.cs",
+    )
+    value["slice_hints"][0]["production_owners"] = [
+        "PhaseA.Platform.Tests/Browser/AdminReviewQueueHttpIntegrationTests.cs"
+    ]
+    value = _normalize_production_write_sets(tmp_path, value)
+    grounded, _ = ground_v3_paths(tmp_path, payload, value)
+    hint = grounded["slice_hints"][0]
+    assert hint["production_owners"] == [
+        "PhaseA.Platform/Program.cs",
+        "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+    ]
+    assert hint["planned_new_files"] == []
+
+
+def test_declared_missing_phase_b_test_artifacts_become_planned_with_real_owner(tmp_path: Path) -> None:
+    owner = tmp_path / "PhaseA.Platform/Workspaces/WorkspaceStorageService.cs"
+    owner.parent.mkdir(parents=True)
+    owner.write_text("class ProductionEntry {}\n", encoding="utf-8")
+    paths = [
+        "tests/phase_b_c_identity_isolation/current/test_s74.py",
+        "PhaseA.Platform.Tests/PhaseB/Repair/S74BoundaryTests.cs",
+        "tests/phase_b_c_identity_isolation/current/s74_fixture.py",
+    ]
+    value = {"slice_hints": [{
+        **_hint(["O-1"], allowed=["PhaseA.Platform/Workspaces/WorkspaceStorageService.cs", *paths], planned=[]),
+        "production_owners": ["PhaseA.Platform/Workspaces/WorkspaceStorageService.cs"],
+        "execution_snapshot_paths": paths,
+    }]}
+    result = _normalize_production_write_sets(tmp_path, value)
+    assert result["slice_hints"][0]["planned_new_files"] == paths
+
+
+def test_existing_s11_substitute_root_selector_uses_real_storage_and_restore_owners(tmp_path: Path) -> None:
+    for path in (
+        "PhaseA.Platform/Workspaces/WorkspaceStorageService.cs",
+        "PhaseA.Platform/Workspaces/RestoreService.cs",
+    ):
+        target = tmp_path / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("class ProductionEntry {}\n", encoding="utf-8")
+    payload, value = _repair_payload(
+        source_text="SM-T11 SubstituteRootDrill_RecordsBoundedRto",
+        snapshot="PhaseA.Platform.Tests/PhaseB/Repair/S11BoundaryTests.cs",
+    )
+    value["slice_hints"][0]["production_owners"] = [
+        "PhaseA.Platform.Tests/PhaseB/Repair/S11BoundaryTests.cs"
+    ]
+    value = _normalize_production_write_sets(tmp_path, value)
+    hint = value["slice_hints"][0]
+    assert hint["production_owners"] == [
+        "PhaseA.Platform/Workspaces/WorkspaceStorageService.cs",
+        "PhaseA.Platform/Workspaces/RestoreService.cs",
+    ]
+    assert set(hint["production_owners"]).issubset(hint["allowed_write_paths"])
 
 
 def test_path_grounding_only_maps_explicit_stale_production_path(tmp_path: Path) -> None:

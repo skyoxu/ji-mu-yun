@@ -41,12 +41,26 @@ _CANONICAL_TEST_PRODUCTION = {
     "RunnerBoundaryTests": ["PhaseA.Platform/Runs/HostedProcessRunner.cs", "PhaseA.Platform/Security/RunnerIsolationPolicy.cs"],
     "SnapshotBoundaryTests": ["PhaseA.Platform/Workspaces/WorkspaceStorageService.cs", "PhaseA.Platform/Workspaces/SnapshotManifest.cs"],
     "RestoreBoundaryTests": ["PhaseA.Platform/Workspaces/RestoreService.cs"],
+    # S11 is the existing bounded substitute-root drill selector.  It exercises
+    # both the snapshot storage and restore publication boundaries, so the
+    # selector is not itself a production owner.
+    "S11BoundaryTests": [
+        "PhaseA.Platform/Workspaces/WorkspaceStorageService.cs",
+        "PhaseA.Platform/Workspaces/RestoreService.cs",
+    ],
     "OperationsBoundaryTests": ["PhaseA.Platform/Program.cs", "PhaseA.Platform/Data/PhaseAMetadataStore.cs"],
     # Existing A08 evidence tests exercise the production evidence pipeline;
     # they are selectors, not production write owners.
     "RouteOperationGovernanceTests": [
         "PhaseA.Platform/Workflow/RouteOperationPreflight.cs",
         "PhaseA.Platform/Workflow/SecretRedactionPolicy.cs",
+    ],
+    # This existing HTTP integration selector exercises the mapped admin queue
+    # routes and their private-response headers.  The selector is not a
+    # production owner; the routes and their server-owned state live here.
+    "AdminReviewQueueHttpIntegrationTests": [
+        "PhaseA.Platform/Program.cs",
+        "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
     ],
 }
 
@@ -55,12 +69,24 @@ _AUTHORIZED_REPAIR_TESTS = {
     "RunnerBoundaryTests": "PhaseA.Platform.Tests/PhaseB/Repair/RunnerBoundaryTests.cs",
     "SnapshotBoundaryTests": "PhaseA.Platform.Tests/PhaseB/Repair/SnapshotBoundaryTests.cs",
     "RestoreBoundaryTests": "PhaseA.Platform.Tests/PhaseB/Repair/RestoreBoundaryTests.cs",
+    "S11BoundaryTests": "PhaseA.Platform.Tests/PhaseB/Repair/S11BoundaryTests.cs",
     "OperationsBoundaryTests": "PhaseA.Platform.Tests/PhaseB/Repair/OperationsBoundaryTests.cs",
     "RouteOperationGovernanceTests": "PhaseA.Platform.Tests/Workflow/RouteOperationGovernanceTests.cs",
 }
 
 _EXISTING_AUTHORIZED_TESTS = {
     "PhaseA.Platform.Tests/Workflow/RouteOperationGovernanceTests.cs",
+    "PhaseA.Platform.Tests/Browser/AdminReviewQueueHttpIntegrationTests.cs",
+}
+
+# S4 is the current, repository-owned migration-evidence selector for the
+# terminal-category constraint.  That constraint changes verification
+# registration rather than a Phase production boundary, so its executable
+# owner is the existing test project.  Keep this projection exact: it is not a
+# filename heuristic and it does not authorize arbitrary test-only hints.
+_TERMINAL_EVIDENCE_TEST_OWNERS = {
+    "tests/phase_b_c_identity_isolation/test_s4_migration_evidence.py":
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
 }
 
 
@@ -93,6 +119,62 @@ def _atomicize_initial_candidate(stage: str, payload: Mapping[str, Any], value: 
     one-shot schema repair. Singleton candidates need no semantic projection.
     """
     return value
+
+
+def _normalize_expected_red_for_product_behavior(
+    stage: str, payload: Mapping[str, Any], value: Mapping[str, Any]
+) -> Mapping[str, Any]:
+    """Make the required causal RED role explicit for product behavior.
+
+    The frozen V3 contract permits ``expected-red`` only for Product/Platform
+    behavior or quality obligations, and requires it for those obligations'
+    implementation failures.  A model occasionally labels a positive product
+    selector as a harness failure.  Preserve that selector, but add the exact
+    frozen behavior it must negate so V4 can distinguish causal RED from a
+    tooling condition.  Constraints and Governance records remain untouched.
+    """
+    by_id = {
+        str(item.get("obligation_id")): item
+        for item in _obligations(stage, payload)
+        if isinstance(item.get("obligation_id"), str)
+    }
+    failures = value.get("failure_intents")
+    if not isinstance(failures, list):
+        return value
+    normalized: list[Any] = []
+    changed = False
+    for raw in failures:
+        if not isinstance(raw, Mapping):
+            normalized.append(raw)
+            continue
+        item = dict(raw)
+        ids = _string_list(item.get("obligation_ids"), nonempty=True)
+        if ids is None or len(ids) != 1:
+            normalized.append(item)
+            continue
+        obligation = by_id.get(ids[0])
+        expected = obligation.get("expected_behavior") if isinstance(obligation, Mapping) else None
+        eligible = (
+            isinstance(obligation, Mapping)
+            and obligation.get("requirement_type") in {"Product", "Platform"}
+            and obligation.get("obligation_kind") in {"behavior", "quality"}
+            and isinstance(expected, str) and expected.strip()
+        )
+        if not eligible or item.get("failure_family") == "expected-red":
+            normalized.append(item)
+            continue
+        selector = item.get("selector_intent")
+        if not isinstance(selector, str) or not selector.strip():
+            normalized.append(item)
+            continue
+        negation = "Negate required behavior: " + expected.strip()
+        if negation not in selector:
+            selector = selector.strip() + "; " + negation
+        item["failure_family"] = "expected-red"
+        item["selector_intent"] = selector
+        normalized.append(item)
+        changed = True
+    return {**value, "failure_intents": normalized} if changed else value
 
 
 def _normalize_harness_lanes(stage: str, payload: Mapping[str, Any], value: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -251,9 +333,21 @@ def _normalize_production_write_sets(root: Path, value: Mapping[str, Any]) -> Ma
         owners = _string_list(hint.get("production_owners"))
         allowed = _string_list(hint.get("allowed_write_paths"))
         snapshots = _string_list(hint.get("execution_snapshot_paths"))
-        if owners is None or allowed is None:
+        if allowed is None:
             normalized.append(hint)
             continue
+        # A missing worker owner remains invalid unless the exact selector has
+        # an existing, repository-owned canonical owner below.  Represent it
+        # as empty here so the finite selector mappings can repair it; an
+        # unrecognized selector still reaches `_findings` as a hard failure.
+        if owners is None:
+            owners = []
+        if not owners and snapshots is not None and len(snapshots) == 1:
+            terminal_owner = _TERMINAL_EVIDENCE_TEST_OWNERS.get(snapshots[0])
+            if terminal_owner is not None and (root / terminal_owner).is_file() and not (root / terminal_owner).is_symlink():
+                owners = [terminal_owner]
+                hint["production_owners"] = owners
+                changed = True
         command_text = json.dumps(hint.get("validation_commands", []), ensure_ascii=False)
         test_class = next((name for name, path in _AUTHORIZED_REPAIR_TESTS.items()
                            if name in command_text or (snapshots and path in snapshots)), None)
@@ -278,10 +372,18 @@ def _normalize_production_write_sets(root: Path, value: Mapping[str, Any]) -> Ma
             candidates.discard(None)
             if len(candidates) == 1:
                 test_class = candidates.pop()
+        if test_class is None and snapshots:
+            existing_selector_classes = {
+                "PhaseA.Platform.Tests/Browser/AdminReviewQueueHttpIntegrationTests.cs": "AdminReviewQueueHttpIntegrationTests",
+            }
+            candidates = {existing_selector_classes.get(snapshot) for snapshot in snapshots}
+            candidates.discard(None)
+            if len(candidates) == 1:
+                test_class = candidates.pop()
         # A worker may emit either a stale test file or a truncated test
         # directory.  Once the frozen source names exactly one repair class,
         # the canonical selector is an explicitly authorized planned file.
-        if snapshots and test_class and any(
+        if snapshots and test_class in _AUTHORIZED_REPAIR_TESTS and any(
             s == "PhaseA.Platform.Tests/" or s.startswith("PhaseA.Platform.Tests/")
             for s in snapshots
         ):
@@ -311,6 +413,26 @@ def _normalize_production_write_sets(root: Path, value: Mapping[str, Any]) -> Ma
         if expanded != allowed:
             hint["allowed_write_paths"] = expanded
             changed = True
+        # A V3 worker can correctly declare a future Q2 selector, boundary case
+        # and fixture in both the frozen snapshot and write set while omitting
+        # the redundant planned-file projection.  Once a real owner exists,
+        # promote only those exact, already-declared Phase B/C test artifacts.
+        # This never turns an arbitrary missing source file into a test target.
+        planned = _string_list(hint.get("planned_new_files")) or []
+        future_test_artifacts = [
+            snapshot for snapshot in (snapshots or [])
+            if snapshot in expanded
+            and not (root / snapshot).is_file()
+            and (
+                snapshot.startswith("tests/phase_b_c_identity_isolation/current/")
+                or snapshot.startswith("PhaseA.Platform.Tests/PhaseB/Repair/")
+            )
+        ]
+        if real_owners and future_test_artifacts:
+            next_planned = list(dict.fromkeys([*planned, *future_test_artifacts]))
+            if next_planned != planned:
+                hint["planned_new_files"] = next_planned
+                changed = True
         normalized.append(hint)
     return {**value, "slice_hints": normalized} if changed else value
 
@@ -429,6 +551,7 @@ def execution_contract_transport(
             value=value,
             worker_cache=worker_cache,
         )
+        value = _normalize_expected_red_for_product_behavior(stage, payload, value)
         value = _normalize_harness_lanes(stage, payload, value)
         value = _normalize_production_write_sets(Path(root), value)
         before_grounding = value

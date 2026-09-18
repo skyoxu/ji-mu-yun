@@ -53,6 +53,10 @@ def _string_array(*, nonempty: bool = False) -> dict[str, Any]:
 def _worker_output_schema(stage: str) -> dict[str, Any] | None:
     kind = _schema_kind(stage)
     if kind == "v1":
+        # The source-gap repair lane may only add active obligations. Constrain
+        # that fact at the transport boundary so an otherwise schema-valid
+        # not_applicable placeholder cannot abort a later deterministic merge.
+        status_values = ["active"] if stage.startswith("v1-source-gap-repair") else ["active", "deferred", "not_applicable"]
         obligation = {
             "type": "object",
             "additionalProperties": False,
@@ -68,7 +72,7 @@ def _worker_output_schema(stage: str) -> dict[str, Any] | None:
                 "requirement_type": {"type": "string", "enum": ["Product", "Platform", "Governance"]},
                 "obligation_kind": {"type": "string", "enum": ["behavior", "quality", "constraint", "governance"]},
                 "unresolved_fragments": _string_array(),
-                "status": {"type": "string", "enum": ["active", "deferred", "not_applicable"]},
+                "status": {"type": "string", "enum": status_values},
                 "depends_on": _string_array(),
             },
             "required": [
@@ -219,7 +223,13 @@ def transport_invoke_worker(
 ) -> Mapping[str, Any]:
     """Mirror the canonical worker seam with bounded structured-output transport."""
     role_contract = _source_role_contract(stage)
-    cache_payload = {"source_role_contract": role_contract, "input": payload} if role_contract else payload
+    # Worker semantics include the extraction prompt.  Reusing a candidate
+    # produced under a less exhaustive prompt silently loses atomic clauses.
+    cache_payload = {
+        "source_role_contract": role_contract,
+        "prompt": prompt,
+        "input": payload,
+    }
     cache_dir = out_dir / ".compiler-cache"
     cache_path = cache_dir / sc._worker_cache_key(stage, cache_payload)
     if cache_path.is_file():

@@ -45,9 +45,15 @@ def test_unrelated_v3_cache_and_injected_fixture_are_not_reclassified(tmp_path):
     out_dir = tmp_path / "plan"
     payload = {"obligations": []}
     cached = {"acceptances": [], "failure_intents": [], "slice_hints": []}
-    path = out_dir / ".compiler-cache" / transport.sc._worker_cache_key("v3", payload)
+    prompt = "Compile."
+    cache_payload = {
+        "source_role_contract": transport._source_role_contract("v3"),
+        "prompt": prompt,
+        "input": payload,
+    }
+    path = out_dir / ".compiler-cache" / transport.sc._worker_cache_key("v3", cache_payload)
     transport.sc.atomic_json(path, cached)
-    assert transport.transport_invoke_worker(root=tmp_path, out_dir=out_dir, stage="v3", payload=payload, prompt="Compile.") == cached
+    assert transport.transport_invoke_worker(root=tmp_path, out_dir=out_dir, stage="v3", payload=payload, prompt=prompt) == cached
     assert transport._source_role_contract("v3") == ""
     historical = {"invented_obligation_ids": [], "supported_obligation_ids": ["O-1"], "source_gap_claims": []}
     assert transport.transport_invoke_worker(root=tmp_path, out_dir=out_dir, stage="v4-atomic-recall",

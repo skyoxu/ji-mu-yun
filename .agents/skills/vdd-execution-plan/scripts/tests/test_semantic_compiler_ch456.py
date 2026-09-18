@@ -8,7 +8,8 @@ SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from semantic_compiler import _normalize_obligation, build_source_index, source_preflight
+from semantic_compiler import _normalize_obligation, build_source_index, compile_obligations, source_preflight
+import semantic_compiler as compiler
 from semantic_compiler_gate import compile_plan
 import semantic_compiler_gate as gate
 
@@ -181,6 +182,68 @@ def test_repair_case_table_owns_atomic_ids_and_companions_are_frozen_context(tmp
     ]
     assert index["companions"][0]["source_text"].startswith("# Canonical")
     assert source_preflight(root, index)["valid"] is True
+
+
+def test_anchored_repair_case_table_keeps_companions_as_frozen_context(tmp_path: Path) -> None:
+    root = tmp_path
+    (root / ".agents").mkdir()
+    (root / "AGENTS.md").write_text("x", encoding="utf-8")
+    requirements = root / "repair.md"
+    requirements.write_text(
+        "| Case | PIWR parents | Acceptance | Lane | Source | Behavior |\n"
+        "| --- | --- | --- | --- | --- | --- |\n"
+        "| <a id=\"SM-I01\"></a>I01 | PIWR-001 | PIWR-A01 | S0 | identity.md | Resolve server context. |\n"
+        "| <a id=\"SM-A01\"></a>A01 | PIWR-002 | PIWR-A02 | S4 | api.md | Preserve existing clients. |\n",
+        encoding="utf-8",
+    )
+    companion = root / "SPEC.md"
+    companion.write_text("FR-001 and NFR-001 are normative.\n", encoding="utf-8")
+
+    index = build_source_index(root, requirements, [companion])
+
+    assert [entry["requirement_id"] for entry in index["entries"]] == ["SM-I01", "SM-A01"]
+    assert len({entry["requirement_id"] for entry in index["entries"]}) == len(index["entries"])
+    assert [item["repository_relative_source_path"] for item in index["companions"]] == ["SPEC.md"]
+    assert source_preflight(root, index)["valid"] is True
+
+
+def test_case_row_obligation_prompt_does_not_expand_every_companion_clause(tmp_path: Path, monkeypatch) -> None:
+    root, req, _owner, _selector = _repo(tmp_path)
+    req.write_text(
+        "| <a id=\"SM-I01\"></a>I01 | PIWR-001 | PIWR-A01 | L0 | identity.md | Resolve server context. |\n",
+        encoding="utf-8",
+    )
+    companion = root / "identity.md"
+    companion.write_text("PIWR-001 plus unrelated PIWR-999 normative prose.\n", encoding="utf-8")
+    prompts: list[str] = []
+    companion_paths: list[list[str]] = []
+
+    def worker(**kwargs):
+        if kwargs["stage"] == "v4-atomic-recall":
+            return {
+                "supported_obligation_ids": [
+                    item["obligation_id"] for item in kwargs["payload"]["obligations"]
+                ],
+                "invented_obligation_ids": [],
+                "source_gap_claims": [],
+            }
+        prompts.append(kwargs["prompt"])
+        companion_paths.append([item["repository_relative_source_path"] for item in kwargs["payload"]["companions"]])
+        return {"obligations": [{
+            "source_refs": [kwargs["payload"]["source"]["source_ref"]], "subject": "server context",
+            "trigger": "request", "state_before": "unresolved", "state_after": "resolved",
+            "expected_behavior": "resolve server context", "observable_result": "resolved context",
+            "forbidden_result": ["client authority"], "requirement_type": "Platform",
+            "obligation_kind": "behavior", "unresolved_fragments": [], "status": "active", "depends_on": [],
+        }]}
+
+    monkeypatch.setattr(compiler, "invoke_worker", worker)
+    result = compile_obligations(root=root, out_dir=root / "plan", source_index=build_source_index(root, req, [companion]), worker_cache=None)
+
+    assert len(result) == 1
+    assert companion_paths == [["identity.md"]]
+    assert "do not duplicate every companion clause into this row" in prompts[0]
+    assert "parameterized boundary family as one obligation" in prompts[0]
 
 
 def test_companion_byte_change_invalidates_source_preflight(tmp_path: Path) -> None:

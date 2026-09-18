@@ -21,6 +21,11 @@ REQ_ID_RE = re.compile(r"^(FR-[0-9]+|NFR-[0-9]+|SM-[A-Z0-9-]+)$")
 HEADING_RE = re.compile(r"^#{1,6}\s*(FR-[0-9]+|NFR-[0-9]+|SM-[A-Z0-9-]+)\b(?:\s*[:：\-]\s*)?(.*)$", re.I)
 INLINE_REQ_RE = re.compile(r"\b(FR-[0-9]+|NFR-[0-9]+|SM-[A-Z0-9-]+)\b", re.I)
 CASE_ROW_RE = re.compile(r"^\|\s*([A-Z][0-9]{2})\s*\|", re.I)
+ANCHORED_CASE_ROW_RE = re.compile(
+    r'^\|\s*<a\s+id=["\'](SM-[A-Z][0-9]{2})["\']></a>([A-Z][0-9]{2})\s*\|',
+    re.I,
+)
+TABLE_SEPARATOR_RE = re.compile(r"^\|(?:\s*:?-{3,}:?\s*\|)+\s*$")
 FAILURE_FAMILIES = {
     "semantic-contract-gap", "artifact-integrity", "target-binding-failure",
     "test-harness-failure", "timeout-no-observation", "repo-noise",
@@ -121,17 +126,31 @@ def _sections(text: str) -> list[tuple[str, str, int]]:
 
 def _behavior_case_sections(text: str) -> list[tuple[str, str, int]]:
     """Extract stable atomic behavior rows from a repair-input case table."""
-    result: list[tuple[str, str, int]] = []
-    seen: set[str] = set()
+    anchored_rows: list[tuple[str, str, int]] = []
     for index, line in enumerate(text.splitlines()):
-        match = CASE_ROW_RE.match(line.strip())
+        match = ANCHORED_CASE_ROW_RE.match(line.strip())
         if not match:
             continue
-        requirement_id = f"SM-{match.group(1).upper()}"
+        requirement_id = match.group(1).upper()
+        if requirement_id != f"SM-{match.group(2).upper()}":
+            raise ValueError(f"anchored behavior case id mismatch: {requirement_id}")
+        anchored_rows.append((requirement_id, line.strip(), index + 1))
+
+    # Anchored IDs are authoritative when a repair input supplies them. This
+    # avoids treating unrelated two-character tables as requirements and keeps
+    # companions as frozen context rather than duplicate requirement sources.
+    rows = anchored_rows or [
+        (f"SM-{match.group(1).upper()}", line.strip(), index + 1)
+        for index, line in enumerate(text.splitlines())
+        if (match := CASE_ROW_RE.match(line.strip()))
+    ]
+    result: list[tuple[str, str, int]] = []
+    seen: set[str] = set()
+    for requirement_id, source_text, line_no in rows:
         if requirement_id in seen:
             raise ValueError(f"duplicate behavior case id: {requirement_id}")
         seen.add(requirement_id)
-        result.append((requirement_id, line.strip(), index + 1))
+        result.append((requirement_id, source_text, line_no))
     return result
 
 
@@ -178,7 +197,13 @@ def build_source_index(root: Path, requirements: Path, companions: Sequence[Path
     additional = []
     if case_sections:
         remaining = "\n".join(
-            line for line in text.splitlines() if not CASE_ROW_RE.match(line.strip())
+            line for line in text.splitlines()
+            if not (
+                CASE_ROW_RE.match(line.strip())
+                or ANCHORED_CASE_ROW_RE.match(line.strip())
+                or TABLE_SEPARATOR_RE.match(line.strip())
+                or (line.strip().startswith("|") and "PIWR parents" in line)
+            )
         ).strip()
         if remaining:
             additional.append((relative, raw, [("SM-REPAIR-CONSTRAINTS", remaining, 1)]))
@@ -273,8 +298,10 @@ def source_preflight(root: Path, source_index: Mapping[str, Any]) -> dict[str, A
     return {"valid": not findings, "recommended_action": "continue" if not findings else "repair-vdd", "findings": findings}
 
 
-def _worker_cache_key(stage: str, payload: Any) -> str:
-    return f"{stage}-{sha256_value(payload)[7:31]}.json"
+def _worker_cache_key(stage: str, payload: Any, prompt: str = "") -> str:
+    """Bind cached worker output to both frozen input and extraction policy."""
+    identity = {"payload": payload, "prompt": prompt} if prompt else payload
+    return f"{stage}-{sha256_value(identity)[7:31]}.json"
 
 
 def _parse_json_output(text: str) -> Mapping[str, Any]:
@@ -293,7 +320,7 @@ def _parse_json_output(text: str) -> Mapping[str, Any]:
 
 def invoke_worker(*, root: Path, out_dir: Path, stage: str, payload: Mapping[str, Any], prompt: str, worker_cache: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
     cache_dir = out_dir / ".compiler-cache"
-    cache_path = cache_dir / _worker_cache_key(stage, payload)
+    cache_path = cache_dir / _worker_cache_key(stage, payload, prompt)
     if cache_path.is_file():
         value = json.loads(cache_path.read_text(encoding="utf-8"))
         if not isinstance(value, Mapping):
@@ -374,17 +401,46 @@ def _normalize_obligation(entry: Mapping[str, Any], raw: Mapping[str, Any]) -> d
     }
 
 
+def _entry_companion_context(entry: Mapping[str, Any], companions: Sequence[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
+    """Keep a repair case's semantic context to its declared source owner.
+
+    The complete companion set remains frozen in the source index and V4
+    recall.  V1 must not resend every companion to every case row: that makes
+    unrelated clauses look bound to the row and multiplies output volume.
+    """
+    text = str(entry.get("source_text") or "")
+    cells = [cell.strip() for cell in text.strip().strip("|").split("|")]
+    if len(cells) < 6 or not str(entry.get("requirement_id") or "").startswith("SM-"):
+        return list(companions)
+    owner = Path(cells[4]).name.casefold()
+    selected = [
+        companion for companion in companions
+        if Path(str(companion.get("repository_relative_source_path") or "")).name.casefold() == owner
+    ]
+    return selected or list(companions)
+
+
 def compile_obligations(*, root: Path, out_dir: Path, source_index: Mapping[str, Any], worker_cache: Mapping[str, Any] | None) -> list[dict[str, Any]]:
     obligations: list[dict[str, Any]] = []
     for entry in source_index["entries"]:
         stage = f"v1-{entry['requirement_id']}"
         payload = {"source": entry}
         if "companions" in source_index:
-            payload["companions"] = list(source_index["companions"])
+            payload["companions"] = _entry_companion_context(entry, source_index["companions"])
         raw = invoke_worker(
             root=root, out_dir=out_dir, stage=stage, payload=payload, worker_cache=worker_cache,
             prompt=(
-                "Extract all atomic obligations from the one requirement. Return {\"obligations\":[...]}. "
+                "Extract every independently assertable atomic obligation from the one requirement. The supplied "
+                "companions are frozen interpretation context for this requirement only: do not duplicate every "
+                "companion clause into this row, and do not emit a duty that is not explicitly bound by the row. "
+                "Treat each semicolon-separated "
+                "duty, named boundary, quantitative limit, required readback/evidence field, denial condition, "
+                "lifecycle transition, and forbidden outcome as a candidate independent obligation; retain it unless "
+                "the frozen source makes it purely descriptive context. Do not summarize a compound case row into "
+                "a small representative subset. Keep a parameterized boundary family as one obligation when every "
+                "member has the same trigger, production boundary and oracle shape; retain every member explicitly "
+                "in that obligation's observable and forbidden results so later Acceptance can assert each one. "
+                "Return {\"obligations\":[...]}. "
                 "Each obligation must contain source_refs (exactly the supplied source_ref), subject, trigger, state_before, state_after, expected_behavior, observable_result, forbidden_result[], requirement_type Product|Platform|Governance, obligation_kind behavior|quality|constraint|governance, unresolved_fragments[], status active|deferred|not_applicable, depends_on[]. Split independent behaviors; do not collapse multiple observable rules into one obligation."
             ),
         )
@@ -616,7 +672,7 @@ def semantic_align(*, root: Path, out_dir: Path, source_index: Mapping[str, Any]
     raw = invoke_worker(
         root=root, out_dir=out_dir, stage="v4", payload=payload, worker_cache=worker_cache,
         prompt=(
-            "Independently align the frozen source to obligations, Acceptance and RED intents. Do not read another worker's reasoning. Return covered_obligation_ids[], missing_obligation_ids[], invented_obligation_ids[], misaligned_acceptance_ids[], oracle_alignment object, repairs[]. A boolean valid may be included but is not authoritative."
+            "Independently align the frozen source to obligations, Acceptance and RED intents. Failure intents bind Acceptance IDs; evaluate the supplied Acceptance-to-RED links when classifying coverage. Do not read another worker's reasoning. Return covered_obligation_ids[], missing_obligation_ids[], invented_obligation_ids[], misaligned_acceptance_ids[], oracle_alignment object, repairs[]. A boolean valid may be included but is not authoritative."
             + ALIGNMENT_SCOPE_PROMPT
         ),
     )
@@ -638,13 +694,25 @@ def semantic_align(*, root: Path, out_dir: Path, source_index: Mapping[str, Any]
         remaining_set = set(remaining[:40])
         narrowed_obligations = [item for item in obligations if item.get("obligation_id") in remaining_set]
         narrowed_acceptances = [item for item in acceptances if remaining_set.intersection(item.get("obligation_ids", []))]
-        narrowed_failures = [item for item in failures if remaining_set.intersection(item.get("obligation_ids", []))]
+        # V3 failure intents bind their Acceptance IDs, not obligation IDs.
+        # Preserve the RED contract for each bounded V4 recheck by following
+        # that normative binding; otherwise every recheck sees an empty RED
+        # set and can only classify its obligations as missing.
+        narrowed_acceptance_ids = {
+            item.get("acceptance_id")
+            for item in narrowed_acceptances
+            if isinstance(item.get("acceptance_id"), str) and item.get("acceptance_id")
+        }
+        narrowed_failures = [
+            item for item in failures
+            if narrowed_acceptance_ids.intersection(item.get("acceptance_ids", []))
+        ]
         supplement = invoke_worker(
             root=root, out_dir=out_dir, stage=f"v4-coverage-repair-{round_index}",
             payload=alignment_payload(source_index, narrowed_obligations, narrowed_acceptances, narrowed_failures),
             worker_cache=worker_cache,
             prompt=(
-                "Independently classify EVERY active obligation in this bounded frozen input. "
+                "Independently classify EVERY active obligation in this bounded frozen input. Failure intents bind the supplied Acceptance IDs and are part of each obligation's RED contract. "
                 "Return covered_obligation_ids[], missing_obligation_ids[], invented_obligation_ids[], "
                 "misaligned_acceptance_ids[], oracle_alignment object, repairs[]. Do not omit an input ID."
                 + ALIGNMENT_SCOPE_PROMPT
