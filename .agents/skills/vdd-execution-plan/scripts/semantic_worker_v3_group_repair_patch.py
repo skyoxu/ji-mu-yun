@@ -159,6 +159,37 @@ def _reusable_prior_contracts(
     return recovered
 
 
+def _reusable_prior_complete_contracts(
+    *, root: Path, cache_dir: Path, payload: Mapping[str, Any], ids: list[str],
+) -> dict[str, Any] | None:
+    """Reuse an exact complete V3 candidate before recomposing positional chunks.
+
+    A transport timeout has no semantic meaning. If an earlier complete inline
+    candidate still projects against every current frozen obligation and its
+    execution snapshots remain usable, preserving it prevents an unrelated
+    retry from changing deterministic Acceptance identities and invalidating
+    all V4 source partitions.
+    """
+    wanted = set(ids)
+    candidates = sorted(
+        (path for path in cache_dir.glob(_GROUP_STAGE + "-*.json") if "-chunk-" not in path.name),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    for path in candidates:
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            contracts = raw.get("obligation_contracts") if isinstance(raw, Mapping) else None
+            if not isinstance(contracts, Mapping) or set(contracts) != wanted:
+                continue
+            projected = _project_current_output(raw, _obligation_refs(payload))
+            if not sc._v3_cache_requires_contract_refresh(projected, root, payload):
+                return dict(raw)
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+            continue
+    return None
+
+
 def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
     obligations = _repair_obligations(payload)
     known_ids = sorted({
@@ -514,6 +545,13 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         projected = _project_current_output(cached, refs_by_oid)
         if not sc._v3_cache_requires_contract_refresh(projected, root, payload):
             return projected
+
+    complete = _reusable_prior_complete_contracts(
+        root=root, cache_dir=cache_dir, payload=payload, ids=sorted(refs_by_oid),
+    )
+    if complete is not None:
+        _write_refreshable_json(cache_path, complete)
+        return _project_current_output(complete, refs_by_oid)
 
     grouped_prompt = (
         prompt

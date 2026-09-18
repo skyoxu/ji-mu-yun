@@ -50,6 +50,22 @@ def test_inline_schema_requires_proof_and_context_without_reference_targets():
         assert contract["additionalProperties"] is False
 
 
+def test_complete_prior_candidate_is_reused_before_chunk_recomposition(tmp_path, monkeypatch):
+    raw = _inline()
+    payload = {"input": {"obligations": [_obligation(oid) for oid in _refs(raw)]}}
+    cache_dir = tmp_path / ".compiler-cache"
+    cache_dir.mkdir()
+    prior = cache_dir / "v3-schema-repair-group-v5-inline-context-prior.json"
+    prior.write_text(json.dumps(raw), encoding="utf-8")
+    monkeypatch.setattr(grouped.sc, "_v3_cache_requires_contract_refresh", lambda *_args: False)
+
+    recovered = grouped._reusable_prior_complete_contracts(
+        root=tmp_path, cache_dir=cache_dir, payload=payload, ids=sorted(_refs(raw)),
+    )
+
+    assert recovered == raw
+
+
 def test_37_inline_contracts_compile_once_and_keep_one_cohesive_slice(tmp_path, monkeypatch):
     raw = _inline(37)
     (tmp_path / "src").mkdir()

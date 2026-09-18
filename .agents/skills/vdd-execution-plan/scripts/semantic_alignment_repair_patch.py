@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Any, Mapping, Sequence
 
 import json
+from pathlib import Path
 
 import semantic_compiler_gate as gate
 import semantic_worker_v3_domain_patch  # noqa: F401  # preserve frozen V3 domain first
@@ -22,6 +23,83 @@ import semantic_worker_v3_domain_patch  # noqa: F401  # preserve frozen V3 domai
 sc = gate.sc
 _BASE_SEMANTIC_ALIGN = sc.semantic_align
 _MAX_V4_ALIGNMENT_INPUT_CHARS = 900_000
+_REPAIRS_PER_APPROVED_CYCLE = 3
+_approved_repair_cycles = 0
+
+
+def configure_approved_v4_repair_cycles(cycles: int) -> None:
+    """Allow explicitly approved follow-up batches without weakening V4 gates."""
+    if not isinstance(cycles, int) or cycles < 0:
+        raise ValueError("approved V4 repair cycles must be a non-negative integer")
+    global _approved_repair_cycles
+    _approved_repair_cycles = cycles
+
+
+def _maximum_closed_v4_repair_passes() -> int:
+    return _REPAIRS_PER_APPROVED_CYCLE * (1 + _approved_repair_cycles)
+
+
+def _v4_source_chunk_result_matches_scope(
+    raw: Mapping[str, Any], obligation_ids: set[str], acceptance_ids: set[str],
+    acceptance_obligations: Mapping[str, set[str]],
+) -> bool:
+    """Accept a cached V4 partition only when its IDs and bindings are local."""
+    for field in ("covered_obligation_ids", "missing_obligation_ids"):
+        values = raw.get(field)
+        if not isinstance(values, list) or any(
+            not isinstance(value, str) or value not in obligation_ids for value in values
+        ):
+            return False
+    values = raw.get("misaligned_acceptance_ids")
+    if not isinstance(values, list) or not all(
+        isinstance(value, str) and value in acceptance_ids for value in values
+    ):
+        return False
+    missing = {value for value in raw["missing_obligation_ids"] if isinstance(value, str)}
+    if not missing:
+        return True
+    # V3 emits one Acceptance contract per active obligation. A cached V4
+    # conclusion that says an obligation is missing yet omits its actual bound
+    # Acceptance cannot guide an Acceptance-only repair, even if it names some
+    # other current Acceptance from the same source partition.
+    bound = {
+        aid for aid, bound_obligations in acceptance_obligations.items()
+        if missing.intersection(bound_obligations)
+    }
+    return bound <= set(values)
+
+
+def _preserve_stale_v4_chunk_cache(*, out_dir, stage: str, payload: Mapping[str, Any]) -> None:
+    """Move one invalid cache entry aside so only its source partition is replayed."""
+    cache_path = Path(out_dir) / ".compiler-cache" / sc._worker_cache_key(stage, payload)
+    if not cache_path.is_file():
+        return
+    sidecar = cache_path.with_name(cache_path.name + ".stale-v4-source-scope")
+    suffix = 1
+    while sidecar.exists():
+        sidecar = cache_path.with_name(cache_path.name + f".stale-v4-source-scope-{suffix}")
+        suffix += 1
+    cache_path.replace(sidecar)
+
+
+def _invoke_v4_source_chunk(
+    *, root, out_dir, stage: str, payload: Mapping[str, Any], prompt: str,
+    worker_cache, obligation_ids: set[str], acceptance_ids: set[str],
+    acceptance_obligations: Mapping[str, set[str]],
+) -> Mapping[str, Any]:
+    raw = sc.invoke_worker(
+        root=root, out_dir=out_dir, stage=stage, payload=payload,
+        worker_cache=worker_cache, prompt=prompt,
+    )
+    if _v4_source_chunk_result_matches_scope(raw, obligation_ids, acceptance_ids, acceptance_obligations):
+        return raw
+    _preserve_stale_v4_chunk_cache(out_dir=out_dir, stage=stage, payload=payload)
+    # An injected fixture may be just as stale as the disk cache. Do not feed it
+    # back into the retry; the stale value has already been retained as a sidecar.
+    return sc.invoke_worker(
+        root=root, out_dir=out_dir, stage=stage, payload=payload,
+        worker_cache=None, prompt=prompt,
+    )
 
 
 def _chunked_alignment(
@@ -39,11 +117,18 @@ def _chunked_alignment(
         ids = {str(item.get("obligation_id")) for item in scoped_obligations}
         scoped_acceptances = [item for item in acceptances if ids.intersection(str(x) for x in item.get("obligation_ids", []))]
         aids = {str(item.get("acceptance_id")) for item in scoped_acceptances}
+        acceptance_obligations = {
+            str(item.get("acceptance_id")): {
+                str(oid) for oid in item.get("obligation_ids", []) if isinstance(oid, str)
+            }
+            for item in scoped_acceptances
+        }
         scoped_failures = [item for item in failures if aids.intersection(str(x) for x in item.get("acceptance_ids", []))]
         payload = sc.alignment_payload({"entries": [entry]}, scoped_obligations, scoped_acceptances, scoped_failures)
-        raw = sc.invoke_worker(
-            root=root, out_dir=out_dir, stage=f"v4-source-chunk-{index:02d}", payload=payload, worker_cache=worker_cache,
-            prompt=(
+        raw = _invoke_v4_source_chunk(
+            root=root, out_dir=out_dir, stage=f"v4-source-chunk-{index:02d}", payload=payload,
+            worker_cache=worker_cache, obligation_ids=ids, acceptance_ids=aids,
+            acceptance_obligations=acceptance_obligations, prompt=(
                 "Independently align this frozen source partition to its supplied obligations, Acceptance and RED intents. "
                 "Return covered_obligation_ids[], missing_obligation_ids[], invented_obligation_ids[], "
                 "misaligned_acceptance_ids[], oracle_alignment object, repairs[]. A boolean valid is not authoritative."
@@ -157,17 +242,61 @@ def _repair_map(raw: Mapping[str, Any], targets: set[str]) -> dict[str, Mapping[
     return result
 
 
+def _repair_targets(
+    raw: Mapping[str, Any], acceptances: Sequence[Mapping[str, Any]],
+) -> set[str]:
+    """Use compiler-owned bindings when a worker reports an incomplete association.
+
+    V4 may identify a real wording issue but associate its reported Acceptance
+    ID with the wrong missing obligation.  IDs and obligation bindings are
+    compiler-owned, so only current reported IDs are retained and the actual
+    bound Acceptance for each reported missing obligation is added. The caller
+    still requires the resulting set to be closed over the active missing set.
+    """
+    current_ids = {
+        str(item.get("acceptance_id"))
+        for item in acceptances
+        if isinstance(item, Mapping) and isinstance(item.get("acceptance_id"), str)
+    }
+    # Worker IDs are diagnostic claims, not authority. A repaired candidate
+    # has deterministic new IDs, so an ID absent from the supplied current
+    # candidates cannot be a legal repair target.
+    missing = {
+        str(item)
+        for item in raw.get("missing_obligation_ids", [])
+        if isinstance(item, str) and item
+    }
+    # A missing obligation is a compiler-owned binding problem.  Do not let a
+    # worker's potentially stale association pull a peer Acceptance into this
+    # bounded repair. The next independent recheck can surface an unrelated
+    # semantic mismatch as its own (second and final) closed repair.
+    targets: set[str] = set()
+    for acceptance in acceptances:
+        if not isinstance(acceptance, Mapping):
+            continue
+        aid = acceptance.get("acceptance_id")
+        bound = acceptance.get("obligation_ids")
+        if isinstance(aid, str) and isinstance(bound, list) and missing.intersection(
+            str(oid) for oid in bound if isinstance(oid, str)
+        ):
+            targets.add(aid)
+    if missing:
+        return targets
+    targets.update(
+        str(item)
+        for item in raw.get("misaligned_acceptance_ids", [])
+        if isinstance(item, str) and item in current_ids
+    )
+    return targets
+
+
 def _isolated_acceptance_semantic_gap(
     raw: Mapping[str, Any],
     obligations: Sequence[Mapping[str, Any]],
     acceptances: Sequence[Mapping[str, Any]],
 ) -> bool:
     """Permit repair only when V4 localizes all coverage loss to its own targets."""
-    targets = {
-        str(item)
-        for item in raw.get("misaligned_acceptance_ids", [])
-        if isinstance(item, str) and item
-    }
+    targets = _repair_targets(raw, acceptances)
     if not targets:
         return False
     by_acceptance = {
@@ -193,7 +322,11 @@ def _isolated_acceptance_semantic_gap(
     invented = {str(item) for item in raw.get("invented_obligation_ids", []) if isinstance(item, str)}
     if invented or not missing <= active or not covered <= active:
         return False
-    return missing == active - covered and missing <= target_obligations
+    # Partitioned V4 reports coverage and explicit missing IDs independently.
+    # Require the full compiler-derived uncovered set to remain inside the
+    # actual repair closure, rather than requiring the two worker projections
+    # to be byte-for-byte equivalent.
+    return (active - covered) <= target_obligations and missing <= target_obligations
 
 
 def _apply_repairs(
@@ -310,75 +443,91 @@ def semantic_align_with_bounded_repair(
     if not isinstance(acceptances, list) or not isinstance(failures, list):
         return first
 
-    raw_first = first.get("worker")
-    if not isinstance(raw_first, Mapping):
-        return first
-    if not _isolated_acceptance_semantic_gap(raw_first, obligations, acceptances):
-        return first
-    targets = {
-        str(aid)
-        for aid in raw_first.get("misaligned_acceptance_ids", [])
-        if isinstance(aid, str) and aid
-    }
-    current_ids = {str(item.get("acceptance_id")) for item in acceptances if isinstance(item, Mapping)}
-    if not targets or not targets <= current_ids:
-        return first
+    # A recheck may expose a semantic wording error that was masked by an
+    # earlier candidate. Each maintainer-approved cycle permits exactly three
+    # closed repairs; coverage, identity, or invented-ID findings stop
+    # immediately. A new cycle never lowers those gates or reuses a finding as
+    # approval.
+    candidate = first
+    transcript: list[dict[str, Any]] = []
+    maximum_passes = _maximum_closed_v4_repair_passes()
+    for repair_pass in range(1, maximum_passes + 1):
+        candidate_findings = [str(item) for item in candidate.get("findings", [])]
+        if not candidate_findings or any(
+            not item.startswith(("v4:misaligned-acceptance:", "v4:active-not-covered:", "v4:missing:"))
+            for item in candidate_findings
+        ):
+            return candidate
+        raw_candidate = candidate.get("worker")
+        if not isinstance(raw_candidate, Mapping):
+            return candidate
+        if not _isolated_acceptance_semantic_gap(raw_candidate, obligations, acceptances):
+            return candidate
+        targets = _repair_targets(raw_candidate, acceptances)
+        current_ids = {str(item.get("acceptance_id")) for item in acceptances if isinstance(item, Mapping)}
+        if not targets or not targets <= current_ids:
+            return candidate
 
-    repair_payload = {
-        "obligations": list(obligations),
-        "acceptances": list(acceptances),
-        "failure_intents": list(failures),
-        "misaligned_acceptance_ids": sorted(targets),
-        "v4_repairs": list(raw_first.get("repairs", [])) if isinstance(raw_first.get("repairs"), list) else [],
-    }
-    repair_raw = sc.invoke_worker(
-        root=root,
-        out_dir=out_dir,
-        stage="v4-acceptance-repair",
-        payload=repair_payload,
-        worker_cache=worker_cache,
-        prompt=(
-            "Repair only the semantic wording of the named misaligned Acceptance candidates. Return "
-            "{\"acceptance_repairs\":[{acceptance_id,given,when,then,oracle{observable,expected,forbidden[]},assertion_ids[]}]} "
-            "with exactly one item per misaligned Acceptance ID. Preserve every Acceptance obligation_ids/source_refs "
-            "binding and preserve all RED selector/family semantics, slice hints, owners and write sets. Use the frozen "
-            "obligations and V4 repair advice only to make Given/When/Then/oracle/assertions faithfully discriminate the "
-            "already-bound behavior; do not merge, split, add or remove obligations."
-        ),
-    )
-    repair_map = _repair_map(repair_raw, targets)
-    repaired_acceptances, repaired_failures = _apply_repairs(
-        [dict(item) for item in acceptances],
-        [dict(item) for item in failures],
-        repair_map,
-    )
-    preflight = sc.semantic_preflight(obligations, repaired_acceptances, repaired_failures)
-    if not preflight.get("valid"):
-        return {
-            "valid": False,
-            "findings": ["v4:acceptance-repair-preflight:" + ",".join(str(x) for x in preflight.get("findings", []))],
-            "worker": {"initial": dict(raw_first), "repair": dict(repair_raw)},
+        repair_payload = {
+            "obligations": list(obligations),
+            "acceptances": list(acceptances),
+            "failure_intents": list(failures),
+            "misaligned_acceptance_ids": sorted(targets),
+            "v4_repairs": list(raw_candidate.get("repairs", [])) if isinstance(raw_candidate.get("repairs"), list) else [],
         }
+        repair_raw = sc.invoke_worker(
+            root=root,
+            out_dir=out_dir,
+            stage="v4-acceptance-repair",
+            payload=repair_payload,
+            worker_cache=worker_cache,
+            prompt=(
+                "Repair only the semantic wording of the named misaligned Acceptance candidates. Return "
+                "{\"acceptance_repairs\":[{acceptance_id,given,when,then,oracle{observable,expected,forbidden[]},assertion_ids[]}]} "
+                "with exactly one item per misaligned Acceptance ID. Preserve every Acceptance obligation_ids/source_refs "
+                "binding and preserve all RED selector/family semantics, slice hints, owners and write sets. Use the frozen "
+                "obligations and V4 repair advice only to make Given/When/Then/oracle/assertions faithfully discriminate the "
+                "already-bound behavior; do not merge, split, add or remove obligations."
+            ),
+        )
+        repair_map = _repair_map(repair_raw, targets)
+        repaired_acceptances, repaired_failures = _apply_repairs(
+            [dict(item) for item in acceptances], [dict(item) for item in failures], repair_map,
+        )
+        preflight = sc.semantic_preflight(obligations, repaired_acceptances, repaired_failures)
+        if not preflight.get("valid"):
+            return {
+                "valid": False,
+                "findings": ["v4:acceptance-repair-preflight:" + ",".join(str(x) for x in preflight.get("findings", []))],
+                "worker": {"transcript": transcript, "initial": dict(raw_candidate), "repair": dict(repair_raw)},
+                "repair_attempted": True,
+                "repair_passes": repair_pass,
+                "repair_scope": "acceptance-semantics-only",
+            }
 
-    acceptances[:] = repaired_acceptances
-    failures[:] = repaired_failures
-    recheck = _independent_recheck(
-        root=root,
-        out_dir=out_dir,
-        source_index=source_index,
-        obligations=obligations,
-        acceptances=acceptances,
-        failures=failures,
-        worker_cache=worker_cache,
-    )
+        acceptances[:] = repaired_acceptances
+        failures[:] = repaired_failures
+        recheck = _independent_recheck(
+            root=root, out_dir=out_dir, source_index=source_index, obligations=obligations,
+            acceptances=acceptances, failures=failures, worker_cache=worker_cache,
+        )
+        transcript.append({"input": dict(raw_candidate), "repair": dict(repair_raw), "recheck": dict(recheck.get("worker", {}))})
+        candidate = recheck
+        if candidate.get("valid"):
+            return {
+                **candidate,
+                "worker": {"transcript": transcript},
+                "repair_attempted": True,
+                "repair_passes": repair_pass,
+                "repair_scope": "acceptance-semantics-only",
+            }
+
     return {
-        **recheck,
-        "worker": {
-            "initial": dict(raw_first),
-            "repair": dict(repair_raw),
-            "recheck": dict(recheck.get("worker", {})),
-        },
+        **candidate,
+        "worker": {"transcript": transcript, "final_recheck": dict(candidate.get("worker", {}))},
         "repair_attempted": True,
+        "repair_passes": maximum_passes,
+        "approved_repair_cycles": _approved_repair_cycles,
         "repair_scope": "acceptance-semantics-only",
     }
 

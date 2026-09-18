@@ -788,8 +788,12 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
         "agent_contexts": contexts,
     }
     # ADR-0041: project probe intent without claiming current behavior or running tests.
-    from semantic_behavior_contract import SCHEMA, project_intents
-    bundle["behavior_routing"] = {"schema": SCHEMA, "intents": project_intents(bundle), "deferred": []}
+    from semantic_behavior_contract import SCHEMA, project_deferred, project_intents
+    bundle["behavior_routing"] = {
+        "schema": SCHEMA,
+        "intents": project_intents(bundle),
+        "deferred": project_deferred(bundle),
+    }
     valid, findings = stage_call(out_dir, "final-validation", validate_semantic_bundle, bundle)
     if not valid:
         return {"status": "repair-vdd", "stage": "final-validation", "findings": findings}

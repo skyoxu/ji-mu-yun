@@ -7,7 +7,7 @@ SCHEMA = "vdd.behavior-routing-intent.v1"
 def project_intents(bundle):
     intents = []
     for obligation in bundle["obligations"]:
-        if obligation.get("status") == "not_applicable":
+        if obligation.get("status") != "active":
             continue
         oid = obligation["obligation_id"]
         acceptances = [a for a in bundle["acceptances"] if oid in a.get("obligation_ids", [])]
@@ -25,6 +25,26 @@ def project_intents(bundle):
             "depends_on": list(obligation.get("depends_on", [])),
         })
     return sorted(intents, key=lambda x: x["obligation_id"])
+
+
+def project_deferred(bundle):
+    """Retain unresolved source contracts without inventing a Quick Dev route."""
+    rows = []
+    for obligation in bundle["obligations"]:
+        if obligation.get("status") != "deferred":
+            continue
+        fragments = obligation.get("unresolved_fragments")
+        reason = "; ".join(x for x in fragments if isinstance(x, str) and x.strip())
+        if not reason:
+            reason = "The frozen source contract remains unresolved."
+        rows.append({
+            "type": "blocking",
+            "reason": reason,
+            "resolution_owner": "canonical-source-owner",
+            "resolution_stage": "source-clarification",
+            "affected_obligation_ids": [obligation["obligation_id"]],
+        })
+    return rows
 
 
 def validate_routing_intent(bundle):
@@ -48,7 +68,11 @@ def validate_routing_intent(bundle):
     rows = contract.get("deferred")
     if not isinstance(rows, list):
         return findings + ["deferred:shape"]
-    index = {x["obligation_id"]: x for x in expected}
+    index = {
+        str(x["obligation_id"]): x
+        for x in bundle["obligations"]
+        if x.get("status") != "not_applicable"
+    }
     recorded = set()
     for row in rows:
         if not isinstance(row, dict) or any(not isinstance(row.get(k), str) or not row[k].strip()

@@ -25,12 +25,30 @@ def main() -> int:
     parser.add_argument("--recommendation-only", action="store_true")
     parser.add_argument("--resume-from", choices=("first-failed-stage",), default=None)
     parser.add_argument("--repair-timeout-seconds", type=int, help="Explicit per-repair worker budget")
+    parser.add_argument(
+        "--approved-v4-repair-cycles", type=int, default=0,
+        help="Explicit maintainer-approved follow-up V4 repair cycles; each cycle permits three closed repairs",
+    )
+    parser.add_argument(
+        "--v4-repair-approval-reference",
+        help="Required non-empty maintainer approval reference when approving follow-up V4 repair cycles",
+    )
     args = parser.parse_args()
     if args.repair_timeout_seconds is not None:
         if args.repair_timeout_seconds <= 0:
             parser.error("repair timeout must be positive")
         import semantic_worker_transport_patch as transport
         transport._REPAIR_TIMEOUT_SECONDS = args.repair_timeout_seconds
+    if args.approved_v4_repair_cycles < 0:
+        parser.error("approved V4 repair cycles must be non-negative")
+    if args.approved_v4_repair_cycles and not (
+        isinstance(args.v4_repair_approval_reference, str) and args.v4_repair_approval_reference.strip()
+    ):
+        parser.error("approved V4 repair cycles require --v4-repair-approval-reference")
+    if args.v4_repair_approval_reference and not args.approved_v4_repair_cycles:
+        parser.error("V4 repair approval reference requires approved V4 repair cycles")
+    import semantic_alignment_repair_patch as alignment
+    alignment.configure_approved_v4_repair_cycles(args.approved_v4_repair_cycles)
     cache = None
     if args.worker_cache:
         value = json.loads(args.worker_cache.read_text(encoding="utf-8"))
