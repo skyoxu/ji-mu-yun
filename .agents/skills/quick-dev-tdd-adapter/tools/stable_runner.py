@@ -223,8 +223,12 @@ def q2_author_red(
     argv, target_refs, fixture_refs = _descriptor_inputs(bundle, plan_dir, slice_id)
     selected = _slice(bundle, slice_id)
     missing = [path for path in sorted(set(target_refs + fixture_refs)) if not (ROOT / path).is_file()]
-    planned = set(str(item) for item in selected.get("planned_new_files", []))
-    worker_required = bool(missing or planned.intersection(target_refs + fixture_refs))
+    # `planned_new_files` is a plan-time declaration which permits an absent
+    # RED input.  It is not evidence that an already materialized, correctly
+    # mapped input still needs a model author.  Treating it as such needlessly
+    # re-authorizes workers during resumed runs and can strand an otherwise
+    # deterministic probe behind an unrelated backend timeout.
+    worker_required = bool(missing)
     if "behavior_routing" in bundle:
         # A new plan may bind existing tests with new assertion IDs. This only
         # decides whether authoring is needed; the probe alone proves behavior.

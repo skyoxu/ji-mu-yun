@@ -254,6 +254,22 @@ def test_existing_tests_with_new_assertion_ids_route_through_bounded_author(tmp_
     assert (tmp_path/"candidate.py").read_bytes()==before
 
 
+def test_materialized_planned_test_with_required_assertion_does_not_reinvoke_author(tmp_path,monkeypatch):
+    import stable_runner
+    semantic,_=fixture(tmp_path)
+    bundle=json.loads(semantic.read_text(encoding="utf-8"))
+    bundle["slices"][0]["planned_new_files"]=["tests/test_one.py"]
+    semantic.write_text(json.dumps(bundle),encoding="utf-8")
+    monkeypatch.setattr(stable_runner,"ROOT",tmp_path)
+    calls=[]
+    monkeypatch.setattr(stable_runner,"run_red_author",lambda **kwargs: calls.append(kwargs) or {"status":"worker-changes-valid"})
+    result=stable_runner.q2_author_red(semantic=semantic,slice_id="S1",run_dir=tmp_path/"RUN-1",
+        profile="standard",timeout_seconds=10,backend="offline-disabled")
+    assert calls==[]
+    assert result["worker"]["status"]=="worker-not-required"
+    assert result["required_next_action"]=="run-probe"
+
+
 def test_change_impact_invalidates_regression_observations(tmp_path):
     from current_router import recommendation
     semantic,_=fixture(tmp_path)
