@@ -301,3 +301,19 @@ verification instead of accepting the candidate declaration. Testing that
 behavior is implementable; granting trust approval is not. The original
 `target-binding-failure` remains diagnostic intent, and the new role binds
 `UNVERIFIED-CANDIDATE-EXTERNAL-TRUST-REJECTED` as a test assertion failure.
+
+
+### Q4 requires actual production progress (2026-09-19)
+
+An implementation worker entered after clean expected RED must produce a
+content change under a declared production owner. A zero exit, prose claim,
+non-production-only change or edit restored to its original bytes is not
+implementation progress. The worker adapter returns task-implementation-failure
+with reason no-production-change; the independent Q4 finish gate enforces the
+same rule using resolver-derived changes. Failed Q4 cannot publish a GREEN
+descriptor or request run-green, and the public CLI returns a nonzero exit.
+
+This is a necessary progress gate, not proof that a nonempty patch is correct.
+Real GREEN and downstream gates remain required. A no-op REFACTOR after valid
+GREEN remains legal. Historical attempts are immutable; repeated failures are
+not retried until a relevant input or control-plane defect is repaired.

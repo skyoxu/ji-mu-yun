@@ -1,0 +1,10 @@
+{
+  "base_commit": "57300d8abc2059ea604bdee050b991ceba184124",
+  "tests_passed": 19,
+  "skipped": 0,
+  "platform": "Linux",
+  "windows_verified": false,
+  "live_backend_called": false,
+  "s1_implementation_retried": false,
+  "authorizes": []
+}

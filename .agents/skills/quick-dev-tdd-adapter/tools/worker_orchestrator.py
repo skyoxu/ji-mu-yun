@@ -229,6 +229,17 @@ def _invoke(
     after = workspace_snapshot(root)
     changed = changed_paths(before, after)
     _validate_delta(changed, allowed=allowed, forbidden=forbidden, label=stage)
+    # ADR-0041: successful process exit is not implementation progress.
+    production = payload.get("slice", {}).get("production_owners", [])
+    if stage == "implementation" and not any(_matches(path, production) for path in changed):
+        return {
+            "schema": "quick-dev.worker-result.v1", "stage": stage,
+            "status": "task-implementation-failure", "failure_family": "task-implementation-failure",
+            "reason_code": "no-production-change", "backend": backend_name,
+            "changed_paths": changed, "before_sha256": sha256_value(before),
+            "after_sha256": sha256_value(after), "output_sha256": output_sha,
+            "authorizes_evidence": False, "authorizes": [],
+        }
     duration_ms = int((time.perf_counter() - started) * 1000)
     return {
         "schema": "quick-dev.worker-result.v1",

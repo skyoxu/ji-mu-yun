@@ -89,3 +89,13 @@ a fresh current run because the plan/selector identity changed. Prior slice
 receipts remain historical. Author every exact assertion mapping and preserve
 its independent oracle, including fixture-based replacement of old raw CLI
 commands. Existing guard failures keep their non-authorizing family.
+
+## Q4 no-production-change failure
+
+After expected RED, the implementation worker and Q4 finish gate both require
+an actual content delta under a declared production owner. No change, restored
+bytes, or changes only to other allowed paths yield task-implementation-failure
+(reason no-production-change), a nonzero CLI exit, and no GREEN descriptor.
+Do not proceed to run-green or retry the same unchanged attempt. Retain its
+evidence and resolve the worker/control-plane cause before a fresh run.
+No-op refactoring of already-GREEN behavior is still permitted.

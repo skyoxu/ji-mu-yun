@@ -390,12 +390,19 @@ def q4_implementation_worker(
         backend=backend,
     )
     if worker.get("status") != "worker-changes-valid":
-        return {"schema": "quick-dev.implementation-worker-result.v1", "status": worker.get("status"), "worker": worker, "handoff": handoff, "authorizes": []}
+        return {"schema": "quick-dev.implementation-worker-result.v1", "status": worker.get("status"), "failure_family": worker.get("failure_family"), "reason_code": worker.get("reason_code"), "worker": worker, "handoff": handoff, "authorizes": []}
     gate = q4_finish(
         semantic=semantic, slice_id=slice_id, run_dir=run_dir, before=handoff["before"],
         snapshot_roots=snapshot_roots, source_commit=source_commit, base_commit=base_commit,
         claimed_changed_paths=worker.get("changed_paths", []),
     )
+    if gate.get("status") != "implementation-successor":
+        return {
+            "schema": "quick-dev.implementation-worker-result.v1",
+            "status": gate.get("status"), "failure_family": gate.get("failure_family"),
+            "reason_code": gate.get("reason_code"), "worker": worker, "q4_gate": gate,
+            "authorizes_evidence": False, "authorizes": [],
+        }
     bundle = load_json(semantic)
     red_descriptor = load_json(_stage_descriptor(_inside_root(run_dir, "run-dir"), "red"))
     identity = candidate_identity(ROOT, bundle, slice_id)
@@ -724,7 +731,7 @@ def main() -> int:
         print(json.dumps({"status": "blocked", "recommended_action": "repair-vdd", "reason": str(exc)}, sort_keys=True))
         return 1
     print(json.dumps(result, sort_keys=True))
-    return 0
+    return 1 if result.get("status") == "task-implementation-failure" else 0
 
 
 if __name__ == "__main__":
