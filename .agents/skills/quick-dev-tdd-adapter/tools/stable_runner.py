@@ -524,7 +524,7 @@ def _materialize_named_descriptor(semantic: Path, run_dir: Path, stage: str) -> 
     if not descriptor.is_file():
         bundle = load_json(semantic)
         routed = "behavior_routing" in bundle
-        if stage != "terminal" and not (routed and stage in {"red", "regression"}):
+        if stage != "terminal" and not (routed and stage in {"red", "green", "refactor", "regression"}):
             raise ValueError(f"{stage} descriptor missing")
         base = load_json(_stage_descriptor(run_dir, "probe" if routed else "red"))
         slice_id = base["slice_id"]

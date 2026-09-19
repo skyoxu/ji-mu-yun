@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+
 namespace PhaseA.Platform.Runs;
 
 public sealed class HeavyRunnerQueueService
@@ -43,6 +45,37 @@ public sealed class HeavyRunnerQueueService
             projectId,
             runType,
             (_, token) => work(token),
+            cancellationToken);
+    }
+
+    public async Task<T> ExecuteAuthorizedAsync<T>(
+        string runId,
+        string accountId,
+        string projectId,
+        string runType,
+        RequestContext context,
+        Func<RequestContext, CancellationToken, Task<bool>> reauthorizeAtStart,
+        Func<CancellationToken, Task<T>> work,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(reauthorizeAtStart);
+        context.DemandAccount(accountId);
+
+        return await ExecuteAsync(
+            runId,
+            accountId,
+            projectId,
+            runType,
+            async token =>
+            {
+                if (!await reauthorizeAtStart(context, token))
+                {
+                    throw new UnauthorizedAccessException("queued work is no longer authorized at execution");
+                }
+
+                return await work(token);
+            },
             cancellationToken);
     }
 

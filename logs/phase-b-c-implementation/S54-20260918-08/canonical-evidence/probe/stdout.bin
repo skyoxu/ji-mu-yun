@@ -1,0 +1,324 @@
+FF.FFFFFF..FF                                                            [100%]
+================================== FAILURES ===================================
+_____________________________ test_o_12f85445ccd2 _____________________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_12f85445ccd20')
+
+    @pytest.mark.cer_assertion("A-O-12F85445CCD2-OS-WRITE-DENIAL")
+>   def test_o_12f85445ccd2(tmp_path): assert invoke_s54_boundary(tmp_path, "O_12F85445CCD2")
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_12f85445ccd20')
+method = 'O_12F85445CCD2'
+
+    def invoke_s54_boundary(tmp_path: Path, method: str) -> bool:
+        root = Path(__file__).resolve().parents[3]; out = tmp_path / method; out.mkdir()
+        case = f"PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.{method}"
+        p = subprocess.run(["dotnet","test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--filter",f"FullyQualifiedName={case}","--logger","trx","--results-directory",str(out)], cwd=root, shell=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        files=list(out.glob("*.trx"))
+        if len(files)!=1: raise RuntimeError("S54 did not produce one fresh TRX")
+        doc=ET.parse(files[0]).getroot(); rows=[x for x in doc.iter() if x.tag.endswith("UnitTestResult") and x.attrib.get("testName")==case]
+        if len(rows)!=1: raise RuntimeError("S54 exact case missing")
+        if p.returncode != 0 and rows[0].attrib.get("outcome") != "Failed": raise RuntimeError("S54 harness failed")
+        if rows[0].attrib.get("outcome") != "Passed":
+            print(f"FAILURE_ID:{FAILURES[method]}")
+>           raise AssertionError(f"{FAILURES[method]}: S54 restricted boundary behavior not proven")
+E           AssertionError: FAILURE-O-12F85445CCD2: S54 restricted boundary behavior not proven
+
+tests\phase_b_c_identity_isolation\current\s54_fixture.py:25: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-12F85445CCD2
+_____________________________ test_o_1d8cb3e8262f _____________________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_1d8cb3e8262f0')
+
+    @pytest.mark.cer_assertion("A-O-1D8CB3E8262F-OS-READ-DENIAL")
+>   def test_o_1d8cb3e8262f(tmp_path): assert invoke_s54_boundary(tmp_path, "O_1D8CB3E8262F")
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:15: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_1d8cb3e8262f0')
+method = 'O_1D8CB3E8262F'
+
+    def invoke_s54_boundary(tmp_path: Path, method: str) -> bool:
+        root = Path(__file__).resolve().parents[3]; out = tmp_path / method; out.mkdir()
+        case = f"PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.{method}"
+        p = subprocess.run(["dotnet","test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--filter",f"FullyQualifiedName={case}","--logger","trx","--results-directory",str(out)], cwd=root, shell=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        files=list(out.glob("*.trx"))
+        if len(files)!=1: raise RuntimeError("S54 did not produce one fresh TRX")
+        doc=ET.parse(files[0]).getroot(); rows=[x for x in doc.iter() if x.tag.endswith("UnitTestResult") and x.attrib.get("testName")==case]
+        if len(rows)!=1: raise RuntimeError("S54 exact case missing")
+        if p.returncode != 0 and rows[0].attrib.get("outcome") != "Failed": raise RuntimeError("S54 harness failed")
+        if rows[0].attrib.get("outcome") != "Passed":
+            print(f"FAILURE_ID:{FAILURES[method]}")
+>           raise AssertionError(f"{FAILURES[method]}: S54 restricted boundary behavior not proven")
+E           AssertionError: FAILURE-O-1D8CB3E8262F: S54 restricted boundary behavior not proven
+
+tests\phase_b_c_identity_isolation\current\s54_fixture.py:25: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-1D8CB3E8262F
+_____________________________ test_o_358d470f6e85 _____________________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_358d470f6e850')
+
+    @pytest.mark.cer_assertion("A-O-358D470F6E85-OS-STAGING-WRITE-DENIAL")
+>   def test_o_358d470f6e85(tmp_path): assert invoke_s54_boundary(tmp_path, "O_358D470F6E85")
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_358d470f6e850')
+method = 'O_358D470F6E85'
+
+    def invoke_s54_boundary(tmp_path: Path, method: str) -> bool:
+        root = Path(__file__).resolve().parents[3]; out = tmp_path / method; out.mkdir()
+        case = f"PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.{method}"
+        p = subprocess.run(["dotnet","test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--filter",f"FullyQualifiedName={case}","--logger","trx","--results-directory",str(out)], cwd=root, shell=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        files=list(out.glob("*.trx"))
+        if len(files)!=1: raise RuntimeError("S54 did not produce one fresh TRX")
+        doc=ET.parse(files[0]).getroot(); rows=[x for x in doc.iter() if x.tag.endswith("UnitTestResult") and x.attrib.get("testName")==case]
+        if len(rows)!=1: raise RuntimeError("S54 exact case missing")
+        if p.returncode != 0 and rows[0].attrib.get("outcome") != "Failed": raise RuntimeError("S54 harness failed")
+        if rows[0].attrib.get("outcome") != "Passed":
+            print(f"FAILURE_ID:{FAILURES[method]}")
+>           raise AssertionError(f"{FAILURES[method]}: S54 restricted boundary behavior not proven")
+E           AssertionError: FAILURE-O-358D470F6E85: S54 restricted boundary behavior not proven
+
+tests\phase_b_c_identity_isolation\current\s54_fixture.py:25: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-358D470F6E85
+_____________________________ test_o_3fa9a1207c61 _____________________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_3fa9a1207c610')
+
+    @pytest.mark.cer_assertion("A-O-3FA9A1207C61-OS-SECRETS-READ-DENIAL")
+>   def test_o_3fa9a1207c61(tmp_path): assert invoke_s54_boundary(tmp_path, "O_3FA9A1207C61")
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_3fa9a1207c610')
+method = 'O_3FA9A1207C61'
+
+    def invoke_s54_boundary(tmp_path: Path, method: str) -> bool:
+        root = Path(__file__).resolve().parents[3]; out = tmp_path / method; out.mkdir()
+        case = f"PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.{method}"
+        p = subprocess.run(["dotnet","test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--filter",f"FullyQualifiedName={case}","--logger","trx","--results-directory",str(out)], cwd=root, shell=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        files=list(out.glob("*.trx"))
+        if len(files)!=1: raise RuntimeError("S54 did not produce one fresh TRX")
+        doc=ET.parse(files[0]).getroot(); rows=[x for x in doc.iter() if x.tag.endswith("UnitTestResult") and x.attrib.get("testName")==case]
+        if len(rows)!=1: raise RuntimeError("S54 exact case missing")
+        if p.returncode != 0 and rows[0].attrib.get("outcome") != "Failed": raise RuntimeError("S54 harness failed")
+        if rows[0].attrib.get("outcome") != "Passed":
+            print(f"FAILURE_ID:{FAILURES[method]}")
+>           raise AssertionError(f"{FAILURES[method]}: S54 restricted boundary behavior not proven")
+E           AssertionError: FAILURE-O-3FA9A1207C61: S54 restricted boundary behavior not proven
+
+tests\phase_b_c_identity_isolation\current\s54_fixture.py:25: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-3FA9A1207C61
+_____________________________ test_o_4178bd27ec32 _____________________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_4178bd27ec320')
+
+    @pytest.mark.cer_assertion("A-O-4178BD27EC32")
+>   def test_o_4178bd27ec32(tmp_path): assert invoke_s54_boundary(tmp_path, "O_4178BD27EC32")
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_4178bd27ec320')
+method = 'O_4178BD27EC32'
+
+    def invoke_s54_boundary(tmp_path: Path, method: str) -> bool:
+        root = Path(__file__).resolve().parents[3]; out = tmp_path / method; out.mkdir()
+        case = f"PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.{method}"
+        p = subprocess.run(["dotnet","test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--filter",f"FullyQualifiedName={case}","--logger","trx","--results-directory",str(out)], cwd=root, shell=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        files=list(out.glob("*.trx"))
+        if len(files)!=1: raise RuntimeError("S54 did not produce one fresh TRX")
+        doc=ET.parse(files[0]).getroot(); rows=[x for x in doc.iter() if x.tag.endswith("UnitTestResult") and x.attrib.get("testName")==case]
+        if len(rows)!=1: raise RuntimeError("S54 exact case missing")
+        if p.returncode != 0 and rows[0].attrib.get("outcome") != "Failed": raise RuntimeError("S54 harness failed")
+        if rows[0].attrib.get("outcome") != "Passed":
+            print(f"FAILURE_ID:{FAILURES[method]}")
+>           raise AssertionError(f"{FAILURES[method]}: S54 restricted boundary behavior not proven")
+E           AssertionError: FAILURE-O-4178BD27EC32: S54 restricted boundary behavior not proven
+
+tests\phase_b_c_identity_isolation\current\s54_fixture.py:25: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-4178BD27EC32
+_____________________________ test_o_4834e9163638 _____________________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_4834e91636380')
+
+    @pytest.mark.cer_assertion("A-O-4834E9163638")
+>   def test_o_4834e9163638(tmp_path): assert invoke_s54_boundary(tmp_path, "O_4834E9163638")
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_4834e91636380')
+method = 'O_4834E9163638'
+
+    def invoke_s54_boundary(tmp_path: Path, method: str) -> bool:
+        root = Path(__file__).resolve().parents[3]; out = tmp_path / method; out.mkdir()
+        case = f"PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.{method}"
+        p = subprocess.run(["dotnet","test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--filter",f"FullyQualifiedName={case}","--logger","trx","--results-directory",str(out)], cwd=root, shell=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        files=list(out.glob("*.trx"))
+        if len(files)!=1: raise RuntimeError("S54 did not produce one fresh TRX")
+        doc=ET.parse(files[0]).getroot(); rows=[x for x in doc.iter() if x.tag.endswith("UnitTestResult") and x.attrib.get("testName")==case]
+        if len(rows)!=1: raise RuntimeError("S54 exact case missing")
+        if p.returncode != 0 and rows[0].attrib.get("outcome") != "Failed": raise RuntimeError("S54 harness failed")
+        if rows[0].attrib.get("outcome") != "Passed":
+            print(f"FAILURE_ID:{FAILURES[method]}")
+>           raise AssertionError(f"{FAILURES[method]}: S54 restricted boundary behavior not proven")
+E           AssertionError: FAILURE-O-4834E9163638: S54 restricted boundary behavior not proven
+
+tests\phase_b_c_identity_isolation\current\s54_fixture.py:25: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-4834E9163638
+_____________________________ test_o_4e130e94995a _____________________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_4e130e94995a0')
+
+    @pytest.mark.cer_assertion("A-O-4E130E94995A")
+>   def test_o_4e130e94995a(tmp_path): assert invoke_s54_boundary(tmp_path, "O_4E130E94995A")
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_4e130e94995a0')
+method = 'O_4E130E94995A'
+
+    def invoke_s54_boundary(tmp_path: Path, method: str) -> bool:
+        root = Path(__file__).resolve().parents[3]; out = tmp_path / method; out.mkdir()
+        case = f"PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.{method}"
+        p = subprocess.run(["dotnet","test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--filter",f"FullyQualifiedName={case}","--logger","trx","--results-directory",str(out)], cwd=root, shell=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        files=list(out.glob("*.trx"))
+        if len(files)!=1: raise RuntimeError("S54 did not produce one fresh TRX")
+        doc=ET.parse(files[0]).getroot(); rows=[x for x in doc.iter() if x.tag.endswith("UnitTestResult") and x.attrib.get("testName")==case]
+        if len(rows)!=1: raise RuntimeError("S54 exact case missing")
+        if p.returncode != 0 and rows[0].attrib.get("outcome") != "Failed": raise RuntimeError("S54 harness failed")
+        if rows[0].attrib.get("outcome") != "Passed":
+            print(f"FAILURE_ID:{FAILURES[method]}")
+>           raise AssertionError(f"{FAILURES[method]}: S54 restricted boundary behavior not proven")
+E           AssertionError: FAILURE-O-4E130E94995A: S54 restricted boundary behavior not proven
+
+tests\phase_b_c_identity_isolation\current\s54_fixture.py:25: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-4E130E94995A
+_____________________________ test_o_5cbd9c2f5f8e _____________________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_5cbd9c2f5f8e0')
+
+    @pytest.mark.cer_assertion("A-O-5CBD9C2F5F8E")
+>   def test_o_5cbd9c2f5f8e(tmp_path): assert invoke_s54_boundary(tmp_path, "O_5CBD9C2F5F8E")
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_5cbd9c2f5f8e0')
+method = 'O_5CBD9C2F5F8E'
+
+    def invoke_s54_boundary(tmp_path: Path, method: str) -> bool:
+        root = Path(__file__).resolve().parents[3]; out = tmp_path / method; out.mkdir()
+        case = f"PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.{method}"
+        p = subprocess.run(["dotnet","test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--filter",f"FullyQualifiedName={case}","--logger","trx","--results-directory",str(out)], cwd=root, shell=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        files=list(out.glob("*.trx"))
+        if len(files)!=1: raise RuntimeError("S54 did not produce one fresh TRX")
+        doc=ET.parse(files[0]).getroot(); rows=[x for x in doc.iter() if x.tag.endswith("UnitTestResult") and x.attrib.get("testName")==case]
+        if len(rows)!=1: raise RuntimeError("S54 exact case missing")
+        if p.returncode != 0 and rows[0].attrib.get("outcome") != "Failed": raise RuntimeError("S54 harness failed")
+        if rows[0].attrib.get("outcome") != "Passed":
+            print(f"FAILURE_ID:{FAILURES[method]}")
+>           raise AssertionError(f"{FAILURES[method]}: S54 restricted boundary behavior not proven")
+E           AssertionError: FAILURE-O-5CBD9C2F5F8E: S54 restricted boundary behavior not proven
+
+tests\phase_b_c_identity_isolation\current\s54_fixture.py:25: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-5CBD9C2F5F8E
+_____________________________ test_o_d6f9ac452a48 _____________________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_d6f9ac452a480')
+
+    @pytest.mark.cer_assertion("A-O-D6F9AC452A48")
+>   def test_o_d6f9ac452a48(tmp_path): assert invoke_s54_boundary(tmp_path, "O_D6F9AC452A48")
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_d6f9ac452a480')
+method = 'O_D6F9AC452A48'
+
+    def invoke_s54_boundary(tmp_path: Path, method: str) -> bool:
+        root = Path(__file__).resolve().parents[3]; out = tmp_path / method; out.mkdir()
+        case = f"PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.{method}"
+        p = subprocess.run(["dotnet","test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--filter",f"FullyQualifiedName={case}","--logger","trx","--results-directory",str(out)], cwd=root, shell=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        files=list(out.glob("*.trx"))
+        if len(files)!=1: raise RuntimeError("S54 did not produce one fresh TRX")
+        doc=ET.parse(files[0]).getroot(); rows=[x for x in doc.iter() if x.tag.endswith("UnitTestResult") and x.attrib.get("testName")==case]
+        if len(rows)!=1: raise RuntimeError("S54 exact case missing")
+        if p.returncode != 0 and rows[0].attrib.get("outcome") != "Failed": raise RuntimeError("S54 harness failed")
+        if rows[0].attrib.get("outcome") != "Passed":
+            print(f"FAILURE_ID:{FAILURES[method]}")
+>           raise AssertionError(f"{FAILURES[method]}: S54 restricted boundary behavior not proven")
+E           AssertionError: FAILURE-O-D6F9AC452A48: S54 restricted boundary behavior not proven
+
+tests\phase_b_c_identity_isolation\current\s54_fixture.py:25: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-D6F9AC452A48
+_____________________ test_o_824_account_root_enumeration _____________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_824_account_root_enumer0')
+
+    @pytest.mark.cer_assertion("ASSERT-824-ACCOUNT-ROOT-ENUMERATION")
+>   def test_o_824_account_root_enumeration(tmp_path): assert invoke_s54_boundary(tmp_path, "O_824_ACCOUNT_ROOT_ENUMERATION")
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-179/test_o_824_account_root_enumer0')
+method = 'O_824_ACCOUNT_ROOT_ENUMERATION'
+
+    def invoke_s54_boundary(tmp_path: Path, method: str) -> bool:
+        root = Path(__file__).resolve().parents[3]; out = tmp_path / method; out.mkdir()
+        case = f"PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.{method}"
+        p = subprocess.run(["dotnet","test","PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj","--filter",f"FullyQualifiedName={case}","--logger","trx","--results-directory",str(out)], cwd=root, shell=False, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        files=list(out.glob("*.trx"))
+        if len(files)!=1: raise RuntimeError("S54 did not produce one fresh TRX")
+        doc=ET.parse(files[0]).getroot(); rows=[x for x in doc.iter() if x.tag.endswith("UnitTestResult") and x.attrib.get("testName")==case]
+        if len(rows)!=1: raise RuntimeError("S54 exact case missing")
+        if p.returncode != 0 and rows[0].attrib.get("outcome") != "Failed": raise RuntimeError("S54 harness failed")
+        if rows[0].attrib.get("outcome") != "Passed":
+            print(f"FAILURE_ID:{FAILURES[method]}")
+>           raise AssertionError(f"{FAILURES[method]}: S54 restricted boundary behavior not proven")
+E           AssertionError: FAILURE-O-824-ACCOUNT-ROOT-ENUMERATION: S54 restricted boundary behavior not proven
+
+tests\phase_b_c_identity_isolation\current\s54_fixture.py:25: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-824-ACCOUNT-ROOT-ENUMERATION
+=========================== short test summary info ===========================
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_12f85445ccd2
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_1d8cb3e8262f
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_358d470f6e85
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_3fa9a1207c61
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_4178bd27ec32
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_4834e9163638
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_4e130e94995a
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_5cbd9c2f5f8e
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_d6f9ac452a48
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_824_account_root_enumeration
+10 failed, 3 passed in 77.21s (0:01:17)
