@@ -127,7 +127,11 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str)
     selector_text = " ".join(
         [*argv, *[str(item) for item in (selected.get("proof") or {}).get("selector_intents", [])]]
     )
-    targets = [path for path in snapshots if path in selector_text]
+    # Explicit argv targets outrank prose references to fixture paths.
+    argv_paths = {part.split("::", 1)[0] for part in argv}
+    targets = [path for path in snapshots if path in argv_paths]
+    if not targets:
+        targets = [path for path in snapshots if path in selector_text]
     if not targets:
         targets = [path for path in snapshots if Path(path).suffix.lower() in {".py", ".cs", ".gd", ".js", ".ts"}]
     if not targets:

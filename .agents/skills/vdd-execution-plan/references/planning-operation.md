@@ -54,3 +54,30 @@ shadow execution receipts to replay against the requested route identity.
 
 For an unchanged frozen input, resume the original failed output directory with the canonical compiler's `--resume-from first-failed-stage`. Keep its disk caches; `--worker-cache` is explicit fixture injection and is not a resume-cache selector. An invalid inline V3 chunk is checked per obligation so valid peer contracts are retained and only invalid contracts are requested again. Invalid cache bytes remain in sidecars. Missing-selector diagnostics guide the worker but never create path authority or relax execution-contract validation. A changed source identity still requires its affected stages to be revalidated; there is no V3-only bypass.
 
+
+## Execution-only handoff repair
+
+Use the public compiler's `--repair-quick-dev-handoff-from` only for a
+hash-bound plan-ready predecessor with valid semantic alignment and exact
+atomic recall. Keep the original requirements path and choose a distinct empty
+successor under the same repair scope. Do not combine this with worker caches,
+resume, companions, V1 reuse overrides or V4 repair overrides.
+
+The mode retains obligations, oracles, assertions, slice membership, production
+owners and terminal predicates. It declares dedicated pytest authoring entries,
+separates frozen tests from production writes and adds missing expected-red
+roles only for eligible executable behaviors. It records every original command
+and its retained regression or bounded-test oracle replacement. Quick Dev must
+author those real tests; VDD creates no test placeholders or execution evidence.
+
+The successor report explicitly records reused V1/V4 checks and the exact
+unchanged semantic projection. A stale source byte hash can be rebound only
+when the entire current text equals all frozen source entries; changed source
+meaning or dropped text requires ordinary recompilation. New deterministic
+source, semantic preflight, exact cover, feasibility and handoff checks must
+pass. The predecessor, caches, prior failures and C3 approvals stay unchanged.
+
+Publication and current consumption reject production/snapshot overlap, missing
+primary authorable pytest entry, and missing RED roles for eligible behavior.
+A constraints/governance failure still blocks; never manufacture expected RED
+just to keep the implementation loop running.

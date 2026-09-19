@@ -246,3 +246,35 @@ Refactor checks reentry before worker invocation. Historical results without
 these bindings are not silently upgraded. This decision is limited to 8-17
 reentry, stop-loss wiring and CER-compatible recovery fixtures; 8-13 advanced
 sharding and CH456 live acceptance are outside scope.
+
+
+## 2026-09-19: reviewed-plan execution handoff repair
+
+The canonical compiler may repair only the execution bindings of an existing
+hash-bound, independently reviewed CER plan without rerunning semantic workers.
+The public `--repair-quick-dev-handoff-from` mode publishes a distinct successor;
+it does not overwrite the predecessor or claim that V1/V4 ran again. The repair
+report binds the predecessor, reused reviews and unchanged semantic projection.
+Obligations, acceptance Given/When/Then/oracles/assertions, slice membership,
+production owners, terminal predicates and existing failure intents are retained.
+Only executable non-Governance behavior/quality may gain a test expected-red
+role. Subject rejection required by an oracle is a passing test; infrastructure
+faults and governance guards never acquire implementation authority.
+
+Dedicated planned test entries are authored by Quick Dev. Production owners
+remain candidate-bound but cannot also be frozen execution snapshots. Explicit
+command targets outrank prose references to fixtures. Existing test regressions
+are retained with proper argv/test-runner syntax; raw diagnostic and negative
+validator invocations become explicit bounded-fixture oracle responsibilities
+of the bound test, not zero-exit commands or independent behavior proof.
+
+A source byte-identity correction is permitted only if the entire current UTF-8
+source text equals the ordered frozen source entries after universal newline
+and outer-whitespace normalization. Every affected old/new hash is recorded;
+changed text, omitted preambles or new execution metadata require ordinary
+semantic recompilation. Source files and historical records remain immutable.
+
+Normal publication, completed-plan resume, and current Quick Dev validation
+reject incompatible handoffs. The deterministic gates rerun before publication.
+No test execution, present/missing disposition, implementation completion, C3
+approval, or Acceptance authority is created; `authorizes` remains empty.

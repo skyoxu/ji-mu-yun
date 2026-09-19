@@ -68,7 +68,27 @@ def main() -> int:
         "--v4-repair-approval-reference",
         help="Required non-empty maintainer approval reference when approving follow-up V4 repair cycles",
     )
+    parser.add_argument("--repair-quick-dev-handoff-from", type=Path,
+                        help="Repair execution bindings of a reviewed plan into a distinct successor")
+    parser.add_argument("--handoff-test-root", default="scripts/sc/tests/tc_d1_cer")
     args = parser.parse_args()
+    if args.repair_quick_dev_handoff_from:
+        if any((args.companion, args.worker_cache, args.recommendation_only, args.resume_from,
+                args.v1_reuse_from_git_ref, args.v1_reuse_from_plan, args.repair_timeout_seconds,
+                args.approved_v4_repair_cycles, args.v4_repair_approval_reference)):
+            parser.error("handoff repair cannot combine semantic compilation or worker overrides")
+        from quick_dev_handoff import publish_repair
+        try:
+            result = publish_repair(root=ROOT, requirements=args.requirements,
+                predecessor=args.repair_quick_dev_handoff_from, out_dir=args.out_dir,
+                test_root=args.handoff_test_root)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            result = {"status": "repair-vdd", "reason": str(exc)}
+        if args.result_json:
+            args.result_json.parent.mkdir(parents=True, exist_ok=True)
+            args.result_json.write_text(json.dumps(result, sort_keys=True) + "\n", encoding="utf-8")
+        print(json.dumps(result, sort_keys=True))
+        return 0 if result.get("status") == "plan-ready" else 1
     if args.repair_timeout_seconds is not None:
         if args.repair_timeout_seconds <= 0:
             parser.error("repair timeout must be positive")

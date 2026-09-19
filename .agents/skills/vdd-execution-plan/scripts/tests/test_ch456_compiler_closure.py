@@ -76,7 +76,7 @@ def _cache(owner: str, selector: str) -> dict:
             }],
             "failure_intents": [{
                 "obligation_ids": [oid],
-                "failure_family": "semantic-contract-gap",
+                "failure_family": "expected-red",
                 "selector_intent": selector,
                 "expected_outcome": "fail",
                 "failure_id": "COMPILE-RED",

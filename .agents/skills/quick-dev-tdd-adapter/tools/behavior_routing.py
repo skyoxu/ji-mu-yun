@@ -16,7 +16,8 @@ def validate_plan(bundle):
     if str(vdd) not in sys.path:
         sys.path.insert(0, str(vdd))
     from semantic_behavior_contract import validate_routing_intent
-    findings = validate_routing_intent(bundle)
+    from quick_dev_handoff import handoff_findings
+    findings = [*validate_routing_intent(bundle), *handoff_findings(bundle)]
     expected = {o["obligation_id"] for o in bundle["obligations"] if o.get("status") != "not_applicable"}
     covered = {e.get("obligation_id") for e in bundle["final_plan_coverage"]}
     if covered != expected:

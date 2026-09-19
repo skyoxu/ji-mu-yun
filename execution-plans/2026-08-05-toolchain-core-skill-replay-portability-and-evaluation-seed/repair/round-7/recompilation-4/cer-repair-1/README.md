@@ -1,4 +1,16 @@
-# CER execution-contract repair candidate
+# CER execution-contract repair
+
+## Current handoff: Quick Dev ready
+
+Use [quick-dev-ready/START-QUICK-DEV.md](quick-dev-ready/START-QUICK-DEV.md)
+and its `current-plan/` successor for new Quick Dev work. The canonical CLI
+published this execution-only repair of the reviewed 114-obligation, 45-slice
+plan. The continuation instructions below are retained as historical repair
+context; do not rerun their compilation commands to start implementation.
+
+The successor preserves source meaning and records the predecessor source-byte
+identity correction, test bindings, write boundaries and behavior RED routing.
+It is planning readiness, not implementation or Acceptance completion.
 
 ## Current continuation: selective V3 cache repair
 

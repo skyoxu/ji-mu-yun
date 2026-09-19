@@ -1082,6 +1082,10 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
     valid, findings = stage_call(out_dir, "final-validation", validate_semantic_bundle, bundle)
     if not valid:
         return {"status": "repair-vdd", "stage": "final-validation", "findings": findings}
+    from quick_dev_handoff import handoff_findings
+    handoff_errors = handoff_findings(bundle)
+    if handoff_errors:
+        return {"status": "repair-vdd", "stage": "quick-dev-handoff", "findings": handoff_errors}
     atomic_json(out_dir / "source-index.v1.json", source_index)
     atomic_json(out_dir / "obligations.v1.json", obligations)
     atomic_json(out_dir / "acceptances.v1.json", acceptances)

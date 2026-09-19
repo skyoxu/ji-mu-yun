@@ -48,7 +48,7 @@ def _repo(tmp_path: Path) -> tuple[Path, Path, str, str]:
     (root / "src").mkdir(); (root / "tests").mkdir()
     owner = "src/compiler.py"; selector = "tests/test_compile.py"
     (root / owner).write_text("VALUE = 1\n", encoding="utf-8")
-    (root / selector).write_text("print('selector')\n", encoding="utf-8")
+    (root / selector).write_text("from src.compiler import VALUE\ndef test_compile():\n    assert VALUE == 1\n", encoding="utf-8")
     req = root / "req.md"; req.write_text("# FR-1\nThe compiler must emit a deterministic plan.\n", encoding="utf-8")
     return root, req, owner, selector
 
@@ -66,8 +66,8 @@ def _worker_cache(source_ref: str, owner: str, selector: str) -> dict:
         "v1-FR-1": {"obligations": [raw_obligation]},
         "v3": {
             "acceptances": [{"obligation_ids":[oid],"source_refs":[source_ref],"given":"a valid requirement","when":"compiled","then":"a deterministic plan is emitted","oracle":{"observable":"semantic bundle","expected":"plan-ready","forbidden":["future runtime evidence"]},"assertion_ids":["ASSERT-COMPILE"]}],
-            "failure_intents": [{"obligation_ids":[oid],"failure_family":"semantic-contract-gap","selector_intent":selector,"expected_outcome":"fail","failure_id":"COMPILE-RED"}],
-            "slice_hints": [{"obligation_ids":[oid],"production_owners":[owner],"verification_lane":"unit","behavior_change":"compile deterministic plans","affected_subjects":["compiler"],"state_transition":"uncompiled->compiled","rollback_scope":{"production_paths":[owner],"state_or_schema_compatibility":"backward-compatible"},"allowed_write_paths":[owner],"execution_snapshot_paths":[selector],"planned_new_files":[],"terminal_predicate":"all active Acceptance assertions pass","forbidden_paths":[],"validation_commands":[[sys.executable,selector]]}]
+            "failure_intents": [{"obligation_ids":[oid],"failure_family":"expected-red","selector_intent":selector,"expected_outcome":"fail","failure_id":"COMPILE-RED"}],
+            "slice_hints": [{"obligation_ids":[oid],"production_owners":[owner],"verification_lane":"unit","behavior_change":"compile deterministic plans","affected_subjects":["compiler"],"state_transition":"uncompiled->compiled","rollback_scope":{"production_paths":[owner],"state_or_schema_compatibility":"backward-compatible"},"allowed_write_paths":[owner],"execution_snapshot_paths":[selector],"planned_new_files":[],"terminal_predicate":"all active Acceptance assertions pass","forbidden_paths":[],"validation_commands":[[sys.executable,"-m","pytest",selector]]}]
         },
         "v4-atomic-recall": {"supported_obligation_ids":[oid],"invented_obligation_ids":[],"source_gap_claims":[]},
         "v4": {"covered_obligation_ids":[oid],"missing_obligation_ids":[],"invented_obligation_ids":[],"misaligned_acceptance_ids":[],"oracle_alignment":{},"repairs":[]}
@@ -315,3 +315,13 @@ def test_missing_requirement_anchor_fails_closed(tmp_path: Path) -> None:
         assert "requirement" in str(exc).lower()
     else:
         raise AssertionError("missing requirement anchor must fail")
+
+
+def test_compiler_rejects_unconsumable_cer_handoff(tmp_path: Path) -> None:
+    root, req, owner, selector = _repo(tmp_path)
+    cache = _worker_cache("req.md#FR-1", owner, selector)
+    cache["v3"]["slice_hints"][0]["validation_commands"] = [[sys.executable, owner, "--help"]]
+    result = compile_plan(requirements=req, out_dir=root / "plan", worker_cache=cache)
+    assert result["status"] == "repair-vdd"
+    assert result["stage"] == "quick-dev-handoff"
+    assert not (root / "plan" / "compiler-state.v1.json").exists()

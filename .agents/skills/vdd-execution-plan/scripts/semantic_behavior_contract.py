@@ -73,6 +73,7 @@ def validate_routing_intent(bundle):
         for x in bundle["obligations"]
         if x.get("status") != "not_applicable"
     }
+    execution_index = {row["obligation_id"]: row for row in expected}
     recorded = set()
     for row in rows:
         if not isinstance(row, dict) or any(not isinstance(row.get(k), str) or not row[k].strip()
@@ -87,7 +88,7 @@ def validate_routing_intent(bundle):
         if row["type"] not in {"implementation-resolvable", "external-owner", "blocking"}:
             findings.append("deferred:unknown-type")
         elif row["type"] == "implementation-resolvable":
-            if row["resolution_stage"] != "implementation" or any(not index[x]["allowed_write_paths"] for x in affected):
+            if row["resolution_stage"] != "implementation" or any(not execution_index.get(x, {}).get("allowed_write_paths") for x in affected):
                 findings.append("deferred:proof-or-write-contract-unresolved")
         else:
             # Every row refers to the current scope; author-supplied blocking=False
