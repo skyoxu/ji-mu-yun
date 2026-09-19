@@ -71,7 +71,11 @@ def main() -> int:
     parser.add_argument("--repair-quick-dev-handoff-from", type=Path,
                         help="Repair execution bindings of a reviewed plan into a distinct successor")
     parser.add_argument("--handoff-test-root", default="scripts/sc/tests/tc_d1_cer")
+    parser.add_argument("--runtime-red-intent", action="append", default=[],
+                        help="Explicit reviewed runtime intent to bind as expected RED; requires handoff repair")
     args = parser.parse_args()
+    if args.runtime_red_intent and not args.repair_quick_dev_handoff_from:
+        parser.error("--runtime-red-intent requires --repair-quick-dev-handoff-from")
     if args.repair_quick_dev_handoff_from:
         if any((args.companion, args.worker_cache, args.recommendation_only, args.resume_from,
                 args.v1_reuse_from_git_ref, args.v1_reuse_from_plan, args.repair_timeout_seconds,
@@ -81,7 +85,7 @@ def main() -> int:
         try:
             result = publish_repair(root=ROOT, requirements=args.requirements,
                 predecessor=args.repair_quick_dev_handoff_from, out_dir=args.out_dir,
-                test_root=args.handoff_test_root)
+                test_root=args.handoff_test_root, runtime_red_intents=args.runtime_red_intent)
         except (OSError, ValueError, KeyError, TypeError) as exc:
             result = {"status": "repair-vdd", "reason": str(exc)}
         if args.result_json:

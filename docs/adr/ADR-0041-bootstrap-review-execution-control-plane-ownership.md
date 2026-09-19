@@ -257,8 +257,8 @@ it does not overwrite the predecessor or claim that V1/V4 ran again. The repair
 report binds the predecessor, reused reviews and unchanged semantic projection.
 Obligations, acceptance Given/When/Then/oracles/assertions, slice membership,
 production owners, terminal predicates and existing failure intents are retained.
-Only executable non-Governance behavior/quality may gain a test expected-red
-role. Subject rejection required by an oracle is a passing test; infrastructure
+Automatic handoff repair selects only executable non-Governance behavior/quality
+for a new test expected-red role. Subject rejection required by an oracle is a passing test; infrastructure
 faults and governance guards never acquire implementation authority.
 
 Dedicated planned test entries are authored by Quick Dev. Production owners
@@ -278,3 +278,26 @@ Normal publication, completed-plan resume, and current Quick Dev validation
 reject incompatible handoffs. The deterministic gates rerun before publication.
 No test execution, present/missing disposition, implementation completion, C3
 approval, or Acceptance authority is created; `authorizes` remains empty.
+
+
+### Explicit runtime RED role for a governance-related machine check
+
+Requirement category and observed test outcome are separate. A Governance
+requirement can include an executable independent-verification assertion.
+After reviewing that concrete machine oracle, the maintainer-directed repair
+may explicitly select its existing failure intent with `--runtime-red-intent`
+under the canonical handoff repair mode. This appends an expected-red role
+using the existing failure ID and preserves the original diagnostic intent.
+It changes only the bound slices and their coverage projections, preserving
+all other slice contexts. It does not automatically convert governance or
+constraint families. The current CER judge still requires a real case-bound
+failing AssertionError after successful setup; a marker alone is insufficient.
+Human authorization, substitute Trust Approval and Consumer exception decisions
+remain outside this runtime role, regardless of the requirement category.
+
+For 08-05 S1, `FI-6AED86AC07D0` binds a unit-level check of candidate-external
+trust in `candidate_workspace.py`. Its unchanged oracle requires independent
+verification instead of accepting the candidate declaration. Testing that
+behavior is implementable; granting trust approval is not. The original
+`target-binding-failure` remains diagnostic intent, and the new role binds
+`UNVERIFIED-CANDIDATE-EXTERNAL-TRUST-REJECTED` as a test assertion failure.

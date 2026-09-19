@@ -81,3 +81,16 @@ Publication and current consumption reject production/snapshot overlap, missing
 primary authorable pytest entry, and missing RED roles for eligible behavior.
 A constraints/governance failure still blocks; never manufacture expected RED
 just to keep the implementation loop running.
+
+### Slice-local runtime-role correction
+
+If a real machine assertion was excluded only because its requirement is
+categorized Governance or its diagnostic family is non-RED, first review the
+actual production entry and bound acceptance oracle. Then explicitly select
+its existing failure intent using `--runtime-red-intent` together with
+`--repair-quick-dev-handoff-from`. This variant appends a separate expected-red
+intent with the same runtime marker, preserves the original diagnosis and
+changes only selected slice contexts. It does not re-author other selectors
+or rerun semantic workers. Never use it for a missing human approval, Trust
+Approval, Consumer exception, setup failure or invalid execution evidence.
+Only fresh controlled probe/RED case evidence can authorize implementation.

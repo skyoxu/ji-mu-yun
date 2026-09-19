@@ -139,3 +139,9 @@ py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/sk
 
 
 For Skill maintenance also run `py -3 .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan` and its unit tests.
+
+An explicit `--runtime-red-intent <failure-intent-id>` on handoff repair binds
+a reviewed executable assertion to an expected-red role without changing its
+requirement category or existing diagnostic family. This is not automatic
+Governance conversion. See the planning guide and ADR-0041; approval decisions
+can never become runtime implementation authority through this option.

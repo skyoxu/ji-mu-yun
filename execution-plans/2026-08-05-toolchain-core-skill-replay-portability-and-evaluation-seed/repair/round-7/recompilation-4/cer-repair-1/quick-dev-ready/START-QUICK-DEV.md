@@ -1,5 +1,10 @@
 # Start 08-05 Quick Dev from the repaired handoff
 
+Current continuation: [S1 runtime RED correction](s1-red-repair/RESUME-S1.md).
+Use `s1-red-repair/current-plan/` for the next S1 run. The previous
+`current-plan/` remains the immutable predecessor. The remaining instructions
+apply using that successor path.
+
 Use branch `fix/08-05-real-skill-replay` after a normal fast-forward sync.
 The current input is this directory's `current-plan/`, published by the public
 canonical compiler. No local VDD rerun is required.
@@ -27,7 +32,7 @@ canonical compiler. No local VDD rerun is required.
 Quick deterministic entry check from repository root (PowerShell):
 
 ```powershell
-$plan = "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan"
+$plan = "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/s1-red-repair/current-plan"
 py -3 scripts/quick_dev/run.py --plan $plan --slice S1 --profile self-hosted --action preflight
 ```
 

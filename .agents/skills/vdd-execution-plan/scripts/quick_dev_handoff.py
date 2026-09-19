@@ -157,6 +157,67 @@ def repair_bundle(bundle, test_root):
     return result, {'added_expected_red_intents': added, 'command_dispositions': dispositions}
 
 
+def repair_runtime_red_roles(bundle, failure_intent_ids):
+    """Bind explicitly reviewed machine assertions, never infer human approval.
+
+    Governance is a requirement category, not an execution outcome. An operator
+    may select an existing intent after reviewing its machine oracle. Existing
+    diagnostics remain intact; only real case-bound AssertionError can use the
+    added role. No automatic conversion of governance/constraint intents occurs.
+    """
+    import semantic_compiler as sc
+    from semantic_behavior_contract import SCHEMA, project_intents
+    result = deepcopy(bundle)
+    requested = set(failure_intent_ids)
+    if not requested or len(requested) != len(failure_intent_ids):
+        raise ValueError('runtime RED repair requires unique explicit failure intent IDs')
+    index = {f['failure_intent_id']: f for f in result['failure_intents']}
+    if not requested <= index.keys():
+        raise ValueError('runtime RED repair references unknown failure intent')
+    affected = set()
+    additions = []
+    for fid in sorted(requested):
+        original = index[fid]
+        if original['failure_family'] == 'expected-red' or len(original['acceptance_ids']) != 1:
+            raise ValueError('runtime RED repair requires one non-RED Acceptance intent')
+        aid = original['acceptance_ids'][0]
+        acceptance = next(a for a in result['acceptances'] if a['acceptance_id'] == aid)
+        selected = [item for item in result['slices'] if aid in item['acceptance_ids']]
+        if len(selected) != 1 or acceptance.get('verification_lane') not in {'unit', 'integration', 'matrix', 'runtime'}:
+            raise ValueError('runtime RED repair requires an executable slice oracle')
+        item = selected[0]
+        if not item['production_owners'] or not acceptance['assertion_ids'] or not acceptance['oracle']['observable']:
+            raise ValueError('runtime RED repair lacks production/assertion/observable binding')
+        if any(f['failure_family'] == 'expected-red' and aid in f['acceptance_ids'] for f in result['failure_intents']):
+            raise ValueError('runtime RED role already exists for Acceptance')
+        added = {**original, 'failure_family': 'expected-red',
+            'selector_intent': original['selector_intent'] +
+                ' Runtime test role: emit the existing failure ID only when a real assertion of this '
+                'Acceptance oracle fails after invoking the production entry. A required subject rejection '
+                'is a passing test. Human approval, Trust Approval, Consumer exceptions, setup/import '
+                'errors, timeouts and harness binding errors cannot satisfy this role.'}
+        added['failure_intent_id'] = sc._stable_failure_intent_id(added)
+        result['failure_intents'].append(added)
+        acceptance['red_intent_ids'] = sorted([*acceptance['red_intent_ids'], added['failure_intent_id']])
+        item['failure_intent_ids'] = sorted([*item['failure_intent_ids'], added['failure_intent_id']])
+        item['proof']['selector_intents'] = sorted([*item['proof']['selector_intents'], added['selector_intent']])
+        item['slice_input_hash'] = sc.sha256_value({k: v for k, v in item.items() if k != 'slice_input_hash'})
+        context = next(c for c in result['agent_contexts'] if c['slice_id'] == item['slice_id'])
+        context['selector_intents'] = list(item['proof']['selector_intents'])
+        context['contracts'].append('Explicit runtime RED role for ' + fid + ': only the bound executable '
+            'assertion may emit ' + original['failure_id'] + '. The Governance requirement classification '
+            'and all approval boundaries remain unchanged. This role is not an approval or observed RED.')
+        affected.add(item['slice_id'])
+        additions.append({'original_failure_intent_id': fid, 'runtime_failure_intent_id': added['failure_intent_id'],
+                          'acceptance_id': aid, 'failure_id': original['failure_id']})
+    result['pre_slice_coverage'] = sc.exact_cover(result['obligations'], result['acceptances'], result['failure_intents'])
+    result['final_plan_coverage'] = sc.final_cover(result['pre_slice_coverage'], result['slices'])
+    result['behavior_routing'] = {**result['behavior_routing'], 'schema': SCHEMA, 'intents': project_intents(result)}
+    return result, {'runtime_red_role_bindings': additions, 'affected_slices': sorted(affected),
+                    'unaffected_slices': [s['slice_id'] for s in result['slices'] if s['slice_id'] not in affected],
+                    'command_dispositions': [], 'added_expected_red_intents': [a['runtime_failure_intent_id'] for a in additions]}
+
+
 def semantic_projection(bundle):
     """Fields that this execution repair is not authorized to change."""
     return {
@@ -170,7 +231,7 @@ def semantic_projection(bundle):
     }
 
 
-def publish_repair(*, root, requirements, predecessor, out_dir, test_root):
+def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=()):
     import semantic_compiler as sc
     from semantic_plan_contract import validate_semantic_bundle
     from semantic_chain_audit import audit_bundle
@@ -220,7 +281,8 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root):
     active = {o['obligation_id'] for o in original['obligations'] if o.get('status') == 'active'}
     if alignment.get('valid') is not True or recall.get('valid') is not True or set(recall['worker']['supported_obligation_ids']) != active:
         raise ValueError('handoff predecessor lacks complete independent semantic review')
-    repaired, delta = repair_bundle(original, test_root)
+    repaired, delta = (repair_runtime_red_roles(original, runtime_red_intents)
+                       if runtime_red_intents else repair_bundle(original, test_root))
     repaired['plan_id'] = 'PLAN-' + sc.sha256_value({'source': source['sha256'], 'profile': original['profile']})[7:19].upper()
     if semantic_projection(original) != semantic_projection(repaired):
         raise ValueError('handoff repair changed semantic scope')
