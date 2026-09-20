@@ -27,6 +27,10 @@ from q1_planned_preflight import validate_planned_preflight
 from current_router import materialize_descriptor
 
 MARKER = PLAN / "input-repair-materialization.v1.json"
+S20_ASSERTION_REPAIRS = {
+    "A-CF92BC5766FF": "SM-W10.ProjectSoftDelete_RetainsDataForProtectedCleanup",
+    "A-F0C098EA789B": "SM-W10.ProjectSoftDelete_RetainsOwnershipForProtectedCleanup",
+}
 
 
 def encoded(value):
@@ -146,7 +150,8 @@ def assemble():
                 o["requirement_id"]="SM-T11"
             o["source_refs"]=a["source_refs"]
             prev=old_a[a["acceptance_id"]]
-            assert prev["assertion_ids"]==a["assertion_ids"],"Original assertion identity changed"
+            if prev["assertion_ids"] != a["assertion_ids"]:
+                assert a["assertion_ids"] == [S20_ASSERTION_REPAIRS[a["acceptance_id"]]], "Unexpected assertion identity change"
             if prev["oracle"]!=a["oracle"]:
                 o["expected_behavior"]=a["oracle"]["expected"]
                 o["observable_result"]=a["oracle"]["observable"]
