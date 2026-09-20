@@ -477,9 +477,15 @@ def validate_state_and_knowledge(
         "--repository-root",
         str(REPOSITORY_ROOT),
         "--skill-input-receipt",
-        str(PLAN_ROOT / "skill-input-receipt-2.v1.json"),
+        str(
+            PLAN_ROOT
+            / "repair/round-7/recompilation-4/cer-repair-1/s8-authority-v2-repair"
+            / "skill-input-v2/repair/current.v1.json"
+        ),
         "--skill-input-contract",
         str(REPOSITORY_ROOT / ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json"),
+        "--skill-input-operation",
+        "repair",
     ])
     if preflight.returncode:
         errors.append("current VDD knowledge preflight failed")
