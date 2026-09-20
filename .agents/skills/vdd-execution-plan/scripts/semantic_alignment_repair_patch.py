@@ -340,6 +340,29 @@ def _isolated_acceptance_semantic_gap(
     return (active - covered) <= target_obligations and missing <= target_obligations
 
 
+def _requires_frozen_execution_binding_change(raw: Mapping[str, Any]) -> bool:
+    """Reject V4 repair advice that would alter a frozen RED/assertion binding.
+
+    The V4 repair worker may revise Acceptance wording only.  A request to add
+    or replace a RED intent or assertion binding belongs to the upstream
+    contract producer; allowing the wording worker to attempt it wastes its
+    bounded repair budget and cannot establish a real executable assertion.
+    """
+    repairs = raw.get("repairs")
+    if not isinstance(repairs, list):
+        return False
+    for repair in repairs:
+        if not isinstance(repair, Mapping):
+            continue
+        text = " ".join(
+            str(value) for key, value in repair.items()
+            if key in {"action", "repair", "reason"} and isinstance(value, str)
+        ).lower()
+        if "red intent" in text or "assertion binding" in text or "assertion ids" in text:
+            return True
+    return False
+
+
 def _apply_repairs(
     acceptances: list[dict[str, Any]],
     failures: list[dict[str, Any]],
@@ -471,6 +494,8 @@ def semantic_align_with_bounded_repair(
             return candidate
         raw_candidate = candidate.get("worker")
         if not isinstance(raw_candidate, Mapping):
+            return candidate
+        if _requires_frozen_execution_binding_change(raw_candidate):
             return candidate
         if not _isolated_acceptance_semantic_gap(
             raw_candidate, obligations, acceptances, findings=candidate_findings,

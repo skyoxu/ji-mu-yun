@@ -446,6 +446,18 @@ def test_v4_repair_targets_include_compiler_uncovered_obligation_closure() -> No
     ) == {"A-MISSING", "A-UNCOVERED"}
 
 
+def test_v4_does_not_treat_frozen_red_or_assertion_binding_as_wording_repair() -> None:
+    assert alignment._requires_frozen_execution_binding_change({
+        "repairs": [{"action": "Bind assertions and at least one RED intent to the lifecycle request."}],
+    })
+    assert alignment._requires_frozen_execution_binding_change({
+        "repairs": [{"repair": "Replace the foreign assertion bindings with current assertion IDs."}],
+    })
+    assert not alignment._requires_frozen_execution_binding_change({
+        "repairs": [{"repair": "Make the observable distinguish rejection from acceptance."}],
+    })
+
+
 def test_v4_source_chunk_retries_only_its_stale_acceptance_scope(monkeypatch, tmp_path: Path) -> None:
     payload = {"acceptances": [{"acceptance_id": "A-CURRENT"}]}
     stage = "v4-source-chunk-09"

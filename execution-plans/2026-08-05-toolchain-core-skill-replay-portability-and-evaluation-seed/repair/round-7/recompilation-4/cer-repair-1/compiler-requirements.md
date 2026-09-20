@@ -13,10 +13,10 @@ Do not invent alternate test filenames. A planned test is not an existing test a
 Bound existing obligation: O-0975596C598C.
 This is a selector/collector compatibility correction only; it does not add an obligation, change the FR-3 oracle, or authorize candidate trust.
 Real production entry point: `.agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py`.
-Quick Dev test selector: `py -3 -m pytest .agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py`.
-The selector must remain pytest-based because the current CER collector requires pytest case events; the existing unittest spelling is not a valid current-run selector.
+Quick Dev test selector: `py -3 -m pytest scripts/sc/tests/tc_d1_cer/test_s1.py -q`.
+The selector must remain pytest-based because the current CER collector requires pytest case events; it is the dedicated FR-3 assertion and must not execute unrelated FR-7 matrix assertions.
 Retain existing fixture `.agents/skills/quick-dev-tdd-adapter/tools/tests/fixtures/candidate-identity.v1.json` only for its actual declared role; file existence alone proves no behavior.
-Retain existing test `.agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py` only for its actual declared role; authoring and execution evidence remain required.
+Retain existing test `scripts/sc/tests/tc_d1_cer/test_s1.py` only for its actual declared role; authoring and execution evidence remain required.
 
 ### S3 execution context
 
