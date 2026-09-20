@@ -6,6 +6,7 @@ Only the public compiler CLI may invoke publish_repair to publish a successor.
 from __future__ import annotations
 
 from copy import deepcopy
+import ast
 import json
 from pathlib import Path, PurePosixPath
 import shlex
@@ -21,7 +22,24 @@ def _inside(path, parent):
     return path == parent or path.startswith(parent.rstrip('/') + '/')
 
 
-def handoff_findings(bundle):
+def _declared_cer_assertions(path):
+    """Return literal CER assertion markers from an already-existing test file."""
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+    except (OSError, SyntaxError, UnicodeError):
+        return None
+    declared = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+            continue
+        if node.func.attr != "cer_assertion":
+            continue
+        declared.update(arg.value for arg in node.args
+                        if isinstance(arg, ast.Constant) and isinstance(arg.value, str))
+    return declared
+
+
+def handoff_findings(bundle, workspace=None):
     """Check actual Quick Dev write/selector roles, without observing behavior."""
     if 'behavior_routing' not in bundle:
         return []
@@ -49,6 +67,16 @@ def handoff_findings(bundle):
         for p in paths:
             if any(_inside(p, f) for f in context.get('forbidden_paths', [])):
                 findings.append(f'{sid}:test-entry-forbidden:{p}')
+            # A planned file may legitimately be absent until Quick Dev Q2.
+            # An existing file, however, cannot be relabelled as a new slice:
+            # its literal CER mapping must already contain this slice's exact
+            # Acceptance assertions or VDD must repair the semantic binding.
+            if workspace is not None:
+                declared = _declared_cer_assertions(Path(workspace) / p)
+                expected = {assertion for aid in item['acceptance_ids']
+                            for assertion in acceptances[aid]['assertion_ids']}
+                if declared is not None and not expected.issubset(declared):
+                    findings.append(f'{sid}:existing-test-assertion-mismatch:{p}')
         for aid in item['acceptance_ids']:
             acceptance = acceptances[aid]
             if _eligible(acceptance, obligations) and not any(
@@ -83,7 +111,7 @@ def _regression(command):
     return None, 'bound-test-oracle-required'
 
 
-def repair_bundle(bundle, test_root):
+def repair_bundle(bundle, test_root, workspace=None):
     import semantic_compiler as sc
     from semantic_behavior_contract import SCHEMA, project_intents, project_deferred
     root = PurePosixPath(test_root)
@@ -119,7 +147,23 @@ def repair_bundle(bundle, test_root):
     contexts = {c['slice_id']: c for c in result['agent_contexts']}
     for item in result['slices']:
         sid = item['slice_id']
-        test = test_root + '/test_' + sid.lower() + '.py'
+        # A V3 correction may already declare the sole real pytest file for
+        # this slice.  Preserve that semantic binding; ordinal filenames are
+        # only a deterministic fallback for plans with no declared test.
+        declared_tests = sorted(
+            p for p in item['planned_new_files']
+            if p.endswith('.py') and p not in item['production_owners']
+        )
+        test = declared_tests[0] if len(declared_tests) == 1 else test_root + '/test_' + sid.lower() + '.py'
+        if workspace is not None:
+            expected = {assertion for aid in item['acceptance_ids']
+                        for assertion in result['acceptances'][next(i for i, a in enumerate(result['acceptances']) if a['acceptance_id'] == aid)]['assertion_ids']}
+            existing = _declared_cer_assertions(Path(workspace) / test)
+            # A legacy test with another slice's literal markers is regression
+            # only.  Allocate a new, stable CER target rather than changing
+            # its marker or silently treating it as this slice's oracle.
+            if existing is not None and not expected.issubset(existing):
+                test = test_root + '/test_' + sid.lower() + '_cer.py'
         context = contexts[sid]
         if any(_inside(test, p) for p in context.get('forbidden_paths', [])):
             raise ValueError(f'{sid}:planned-test-forbidden')
@@ -296,7 +340,7 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
     if alignment.get('valid') is not True or recall.get('valid') is not True or set(recall['worker']['supported_obligation_ids']) != active:
         raise ValueError('handoff predecessor lacks complete independent semantic review')
     repaired, delta = (repair_runtime_red_roles(original, runtime_red_intents)
-                       if runtime_red_intents else repair_bundle(original, test_root))
+                       if runtime_red_intents else repair_bundle(original, test_root, workspace=root))
     repaired['plan_id'] = 'PLAN-' + sc.sha256_value({'source': source['sha256'], 'profile': original['profile']})[7:19].upper()
     if semantic_projection(original) != semantic_projection(repaired):
         raise ValueError('handoff repair changed semantic scope')
@@ -312,7 +356,7 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
     }
     valid, errors = validate_semantic_bundle(repaired)
     checks['final-validation'] = {'valid': valid, 'findings': errors}
-    errors = handoff_findings(repaired)
+    errors = handoff_findings(repaired, workspace=root)
     checks['quick-dev-handoff'] = {'valid': not errors, 'findings': errors}
     if any(not value['valid'] for value in checks.values()):
         return {'status': 'repair-vdd', 'checks': checks}

@@ -1083,7 +1083,7 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
     if not valid:
         return {"status": "repair-vdd", "stage": "final-validation", "findings": findings}
     from quick_dev_handoff import handoff_findings
-    handoff_errors = handoff_findings(bundle)
+    handoff_errors = handoff_findings(bundle, workspace=root)
     if handoff_errors:
         # Preserve an independently validated *semantic* candidate for the
         # execution-only repair path.  This is deliberately not a plan

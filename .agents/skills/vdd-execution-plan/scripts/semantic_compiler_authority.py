@@ -260,7 +260,7 @@ def compile_plan(
         completed = gate._completed_resume(out_dir)
         if completed is not None and _published_recall_matches_obligations(out_dir):
             from quick_dev_handoff import handoff_findings
-            handoff_errors = handoff_findings(json.loads((out_dir / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8")))
+            handoff_errors = handoff_findings(json.loads((out_dir / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8")), workspace=root)
             if handoff_errors:
                 return {"status": "repair-vdd", "stage": "quick-dev-handoff", "findings": handoff_errors}
             audit = _plan_chain_audit(out_dir)
