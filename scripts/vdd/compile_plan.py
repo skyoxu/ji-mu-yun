@@ -48,6 +48,8 @@ def main() -> int:
     parser.add_argument("--profile", choices=("standard", "resumable", "self-hosted"), default="standard")
     parser.add_argument("--companion", type=Path, action="append", default=[])
     parser.add_argument("--worker-cache", type=Path)
+    parser.add_argument("--v3-contract-repair", type=Path,
+                        help="Explicit source-bound V3 candidate corrections; independent V4 remains required")
     parser.add_argument("--result-json", type=Path, help="Write the compiler result even on a caught failure")
     parser.add_argument("--recommendation-only", action="store_true")
     parser.add_argument("--resume-from", choices=("first-failed-stage",), default=None)
@@ -79,7 +81,7 @@ def main() -> int:
     if args.repair_quick_dev_handoff_from:
         if any((args.companion, args.worker_cache, args.recommendation_only, args.resume_from,
                 args.v1_reuse_from_git_ref, args.v1_reuse_from_plan, args.repair_timeout_seconds,
-                args.approved_v4_repair_cycles, args.v4_repair_approval_reference)):
+                args.approved_v4_repair_cycles, args.v4_repair_approval_reference, args.v3_contract_repair)):
             parser.error("handoff repair cannot combine semantic compilation or worker overrides")
         from quick_dev_handoff import publish_repair
         try:
@@ -118,6 +120,17 @@ def main() -> int:
             parser.error(str(exc))
     import semantic_alignment_repair_patch as alignment
     alignment.configure_approved_v4_repair_cycles(args.approved_v4_repair_cycles)
+    if args.v3_contract_repair:
+        if args.worker_cache or args.recommendation_only or args.companion:
+            parser.error("V3 candidate repair cannot combine fixtures, recommendation-only or companions")
+        import semantic_v3_contract_repair as candidate_repair
+        try:
+            state_path = args.out_dir / "compiler-state.v1.json"
+            if state_path.exists() and json.loads(state_path.read_text(encoding="utf-8")).get("state") == "plan-ready":
+                raise ValueError("V3 candidate repair requires a failed or unpublished output directory")
+            candidate_repair.install(candidate_repair.load_repair(args.v3_contract_repair, args.requirements))
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            parser.error(str(exc))
     cache = None
     if args.worker_cache:
         value = json.loads(args.worker_cache.read_text(encoding="utf-8"))

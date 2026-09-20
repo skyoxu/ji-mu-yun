@@ -55,6 +55,27 @@ shadow execution receipts to replay against the requested route identity.
 For an unchanged frozen input, resume the original failed output directory with the canonical compiler's `--resume-from first-failed-stage`. Keep its disk caches; `--worker-cache` is explicit fixture injection and is not a resume-cache selector. An invalid inline V3 chunk is checked per obligation so valid peer contracts are retained and only invalid contracts are requested again. Invalid cache bytes remain in sidecars. Missing-selector diagnostics guide the worker but never create path authority or relax execution-contract validation. A changed source identity still requires its affected stages to be revalidated; there is no V3-only bypass.
 
 
+## Explicit V3 candidate correction
+
+When V4 finds a wrong executable binding that cannot be repaired as Acceptance
+wording, the canonical compiler accepts `--v3-contract-repair <json>` for a
+failed or unpublished output directory. This is reviewed authoring input, not
+a worker result or readiness receipt. The input contains
+`schema: vdd.v3-candidate-repair.v1`, the exact requirements byte hash in
+`requirements_sha256`, `authorizes: []`, and `obligation_contracts` using the
+existing V3 inline contract shape. Each selected ID retains its frozen source
+references; supply its complete Acceptance, failure intents and slice hint.
+
+Resume the original failed directory and retain its caches. Only named
+contracts are replaced after cache replay; source extraction and unrelated
+contracts are unchanged. The compiler recalculates Acceptance/RED identities,
+checks normal V3 execution contracts, and requires independent V4 and all
+downstream gates before publication. Missing final targets or unconsumed
+corrections fail closed. Projection sidecars preserve the exact correction
+input without rewriting old worker output. Do not combine this option with
+worker fixtures, companions, recommendation-only or execution-only handoff
+repair. It does not extend repair budgets or permit skipping a failed V4.
+
 ## Execution-only handoff repair
 
 Use the public compiler's `--repair-quick-dev-handoff-from` only for a

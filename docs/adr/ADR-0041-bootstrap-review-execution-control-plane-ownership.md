@@ -317,3 +317,16 @@ This is a necessary progress gate, not proof that a nonempty patch is correct.
 Real GREEN and downstream gates remain required. A no-op REFACTOR after valid
 GREEN remains legal. Historical attempts are immutable; repeated failures are
 not retried until a relevant input or control-plane defect is repaired.
+
+### Bounded V3 Candidate Correction (2026-09-20)
+
+An explicit canonical-compiler input may correct named V3 candidate contracts
+when independent V4 has exposed a wrong executable binding. The input is bound
+to unchanged requirements bytes, retains exact source references, and has an
+empty authorization set. It is authoring input, never a worker result, review
+judgment or plan-ready receipt. Unselected contracts and historical caches are
+retained. Normal deterministic identity construction, V3 execution validation,
+independent V4, coverage, slicing and final publication gates remain required.
+The correction cannot reuse a completed plan or increase the repair budget.
+Runtime expected-RED is limited to an executable assertion; C3 approvals are
+not supplied or inferred by a candidate correction.
