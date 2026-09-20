@@ -238,16 +238,30 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
     root, predecessor, out_dir = root.resolve(), predecessor.resolve(), out_dir.resolve()
     for path in (predecessor, out_dir, requirements.resolve()):
         path.relative_to(root)
-    # A new child of the same repair scope preserves all immutable history.
-    out_dir.relative_to(predecessor.parent)
     if out_dir == predecessor or predecessor in out_dir.parents or (out_dir.exists() and any(out_dir.iterdir())):
         raise ValueError('handoff successor must be a distinct empty sibling scope')
     def read(name):
         return json.loads((predecessor / name).read_text(encoding='utf-8'))
     original = read('semantic-plan-bundle.v1.json')
     state = read('compiler-state.v1.json')
-    if state.get('state') != 'plan-ready' or state.get('semantic_plan_sha256') != sc.sha256_value(original):
-        raise ValueError('handoff predecessor is not a hash-bound plan-ready bundle')
+    pending = state.get('state') == 'semantic-validated-pending-handoff'
+    if state.get('state') not in {'plan-ready', 'semantic-validated-pending-handoff'} or state.get('semantic_plan_sha256') != sc.sha256_value(original):
+        raise ValueError('handoff predecessor is not a hash-bound reviewed semantic bundle')
+    if pending:
+        receipt = read('semantic-handoff-pending.v1.json')
+        if (receipt.get('schema') != 'vdd.semantic-handoff-pending.v1' or receipt.get('authorizes') != []
+                or receipt.get('semantic_plan_sha256') != state['semantic_plan_sha256']):
+            raise ValueError('handoff pending predecessor receipt is invalid')
+        origin = root / receipt.get('origin_out_dir', '')
+        try:
+            out_dir.relative_to(origin.parent)
+        except ValueError:
+            raise ValueError('handoff pending successor is outside its originating repair scope')
+        if not origin.is_dir():
+            raise ValueError('handoff pending predecessor origin is unavailable')
+    else:
+        # A published predecessor retains the established sibling-only rule.
+        out_dir.relative_to(predecessor.parent)
     valid, errors = validate_semantic_bundle(original)
     if not valid or not audit_bundle(original)['valid']:
         raise ValueError('handoff predecessor contract invalid: ' + str(errors))
@@ -325,6 +339,7 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
         sc.atomic_json(out_dir / (name + '.v1.json'), value)
     sc.atomic_json(out_dir / 'compiler-state.v1.json', {**state,
         'plan_id': repaired['plan_id'],
+        'state': 'plan-ready',
         'semantic_plan_sha256': sc.sha256_value(repaired),
         'execution_repair': 'handoff-repair.v1.json', 'reused_stages': ['V1', 'V4'],
         'completed_stages': ['V0', 'V0A', 'V2', 'V3A', 'V5', 'V6A', 'V7', 'final-validation', 'quick-dev-handoff']})

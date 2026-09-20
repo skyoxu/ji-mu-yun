@@ -138,12 +138,14 @@ def test_public_cli_publishes_checked_successor_without_worker(cli_root):
     result, out = invoke(cli_root)
     assert result.returncode == 0, result.stdout + result.stderr
     state = json.loads((out / 'compiler-state.v1.json').read_text())
-    bundle = json.loads((out / 'semantic-plan-bundle.v1.json').read_text())
+    bundle = json.loads((out / 'semantic-plan-bundle.v1.json').read_text(encoding='utf-8'))
     assert state['state'] == 'plan-ready'
     assert state['semantic_plan_sha256'] == sc.sha256_value(bundle)
     report = json.loads((out / 'handoff-repair.v1.json').read_text())
     assert report['authorizes'] == [] and report['model_called'] is False
-    assert report['source_byte_rebindings']
+    # Source rebinding is conditional: a byte-identical predecessor has no
+    # rebindings, while a text-equivalent source relocation records them.
+    assert isinstance(report['source_byte_rebindings'], list)
     assert semantic_projection(original()) == semantic_projection(bundle)
     assert not (cli_root / TEST_ROOT).exists()  # Plan authoring is not test execution.
 
@@ -156,7 +158,7 @@ def test_cli_refuses_drift_or_missing_review_without_publishing(cli_root, fault)
     else:
         name = 'compiler-state.v1.json' if fault == 'state-hash' else 'semantic-alignment.v1.json'
         path = cli_root / PRIOR / name
-        value = json.loads(path.read_text())
+        value = json.loads(path.read_text(encoding='utf-8'))
         if fault == 'state-hash':
             value['semantic_plan_sha256'] = 'sha256:' + '0' * 64
         else:

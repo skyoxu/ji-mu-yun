@@ -1085,7 +1085,39 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
     from quick_dev_handoff import handoff_findings
     handoff_errors = handoff_findings(bundle)
     if handoff_errors:
-        return {"status": "repair-vdd", "stage": "quick-dev-handoff", "findings": handoff_errors}
+        # Preserve an independently validated *semantic* candidate for the
+        # execution-only repair path.  This is deliberately not a plan
+        # publication: Quick Dev cannot consume it and it has no lifecycle
+        # authority.  Without this sidecar the handoff repair has no exact
+        # bundle to repair, while its old predecessor rule requires a bundle
+        # that cannot be published until the very handoff defects are fixed.
+        digest = sha256_value(bundle)[7:31]
+        pending = out_dir / ".compiler-work" / "semantic-handoff-pending" / digest
+        for name, value in {
+            "source-index": source_index, "obligations": obligations,
+            "acceptances": acceptances, "failure-intents": failures,
+            "pre-slice-coverage": pre_edges, "slices": slices,
+            "final-plan-coverage": final_edges, "semantic-alignment": alignment,
+            "feasibility": feasibility_result, "semantic-plan-bundle": bundle,
+        }.items():
+            atomic_json(pending / (name + ".v1.json"), value)
+        for context in contexts:
+            atomic_json(pending / "agent-context" / context["slice_id"] / "agent-context.json", context)
+        pending_receipt = {
+            "schema": "vdd.semantic-handoff-pending.v1", "authorizes": [],
+            "semantic_plan_sha256": sha256_value(bundle),
+            "origin_out_dir": out_dir.resolve().relative_to(root.resolve()).as_posix(),
+            "findings": handoff_errors,
+        }
+        atomic_json(pending / "semantic-handoff-pending.v1.json", pending_receipt)
+        atomic_json(pending / "compiler-state.v1.json", {
+            "schema": "vdd.compiler-state.v1", "plan_id": plan_id,
+            "state": "semantic-validated-pending-handoff",
+            "completed_stages": ["V0", "V0A", "V1", "V2", "V3", "V3A", "V5", "V6", "V6A", "V7", "final-validation"],
+            "semantic_plan_sha256": sha256_value(bundle),
+        })
+        return {"status": "repair-vdd", "stage": "quick-dev-handoff", "findings": handoff_errors,
+                "semantic_handoff_pending": pending.resolve().relative_to(root.resolve()).as_posix()}
     atomic_json(out_dir / "source-index.v1.json", source_index)
     atomic_json(out_dir / "obligations.v1.json", obligations)
     atomic_json(out_dir / "acceptances.v1.json", acceptances)

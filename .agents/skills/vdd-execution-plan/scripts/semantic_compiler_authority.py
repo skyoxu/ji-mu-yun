@@ -351,6 +351,27 @@ def compile_plan(
         )
     )
     if result.get("status") != "plan-ready":
+        pending_ref = result.get("semantic_handoff_pending")
+        if result.get("stage") == "quick-dev-handoff" and isinstance(pending_ref, str):
+            pending = root / pending_ref
+            try:
+                pending_bundle = json.loads((pending / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))
+                pending_obligations = json.loads((pending / "obligations.v1.json").read_text(encoding="utf-8"))
+                pending_recall = stage_call(out_dir, "V4-pending-handoff", gate.atomic_recall_alignment,
+                    root=root, out_dir=out_dir, source_index=source_index,
+                    obligations=pending_obligations, worker_cache=worker_cache)
+                if pending_recall.get("valid") and gate.sc.sha256_value(pending_bundle) == json.loads(
+                    (pending / "compiler-state.v1.json").read_text(encoding="utf-8"))["semantic_plan_sha256"]:
+                    gate.sc.atomic_json(pending / "atomic-recall-alignment.v1.json", pending_recall)
+                    audit = audit_bundle(pending_bundle)
+                    if not audit["valid"]:
+                        raise ValueError("pending semantic chain audit failed")
+                    gate.sc.atomic_json(pending / "semantic-chain-audit.v1.json", audit)
+                else:
+                    result = {"status": "repair-vdd", "stage": "V4", "gate": "atomic-source-recall",
+                              "findings": pending_recall.get("findings", [])}
+            except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+                result = {"status": "repair-vdd", "stage": "semantic-handoff-pending", "reason": str(exc)}
         findings = result.get("findings")
         gaps = result.get("source_gap_claims")
         # Feed back only a final V4 result that contains *only* independently
