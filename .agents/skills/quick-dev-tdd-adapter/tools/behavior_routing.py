@@ -43,10 +43,14 @@ def production_hashes(workspace, bundle, slice_id):
         if oid in seen:
             continue
         if oid not in index:
-            raise ValueError("behavior-routing:dependency-outside-current-scope:" + oid)
+            # `depends_on` also carries non-runtime requirement/governance
+            # labels in compiled plans.  They have no behavior intent or
+            # production owner and therefore cannot widen the runtime hash
+            # closure.  Only projected obligation IDs participate here.
+            continue
         seen.add(oid)
         paths.update(index[oid]["production_owners"])
-        todo.extend(index[oid]["depends_on"])
+        todo.extend(dep for dep in index[oid]["depends_on"] if dep in index)
     return hash_refs(workspace, sorted(paths))
 
 

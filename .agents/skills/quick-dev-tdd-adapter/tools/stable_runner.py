@@ -121,6 +121,37 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str)
     argv = [str(item) for item in commands[0]]
     if any(not item for item in argv):
         raise ValueError("validation command contains empty argv")
+    # A CER slice may distribute its assertion cases over several explicit
+    # pytest commands.  Its stage selector must execute that whole declared
+    # case surface, rather than silently treating only command zero as the
+    # proof floor.  Combine only the mechanically equivalent, shell-free form
+    # so heterogeneous commands retain their own explicit routing.
+    normalized = [[str(item) for item in command] for command in commands]
+    def pytest_parts(command: list[str]):
+        offset = 2 if command[:2] == ["py", "-3"] else 1
+        return offset if (len(command) >= offset + 3 and command[offset:offset + 2] == ["-m", "pytest"]
+                          and all(item == "-q" or not item.startswith("-") for item in command[offset + 2:])) else None
+    pytest_offsets = [pytest_parts(command) for command in normalized]
+    pytest_commands = (
+        len(normalized) > 1
+        and all(offset is not None for offset in pytest_offsets)
+    )
+    if pytest_commands:
+        prefixes = {tuple(command[:offset]) for command, offset in zip(normalized, pytest_offsets)}
+        if len(prefixes) == 1:
+            prefix = list(prefixes.pop())
+            # Repeated validation commands may legitimately arise when a
+            # single assertion is projected through both its target and
+            # fixture context.  Pytest will execute the same node twice in
+            # that form, which violates CER's unique-case requirement.
+            # Preserve declaration order while making each non-option input
+            # occur once in the combined shell-free selector.
+            selector_items: list[str] = []
+            for command, offset in zip(normalized, pytest_offsets):
+                for item in command[offset + 2:]:
+                    if item != "-q" and item not in selector_items:
+                        selector_items.append(item)
+            argv = [*prefix, "-m", "pytest", *selector_items, "-q"]
     snapshots = [safe_relative(str(item)) for item in selected.get("execution_snapshot_paths", [])]
     if not snapshots:
         raise ValueError("slice execution snapshot paths missing")
@@ -364,7 +395,23 @@ def q4_finish(
         slice_item=selected,
         base_commit=base_commit,
     )
-    return {**result, "plan_id": bundle.get("plan_id"), "slice_id": slice_id, "run_id": run_dir.name}
+    result = {**result, "plan_id": bundle.get("plan_id"), "slice_id": slice_id, "run_id": run_dir.name}
+    if result.get("status") != "implementation-successor":
+        return result
+    red_descriptor = load_json(_stage_descriptor(run_dir, "red"))
+    identity = candidate_identity(ROOT, bundle, slice_id)
+    green = successor_descriptor(
+        red_descriptor, stage="green", run_id=run_dir.name,
+        candidate_hash=identity["candidate_hash"],
+    )
+    green_path = _stage_descriptor(run_dir, "green")
+    create_json(green_path, green)
+    return {
+        **result,
+        "green_descriptor_ref": green_path.relative_to(ROOT).as_posix(),
+        "green_descriptor_sha256": sha256_value(green),
+        "required_next_action": "run-green",
+    }
 
 
 def q4_implementation_worker(
@@ -407,20 +454,14 @@ def q4_implementation_worker(
             "reason_code": gate.get("reason_code"), "worker": worker, "q4_gate": gate,
             "authorizes_evidence": False, "authorizes": [],
         }
-    bundle = load_json(semantic)
-    red_descriptor = load_json(_stage_descriptor(_inside_root(run_dir, "run-dir"), "red"))
-    identity = candidate_identity(ROOT, bundle, slice_id)
-    green = successor_descriptor(red_descriptor, stage="green", run_id=_inside_root(run_dir, "run-dir").name, candidate_hash=identity["candidate_hash"])
-    green_path = _stage_descriptor(_inside_root(run_dir, "run-dir"), "green")
-    create_json(green_path, green)
     return {
         "schema": "quick-dev.implementation-worker-result.v1",
         "status": "implementation-successor",
         "worker": worker,
         "q4_gate": gate,
-        "green_descriptor_ref": green_path.relative_to(ROOT).as_posix(),
-        "green_descriptor_sha256": sha256_value(green),
-        "required_next_action": "run-green",
+        "green_descriptor_ref": gate["green_descriptor_ref"],
+        "green_descriptor_sha256": gate["green_descriptor_sha256"],
+        "required_next_action": gate["required_next_action"],
         "authorizes_evidence": False,
         "authorizes": [],
     }

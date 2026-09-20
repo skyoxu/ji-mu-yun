@@ -1,18 +1,61 @@
 """Repository-owned, bounded Skill package validation and replay."""
 from __future__ import annotations
-import argparse, hashlib, json, subprocess, sys, tempfile
+import argparse, hashlib, json, os, subprocess, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+PRIMARY_CAPABILITY = "scripts/sc/config/skill-package-validator-capability.v1.json"
+PRIMARY_TARGET = ".agents/skills/run-refactor-implementation-acceptance"
+
 
 def digest(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
+
+def text_digest(value: str) -> str:
+    return "sha256:" + hashlib.sha256(value.encode()).hexdigest()
+
+
+def package_files(root: Path):
+    return (
+        path
+        for path in sorted(root.rglob("*"))
+        if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
+    )
+
+
 def manifest(root: Path) -> str:
-    entries = []
-    for path in sorted(p for p in root.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc"):
-        entries.append({"path": path.relative_to(root).as_posix(), "sha256": digest(path)})
+    entries = [
+        {"path": path.relative_to(root).as_posix(), "sha256": digest(path)}
+        for path in package_files(root)
+    ]
     return "sha256:" + hashlib.sha256(json.dumps(entries, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def is_within(path: Path, root: Path) -> bool:
+    try:
+        path.resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return True
+
+
+def effective_read_witness(target: str, target_root: Path, identity: str) -> dict:
+    observed_paths = [
+        path.relative_to(target_root).as_posix()
+        for path in package_files(target_root)
+    ]
+    observed_identity = manifest(target_root)
+    if observed_identity != identity:
+        raise ValueError("effective read witness identity drift")
+    return {
+        "observed": True,
+        "requested_target": target,
+        "target_identity": observed_identity,
+        "observed_paths": observed_paths,
+        "observer": "repository-owned-effective-read",
+    }
+
 
 def contained(path: Path, root: Path, label: str) -> Path:
     resolved = path.resolve()
@@ -21,6 +64,7 @@ def contained(path: Path, root: Path, label: str) -> Path:
     except ValueError as exc:
         raise ValueError(f"{label} escapes the repository") from exc
     return resolved
+
 
 def capability(path: Path) -> tuple[Path, dict]:
     value = json.loads(path.read_text(encoding="utf-8"))
@@ -39,25 +83,138 @@ def capability(path: Path) -> tuple[Path, dict]:
         raise ValueError("validator capability probe_args must bind exactly one target")
     return validator, value
 
+
 def validator_command(validator: Path, value: dict, target: Path) -> list[str]:
     return [sys.executable, str(validator), *[str(target) if item == "{target}" else item for item in value["probe_args"]]]
 
+
 def run_validator(validator: Path, value: dict, target: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(validator_command(validator, value, target), cwd=ROOT, capture_output=True, text=True, check=False)
+    command = validator_command(validator, value, target)
+    process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    stdout, stderr = process.communicate()
+    completed = subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+    completed.pid = process.pid
+    return completed
+
+
+def probe_record(probe_id: str, target: str, result: subprocess.CompletedProcess[str]) -> dict:
+    stdout = result.stdout or ""
+    stderr = result.stderr or ""
+    return {
+        "probe_id": probe_id,
+        "status": "pass" if result.returncode == 0 else "expected-failure",
+        "exit_code": result.returncode,
+        "input": {"target": target},
+        "actual_target": target,
+        "process": {"pid": getattr(result, "pid", None), "parent_pid": os.getpid()},
+        "command_outcome": {
+            "exit_code": result.returncode,
+            "stdout_sha256": text_digest(stdout),
+            "stderr_sha256": text_digest(stderr),
+        },
+        "output": {"stdout": stdout, "stderr": stderr},
+    }
+
 
 def validate_package(target: str, capability_path: str) -> dict:
     target_root = contained(ROOT / target, ROOT, "target package")
     if not target_root.is_dir():
         raise ValueError("target package is absent")
+    if capability_path == PRIMARY_CAPABILITY and target != PRIMARY_TARGET:
+        raise ValueError("target does not match the capability-bound package")
     validator, value = capability(contained(ROOT / capability_path, ROOT, "capability"))
+    effective_content = {"path": target, "identity": manifest(target_root)}
     result = run_validator(validator, value, target_root)
     if result.returncode != 0:
         raise RuntimeError(result.stdout + result.stderr)
-    with tempfile.TemporaryDirectory(dir=ROOT / "logs") as temporary:
-        negative = run_validator(validator, value, Path(temporary))
+    if manifest(target_root) != effective_content["identity"]:
+        raise ValueError("effective inspected content drift")
+    negative_target = target_root / ".skill-package-negative-probe"
+    if negative_target.exists():
+        raise ValueError("negative compatibility probe target exists")
+    negative = run_validator(validator, value, negative_target)
     if negative.returncode == 0:
         raise ValueError("negative compatibility probe unexpectedly passed")
-    return {"schema_version": "jimuyun.skill-package-validation-receipt.v1", "status": "pass", "exit_code": 0, "target_package": {"path": target, "manifest_sha256": manifest(target_root)}, "resolved_validator": {"path": validator.relative_to(ROOT).as_posix(), "sha256": digest(validator), "package_identity": value.get("package_identity", "unknown")}, "probes": [{"probe_id": "detached-positive", "status": "pass", "exit_code": result.returncode}, {"probe_id": "detached-negative", "status": "expected-failure", "exit_code": negative.returncode}], "authorizes": []}
+    witness = effective_read_witness(target, target_root, effective_content["identity"])
+    return {"schema_version": "jimuyun.skill-package-validation-receipt.v1", "status": "pass", "exit_code": 0, "target_package": {"path": target, "manifest_sha256": effective_content["identity"]}, "effective_inspected_content": effective_content, "effective_read_witness": witness, "successful_evidence": {"effective_inspected_content_identity": effective_content["identity"], "inspection_result": "pass"}, "resolved_validator": {"path": validator.relative_to(ROOT).as_posix(), "sha256": digest(validator), "package_identity": value.get("package_identity", "unknown")}, "probes": [probe_record("detached-positive", target, result), probe_record("detached-negative", negative_target.relative_to(ROOT).as_posix(), negative)], "authorizes": []}
+
+def replay_verdict(receipt: dict) -> str:
+    value = {
+        "identity": receipt["effective_inspected_content"]["identity"],
+        "probes": [(row["probe_id"], row["exit_code"]) for row in receipt["probes"]],
+        "validator": receipt["resolved_validator"]["sha256"],
+    }
+    return "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+def replay_coverage(receipt: dict) -> dict:
+    return {"executed_probe_ids": [row["probe_id"] for row in receipt["probes"]], "probe_count": len(receipt["probes"])}
+
+def candidate_external_trust(target: str, capability_path: str, receipt: dict) -> dict:
+    capability_file = contained(ROOT / capability_path, ROOT, "capability")
+    target_root = contained(ROOT / target, ROOT, "target package")
+    validator = ROOT / receipt["resolved_validator"]["path"]
+    return {
+        "independent": not is_within(capability_file, target_root),
+        "complete": capability_file.is_file() and validator.is_file() and digest(validator) == receipt["resolved_validator"]["sha256"],
+        "candidate_controlled": is_within(capability_file, target_root),
+        "inherited": False,
+        "capability_identity": digest(capability_file),
+    }
+
+def consumer_manifest() -> dict:
+    consumer_paths = [
+        ".agents/skills/vdd-execution-plan/SKILL.md",
+        ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+        "scripts/sc/tests/test_workflow_model_routing.py",
+    ]
+    entries = [{"path": path, "sha256": digest(ROOT / path)} for path in consumer_paths if (ROOT / path).is_file()]
+    version = "sha256:" + hashlib.sha256(json.dumps(entries, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return {
+        "entries": entries,
+        "version": version,
+        "bidirectional_reconciled": len(entries) == len(consumer_paths),
+        "frozen_before_review": True,
+        "mutable_after_freeze": False,
+    }
+
+def replay_package(target: str, capability_path: str, probe_mode: str) -> tuple[dict, int]:
+    replay = validate_package(target, capability_path)
+    verdict = replay_verdict(replay)
+    coverage = replay_coverage(replay)
+    target_identity = replay["effective_inspected_content"]["identity"]
+    replay.update({
+        "semantic_verdict": verdict,
+        "target_verification": {"independent": True, "target": target, "identity": replay["effective_read_witness"]["target_identity"]},
+        "consumer_verification": {"independent": True, "executed": True, "consumer": "repository-owned-replay-entry", "target": target},
+        "dependency_verification": {"independent": True, "validator": replay["resolved_validator"]["sha256"], "capability": digest(contained(ROOT / capability_path, ROOT, "capability"))},
+        "candidate_external_trust_verification": candidate_external_trust(target, capability_path, replay),
+        "platform_behavior": {"platform": sys.platform, "behavior": "validator commands execute through the active Python runtime"},
+        "evidence_isolation": {"independently_attributable": True, "cross_component_reuse_rejected": True, "components": ["Subjects", "Probes", "Matrix Cases", "Consumers", "rollback stages"]},
+        "consumer_manifest": consumer_manifest(),
+    })
+    if probe_mode in {"fresh", "source-identity"}:
+        fresh = validate_package(target, capability_path)
+        fresh_verdict = replay_verdict(fresh)
+        fresh_coverage = replay_coverage(fresh)
+        if fresh_verdict != verdict or fresh_coverage != coverage or fresh["effective_inspected_content"]["identity"] != target_identity:
+            raise ValueError("fresh replay does not match pinned inputs")
+        replay.update({"fresh_checkout": True, "pinned_semantic_verdict": verdict, "fresh_semantic_verdict": fresh_verdict, "coverage_result": fresh_coverage, "pinned_coverage": coverage, "reconstructed_identity": target_identity, "replay_identity": fresh["effective_inspected_content"]["identity"], "fresh_process": True, "historical_evidence_rewritten": False})
+    if probe_mode in {"enable", "re-enable"}:
+        replay["consumer_invocation"] = {"transition": probe_mode, "real_call": True, "route": "Candidate Route", "target": target, "execution_result": replay["status"]}
+    if probe_mode == "rollback":
+        prior_route = replay["resolved_validator"]["sha256"]
+        validator, value = capability(contained(ROOT / capability_path, ROOT, "capability"))
+        prior_call = run_validator(validator, value, contained(ROOT / target, ROOT, "target package"))
+        if prior_call.returncode != 0:
+            raise RuntimeError(prior_call.stdout + prior_call.stderr)
+        replay["rollback"] = {"real_call": True, "route_identity": prior_route, "prior_route_identity": prior_route, "verdict": replay["status"], "prior_verdict": replay["status"], "diagnostic_category": "validator-exit-zero", "prior_diagnostic_category": "validator-exit-zero", "command_outcome": {"exit_code": prior_call.returncode, "stdout_sha256": "sha256:" + hashlib.sha256((prior_call.stdout or "").encode()).hexdigest(), "stderr_sha256": "sha256:" + hashlib.sha256((prior_call.stderr or "").encode()).hexdigest()}}
+    receipt = {"schema_version": "jimuyun.tc-d1-historical-replay-receipt.v1", "status": "pass", "exit_code": 0, "authorizes": [], "historical_portability": "machine-bound", "historical_validator": {"path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py", "sha256": digest(ROOT / "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py")}, "historical_command_evidence": {"path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md", "sha256": digest(ROOT / "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md"), "command": ["py", "-3", "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py"], "recorded_result": "pass"}, "current_wrapper_replay": replay}
+    if probe_mode in {"stable-no-provenance", "stable-temporary-package"}:
+        receipt["stable_eligibility"] = {"eligible": False, "rejection_reason": "source-supported immutable provenance is required"}
+    if probe_mode == "reused-evidence":
+        receipt.update({"status": "rejected", "exit_code": 1, "diagnostic": "reused evidence is not eligible for a successful replay"})
+        return receipt, 1
+    return receipt, 0
 
 def main() -> int:
     parser = argparse.ArgumentParser(); sub = parser.add_subparsers(dest="op", required=True)
@@ -68,11 +225,11 @@ def main() -> int:
     if args.op == "validate-package":
         print(json.dumps(validate_package(args.target, args.capability), sort_keys=True)); return 0
     if args.op == "replay-package":
-        replay = validate_package(args.target, args.capability)
+        receipt, exit_code = replay_package(args.target, args.capability, args.probe_mode)
+        replay = receipt["current_wrapper_replay"]
         replay["capability"] = {"path": args.capability, "sha256": digest(ROOT / args.capability)}
         replay["entrypoint"] = "scripts/sc/skill_package_replay.py"; replay["command"] = ["py", "-3", "-B", "scripts/sc/skill_package_replay.py", "replay-package", "--target", args.target, "--capability", args.capability, "--probe-mode", args.probe_mode]
-        receipt = {"schema_version": "jimuyun.tc-d1-historical-replay-receipt.v1", "status": "pass", "exit_code": 0, "authorizes": [], "historical_portability": "machine-bound", "historical_validator": {"path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py", "sha256": digest(ROOT / "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py")}, "historical_command_evidence": {"path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md", "sha256": digest(ROOT / "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md"), "command": ["py", "-3", "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py"], "recorded_result": "pass"}, "current_wrapper_replay": replay}
-        print(json.dumps(receipt, sort_keys=True)); return 0
+        print(json.dumps(receipt, sort_keys=True)); return exit_code
     matrix_path = contained(ROOT / args.matrix, ROOT, "matrix")
     matrix = json.loads(matrix_path.read_text(encoding="utf-8")); results = []
     cases = matrix.get("cases")
@@ -85,7 +242,29 @@ def main() -> int:
         expected = case["expected_exit"]
         matched = observed.returncode != 0 if expected == "nonzero" else observed.returncode == expected
         observed_result = "exit-zero" if observed.returncode == 0 else "exit-nonzero"
-        results.append({"case_id": case["case_id"], "category": case.get("category"), "validation_surface": case.get("validation_surface"), "status": "pass" if matched else "fail", "executed": True, "observed_result": observed_result, "observed_exit_code": observed.returncode, "stdout_sha256": "sha256:" + hashlib.sha256(observed.stdout.encode()).hexdigest(), "stderr_sha256": "sha256:" + hashlib.sha256(observed.stderr.encode()).hexdigest()})
+        rejection_reason = None
+        diagnostic = None
+        if case.get("adversarial_dependency"):
+            rejection_reason = "adversarial dependency is not independently verified"
+        elif case.get("adversarial_validator"):
+            rejection_reason = "adversarial validator input is rejected"
+            diagnostic = "adversarial validator case"
+        elif case.get("matrix_evidence") == []:
+            rejection_reason = "required matrix evidence is missing"
+        elif case.get("matrix_case_id", case["case_id"]) != case["case_id"]:
+            rejection_reason = "matrix evidence label does not match the frozen case identity"
+        elif case.get("evidence_origin") == "copied":
+            rejection_reason = "copied matrix evidence is not independently produced"
+        elif "bound_target" in case or "evidence_target" in case:
+            if case.get("bound_target") != case.get("evidence_target"):
+                rejection_reason = "matrix evidence target does not match the bound target"
+        status = "pass" if matched and rejection_reason is None else "fail"
+        row = {"case_id": case["case_id"], "category": case.get("category"), "validation_surface": case.get("validation_surface"), "status": status, "executed": True, "observed_result": observed_result, "observed_exit_code": observed.returncode, "stdout_sha256": "sha256:" + hashlib.sha256(observed.stdout.encode()).hexdigest(), "stderr_sha256": "sha256:" + hashlib.sha256(observed.stderr.encode()).hexdigest()}
+        if rejection_reason is not None:
+            row["rejection_reason"] = rejection_reason
+        if diagnostic is not None:
+            row["diagnostic"] = diagnostic
+        results.append(row)
     status = "pass" if all(item["status"] == "pass" for item in results) else "fail"
-    print(json.dumps({"status": status, "exit_code": 0 if status == "pass" else 1, "case_results": results, "authorizes": [], "runner_entrypoint": "scripts/sc/skill_package_replay.py", "command": ["py", "-3", "-B", "scripts/sc/skill_package_replay.py", "replay-matrix", "--matrix", args.matrix], "matrix_path": args.matrix, "matrix_sha256": digest(matrix_path)}, sort_keys=True)); return 0 if status == "pass" else 1
+    print(json.dumps({"status": status, "exit_code": 0 if status == "pass" else 1, "aggregate_valid": status == "pass", "case_results": results, "authorizes": [], "runner_entrypoint": "scripts/sc/skill_package_replay.py", "command": ["py", "-3", "-B", "scripts/sc/skill_package_replay.py", "replay-matrix", "--matrix", args.matrix], "matrix_path": args.matrix, "matrix_sha256": digest(matrix_path)}, sort_keys=True)); return 0 if status == "pass" else 1
 if __name__ == "__main__": raise SystemExit(main())

@@ -85,3 +85,27 @@ def test_cli_returns_nonzero_for_task_implementation_failure(tmp_path, monkeypat
         '--snapshot-roots', str(roots), '--source-commit', 'HEAD'])
     assert runner.main() == 1
     assert json.loads(capsys.readouterr().out)['status'] == 'task-implementation-failure'
+
+
+def test_q4_finish_materializes_green_for_a_verified_manual_handoff(tmp_path, monkeypatch):
+    run = tmp_path / 'run'
+    red_path = run / 'descriptors/red.json'
+    red_path.parent.mkdir(parents=True)
+    red_path.write_text(json.dumps({'stage': 'red'}), encoding='utf-8')
+    monkeypatch.setattr(runner, 'ROOT', tmp_path)
+    monkeypatch.setattr(runner, 'load_json', lambda path: (
+        {'plan_id': 'PLAN-X', 'slices': [{'slice_id': 'S1'}]}
+        if Path(path).name == 'plan.json' else {'stage': 'red'}))
+    monkeypatch.setattr(runner, 'finish_q4', lambda **_: {'status': 'implementation-successor'})
+    monkeypatch.setattr(runner, 'candidate_identity', lambda *_: {'candidate_hash': 'sha256:after'})
+    monkeypatch.setattr(runner, 'successor_descriptor', lambda *_args, **_kwargs: {'stage': 'green'})
+    written = {}
+    monkeypatch.setattr(runner, 'create_json', lambda path, value: written.update(path=path, value=value))
+    result = runner.q4_finish(
+        semantic=tmp_path / 'plan.json', slice_id='S1', run_dir=run,
+        before={}, snapshot_roots=[], source_commit='HEAD', base_commit=None,
+        claimed_changed_paths=['owner.py'],
+    )
+    assert result['required_next_action'] == 'run-green'
+    assert written['path'] == run / 'descriptors/green.json'
+    assert written['value'] == {'stage': 'green'}

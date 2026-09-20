@@ -53,6 +53,15 @@ def implement(root, present):
     (root/"candidate.py").write_text(f"def value(kind):\n return {values!r}[kind]\n", encoding="utf-8")
 
 
+def test_runtime_hash_closure_ignores_non_obligation_dependency_labels(tmp_path: Path) -> None:
+    semantic, _roots = fixture(tmp_path)
+    bundle = json.loads(semantic.read_text(encoding="utf-8"))
+    bundle["obligations"][0]["depends_on"] = ["SM-6.1 governance label"]
+    from semantic_behavior_contract import project_intents
+    bundle["behavior_routing"]["intents"] = project_intents(bundle)
+    assert production_hashes(tmp_path, bundle, "S1") == {"candidate.py": sha256_bytes((tmp_path / "candidate.py").read_bytes())}
+
+
 def execute(root, semantic, stage, route=None, *, run_name="RUN-1", materialize_only=False):
     bundle = json.loads(semantic.read_text())
     run = root/run_name

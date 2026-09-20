@@ -284,8 +284,20 @@ def validate_requirements_and_contract(errors: list[str]) -> None:
         errors.append("requirement and acceptance IDs must be unique")
     if slice_ids != ["RMAP-S0", "RMAP-S1", "RMAP-S2", "RMAP-S3"]:
         errors.append("TC-D1 must have the frozen four-slice order")
-    if any(str(value).startswith("TC-D2") or str(value).startswith("TC-D3") or str(value).startswith("TC-D4") or str(value).startswith("TC-D5") or str(value).startswith("TC-D6") for value in req_ids + slice_ids):
-        errors.append("future first-class directories cannot enter TC-D1 IDs")
+    outside_tc_d1 = ("TC-E0", "TC-D2", "TC-D3", "TC-D4", "TC-D5", "TC-D6")
+    for value in req_ids + slice_ids:
+        if any(str(value).startswith(prefix) for prefix in outside_tc_d1):
+            errors.append(f"outside TC-D1 scope identifier: {value}")
+    excluded_features = {
+        "miner",
+        "curator",
+        "autonomous skill modification",
+        "learned ranking",
+        "reinforcement learning",
+    }
+    for feature in requirements.get("proposed_features", []):
+        if isinstance(feature, str) and feature.lower() in excluded_features:
+            errors.append(f"excluded feature outside TC-D1 scope: {feature}")
 
     known_requirements = set(req_ids)
     known_acceptance = set(acceptance_ids)

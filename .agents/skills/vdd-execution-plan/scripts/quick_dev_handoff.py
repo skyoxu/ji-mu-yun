@@ -55,15 +55,37 @@ def handoff_findings(bundle, workspace=None):
         if any(_inside(a, b) or _inside(b, a) for a in owners for b in snapshots):
             findings.append(f'{sid}:production-frozen-by-execution-snapshot')
         commands = context.get('validation_commands', [])
-        command = commands[0] if commands else []
         # The current CER adapter is single-process pytest. Other adapters need
         # their own explicit contract, not a file-extension fallback.
+        command = commands[0] if commands else []
         offset = 2 if command[:2] == ['py', '-3'] else 1
         targets = command[offset + 2:] if command[offset:offset + 2] == ['-m', 'pytest'] else []
         paths = [v.split('::', 1)[0] for v in targets if v.endswith('.py') or '.py::' in v]
         authorable = set(item.get('planned_new_files', [])) | snapshots
         if not paths or any(p not in snapshots or p not in authorable or p in owners for p in paths):
             findings.append(f'{sid}:missing-authorable-pytest-entry')
+        expected = {assertion for aid in item['acceptance_ids']
+                    for assertion in acceptances[aid]['assertion_ids']}
+        declared_for_slice = set()
+        primary_declared = None
+        if workspace is not None:
+            # Acceptance coverage may intentionally be distributed across the
+            # slice's frozen test surface.  Require exact slice-wide marker
+            # coverage, not an impossible copy of every marker into each
+            # individual pytest entry file.
+            for other_command in commands:
+                other_offset = 2 if other_command[:2] == ['py', '-3'] else 1
+                other_targets = (other_command[other_offset + 2:]
+                                 if other_command[other_offset:other_offset + 2] == ['-m', 'pytest'] else [])
+                for path in other_targets:
+                    path = path.split('::', 1)[0]
+                    if not (path.endswith('.py') or '.py::' in path):
+                        continue
+                    declared = _declared_cer_assertions(Path(workspace) / path)
+                    if declared is not None:
+                        declared_for_slice.update(declared)
+            if paths:
+                primary_declared = _declared_cer_assertions(Path(workspace) / paths[0])
         for p in paths:
             if any(_inside(p, f) for f in context.get('forbidden_paths', [])):
                 findings.append(f'{sid}:test-entry-forbidden:{p}')
@@ -71,12 +93,10 @@ def handoff_findings(bundle, workspace=None):
             # An existing file, however, cannot be relabelled as a new slice:
             # its literal CER mapping must already contain this slice's exact
             # Acceptance assertions or VDD must repair the semantic binding.
-            if workspace is not None:
-                declared = _declared_cer_assertions(Path(workspace) / p)
-                expected = {assertion for aid in item['acceptance_ids']
-                            for assertion in acceptances[aid]['assertion_ids']}
-                if declared is not None and not expected.issubset(declared):
-                    findings.append(f'{sid}:existing-test-assertion-mismatch:{p}')
+            if (workspace is not None and primary_declared is not None
+                    and not expected.issubset(primary_declared)
+                    and not expected.issubset(declared_for_slice)):
+                findings.append(f'{sid}:existing-test-assertion-mismatch:{p}')
         for aid in item['acceptance_ids']:
             acceptance = acceptances[aid]
             if _eligible(acceptance, obligations) and not any(
@@ -86,38 +106,44 @@ def handoff_findings(bundle, workspace=None):
     return findings
 
 
-def _regression(command):
+def _regression(command, *, windows_launcher=False):
     """Retain test runners; CLI/negative-fixture invocations need bound oracles."""
     argv = shlex.split(command[0]) if len(command) == 1 else list(command)
-    if argv[:2] == ['py', '-3']:
-        argv = ['python', *argv[2:]]
     argv = [v for v in argv if v != '-B']
+    if windows_launcher and argv[:3] == ['python', '-m', 'pytest']:
+        argv = ['py', '-3', *argv[1:]]
     argv = [v.replace('.agents/skills/vdd-execution-plan/tests',
                       '.agents/skills/vdd-execution-plan/scripts/tests') for v in argv]
-    if argv[:3] == ['python', '-m', 'unittest']:
+    python_prefix = ['py', '-3'] if argv[:2] == ['py', '-3'] else ['python']
+    offset = len(python_prefix)
+    if argv[offset:offset + 2] == ['-m', 'unittest']:
         if 'discover' in argv:
             root = argv[argv.index('-s') + 1]
             pattern = argv[argv.index('-p') + 1] if '-p' in argv else 'test*.py'
-            argv = ['python', '-m', 'pytest', root if '*' in pattern else root + '/' + pattern]
+            argv = [*python_prefix, '-m', 'pytest', root if '*' in pattern else root + '/' + pattern]
         else:
             target = argv[3]
             if '/' not in target:
                 target = target.replace('.', '/') + '.py'
-            argv = ['python', '-m', 'pytest', target]
-    if len(argv) == 2 and argv[0] == 'python' and Path(argv[1]).name.startswith('test_'):
-        argv = ['python', '-m', 'pytest', argv[1]]
-    if argv[:3] == ['python', '-m', 'pytest'] and not any('/validators' in v for v in argv):
+            argv = [*python_prefix, '-m', 'pytest', target]
+    if len(argv) == offset + 1 and argv[:offset] == python_prefix and Path(argv[offset]).name.startswith('test_'):
+        argv = [*python_prefix, '-m', 'pytest', argv[offset]]
+    if argv[offset:offset + 2] == ['-m', 'pytest'] and not any('/validators' in v for v in argv):
         return argv, 'retained-regression'
     return None, 'bound-test-oracle-required'
 
 
-def repair_bundle(bundle, test_root, workspace=None):
+def repair_bundle(bundle, test_root, workspace=None, windows_launcher_slices=()):
     import semantic_compiler as sc
     from semantic_behavior_contract import SCHEMA, project_intents, project_deferred
     root = PurePosixPath(test_root)
     if root.is_absolute() or '..' in root.parts or str(root) != test_root or not test_root.startswith('scripts/sc/tests/'):
         raise ValueError('handoff test root must be a normalized scripts/sc/tests child')
     result = deepcopy(bundle)
+    launcher_slices = set(windows_launcher_slices)
+    known_slices = {item['slice_id'] for item in result['slices']}
+    if not launcher_slices <= known_slices:
+        raise ValueError('Windows launcher repair references unknown slice')
     obligations = {o['obligation_id']: o for o in result['obligations']}
     failures = {f['failure_intent_id']: f for f in result['failure_intents']}
     added = []
@@ -176,9 +202,10 @@ def repair_bundle(bundle, test_root, workspace=None):
         selectors = sorted({f['selector_intent'] for f in related})
         item['proof']['selector_intents'] = selectors
         item['slice_input_hash'] = sc.sha256_value({k: v for k, v in item.items() if k != 'slice_input_hash'})
-        commands = [['python', '-m', 'pytest', test, '-q']]
+        launcher = sid in launcher_slices
+        commands = [['py', '-3', '-m', 'pytest', test, '-q']] if launcher else [['python', '-m', 'pytest', test, '-q']]
         for command in context['validation_commands']:
-            normalized, disposition = _regression(command)
+            normalized, disposition = _regression(command, windows_launcher=launcher)
             dispositions.append({'slice_id': sid, 'original': command, 'disposition': disposition,
                                  'replacement': normalized or commands[0]})
             if normalized and normalized not in commands:
@@ -262,6 +289,36 @@ def repair_runtime_red_roles(bundle, failure_intent_ids):
                     'command_dispositions': [], 'added_expected_red_intents': [a['runtime_failure_intent_id'] for a in additions]}
 
 
+def repair_runtime_red_bindings(bundle, test_root, workspace, failure_intent_ids):
+    """Retain handoff test rebinding while adding only reviewed runtime RED roles.
+
+    A runtime-role repair may encounter an existing local CER test owned by a
+    different slice.  Reuse the normal handoff's dedicated-test allocation,
+    but discard its broad automatic RED additions before adding the explicitly
+    selected runtime role.  This keeps the repair execution-only and local to
+    the reviewed intent.
+    """
+    rebound, handoff_delta = repair_bundle(bundle, test_root, workspace=workspace)
+    generated = set(handoff_delta['added_expected_red_intents'])
+    if generated:
+        rebound['failure_intents'] = [item for item in rebound['failure_intents']
+                                      if item['failure_intent_id'] not in generated]
+        for acceptance in rebound['acceptances']:
+            acceptance['red_intent_ids'] = [item for item in acceptance['red_intent_ids']
+                                             if item not in generated]
+        for item in rebound['slices']:
+            item['failure_intent_ids'] = [value for value in item['failure_intent_ids']
+                                          if value not in generated]
+            item['slice_input_hash'] = __import__('semantic_compiler').sha256_value(
+                {key: value for key, value in item.items() if key != 'slice_input_hash'})
+    repaired, delta = repair_runtime_red_roles(rebound, failure_intent_ids)
+    delta['execution_binding_repair'] = {
+        'command_dispositions': handoff_delta['command_dispositions'],
+        'rebound_test_entries': True,
+    }
+    return repaired, delta
+
+
 def semantic_projection(bundle):
     """Fields that this execution repair is not authorized to change."""
     return {
@@ -275,7 +332,7 @@ def semantic_projection(bundle):
     }
 
 
-def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=()):
+def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=(), windows_launcher_slices=()):
     import semantic_compiler as sc
     from semantic_plan_contract import validate_semantic_bundle
     from semantic_chain_audit import audit_bundle
@@ -339,8 +396,11 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
     active = {o['obligation_id'] for o in original['obligations'] if o.get('status') == 'active'}
     if alignment.get('valid') is not True or recall.get('valid') is not True or set(recall['worker']['supported_obligation_ids']) != active:
         raise ValueError('handoff predecessor lacks complete independent semantic review')
-    repaired, delta = (repair_runtime_red_roles(original, runtime_red_intents)
-                       if runtime_red_intents else repair_bundle(original, test_root, workspace=root))
+    if runtime_red_intents and windows_launcher_slices:
+        raise ValueError('runtime RED role repair cannot combine Windows launcher repair')
+    repaired, delta = (repair_runtime_red_bindings(original, test_root, root, runtime_red_intents)
+                       if runtime_red_intents else repair_bundle(original, test_root, workspace=root,
+                                                                  windows_launcher_slices=windows_launcher_slices))
     repaired['plan_id'] = 'PLAN-' + sc.sha256_value({'source': source['sha256'], 'profile': original['profile']})[7:19].upper()
     if semantic_projection(original) != semantic_projection(repaired):
         raise ValueError('handoff repair changed semantic scope')

@@ -14,7 +14,7 @@ sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(ROOT / '.agents/skills/quick-dev-tdd-adapter/tools'))
 import semantic_feasibility_patch  # noqa: F401
 import semantic_compiler as sc
-from quick_dev_handoff import handoff_findings, repair_bundle, semantic_projection
+from quick_dev_handoff import _regression, handoff_findings, repair_bundle, repair_runtime_red_bindings, semantic_projection
 from semantic_chain_audit import audit_bundle
 from semantic_plan_contract import validate_semantic_bundle
 from current_router import materialize_descriptor, validate_red_author_delta, validate_write_delta
@@ -33,6 +33,21 @@ def original():
 
 def repaired():
     return repair_bundle(original(), TEST_ROOT)[0]
+
+
+def test_handoff_retains_windows_python_launcher_for_pytest_regression():
+    command = ['py', '-3', '-m', 'pytest', 'scripts/sc/tests/tc_d1_cer/test_s4_cer.py', '-q']
+    assert _regression(command) == (command, 'retained-regression')
+    assert _regression(['python', '-m', 'pytest', 'scripts/sc/tests/tc_d1_cer/test_s4_cer.py', '-q'], windows_launcher=True) == (command, 'retained-regression')
+    repaired_bundle = repair_bundle(original(), TEST_ROOT, windows_launcher_slices=['S4'])[0]
+    context = next(item for item in repaired_bundle['agent_contexts'] if item['slice_id'] == 'S4')
+    assert all(item[:4] == ['py', '-3', '-m', 'pytest'] for item in context['validation_commands'])
+    unaffected = next(item for item in repaired_bundle['agent_contexts'] if item['slice_id'] == 'S5')
+    original_context = next(item for item in original()['agent_contexts'] if item['slice_id'] == 'S5')
+    expected_unaffected = repair_bundle(original(), TEST_ROOT)[0]
+    expected_context = next(item for item in expected_unaffected['agent_contexts'] if item['slice_id'] == 'S5')
+    assert unaffected['validation_commands'] == expected_context['validation_commands']
+    assert original_context['slice_id'] == 'S5'
 
 
 def test_real_predecessor_exposes_all_three_handoff_defects():
@@ -72,6 +87,31 @@ def test_only_executable_behavior_gets_a_new_red_role():
     assert not [f for f in added if set(f['acceptance_ids']) & set(s1['acceptance_ids'])]
 
 
+def test_runtime_red_repair_reports_conflicting_existing_test_binding(tmp_path):
+    bundle = original()
+    runtime_intent = next(item['failure_intent_id'] for item in bundle['failure_intents']
+                          if item['failure_family'] != 'expected-red'
+                          and len(item['acceptance_ids']) == 1)
+    test = ROOT / 'scripts/sc/tests/tc_d1_cer/test_s4.py'
+    previous = test.read_text(encoding='utf-8') if test.exists() else None
+    try:
+        test.parent.mkdir(parents=True, exist_ok=True)
+        test.write_text('@pytest.mark.cer_assertion("other-slice")\ndef test_marker(): pass\n', encoding='utf-8')
+        repaired, delta = repair_runtime_red_bindings(bundle, TEST_ROOT, ROOT, [runtime_intent])
+        s4 = next(item for item in repaired['slices'] if item['slice_id'] == 'S4')
+        assert f'{TEST_ROOT}/test_s4_cer.py' in s4['execution_snapshot_paths']
+        assert any('existing-test-assertion-mismatch' in item
+                   for item in handoff_findings(repaired, workspace=ROOT))
+        assert len(delta['runtime_red_role_bindings']) == 1
+        original_ids = {item['failure_intent_id'] for item in bundle['failure_intents']}
+        assert len([item for item in repaired['failure_intents'] if item['failure_intent_id'] not in original_ids]) == 1
+    finally:
+        if previous is None:
+            test.unlink(missing_ok=True)
+        else:
+            test.write_text(previous, encoding='utf-8')
+
+
 @pytest.mark.parametrize('sid', [f'S{i}' for i in range(1, 46)])
 def test_each_real_slice_has_authorable_test_and_unfrozen_production(tmp_path, sid, monkeypatch):
     monkeypatch.setattr(stable_runner, "ROOT", tmp_path)
@@ -82,7 +122,8 @@ def test_each_real_slice_has_authorable_test_and_unfrozen_production(tmp_path, s
     path.parent.mkdir(parents=True)
     path.write_text(json.dumps(context), encoding='utf-8')
     command, targets, fixtures = _descriptor_inputs(bundle, tmp_path, sid)
-    assert targets == [f'{TEST_ROOT}/test_{sid.lower()}.py']
+    assert f'{TEST_ROOT}/test_{sid.lower()}.py' in targets
+    assert all(target in item['execution_snapshot_paths'] for target in targets)
     validate_red_author_delta(targets, item['execution_snapshot_paths'] + item['planned_new_files'], item['production_owners'])
     validate_write_delta(item['production_owners'], item['allowed_write_paths'], item['execution_snapshot_paths'])
     validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=sid, timeout_seconds=600)
@@ -90,7 +131,7 @@ def test_each_real_slice_has_authorable_test_and_unfrozen_production(tmp_path, s
         candidate_hash='sha256:' + '1' * 64, argv=command, cwd='.', timeout_seconds=60,
         target_refs=targets, fixture_refs=fixtures)
     assert {a['assertion_id'] for a in descriptor['acceptance_assertions']} == set(item['proof']['assertion_ids'])
-    assert all(a['target_ref'] == targets[0] for a in descriptor['acceptance_assertions'])
+    assert all(a['target_ref'] in targets for a in descriptor['acceptance_assertions'])
 
 
 @pytest.mark.parametrize('mutation,expected', [
