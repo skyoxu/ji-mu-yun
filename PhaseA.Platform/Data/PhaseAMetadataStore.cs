@@ -209,6 +209,7 @@ public sealed class PhaseAMetadataStore
             FROM accounts a
             LEFT JOIN project_limits pl ON pl.account_id = a.id
             LEFT JOIN projects p ON p.account_id = a.id
+                AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = p.id)
             LEFT JOIN aicodemirror_key_pool ak ON ak.account_id = a.id
             GROUP BY a.id, a.username, a.is_admin, a.is_disabled, pl.project_limit, a.created_utc, a.valid_until_utc, a.spend_limit_cny, ak.key_name
             ORDER BY a.is_admin DESC, a.created_utc ASC, a.username ASC;
@@ -442,7 +443,7 @@ public sealed class PhaseAMetadataStore
         await using var connection = await OpenConnectionAsync(cancellationToken);
         var count = await ExecuteScalarLongAsync(
             connection,
-            "SELECT COUNT(*) FROM projects WHERE id = $project_id AND account_id = $account_id;",
+            "SELECT COUNT(*) FROM projects WHERE id = $project_id AND account_id = $account_id AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = projects.id);",
             cancellationToken,
             ("$project_id", projectId),
             ("$account_id", accountId)) ?? 0;
@@ -1210,7 +1211,7 @@ public sealed class PhaseAMetadataStore
         var limit = await GetProjectLimitInsideTransactionAsync(connection, create.AccountId, cancellationToken);
         var count = await ExecuteScalarLongAsync(
             connection,
-            "SELECT COUNT(*) FROM projects WHERE account_id = $account_id;",
+            "SELECT COUNT(*) FROM projects WHERE account_id = $account_id AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = projects.id);",
             cancellationToken,
             ("$account_id", create.AccountId)) ?? 0;
 
@@ -1325,7 +1326,8 @@ public sealed class PhaseAMetadataStore
                 COALESCE(w.meta_path, '')
             FROM projects p
             LEFT JOIN workspaces w ON w.project_id = p.id
-            WHERE p.id = $project_id;
+            WHERE p.id = $project_id
+              AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = p.id);
             """;
         command.Parameters.AddWithValue("$project_id", projectId);
 
@@ -1378,6 +1380,7 @@ public sealed class PhaseAMetadataStore
             FROM projects p
             INNER JOIN workspaces w ON w.project_id = p.id
             WHERE p.account_id = $account_id
+              AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = p.id)
             ORDER BY COALESCE(p.last_activity_utc, p.created_utc), p.created_utc, p.id;
             """;
         command.Parameters.AddWithValue("$account_id", accountId);
@@ -1429,6 +1432,7 @@ public sealed class PhaseAMetadataStore
                 w.meta_path
             FROM projects p
             INNER JOIN workspaces w ON w.project_id = p.id
+            WHERE NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = p.id)
             ORDER BY p.created_utc, p.id;
             """;
 
@@ -1529,6 +1533,29 @@ public sealed class PhaseAMetadataStore
         command.CommandText = "DELETE FROM projects WHERE id = $project_id;";
         command.Parameters.AddWithValue("$project_id", projectId);
         await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task SoftDeleteProjectAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+
+        var activeProjectCount = await ExecuteScalarLongInsideTransactionAsync(
+            connection,
+            transaction,
+            "SELECT COUNT(*) FROM projects WHERE id = $project_id AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = projects.id);",
+            cancellationToken,
+            ("$project_id", projectId)) ?? 0;
+        if (activeProjectCount == 0)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return;
+        }
+
+        await RecordProjectDeleteTombstoneInsideTransactionAsync(connection, transaction, projectId, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
 
@@ -3347,6 +3374,7 @@ public sealed class PhaseAMetadataStore
                     SELECT COUNT(*)
                     FROM projects count_projects
                     WHERE count_projects.account_id = a.id
+                      AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = count_projects.id)
                 ) AS project_count,
                 a.created_utc,
                 r.id,
