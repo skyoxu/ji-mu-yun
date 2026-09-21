@@ -254,6 +254,27 @@ def test_existing_tests_with_new_assertion_ids_route_through_bounded_author(tmp_
     assert (tmp_path/"candidate.py").read_bytes()==before
 
 
+def test_author_failure_is_recorded_and_blocks_same_run_reentry(tmp_path,monkeypatch):
+    import stable_runner
+    semantic,_=fixture(tmp_path)
+    monkeypatch.setattr(stable_runner,"ROOT",tmp_path)
+    test=tmp_path/"tests/test_one.py"
+    test.unlink()
+    worker={"schema":"quick-dev.worker-result.v1","stage":"red-author","status":"worker-failed","exit_code":124,"changed_paths":[],"authorizes_evidence":False,"authorizes":[]}
+    monkeypatch.setattr(stable_runner,"run_red_author",lambda **_kwargs: worker)
+    run=tmp_path/"RUN-AUTHOR-FAIL"
+    result=stable_runner.q2_author_red(semantic=semantic,slice_id="S1",run_dir=run,
+        profile="standard",timeout_seconds=10,backend="offline-disabled")
+    record=run/"worker-result.v1.json"
+    assert result["required_next_action"]=="recover" and record.is_file()
+    persisted=json.loads(record.read_text(encoding="utf-8"))
+    assert persisted["worker"]==worker and persisted["authorizes_evidence"] is False
+    blocked=stable_runner.q2_author_red(semantic=semantic,slice_id="S1",run_dir=run,
+        profile="standard",timeout_seconds=10,backend="offline-disabled")
+    assert blocked["status"]=="stage-reentry-blocked"
+    assert blocked["required_next_action"]=="recover"
+
+
 def test_change_impact_invalidates_regression_observations(tmp_path):
     from current_router import recommendation
     semantic,_=fixture(tmp_path)

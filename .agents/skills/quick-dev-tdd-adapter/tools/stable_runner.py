@@ -142,6 +142,10 @@ def _stage_descriptor(run_dir: Path, stage: str) -> Path:
     return run_dir / "descriptors" / f"{stage}.json"
 
 
+def _worker_failure_record(run_dir: Path) -> Path:
+    return run_dir / "worker-result.v1.json"
+
+
 def q0_recommendation(
     *,
     semantic: Path,
@@ -240,6 +244,23 @@ def q2_author_red(
                     declared.update(arg.value for arg in node.args if isinstance(arg, ast.Constant) and isinstance(arg.value, str))
         worker_required = worker_required or not required <= declared
     if worker_required:
+        failure_record = _worker_failure_record(run_dir)
+        if failure_record.exists():
+            recorded = load_json(failure_record)
+            if not isinstance(recorded, Mapping) or recorded.get("schema") != "quick-dev.worker-attempt.v1":
+                raise ValueError("author worker failure record invalid")
+            if recorded.get("stage") != "red-author" or recorded.get("slice_id") != slice_id:
+                raise ValueError("author worker failure record identity mismatch")
+            return {
+                "schema": "quick-dev.red-author-result.v1",
+                "status": "stage-reentry-blocked",
+                "required_next_action": "recover",
+                "reason": "author worker failure already recorded for this run",
+                "failure_record_ref": failure_record.relative_to(ROOT).as_posix(),
+                "failure_record_sha256": sha256_value(recorded),
+                "authorizes_evidence": False,
+                "authorizes": [],
+            }
         worker = run_red_author(
             workspace=ROOT,
             plan_dir=plan_dir,
@@ -249,7 +270,21 @@ def q2_author_red(
             backend=backend,
         )
         if worker.get("status") != "worker-changes-valid":
-            return {**worker, "required_next_action": "author-red"}
+            record = {
+                "schema": "quick-dev.worker-attempt.v1",
+                "stage": "red-author",
+                "slice_id": slice_id,
+                "worker": worker,
+                "authorizes_evidence": False,
+                "authorizes": [],
+            }
+            create_json(failure_record, record)
+            return {
+                **worker,
+                "required_next_action": "recover",
+                "failure_record_ref": failure_record.relative_to(ROOT).as_posix(),
+                "failure_record_sha256": sha256_value(record),
+            }
     else:
         worker = {
             "schema": "quick-dev.worker-result.v1", "stage": "red-author", "status": "worker-not-required",
