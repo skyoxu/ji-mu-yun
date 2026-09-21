@@ -266,7 +266,10 @@ def q2_author_red(
         import ast
         required = {sid for a in bundle["acceptances"] if a["acceptance_id"] in selected["acceptance_ids"] for sid in a["assertion_ids"]}
         declared = set()
-        for ref in target_refs:
+        # Assertions may be deliberately split between the primary selector
+        # and frozen fixture tests.  Both are executed by the descriptor, so
+        # authoring is necessary only when their combined mapping is incomplete.
+        for ref in sorted(set(target_refs + fixture_refs)):
             try:
                 tree = ast.parse((ROOT / ref).read_text(encoding="utf-8"))
             except (OSError, SyntaxError):
