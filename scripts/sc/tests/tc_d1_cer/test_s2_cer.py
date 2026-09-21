@@ -1,4 +1,4 @@
-"""CER coverage for successful evidence bound to effective inspected content."""
+"""CER receipt coverage for successful evidence content binding."""
 from __future__ import annotations
 
 import hashlib
@@ -31,9 +31,18 @@ def _package_identity(package_root: Path) -> str:
 
 
 @pytest.mark.cer_assertion("FR-2-SUCCESSFUL-EVIDENCE-EFFECTIVE-CONTENT-BINDING")
-def test_successful_evidence_is_bound_to_the_effective_inspected_content() -> None:
+def test_successful_evidence_names_the_identity_of_the_inspected_package() -> None:
     result = subprocess.run(
-        [sys.executable, "-B", str(ENTRY), "validate-package", "--target", TARGET, "--capability", CAPABILITY],
+        [
+            sys.executable,
+            "-B",
+            str(ENTRY),
+            "validate-package",
+            "--target",
+            TARGET,
+            "--capability",
+            CAPABILITY,
+        ],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -46,19 +55,16 @@ def test_successful_evidence_is_bound_to_the_effective_inspected_content() -> No
     except json.JSONDecodeError:
         receipt = {}
     effective = receipt.get("effective_inspected_content", {}) if isinstance(receipt, dict) else {}
-    successful_evidence = receipt.get("successful_evidence", {}) if isinstance(receipt, dict) else {}
     evidence = receipt.get("successful_evidence", {}) if isinstance(receipt, dict) else {}
     expected_identity = _package_identity(ROOT / TARGET)
-    bound = (
+    correctly_bound = (
         result.returncode == 0
         and receipt.get("status") == "pass"
         and effective.get("path") == TARGET
         and effective.get("identity") == expected_identity
         and evidence.get("effective_inspected_content_identity") == expected_identity
         and evidence.get("inspection_result") == "pass"
-        and successful_evidence.get("effective_inspected_content_identity") == effective["identity"]
-        and successful_evidence.get("inspection_result") == "pass"
     )
-    if not bound:
+    if not correctly_bound:
         print("FAILURE_ID:FR2_EFFECTIVE_CONTENT_BINDING_MISSING")
-    assert bound, "successful validation must bind evidence to the effective inspected content actually inspected"
+    assert correctly_bound, "successful evidence must name the identity of the package actually inspected"
