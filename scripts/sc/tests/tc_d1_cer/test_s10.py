@@ -133,3 +133,54 @@ def test_always_success_validator_is_reported_as_a_failed_probe_outcome() -> Non
         "ALWAYS_SUCCESS_FALSE_NEGATIVE_PASSED",
         "An always-success validator must produce a failed detached Probe outcome",
     )
+
+
+@pytest.mark.cer_assertion("A-431D-fresh-replay-1")
+def test_fresh_replay_reproduces_recorded_verdict_and_coverage() -> None:
+    _, returncode, receipt = _positive_replay()
+    replay = receipt.get("current_wrapper_replay") if isinstance(receipt, dict) else None
+    condition = (
+        returncode == 0
+        and isinstance(replay, dict)
+        and replay.get("fresh_checkout") is True
+        and replay.get("fresh_semantic_verdict") == replay.get("pinned_semantic_verdict")
+        and replay.get("fresh_coverage") == replay.get("pinned_coverage")
+    )
+    _assert_behavior(
+        condition,
+        "CER-A-92898EBFD70B-BEHAVIOR",
+        "Fresh-checkout replay must reproduce the pinned verdict and coverage",
+    )
+
+
+@pytest.mark.cer_assertion("A-REPLAY-CURRENT-SNAPSHOT-COMPLETE")
+@pytest.mark.cer_assertion("A-REPLAY-SNAPSHOT-BINDING")
+def test_replay_result_contains_complete_current_snapshot_binding() -> None:
+    _, returncode, receipt = _positive_replay()
+    replay = receipt.get("current_wrapper_replay") if isinstance(receipt, dict) else None
+    snapshot = replay.get("current_snapshot") if isinstance(replay, dict) else None
+    condition = returncode == 0 and isinstance(snapshot, dict) and snapshot.get("sha256") and snapshot.get("roots")
+    _assert_behavior(
+        bool(condition),
+        "F-REPLAY-INCOMPLETE-SNAPSHOT",
+        "Replay results must bind a complete Current Snapshot",
+    )
+
+
+@pytest.mark.cer_assertion("A-FCD3611EEC73-1")
+def test_supported_replay_route_binds_effective_inspected_content() -> None:
+    _, returncode, receipt = _positive_replay()
+    replay = receipt.get("current_wrapper_replay") if isinstance(receipt, dict) else None
+    inspected = replay.get("effective_inspected_content") if isinstance(replay, dict) else None
+    condition = (
+        returncode == 0
+        and isinstance(inspected, dict)
+        and inspected.get("path") == TARGET
+        and isinstance(inspected.get("identity"), str)
+        and inspected["identity"].startswith("sha256:")
+    )
+    _assert_behavior(
+        condition,
+        "F-FCD3611EEC73-1",
+        "Supported replay routes must bind the effective inspected content",
+    )

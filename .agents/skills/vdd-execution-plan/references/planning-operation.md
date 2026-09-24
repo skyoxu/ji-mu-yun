@@ -32,10 +32,10 @@ use the existing explicit source/scope decision path.
 Select `standard`, `resumable`, or `self-hosted` entirely from the profile table
 before model routing. Then pass that already-selected profile to
 `scripts/model_routing.py`; do not add another VDD complexity classifier.
-All three ordinary profiles currently request Sol/high. Only a closed typed
-complex-recovery trigger may request Sol/max, and that route remains blocked
-until an exact backend/model/effort/sandbox capability probe and its shadow
-predicate both pass. Free-form recovery reasons fail closed.
+All three ordinary profiles and the typed complex-recovery route currently
+request `gpt-6-sol/high`. Complex recovery remains blocked until its exact
+backend/model/effort/sandbox capability probe and shadow predicate both pass.
+Free-form recovery reasons fail closed.
 
 The emitted route decision is hash-bound and non-authorizing. The shared
 workflow launcher alone may start a child process. In `observe_only`, continue
@@ -44,7 +44,7 @@ nor replaces that session's model.
 
 The canonical policy owns VDD's independent consumer enablement. A disabled
 VDD consumer emits `disabled` without changing Quick Dev or Refactor
-Acceptance. Sol/max recovery evidence is loaded only from policy-bound
+Acceptance. Sol/high recovery evidence is loaded only from policy-bound
 path/hash references under the controlled capability-evidence root. Callers
 cannot supply or synthesize a capability-proof dictionary; activation requires
 the bound producer receipt, its successful process result, and representative

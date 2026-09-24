@@ -8,11 +8,30 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[4]
+sys.path.insert(0, str(ROOT / "scripts" / "sc"))
+
+from _semantic_gate_all_runtime import build_prompt_with_budget, load_task_maps
+
+
 ENTRY = ROOT / "scripts" / "sc" / "skill_package_replay.py"
 CAPABILITY = "scripts/sc/config/skill-package-validator-capability.v1.json"
 TARGET = ".agents/skills/run-refactor-implementation-acceptance"
+
+
+@pytest.mark.cer_assertion("A-B4382B18F0CA-1")
+def test_aggregate_prompt_budget_is_finite_and_observable() -> None:
+    task_ids, master, back, gameplay = load_task_maps()
+    batch = task_ids[: min(3, len(task_ids))]
+    prompt, _trimmed, _budget = build_prompt_with_budget(
+        batch=batch,
+        max_acceptance_items=4,
+        max_prompt_chars=1400,
+        master_by_id=master,
+        back_by_id=back,
+        gameplay_by_id=gameplay,
+    )
+    assert batch and len(prompt) <= 1400
 
 
 def _receipt(probe_mode: str) -> dict:

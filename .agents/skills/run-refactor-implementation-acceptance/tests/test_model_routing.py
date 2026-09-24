@@ -33,7 +33,7 @@ class RefactorAcceptanceModelRoutingTests(unittest.TestCase):
                 self.assertEqual(
                     "refactor_acceptance.complex_recovery", decision["routeId"]
                 )
-                self.assertEqual("gpt-5.6-sol", decision["requestedExecution"]["model"])
+                self.assertEqual("gpt-6-sol", decision["requestedExecution"]["model"])
                 self.assertEqual("high", decision["requestedExecution"]["effort"])
                 self.assertEqual("observe_only", decision["status"])
 
@@ -53,7 +53,7 @@ class RefactorAcceptanceModelRoutingTests(unittest.TestCase):
         before = profile_path.read_bytes()
         external = model_routing.routing.bootstrap_external_decision()
         rejected = model_routing.routing.bootstrap_external_decision(
-            override_model="gpt-5.6-terra"
+            override_model="gpt-6-sol"
         )
         self.assertEqual("external_profile", external["requestedExecution"]["launchMode"])
         self.assertIsNone(external["requestedExecution"]["model"])

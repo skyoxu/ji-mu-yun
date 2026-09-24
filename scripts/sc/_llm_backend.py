@@ -185,7 +185,7 @@ def _extract_reasoning_effort(codex_configs: list[str] | None) -> str:
 
 
 def _resolve_openai_model() -> str:
-    return str(os.environ.get("SC_OPENAI_MODEL") or os.environ.get("OPENAI_MODEL") or "gpt-5").strip() or "gpt-5"
+    return str(os.environ.get("SC_OPENAI_MODEL") or os.environ.get("OPENAI_MODEL") or "gpt-6-sol").strip() or "gpt-6-sol"
 
 
 def _extract_response_output_text(response: object) -> str:

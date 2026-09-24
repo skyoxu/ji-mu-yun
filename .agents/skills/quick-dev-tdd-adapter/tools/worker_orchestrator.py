@@ -207,7 +207,7 @@ def _invoke(
                 prompt=_prompt(stage, payload, allowed=allowed, forbidden=forbidden),
                 output_last_message=output,
                 timeout_sec=timeout_seconds,
-                codex_configs=["model_reasoning_effort=\"high\""],
+                codex_configs=["model_reasoning_effort=\"medium\""],
                 codex_sandbox="workspace-write",
             )
             if output.is_file():

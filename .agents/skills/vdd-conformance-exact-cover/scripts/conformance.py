@@ -28,7 +28,40 @@ def file_hash(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def exact_cover(requirements: Iterable[dict[str, Any]], acceptance_ids: Iterable[str], reverse_mapping: dict[str, list[str]]) -> dict[str, Any]:
+def _graph_result(graph: Any, obligation_ids: set[str]) -> dict[str, Any]:
+    """Validate the optional Exact Cover graph carried by a mapping."""
+    if not isinstance(graph, dict):
+        return {}
+    nodes = graph.get("nodes")
+    edges = graph.get("edges")
+    if not isinstance(nodes, list) or not isinstance(edges, list):
+        return {"bidirectional": False, "orphan_nodes": [], "node_type_coverage": {},
+                "graph_errors": [{"family": "deterministic_coverage_gap", "code": "graph_schema_invalid"}]}
+    node_by_id = {item.get("id"): item for item in nodes if isinstance(item, dict) and isinstance(item.get("id"), str)}
+    pairs = {(item.get("source"), item.get("target")) for item in edges if isinstance(item, dict)}
+    graph_errors: list[dict[str, str]] = []
+    bidirectional = True
+    for source, target in sorted(pairs):
+        if (target, source) not in pairs:
+            bidirectional = False
+            graph_errors.append({"family": "deterministic_coverage_gap", "code": "missing_reverse_edge", "source": source, "target": target})
+    connected = {value for pair in pairs for value in pair}
+    orphan_nodes = sorted(node_id for node_id in node_by_id if node_id not in connected)
+    if orphan_nodes:
+        graph_errors.append({"family": "deterministic_coverage_gap", "code": "orphan_graph_node"})
+    required_types = ("assertions", "selectors", "commands", "witnesses", "runtime_evidence")
+    coverage: dict[str, dict[str, str]] = {}
+    for obligation_id in sorted(obligation_ids):
+        coverage[obligation_id] = {}
+        for node_type in required_types:
+            matches = [node_id for node_id, item in node_by_id.items() if item.get("node_type") == node_type and (obligation_id, node_id) in pairs and (node_id, obligation_id) in pairs]
+            coverage[obligation_id][node_type] = "complete" if matches else "missing"
+            if not matches:
+                graph_errors.append({"family": "deterministic_coverage_gap", "code": "node_type_coverage_missing", "node_type": node_type})
+    return {"bidirectional": bidirectional, "orphan_nodes": orphan_nodes, "node_type_coverage": coverage, "graph_errors": graph_errors}
+
+
+def exact_cover(requirements: Iterable[dict[str, Any]], acceptance_ids: Iterable[str], reverse_mapping: dict[str, list[str]], graph: Any = None) -> dict[str, Any]:
     rows = list(requirements)
     raw_acceptance = list(acceptance_ids)
     acceptance = sorted(set(raw_acceptance))
@@ -52,7 +85,10 @@ def exact_cover(requirements: Iterable[dict[str, Any]], acceptance_ids: Iterable
     for aid in acceptance:
         if not reverse_mapping.get(aid):
             errors.append({"family": "deterministic_coverage_gap", "code": "orphan_acceptance"})
-    return {"schema_version": "vdd-conformance-result.v1", "status": "blocked" if errors else "conformant", "errors": errors, "authorizes": []}
+    graph_obligations = {node_id for node_id, item in ({item.get("id"): item for item in (graph or {}).get("nodes", []) if isinstance(item, dict)}).items() if item.get("node_type") == "atomic_obligation"} if isinstance(graph, dict) else set()
+    graph_result = _graph_result(graph, graph_obligations)
+    errors.extend(graph_result.pop("graph_errors", []))
+    return {"schema_version": "vdd-conformance-result.v1", "status": "blocked" if errors else "conformant", "errors": errors, **graph_result, "authorizes": []}
 
 
 def shard_id(manifest_path: str, source_sha256: str, start_byte: int, end_byte: int) -> str:
@@ -732,7 +768,7 @@ def validate_conformance(root: Path, manifest_path: Path, mapping_path: Path) ->
     _load_vdd_source_freeze(root).validate_manifest(root, manifest)
     mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
     _validate_repair_lineage_successor(root, manifest, mapping_path)
-    result = exact_cover(mapping["requirements"], mapping["acceptance_ids"], mapping["reverse_mapping"])
+    result = exact_cover(mapping["requirements"], mapping["acceptance_ids"], mapping["reverse_mapping"], mapping.get("exact_cover_graph"))
     obligations = build_obligation_inventory(root, manifest)
     expected_ids: set[str] = set()
     for item in obligations:
@@ -802,7 +838,7 @@ def main() -> int:
     try:
         if args.manifest is None or args.repository_root is None:
             data = json.loads(args.mapping.read_text(encoding="utf-8"))
-            result = exact_cover(data["requirements"], data["acceptance_ids"], data["reverse_mapping"])
+            result = exact_cover(data["requirements"], data["acceptance_ids"], data["reverse_mapping"], data.get("exact_cover_graph"))
         else:
             result = validate_conformance(args.repository_root.resolve(), args.manifest.resolve(), args.mapping.resolve())
         if args.repair_input_out:

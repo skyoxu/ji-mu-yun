@@ -13,6 +13,40 @@ from test_s10 import (
 )
 from test_s41 import test_consumer_disable_records_the_real_prior_route_call as _disable_probe
 
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[4]
+ENTRY = ROOT / "scripts" / "sc" / "skill_package_replay.py"
+CAPABILITY = "scripts/sc/config/skill-package-validator-capability.v1.json"
+TARGET = ".agents/skills/run-refactor-implementation-acceptance"
+
+
+@pytest.mark.cer_assertion("A-FR5-HISTORICAL-NONAUT")
+def test_reused_historical_evidence_cannot_authorize_current_replay() -> None:
+    result = subprocess.run(
+        [
+            sys.executable, "-B", str(ENTRY), "replay-package",
+            "--target", TARGET, "--capability", CAPABILITY,
+            "--probe-mode", "reused-evidence",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    receipt = json.loads(result.stdout)
+    assert (
+        result.returncode != 0
+        and receipt.get("status") == "rejected"
+        and receipt.get("diagnostic") == "reused evidence is not eligible for a successful replay"
+        and receipt.get("authorizes") == []
+    ), receipt
+
 
 @pytest.mark.cer_assertion("ASSERT-O-2B7C47734A05-PROBE-PROCESS")
 def test_s7_detached_probe_records_a_distinct_child_process() -> None:

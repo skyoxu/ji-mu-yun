@@ -201,6 +201,36 @@
         "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
         "registryId": "bootstrap-authority-roots.v1"
       }
+    },
+    {
+      "profileName": "bootstrap-upstream-plan",
+      "policyRevision": "sha256:2bccdae31913e984e6108157733554a97fa117d83c5007fe19a41b7d9e88dd78",
+      "replayScope": "baseline-only",
+      "authorityRootRegistry": null
+    },
+    {
+      "profileName": "bootstrap-implementation-conformance",
+      "policyRevision": "sha256:36bcd27f0967109fe63217593fc3742be76f9520ac67faa60494fa50cd2cae3f",
+      "replayScope": "baseline-only",
+      "authorityRootRegistry": null
+    },
+    {
+      "profileName": "bootstrap-skill-route",
+      "policyRevision": "sha256:189d5eef49314aadfa639541b7029500061d47739ca2d8e244d2c740eceb665c",
+      "replayScope": "baseline-only",
+      "authorityRootRegistry": null
+    },
+    {
+      "profileName": "bootstrap-focused-change",
+      "policyRevision": "sha256:8f7b25659bda7e811cb506ec283edfd4877249b2e974a585439c235d1e72510b",
+      "replayScope": "baseline-only",
+      "authorityRootRegistry": null
+    },
+    {
+      "profileName": "bootstrap-focused-repair-verification",
+      "policyRevision": "sha256:12c7ee7e1c12ede2c59e31d7ae5b49f3d79c1a20497960566218fc3d9a39e900",
+      "replayScope": "baseline-only",
+      "authorityRootRegistry": null
     }
   ],
   "authorizes": []

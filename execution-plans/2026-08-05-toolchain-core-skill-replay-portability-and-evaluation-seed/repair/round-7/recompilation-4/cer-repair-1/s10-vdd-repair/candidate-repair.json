@@ -1,0 +1,86 @@
+{
+  "schema": "vdd.v3-candidate-repair.v1",
+  "requirements_sha256": "sha256:6f5ca742491849839bf80b19f0fa00d603f5dc95b1a301093a5f6accef6a0c1b",
+  "authorizes": [],
+  "obligation_contracts": {
+    "O-99CE57C37E7D": {
+      "acceptance": {
+        "assertion_ids": [
+          "A-REPLAY-CURRENT-SNAPSHOT-COMPLETE",
+          "A-REPLAY-SNAPSHOT-BINDING"
+        ],
+        "given": "A replay result is produced or consumed by the Toolchain replay pipeline with its evidence bundle available.",
+        "oracle": {
+          "expected": "The replay-result artifact records association with the complete Current Snapshot identity and required contents, and validation rejects absent or partial snapshot bindings.",
+          "forbidden": [
+            "A replay result is produced without a complete Current Snapshot binding.",
+            "The binding covers only a partial Current Snapshot."
+          ],
+          "observable": "Replay-result validation output and serialized metadata containing the complete Current Snapshot binding"
+        },
+        "source_refs": [
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-12"
+        ],
+        "then": "The replay result is consumable only after complete Current Snapshot binding is validated.",
+        "when": "A replay result is produced or consumed."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "artifact-integrity",
+          "failure_id": "F-REPLAY-INCOMPLETE-SNAPSHOT",
+          "selector_intent": "Replay a result artifact with the Current Snapshot removed or truncated; validation must fail closed and identify incomplete binding."
+        },
+        {
+          "expected_outcome": "fail",
+          "failure_family": "expected-red",
+          "failure_id": "CER-A-96DBE956A08F-BEHAVIOR",
+          "selector_intent": "Run the real replay entry on a successful result and fail when the result does not carry a complete Current Snapshot binding."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Replay result"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/skill_package_replay.py"
+        ],
+        "behavior_change": "Require replay-result serialization and validation to carry a complete Current Snapshot binding.",
+        "execution_snapshot_paths": [
+          "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json"
+        ],
+        "forbidden_paths": [
+          "PhaseA.Platform",
+          "runtime/phase-a",
+          "logs"
+        ],
+        "planned_new_files": [],
+        "production_owners": [
+          "scripts/sc/skill_package_replay.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/skill_package_replay.py"
+          ],
+          "state_or_schema_compatibility": "Preserve existing replay-result fields while making complete Current Snapshot association mandatory."
+        },
+        "state_transition": "replay result unbound/partial -> complete snapshot association validated -> result accepted",
+        "terminal_predicate": "Validation proves the result references a complete Current Snapshot and rejects absent or partial bindings.",
+        "validation_commands": [
+          [
+            "python",
+            "scripts/sc/skill_package_replay.py",
+            "--help"
+          ],
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    }
+  }
+}

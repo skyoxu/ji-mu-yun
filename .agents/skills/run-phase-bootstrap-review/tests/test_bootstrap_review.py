@@ -1757,8 +1757,8 @@ class BootstrapReviewCliTests(unittest.TestCase):
             self.assertIn("this repository is AI-native and has one", prompt)
             self.assertIn("human maintainer", prompt)
             self.assertIn("P0 to P1, P1 to non-blocking P2, and P2 to ignored", prompt)
-            self.assertIn("Preferred Codex exec model: `gpt-5.6-terra`", prompt)
-            self.assertIn("Fallback models: `gpt-5.5, gpt-5.4`", prompt)
+            self.assertIn("Preferred Codex exec model: `gpt-6-sol`", prompt)
+            self.assertIn("Fallback models: ``", prompt)
             self.assertIn("Forbidden models: ``", prompt)
             self.assertIn(
                 f"Reasoning effort: `{profile['codexExecPolicy']['reasoningEffortByRole'][layer]}`",
@@ -1876,10 +1876,10 @@ class BootstrapReviewCliTests(unittest.TestCase):
             self.assertEqual(bootstrap.PROCESS_LEASE_POLICY, profile["processLeasePolicy"])
             self.assertEqual(bootstrap.REVIEW_COST_POLICY, profile["reviewCostPolicy"])
             self.assertEqual(bootstrap.ACCESS_PROBE_POLICY, profile["accessProbePolicy"])
-            self.assertEqual("gpt-5.6-terra", profile["verifierPolicy"]["preferredModel"])
-            self.assertEqual("gpt-5.6-sol", profile["verifierPolicy"]["escalatedModel"])
-            self.assertEqual("max", profile["verifierPolicy"]["escalatedReasoningEffort"])
-            self.assertNotIn("gpt-5.6-sol", profile["codexExecPolicy"]["forbiddenModels"])
+            self.assertEqual("gpt-6-sol", profile["verifierPolicy"]["preferredModel"])
+            self.assertEqual("gpt-6-sol", profile["verifierPolicy"]["escalatedModel"])
+            self.assertEqual("high", profile["verifierPolicy"]["escalatedReasoningEffort"])
+            self.assertNotIn("gpt-6-sol", profile["codexExecPolicy"]["forbiddenModels"])
             self.assertEqual(
                 bootstrap.CONTENT_TRUST_POLICY,
                 profile["reviewerInstructionPolicy"]["contentTrustPolicy"],
@@ -1898,7 +1898,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             ["reasoningEffortByRole"]["blind_hunter"],
         )
         self.assertEqual(
-            "gpt-5.6-terra",
+            "gpt-6-sol",
             profiles["bootstrap-skill-route"]["codexExecPolicy"]["preferredModel"],
         )
 
@@ -1907,7 +1907,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         ordinary = bootstrap.discovery_execution_route(
             {**implementation, "fullReviewRound": 1}, "blind_hunter"
         )
-        self.assertEqual(("gpt-5.6-terra", "high"), (
+        self.assertEqual(("gpt-6-sol", "high"), (
             ordinary["model"], ordinary["reasoningEffort"]
         ))
 
@@ -1917,7 +1917,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 route = bootstrap.discovery_execution_route(
                     {**skill, "fullReviewRound": review_round}, role
                 )
-                self.assertEqual(("gpt-5.6-terra", "high"), (
+                self.assertEqual(("gpt-6-sol", "high"), (
                     route["model"], route["reasoningEffort"]
                 ))
 
@@ -1930,7 +1930,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 route = bootstrap.discovery_execution_route(
                     {**profile, "fullReviewRound": 3}, role
                 )
-                self.assertEqual(("gpt-5.6-sol", "high"), (
+                self.assertEqual(("gpt-6-sol", "xhigh"), (
                     route["model"], route["reasoningEffort"]
                 ))
 
@@ -1951,16 +1951,16 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 "verifierRiskClass": "shared_entrypoint",
             }],
         )
-        self.assertEqual(("gpt-5.6-terra", "high"), (
+        self.assertEqual(("gpt-6-sol", "medium"), (
             p1_route["model"], p1_route["reasoningEffort"]
         ))
-        self.assertEqual(("gpt-5.6-sol", "high"), (
+        self.assertEqual(("gpt-6-sol", "high"), (
             high_risk_p1_route["model"], high_risk_p1_route["reasoningEffort"]
         ))
-        self.assertEqual(("gpt-5.6-sol", "max"), (
+        self.assertEqual(("gpt-6-sol", "high"), (
             p0_route["model"], p0_route["reasoningEffort"]
         ))
-        self.assertEqual(("gpt-5.6-sol", "max"), (
+        self.assertEqual(("gpt-6-sol", "high"), (
             security_route["model"], security_route["reasoningEffort"]
         ))
 
@@ -1968,11 +1968,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.prepare(execution_mode="codex-exec")
         manifest = self.read_json("review-input.json")
         groups = bootstrap.discovery_access_route_groups(self.run_dir, manifest)
-        self.assertEqual(2, len(groups))
-        self.assertEqual(["blind_hunter"], groups[0][0])
-        self.assertEqual("medium", groups[0][2]["reasoningEffort"])
-        self.assertEqual(["edge_case_hunter", "acceptance_auditor"], groups[1][0])
-        self.assertEqual("high", groups[1][2]["reasoningEffort"])
+        self.assertEqual(1, len(groups))
+        self.assertEqual(["blind_hunter", "edge_case_hunter", "acceptance_auditor"], groups[0][0])
+        self.assertEqual("high", groups[0][2]["reasoningEffort"])
 
         self.complete_access_proof(manifest)
         aggregate_hash = bootstrap.validate_access_proof(
@@ -1992,24 +1990,22 @@ class BootstrapReviewCliTests(unittest.TestCase):
             proof = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(route["reasoningEffort"], proof["reasoningEffort"])
 
-    def test_fallback_model_uses_a_distinct_role_access_proof_path(self) -> None:
+    def test_unconfigured_fallback_model_is_rejected(self) -> None:
         self.prepare(execution_mode="codex-exec")
         manifest = self.read_json("review-input.json")
 
         preferred_path, _route, _gate_hash = bootstrap.access_proof_route(
             self.run_dir, manifest, "discovery", reviewer_role="blind_hunter"
         )
-        fallback_path, fallback_route, _gate_hash = bootstrap.access_proof_route(
-            self.run_dir,
-            manifest,
-            "discovery",
-            reviewer_role="blind_hunter",
-            selected_model="gpt-5.5",
-        )
-
-        self.assertIn("gpt-5.5", fallback_route["allowedModels"])
-        self.assertNotEqual(preferred_path, fallback_path)
-        self.assertIn("gpt-5.5", fallback_path.name)
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "Model is not allowed"):
+            bootstrap.access_proof_route(
+                self.run_dir,
+                manifest,
+                "discovery",
+                reviewer_role="blind_hunter",
+                selected_model="gpt-5.5",
+            )
+        self.assertEqual("access-proof.json", preferred_path.name)
 
     def test_focused_route_uses_frozen_predecessor_policy_and_complete_candidates(self) -> None:
         predecessor = self.repo / "focused-route-predecessor"
@@ -2386,7 +2382,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             for field, value in bootstrap.bootstrap_sidecar_binding(manifest).items():
                 self.assertEqual(value, sidecar[field], f"{relative} has stale {field}")
         verifier_prompt = (self.run_dir / "verification-prompt.md").read_text(encoding="utf-8")
-        self.assertIn("Preferred Codex exec model: `gpt-5.6-terra`", verifier_prompt)
+        self.assertIn("Preferred Codex exec model: `gpt-6-sol`", verifier_prompt)
         self.assertIn("Fallback models: ``", verifier_prompt)
         self.assertIn("Forbidden models: ``", verifier_prompt)
         self.assertIn("Reasoning effort: `high`", verifier_prompt)
@@ -3729,7 +3725,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         )
         discovery_proof = self.read_json("access-proof.json")
         self.assertEqual("discovery", discovery_proof["proofRole"])
-        self.assertEqual("gpt-5.6-terra", discovery_proof["model"])
+        self.assertEqual("gpt-6-sol", discovery_proof["model"])
         self.assertEqual(
             "prove-verifier-access",
             bootstrap.classify_run(self.run_dir, manifest)["nextAction"],
@@ -3739,7 +3735,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "run-layer", "--run-dir", str(self.run_dir),
             "--role", "independent_verifier",
             "--codex-command", "test-codex-command",
-            "--model", "gpt-5.6-terra",
+            "--model", "gpt-6-sol",
         ]))
         self.assertEqual(
             attempts_before,
@@ -3749,7 +3745,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.complete_access_proof(manifest, "independent_verifier")
         verifier_proof = self.read_json("verifier-access-proof.json")
         self.assertEqual("independent_verifier", verifier_proof["proofRole"])
-        self.assertEqual("gpt-5.6-terra", verifier_proof["model"])
+        self.assertEqual("gpt-6-sol", verifier_proof["model"])
         self.assertEqual("high", verifier_proof["reasoningEffort"])
         self.assertEqual(
             bootstrap.file_hash(self.run_dir / "review-gate-state.json"),
@@ -3767,7 +3763,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         )
         self.complete_access_proof(manifest, "independent_verifier")
         verifier_proof = self.read_json("verifier-access-proof.json")
-        self.assertEqual("gpt-5.6-sol", verifier_proof["model"])
+        self.assertEqual("gpt-6-sol", verifier_proof["model"])
         self.assertEqual("high", verifier_proof["reasoningEffort"])
 
     def test_verifier_access_probe_is_rejected_before_gate(self) -> None:
@@ -4438,7 +4434,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             self.run_dir, manifest, bootstrap.FOCUSED_REPAIR_ROLE
         )
         self.assertIsNone(gate_hash)
-        self.assertEqual(("gpt-5.6-terra", "high"), (
+        self.assertEqual(("gpt-6-sol", "medium"), (
             focused_route["model"], focused_route["reasoningEffort"]
         ))
         with self.assertRaisesRegex(
@@ -4760,7 +4756,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
 
         self.assertEqual(expected, actual)
         self.assertEqual(
-            "sha256:12c7ee7e1c12ede2c59e31d7ae5b49f3d79c1a20497960566218fc3d9a39e900",
+            "sha256:c359cd5465c0900df4b6129765415bf85e00a928d1c130009526515057ec2576",
             actual["policyRevision"],
         )
 

@@ -16,6 +16,40 @@ CAPABILITY = "scripts/sc/config/skill-package-validator-capability.v1.json"
 TARGET = ".agents/skills/run-refactor-implementation-acceptance"
 
 
+@pytest.mark.cer_assertion("assert-platform-specific-declaration")
+def test_replay_receipt_declares_active_platform_behavior() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            str(ENTRY),
+            "replay-package",
+            "--target",
+            TARGET,
+            "--capability",
+            CAPABILITY,
+            "--probe-mode",
+            "fresh",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    receipt = json.loads(result.stdout)
+    replay = receipt.get("current_wrapper_replay")
+    declaration = replay.get("platform_behavior") if isinstance(replay, dict) else None
+    assert (
+        result.returncode == 0
+        and isinstance(declaration, dict)
+        and declaration.get("platform") == sys.platform
+        and declaration.get("behavior")
+        and receipt.get("authorizes") == []
+    ), receipt
+
+
 def _package_identity(package_root: Path) -> str:
     entries = [
         {

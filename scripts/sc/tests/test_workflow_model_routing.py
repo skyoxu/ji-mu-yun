@@ -111,7 +111,7 @@ class LauncherTests(unittest.TestCase):
         policy["rolloutMode"] = "active"
         decision = routing.quick_dev_decision(self._normal_facts(), policy=policy)
         runner = mock.Mock(return_value=(0, "ok", [
-            "codex", "exec", "-m", "gpt-5.6-terra", "-c", 'model_reasoning_effort="medium"',
+            "codex", "exec", "-m", "gpt-6-sol", "-c", 'model_reasoning_effort="medium"',
             "--sandbox", "workspace-write", "-",
         ]))
         with mock.patch.object(routing, "load_policy", return_value=policy):
@@ -126,7 +126,7 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual("completed", result["status"])
         kwargs = runner.call_args.kwargs
         self.assertEqual("stdin prompt", kwargs["prompt"])
-        self.assertEqual("gpt-5.6-terra", kwargs["codex_model"])
+        self.assertEqual("gpt-6-sol", kwargs["codex_model"])
         self.assertEqual("workspace-write", kwargs["codex_sandbox"])
         self.assertEqual(['model_reasoning_effort="medium"'], kwargs["codex_configs"])
         self.assertNotIn("fallback", json.dumps(result).lower())
@@ -141,8 +141,8 @@ class LauncherTests(unittest.TestCase):
     def test_caller_cannot_self_attest_capability_or_shadow_evidence(self) -> None:
         forged = {
             "status": "passed",
-            "model": "gpt-5.6-sol",
-            "effort": "max",
+            "model": "gpt-6-sol",
+            "effort": "high",
             "backend": "codex-cli",
             "sandbox": "workspace-write",
             "shadowPredicateStatus": "passed",
@@ -166,15 +166,15 @@ class LauncherTests(unittest.TestCase):
         requested = {
             "launchMode": "child",
             "backend": "codex-cli",
-            "model": "gpt-5.6-sol",
-            "effort": "max",
+            "model": "gpt-6-sol",
+            "effort": "high",
             "sandbox": "workspace-write",
         }
         actual = {
             "launched": True,
             "backend": "codex-cli",
-            "model": "gpt-5.6-sol",
-            "effort": "max",
+            "model": "gpt-6-sol",
+            "effort": "high",
             "sandbox": "workspace-write",
             "exitCode": 0,
         }
@@ -257,17 +257,19 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual("failed", result["status"])
         self.assertIsNone(result["actualExecution"]["model"])
 
-    def test_shadow_model_cannot_become_an_active_route(self) -> None:
+    def test_unknown_model_cannot_become_an_active_route(self) -> None:
         policy = routing.load_policy()
         policy["routes"]["quick_dev.normal"]["model"] = "luna"
-        with self.assertRaisesRegex(routing.RoutingError, "shadow model"):
+        with self.assertRaisesRegex(routing.RoutingError, "route model or effort is invalid"):
             routing.validate_policy(policy)
 
-    def test_max_route_requires_capability_probe(self) -> None:
+    def test_complex_recovery_route_retains_capability_probe_contract(self) -> None:
         policy = routing.load_policy()
-        del policy["routes"]["vdd.complex_recovery"]["requiresCapabilityProbe"]
-        with self.assertRaisesRegex(routing.RoutingError, "capability probe"):
-            routing.validate_policy(policy)
+        route = policy["routes"]["vdd.complex_recovery"]
+        self.assertEqual("gpt-6-sol", policy["models"][route["model"]]["modelId"])
+        self.assertEqual("high", route["effort"])
+        self.assertTrue(route["requiresCapabilityProbe"])
+        self.assertTrue(route["requiresShadowPredicate"])
 
     def test_unknown_or_duplicate_policy_ownership_is_rejected(self) -> None:
         policy = routing.load_policy()

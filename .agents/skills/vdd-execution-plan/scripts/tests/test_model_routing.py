@@ -23,16 +23,16 @@ class VddModelRoutingTests(unittest.TestCase):
                 decision = model_routing.build_route_decision(profile)
                 self.assertEqual(profile, decision["classification"])
                 self.assertEqual(f"vdd.{route_suffix}", decision["routeId"])
-                self.assertEqual("gpt-5.6-sol", decision["requestedExecution"]["model"])
+                self.assertEqual("gpt-6-sol", decision["requestedExecution"]["model"])
                 self.assertEqual("high", decision["requestedExecution"]["effort"])
                 self.assertEqual("observe_only", decision["status"])
 
-    def test_max_recovery_requires_a_closed_trigger_and_policy_bound_capability_evidence(self) -> None:
+    def test_complex_recovery_requires_a_closed_trigger_and_policy_bound_capability_evidence(self) -> None:
         blocked = model_routing.build_route_decision(
             "self-hosted", complex_recovery_trigger="bounded_repair_exhausted"
         )
-        self.assertEqual("gpt-5.6-sol", blocked["requestedExecution"]["model"])
-        self.assertEqual("max", blocked["requestedExecution"]["effort"])
+        self.assertEqual("gpt-6-sol", blocked["requestedExecution"]["model"])
+        self.assertEqual("high", blocked["requestedExecution"]["effort"])
         self.assertEqual("blocked", blocked["status"])
 
         with self.assertRaises(TypeError):

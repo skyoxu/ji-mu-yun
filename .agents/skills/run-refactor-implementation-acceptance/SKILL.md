@@ -37,7 +37,7 @@ Bootstrap is explicit-only: only `maintainerIntent=request` can require review. 
 ## Model Route Decision
 
 Keep every ordinary Acceptance next action deterministic and pass it through
-`scripts/model_routing.py` as the no-launch route. Request Sol/high only when
+`scripts/model_routing.py` as the no-launch route. Request `gpt-6-sol/high` only when
 the current failure matches one policy-owned complex-recovery trigger:
 Bootstrap control-plane unavailable, candidate-binding recovery failed, or
 lineage evidence inconsistent. Reject free-form recovery reasons. Do not use a
@@ -81,5 +81,4 @@ Use this repository-owned command for Skill package validation:
 ```text
 py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/run-refactor-implementation-acceptance --capability scripts/sc/config/skill-package-validator-capability.v1.json
 ```
-
 
