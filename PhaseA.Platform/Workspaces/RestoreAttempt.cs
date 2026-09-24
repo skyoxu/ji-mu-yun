@@ -20,4 +20,16 @@ public sealed record RestoreAttempt(string AttemptId, string SnapshotId, string 
 
         return this with { Status = next };
     }
+
+    public bool IsRetryable => Status is RestoreAttemptStatus.Quarantined or RestoreAttemptStatus.Failed;
+
+    public RestoreAttempt Retry()
+    {
+        if (!IsRetryable)
+        {
+            throw new InvalidOperationException("only failed or quarantined restore attempts can be retried");
+        }
+
+        return this with { Status = RestoreAttemptStatus.Staging };
+    }
 }

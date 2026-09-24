@@ -3,7 +3,7 @@ from s54_fixture import invoke_s54_boundary
 
 
 def assert_boundary(tmp_path, method, failure_id):
-    if invoke_s54_boundary(tmp_path, method):
+    if invoke_s54_boundary(tmp_path, method, failure_id):
         return
     print(f"FAILURE_ID:{failure_id}")
     raise AssertionError(f"{failure_id}: real HostedProcessRunner boundary is not enforced")

@@ -1751,6 +1751,14 @@ public static class SqliteMetadataSchema
             END
             WHERE id = NEW.project_id;
         END;
-        """
+        """,
+        "CREATE TABLE IF NOT EXISTS packages (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NULL, created_utc TEXT NOT NULL);",
+        "CREATE TABLE IF NOT EXISTS assets (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NULL, created_utc TEXT NOT NULL);",
+        "CREATE TABLE IF NOT EXISTS chats (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NULL, created_utc TEXT NOT NULL);",
+        "CREATE TABLE IF NOT EXISTS workflows (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NULL, created_utc TEXT NOT NULL);",
+        "CREATE TABLE IF NOT EXISTS llm_usage (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NULL, created_utc TEXT NOT NULL);",
+        "CREATE TABLE IF NOT EXISTS snapshots (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NULL, created_utc TEXT NOT NULL);",
+        "CREATE TABLE IF NOT EXISTS restore_attempts (attempt_id TEXT PRIMARY KEY, idempotency_key TEXT NOT NULL UNIQUE, snapshot_id TEXT NOT NULL, workspace_id TEXT NOT NULL, account_id TEXT NOT NULL DEFAULT '', project_id TEXT NOT NULL DEFAULT '', status TEXT NOT NULL, fence INTEGER NOT NULL, updated_utc TEXT NOT NULL);",
+        "CREATE TABLE IF NOT EXISTS previews (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NULL, created_utc TEXT NOT NULL);",
     ];
 }

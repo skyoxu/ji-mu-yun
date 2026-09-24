@@ -10,7 +10,6 @@ import xml.etree.ElementTree as element_tree
 
 TEST_PROJECT = "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj"
 TEST_CLASS = "PhaseA.Platform.Tests.PhaseB.Repair.S69BoundaryTests"
-TEMP_ROOT = Path("C:/tmp")
 
 
 @dataclass(frozen=True)
@@ -33,18 +32,20 @@ def assert_boundary_passes(result: BoundaryCaseResult, failure_id: str) -> None:
 
 def run_boundary_case(repository_root: Path, method_name: str) -> BoundaryCaseResult:
     fully_qualified_name = f"{TEST_CLASS}.{method_name}"
-    results_directory = Path(tempfile.mkdtemp(prefix=f"s69-trx-{uuid.uuid4().hex}-", dir=TEMP_ROOT))
+    evidence_root = repository_root / "logs" / "quick-dev" / "s69-trx"
+    evidence_root.mkdir(parents=True, exist_ok=True)
+    results_directory = Path(tempfile.mkdtemp(prefix=f"s69-trx-{uuid.uuid4().hex}-", dir=evidence_root))
     command = [
         "dotnet",
         "test",
         TEST_PROJECT,
+        "--no-build",
+        "--no-restore",
         "--filter",
         f"FullyQualifiedName={fully_qualified_name}",
         "--logger",
         "trx",
         "--results-directory",
-        str(results_directory),
-        "--artifacts-path",
         str(results_directory),
     ]
     completed = subprocess.run(

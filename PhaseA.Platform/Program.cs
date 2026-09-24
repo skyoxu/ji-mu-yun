@@ -119,6 +119,7 @@ builder.Services.AddSingleton<PrototypeCommandService>();
 builder.Services.AddSingleton<SkillActionCatalog>();
 builder.Services.AddSingleton<SkillActionService>();
 builder.Services.AddSingleton<ArtifactReadbackService>();
+builder.Services.AddSingleton(new ExtensionPolicyState());
 builder.Services.AddSingleton<ProjectWebPreviewService>();
 builder.Services.AddSingleton<ProjectPackageService>();
 builder.Services.AddSingleton<ProjectAssetInventoryService>();
@@ -223,8 +224,9 @@ app.Use(async (context, next) =>
         await RecordUnhandledRequestDiagnosticAsync(options, context, ex, CancellationToken.None);
         if (!context.Response.HasStarted)
         {
+            await RecordRequestFailureDiagnosticAsync(options, context, "internal_failure", StatusCodes.Status500InternalServerError);
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await context.Response.WriteAsJsonAsync(new { error = "unhandled_request_failed" });
+            await context.Response.WriteAsJsonAsync(new { error = "unhandled_request_failed", requestId = context.TraceIdentifier });
         }
     }
 });
@@ -271,8 +273,19 @@ app.Use(async (context, next) =>
     var identity = await ResolveIdentityAsync(context, adminAccountId);
     if (identity is null)
     {
+        var failureFamily = "unauthenticated";
+        var token = PhaseAAuth.ReadBearerOrHeaderToken(context.Request);
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            var inactive = await metadataStore.ResolveAccountByTokenHashIncludingInactiveAsync(
+                PhaseAAuth.HashTokenForStorage(token),
+                context.RequestAborted);
+            failureFamily = inactive?.IsDisabled == true ? "account_disabled" : "credential_revoked";
+        }
+
+        await RecordRequestFailureDiagnosticAsync(options, context, failureFamily, StatusCodes.Status401Unauthorized);
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        await context.Response.WriteAsJsonAsync(new { error = PhaseAAuth.AuthFailureCode });
+        await context.Response.WriteAsJsonAsync(new { error = PhaseAAuth.AuthFailureCode, requestId = context.TraceIdentifier });
         return;
     }
 
@@ -280,8 +293,9 @@ app.Use(async (context, next) =>
         TryReadApiProjectId(context.Request.Path, out var projectId) &&
         !await metadataStore.ProjectBelongsToAccountAsync(identity.AccountId, projectId, context.RequestAborted))
     {
+        await RecordRequestFailureDiagnosticAsync(options, context, "ownership_mismatch", StatusCodes.Status404NotFound);
         context.Response.StatusCode = StatusCodes.Status404NotFound;
-        await context.Response.WriteAsJsonAsync(new { error = "project_not_found" });
+        await context.Response.WriteAsJsonAsync(new { error = "project_not_found", requestId = context.TraceIdentifier });
         return;
     }
 
@@ -289,7 +303,7 @@ app.Use(async (context, next) =>
     context.Items["phasea.role"] = identity.Role;
     context.Items["phasea.accountId"] = identity.AccountId;
     context.Items["phasea.username"] = identity.Username;
-    if (!identity.IsAdmin)
+    if (!identity.IsAdmin && !context.Request.Headers.ContainsKey("Authorization"))
     {
         PersistAccessTokenCookie(context);
     }
@@ -367,6 +381,31 @@ app.MapGet("/api/account/active-run", async (
     return Results.Ok(await readback.GetActiveRunAsync(CurrentAccountId(context), cancellationToken));
 });
 
+app.MapGet("/api/admin/extension-policy", (
+    HttpContext context,
+    [FromServices] ExtensionPolicyState policy) =>
+{
+    if (RejectNonAdministrator(context) is { } rejection)
+    {
+        return rejection;
+    }
+
+    return Results.Ok(policy.Read());
+});
+
+app.MapPost("/api/admin/extension-policy", (
+    ExtensionPolicyRequest request,
+    HttpContext context,
+    [FromServices] ExtensionPolicyState policy) =>
+{
+    if (RejectNonAdministrator(context) is { } rejection)
+    {
+        return rejection;
+    }
+
+    return Results.Ok(policy.Update(request.Blacklist));
+});
+
 app.MapPost("/api/projects/{projectId}/snapshots", HandleDurableWorkspaceOperationAsync);
 app.MapPost("/api/projects/{projectId}/restores", HandleDurableWorkspaceOperationAsync);
 app.MapPost("/api/projects/{projectId}/acl-repairs", HandleDurableWorkspaceOperationAsync);
@@ -384,20 +423,14 @@ static async Task<IResult> HandleDurableWorkspaceOperationAsync(
         return Results.BadRequest(new { error = "operation_key_required" });
     }
 
-    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
+    var project = (await store.ListProjectSnapshotsAsync(cancellationToken))
+        .FirstOrDefault(candidate => string.Equals(candidate.ProjectId, projectId, StringComparison.Ordinal));
     if (project is null || !string.Equals(project.AccountId, CurrentAccountId(context), StringComparison.Ordinal))
     {
         return Results.NotFound(new { error = "project_not_found" });
     }
 
-    var suffix = context.Request.Path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
-    var operationType = suffix switch
-    {
-        "snapshots" => "workspace-snapshot",
-        "restores" => "workspace-restore",
-        "acl-repairs" => "workspace-acl-repair",
-        _ => throw new InvalidOperationException("Unknown durable workspace operation."),
-    };
+    var operationType = ResolveDurableWorkspaceOperationType(context.Request.Path);
     var runType = $"{operationType}:{request.OperationKey.Trim()}";
     var run = await store.GetOrCreateProjectOperationRunAsync(project.ProjectId, project.WorkspaceId, runType, cancellationToken);
     if (string.Equals(run.Status, "queued", StringComparison.Ordinal))
@@ -419,7 +452,12 @@ static async Task<IResult> HandleDurableWorkspaceOperationAsync(
         run = (await store.GetRunSnapshotAsync(run.RunId, CancellationToken.None))!;
     }
 
-    return Results.Accepted($"/api/runs/{run.RunId}", new { operationId = run.RunId, result = new { run.Status, run.RunType } });
+    return Results.Accepted($"/api/runs/{run.RunId}", new
+    {
+        operationId = run.RunId,
+        evidencePointer = $"/api/runs/{run.RunId}",
+        result = new { run.Status, run.RunType }
+    });
 }
 
 app.MapPost("/api/runs/{runId}/cancel", async (
@@ -2107,7 +2145,12 @@ app.MapGet("/api/admin/users", async (
     ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return AdminForbidden();
+        await RecordRequestFailureDiagnosticAsync(
+            context.RequestServices.GetRequiredService<PhaseAPlatformOptions>(),
+            context,
+            "forbidden",
+            StatusCodes.Status403Forbidden);
+        return Results.Json(new { error = "admin_required", requestId = context.TraceIdentifier }, statusCode: StatusCodes.Status403Forbidden);
     }
 
     return Results.Ok(new { users = await store.ListAccountsAsync(cancellationToken) });
@@ -3441,9 +3484,38 @@ static string CurrentAccountId(HttpContext context)
     return CurrentIdentity(context).AccountId;
 }
 
+static string ResolveDurableWorkspaceOperationType(PathString requestPath)
+{
+    var suffix = requestPath.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+    return suffix switch
+    {
+        "snapshots" => "workspace-snapshot",
+        "restores" => "workspace-restore",
+        "acl-repairs" => "workspace-acl-repair",
+        _ => throw new InvalidOperationException("Unknown durable workspace operation."),
+    };
+}
+
 static IResult AdminForbidden()
 {
     return Results.Json(new { error = "admin_required" }, statusCode: StatusCodes.Status403Forbidden);
+}
+
+static IResult? RejectNonAdministrator(HttpContext context)
+{
+    ApplyNoStore(context);
+    if (CurrentIdentity(context).IsAdmin)
+    {
+        return null;
+    }
+
+    var options = context.RequestServices.GetRequiredService<PhaseAPlatformOptions>();
+    RecordRequestFailureDiagnosticAsync(
+        options,
+        context,
+        "forbidden",
+        StatusCodes.Status403Forbidden).GetAwaiter().GetResult();
+    return AdminForbidden();
 }
 
 static Dictionary<string, string> AdminLifecycleAuditMetadata(
@@ -3515,6 +3587,42 @@ static async Task RecordProjectDeleteDiagnosticAsync(
     catch
     {
         // Diagnostics must never break the delete route.
+    }
+}
+
+static async Task RecordRequestFailureDiagnosticAsync(
+    PhaseAPlatformOptions options, HttpContext context, string failureFamily, int statusCode)
+{
+    // ADR-0061/0038: platform failures may precede project identity. Keep this
+    // operator-only evidence outside workspace artifacts and browser readback.
+    // Never persist caller headers, tokens, query strings or exception messages.
+    var directory = ResolveRuntimeDiagnosticsDirectory(options);
+    if (directory is null) return;
+    var line = JsonSerializer.Serialize(new
+    {
+        timestampUtc = DateTimeOffset.UtcNow,
+        requestId = context.TraceIdentifier,
+        failureFamily,
+        statusCode,
+        method = context.Request.Method,
+        message = "Request rejected or failed."
+    }) + Environment.NewLine;
+    await Program.RequestFailureDiagnosticGate.WaitAsync();
+    try
+    {
+        Directory.CreateDirectory(directory);
+        await File.AppendAllTextAsync(Path.Combine(directory, "request-failure-diagnostics.jsonl"), line, Encoding.UTF8);
+    }
+    catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+    {
+        // Preserve the original denial. Missing diagnostics remain an observable
+        // operational failure, never a fabricated successful evidence record.
+        context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("RequestFailureDiagnostics")
+            .LogError("Request failure diagnostic persistence failed. RequestId={RequestId}", context.TraceIdentifier);
+    }
+    finally
+    {
+        Program.RequestFailureDiagnosticGate.Release();
     }
 }
 
@@ -3716,4 +3824,44 @@ static bool TryReadApiProjectId(PathString path, out string projectId)
 
 public sealed record DurableWorkspaceOperationRequest(string OperationKey);
 
-public partial class Program;
+public sealed record ExtensionPolicyRequest(IReadOnlyList<string>? Blacklist);
+
+public sealed class ExtensionPolicyState
+{
+    private readonly object _gate = new();
+    private int _version = 1;
+    private string[] _blacklist = [];
+
+    public object Read()
+    {
+        lock (_gate)
+        {
+            return new { version = _version, blacklist = _blacklist.ToArray() };
+        }
+    }
+
+    public object Update(IReadOnlyList<string>? blacklist)
+    {
+        lock (_gate)
+        {
+            _blacklist = NormalizeBlacklist(blacklist);
+            _version++;
+            return new { version = _version, blacklist = _blacklist.ToArray(), updated = true };
+        }
+    }
+
+    private static string[] NormalizeBlacklist(IReadOnlyList<string>? blacklist)
+    {
+        return (blacklist ?? [])
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .Select(item => item.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(item => item, StringComparer.Ordinal)
+            .ToArray();
+    }
+}
+
+public partial class Program
+{
+    internal static readonly SemaphoreSlim RequestFailureDiagnosticGate = new(1, 1);
+}

@@ -15,11 +15,12 @@ public sealed class S39BoundaryTests
         var conflictingOwner = await fixture.CreateAccountAsync("s39-conflicting-owner");
         var project = await fixture.CreateProjectAsync(conflictingOwner.AccountId, "conflicting-owner");
 
-        var observation = await fixture.ReadForRequesterAsync(requester.AccountId, project.ProjectId!);
+        if (!project.Succeeded || project.ProjectId is null)
+            throw new InvalidOperationException("S39 conflicting-owner fixture project was not created.");
+        var observation = await fixture.ReadForRequesterAsync(requester.AccountId, project.ProjectId);
 
         Require(
-            observation.Project is not null &&
-            !string.Equals(observation.Project.AccountId, requester.AccountId, StringComparison.Ordinal) &&
+            !string.Equals(observation.PersistedOwner, requester.AccountId, StringComparison.Ordinal) &&
             !observation.RequesterOwnsProject &&
             observation.RequesterProjects.All(candidate => !string.Equals(candidate.ProjectId, project.ProjectId, StringComparison.Ordinal)),
             "FAILURE-O-26EB3FEDC908",
@@ -38,9 +39,8 @@ public sealed class S39BoundaryTests
         var observation = await fixture.ReadForRequesterAsync(requester.AccountId, projectId);
 
         Require(
-            observation.Project is not null &&
-            string.Equals(observation.Project.BootstrapStatus, "quarantined", StringComparison.Ordinal) &&
-            !string.Equals(observation.Project.AccountId, requester.AccountId, StringComparison.Ordinal) &&
+            string.Equals(observation.PersistedBootstrapStatus, "quarantined", StringComparison.Ordinal) &&
+            !string.Equals(observation.PersistedOwner, requester.AccountId, StringComparison.Ordinal) &&
             !observation.RequesterOwnsProject &&
             observation.RequesterProjects.All(candidate => !string.Equals(candidate.ProjectId, projectId, StringComparison.Ordinal)),
             "FAILURE-O-9CC6D75341B4",
@@ -58,8 +58,7 @@ public sealed class S39BoundaryTests
         var observation = await fixture.ReadForRequesterAsync(requester.AccountId, projectId);
 
         Require(
-            observation.Project is not null &&
-            !string.Equals(observation.Project.AccountId, requester.AccountId, StringComparison.Ordinal) &&
+            !string.Equals(observation.PersistedOwner, requester.AccountId, StringComparison.Ordinal) &&
             !observation.RequesterOwnsProject &&
             observation.RequesterProjects.All(candidate => !string.Equals(candidate.ProjectId, projectId, StringComparison.Ordinal)),
             "FAILURE-O-C0DC8313E8FC",
@@ -77,11 +76,13 @@ public sealed class S39BoundaryTests
     private sealed class BoundaryFixture : IAsyncDisposable
     {
         private readonly string _databasePath;
+        private readonly string _workspaceRoot;
         private readonly PhaseAMetadataStore _store;
 
-        private BoundaryFixture(string databasePath, PhaseAMetadataStore store)
+        private BoundaryFixture(string databasePath, string workspaceRoot, PhaseAMetadataStore store)
         {
             _databasePath = databasePath;
+            _workspaceRoot = workspaceRoot;
             _store = store;
         }
 
@@ -90,8 +91,12 @@ public sealed class S39BoundaryTests
             var databasePath = Path.Combine(Path.GetTempPath(), $"s39-{Guid.NewGuid():N}.sqlite3");
             var connectionString = new SqliteConnectionStringBuilder { DataSource = databasePath, Pooling = false }.ToString();
             await SqliteMetadataSchema.InitializeAsync(connectionString);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-            return new BoundaryFixture(databasePath, new PhaseAMetadataStore(connectionString, options));
+            var workspaceRoot = Path.Combine(Path.GetDirectoryName(databasePath)!, "workspaces");
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            {
+                ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot
+            });
+            return new BoundaryFixture(databasePath, workspaceRoot, new PhaseAMetadataStore(connectionString, options));
         }
 
         public Task<AdminCreateUserResult> CreateAccountAsync(string username)
@@ -101,7 +106,7 @@ public sealed class S39BoundaryTests
 
         public Task<ProjectCreationResult> CreateProjectAsync(string ownerAccountId, string name)
         {
-            var projectRoot = Path.Combine(Path.GetTempPath(), $"s39-project-{Guid.NewGuid():N}");
+            var projectRoot = Path.Combine(_workspaceRoot, $"s39-project-{Guid.NewGuid():N}");
             return _store.CreateProjectAsync(new ProjectCreationCommand(
                 $"project-{Guid.NewGuid():N}",
                 ownerAccountId,
@@ -151,7 +156,17 @@ public sealed class S39BoundaryTests
             var requesterOwnsProject = await _store.ProjectBelongsToAccountAsync(requesterAccountId, projectId);
             var requesterProjects = await _store.ListProjectsAsync(requesterAccountId);
             var project = await _store.GetProjectSnapshotAsync(projectId);
-            return new RequesterProjectObservation(requesterOwnsProject, requesterProjects, project);
+            await using var connection = new SqliteConnection(
+                new SqliteConnectionStringBuilder { DataSource = _databasePath, Pooling = false }.ToString());
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT account_id, bootstrap_status FROM projects WHERE id = $project_id";
+            command.Parameters.AddWithValue("$project_id", projectId);
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                throw new InvalidOperationException("S39 fixture project is absent from authoritative storage.");
+            return new RequesterProjectObservation(requesterOwnsProject, requesterProjects, project,
+                reader.GetString(0), reader.GetString(1));
         }
 
         public ValueTask DisposeAsync()
@@ -169,5 +184,7 @@ public sealed class S39BoundaryTests
     private sealed record RequesterProjectObservation(
         bool RequesterOwnsProject,
         IReadOnlyList<ProjectListItem> RequesterProjects,
-        ProjectSnapshot? Project);
+        ProjectSnapshot? Project,
+        string PersistedOwner,
+        string PersistedBootstrapStatus);
 }

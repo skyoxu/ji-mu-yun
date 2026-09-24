@@ -8,6 +8,7 @@ namespace PhaseA.Platform.Tests.PhaseB.Repair;
 
 public sealed class S29BoundaryTests
 {
+    // ADR-0061: disposable ownership fixtures obey the configured workspace boundary.
     [Fact]
     public async Task O_B7041EE09EE2()
     {
@@ -79,7 +80,10 @@ public sealed class S29BoundaryTests
             var databasePath = Path.Combine(Path.GetTempPath(), $"s29-{Guid.NewGuid():N}.sqlite3");
             var connectionString = new SqliteConnectionStringBuilder { DataSource = databasePath }.ToString();
             await SqliteMetadataSchema.InitializeAsync(connectionString);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            {
+                ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+            });
             return new BoundaryFixture(databasePath, new PhaseAMetadataStore(connectionString, options));
         }
 

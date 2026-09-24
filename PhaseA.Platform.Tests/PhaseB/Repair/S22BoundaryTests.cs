@@ -1,0 +1,149 @@
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.Data.Sqlite;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Workspaces;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace PhaseA.Platform.Tests.PhaseB.Repair;
+
+public sealed class S22BoundaryTests
+{
+    private readonly ITestOutputHelper _output;
+
+    public S22BoundaryTests(ITestOutputHelper output) => _output = output;
+
+    [Fact]
+    public void O_D6DA22255508()
+    {
+        using var probe = SnapshotProtectionProbe.Create();
+        var observation = probe.CreateSnapshot();
+        _output.WriteLine($"S22_OBSERVATION:keyReference={observation.KeyReference};mechanism={observation.Mechanism};protectedPayload={observation.HasProtectedPayload.ToString().ToLowerInvariant()};recovered={observation.RecoveredOriginalBytes.ToString().ToLowerInvariant()}");
+
+        Require(
+            observation.KeyReference == SnapshotProtectionProbe.KeyReference
+            && observation.Mechanism == SnapshotProtectionProbe.Mechanism
+            && observation.HasProtectedPayload
+            && observation.RecoveredOriginalBytes,
+            "FAILURE-O-D6DA22255508",
+            "Snapshot storage did not retain an AES-256-GCM protected payload recoverable through its selected key-reference profile.");
+    }
+
+    private static void Require(bool condition, string failureId, string message)
+    {
+        if (!condition)
+            throw new Xunit.Sdk.XunitException($"{failureId}: {message}");
+    }
+
+    private sealed class SnapshotProtectionProbe : IDisposable
+    {
+        public const string KeyReference = "keyref-s22-approved";
+        public const string Mechanism = "AES-256-GCM";
+        private const string SnapshotId = "snapshot-s22";
+        private const string WorkspaceId = "workspace-s22";
+        private const string AccountId = "account-s22";
+        private const string ProjectId = "project-s22";
+        private static readonly byte[] Plaintext = Encoding.UTF8.GetBytes("s22 nonempty bounded fixture payload");
+        private readonly DirectoryInfo _root;
+        private readonly string _databasePath;
+
+        private SnapshotProtectionProbe(DirectoryInfo root, string databasePath)
+        {
+            _root = root;
+            _databasePath = databasePath;
+        }
+
+        public static SnapshotProtectionProbe Create()
+        {
+            var root = Directory.CreateTempSubdirectory("s22-boundary-");
+            var databasePath = Path.Combine(Path.GetTempPath(), $"s22-{Guid.NewGuid():N}.db");
+            var probe = new SnapshotProtectionProbe(root, databasePath);
+            var fixturePath = Path.Combine(root.FullName, "content", "fixture.bin");
+            Directory.CreateDirectory(Path.GetDirectoryName(fixturePath)!);
+            File.WriteAllBytes(fixturePath, Plaintext);
+            probe.CreateProjectDatabase();
+            return probe;
+        }
+
+        public SnapshotProtectionObservation CreateSnapshot()
+        {
+            var context = RequestContext.FromIdentity(
+                new AccountIdentity(AccountId, "owner", PhaseAAuth.UserRole),
+                "principal-s22",
+                "credential-s22",
+                "correlation-s22");
+            var storage = new WorkspaceStorageService($"Data Source={_databasePath}");
+            var record = storage.CreateSnapshot(
+                context,
+                _root.FullName,
+                SnapshotId,
+                WorkspaceId,
+                ProjectId,
+                "policy-s22",
+                new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+            var artifacts = Directory.EnumerateFiles(_root.FullName, $".snapshots-{SnapshotId}.*", SearchOption.TopDirectoryOnly)
+                .Where(path => !StringComparer.OrdinalIgnoreCase.Equals(path, record.ManifestPath))
+                .ToArray();
+
+            var hasProtectedPayload = artifacts.Length == 1;
+            var mechanism = "missing";
+            var recoveredOriginalBytes = false;
+            if (hasProtectedPayload)
+                recoveredOriginalBytes = TryRecover(File.ReadAllBytes(artifacts[0]), record.Manifest.KeyReference, out mechanism);
+
+            return new SnapshotProtectionObservation(record.Manifest.KeyReference, mechanism, hasProtectedPayload, recoveredOriginalBytes);
+        }
+
+        public void Dispose()
+        {
+            SqliteConnection.ClearAllPools();
+            if (_root.Exists)
+                _root.Delete(true);
+            if (File.Exists(_databasePath))
+                File.Delete(_databasePath);
+        }
+
+        private static bool TryRecover(byte[] protectedPayload, string keyReference, out string mechanism)
+        {
+            mechanism = "unrecognized";
+            var header = Encoding.ASCII.GetBytes("S22-AES-256-GCM-V1\0");
+            const int nonceLength = 12;
+            const int tagLength = 16;
+            if (!StringComparer.Ordinal.Equals(keyReference, KeyReference)
+                || protectedPayload.Length <= header.Length + nonceLength + tagLength
+                || !protectedPayload.AsSpan(0, header.Length).SequenceEqual(header))
+                return false;
+
+            mechanism = Mechanism;
+            var nonce = protectedPayload.AsSpan(header.Length, nonceLength).ToArray();
+            var tag = protectedPayload.AsSpan(protectedPayload.Length - tagLength, tagLength).ToArray();
+            var ciphertext = protectedPayload.AsSpan(header.Length + nonceLength, protectedPayload.Length - header.Length - nonceLength - tagLength).ToArray();
+            var recovered = new byte[ciphertext.Length];
+            var key = SHA256.HashData(Encoding.UTF8.GetBytes($"s22-static-profile/{keyReference}"));
+            try
+            {
+                using var aes = new AesGcm(key, tagLength);
+                aes.Decrypt(nonce, ciphertext, tag, recovered, Encoding.UTF8.GetBytes(keyReference));
+                return recovered.AsSpan().SequenceEqual(Plaintext);
+            }
+            catch (CryptographicException)
+            {
+                return false;
+            }
+        }
+
+        private void CreateProjectDatabase()
+        {
+            using var connection = new SqliteConnection($"Data Source={_databasePath}");
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "CREATE TABLE projects (id TEXT PRIMARY KEY, account_id TEXT NOT NULL); INSERT INTO projects(id, account_id) VALUES ($project, $account);";
+            command.Parameters.AddWithValue("$project", ProjectId);
+            command.Parameters.AddWithValue("$account", AccountId);
+            command.ExecuteNonQuery();
+        }
+    }
+
+    private sealed record SnapshotProtectionObservation(string KeyReference, string Mechanism, bool HasProtectedPayload, bool RecoveredOriginalBytes);
+}

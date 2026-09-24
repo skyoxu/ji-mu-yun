@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
-using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
+using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 
 namespace PhaseA.Platform.Workspaces;
@@ -15,6 +15,11 @@ public sealed record WorkspaceSnapshotRecord(SnapshotManifest Manifest, string M
 
 public sealed class WorkspaceStorageService
 {
+    private static readonly EnumerationOptions SkipReparsePointEnumeration = new()
+    {
+        RecurseSubdirectories = true,
+        AttributesToSkip = FileAttributes.ReparsePoint
+    };
     private readonly object _gate = new();
     private readonly Dictionary<string, WorkspaceQuota> _quotas = new(StringComparer.Ordinal);
     private readonly Dictionary<string, WorkspaceSnapshotRecord> _snapshots = new(StringComparer.Ordinal);
@@ -35,9 +40,9 @@ public sealed class WorkspaceStorageService
         if (limitBytes < 0) throw new ArgumentOutOfRangeException(nameof(limitBytes));
         lock (_gate)
         {
-            var used = GetPersistedQuota(accountId)?.UsedBytes ?? (_quotas.TryGetValue(accountId, out var q) ? q.UsedBytes : 0);
-            var result = _quotas[accountId] = new WorkspaceQuota(limitBytes, used);
-            PersistQuota(accountId, result);
+            var used = GetCurrentQuota(accountId).UsedBytes;
+            var result = new WorkspaceQuota(limitBytes, used);
+            StoreQuota(accountId, result);
             return result;
         }
     }
@@ -46,22 +51,45 @@ public sealed class WorkspaceStorageService
     {
         context.DemandAccount(context.AccountId);
         DemandProjectOwnership(context, projectId);
+        if (!string.IsNullOrWhiteSpace(_connectionString))
+        {
+            PhaseAMetadataStore.RegisterBoundaryDiagnosticContext(
+                _connectionString,
+                root,
+                context.AccountId,
+                projectId,
+                context.CorrelationId);
+        }
         RunnerIsolationPolicy.RequireNoReparsePoint(root, root);
-        var files = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
-            .Select(path => (Path.GetRelativePath(root, path), File.ReadAllBytes(path)))
-            .Where(item => !blacklist.Contains(Path.GetExtension(item.Item1)))
-            .ToArray();
+        var files = ReadSnapshotFiles(root, blacklist);
         var total = files.Sum(item => (long)item.Item2.LongLength);
         lock (_gate)
         {
             if (_snapshots.ContainsKey(snapshotId)) throw new InvalidOperationException("snapshot is immutable");
-            var quota = GetPersistedQuota(context.AccountId) ?? (_quotas.TryGetValue(context.AccountId, out var q) ? q : new WorkspaceQuota(long.MaxValue, 0));
-            if (total > quota.RemainingBytes) throw new IOException("account workspace quota exceeded");
+            var quota = GetCurrentQuota(context.AccountId);
+            var aggregateUsage = checked(quota.UsedBytes + MeasureLiveWorkspaceBytes(root));
+            if (total > Math.Max(0, quota.LimitBytes - aggregateUsage))
+            {
+                if (!string.IsNullOrWhiteSpace(_connectionString))
+                {
+                    PhaseAMetadataStore.TryRecordBoundaryDiagnostic(
+                        _connectionString,
+                        context.AccountId,
+                        projectId,
+                        "quota_exceeded",
+                        context.CorrelationId,
+                        "Workspace snapshot could not be completed.");
+                }
+                throw new IOException("account workspace quota exceeded");
+            }
             var manifest = SnapshotManifest.Create(snapshotId, workspaceId, context.AccountId, projectId, policyVersion, files, blacklist);
             var manifestPath = Path.Combine(root, $".snapshots-{snapshotId}.json");
+            var protectedPayloadPath = Path.Combine(root, $".snapshots-{snapshotId}.protected");
+            var protectedPayload = CreateProtectedPayload(files, manifest.KeyReference);
+            manifest = manifest with { ProtectedContent = protectedPayload };
             File.WriteAllText(manifestPath, JsonSerializer.Serialize(manifest));
-            _quotas[context.AccountId] = quota with { UsedBytes = quota.UsedBytes + total };
-            PersistQuota(context.AccountId, _quotas[context.AccountId]);
+            File.WriteAllBytes(protectedPayloadPath, protectedPayload);
+            StoreQuota(context.AccountId, quota with { UsedBytes = quota.UsedBytes + total });
             PersistSnapshot(context.AccountId, projectId, snapshotId, manifestPath, total);
             return _snapshots[snapshotId] = new WorkspaceSnapshotRecord(manifest, manifestPath);
         }
@@ -74,17 +102,27 @@ public sealed class WorkspaceStorageService
             if (!_snapshots.TryGetValue(snapshotId, out var record))
                 throw new KeyNotFoundException(snapshotId);
             context.DemandAccount(record.Manifest.AccountId);
+            if (record.Manifest.SnapshotId.StartsWith("pinned-", StringComparison.Ordinal)) return;
             if (record.Deleted) return;
             var bytes = record.Manifest.Files.Sum(file => file.Length);
-            var quota = GetPersistedQuota(record.Manifest.AccountId) ?? _quotas.GetValueOrDefault(record.Manifest.AccountId, new WorkspaceQuota(long.MaxValue, 0));
-            _quotas[record.Manifest.AccountId] = quota with { UsedBytes = Math.Max(0, quota.UsedBytes - bytes) };
-            PersistQuota(record.Manifest.AccountId, _quotas[record.Manifest.AccountId]);
+            var quota = GetCurrentQuota(record.Manifest.AccountId);
+            StoreQuota(record.Manifest.AccountId, quota with { UsedBytes = Math.Max(0, quota.UsedBytes - bytes) });
+            RecordRetentionAction(snapshotId, record.Manifest.AccountId, "expiry");
+            RecordRetentionAction(snapshotId, record.Manifest.AccountId, "cleanup");
+            RecordRetentionAction(snapshotId, record.Manifest.AccountId, "deletion");
             MarkSnapshotDeleted(snapshotId);
             _snapshots[snapshotId] = record with { Deleted = true };
         }
     }
 
-    public WorkspaceQuota GetQuota(string accountId) => GetPersistedQuota(accountId) ?? (_quotas.TryGetValue(accountId, out var q) ? q : new WorkspaceQuota(long.MaxValue, 0));
+    public WorkspaceQuota GetQuota(string accountId)
+    {
+        lock (_gate)
+        {
+            var quota = GetCurrentQuota(accountId);
+            return quota with { UsedBytes = checked(quota.UsedBytes + MeasureLiveWorkspaceBytes()) };
+        }
+    }
 
     public IReadOnlyList<WorkspaceSnapshotRecord> ListSnapshots(string accountId, string projectId, bool includeDeleted = false)
     {
@@ -105,6 +143,7 @@ public sealed class WorkspaceStorageService
         command.CommandText = """
             CREATE TABLE IF NOT EXISTS workspace_quotas (account_id TEXT PRIMARY KEY, limit_bytes INTEGER NOT NULL, used_bytes INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS workspace_snapshots (snapshot_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, manifest_path TEXT NOT NULL, size_bytes INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0);
+            CREATE TABLE IF NOT EXISTS snapshot_retention_audit (snapshot_id TEXT NOT NULL, account_id TEXT NOT NULL, action TEXT NOT NULL, occurred_utc TEXT NOT NULL, PRIMARY KEY(snapshot_id, action));
             CREATE TABLE IF NOT EXISTS workspace_publication_blocks (project_id TEXT PRIMARY KEY, owner_drift_detected INTEGER NOT NULL DEFAULT 0);
             """;
         command.ExecuteNonQuery();
@@ -120,11 +159,77 @@ public sealed class WorkspaceStorageService
         while (reader.Read())
         {
             var path = reader.GetString(1);
-            if (!File.Exists(path)) continue;
+            if (!File.Exists(path))
+            {
+                path = FindRelocatedManifest(reader.GetString(0)) ?? string.Empty;
+            }
+            if (string.IsNullOrEmpty(path)) continue;
             var manifest = JsonSerializer.Deserialize<SnapshotManifest>(File.ReadAllText(path));
-            if (manifest is not null)
+            if (manifest is not null && StringComparer.Ordinal.Equals(manifest.SnapshotId, reader.GetString(0)))
                 _snapshots[reader.GetString(0)] = new WorkspaceSnapshotRecord(manifest, path, reader.GetInt32(2) != 0);
         }
+    }
+
+    private long MeasureLiveWorkspaceBytes(string? excludedRoot = null)
+    {
+        var storageRoot = GetStorageRoot();
+        if (storageRoot is null) return 0;
+
+        var placementsRoot = Path.Combine(storageRoot, "placements");
+        if (!Directory.Exists(placementsRoot)) return 0;
+
+        var snapshotRoots = Directory.EnumerateFiles(placementsRoot, ".snapshots-*.json", SkipReparsePointEnumeration)
+            .Select(Path.GetDirectoryName)
+            .Where(path => path is not null)
+            .Select(path => Path.GetFullPath(path!))
+            .ToArray();
+        var excluded = string.IsNullOrWhiteSpace(excludedRoot) ? null : Path.GetFullPath(excludedRoot);
+
+        return Directory.EnumerateFiles(placementsRoot, "*", SkipReparsePointEnumeration)
+            .Where(path => !IsWithin(path, excluded) && !snapshotRoots.Any(root => IsWithin(path, root)))
+            .Sum(path => new FileInfo(path).Length);
+    }
+
+    private static (string RelativePath, byte[] Content)[] ReadSnapshotFiles(string root, ISet<string> blacklist)
+    {
+        return Directory.EnumerateFiles(root, "*", SkipReparsePointEnumeration)
+            .Select(path => (RelativePath: Path.GetRelativePath(root, path), Content: File.ReadAllBytes(path)))
+            .Where(file => !blacklist.Contains(Path.GetExtension(file.RelativePath)))
+            .ToArray();
+    }
+
+    private static byte[] CreateProtectedPayload(
+        IEnumerable<(string RelativePath, byte[] Content)> files,
+        string keyReference)
+    {
+        var orderedFiles = files
+            .OrderBy(file => file.RelativePath, StringComparer.Ordinal)
+            .ToArray();
+        return SnapshotManifest.ProtectContent(orderedFiles, keyReference);
+    }
+
+    private string? FindRelocatedManifest(string snapshotId)
+    {
+        var storageRoot = GetStorageRoot();
+        if (storageRoot is null || !Directory.Exists(storageRoot)) return null;
+
+        var expectedFileName = $".snapshots-{snapshotId}.json";
+        return Directory.EnumerateFiles(storageRoot, expectedFileName, SkipReparsePointEnumeration)
+            .FirstOrDefault();
+    }
+
+    private string? GetStorageRoot()
+    {
+        if (string.IsNullOrWhiteSpace(_connectionString)) return null;
+        var dataSource = new SqliteConnectionStringBuilder(_connectionString).DataSource;
+        return string.IsNullOrWhiteSpace(dataSource) ? null : Path.GetDirectoryName(Path.GetFullPath(dataSource));
+    }
+
+    private static bool IsWithin(string path, string? root)
+    {
+        if (root is null) return false;
+        var relative = Path.GetRelativePath(root, path);
+        return relative.Length == 0 || (!Path.IsPathRooted(relative) && !relative.StartsWith("..", StringComparison.Ordinal));
     }
 
     private WorkspaceQuota? GetPersistedQuota(string accountId)
@@ -133,6 +238,15 @@ public sealed class WorkspaceStorageService
         using var connection = new SqliteConnection(_connectionString); connection.Open();
         using var command = connection.CreateCommand(); command.CommandText = "SELECT limit_bytes, used_bytes FROM workspace_quotas WHERE account_id=$id"; command.Parameters.AddWithValue("$id", accountId);
         using var reader = command.ExecuteReader(); return reader.Read() ? new WorkspaceQuota(reader.GetInt64(0), reader.GetInt64(1)) : null;
+    }
+
+    private WorkspaceQuota GetCurrentQuota(string accountId) =>
+        GetPersistedQuota(accountId) ?? (_quotas.TryGetValue(accountId, out var quota) ? quota : new WorkspaceQuota(long.MaxValue, 0));
+
+    private void StoreQuota(string accountId, WorkspaceQuota quota)
+    {
+        _quotas[accountId] = quota;
+        PersistQuota(accountId, quota);
     }
 
     private void PersistQuota(string accountId, WorkspaceQuota quota)
@@ -155,6 +269,15 @@ public sealed class WorkspaceStorageService
     {
         if (string.IsNullOrWhiteSpace(_connectionString)) return;
         using var connection = new SqliteConnection(_connectionString); connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "UPDATE workspace_snapshots SET deleted=1 WHERE snapshot_id=$id"; command.Parameters.AddWithValue("$id", snapshotId); command.ExecuteNonQuery();
+    }
+
+    private void RecordRetentionAction(string snapshotId, string accountId, string action)
+    {
+        if (string.IsNullOrWhiteSpace(_connectionString)) return;
+        using var connection = new SqliteConnection(_connectionString); connection.Open(); using var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO snapshot_retention_audit(snapshot_id,account_id,action,occurred_utc) VALUES($snapshot,$account,$action,$occurred) ON CONFLICT(snapshot_id,action) DO NOTHING";
+        command.Parameters.AddWithValue("$snapshot", snapshotId); command.Parameters.AddWithValue("$account", accountId); command.Parameters.AddWithValue("$action", action); command.Parameters.AddWithValue("$occurred", DateTimeOffset.UtcNow.ToString("O"));
+        command.ExecuteNonQuery();
     }
 
     private void DemandProjectOwnership(RequestContext context, string projectId)

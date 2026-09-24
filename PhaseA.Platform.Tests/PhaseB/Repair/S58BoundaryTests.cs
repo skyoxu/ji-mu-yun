@@ -302,7 +302,7 @@ public sealed class S58BoundaryTests
         public async Task<string> CreateProjectAsync(string ownerAccountId, string name)
         {
             var projectId = $"s58-project-{Guid.NewGuid():N}";
-            var projectRoot = Path.Combine(_root, "projects", projectId);
+            var projectRoot = Path.Combine(_root, "workspaces", "projects", projectId);
             var project = await _store.CreateProjectAsync(new ProjectCreationCommand(
                 projectId,
                 ownerAccountId,

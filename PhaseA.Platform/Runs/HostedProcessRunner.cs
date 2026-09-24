@@ -1,12 +1,15 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using PhaseA.Platform.Security;
 
 namespace PhaseA.Platform.Runs;
 
 public sealed class HostedProcessRunner : IHostedProcessRunner
 {
     private readonly RunCancellationService _runCancellation;
+    private int _cleanupFailureObserved;
 
     public HostedProcessRunner(RunCancellationService? runCancellation = null)
     {
@@ -16,10 +19,17 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
     public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
+        if (Volatile.Read(ref _cleanupFailureObserved) != 0)
+        {
+            return new HostedProcessResult(409, string.Empty, "runner dispatch is blocked after a prior cleanup failure");
+        }
         using var linkedCancellation = string.IsNullOrWhiteSpace(command.RunId)
             ? null
             : _runCancellation.CreateLinkedTokenSource(command.RunId, cancellationToken);
         var effectiveCancellationToken = linkedCancellation?.Token ?? cancellationToken;
+        RunnerIsolationDescriptor? isolationDescriptor = null;
+        var hasIsolation = OperatingSystem.IsWindows()
+            && RunnerIsolationPolicy.TryGetWorkspaceDescriptor(command.WorkingDirectory, out isolationDescriptor);
 
         var startInfo = new ProcessStartInfo
         {
@@ -33,11 +43,27 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
             UseShellExecute = false,
             CreateNoWindow = true
         };
+        if (hasIsolation)
+        {
+            var credential = RunnerCredentialStore.Read(RunnerIsolationPolicy.CredentialTarget(isolationDescriptor!));
+            var logonIdentity = RunnerLogonIdentity.Parse(credential.UserName);
+            startInfo.UserName = logonIdentity.UserName;
+            startInfo.Domain = logonIdentity.Domain;
+            startInfo.PasswordInClearText = credential.Password;
+            startInfo.LoadUserProfile = true;
+        }
         if (command.StandardInput is not null)
         {
             startInfo.StandardInputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
         }
 
+        startInfo.Environment.Clear();
+        if (OperatingSystem.IsWindows() && Environment.GetEnvironmentVariable("SystemRoot") is { Length: > 0 } systemRoot)
+        {
+            var systemDirectory = Path.Combine(systemRoot, "System32");
+            startInfo.Environment["SystemRoot"] = systemRoot;
+            startInfo.Environment["Path"] = string.Join(Path.PathSeparator, systemDirectory, Path.Combine(systemDirectory, "WindowsPowerShell", "v1.0"), systemRoot);
+        }
         foreach (var argument in command.Arguments)
         {
             startInfo.ArgumentList.Add(argument);
@@ -49,6 +75,11 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
         }
 
         using var process = new Process { StartInfo = startInfo };
+        using var processIsolation = hasIsolation ? RunnerIsolationPolicy.CreateProcessIsolation(isolationDescriptor!) : null;
+        if (hasIsolation && !RunnerIsolationPolicy.HasExpectedWorkspaceSecurity(isolationDescriptor!))
+        {
+            return new HostedProcessResult(403, string.Empty, "runner workspace security drift detected");
+        }
         var stdout = new StringBuilder();
         var stderr = new StringBuilder();
         var startedAt = DateTimeOffset.UtcNow;
@@ -75,6 +106,9 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
         try
         {
             process.Start();
+            startedAt = DateTimeOffset.UtcNow;
+            startInfo.PasswordInClearText = null;
+            processIsolation?.AttachProcess(process);
             if (command.StandardInput is not null)
             {
                 await process.StandardInput.WriteAsync(command.StandardInput);
@@ -95,10 +129,12 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
                 reason => timeoutReason = reason,
                 timeoutMonitorCancellation.Token);
             await waitTask;
+            process.WaitForExit();
             await timeoutMonitorCancellation.CancelAsync();
             await timeoutTask;
             if (!string.IsNullOrWhiteSpace(timeoutReason))
             {
+                Interlocked.Exchange(ref _cleanupFailureObserved, 1);
                 return new HostedProcessResult(408, stdout.ToString(), timeoutReason);
             }
         }
@@ -118,6 +154,7 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
 
             if (!string.IsNullOrWhiteSpace(timeoutReason) && !cancellationToken.IsCancellationRequested)
             {
+                Interlocked.Exchange(ref _cleanupFailureObserved, 1);
                 return new HostedProcessResult(408, stdout.ToString(), timeoutReason);
             }
 
@@ -131,7 +168,12 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
             }
         }
 
-        return new HostedProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
+        var result = new HostedProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
+        if (result.ExitCode != 0)
+        {
+            Interlocked.Exchange(ref _cleanupFailureObserved, 1);
+        }
+        return result;
     }
 
     private static async Task MonitorTimeoutsAsync(
@@ -271,4 +313,87 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
     }
 
     private sealed record WatchedActivitySnapshot(int FileCount, long TotalBytes, DateTimeOffset? NewestWrite);
+}
+
+internal sealed record RunnerCredential(string UserName, string Password);
+
+internal sealed record RunnerLogonIdentity(string UserName, string Domain)
+{
+    public static RunnerLogonIdentity Parse(string userName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(userName);
+        var separator = userName.IndexOf('\\');
+        if (separator < 0)
+        {
+            return new RunnerLogonIdentity(userName, ".");
+        }
+
+        var domain = userName[..separator];
+        var account = userName[(separator + 1)..];
+        if (string.IsNullOrWhiteSpace(account) || account.Contains('\\'))
+        {
+            throw new InvalidOperationException("managed runner credential has an invalid user name");
+        }
+
+        return new RunnerLogonIdentity(account, string.IsNullOrWhiteSpace(domain) ? "." : domain);
+    }
+}
+
+internal static class RunnerCredentialStore
+{
+    private const uint CredTypeGeneric = 1;
+
+    public static RunnerCredential Read(string target)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(target);
+        if (!OperatingSystem.IsWindows() || !CredRead(target, CredTypeGeneric, 0, out var pointer))
+        {
+            throw new InvalidOperationException("managed runner credential is unavailable");
+        }
+
+        try
+        {
+            var credential = Marshal.PtrToStructure<NativeCredential>(pointer);
+            if (credential.CredentialBlob == nint.Zero || credential.CredentialBlobSize == 0 || string.IsNullOrWhiteSpace(credential.UserName))
+            {
+                throw new InvalidOperationException("managed runner credential is incomplete");
+            }
+
+            var password = Marshal.PtrToStringUni(credential.CredentialBlob, checked((int)credential.CredentialBlobSize / sizeof(char)));
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new InvalidOperationException("managed runner credential is incomplete");
+            }
+
+            return new RunnerCredential(credential.UserName, password);
+        }
+        finally
+        {
+            CredFree(pointer);
+        }
+    }
+
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CredRead(string target, uint type, uint flags, out nint credential);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern void CredFree(nint buffer);
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct NativeCredential
+    {
+        public uint Flags;
+        public uint Type;
+        public nint TargetName;
+        public nint Comment;
+        public System.Runtime.InteropServices.ComTypes.FILETIME LastWritten;
+        public uint CredentialBlobSize;
+        public nint CredentialBlob;
+        public uint Persist;
+        public uint AttributeCount;
+        public nint Attributes;
+        public nint TargetAlias;
+        [MarshalAs(UnmanagedType.LPWStr)] public string? UserName;
+    }
 }
