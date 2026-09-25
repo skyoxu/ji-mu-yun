@@ -109,6 +109,18 @@ def run_validator(validator: Path, value: dict, target: Path) -> subprocess.Comp
     return completed
 
 
+def _verification_failure_reasons(report: dict) -> list[str]:
+    reasons = []
+    if not report["source_matches_declaration"]:
+        reasons.append("source mismatch")
+    if not report["content_matches_source"]:
+        reasons.append("content mismatch")
+    missing = [rule for rule, present in report["required_rule_checks"].items() if not present]
+    if missing:
+        reasons.append("missing required rule: " + ", ".join(missing))
+    return reasons
+
+
 def independent_validator_verification(validator: Path, value: dict) -> dict | None:
     """Verify declared validator source/content independently (ADR-0058)."""
     source_ref = value.get("validator_source")
@@ -141,15 +153,10 @@ def independent_validator_verification(validator: Path, value: dict) -> dict | N
         "authorizes": [],
     }
     if report["status"] != "pass":
-        missing = [rule for rule, present in checks.items() if not present]
-        reasons = []
-        if not source_matches:
-            reasons.append("source mismatch")
-        if not content_matches_source:
-            reasons.append("content mismatch")
-        if missing:
-            reasons.append("missing required rule: " + ", ".join(missing))
-        raise ValueError("independent validator verification failed: " + "; ".join(reasons))
+        raise ValueError(
+            "independent validator verification failed: "
+            + "; ".join(_verification_failure_reasons(report))
+        )
     return report
 
 
