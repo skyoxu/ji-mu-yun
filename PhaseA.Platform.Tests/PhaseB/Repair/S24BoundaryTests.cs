@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Data.Sqlite;
+using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
@@ -91,14 +92,28 @@ public sealed class S24BoundaryTests
             var connectionString = new SqliteConnectionStringBuilder { DataSource = Path.Combine(root, "metadata.sqlite3"), Pooling = false }.ToString();
             SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
             _ = new RestoreService(connectionString);
-            var protectedManifest = CreateProtectedManifest();
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            {
+                ["HOSTED_WORKSPACE_ROOT"] = root,
+            });
+            var store = new PhaseAMetadataStore(connectionString, options);
+            var account = store.CreateUserAccountAsync($"s24-user-{Guid.NewGuid():N}", 1).GetAwaiter().GetResult();
+            var projectRoot = Directory.CreateDirectory(Path.Combine(root, "project"));
+            _ = store.CreateProjectAsync(new ProjectCreationCommand(
+                ProjectId, account.AccountId, "S24 boundary", "S24 boundary", "manual", "default", false, [],
+                projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
+                Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
+            var protectedManifest = SnapshotManifest.Create("s24-snapshot", WorkspaceId, account.AccountId, ProjectId, "policy-s24", Files) with
+            {
+                ProtectedContent = SnapshotManifest.ProtectContent(Files, SnapshotManifest.Create("s24-snapshot", WorkspaceId, account.AccountId, ProjectId, "policy-s24", Files).KeyReference)
+            };
             var manifest = protectedManifest with { KeyReference = "keyref-s24-unavailable" };
             var context = RequestContext.FromIdentity(
-                new AccountIdentity(AccountId, "owner", PhaseAAuth.UserRole),
+                new AccountIdentity(account.AccountId, "owner", PhaseAAuth.UserRole),
                 "s24-requester",
                 "s24-credential",
                 "s24-correlation");
-            var lease = new RunnerLease("s24-lease", AccountId, ProjectId, 1);
+            var lease = new RunnerLease("s24-lease", account.AccountId, ProjectId, 1);
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();

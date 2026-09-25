@@ -52,20 +52,24 @@ public sealed class S48BoundaryTests
                 "s48-principal",
                 "s48-runtime-credential",
                 "s48-correlation");
-            var currentManifest = SnapshotManifest.Create(
+            var storage = new WorkspaceStorageService();
+            storage.SetQuota(accountId, 1024 * 1024);
+            var currentManifest = storage.CreateSnapshot(
+                context,
+                currentSource.FullName,
                 "s48-current-snapshot",
                 "s48-workspace",
-                accountId,
                 ProjectId,
                 "s48-policy",
-                [("project.godot", "current fenced publication"u8.ToArray())]);
-            var staleManifest = SnapshotManifest.Create(
+                new HashSet<string>()).Manifest;
+            var staleManifest = storage.CreateSnapshot(
+                context,
+                staleSource.FullName,
                 "s48-stale-snapshot",
                 "s48-workspace",
-                accountId,
                 ProjectId,
                 "s48-policy",
-                [("project.godot", "stale fenced publication"u8.ToArray())]);
+                new HashSet<string>()).Manifest;
 
             var restore = new RestoreService(connectionString);
             var currentPublication = currentLease is null

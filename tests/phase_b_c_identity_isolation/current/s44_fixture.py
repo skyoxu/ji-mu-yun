@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 import subprocess
 import tempfile
@@ -17,6 +18,8 @@ class BoundaryResult:
     details: str
 
 
+# ADR-0041: one .NET execution covers the full matrix; each pytest case checks its own row.
+@lru_cache(maxsize=1)
 def invoke_boundary_test(repository_root: Path) -> BoundaryResult:
     with tempfile.TemporaryDirectory(prefix="s44-trx-", ignore_cleanup_errors=True) as results_directory:
         argv = [

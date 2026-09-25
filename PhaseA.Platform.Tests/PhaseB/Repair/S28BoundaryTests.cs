@@ -1,6 +1,9 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using Microsoft.Data.Sqlite;
+using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Data;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
@@ -22,46 +25,59 @@ public sealed class S28BoundaryTests
         using var oldCancellation = new CancellationTokenSource();
 
         var oldPidPath = Path.Combine(fixture.Root, "pre-restore.pid");
+        var releasePath = Path.Combine(fixture.Root, "release-current");
         var oldRun = fixture.RunAsync(fixture.PreRestoreRoot, oldPidPath, oldCancellation.Token);
-        await WaitForFileAsync(oldPidPath);
-        var oldPid = int.Parse(await File.ReadAllTextAsync(oldPidPath), CultureInfo.InvariantCulture);
-
-        var restored = fixture.Restore(fixture.OldContext, fixture.OldLease, "s28-pid-restore");
-        await fixture.ActivateCurrentLeaseAsync();
-        var staleLeaseRejected = false;
+        Task<HostedProcessResult>? currentRun = null;
         try
         {
-            _ = fixture.Restore(fixture.OldContext, fixture.OldLease, "s28-pid-stale-lease");
+            await WaitForFileAsync(oldPidPath);
+            var oldPid = int.Parse(await File.ReadAllTextAsync(oldPidPath), CultureInfo.InvariantCulture);
+
+            var restored = fixture.Restore(fixture.OldContext, fixture.OldLease, "s28-pid-restore");
+            await fixture.ActivateCurrentLeaseAsync();
+            var staleLeaseRejected = false;
+            try
+            {
+                _ = fixture.Restore(fixture.OldContext, fixture.OldLease, "s28-pid-stale-lease");
+            }
+            catch (InvalidOperationException error) when (error.Message.Contains("not authoritative", StringComparison.OrdinalIgnoreCase))
+            {
+                staleLeaseRejected = true;
+            }
+
+            var currentPidPath = Path.Combine(fixture.Root, "current.pid");
+            currentRun = fixture.RunAsync(fixture.RestoredRoot, currentPidPath, CancellationToken.None, releasePath);
+            await WaitForFileAsync(currentPidPath);
+            var currentPid = int.Parse(await File.ReadAllTextAsync(currentPidPath), CultureInfo.InvariantCulture);
+            var currentProcessWasAlive = IsProcessAlive(currentPid);
+
+            oldCancellation.Cancel();
+            await AwaitRunnerAsync(oldRun);
+            var oldPidNoLongerIdentifiesProcess = !IsProcessAlive(oldPid);
+            var oldPidCannotControlCurrent = oldPid != currentPid && currentProcessWasAlive && !currentRun.IsCompleted;
+
+            await File.WriteAllTextAsync(releasePath, "release");
+            var currentResult = await currentRun;
+
+            Require(
+                restored.Status == RestoreAttemptStatus.Published &&
+                staleLeaseRejected &&
+                oldPidNoLongerIdentifiesProcess &&
+                oldPidCannotControlCurrent &&
+                currentResult.ExitCode == 0,
+                "FAILURE-O-5277C4B77BBF",
+                $"The pre-restore PID was not non-authoritative after restore. oldPid={oldPid}; currentPid={currentPid}; currentExit={currentResult.ExitCode}.");
+            _output.WriteLine($"S28-OBSERVATION old-pid-non-authoritative oldPid={oldPid} currentPid={currentPid}");
         }
-        catch (InvalidOperationException error) when (error.Message.Contains("not authoritative", StringComparison.OrdinalIgnoreCase))
+        finally
         {
-            staleLeaseRejected = true;
+            // ADR-0061: a failed assertion must not leave the pre-restore Runner alive.
+            oldCancellation.Cancel();
+            if (currentRun is { IsCompleted: false })
+            {
+                await File.WriteAllTextAsync(releasePath, "release");
+            }
         }
-
-        var currentPidPath = Path.Combine(fixture.Root, "current.pid");
-        var releasePath = Path.Combine(fixture.Root, "release-current");
-        var currentRun = fixture.RunAsync(fixture.RestoredRoot, currentPidPath, CancellationToken.None, releasePath);
-        await WaitForFileAsync(currentPidPath);
-        var currentPid = int.Parse(await File.ReadAllTextAsync(currentPidPath), CultureInfo.InvariantCulture);
-        var currentProcessWasAlive = IsProcessAlive(currentPid);
-
-        oldCancellation.Cancel();
-        await AwaitRunnerAsync(oldRun);
-        var oldPidNoLongerIdentifiesProcess = !IsProcessAlive(oldPid);
-        var oldPidCannotControlCurrent = oldPid != currentPid && currentProcessWasAlive && !currentRun.IsCompleted;
-
-        await File.WriteAllTextAsync(releasePath, "release");
-        var currentResult = await currentRun;
-
-        Require(
-            restored.Status == RestoreAttemptStatus.Published &&
-            staleLeaseRejected &&
-            oldPidNoLongerIdentifiesProcess &&
-            oldPidCannotControlCurrent &&
-            currentResult.ExitCode == 0,
-            "FAILURE-O-5277C4B77BBF",
-            $"The pre-restore PID was not non-authoritative after restore. oldPid={oldPid}; currentPid={currentPid}; currentExit={currentResult.ExitCode}.");
-        _output.WriteLine($"S28-OBSERVATION old-pid-non-authoritative oldPid={oldPid} currentPid={currentPid}");
     }
 
     [Fact]
@@ -75,7 +91,7 @@ public sealed class S28BoundaryTests
         Require(
             restored.Status == RestoreAttemptStatus.Published &&
             run.ExitCode == 0 &&
-            run.Stdout.Contains("S28_SCOPE_ACCOUNT=account-s28", StringComparison.Ordinal) &&
+            run.Stdout.Contains($"S28_SCOPE_ACCOUNT={fixture.CurrentContext.AccountId}", StringComparison.Ordinal) &&
             run.Stdout.Contains("S28_SCOPE_WORKSPACE=workspace-s28", StringComparison.Ordinal),
             "FAILURE-O-80DBEB1AFBC6",
             $"The controlled Run did not prove restored Workspace and Account scope. exit={run.ExitCode}; stdout={run.Stdout}; stderr={run.Stderr}.");
@@ -155,7 +171,7 @@ public sealed class S28BoundaryTests
 
     private sealed class S28Fixture : IAsyncDisposable
     {
-        private S28Fixture(string root, string connectionString, SnapshotManifest manifest)
+        private S28Fixture(string root, string connectionString, SnapshotManifest manifest, string accountId)
         {
             Root = root;
             ConnectionString = connectionString;
@@ -163,6 +179,10 @@ public sealed class S28BoundaryTests
             PreRestoreRoot = Directory.CreateDirectory(Path.Combine(root, "pre-restore")).FullName;
             RestoredRoot = Directory.CreateDirectory(Path.Combine(root, "restored")).FullName;
             File.WriteAllText(Path.Combine(PreRestoreRoot, "pre-restore.txt"), "pre-restore");
+            OldContext = RequestContext.FromIdentity(new AccountIdentity(accountId, "old", PhaseAAuth.UserRole), "principal-old", "credential-old", "s28-old");
+            CurrentContext = RequestContext.FromIdentity(new AccountIdentity(accountId, "current", PhaseAAuth.UserRole), "principal-current", "credential-current", "s28-current");
+            OldLease = new RunnerLease("lease-old", accountId, "project-s28", 1);
+            CurrentLease = new RunnerLease("lease-current", accountId, "project-s28", 2);
         }
 
         public string Root { get; }
@@ -171,10 +191,10 @@ public sealed class S28BoundaryTests
         public string RestoredRoot { get; }
         public string RestoredWorkspaceRoot => Path.Combine(RestoredRoot, ".restore-current");
         public SnapshotManifest Manifest { get; }
-        public RequestContext OldContext { get; } = RequestContext.FromIdentity(new AccountIdentity("account-s28", "old", PhaseAAuth.UserRole), "principal-old", "credential-old", "s28-old");
-        public RequestContext CurrentContext { get; } = RequestContext.FromIdentity(new AccountIdentity("account-s28", "current", PhaseAAuth.UserRole), "principal-current", "credential-current", "s28-current");
-        public RunnerLease OldLease { get; } = new("lease-old", "account-s28", "project-s28", 1);
-        public RunnerLease CurrentLease { get; } = new("lease-current", "account-s28", "project-s28", 2);
+        public RequestContext OldContext { get; }
+        public RequestContext CurrentContext { get; }
+        public RunnerLease OldLease { get; }
+        public RunnerLease CurrentLease { get; }
 
         public static async Task<S28Fixture> CreateAsync()
         {
@@ -184,17 +204,30 @@ public sealed class S28BoundaryTests
                 DataSource = Path.Combine(root, "metadata.sqlite3"),
                 Pooling = false
             }.ToString();
+            // ADR-0061: use the real account and project metadata boundary for restore and Run.
+            await SqliteMetadataSchema.InitializeAsync(connectionString);
             _ = new RestoreService(connectionString);
-            var scope = "S28_SCOPE_ACCOUNT=account-s28\nS28_SCOPE_WORKSPACE=workspace-s28\n"u8.ToArray();
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            {
+                ["HOSTED_WORKSPACE_ROOT"] = root,
+            });
+            var store = new PhaseAMetadataStore(connectionString, options);
+            var account = await store.CreateUserAccountAsync($"s28-user-{Guid.NewGuid():N}", 1);
+            var projectRoot = Directory.CreateDirectory(Path.Combine(root, "project"));
+            _ = await store.CreateProjectAsync(new ProjectCreationCommand(
+                "project-s28", account.AccountId, "S28 boundary", "S28 boundary", "manual", "default", false, [],
+                projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
+                Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta")));
+            var scope = Encoding.UTF8.GetBytes($"S28_SCOPE_ACCOUNT={account.AccountId}\nS28_SCOPE_WORKSPACE=workspace-s28\n");
             var manifest = SnapshotManifest.Create(
                 "snapshot-s28",
                 "workspace-s28",
-                "account-s28",
+                account.AccountId,
                 "project-s28",
                 "policy-s28",
                 [("scope.txt", scope)]);
             manifest = manifest with { ProtectedContent = SnapshotManifest.ProtectContent([("scope.txt", scope)], manifest.KeyReference) };
-            var fixture = new S28Fixture(root, connectionString, manifest);
+            var fixture = new S28Fixture(root, connectionString, manifest, account.AccountId);
             await fixture.InsertLeaseAsync(fixture.OldLease);
             return fixture;
         }

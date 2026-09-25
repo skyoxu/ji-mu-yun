@@ -71,7 +71,7 @@ public sealed class S52BoundaryTests
 
         public string Root { get; }
         public string ConnectionString { get; }
-        public string AccountId => "s52-account";
+        public string AccountId => Context.AccountId;
         public string ProjectId => "s52-project";
         public string WorkspaceId => "s52-workspace";
         public string ResourcePath => "private-preview.png";
@@ -93,12 +93,25 @@ public sealed class S52BoundaryTests
             }.ToString();
             SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
             _ = new RestoreService(connectionString);
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            {
+                ["HOSTED_WORKSPACE_ROOT"] = root,
+                ["PHASEA_TICKET_SIGNING_SECRET"] = "s52-ticket-signing-secret"
+            });
+            // ADR-0061: the restore probe must use a real enabled account and project.
+            var store = new PhaseAMetadataStore(connectionString, options);
+            var account = store.CreateUserAccountAsync($"s52-user-{Guid.NewGuid():N}", 1).GetAwaiter().GetResult();
+            var projectRoot = Directory.CreateDirectory(Path.Combine(root, "project"));
+            _ = store.CreateProjectAsync(new ProjectCreationCommand(
+                "s52-project", account.AccountId, "S52 boundary", "S52 boundary", "manual", "default", false, [],
+                projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
+                Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
 
             var content = "s52-preview-content"u8.ToArray();
             var manifest = SnapshotManifest.Create(
                 "s52-snapshot",
                 "s52-workspace",
-                "s52-account",
+                account.AccountId,
                 "s52-project",
                 "s52-policy",
                 [("private-preview.png", content)]);
@@ -110,11 +123,11 @@ public sealed class S52BoundaryTests
             };
 
             var context = RequestContext.FromIdentity(
-                new AccountIdentity("s52-account", "owner", PhaseAAuth.UserRole),
+                new AccountIdentity(account.AccountId, "owner", PhaseAAuth.UserRole),
                 "s52-requester",
                 "s52-credential",
                 "s52-correlation");
-            var lease = new RunnerLease("s52-lease", "s52-account", "s52-project", 1);
+            var lease = new RunnerLease("s52-lease", account.AccountId, "s52-project", 1);
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
@@ -127,10 +140,6 @@ public sealed class S52BoundaryTests
                 command.ExecuteNonQuery();
             }
 
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
-            {
-                ["PHASEA_TICKET_SIGNING_SECRET"] = "s52-ticket-signing-secret"
-            });
             return new S52Fixture(
                 root,
                 connectionString,

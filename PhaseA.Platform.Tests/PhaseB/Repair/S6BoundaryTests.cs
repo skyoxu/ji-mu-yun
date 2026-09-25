@@ -145,19 +145,28 @@ public sealed class S6BoundaryTests
 
         var (mutatedSource, mutatedManifest) = fixture.CreateSnapshot("binding-mutation", "mutated-content");
         var mutatedDestination = Directory.CreateDirectory(Path.Combine(fixture.Root.FullName, "mutated-binding-destination"));
-        var repeated = service.Restore(
-            fixture.Context,
-            mutatedManifest,
-            mutatedSource.FullName,
-            mutatedDestination.FullName,
-            fixture.Lease,
-            idempotencyKey);
+        var conflictingRequestRejected = false;
+        try
+        {
+            service.Restore(
+                fixture.Context,
+                mutatedManifest,
+                mutatedSource.FullName,
+                mutatedDestination.FullName,
+                fixture.Lease,
+                idempotencyKey);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            conflictingRequestRejected = true;
+        }
         var postMutationReadback = ReadBindings(fixture.ConnectionString, idempotencyKey);
 
         Require(
             created.Status == RestoreAttemptStatus.Published &&
             initialReadback == submitted &&
-            repeated.AttemptId == created.AttemptId &&
+            conflictingRequestRejected &&
+            !Directory.Exists(Path.Combine(mutatedDestination.FullName, ".restore-current")) &&
             postMutationReadback == submitted,
             "FAILURE-O-DE0452FC4B15",
             "The Restore operation did not read back immutable requester, tenant, project, snapshot, target, and idempotency-key bindings.");

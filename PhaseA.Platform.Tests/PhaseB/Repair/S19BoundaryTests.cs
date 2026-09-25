@@ -1,4 +1,6 @@
 using Microsoft.Data.Sqlite;
+using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
 using Xunit;
@@ -89,12 +91,34 @@ public sealed class S19BoundaryTests
                 DataSource = Path.Combine(root, "metadata.sqlite3"),
                 Pooling = false
             }.ToString();
+            SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
             _ = new RestoreService(connectionString);
+            // ADR-0061: exercise restore validity with a real enabled account and project.
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            {
+                ["HOSTED_WORKSPACE_ROOT"] = root,
+            });
+            var store = new PhaseAMetadataStore(connectionString, options);
+            var account = store.CreateUserAccountAsync($"s19-user-{Guid.NewGuid():N}", 1).GetAwaiter().GetResult();
+            var projectRoot = Directory.CreateDirectory(Path.Combine(root, "project"));
+            _ = store.CreateProjectAsync(new ProjectCreationCommand(
+                "s19-project",
+                account.AccountId,
+                "S19 boundary",
+                "S19 boundary",
+                "manual",
+                "default",
+                false,
+                [],
+                projectRoot.FullName,
+                Path.Combine(projectRoot.FullName, "repo"),
+                Path.Combine(projectRoot.FullName, "runtime"),
+                Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
 
             var manifest = SnapshotManifest.Create(
                 "s19-snapshot",
                 "s19-workspace",
-                "s19-account",
+                account.AccountId,
                 "s19-project",
                 "s19-policy",
                 [("project.godot", "s19-verified-content"u8.ToArray())]);
@@ -105,11 +129,11 @@ public sealed class S19BoundaryTests
                     manifest.KeyReference)
             };
             var context = RequestContext.FromIdentity(
-                new AccountIdentity("s19-account", "owner", PhaseAAuth.UserRole),
+                new AccountIdentity(account.AccountId, "owner", PhaseAAuth.UserRole),
                 "s19-requester",
                 "s19-credential",
                 "s19-correlation");
-            var lease = new RunnerLease("s19-lease", "s19-account", "s19-project", 1);
+            var lease = new RunnerLease("s19-lease", account.AccountId, "s19-project", 1);
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();

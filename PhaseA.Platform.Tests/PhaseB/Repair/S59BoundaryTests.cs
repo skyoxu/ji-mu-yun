@@ -123,6 +123,7 @@ public sealed class S59BoundaryTests
                 "s59-rpo-b-retry",
                 "s59-rpo-workspace");
 
+            storage.SetQuota(accountId, 1024 * 1024);
             File.Delete(sourceFile);
             var restored = new RestoreService(connectionString).Restore(
                 context,

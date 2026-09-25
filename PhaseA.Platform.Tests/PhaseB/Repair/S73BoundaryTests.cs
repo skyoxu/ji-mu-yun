@@ -50,13 +50,16 @@ public sealed class S73BoundaryTests
                 "s73-principal",
                 "s73-runtime-credential",
                 "s73-correlation");
-            var manifest = SnapshotManifest.Create(
+            var storage = new WorkspaceStorageService();
+            storage.SetQuota(lease.AccountId, 1024 * 1024);
+            var manifest = storage.CreateSnapshot(
+                context,
+                source.FullName,
                 "s73-snapshot",
                 "s73-workspace",
-                lease.AccountId,
                 ProjectId,
                 "s73-policy",
-                [("project.godot", "s73 durable publication"u8.ToArray())]);
+                new HashSet<string>()).Manifest;
             var published = new RestoreService(connectionString).Restore(
                 context,
                 manifest,

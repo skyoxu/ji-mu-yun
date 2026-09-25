@@ -1,4 +1,6 @@
 using Microsoft.Data.Sqlite;
+using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
 using Xunit;
@@ -23,12 +25,24 @@ public sealed class S62BoundaryTests
         {
             var database = Path.Combine(root.FullName, "metadata.sqlite3");
             var connectionString = new SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString();
+            SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            {
+                ["HOSTED_WORKSPACE_ROOT"] = root.FullName,
+            });
+            var store = new PhaseAMetadataStore(connectionString, options);
+            var account = store.CreateUserAccountAsync($"s62-user-{Guid.NewGuid():N}", 1).GetAwaiter().GetResult();
+            var projectRoot = Directory.CreateDirectory(Path.Combine(root.FullName, "project"));
+            _ = store.CreateProjectAsync(new ProjectCreationCommand(
+                ProjectId, account.AccountId, "S62 boundary", "S62 boundary", "manual", "default", false, [],
+                projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
+                Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
             var context = RequestContext.FromIdentity(
-                new AccountIdentity(AccountId, "s62-owner", PhaseAAuth.UserRole),
+                new AccountIdentity(account.AccountId, "s62-owner", PhaseAAuth.UserRole),
                 "s62-requester",
                 "s62-credential",
                 "s62-correlation");
-            var lease = new RunnerLease("s62-lease", AccountId, ProjectId, 1);
+            var lease = new RunnerLease("s62-lease", account.AccountId, ProjectId, 1);
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
@@ -49,7 +63,7 @@ public sealed class S62BoundaryTests
             var manifest = SnapshotManifest.Create(
                 "s62-snapshot",
                 WorkspaceId,
-                AccountId,
+                account.AccountId,
                 ProjectId,
                 "s62-policy",
                 [("project.godot", content)]);

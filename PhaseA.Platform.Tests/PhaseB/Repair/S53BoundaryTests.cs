@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
+using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
@@ -70,7 +71,6 @@ public sealed class S53BoundaryTests
 
     private sealed class EvidenceFixture : IDisposable
     {
-        private const string AccountId = "s53-account";
         private const string ProjectId = "s53-project";
         private const string WorkspaceId = "s53-workspace";
         private static readonly string[] RequiredArtifacts = ["snapshot", "permission", "fault", "migration", "redaction"];
@@ -91,14 +91,26 @@ public sealed class S53BoundaryTests
             var destination = Directory.CreateDirectory(Path.Combine(root, "destination")).FullName;
             var databasePath = Path.Combine(root, "metadata.sqlite3");
             var connectionString = new SqliteConnectionStringBuilder { DataSource = databasePath, Pooling = false }.ToString();
+            // ADR-0061: exercise evidence validation with production account and project metadata.
             SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
-            var context = RequestContext.FromIdentity(new AccountIdentity(AccountId, "owner", PhaseAAuth.UserRole), "s53-requester", "s53-credential", "s53-correlation");
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            {
+                ["HOSTED_WORKSPACE_ROOT"] = root,
+            });
+            var store = new PhaseAMetadataStore(connectionString, options);
+            var account = store.CreateUserAccountAsync($"s53-user-{Guid.NewGuid():N}", 1).GetAwaiter().GetResult();
+            var projectRoot = Directory.CreateDirectory(Path.Combine(root, "project"));
+            _ = store.CreateProjectAsync(new ProjectCreationCommand(
+                ProjectId, account.AccountId, "S53 boundary", "S53 boundary", "manual", "default", false, [],
+                projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
+                Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
+            var context = RequestContext.FromIdentity(new AccountIdentity(account.AccountId, "owner", PhaseAAuth.UserRole), "s53-requester", "s53-credential", "s53-correlation");
             var content = "s53-current-snapshot"u8.ToArray();
             File.WriteAllBytes(Path.Combine(source, "project.godot"), content);
             var storage = new WorkspaceStorageService();
-            storage.SetQuota(AccountId, 1024 * 1024);
+            storage.SetQuota(account.AccountId, 1024 * 1024);
             var snapshot = storage.CreateSnapshot(context, source, "s53-snapshot", WorkspaceId, ProjectId, "policy-s53", new HashSet<string>());
-            var lease = new RunnerLease("s53-lease", AccountId, ProjectId, 1);
+            var lease = new RunnerLease("s53-lease", account.AccountId, ProjectId, 1);
             _ = new RestoreService(connectionString);
             InsertLease(connectionString, lease);
             var restore = new RestoreService(connectionString).Restore(context, snapshot.Manifest, source, destination, lease, "s53-roundtrip");
@@ -110,7 +122,7 @@ public sealed class S53BoundaryTests
             var faultObserved = false;
             try { _ = File.ReadAllBytes(missingPath); }
             catch (FileNotFoundException) { faultObserved = true; }
-            var migration = new SqliteMigrationService().MigrateAsync(connectionString, AccountId, ProjectId, "s53-migration").GetAwaiter().GetResult();
+            var migration = new SqliteMigrationService().MigrateAsync(connectionString, account.AccountId, ProjectId, "s53-migration").GetAwaiter().GetResult();
             var redacted = SecretRedactionPolicy.RedactForPersistence("OPENAI_API_KEY=sk-abcdefghijklmnop");
             var redactionObserved = !redacted.Contains("sk-abcdefghijklmnop", StringComparison.Ordinal) && redacted.Contains("[redacted]", StringComparison.Ordinal);
 

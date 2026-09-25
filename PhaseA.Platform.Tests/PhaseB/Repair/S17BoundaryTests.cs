@@ -2,6 +2,8 @@ using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using Microsoft.Data.Sqlite;
+using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
 using Xunit;
@@ -105,26 +107,29 @@ public sealed class S17BoundaryTests
             var destination = Directory.CreateDirectory(Path.Combine(root, "substitute-root")).FullName;
             var databasePath = Path.Combine(root, "metadata.sqlite3");
             var connectionString = new SqliteConnectionStringBuilder { DataSource = databasePath, Pooling = false }.ToString();
-            const string accountId = "account-s17";
             const string projectId = "project-s17";
-            var context = RequestContext.FromIdentity(
-                new AccountIdentity(accountId, "s17-owner", PhaseAAuth.UserRole),
-                "principal-s17",
-                "credential-s17",
-                "correlation-s17");
-            var lease = new RunnerLease("lease-s17", accountId, projectId, 1);
 
             try
             {
-                using (var connection = new SqliteConnection(connectionString))
+                // ADR-0061: restore drills require the real account and project metadata boundary.
+                SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
+                var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
                 {
-                    connection.Open();
-                    using var command = connection.CreateCommand();
-                    command.CommandText = "CREATE TABLE projects (id TEXT PRIMARY KEY, account_id TEXT NOT NULL); INSERT INTO projects(id, account_id) VALUES ($project, $account);";
-                    command.Parameters.AddWithValue("$project", projectId);
-                    command.Parameters.AddWithValue("$account", accountId);
-                    command.ExecuteNonQuery();
-                }
+                    ["HOSTED_WORKSPACE_ROOT"] = root,
+                });
+                var store = new PhaseAMetadataStore(connectionString, options);
+                var account = store.CreateUserAccountAsync($"s17-user-{Guid.NewGuid():N}", 1).GetAwaiter().GetResult();
+                var projectRoot = Directory.CreateDirectory(Path.Combine(root, "project"));
+                _ = store.CreateProjectAsync(new ProjectCreationCommand(
+                    projectId, account.AccountId, "S17 boundary", "S17 boundary", "manual", "default", false, [],
+                    projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
+                    Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
+                var context = RequestContext.FromIdentity(
+                    new AccountIdentity(account.AccountId, "s17-owner", PhaseAAuth.UserRole),
+                    "principal-s17",
+                    "credential-s17",
+                    "correlation-s17");
+                var lease = new RunnerLease("lease-s17", account.AccountId, projectId, 1);
 
                 foreach (var file in RequiredFiles)
                 {
@@ -136,7 +141,7 @@ public sealed class S17BoundaryTests
                 Directory.CreateDirectory(Path.Combine(destination, ".restore-current"));
                 File.WriteAllText(Path.Combine(destination, ".restore-current", "previous-ready.txt"), "previous-ready-content");
                 var storage = new WorkspaceStorageService(connectionString);
-                storage.SetQuota(accountId, 16 * 1024 * 1024);
+                storage.SetQuota(account.AccountId, 16 * 1024 * 1024);
                 _ = new RestoreService(connectionString);
                 using (var connection = new SqliteConnection(connectionString))
                 {

@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Data.Sqlite;
+using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Data;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
@@ -130,7 +132,6 @@ public sealed class S32BoundaryTests
 
     private sealed class SubstituteRootDrillFixture : IDisposable
     {
-        private const string AccountId = "s32-account";
         private const string ProjectId = "s32-project";
         private const string WorkspaceId = "s32-workspace";
         private static readonly byte[] RepresentativeContent = "S32_RESTORED_WORKSPACE_ROUTE\n"u8.ToArray();
@@ -172,11 +173,24 @@ public sealed class S32BoundaryTests
                 DataSource = Path.Combine(root, "metadata.sqlite3"),
                 Pooling = false
             }.ToString();
+            // ADR-0061: the substitute-root drill uses production account and project metadata.
+            SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
             _ = new RestoreService(connectionString);
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            {
+                ["HOSTED_WORKSPACE_ROOT"] = root,
+            });
+            var store = new PhaseAMetadataStore(connectionString, options);
+            var account = store.CreateUserAccountAsync($"s32-user-{Guid.NewGuid():N}", 1).GetAwaiter().GetResult();
+            var projectRoot = Directory.CreateDirectory(Path.Combine(root, "project"));
+            _ = store.CreateProjectAsync(new ProjectCreationCommand(
+                ProjectId, account.AccountId, "S32 boundary", "S32 boundary", "manual", "default", false, [],
+                projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
+                Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
             var manifest = SnapshotManifest.Create(
                 "snapshot-s32",
                 WorkspaceId,
-                AccountId,
+                account.AccountId,
                 ProjectId,
                 "policy-s32",
                 [("project.godot", RepresentativeContent)]);
@@ -187,11 +201,11 @@ public sealed class S32BoundaryTests
                     manifest.KeyReference)
             };
             var context = RequestContext.FromIdentity(
-                new AccountIdentity(AccountId, "owner", PhaseAAuth.UserRole),
+                new AccountIdentity(account.AccountId, "owner", PhaseAAuth.UserRole),
                 "s32-requester",
                 "s32-credential",
                 "s32-correlation");
-            var lease = new RunnerLease("s32-lease", AccountId, ProjectId, 1);
+            var lease = new RunnerLease("s32-lease", account.AccountId, ProjectId, 1);
             InsertLease(connectionString, lease);
             return new SubstituteRootDrillFixture(root, sourceRoot, substituteRoot, connectionString, manifest, context, lease);
         }

@@ -1,4 +1,6 @@
 using Microsoft.Data.Sqlite;
+using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
 using Xunit;
@@ -24,31 +26,41 @@ public sealed class S13BoundaryTests
         try
         {
             File.WriteAllText(Path.Combine(source.FullName, "project.godot"), "restored");
+            var connectionString = $"Data Source={databasePath}";
+            var accountId = CreateRestoreAccountAndProject(connectionString, source.FullName, "project-secret");
             var manifest = SnapshotManifest.Create(
                 "snapshot-secret",
                 "workspace-secret",
-                "account-secret",
+                accountId,
                 "project-secret",
                 "policy-restore",
                 [("project.godot", "restored"u8.ToArray())]);
+            manifest = manifest with
+            {
+                ProtectedContent = SnapshotManifest.ProtectContent(
+                    [("project.godot", "restored"u8.ToArray())], manifest.KeyReference)
+            };
             var oldSecret = RequestContext.FromIdentity(
-                new AccountIdentity("account-secret", "owner", PhaseAAuth.UserRole),
+                new AccountIdentity(accountId, "owner", PhaseAAuth.UserRole),
                 "principal-old",
                 "pre-restore-secret",
                 "correlation-old");
             var currentSecret = RequestContext.FromIdentity(
-                new AccountIdentity("account-secret", "owner", PhaseAAuth.UserRole),
+                new AccountIdentity(accountId, "owner", PhaseAAuth.UserRole),
                 "principal-current",
                 "post-restore-secret",
                 "correlation-current");
-            var lease = new RunnerLease("lease-secret", "account-secret", "project-secret", 1);
+            var lease = new RunnerLease("lease-secret", accountId, "project-secret", 1);
 
-            var connectionString = $"Data Source={databasePath}";
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
                 using var command = connection.CreateCommand();
-                command.CommandText = "CREATE TABLE runner_leases (lease_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, fence INTEGER NOT NULL); INSERT INTO runner_leases VALUES ('lease-secret', 'account-secret', 'project-secret', 1);";
+                command.CommandText = "INSERT INTO runner_leases(lease_id,account_id,project_id,fence) VALUES ($lease,$account,$project,$fence);";
+                command.Parameters.AddWithValue("$lease", lease.LeaseId);
+                command.Parameters.AddWithValue("$account", accountId);
+                command.Parameters.AddWithValue("$project", lease.ProjectId);
+                command.Parameters.AddWithValue("$fence", lease.Fence);
                 command.ExecuteNonQuery();
             }
             var service = new RestoreService(connectionString);
@@ -117,11 +129,13 @@ public sealed class S13BoundaryTests
         try
         {
             var connectionString = $"Data Source={databasePath}";
+            var accountId = CreateRestoreAccountAndProject(connectionString, source.FullName, "project-lease");
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
                 using var command = connection.CreateCommand();
-                command.CommandText = "CREATE TABLE runner_leases (lease_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, fence INTEGER NOT NULL); INSERT INTO runner_leases VALUES ('lease-stale', 'account-lease', 'project-lease', 1);";
+                command.CommandText = "INSERT INTO runner_leases(lease_id,account_id,project_id,fence) VALUES ('lease-stale',$account,'project-lease',1);";
+                command.Parameters.AddWithValue("$account", accountId);
                 command.ExecuteNonQuery();
             }
 
@@ -129,16 +143,21 @@ public sealed class S13BoundaryTests
             var manifest = SnapshotManifest.Create(
                 "snapshot-lease",
                 "workspace-lease",
-                "account-lease",
+                accountId,
                 "project-lease",
                 "policy-lease",
                 [("project.godot", "before"u8.ToArray())]);
+            manifest = manifest with
+            {
+                ProtectedContent = SnapshotManifest.ProtectContent(
+                    [("project.godot", "before"u8.ToArray())], manifest.KeyReference)
+            };
             var context = RequestContext.FromIdentity(
-                new AccountIdentity("account-lease", "owner", PhaseAAuth.UserRole),
+                new AccountIdentity(accountId, "owner", PhaseAAuth.UserRole),
                 "principal-lease",
                 "secret-lease",
                 "correlation-lease");
-            var staleLease = new RunnerLease("lease-stale", "account-lease", "project-lease", 1);
+            var staleLease = new RunnerLease("lease-stale", accountId, "project-lease", 1);
             var service = new RestoreService(connectionString);
             var first = service.Restore(context, manifest, source.FullName, destination.FullName, staleLease, "lease-first");
             Require(first.Status == RestoreAttemptStatus.Published, "FAILURE-O-F17C15697A79", "Initial restore did not publish its staged result.");
@@ -241,6 +260,25 @@ public sealed class S13BoundaryTests
         {
             return false;
         }
+    }
+
+    private static string CreateRestoreAccountAndProject(string connectionString, string sourceRoot, string projectId)
+    {
+        // ADR-0061: restore probes require production-created account and project metadata.
+        SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = sourceRoot,
+        });
+        var store = new PhaseAMetadataStore(connectionString, options);
+        var account = store.CreateUserAccountAsync($"s13-user-{Guid.NewGuid():N}", 1).GetAwaiter().GetResult();
+        var projectRoot = Directory.CreateDirectory(Path.Combine(sourceRoot, "metadata-project"));
+        _ = store.CreateProjectAsync(new ProjectCreationCommand(
+            projectId, account.AccountId, "S13 boundary", "S13 boundary", "manual", "default", false, [],
+            projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
+            Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
+        _ = new RestoreService(connectionString);
+        return account.AccountId;
     }
 
     private static void SetProjectOwner(string connectionString, string accountId)

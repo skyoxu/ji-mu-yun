@@ -242,7 +242,7 @@ public sealed class S40BoundaryTests
 
         public string Root { get; }
         public string ConnectionString { get; }
-        public string AccountId => "s40-account";
+        public string AccountId => Context.AccountId;
         public string ProjectId => "s40-project";
         public string WorkspaceId => "s40-workspace";
         public SnapshotManifest Manifest { get; }
@@ -261,10 +261,30 @@ public sealed class S40BoundaryTests
             }.ToString();
             SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
             _ = new RestoreService(connectionString);
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            {
+                ["HOSTED_WORKSPACE_ROOT"] = root,
+            });
+            var store = new PhaseAMetadataStore(connectionString, options);
+            var account = store.CreateUserAccountAsync($"s40-user-{Guid.NewGuid():N}", 1).GetAwaiter().GetResult();
+            var projectRoot = Directory.CreateDirectory(Path.Combine(root, "project"));
+            _ = store.CreateProjectAsync(new ProjectCreationCommand(
+                "s40-project",
+                account.AccountId,
+                "S40 boundary",
+                "S40 boundary",
+                "manual",
+                "default",
+                false,
+                [],
+                projectRoot.FullName,
+                Path.Combine(projectRoot.FullName, "repo"),
+                Path.Combine(projectRoot.FullName, "runtime"),
+                Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
             var manifest = SnapshotManifest.Create(
                 "s40-snapshot",
                 "s40-workspace",
-                "s40-account",
+                account.AccountId,
                 "s40-project",
                 "s40-policy",
                 [("project.godot", "s40-content"u8.ToArray())]);
@@ -279,11 +299,11 @@ public sealed class S40BoundaryTests
             }
 
             var context = RequestContext.FromIdentity(
-                new AccountIdentity("s40-account", "owner", PhaseAAuth.UserRole),
+                new AccountIdentity(account.AccountId, "owner", PhaseAAuth.UserRole),
                 "s40-requester",
                 "s40-credential",
                 "s40-correlation");
-            var lease = new RunnerLease("s40-lease", "s40-account", "s40-project", 1);
+            var lease = new RunnerLease("s40-lease", account.AccountId, "s40-project", 1);
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();

@@ -1,10 +1,31 @@
 import subprocess
 import xml.etree.ElementTree as ET
+from functools import lru_cache
 from pathlib import Path
+
+
+@lru_cache(maxsize=1)
+def _prepare_s50_test_binary(root: Path) -> None:
+    try:
+        completed = subprocess.run(
+            ["dotnet", "build", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj"],
+            cwd=root,
+            shell=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=180,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired) as error:
+        raise RuntimeError("S50 test binary could not be built") from error
+    if completed.returncode != 0:
+        raise RuntimeError(f"S50 test binary build failed: {(completed.stdout + completed.stderr)[-2000:]}")
 
 
 def invoke_s50_boundary(tmp_path: Path, method: str, failure_id: str) -> bool:
     root = Path(__file__).resolve().parents[3]
+    _prepare_s50_test_binary(root)
     results = tmp_path / method
     results.mkdir()
     common = {
@@ -18,61 +39,61 @@ def invoke_s50_boundary(tmp_path: Path, method: str, failure_id: str) -> bool:
     }
     if method == "O_0540475EB849":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_0540475EB849"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_0540475EB849", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_0540475EB849", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_17ED20E8D615":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_17ED20E8D615"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_17ED20E8D615", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_17ED20E8D615", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_2EDAD0C079A7":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_2EDAD0C079A7"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_2EDAD0C079A7", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_2EDAD0C079A7", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_350460F95643":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_350460F95643"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_350460F95643", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_350460F95643", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_38DA71E9D444":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_38DA71E9D444"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_38DA71E9D444", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_38DA71E9D444", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_571C78093983":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_571C78093983"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_571C78093983", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_571C78093983", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_5D176438FFA6":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_5D176438FFA6"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_5D176438FFA6", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_5D176438FFA6", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_7958B030A69B":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_7958B030A69B"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_7958B030A69B", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_7958B030A69B", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_7E825F215702":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_7E825F215702"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_7E825F215702", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_7E825F215702", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_B085F1A35441":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_B085F1A35441"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_B085F1A35441", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_B085F1A35441", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_CC964B3582F6":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_CC964B3582F6"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_CC964B3582F6", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_CC964B3582F6", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_D2840720344F":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_D2840720344F"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_D2840720344F", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_D2840720344F", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_D664E1FFDFB3":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_D664E1FFDFB3"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_D664E1FFDFB3", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_D664E1FFDFB3", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_D9BA6D66CD0D":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_D9BA6D66CD0D"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_D9BA6D66CD0D", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_D9BA6D66CD0D", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_DF1BBA997C44":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_DF1BBA997C44"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_DF1BBA997C44", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_DF1BBA997C44", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_E20FAEA5ABC8":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_E20FAEA5ABC8"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_E20FAEA5ABC8", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_E20FAEA5ABC8", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_E79036BF6FA3":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_E79036BF6FA3"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_E79036BF6FA3", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_E79036BF6FA3", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_EB1DEE188517":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_EB1DEE188517"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_EB1DEE188517", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_EB1DEE188517", "--logger", "trx", "--results-directory", str(results)], **common)
     elif method == "O_FA0C21A344E7":
         qualified_name = "PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_FA0C21A344E7"
-        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_FA0C21A344E7", "--logger", "trx", "--results-directory", str(results)], **common)
+        completed = subprocess.run(["dotnet", "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S50BoundaryTests.O_FA0C21A344E7", "--logger", "trx", "--results-directory", str(results)], **common)
     else:
         raise ValueError(f"unknown S50 boundary method: {method}")
 

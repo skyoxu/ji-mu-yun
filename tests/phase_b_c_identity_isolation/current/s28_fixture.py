@@ -22,6 +22,7 @@ class BoundaryCaseResult:
 
 def run_boundary_case(repository_root: Path, method_name: str) -> BoundaryCaseResult:
     fully_qualified_name = f"{TEST_CLASS}.{method_name}"
+    # ADR-0041: isolate each TRX, not build artifacts, so the bounded probe remains observable.
     results_directory = repository_root / f"s28-trx-{uuid.uuid4().hex}"
     results_directory.mkdir()
     try:
@@ -36,8 +37,6 @@ def run_boundary_case(repository_root: Path, method_name: str) -> BoundaryCaseRe
                     "--logger",
                     "trx",
                     "--results-directory",
-                    str(results_directory),
-                    "--artifacts-path",
                     str(results_directory),
                 ],
                 cwd=repository_root,

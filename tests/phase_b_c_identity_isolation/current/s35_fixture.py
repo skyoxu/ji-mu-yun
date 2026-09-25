@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 import xml.etree.ElementTree as ElementTree
 
 
@@ -12,7 +13,6 @@ ASSERTION_ID = "A-OBF44FB067530"
 FAILURE_ID = "FAILURE-O-BF44FB067530"
 CASE_NAME = "PhaseA.Platform.Tests.PhaseB.Repair.S35BoundaryTests.O_BF44FB067530"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
-RESULTS_DIRECTORY = Path(__file__).resolve().parent
 
 
 class DotnetBoundaryHarnessError(RuntimeError):
@@ -27,49 +27,45 @@ class DotnetBoundaryResult:
 
 
 def run_s35_boundary() -> DotnetBoundaryResult:
-    existing_trx_files = set(RESULTS_DIRECTORY.glob("*.trx"))
-    environment = os.environ.copy()
-    environment["S35_TEST_ROOT"] = str(RESULTS_DIRECTORY)
-    try:
-        completed = subprocess.run(
-            [
-                "dotnet",
-                "test",
-                "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
-                "--filter",
-                "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S35BoundaryTests.O_BF44FB067530",
-                "--logger",
-                "trx",
-                "--results-directory",
-                str(RESULTS_DIRECTORY),
-            ],
-            cwd=REPOSITORY_ROOT,
-            shell=False,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=120,
-            check=False,
-            env=environment,
-        )
-    except FileNotFoundError as error:
-        raise DotnetBoundaryHarnessError("dotnet is unavailable for the S35 boundary test") from error
-    except subprocess.TimeoutExpired as error:
-        raise DotnetBoundaryHarnessError("S35 boundary test timed out") from error
+    with tempfile.TemporaryDirectory(prefix="s35-trx-") as results_directory:
+        environment = os.environ.copy()
+        environment["S35_TEST_ROOT"] = results_directory
+        try:
+            completed = subprocess.run(
+                [
+                    "dotnet",
+                    "test",
+                    "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+                    "--filter",
+                    "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S35BoundaryTests.O_BF44FB067530",
+                    "--logger",
+                    "trx",
+                    "--results-directory",
+                    results_directory,
+                ],
+                cwd=REPOSITORY_ROOT,
+                shell=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=120,
+                check=False,
+                env=environment,
+            )
+        except FileNotFoundError as error:
+            raise DotnetBoundaryHarnessError("dotnet is unavailable for the S35 boundary test") from error
+        except subprocess.TimeoutExpired as error:
+            raise DotnetBoundaryHarnessError("S35 boundary test timed out") from error
 
-    fresh_trx_files = set(RESULTS_DIRECTORY.glob("*.trx")) - existing_trx_files
-    if len(fresh_trx_files) != 1:
-        raise DotnetBoundaryHarnessError(
-            f"S35 boundary test produced {len(fresh_trx_files)} fresh TRX files instead of one result; "
-            f"exit={completed.returncode}; stdout={completed.stdout}; stderr={completed.stderr}"
-        )
+        trx_files = list(Path(results_directory).glob("*.trx"))
+        if len(trx_files) != 1:
+            raise DotnetBoundaryHarnessError(
+                f"S35 boundary test produced {len(trx_files)} TRX files instead of one result; "
+                f"exit={completed.returncode}; stdout={completed.stdout}; stderr={completed.stderr}"
+            )
 
-    trx_path = fresh_trx_files.pop()
-    try:
-        return _parse_s35_result(trx_path, completed)
-    finally:
-        trx_path.unlink(missing_ok=True)
+        return _parse_s35_result(trx_files[0], completed)
 
 
 def _parse_s35_result(trx_path: Path, completed: subprocess.CompletedProcess[str]) -> DotnetBoundaryResult:
@@ -101,6 +97,11 @@ def _parse_s35_result(trx_path: Path, completed: subprocess.CompletedProcess[str
     outcome = result.attrib.get("outcome")
     if outcome not in {"Passed", "Failed"}:
         raise DotnetBoundaryHarnessError(f"S35 C# case has non-behavioral outcome: {outcome!r}")
+    if completed.returncode not in {0, 1}:
+        raise DotnetBoundaryHarnessError(
+            f"S35 dotnet invocation failed before a behavioral result: exit={completed.returncode}; "
+            f"stdout={completed.stdout}; stderr={completed.stderr}"
+        )
 
     error_message = "\n".join(
         message.text or "" for message in result.findall(".//trx:ErrorInfo/trx:Message", namespace)
@@ -124,8 +125,10 @@ def _parse_s35_result(trx_path: Path, completed: subprocess.CompletedProcess[str
             raise DotnetBoundaryHarnessError("S35 passed in TRX but dotnet test exited nonzero")
         if observation is None or observation.group("status") != "completed":
             raise DotnetBoundaryHarnessError("S35 passed without its required migration inventory observation")
-    elif completed.returncode == 0:
-        raise DotnetBoundaryHarnessError("S35 failed in TRX but dotnet test exited zero")
+    elif completed.returncode != 1:
+        raise DotnetBoundaryHarnessError(
+            f"S35 failed in TRX with an unexpected dotnet exit code: {completed.returncode}"
+        )
 
     return DotnetBoundaryResult(
         outcome=outcome,
