@@ -445,6 +445,7 @@ static async Task<IResult> HandleDurableWorkspaceOperationAsync(
     [FromServices] PhaseAMetadataStore store,
     [FromServices] WorkspaceStorageService workspaceStorage,
     [FromServices] RestoreService restoreService,
+    [FromServices] ExtensionPolicyState extensionPolicy,
     [FromServices] HeavyRunnerQueueService queue,
     CancellationToken cancellationToken)
 {
@@ -490,14 +491,15 @@ static async Task<IResult> HandleDurableWorkspaceOperationAsync(
                         if (operationType == "workspace-snapshot")
                         {
                             await store.UpdateRunProgressAsync(run.RunId, "workspace", "snapshot", "snapshot-started", token);
+                            var policy = extensionPolicy.ReadSnapshotPolicy();
                             var snapshot = workspaceStorage.CreateSnapshot(
                                 requestContext,
                                 project.WorkspaceRootPath,
                                 $"snapshot-{run.RunId}",
                                 project.WorkspaceId,
                                 project.ProjectId,
-                                "policy-v1",
-                                new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+                                policy.Version,
+                                policy.Blacklist);
                             await store.UpdateRunProgressAsync(run.RunId, "workspace", "snapshot", "snapshot-created", token);
                             await store.CompleteRunAsync(
                                 run.RunId,
@@ -526,6 +528,21 @@ static async Task<IResult> HandleDurableWorkspaceOperationAsync(
                             var destinationRoot = string.IsNullOrWhiteSpace(request.TargetRoot)
                                 ? project.WorkspaceRootPath
                                 : Path.GetFullPath(request.TargetRoot);
+                            if (!WorkspacePathPolicy.IsUnderRoot(project.WorkspaceRootPath, destinationRoot))
+                                throw new UnauthorizedAccessException("restore target is outside the server-owned workspace root");
+                            if (!RunnerIsolationPolicy.TryGetWorkspaceDescriptor(destinationRoot, out _))
+                            {
+                                // A caller-selected target remains under the server-owned
+                                // workspace root, but must inherit the project's registered
+                                // OS identity.  Never invent a synthetic Windows account
+                                // name that cannot be resolved by the ACL boundary.
+                                var registered = RunnerIsolationPolicy.TryGetWorkspaceDescriptor(
+                                    project.WorkspaceRootPath, out var projectDescriptor)
+                                    ? projectDescriptor
+                                    : RunnerIsolationPolicy.Describe(project.AccountId, project.ProjectId, project.WorkspaceRootPath);
+                                using var preparedDestination = RunnerIsolationPolicy.PrepareWorkspace(
+                                    registered with { WorkspaceRoot = destinationRoot });
+                            }
                             var restored = restoreService.Restore(
                                 requestContext,
                                 snapshot.Manifest,
@@ -595,7 +612,7 @@ static async Task<IResult> HandleDurableWorkspaceOperationAsync(
                         "failed",
                         500,
                         "durable workspace operation failed",
-                        error.GetType().Name,
+                        $"{error.GetType().Name}: {error.Message}",
                         JsonSerializer.Serialize(new { code = "workspace_operation_failed", error = error.Message }),
                         CancellationToken.None);
                 }
@@ -3993,6 +4010,14 @@ public sealed class ExtensionPolicyState
         lock (_gate)
         {
             return new { version = _version, blacklist = _blacklist.ToArray() };
+        }
+    }
+
+    public (string Version, ISet<string> Blacklist) ReadSnapshotPolicy()
+    {
+        lock (_gate)
+        {
+            return ($"policy-v{_version}", new HashSet<string>(_blacklist, StringComparer.OrdinalIgnoreCase));
         }
     }
 

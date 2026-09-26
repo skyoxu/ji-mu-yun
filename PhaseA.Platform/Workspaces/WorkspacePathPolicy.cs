@@ -25,7 +25,8 @@ public static class WorkspacePathPolicy
         var normalizedRoot = EnsureTrailingSeparator(Path.GetFullPath(workspaceRoot));
         var normalizedCandidate = Path.GetFullPath(candidatePath);
 
-        if (!normalizedCandidate.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase))
+        if (!normalizedCandidate.Equals(normalizedRoot.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase) &&
+            !normalizedCandidate.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }

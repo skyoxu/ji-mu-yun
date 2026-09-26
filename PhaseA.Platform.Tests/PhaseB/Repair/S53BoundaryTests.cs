@@ -70,7 +70,21 @@ public sealed class S53BoundaryTests
             }
             var runId = (await store.GetOrCreateProjectOperationRunAsync(project.ProjectId!, workspaceId, "s53-evidence")).RunId;
             await store.TryMarkRunStartedAsync(runId, null);
-            var evidence = JsonSerializer.Serialize(new { producerRunId = runId });
+            var bindings = artifacts.Select(item =>
+            {
+                var node = JsonSerializer.SerializeToElement(item);
+                return new
+                {
+                    kind = node.GetProperty("kind").GetString(),
+                    path = node.GetProperty("path").GetString(),
+                    sha256 = node.GetProperty("sha256").GetString(),
+                };
+            }).ToArray();
+            var evidence = JsonSerializer.Serialize(new
+            {
+                producerRunId = runId,
+                independentEvidence = new { executionSource = "platform-run", artifacts = bindings },
+            });
             await store.CompleteRunAsync(runId, "succeeded", 0, "", "", evidence);
             File.WriteAllText(package, JsonSerializer.Serialize(new { executed = true, producerRunId = runId, timestamp = DateTimeOffset.UtcNow, artifacts }));
 

@@ -15,6 +15,7 @@ public sealed record WorkspaceSnapshotRecord(SnapshotManifest Manifest, string M
 
 public sealed class WorkspaceStorageService
 {
+    private static readonly string[] BuiltInSnapshotExclusions = [".tmp", ".cache", ".log", ".secret", ".ticket", ".trx", ".protected"];
     private static readonly EnumerationOptions SkipReparsePointEnumeration = new()
     {
         RecurseSubdirectories = true,
@@ -61,7 +62,9 @@ public sealed class WorkspaceStorageService
                 context.CorrelationId);
         }
         RunnerIsolationPolicy.RequireNoReparsePoint(root, root);
-        var files = ReadSnapshotFiles(root, blacklist);
+        var effectiveBlacklist = new HashSet<string>(BuiltInSnapshotExclusions, StringComparer.OrdinalIgnoreCase);
+        foreach (var extension in blacklist) effectiveBlacklist.Add(extension);
+        var files = ReadSnapshotFiles(root, effectiveBlacklist);
         var total = files.Sum(item => (long)item.Item2.LongLength);
         lock (_gate)
         {

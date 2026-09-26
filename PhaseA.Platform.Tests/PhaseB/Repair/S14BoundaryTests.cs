@@ -133,7 +133,7 @@ public sealed class S14BoundaryTests
                 "FAILURE-O-11DDC0AAE540", "Interrupted operation reentry did not retain its stable failed result.");
             _output.WriteLine("S14-OBSERVATION durable-operation-state-survives-application-restart");
 
-            var alternateRoot = Path.Combine(root, "alternate-restore-root");
+            var alternateRoot = Path.Combine(projectRoot, "alternate-restore-root");
             var restoreRequest = new OperationRequest("restore", $"/api/projects/{project.ProjectId}/restores", "s14-restore", snapshotRun.SnapshotId, alternateRoot);
             var restoreAdmission = await InvokeThenDisconnectAsync(url, user.Token, restoreRequest);
             RunObservation restoreRun;

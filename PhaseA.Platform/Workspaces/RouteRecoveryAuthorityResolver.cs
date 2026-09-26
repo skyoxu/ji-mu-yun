@@ -56,8 +56,10 @@ public sealed class RouteRecoveryAuthorityResolver
         sources.Add($"current route latest state:{routeState}");
         if (!routeState) blockers.Add("current_route_state_missing");
 
-        sources.Add("current goal/step/session state when applicable:true");
-        sources.Add("repair ledger and failing acceptance/Godot diagnostic evidence when applicable:true");
+        var goalState = HasCurrentGoalState(connection, projectId);
+        sources.Add($"current goal/step/session state when applicable:{goalState}");
+        var repairEvidence = HasCurrentRepairEvidence(connection, accountId, projectId);
+        sources.Add($"repair ledger and failing acceptance/Godot diagnostic evidence when applicable:{repairEvidence}");
 
         var liveBlocker = HasCurrentBlocker(connection, accountId, projectId);
         sources.Add($"latest live platform acceptance blocker:{!liveBlocker}");
@@ -103,6 +105,23 @@ public sealed class RouteRecoveryAuthorityResolver
               AND severity IN ('P0','P1')
               AND failure_family IN ('route_authority_missing','restore_interrupted','stale_lease')
             """;
+        command.Parameters.AddWithValue("$account", accountId);
+        command.Parameters.AddWithValue("$project", projectId);
+        return Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) > 0;
+    }
+
+    private static bool HasCurrentGoalState(SqliteConnection connection, string projectId)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM project_iteration_sessions WHERE project_id=$project AND status IN ('active','running','ready','needs_fix')";
+        command.Parameters.AddWithValue("$project", projectId);
+        return Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) > 0;
+    }
+
+    private static bool HasCurrentRepairEvidence(SqliteConnection connection, string accountId, string projectId)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM project_diagnostic_spool WHERE account_id=$account AND project_id=$project AND triage_status IN ('unresolved','backlog')";
         command.Parameters.AddWithValue("$account", accountId);
         command.Parameters.AddWithValue("$project", projectId);
         return Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) > 0;

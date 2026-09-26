@@ -76,7 +76,29 @@ public static class IndependentEvidenceReader
         if (!evidence.RootElement.TryGetProperty("producerRunId", out var producer) ||
             !string.Equals(producer.GetString(), run.RunId, StringComparison.Ordinal))
             return Reject("producer_run_mismatch");
-        return Validate(packagePath, run.RunId, now);
+        if (!evidence.RootElement.TryGetProperty("independentEvidence", out var independent) ||
+            independent.ValueKind != JsonValueKind.Object ||
+            !independent.TryGetProperty("executionSource", out var source) ||
+            !string.Equals(source.GetString(), "platform-run", StringComparison.Ordinal) ||
+            !independent.TryGetProperty("artifacts", out var boundArtifacts) ||
+            boundArtifacts.ValueKind != JsonValueKind.Array)
+            return Reject("run_evidence_binding_missing");
+
+        var result = Validate(packagePath, run.RunId, now);
+        if (!result.Accepted)
+            return result;
+
+        using var package = JsonDocument.Parse(File.ReadAllText(packagePath, Encoding.UTF8));
+        var packageArtifacts = package.RootElement.GetProperty("artifacts").EnumerateArray()
+            .ToDictionary(item => item.GetProperty("kind").GetString() ?? string.Empty, StringComparer.Ordinal);
+        var bindings = boundArtifacts.EnumerateArray().ToDictionary(
+            item => item.GetProperty("kind").GetString() ?? string.Empty, StringComparer.Ordinal);
+        if (bindings.Count != packageArtifacts.Count ||
+            packageArtifacts.Any(pair => !bindings.TryGetValue(pair.Key, out var binding) ||
+                !string.Equals(binding.GetProperty("path").GetString(), pair.Value.GetProperty("path").GetString(), StringComparison.Ordinal) ||
+                !string.Equals(binding.GetProperty("sha256").GetString(), pair.Value.GetProperty("sha256").GetString(), StringComparison.OrdinalIgnoreCase)))
+            return Reject("run_evidence_binding_mismatch");
+        return result;
     }
 
     private static IndependentEvidenceResult Reject(string reason) => new(false, reason, []);
