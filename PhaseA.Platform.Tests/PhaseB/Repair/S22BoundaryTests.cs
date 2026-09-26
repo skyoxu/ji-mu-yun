@@ -45,18 +45,22 @@ public sealed class S22BoundaryTests
         private static readonly byte[] Plaintext = Encoding.UTF8.GetBytes("s22 nonempty bounded fixture payload");
         private readonly DirectoryInfo _root;
         private readonly string _databasePath;
+        private readonly string? _previousKeyRoot;
 
-        private SnapshotProtectionProbe(DirectoryInfo root, string databasePath)
+        private SnapshotProtectionProbe(DirectoryInfo root, string databasePath, string? previousKeyRoot)
         {
             _root = root;
             _databasePath = databasePath;
+            _previousKeyRoot = previousKeyRoot;
         }
 
         public static SnapshotProtectionProbe Create()
         {
             var root = Directory.CreateTempSubdirectory("s22-boundary-");
             var databasePath = Path.Combine(Path.GetTempPath(), $"s22-{Guid.NewGuid():N}.db");
-            var probe = new SnapshotProtectionProbe(root, databasePath);
+            var previousKeyRoot = Environment.GetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT");
+            Environment.SetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT", Path.Combine(root.FullName, "keys"));
+            var probe = new SnapshotProtectionProbe(root, databasePath, previousKeyRoot);
             var fixturePath = Path.Combine(root.FullName, "content", "fixture.bin");
             Directory.CreateDirectory(Path.GetDirectoryName(fixturePath)!);
             File.WriteAllBytes(fixturePath, Plaintext);
@@ -89,7 +93,9 @@ public sealed class S22BoundaryTests
             var recoveredOriginalBytes = false;
             if (hasProtectedPayload)
             {
-                mechanism = Mechanism;
+                var payload = File.ReadAllBytes(artifacts[0]);
+                mechanism = payload.AsSpan().StartsWith("S22-AES-256-GCM-V1\0"u8) ? Mechanism : "unknown";
+                hasProtectedPayload = payload.AsSpan().IndexOf(Plaintext) < 0;
                 recoveredOriginalBytes = record.Manifest.ReadProtectedContent().TryGetValue("content/fixture.bin", out var content)
                     && content.AsSpan().SequenceEqual(Plaintext);
             }
@@ -99,6 +105,7 @@ public sealed class S22BoundaryTests
 
         public void Dispose()
         {
+            Environment.SetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT", _previousKeyRoot);
             SqliteConnection.ClearAllPools();
             if (_root.Exists)
                 _root.Delete(true);

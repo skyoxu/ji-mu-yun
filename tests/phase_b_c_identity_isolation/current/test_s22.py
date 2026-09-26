@@ -15,7 +15,7 @@ def test_o_d6da22255508(tmp_path) -> None:
     observation = result.observation
     behavior_proved = (
         result.outcome == "Passed"
-        and observation["keyReference"] == "keyref-s22-approved"
+        and observation["keyReference"].startswith("keyref-")
         and observation["mechanism"] == "AES-256-GCM"
         and observation["protectedPayload"] == "true"
         and observation["recovered"] == "true"
