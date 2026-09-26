@@ -136,7 +136,7 @@ public sealed class S21BoundaryTests
 
                 var record = probe.CreateStorage().CreateSnapshot(probe.Context(), root.FullName, SnapshotId, "workspace-s21-boundary", ProjectId, "policy-s21-boundary", probe.Blacklist());
                 var manifest = File.ReadAllText(record.ManifestPath);
-                var payload = probe.ReadPayload(SnapshotId, record.Manifest.KeyReference);
+                var payload = record.Manifest.ReadProtectedContent().SelectMany(item => item.Value).ToArray();
                 var has = (string path, string value) => record.Manifest.Files.Any(file => file.RelativePath == path) && Contains(payload, value);
                 var excludes = (string path, string value) => !record.Manifest.Files.Any(file => file.RelativePath == path) && !manifest.Contains(value, StringComparison.Ordinal) && !Contains(payload, value);
                 return probe with
@@ -166,26 +166,6 @@ public sealed class S21BoundaryTests
         }
 
         private static bool Contains(byte[] payload, string value) => payload.AsSpan().IndexOf(Encoding.UTF8.GetBytes(value)) >= 0;
-
-        private byte[] ReadPayload(string snapshotId, string keyReference)
-        {
-            var protectedBytes = File.ReadAllBytes(Path.Combine(_root.FullName, $".snapshots-{snapshotId}.protected"));
-            var header = Encoding.ASCII.GetBytes("S22-AES-256-GCM-V1\0");
-            const int nonceLength = 12;
-            const int tagLength = 16;
-            if (protectedBytes.Length < header.Length + nonceLength + tagLength || !protectedBytes.AsSpan(0, header.Length).SequenceEqual(header))
-                throw new InvalidDataException("S21 protected Snapshot payload was not present.");
-            var plaintext = new byte[protectedBytes.Length - header.Length - nonceLength - tagLength];
-            var key = SHA256.HashData(Encoding.UTF8.GetBytes($"s22-static-profile/{keyReference}"));
-            using var aes = new AesGcm(key, tagLength);
-            aes.Decrypt(
-                protectedBytes.AsSpan(header.Length, nonceLength),
-                protectedBytes.AsSpan(header.Length + nonceLength, plaintext.Length),
-                protectedBytes.AsSpan(protectedBytes.Length - tagLength, tagLength),
-                plaintext,
-                Encoding.UTF8.GetBytes(keyReference));
-            return plaintext;
-        }
 
         private WorkspaceStorageService CreateStorage() => new($"Data Source={_databasePath}");
         private RequestContext Context() => RequestContext.FromIdentity(new AccountIdentity(AccountId, "s21", PhaseAAuth.UserRole), "principal-s21", "credential-s21", "correlation-s21");

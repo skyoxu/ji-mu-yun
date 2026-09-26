@@ -2,22 +2,30 @@ using PhaseA.Platform.Readback;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using Microsoft.Data.Sqlite;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace PhaseA.Platform.Workspaces;
 
 public sealed class RestoreService
 {
     private readonly string? _connectionString;
+    // Single-node publication coordination. The durable SQLite row remains the
+    // authority across restarts; this gate prevents two in-process callers from
+    // staging and publishing different attempts for the same idempotency key.
+    private readonly object _restoreGate = new();
     private readonly Dictionary<string, RestoreAttempt> _inMemoryAttempts = new(StringComparer.Ordinal);
     private readonly HashSet<string> _invalidatedLeaseIds = new(StringComparer.Ordinal);
+    private readonly RouteRecoveryAuthorityResolver? _routeAuthorityResolver;
 
-    public RestoreService(string? connectionString = null)
+    public RestoreService(string? connectionString = null, RouteRecoveryAuthorityResolver? routeAuthorityResolver = null)
     {
         _connectionString = connectionString;
+        _routeAuthorityResolver = routeAuthorityResolver;
         if (!string.IsNullOrWhiteSpace(connectionString))
         {
             using var connection = new SqliteConnection(connectionString); connection.Open(); using var command = connection.CreateCommand();
-            command.CommandText = "CREATE TABLE IF NOT EXISTS runner_leases (lease_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, fence INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS restore_attempts (attempt_id TEXT PRIMARY KEY, idempotency_key TEXT NOT NULL UNIQUE, snapshot_id TEXT NOT NULL, workspace_id TEXT NOT NULL, account_id TEXT NOT NULL, project_id TEXT NOT NULL, status TEXT NOT NULL, fence INTEGER NOT NULL, updated_utc TEXT NOT NULL, requester_id TEXT, tenant_id TEXT, target TEXT); CREATE TABLE IF NOT EXISTS restore_attempt_history (attempt_id TEXT NOT NULL, sequence INTEGER NOT NULL, stage TEXT NOT NULL, outcome TEXT NOT NULL, PRIMARY KEY(attempt_id, sequence)); CREATE TABLE IF NOT EXISTS restore_runtime_credentials (workspace_id TEXT PRIMARY KEY, credential_id TEXT NOT NULL); CREATE TABLE IF NOT EXISTS restore_audit (recorded_utc TEXT NOT NULL, action TEXT NOT NULL, account_id TEXT NOT NULL, workspace_id TEXT NOT NULL, correlation_id TEXT NOT NULL)"; command.ExecuteNonQuery();
+            command.CommandText = "CREATE TABLE IF NOT EXISTS runner_leases (lease_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, fence INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS invalidated_runner_leases (lease_id TEXT PRIMARY KEY, invalidated_utc TEXT NOT NULL); CREATE TABLE IF NOT EXISTS restore_attempts (attempt_id TEXT PRIMARY KEY, idempotency_key TEXT NOT NULL UNIQUE, snapshot_id TEXT NOT NULL, workspace_id TEXT NOT NULL, account_id TEXT NOT NULL, project_id TEXT NOT NULL, status TEXT NOT NULL, fence INTEGER NOT NULL, updated_utc TEXT NOT NULL, requester_id TEXT, tenant_id TEXT, target TEXT); CREATE TABLE IF NOT EXISTS restore_attempt_history (attempt_id TEXT NOT NULL, sequence INTEGER NOT NULL, stage TEXT NOT NULL, outcome TEXT NOT NULL, PRIMARY KEY(attempt_id, sequence)); CREATE TABLE IF NOT EXISTS restore_runtime_credentials (workspace_id TEXT PRIMARY KEY, credential_id TEXT NOT NULL); CREATE TABLE IF NOT EXISTS restore_audit (recorded_utc TEXT NOT NULL, action TEXT NOT NULL, account_id TEXT NOT NULL, workspace_id TEXT NOT NULL, correlation_id TEXT NOT NULL)"; command.ExecuteNonQuery();
             EnsureRestoreAttemptColumns(connection);
             EnsureRouteRecoveryEvidence(connection);
             ReconcileInterruptedAttempts(connection);
@@ -27,8 +35,32 @@ public sealed class RestoreService
     public RestoreAttempt Restore(RequestContext context, SnapshotManifest manifest, string sourceRoot, string destinationRoot, RunnerLease lease)
         => Restore(context, manifest, sourceRoot, destinationRoot, lease, $"restore:{manifest.SnapshotId}:{manifest.WorkspaceId}");
 
+    public RunnerLease? GetAuthoritativeLease(string accountId, string projectId)
+    {
+        if (string.IsNullOrWhiteSpace(_connectionString)) return null;
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT lease_id, account_id, project_id, fence FROM runner_leases WHERE account_id=$account AND project_id=$project AND NOT EXISTS (SELECT 1 FROM invalidated_runner_leases i WHERE i.lease_id=runner_leases.lease_id) ORDER BY fence DESC LIMIT 1";
+        command.Parameters.AddWithValue("$account", accountId);
+        command.Parameters.AddWithValue("$project", projectId);
+        using var reader = command.ExecuteReader();
+        return reader.Read()
+            ? new RunnerLease(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetInt64(3))
+            : null;
+    }
+
     public RestoreAttempt Restore(RequestContext context, SnapshotManifest manifest, string sourceRoot, string destinationRoot, RunnerLease lease, string idempotencyKey)
     {
+        lock (_restoreGate)
+        {
+            return RestoreCore(context, manifest, sourceRoot, destinationRoot, lease, idempotencyKey);
+        }
+    }
+
+    private RestoreAttempt RestoreCore(RequestContext context, SnapshotManifest manifest, string sourceRoot, string destinationRoot, RunnerLease lease, string idempotencyKey)
+    {
+        using var coordination = AcquireCrossProcessCoordination(destinationRoot, idempotencyKey);
         try
         {
             context.DemandAccount(manifest.AccountId);
@@ -62,7 +94,7 @@ public sealed class RestoreService
             PersistQuarantinedAttempt(rejected, idempotencyKey, lease, context, manifest, destinationRoot, new RestoreBoundaryFailure("stale_lease"));
             throw;
         }
-        if (SignalsMissingOrStaleRouteAuthority(idempotencyKey))
+        if (!HasCurrentRouteAuthority(manifest.AccountId, manifest.ProjectId))
         {
             RecordRouteRecoveryEvidence(0, hasCurrentBlocker: true, isBlocked: true, canContinue: false);
             var blocked = CreateStagingAttempt(manifest).Advance(RestoreAttemptStatus.Quarantined);
@@ -87,17 +119,37 @@ public sealed class RestoreService
             DemandAvailableQuota(manifest);
             var capturedFiles = manifest.ReadProtectedContent();
             StageProtectedContent(manifest, capturedFiles, staging);
+            WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "staging-written");
+            WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "staging-written");
+            // Re-check authority at the publication boundary. A lease or
+            // runtime capability revoked while content was being staged must
+            // not be able to publish a new ready directory.
+            DemandAuthoritativeLease(lease);
+            DemandCurrentRuntimeCredential(context, manifest.WorkspaceId);
+            if (!HasCurrentRouteAuthority(manifest.AccountId, manifest.ProjectId))
+                throw new RestoreBoundaryFailure("route_authority_missing");
+            WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "post-verification");
+            WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "post-verification");
             Directory.CreateDirectory(Path.GetDirectoryName(backup)!);
             if (Directory.Exists(published)) Directory.Move(published, backup);
+            WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "previous-moved");
+            WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "previous-moved");
             try { Directory.Move(staging, published); publishedFromStaging = true; }
             catch { if (Directory.Exists(backup) && !Directory.Exists(published)) Directory.Move(backup, published); throw; }
+            WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "current-switched");
+            WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "current-switched");
             var result = attempt.Advance(RestoreAttemptStatus.Published);
             PersistCurrentRuntimeCredential(context, manifest.WorkspaceId);
             ProjectAssetPreviewTicketService.InvalidateTickets(manifest.AccountId, manifest.ProjectId);
             _inMemoryAttempts[idempotencyKey] = result;
             PersistAttempt(result, idempotencyKey, lease, context, manifest, destinationRoot);
+            WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "metadata-committed");
+            WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "metadata-committed");
             AppendHistory(result.AttemptId, "publish", "published");
+            WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "history-appended");
             _invalidatedLeaseIds.Add(lease.LeaseId);
+            PersistInvalidatedLease(lease.LeaseId);
+            WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "lease-invalidated");
             return result;
         }
         catch (Exception error)
@@ -117,6 +169,43 @@ public sealed class RestoreService
                 destinationRoot,
                 error);
         }
+    }
+
+    private static FileStream AcquireCrossProcessCoordination(string destinationRoot, string idempotencyKey)
+    {
+        Directory.CreateDirectory(destinationRoot);
+        var suffix = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(idempotencyKey))).ToLowerInvariant()[..24];
+        var path = Path.Combine(destinationRoot, $".restore-lock-{suffix}");
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(15);
+        while (true)
+        {
+            try { return new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 1, FileOptions.DeleteOnClose); }
+            catch (IOException) when (DateTime.UtcNow < deadline) { Thread.Sleep(25); }
+        }
+    }
+
+    private static void WritePublicationCheckpoint(string destinationRoot, string attemptId, string checkpoint)
+    {
+        var directory = Path.Combine(destinationRoot, ".restore-checkpoints", attemptId);
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory, checkpoint + ".json"),
+            System.Text.Json.JsonSerializer.Serialize(new
+            {
+                attemptId,
+                checkpoint,
+                recordedUtc = DateTimeOffset.UtcNow
+            }));
+    }
+
+    private static void WaitForTestFaultPoint(string destinationRoot, string attemptId, string checkpoint)
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("PHASEA_RESTORE_FAULT_POINT"), checkpoint, StringComparison.Ordinal))
+            return;
+
+        var release = Path.Combine(destinationRoot, ".restore-checkpoints", attemptId, checkpoint + ".release");
+        var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(2);
+        while (!File.Exists(release) && DateTime.UtcNow < deadline)
+            Thread.Sleep(25);
     }
 
     private RestoreAttempt? LoadAttempt(string key)
@@ -212,16 +301,23 @@ public sealed class RestoreService
         string destinationRoot,
         Exception error)
     {
-        var result = attempt.Advance(RestoreAttemptStatus.Quarantined);
-        _inMemoryAttempts[idempotencyKey] = result;
         var category = ClassifyRestoreFailure(error);
+        var detail = error is InvalidDataException or System.Security.Cryptography.CryptographicException
+            ? error.Message
+            : null;
+        var result = attempt.Advance(RestoreAttemptStatus.Quarantined) with { FailureCategory = category, FailureDetail = detail };
+        _inMemoryAttempts[idempotencyKey] = result;
         var envelope = System.Text.Json.JsonSerializer.Serialize(new
         {
             code = category,
             message = "Workspace restore could not be completed.",
+            detail,
             requestId = context.CorrelationId
         });
         PersistAttempt(result, idempotencyKey, lease, context, manifest, destinationRoot, category, envelope);
+        // Preserve every failure as a controlled diagnostic. The route
+        // authority resolver decides separately which families are live
+        // publication blockers; operation-local failures remain retryable.
         PhaseAMetadataStore.TryRecordBoundaryDiagnostic(
             _connectionString ?? string.Empty,
             manifest.AccountId,
@@ -265,6 +361,13 @@ public sealed class RestoreService
             throw new InvalidOperationException("runner lease is not authoritative");
         if (string.IsNullOrWhiteSpace(_connectionString)) return;
         using var connection = new SqliteConnection(_connectionString); connection.Open();
+        using (var invalidated = connection.CreateCommand())
+        {
+            invalidated.CommandText = "SELECT 1 FROM invalidated_runner_leases WHERE lease_id=$id";
+            invalidated.Parameters.AddWithValue("$id", lease.LeaseId);
+            if (invalidated.ExecuteScalar() is not null)
+                throw new InvalidOperationException("runner lease is not authoritative");
+        }
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT account_id, project_id, fence
@@ -277,6 +380,17 @@ public sealed class RestoreService
         using var reader = command.ExecuteReader();
         if (!reader.Read() || reader.GetString(0) != lease.AccountId || reader.GetString(1) != lease.ProjectId || reader.GetInt64(2) != lease.Fence)
             throw new InvalidOperationException("runner lease is not authoritative");
+    }
+
+    private void PersistInvalidatedLease(string leaseId)
+    {
+        if (string.IsNullOrWhiteSpace(_connectionString)) return;
+        using var connection = new SqliteConnection(_connectionString); connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO invalidated_runner_leases(lease_id,invalidated_utc) VALUES($id,$utc) ON CONFLICT(lease_id) DO NOTHING";
+        command.Parameters.AddWithValue("$id", leaseId);
+        command.Parameters.AddWithValue("$utc", DateTimeOffset.UtcNow.ToString("O"));
+        command.ExecuteNonQuery();
     }
 
     private void AppendHistory(string attemptId, string stage, string outcome)
@@ -301,35 +415,47 @@ public sealed class RestoreService
     private static void EnsureRouteRecoveryEvidence(SqliteConnection connection)
     {
         using var command = connection.CreateCommand();
-        command.CommandText = "CREATE TABLE IF NOT EXISTS route_recovery_evidence (recorded_utc TEXT NOT NULL, authority_count INTEGER NOT NULL, has_current_blocker INTEGER NOT NULL, is_blocked INTEGER NOT NULL, can_continue INTEGER NOT NULL)";
+        command.CommandText = "CREATE TABLE IF NOT EXISTS route_recovery_evidence (recorded_utc TEXT NOT NULL, authority_count INTEGER NOT NULL, has_current_blocker INTEGER NOT NULL, is_blocked INTEGER NOT NULL, can_continue INTEGER NOT NULL, source_order_json TEXT NOT NULL DEFAULT '[]', blocker_json TEXT NOT NULL DEFAULT '[]')";
         command.ExecuteNonQuery();
-        command.CommandText = "INSERT INTO route_recovery_evidence(recorded_utc,authority_count,has_current_blocker,is_blocked,can_continue) SELECT $recorded,8,1,0,1 WHERE NOT EXISTS (SELECT 1 FROM route_recovery_evidence)";
-        command.Parameters.AddWithValue("$recorded", DateTimeOffset.UtcNow.ToString("O"));
-        command.ExecuteNonQuery();
+        foreach (var column in new[] { "source_order_json", "blocker_json" })
+        {
+            command.CommandText = $"ALTER TABLE route_recovery_evidence ADD COLUMN {column} TEXT NOT NULL DEFAULT '[]'";
+            try { command.ExecuteNonQuery(); }
+            catch (SqliteException error) when (error.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase)) { }
+        }
     }
 
-    private void RecordRouteRecoveryEvidence(int authorityCount, bool hasCurrentBlocker, bool isBlocked, bool canContinue)
+    private void RecordRouteRecoveryEvidence(
+        int authorityCount,
+        bool hasCurrentBlocker,
+        bool isBlocked,
+        bool canContinue,
+        IReadOnlyList<string>? sourceEvidence = null,
+        IReadOnlyList<string>? blockers = null)
     {
         if (string.IsNullOrWhiteSpace(_connectionString)) return;
         using var connection = new SqliteConnection(_connectionString); connection.Open(); using var command = connection.CreateCommand();
-        command.CommandText = "INSERT INTO route_recovery_evidence(recorded_utc,authority_count,has_current_blocker,is_blocked,can_continue) VALUES($recorded,$authorityCount,$hasCurrentBlocker,$isBlocked,$canContinue)";
-        command.Parameters.AddWithValue("$recorded", DateTimeOffset.UtcNow.ToString("O")); command.Parameters.AddWithValue("$authorityCount", authorityCount); command.Parameters.AddWithValue("$hasCurrentBlocker", hasCurrentBlocker ? 1 : 0); command.Parameters.AddWithValue("$isBlocked", isBlocked ? 1 : 0); command.Parameters.AddWithValue("$canContinue", canContinue ? 1 : 0); command.ExecuteNonQuery();
+        command.CommandText = "INSERT INTO route_recovery_evidence(recorded_utc,authority_count,has_current_blocker,is_blocked,can_continue,source_order_json,blocker_json) VALUES($recorded,$authorityCount,$hasCurrentBlocker,$isBlocked,$canContinue,$sources,$blockers)";
+        command.Parameters.AddWithValue("$recorded", DateTimeOffset.UtcNow.ToString("O")); command.Parameters.AddWithValue("$authorityCount", authorityCount); command.Parameters.AddWithValue("$hasCurrentBlocker", hasCurrentBlocker ? 1 : 0); command.Parameters.AddWithValue("$isBlocked", isBlocked ? 1 : 0); command.Parameters.AddWithValue("$canContinue", canContinue ? 1 : 0);
+        command.Parameters.AddWithValue("$sources", System.Text.Json.JsonSerializer.Serialize(sourceEvidence ?? PhaseA.Platform.Workflow.HostedRouteRecoveryContract.SourceOrder));
+        command.Parameters.AddWithValue("$blockers", System.Text.Json.JsonSerializer.Serialize(blockers ?? Array.Empty<string>())); command.ExecuteNonQuery();
     }
 
     private void ReconcileInterruptedAttempts(SqliteConnection connection)
     {
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT attempt_id, account_id, project_id FROM restore_attempts WHERE status=$staging";
+        command.CommandText = "SELECT attempt_id, account_id, project_id, target FROM restore_attempts WHERE status=$staging";
         command.Parameters.AddWithValue("$staging", RestoreAttemptStatus.Staging.ToString());
-        var attemptContexts = new List<(string AttemptId, string AccountId, string ProjectId)>();
+        var attemptContexts = new List<(string AttemptId, string AccountId, string ProjectId, string? Target)>();
         using (var contextReader = command.ExecuteReader())
         {
             while (contextReader.Read())
-                attemptContexts.Add((contextReader.GetString(0), contextReader.GetString(1), contextReader.GetString(2)));
+                attemptContexts.Add((contextReader.GetString(0), contextReader.GetString(1), contextReader.GetString(2), contextReader.IsDBNull(3) ? null : contextReader.GetString(3)));
         }
 
-        foreach (var (attemptId, accountId, projectId) in attemptContexts)
+        foreach (var (attemptId, accountId, projectId, target) in attemptContexts)
         {
+            ReconcileAttemptDirectories(attemptId, target);
             command.Parameters.Clear();
             command.CommandText = "UPDATE restore_attempts SET status=$status,updated_utc=$updated,failure_category=$category,error_envelope=$envelope WHERE attempt_id=$attempt";
             command.Parameters.AddWithValue("$status", RestoreAttemptStatus.Quarantined.ToString());
@@ -349,9 +475,72 @@ public sealed class RestoreService
         }
     }
 
-    private static bool SignalsMissingOrStaleRouteAuthority(string idempotencyKey) =>
-        idempotencyKey.Contains("missing-authority", StringComparison.OrdinalIgnoreCase) ||
-        idempotencyKey.Contains("stale-authority", StringComparison.OrdinalIgnoreCase);
+    private void ReconcileAttemptDirectories(string attemptId, string? target)
+    {
+        if (string.IsNullOrWhiteSpace(target) || !Directory.Exists(target)) return;
+        var current = Path.Combine(target, ".restore-current");
+        var staging = Path.Combine(target, ".restore-staging", attemptId);
+        var previous = Path.Combine(target, ".restore-previous", attemptId);
+        var quarantine = Path.Combine(target, ".restore-quarantine", attemptId);
+        // A crash after moving ready aside but before switching staging must
+        // restore the previous ready directory. A crash after switching keeps
+        // the new ready directory and only isolates leftover staging.
+        if (!Directory.Exists(current) && Directory.Exists(previous))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(current)!);
+            Directory.Move(previous, current);
+        }
+        if (Directory.Exists(staging))
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(quarantine)!);
+                if (Directory.Exists(quarantine)) Directory.Delete(quarantine, true);
+                Directory.Move(staging, quarantine);
+            }
+            catch (IOException)
+            {
+                // A crashed worker may still have a short-lived file handle.
+                // Keep the attempt quarantined in metadata and retry physical
+                // isolation on the next service reconciliation.
+            }
+        }
+    }
+
+    private bool HasCurrentRouteAuthority(string accountId, string projectId)
+    {
+        // A connectionless RestoreService is only used by isolated in-memory
+        // unit fixtures. Production and persistent callers always provide the
+        // metadata-backed resolver, where missing authority fails closed.
+        if (string.IsNullOrWhiteSpace(_connectionString)) return true;
+        if (_routeAuthorityResolver is not null)
+        {
+            var resolved = _routeAuthorityResolver.Resolve(accountId, projectId);
+            RecordRouteRecoveryEvidence(
+                resolved.AuthorityCount,
+                resolved.HasCurrentBlocker,
+                !resolved.CanContinue,
+                resolved.CanContinue,
+                resolved.SourceEvidence,
+                resolved.Blockers);
+            return resolved.CanContinue;
+        }
+        if (string.IsNullOrWhiteSpace(_connectionString)) return false;
+        using var connection = new SqliteConnection(_connectionString); connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT recorded_utc,authority_count,has_current_blocker,is_blocked,can_continue,source_order_json,blocker_json FROM route_recovery_evidence ORDER BY recorded_utc DESC LIMIT 1";
+        using var reader = command.ExecuteReader();
+        if (!reader.Read()) return false;
+        if (!DateTimeOffset.TryParse(reader.GetString(0), out var recorded) || DateTimeOffset.UtcNow - recorded > TimeSpan.FromMinutes(30)) return false;
+        if (reader.GetInt32(1) < 8 || reader.GetInt32(2) != 0 || reader.GetInt32(3) != 0 || reader.GetInt32(4) != 1) return false;
+        try
+        {
+            var sources = System.Text.Json.JsonSerializer.Deserialize<string[]>(reader.GetString(5)) ?? [];
+            var blockers = System.Text.Json.JsonSerializer.Deserialize<string[]>(reader.GetString(6)) ?? [];
+            return sources.SequenceEqual(PhaseA.Platform.Workflow.HostedRouteRecoveryContract.SourceOrder, StringComparer.Ordinal) && blockers.Length == 0;
+        }
+        catch (System.Text.Json.JsonException) { return false; }
+    }
 
     private void DemandCurrentRuntimeCredential(RequestContext context, string workspaceId)
     {
@@ -363,7 +552,6 @@ public sealed class RestoreService
         var currentCredential = command.ExecuteScalar()?.ToString();
         if (currentCredential is not null && !StringComparer.Ordinal.Equals(currentCredential, context.CredentialId))
         {
-            PersistCurrentRuntimeCredential(context, workspaceId);
             throw new UnauthorizedAccessException("restore runtime credential is no longer authoritative");
         }
     }

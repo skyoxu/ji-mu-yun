@@ -21,7 +21,9 @@ public sealed class S6BoundaryTests
         using var fixture = await RestoreFixture.CreateAsync();
         var (source, manifest) = fixture.CreateSnapshot("old-lease", "current-publication");
         var destination = Directory.CreateDirectory(Path.Combine(fixture.Root.FullName, "old-lease-destination"));
-        var service = new RestoreService(fixture.ConnectionString);
+        var service = new RestoreService(
+            fixture.ConnectionString,
+            new RouteRecoveryAuthorityResolver(fixture.ConnectionString));
         var first = service.Restore(
             fixture.Context,
             manifest,
@@ -74,7 +76,9 @@ public sealed class S6BoundaryTests
             ProjectId,
             "s6-policy",
             [("project.godot", "retry-content"u8.ToArray())]);
-        var service = new RestoreService(fixture.ConnectionString);
+        var service = new RestoreService(
+            fixture.ConnectionString,
+            new RouteRecoveryAuthorityResolver(fixture.ConnectionString));
         const string idempotencyKey = "s6-retry-key";
 
         var failed = service.Restore(
@@ -115,7 +119,7 @@ public sealed class S6BoundaryTests
             appendedHistory &&
             terminal,
             "FAILURE-O-BA014C1EB184",
-            "Retry did not preserve and append durable restore stage/outcome history before reaching a terminal state.");
+            $"Retry did not preserve and append durable restore stage/outcome history before reaching a terminal state. failed={failed.Status}, retried={retried?.Status.ToString() ?? "<null>"}, before={beforeRetry.Count}, after={afterRetry.Count}, prior={priorHistoryRemained}, appended={appendedHistory}.");
         _output.WriteLine("S6-OBSERVATION O-BA014C1EB184 retry-appended-history-and-reached-terminal-state");
     }
 
@@ -133,7 +137,9 @@ public sealed class S6BoundaryTests
             manifest.SnapshotId,
             destination.FullName,
             idempotencyKey);
-        var service = new RestoreService(fixture.ConnectionString);
+        var service = new RestoreService(
+            fixture.ConnectionString,
+            new RouteRecoveryAuthorityResolver(fixture.ConnectionString));
         var created = service.Restore(
             fixture.Context,
             manifest,
@@ -277,6 +283,7 @@ public sealed class S6BoundaryTests
                 await new SqliteMigrationService().MigrateAsync(connectionString, "s6-account", ProjectId, "s6-migration");
                 var store = CreateStore(connectionString, root.FullName);
                 var accountId = await CreateProjectAsync(store, root.FullName);
+                RouteAuthorityFixture.Seed(connectionString, accountId, ProjectId, Path.Combine(root.FullName, "project"));
                 var runId = await store.CreateRunAsync(ProjectId, null, "s6-run");
                 if (!await store.TryAcquireRunnerLockAsync(ProjectId, runId))
                 {

@@ -18,6 +18,30 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+if (args.Length >= 3 && string.Equals(args[0], "--independent-evidence-reader", StringComparison.Ordinal))
+{
+    var result = IndependentEvidenceReader.Validate(args[1], args[2]);
+    Console.WriteLine(JsonSerializer.Serialize(result));
+    return;
+}
+
+if (args.Length >= 4 && string.Equals(args[0], "--independent-evidence-run", StringComparison.Ordinal))
+{
+    var runOptions = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+    {
+        ["PHASEA_METADATA_DB_PATH"] = args[3],
+    });
+    var runStore = new PhaseAMetadataStore(
+        new SqliteConnectionStringBuilder { DataSource = runOptions.MetadataDatabasePath }.ToString(),
+        runOptions);
+    var run = await runStore.GetRunSnapshotAsync(args[2]);
+    var result = run is null
+        ? new IndependentEvidenceResult(false, "run_not_found", [])
+        : IndependentEvidenceReader.ValidatePersistedRun(run, args[1]);
+    Console.WriteLine(JsonSerializer.Serialize(result));
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 var options = PhaseAPlatformOptionsLoader.FromEnvironment();
 var metadataDirectory = Path.GetDirectoryName(options.MetadataDatabasePath);
@@ -34,6 +58,10 @@ await SqliteMetadataSchema.InitializeAsync(connectionString);
 
 builder.Services.AddSingleton(options);
 builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options));
+builder.Services.AddSingleton(new WorkspaceStorageService(connectionString));
+builder.Services.AddSingleton(new RestoreService(
+    connectionString,
+    string.IsNullOrWhiteSpace(connectionString) ? null : new RouteRecoveryAuthorityResolver(connectionString)));
 if (options.HostedContextSigningKeyRing is { } hostedContextKeyRing)
 {
     builder.Services.AddSingleton(new HostedContextManifestSignatureService(
@@ -415,6 +443,8 @@ static async Task<IResult> HandleDurableWorkspaceOperationAsync(
     DurableWorkspaceOperationRequest request,
     HttpContext context,
     [FromServices] PhaseAMetadataStore store,
+    [FromServices] WorkspaceStorageService workspaceStorage,
+    [FromServices] RestoreService restoreService,
     [FromServices] HeavyRunnerQueueService queue,
     CancellationToken cancellationToken)
 {
@@ -435,28 +465,154 @@ static async Task<IResult> HandleDurableWorkspaceOperationAsync(
     var run = await store.GetOrCreateProjectOperationRunAsync(project.ProjectId, project.WorkspaceId, runType, cancellationToken);
     if (string.Equals(run.Status, "queued", StringComparison.Ordinal))
     {
-        await queue.ExecuteAsync(
-            run.RunId,
-            project.AccountId,
-            project.ProjectId,
-            operationType,
-            async (start, token) =>
+        // The HTTP request only admits durable work.  The queue owns execution;
+        // awaiting it here makes a client disconnect indistinguishable from a
+        // failed operation and can exhaust the request timeout before work runs.
+        var identity = CurrentIdentity(context);
+        var credential = PhaseAAuth.ReadBearerOrHeaderToken(context.Request) ?? string.Empty;
+        var requestContext = RequestContext.FromIdentity(identity, identity.Username, credential, context.TraceIdentifier);
+        _ = Task.Run(async () =>
+        {
+            try
             {
-                if (await store.TryMarkRunStartedAsync(run.RunId, start.QueuePositionAtStart, token))
+                await queue.ExecuteAsync(
+                    run.RunId,
+                    project.AccountId,
+                    project.ProjectId,
+                    operationType,
+                    async (start, token) =>
+                    {
+                        if (!await store.TryMarkRunStartedAsync(run.RunId, start.QueuePositionAtStart, token))
+                        {
+                            return false;
+                        }
+
+                        if (operationType == "workspace-snapshot")
+                        {
+                            await store.UpdateRunProgressAsync(run.RunId, "workspace", "snapshot", "snapshot-started", token);
+                            var snapshot = workspaceStorage.CreateSnapshot(
+                                requestContext,
+                                project.WorkspaceRootPath,
+                                $"snapshot-{run.RunId}",
+                                project.WorkspaceId,
+                                project.ProjectId,
+                                "policy-v1",
+                                new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+                            await store.UpdateRunProgressAsync(run.RunId, "workspace", "snapshot", "snapshot-created", token);
+                            await store.CompleteRunAsync(
+                                run.RunId,
+                                "succeeded",
+                                0,
+                                "workspace snapshot completed",
+                                string.Empty,
+                                JsonSerializer.Serialize(new { producerRunId = run.RunId, snapshotId = snapshot.Manifest.SnapshotId, manifestPath = snapshot.ManifestPath }),
+                                token);
+                            return true;
+                        }
+
+                        if (operationType == "workspace-restore")
+                        {
+                            await store.UpdateRunProgressAsync(run.RunId, "workspace", "restore", "restore-started", token);
+                            var requestedSnapshotId = request.SnapshotId;
+                            var snapshot = workspaceStorage
+                                .ListSnapshots(project.AccountId, project.ProjectId)
+                                .Where(candidate => string.IsNullOrWhiteSpace(requestedSnapshotId) ||
+                                    string.Equals(candidate.Manifest.SnapshotId, requestedSnapshotId, StringComparison.Ordinal))
+                                .OrderByDescending(candidate => candidate.Manifest.CreatedAt)
+                                .FirstOrDefault()
+                                ?? throw new KeyNotFoundException("workspace snapshot not found");
+                            var lease = restoreService.GetAuthoritativeLease(project.AccountId, project.ProjectId)
+                                ?? throw new InvalidOperationException("authoritative runner lease is unavailable");
+                            var destinationRoot = string.IsNullOrWhiteSpace(request.TargetRoot)
+                                ? project.WorkspaceRootPath
+                                : Path.GetFullPath(request.TargetRoot);
+                            var restored = restoreService.Restore(
+                                requestContext,
+                                snapshot.Manifest,
+                                project.WorkspaceRootPath,
+                                destinationRoot,
+                                lease,
+                                request.OperationKey.Trim());
+                            await store.CompleteRunAsync(
+                                run.RunId,
+                                restored.Status == RestoreAttemptStatus.Published ? "succeeded" : "failed",
+                                restored.Status == RestoreAttemptStatus.Published ? 0 : 409,
+                                restored.Status == RestoreAttemptStatus.Published ? "workspace restore completed" : "workspace restore did not publish",
+                                string.Empty,
+                                JsonSerializer.Serialize(new { producerRunId = run.RunId, snapshotId = restored.SnapshotId, attemptId = restored.AttemptId, status = restored.Status.ToString(), failureCategory = restored.FailureCategory, failureDetail = restored.FailureDetail }),
+                                token);
+                            return restored.Status == RestoreAttemptStatus.Published;
+                        }
+
+                        if (operationType == "workspace-acl-repair")
+                        {
+                            await store.UpdateRunProgressAsync(run.RunId, "workspace", "acl-repair", "acl-repair-started", token);
+                            if (!RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.WorkspaceRootPath, out var descriptor))
+                            {
+                                throw new UnauthorizedAccessException("workspace isolation registration is unavailable");
+                            }
+                            using var isolation = RunnerIsolationPolicy.PrepareWorkspace(descriptor);
+                            if (!RunnerIsolationPolicy.HasExpectedWorkspaceSecurity(descriptor))
+                            {
+                                throw new UnauthorizedAccessException("workspace ACL repair did not produce the expected security boundary");
+                            }
+
+                            await store.CompleteRunAsync(
+                                run.RunId,
+                                "succeeded",
+                                0,
+                                "workspace ACL repair completed",
+                                string.Empty,
+                                JsonSerializer.Serialize(new
+                                {
+                                    producerRunId = run.RunId,
+                                    operation = operationType,
+                                    workspaceRoot = project.WorkspaceRootPath,
+                                    policy = descriptor.NtfsAclRequired ? "ntfs-acl-and-runner-isolation" : "workspace-boundary"
+                                }),
+                                token);
+                            return true;
+                        }
+
+                        await store.CompleteRunAsync(
+                            run.RunId,
+                            "failed",
+                            501,
+                            "durable workspace operation executor is not connected",
+                            string.Empty,
+                            JsonSerializer.Serialize(new { code = "workspace_operation_executor_missing", operationType }),
+                            token);
+                        return false;
+                    },
+                    CancellationToken.None);
+            }
+            catch (Exception error)
+            {
+                try
                 {
-                    await store.CompleteRunAsync(run.RunId, "succeeded", 0, "durable workspace operation completed", "", "{}", token);
+                    await store.CompleteRunAsync(
+                        run.RunId,
+                        "failed",
+                        500,
+                        "durable workspace operation failed",
+                        error.GetType().Name,
+                        JsonSerializer.Serialize(new { code = "workspace_operation_failed", error = error.Message }),
+                        CancellationToken.None);
                 }
-                return true;
-            },
-            CancellationToken.None);
-        run = (await store.GetRunSnapshotAsync(run.RunId, CancellationToken.None))!;
+                catch
+                {
+                    // The durable run remains non-successful if persistence itself
+                    // is unavailable; never turn an executor exception into success.
+                }
+            }
+        });
     }
 
     return Results.Accepted($"/api/runs/{run.RunId}", new
     {
         operationId = run.RunId,
         evidencePointer = $"/api/runs/{run.RunId}",
-        result = new { run.Status, run.RunType }
+        result = new { status = "accepted", runType = run.RunType }
     });
 }
 
@@ -3822,7 +3978,7 @@ static bool TryReadApiProjectId(PathString path, out string projectId)
     return !string.IsNullOrWhiteSpace(projectId);
 }
 
-public sealed record DurableWorkspaceOperationRequest(string OperationKey);
+public sealed record DurableWorkspaceOperationRequest(string OperationKey, string? SnapshotId = null, string? TargetRoot = null);
 
 public sealed record ExtensionPolicyRequest(IReadOnlyList<string>? Blacklist);
 

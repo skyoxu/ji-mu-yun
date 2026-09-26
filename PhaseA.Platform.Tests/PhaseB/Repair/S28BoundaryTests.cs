@@ -218,6 +218,7 @@ public sealed class S28BoundaryTests
                 "project-s28", account.AccountId, "S28 boundary", "S28 boundary", "manual", "default", false, [],
                 projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
                 Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta")));
+            RouteAuthorityFixture.Seed(connectionString, account.AccountId, "project-s28", projectRoot.FullName);
             var scope = Encoding.UTF8.GetBytes($"S28_SCOPE_ACCOUNT={account.AccountId}\nS28_SCOPE_WORKSPACE=workspace-s28\n");
             var manifest = SnapshotManifest.Create(
                 "snapshot-s28",
@@ -233,7 +234,7 @@ public sealed class S28BoundaryTests
         }
 
         public RestoreAttempt Restore(RequestContext context, RunnerLease lease, string idempotencyKey) =>
-            new RestoreService(ConnectionString).Restore(context, Manifest, PreRestoreRoot, RestoredRoot, lease, idempotencyKey);
+            new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(context, Manifest, PreRestoreRoot, RestoredRoot, lease, idempotencyKey);
 
         public Task ActivateCurrentLeaseAsync() => InsertLeaseAsync(CurrentLease);
 

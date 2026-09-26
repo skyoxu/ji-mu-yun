@@ -29,6 +29,72 @@ public sealed class S53BoundaryTests
     [Fact] public void O_B2296F39A759() => AssertAccepted("fault", "FAILURE-O-B2296F39A759");
     [Fact] public void O_C1832CCFAB00() => AssertAccepted("redaction", "FAILURE-O-C1832CCFAB00");
 
+    [Fact]
+    public async Task O_A18_PERSISTED_PLATFORM_RUN_BINDING()
+    {
+        var root = Directory.CreateTempSubdirectory("s53-persisted-run-").FullName;
+        try
+        {
+            var database = Path.Combine(root, "metadata.sqlite3");
+            var connectionString = new SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString();
+            await SqliteMetadataSchema.InitializeAsync(connectionString);
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?> { ["HOSTED_WORKSPACE_ROOT"] = root });
+            var store = new PhaseAMetadataStore(connectionString, options);
+            var account = await store.CreateUserAccountAsync("s53-run-owner", 1);
+            var projectRoot = Directory.CreateDirectory(Path.Combine(root, "project"));
+            var project = await store.CreateProjectAsync(new ProjectCreationCommand(
+                "s53-run-project", account.AccountId, "S53", "S53", "manual", "default", false, [],
+                projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
+                Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta")));
+            Require(project.Succeeded && project.ProjectId is not null, "FAILURE-S53-PERSISTED-SETUP", "S53 persisted-run project setup failed.");
+
+            var package = Path.Combine(root, "evidence.json");
+            var artifacts = new List<object>();
+            foreach (var kind in new[] { "snapshot", "permission", "fault", "migration", "redaction" })
+            {
+                var relative = Path.Combine("artifacts", kind + ".txt");
+                var path = Path.Combine(root, relative);
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                var content = "persisted-run:" + kind;
+                File.WriteAllText(path, content);
+                artifacts.Add(new { kind, path = relative, content, sha256 = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content))).ToLowerInvariant() });
+            }
+            string workspaceId;
+            await using (var workspaceConnection = new SqliteConnection(connectionString))
+            {
+                await workspaceConnection.OpenAsync();
+                await using var workspaceCommand = workspaceConnection.CreateCommand();
+                workspaceCommand.CommandText = "SELECT id FROM workspaces WHERE project_id = $project";
+                workspaceCommand.Parameters.AddWithValue("$project", project.ProjectId!);
+                workspaceId = (string?)await workspaceCommand.ExecuteScalarAsync() ?? throw new InvalidOperationException("S53 workspace row was not created.");
+            }
+            var runId = (await store.GetOrCreateProjectOperationRunAsync(project.ProjectId!, workspaceId, "s53-evidence")).RunId;
+            await store.TryMarkRunStartedAsync(runId, null);
+            var evidence = JsonSerializer.Serialize(new { producerRunId = runId });
+            await store.CompleteRunAsync(runId, "succeeded", 0, "", "", evidence);
+            File.WriteAllText(package, JsonSerializer.Serialize(new { executed = true, producerRunId = runId, timestamp = DateTimeOffset.UtcNow, artifacts }));
+
+            using var process = Process.Start(new ProcessStartInfo("dotnet", $"\"{typeof(Program).Assembly.Location}\" --independent-evidence-run \"{package}\" {runId} \"{database}\"")
+            {
+                UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true
+            }) ?? throw new InvalidOperationException("S53 persisted evidence reader did not start.");
+            await process.WaitForExitAsync();
+            var output = await process.StandardOutput.ReadToEndAsync();
+            Require(process.ExitCode == 0, "FAILURE-S53-PERSISTED-RUN", "Independent persisted-run reader failed: " + await process.StandardError.ReadToEndAsync());
+            using var result = JsonDocument.Parse(output);
+            var accepted = result.RootElement.TryGetProperty("Accepted", out var acceptedNode)
+                ? acceptedNode.GetBoolean()
+                : result.RootElement.GetProperty("accepted").GetBoolean();
+            Require(accepted, "FAILURE-S53-PERSISTED-RUN", "Persisted platform run was not accepted by the independent reader.");
+            Observe("O-A18-PERSISTED-PLATFORM-RUN", new IndependentResult(true, "accepted", process.Id, []));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            try { Directory.Delete(root, recursive: true); } catch (IOException) { }
+        }
+    }
+
     private void AssertRejected(string mutation, string failureId)
     {
         using var fixture = EvidenceFixture.Create();
@@ -113,6 +179,7 @@ public sealed class S53BoundaryTests
             var lease = new RunnerLease("s53-lease", account.AccountId, ProjectId, 1);
             _ = new RestoreService(connectionString);
             InsertLease(connectionString, lease);
+            InsertRouteAuthority(connectionString);
             var restore = new RestoreService(connectionString).Restore(context, snapshot.Manifest, source, destination, lease, "s53-roundtrip");
             var restored = Path.Combine(destination, ".restore-current", "project.godot");
             var snapshotObserved = restore.Status == RestoreAttemptStatus.Published && File.Exists(restored) && File.ReadAllBytes(restored).SequenceEqual(content);
@@ -130,14 +197,14 @@ public sealed class S53BoundaryTests
                 "FAILURE-S53-FIXTURE", "S53 could not materialize current production evidence for independent validation.");
             var artifacts = new[]
             {
-                Artifact("snapshot", $"published:{snapshotObserved};sha256:{snapshot.Manifest.Files.Single().Sha256}"),
-                Artifact("permission", $"account:{snapshot.Manifest.AccountId};project:{snapshot.Manifest.ProjectId};acl:{snapshot.Manifest.AclPolicyReference}"),
-                Artifact("fault", "FileNotFoundException:actual-observation"),
-                Artifact("migration", $"status:{migration.Status}"),
-                Artifact("redaction", redacted),
+                Artifact(root, "snapshot", $"published:{snapshotObserved};sha256:{snapshot.Manifest.Files.Single().Sha256}"),
+                Artifact(root, "permission", $"account:{snapshot.Manifest.AccountId};project:{snapshot.Manifest.ProjectId};acl:{snapshot.Manifest.AclPolicyReference}"),
+                Artifact(root, "fault", "FileNotFoundException:actual-observation"),
+                Artifact(root, "migration", $"status:{migration.Status}"),
+                Artifact(root, "redaction", redacted),
             };
             var packagePath = Path.Combine(root, "piwr-a18-evidence.json");
-            File.WriteAllText(packagePath, JsonSerializer.Serialize(new EvidencePackage(true, DateTimeOffset.UtcNow, "declared-pass-must-not-decide", artifacts), JsonOptions));
+            File.WriteAllText(packagePath, JsonSerializer.Serialize(new EvidencePackage(true, DateTimeOffset.UtcNow, "s53-roundtrip", "declared-pass-must-not-decide", artifacts), JsonOptions));
             return new EvidenceFixture(root, packagePath);
         }
 
@@ -156,16 +223,7 @@ public sealed class S53BoundaryTests
             };
             var input = Path.Combine(_root, $"input-{Guid.NewGuid():N}.json");
             File.WriteAllText(input, JsonSerializer.Serialize(altered, JsonOptions));
-            var script = "import datetime,hashlib,json,os,sys\n" +
-                "e=json.load(open(sys.argv[1],encoding='utf-8'));a=e['artifacts'];r='accepted'\n" +
-                "if not e['executed']:r='verification_not_executed'\n" +
-                "elif (datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(e['timestamp'].replace('Z','+00:00'))).total_seconds()>300:r='stale_evidence'\n" +
-                "elif any(k not in [x['kind'] for x in a] for k in ['snapshot','permission','fault','migration','redaction']):r='missing_required_evidence'\n" +
-                "elif any(hashlib.sha256(x['content'].encode()).hexdigest()!=x['sha256'] for x in a):r='integrity_failure'\n" +
-                "print(json.dumps({'accepted':r=='accepted','reason':r,'processId':os.getpid(),'checkedArtifacts':[x['kind'] for x in a]}))\n";
-            var scriptPath = Path.Combine(_root, "independent_evidence_reader.py");
-            File.WriteAllText(scriptPath, script, Encoding.UTF8);
-            using var process = Process.Start(new ProcessStartInfo("python", $"\"{scriptPath}\" \"{input}\"")
+            using var process = Process.Start(new ProcessStartInfo("dotnet", $"\"{typeof(Program).Assembly.Location}\" --independent-evidence-reader \"{input}\" s53-roundtrip")
             {
                 UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true
             }) ?? throw new InvalidOperationException("S53 could not start its independent evidence reader.");
@@ -182,19 +240,33 @@ public sealed class S53BoundaryTests
         }
 
         private static EvidencePackage Mutate(JsonElement package, bool executed, DateTimeOffset? timestamp, EvidenceArtifact[] artifacts) =>
-            new(executed, timestamp ?? package.GetProperty("timestamp").GetDateTimeOffset(), package.GetProperty("declaration").GetString()!, artifacts);
-        private static EvidenceArtifact[] ReadArtifacts(JsonElement package) => package.GetProperty("artifacts").EnumerateArray().Select(item => new EvidenceArtifact(item.GetProperty("kind").GetString()!, item.GetProperty("content").GetString()!, item.GetProperty("sha256").GetString()!)).ToArray();
-        private static EvidenceArtifact Artifact(string kind, string content) => new(kind, content, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content))).ToLowerInvariant());
+            new(executed, timestamp ?? package.GetProperty("timestamp").GetDateTimeOffset(), package.GetProperty("producerRunId").GetString()!, package.GetProperty("declaration").GetString()!, artifacts);
+        private static EvidenceArtifact[] ReadArtifacts(JsonElement package) => package.GetProperty("artifacts").EnumerateArray().Select(item => new EvidenceArtifact(item.GetProperty("kind").GetString()!, item.GetProperty("path").GetString()!, item.GetProperty("content").GetString()!, item.GetProperty("sha256").GetString()!)).ToArray();
+        private static EvidenceArtifact Artifact(string root, string kind, string content)
+        {
+            var relative = Path.Combine("artifacts", kind + ".txt");
+            var path = Path.Combine(root, relative);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, content, Encoding.UTF8);
+            return new(kind, relative, content, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content))).ToLowerInvariant());
+        }
         private static void InsertLease(string connectionString, RunnerLease lease)
         {
             using var connection = new SqliteConnection(connectionString); connection.Open(); using var command = connection.CreateCommand();
             command.CommandText = "INSERT INTO runner_leases(lease_id,account_id,project_id,fence) VALUES($id,$account,$project,$fence)";
             command.Parameters.AddWithValue("$id", lease.LeaseId); command.Parameters.AddWithValue("$account", lease.AccountId); command.Parameters.AddWithValue("$project", lease.ProjectId); command.Parameters.AddWithValue("$fence", lease.Fence); command.ExecuteNonQuery();
         }
+        private static void InsertRouteAuthority(string connectionString)
+        {
+            using var connection = new SqliteConnection(connectionString); connection.Open(); using var command = connection.CreateCommand();
+            command.CommandText = "INSERT INTO route_recovery_evidence(recorded_utc,authority_count,has_current_blocker,is_blocked,can_continue,source_order_json,blocker_json) VALUES($utc,8,0,0,1,$sources,'[]')";
+            command.Parameters.AddWithValue("$utc", DateTimeOffset.UtcNow.ToString("O"));
+            command.Parameters.AddWithValue("$sources", JsonSerializer.Serialize(PhaseA.Platform.Workflow.HostedRouteRecoveryContract.SourceOrder)); command.ExecuteNonQuery();
+        }
         public void Dispose() { SqliteConnection.ClearAllPools(); try { Directory.Delete(_root, recursive: true); } catch (IOException) { } }
     }
 
-    private sealed record EvidencePackage(bool Executed, DateTimeOffset Timestamp, string Declaration, EvidenceArtifact[] Artifacts);
-    private sealed record EvidenceArtifact(string Kind, string Content, string Sha256);
+    private sealed record EvidencePackage(bool Executed, DateTimeOffset Timestamp, string ProducerRunId, string Declaration, EvidenceArtifact[] Artifacts);
+    private sealed record EvidenceArtifact(string Kind, string Path, string Content, string Sha256);
     private sealed record IndependentResult(bool Accepted, string Reason, int ProcessId, string[]? CheckedArtifacts);
 }

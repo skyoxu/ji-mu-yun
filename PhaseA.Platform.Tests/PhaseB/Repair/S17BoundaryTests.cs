@@ -1,11 +1,13 @@
 using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Workflow;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -143,6 +145,7 @@ public sealed class S17BoundaryTests
                 var storage = new WorkspaceStorageService(connectionString);
                 storage.SetQuota(account.AccountId, 16 * 1024 * 1024);
                 _ = new RestoreService(connectionString);
+                SeedRouteAuthorityEvidence(connectionString);
                 using (var connection = new SqliteConnection(connectionString))
                 {
                     connection.Open();
@@ -163,6 +166,18 @@ public sealed class S17BoundaryTests
                 Directory.Delete(root, recursive: true);
                 throw;
             }
+        }
+
+        private static void SeedRouteAuthorityEvidence(string connectionString)
+        {
+            using var connection = new SqliteConnection(connectionString);
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "INSERT INTO route_recovery_evidence(recorded_utc,authority_count,has_current_blocker,is_blocked,can_continue,source_order_json,blocker_json) VALUES($recorded,8,0,0,1,$sources,$blockers)";
+            command.Parameters.AddWithValue("$recorded", DateTimeOffset.UtcNow.ToString("O"));
+            command.Parameters.AddWithValue("$sources", JsonSerializer.Serialize(HostedRouteRecoveryContract.SourceOrder));
+            command.Parameters.AddWithValue("$blockers", "[]");
+            command.ExecuteNonQuery();
         }
 
         public bool DirectorySwitchFailureHasNoPartialContent()

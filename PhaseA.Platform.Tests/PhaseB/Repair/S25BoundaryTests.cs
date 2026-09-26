@@ -8,6 +8,7 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Workflow;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.PhaseB.Repair;
@@ -187,6 +188,7 @@ public sealed class S25BoundaryTests
             var manifest = storage.CreateSnapshot(context, source, "snapshot-control", "workspace-control", project.ProjectId,
                 "policy-s25", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
             var restore = new RestoreService(connectionString);
+            SeedRouteAuthorityEvidence(connectionString);
             var firstLease = new RunnerLease("control-lease", account.AccountId, project.ProjectId, 1);
             await SeedLeaseAsync(connectionString, firstLease);
             var controlDestination = Path.Combine(caseRoot, "control-restore");
@@ -269,6 +271,18 @@ public sealed class S25BoundaryTests
         command.Parameters.AddWithValue("$project", lease.ProjectId);
         command.Parameters.AddWithValue("$fence", lease.Fence);
         await command.ExecuteNonQueryAsync();
+    }
+
+    private static void SeedRouteAuthorityEvidence(string connectionString)
+    {
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO route_recovery_evidence(recorded_utc,authority_count,has_current_blocker,is_blocked,can_continue,source_order_json,blocker_json) VALUES($recorded,8,0,0,1,$sources,$blockers)";
+        command.Parameters.AddWithValue("$recorded", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$sources", JsonSerializer.Serialize(HostedRouteRecoveryContract.SourceOrder));
+        command.Parameters.AddWithValue("$blockers", "[]");
+        command.ExecuteNonQuery();
     }
 
     private static async Task<object> InterruptOwnedRestoreAsync(

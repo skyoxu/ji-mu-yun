@@ -106,14 +106,32 @@ public sealed class S54BoundaryTests : IDisposable
         await WaitForFileAsync(childStarted, TimeSpan.FromSeconds(5));
         Assert.True(File.Exists(childStarted), "FAILURE-O-270713F3B6BC: child did not start; cancellation cannot prove cleanup.");
         var childPid = int.Parse((await File.ReadAllTextAsync(childStarted)).Trim(), System.Globalization.CultureInfo.InvariantCulture);
-        using var child = Process.GetProcessById(childPid);
-        Assert.False(child.HasExited, "FAILURE-O-270713F3B6BC: child exited before parent cancellation.");
+        using var child = TryGetProcess(childPid);
+        Assert.NotNull(child);
+        Assert.False(child!.HasExited, "FAILURE-O-270713F3B6BC: child exited before parent cancellation.");
         cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run);
         await Task.Delay(TimeSpan.FromMilliseconds(500));
         child.Refresh();
-        Assert.True(child.HasExited, "FAILURE-O-270713F3B6BC: child outlived the runner cancellation.");
+        Assert.True(child.HasExited || !IsProcessPresent(childPid), "FAILURE-O-270713F3B6BC: child outlived the runner cancellation.");
         Observe("children-terminated-after-parent", true);
+    }
+
+    private static Process? TryGetProcess(int processId)
+    {
+        try { return Process.GetProcessById(processId); }
+        catch (ArgumentException) { return null; }
+    }
+
+    private static bool IsProcessPresent(int processId)
+    {
+        try
+        {
+            using var process = Process.GetProcessById(processId);
+            return !process.HasExited;
+        }
+        catch (ArgumentException) { return false; }
+        catch (InvalidOperationException) { return false; }
     }
 
     private async Task AssertRunnerDeniedAsync(string resource, string operation, string failureId)

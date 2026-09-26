@@ -1,4 +1,5 @@
 using System.Net;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
@@ -37,6 +38,36 @@ public sealed class S51BoundaryTests
             throw new Xunit.Sdk.XunitException("FAILURE-O-E9499880E6EF: missing valid owning-boundary inductions: " + string.Join(",", missing));
     }
 
+    [Fact]
+    public async Task O_R4_PERSISTED_FAULT_POINT_MATRIX()
+    {
+        var repository = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var root = Path.Combine(repository, "logs", "quick-dev", "s51-fault-matrix", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var checkpoints = new[] { "staging-written", "post-verification", "previous-moved", "current-switched", "metadata-committed" };
+        var observations = new List<object>();
+        try
+        {
+            foreach (var checkpoint in checkpoints)
+            {
+                var result = await ObserveFaultCheckpointAsync(repository, root, checkpoint);
+                observations.Add(new { checkpoint, result });
+                var safeStatus = checkpoint == "metadata-committed"
+                    ? result.RecoveredStatus is "Published" or "Quarantined" or "Failed"
+                    : result.RecoveredStatus is "Quarantined" or "Failed";
+                if (!result.TerminatedAtCheckpoint || !safeStatus || result.StagingFiles != 0)
+                    throw new Xunit.Sdk.XunitException($"FAILURE-R4-{checkpoint}: independent fault-point recovery did not produce a typed safe state (terminated={result.TerminatedAtCheckpoint}, status={result.RecoveredStatus ?? "<null>"}, stagingFiles={result.StagingFiles}).");
+                if (checkpoint == "staging-written")
+                    await VerifyConcurrentRetryPublicationAsync(repository, Path.Combine(root, checkpoint));
+            }
+            File.WriteAllText(Path.Combine(root, "fault-matrix-observations.json"), JsonSerializer.Serialize(observations));
+        }
+        finally
+        {
+            try { Directory.Delete(root, recursive: true); } catch (IOException) { }
+        }
+    }
+
     private static async Task ObserveServiceFamiliesAsync(string repository, string root, Dictionary<string, object> observed, HashSet<string> valid)
     {
         var source = Path.Combine(root, "service", "workspace", "repo");
@@ -58,6 +89,7 @@ public sealed class S51BoundaryTests
         var service = new RestoreService(cs);
         var lease = new RunnerLease("s51-lease", account.AccountId, project.ProjectId, 1);
         await InsertLeaseAsync(cs, lease);
+        await InsertRouteAuthorityAsync(cs);
         var control = service.Restore(context, manifest, source, Path.Combine(root, "service", "control"), lease, "s51-control");
         if (control.Status != RestoreAttemptStatus.Published) throw new InvalidOperationException("S51 service control restore failed.");
 
@@ -134,6 +166,148 @@ public sealed class S51BoundaryTests
         return new { stagedFiles = Directory.EnumerateFiles(destination, "*.txt", SearchOption.AllDirectories).Count(), workerExitCode = worker.ExitCode, recoveredStatus = (await command.ExecuteScalarAsync())?.ToString() };
     }
 
+    private static async Task<FaultPointObservation> ObserveFaultCheckpointAsync(string repository, string root, string checkpoint)
+    {
+        var caseRoot = Path.Combine(root, checkpoint);
+        Directory.CreateDirectory(caseRoot);
+        var source = Path.Combine(caseRoot, "source");
+        Directory.CreateDirectory(source);
+        for (var index = 0; index < 800; index++) File.WriteAllText(Path.Combine(source, $"file-{index:D4}.txt"), "R4 fault matrix content");
+        var destination = Path.Combine(caseRoot, "destination");
+        Directory.CreateDirectory(destination);
+        var database = Path.Combine(caseRoot, "metadata.sqlite3");
+        var cs = new SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString();
+        await SqliteMetadataSchema.InitializeAsync(cs);
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?> { ["HOSTED_WORKSPACE_ROOT"] = caseRoot, ["PHASEA_REPOSITORY_ROOT"] = repository });
+        var store = new PhaseAMetadataStore(cs, options);
+        var account = await store.CreateUserAccountAsync("s51-r4-owner-" + checkpoint, 1);
+        var workspace = Path.Combine(caseRoot, "workspace");
+        var project = await store.CreateProjectAsync(new ProjectCreationCommand("s51-r4-" + checkpoint, account.AccountId, "R4", "R4", "manual", "default", false, [], workspace, source, Path.Combine(workspace, "runtime"), Path.Combine(workspace, "meta")));
+        if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("R4 matrix project setup failed.");
+        var context = new RequestContext("s51-r4-principal", account.AccountId, new HashSet<string> { "user" }, "s51-r4-credential", "s51-r4-correlation-" + checkpoint);
+        var storage = new WorkspaceStorageService(cs); storage.SetQuota(account.AccountId, 100 * 1024 * 1024);
+        var manifest = storage.CreateSnapshot(context, source, "s51-r4-snapshot-" + checkpoint, "s51-r4-workspace", project.ProjectId, "s51-r4-policy", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
+        var lease = new RunnerLease("s51-r4-lease-" + checkpoint, account.AccountId, project.ProjectId, 1);
+        _ = new RestoreService(cs);
+        await InsertLeaseAsync(cs, lease); await InsertRouteAuthorityAsync(cs);
+        var input = Path.Combine(caseRoot, "input.json");
+        File.WriteAllText(input, JsonSerializer.Serialize(new { cs, context, lease, manifest, source, destination, checkpoint }));
+        var watcherRoot = Path.Combine(destination, ".restore-checkpoints", manifest.SnapshotId);
+        using var watcher = new FileSystemWatcher(destination) { IncludeSubdirectories = true, Filter = checkpoint + ".json", NotifyFilter = NotifyFilters.FileName, EnableRaisingEvents = true };
+        var reached = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        watcher.Created += (_, args) => { if (args.FullPath.Contains(checkpoint, StringComparison.OrdinalIgnoreCase)) reached.TrySetResult(); };
+        var start = new ProcessStartInfo("dotnet") { WorkingDirectory = repository, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+        foreach (var argument in new[] { "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--no-restore", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_R4_INTERRUPTION_WORKER", "--logger", "trx", "--results-directory", Path.Combine(caseRoot, "trx") }) start.ArgumentList.Add(argument);
+        start.Environment["S51_R4_INPUT"] = input;
+        start.Environment["PHASEA_RESTORE_FAULT_POINT"] = checkpoint;
+        using var worker = Process.Start(start) ?? throw new InvalidOperationException("R4 matrix worker did not start.");
+        var winner = await Task.WhenAny(reached.Task, worker.WaitForExitAsync(), Task.Delay(TimeSpan.FromSeconds(45)));
+        var terminated = winner == reached.Task && !worker.HasExited;
+        if (terminated) { worker.Kill(entireProcessTree: true); await worker.WaitForExitAsync(); }
+        watcher.Dispose();
+        _ = new RestoreService(cs);
+        string? status;
+        await using (var connection = new SqliteConnection(cs)) { await connection.OpenAsync(); await using var command = connection.CreateCommand(); command.CommandText = "SELECT status FROM restore_attempts WHERE idempotency_key=$key"; command.Parameters.AddWithValue("$key", "s51-r4-request-" + checkpoint); status = (await command.ExecuteScalarAsync())?.ToString(); }
+        var stagingRoot = Path.Combine(destination, ".restore-staging");
+        var stagingFiles = Directory.Exists(stagingRoot) ? Directory.EnumerateFiles(stagingRoot, "*", SearchOption.AllDirectories).Count() : 0;
+        return new FaultPointObservation(terminated, status, stagingFiles);
+    }
+
+    private static async Task VerifyConcurrentRetryPublicationAsync(string repository, string caseRoot)
+    {
+        var input = Path.Combine(caseRoot, "input.json");
+        var workers = new List<Process>();
+        try
+        {
+            for (var index = 0; index < 2; index++)
+            {
+                var start = new ProcessStartInfo("dotnet")
+                {
+                    WorkingDirectory = repository,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                foreach (var argument in new[]
+                {
+                    "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--no-restore",
+                    "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_R4_INTERRUPTION_WORKER",
+                    "--logger", "trx", "--results-directory", Path.Combine(caseRoot, "retry-trx-" + index)
+                }) start.ArgumentList.Add(argument);
+                start.Environment["S51_R4_INPUT"] = input;
+                start.Environment["S51_R4_REQUIRE_PUBLISHED"] = "1";
+                start.Environment["S51_R4_RESULT_FILE"] = Path.Combine(caseRoot, "retry-result-" + index + ".json");
+                workers.Add(Process.Start(start) ?? throw new InvalidOperationException("R4 concurrent retry worker did not start."));
+            }
+            await Task.WhenAll(workers.Select(worker => worker.WaitForExitAsync()))
+                .WaitAsync(TimeSpan.FromSeconds(90));
+            if (workers.Any(worker => worker.ExitCode != 0))
+                throw new Xunit.Sdk.XunitException("FAILURE-R4-CONCURRENT: a same-key retry worker failed.");
+
+            using var data = JsonDocument.Parse(File.ReadAllText(input));
+            var item = data.RootElement;
+            var cs = item.GetProperty("cs").GetString()!;
+            var destination = item.GetProperty("destination").GetString()!;
+            var checkpoint = item.GetProperty("checkpoint").GetString()!;
+            var workerResults = Enumerable.Range(0, 2).Select(index =>
+            {
+                var resultFile = Path.Combine(caseRoot, "retry-result-" + index + ".json");
+                if (!File.Exists(resultFile))
+                    throw new Xunit.Sdk.XunitException("FAILURE-R4-CONCURRENT: a retry worker produced no result artifact.");
+                using var result = JsonDocument.Parse(File.ReadAllText(resultFile));
+                return (
+                    AttemptId: result.RootElement.GetProperty("attemptId").GetString(),
+                    Status: result.RootElement.GetProperty("status").GetString());
+            }).ToArray();
+            await using var connection = new SqliteConnection(cs);
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                SELECT attempt_id, status,
+                       (SELECT COUNT(*) FROM restore_attempt_history h
+                        WHERE h.attempt_id=a.attempt_id AND h.stage='publish' AND h.outcome='published')
+                FROM restore_attempts a WHERE idempotency_key=$key
+                """;
+            command.Parameters.AddWithValue("$key", "s51-r4-request-" + checkpoint);
+            await using var reader = await command.ExecuteReaderAsync();
+            var publishedOnce = await reader.ReadAsync() &&
+                                reader.GetString(1) == "Published" &&
+                                reader.GetInt64(2) == 1 &&
+                                workerResults.All(result =>
+                                    result.Status == "Published" &&
+                                    result.AttemptId == reader.GetString(0));
+            if (!publishedOnce ||
+                !File.Exists(Path.Combine(destination, ".restore-current", "file-0000.txt")))
+                throw new Xunit.Sdk.XunitException("FAILURE-R4-CONCURRENT: same-key processes did not converge on one published result.");
+        }
+        finally
+        {
+            foreach (var worker in workers)
+            {
+                if (!worker.HasExited) worker.Kill(entireProcessTree: true);
+                worker.Dispose();
+            }
+        }
+    }
+
+    [Fact]
+    public void O_R4_INTERRUPTION_WORKER()
+    {
+        var input = Environment.GetEnvironmentVariable("S51_R4_INPUT");
+        if (string.IsNullOrWhiteSpace(input)) return;
+        using var data = JsonDocument.Parse(File.ReadAllText(input));
+        var item = data.RootElement;
+        var contextNode = item.GetProperty("context");
+        var context = new RequestContext(contextNode.GetProperty("PrincipalId").GetString()!, contextNode.GetProperty("AccountId").GetString()!, new HashSet<string> { "user" }, contextNode.GetProperty("CredentialId").GetString()!, contextNode.GetProperty("CorrelationId").GetString()!);
+        var service = new RestoreService(item.GetProperty("cs").GetString());
+        var result = service.Restore(context, item.GetProperty("manifest").Deserialize<SnapshotManifest>()!, item.GetProperty("source").GetString()!, item.GetProperty("destination").GetString()!, item.GetProperty("lease").Deserialize<RunnerLease>()!, "s51-r4-request-" + item.GetProperty("checkpoint").GetString());
+        if (Environment.GetEnvironmentVariable("S51_R4_REQUIRE_PUBLISHED") == "1" &&
+            result.Status != RestoreAttemptStatus.Published)
+            throw new Xunit.Sdk.XunitException("FAILURE-R4-CONCURRENT: retry worker did not observe the published result.");
+        var resultFile = Environment.GetEnvironmentVariable("S51_R4_RESULT_FILE");
+        if (!string.IsNullOrWhiteSpace(resultFile))
+            File.WriteAllText(resultFile, JsonSerializer.Serialize(new { attemptId = result.AttemptId, status = result.Status.ToString() }));
+    }
+
     private static void InterruptedWorker()
     {
         var root = Environment.GetEnvironmentVariable("S51_INTERRUPTION_ROOT")!;
@@ -204,4 +378,7 @@ public sealed class S51BoundaryTests
     private static string? ReadCategory(string cs, string attemptId) { using var connection = new SqliteConnection(cs); connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "SELECT failure_category FROM restore_attempts WHERE attempt_id=$id"; command.Parameters.AddWithValue("$id", attemptId); return command.ExecuteScalar()?.ToString(); }
     private static string? ReadCategoryByKey(string cs, string key) { using var connection = new SqliteConnection(cs); connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "SELECT failure_category FROM restore_attempts WHERE idempotency_key=$key"; command.Parameters.AddWithValue("$key", key); return command.ExecuteScalar()?.ToString(); }
     private static async Task InsertLeaseAsync(string cs, RunnerLease lease) { await using var connection = new SqliteConnection(cs); await connection.OpenAsync(); await using var command = connection.CreateCommand(); command.CommandText = "INSERT INTO runner_leases(lease_id,account_id,project_id,fence) VALUES($id,$account,$project,$fence)"; command.Parameters.AddWithValue("$id", lease.LeaseId); command.Parameters.AddWithValue("$account", lease.AccountId); command.Parameters.AddWithValue("$project", lease.ProjectId); command.Parameters.AddWithValue("$fence", lease.Fence); await command.ExecuteNonQueryAsync(); }
+    private static async Task InsertRouteAuthorityAsync(string cs) { await using var connection = new SqliteConnection(cs); await connection.OpenAsync(); await using var command = connection.CreateCommand(); command.CommandText = "INSERT INTO route_recovery_evidence(recorded_utc,authority_count,has_current_blocker,is_blocked,can_continue,source_order_json,blocker_json) VALUES($utc,8,0,0,1,$sources,'[]')"; command.Parameters.AddWithValue("$utc", DateTimeOffset.UtcNow.ToString("O")); command.Parameters.AddWithValue("$sources", JsonSerializer.Serialize(PhaseA.Platform.Workflow.HostedRouteRecoveryContract.SourceOrder)); await command.ExecuteNonQueryAsync(); }
+
+    private sealed record FaultPointObservation(bool TerminatedAtCheckpoint, string? RecoveredStatus, int StagingFiles);
 }

@@ -11,6 +11,9 @@ public enum RestoreAttemptStatus
 
 public sealed record RestoreAttempt(string AttemptId, string SnapshotId, string WorkspaceId, RestoreAttemptStatus Status)
 {
+    public string? FailureCategory { get; init; }
+    public string? FailureDetail { get; init; }
+
     public RestoreAttempt Advance(RestoreAttemptStatus next)
     {
         if (next < Status || (Status == RestoreAttemptStatus.Published && next != Status))

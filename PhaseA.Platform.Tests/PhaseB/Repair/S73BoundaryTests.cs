@@ -30,7 +30,7 @@ public sealed class S73BoundaryTests
             await new SqliteMigrationService().MigrateAsync(connectionString, "s73-account", ProjectId, "s73-restart-migration");
 
             var store = CreateStore(connectionString, root.FullName);
-            var accountId = await CreateProjectAsync(store, root.FullName);
+        var accountId = await CreateProjectAsync(store, connectionString, root.FullName);
             var leaseId = await store.CreateRunAsync(ProjectId, null, "s73-restart");
             var acquired = await store.TryAcquireRunnerLockAsync(ProjectId, leaseId);
             var restartedStore = CreateStore(connectionString, root.FullName);
@@ -60,7 +60,7 @@ public sealed class S73BoundaryTests
                 ProjectId,
                 "s73-policy",
                 new HashSet<string>()).Manifest;
-            var published = new RestoreService(connectionString).Restore(
+            var published = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(
                 context,
                 manifest,
                 source.FullName,
@@ -92,7 +92,7 @@ public sealed class S73BoundaryTests
             await SqliteMetadataSchema.InitializeAsync(connectionString);
             await new SqliteMigrationService().MigrateAsync(connectionString, "s73-account", ProjectId, "s73-supersession-migration");
             var store = CreateStore(connectionString, root.FullName);
-            await CreateProjectAsync(store, root.FullName);
+            await CreateProjectAsync(store, connectionString, root.FullName);
             var firstLeaseId = await store.CreateRunAsync(ProjectId, null, "s73-first");
             var supersedingLeaseId = await store.CreateRunAsync(ProjectId, null, "s73-second");
 
@@ -126,7 +126,7 @@ public sealed class S73BoundaryTests
         return new PhaseAMetadataStore(connectionString, options);
     }
 
-    private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, string root)
+    private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, string connectionString, string root)
     {
         var account = await store.CreateUserAccountAsync($"s73-user-{Guid.NewGuid():N}", 1);
         var projectRoot = Directory.CreateDirectory(Path.Combine(root, "project"));
@@ -147,6 +147,7 @@ public sealed class S73BoundaryTests
         {
             throw new InvalidOperationException("The disposable S73 project could not be created.");
         }
+        RouteAuthorityFixture.Seed(connectionString, account.AccountId, ProjectId, projectRoot.FullName);
         return account.AccountId;
     }
 

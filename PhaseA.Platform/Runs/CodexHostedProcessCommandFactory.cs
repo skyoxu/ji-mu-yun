@@ -75,7 +75,13 @@ public static class CodexHostedProcessCommandFactory
             environment[item.Key] = item.Value;
         }
 
-        return new HostedProcessCommand(ResolveCodexCommand(), arguments, request.RepositoryRoot, environment, request.Prompt);
+        return new HostedProcessCommand(
+            ResolveCodexCommand(),
+            arguments,
+            request.RepositoryRoot,
+            environment,
+            request.Prompt,
+            RequireIsolation: true);
     }
 
     public static async Task<HostedProcessCommand> BuildAsync(

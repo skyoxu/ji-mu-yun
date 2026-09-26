@@ -36,11 +36,12 @@ public sealed class S31BoundaryTests
         var workspace = Path.GetDirectoryName(source)!;
         var project = await store.CreateProjectAsync(new ProjectCreationCommand("s31-" + nonce, account.AccountId, "Restore fixture", "Restore fixture", "manual", "default", false, [], workspace, source, Path.Combine(workspace, "runtime"), Path.Combine(workspace, "meta")));
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("S31 fixture project creation failed.");
+        RouteAuthorityFixture.Seed(connectionString, account.AccountId, project.ProjectId, workspace);
         var context = new RequestContext("s31-owner", account.AccountId, new HashSet<string> { "user" }, "s31-disposable-credential", "s31-" + nonce);
         var storage = new WorkspaceStorageService(connectionString);
         storage.SetQuota(account.AccountId, 1024 * 1024);
         var manifest = storage.CreateSnapshot(context, source, "snapshot-control", "workspace-control", project.ProjectId, "s31-policy", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
-        var service = new RestoreService(connectionString);
+        var service = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
         var issues = new List<string>();
         var observations = new List<object>();
         var controlLease = new RunnerLease("lease-control", account.AccountId, project.ProjectId, 1);

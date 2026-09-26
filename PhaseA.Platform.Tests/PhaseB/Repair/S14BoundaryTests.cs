@@ -8,6 +8,7 @@ using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
+using PhaseA.Platform.Workspaces;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -34,7 +35,10 @@ public sealed class S14BoundaryTests
         var databasePath = Path.Combine(root, "metadata.sqlite3");
         var workspaceRoot = Path.Combine(root, "workspaces");
         Directory.CreateDirectory(workspaceRoot);
+        var previousKeyRoot = Environment.GetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT");
+        Environment.SetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT", Path.Combine(root, "snapshot-keys"));
         Process? process = null;
+        RunnerIsolationHandle? isolationHandle = null;
         try
         {
             var connectionString = $"Data Source={databasePath}";
@@ -51,39 +55,110 @@ public sealed class S14BoundaryTests
                 "project-s14", user.AccountId, "S14", "S14", "manual", "default", false, [],
                 projectRoot, Path.Combine(projectRoot, "repo"), Path.Combine(projectRoot, "runtime"), Path.Combine(projectRoot, "repo", "meta")));
             await store.SetProjectBootstrapStatusAsync(project.ProjectId!, "succeeded", null);
+            SeedRouteRecoverySources(connectionString, project.ProjectId!, projectRoot);
+            _ = new RestoreService(connectionString);
+            _ = new WorkspaceStorageService(connectionString).SetQuota(user.AccountId, 1_000_000_000);
+            using (var leaseConnection = new SqliteConnection(connectionString))
+            {
+                leaseConnection.Open();
+                using var leaseCommand = leaseConnection.CreateCommand();
+                leaseCommand.CommandText = """
+                    INSERT INTO runner_leases(lease_id, account_id, project_id, fence)
+                    VALUES($lease, $account, $project, 1);
+                    INSERT INTO restore_runtime_credentials(workspace_id, credential_id)
+                    VALUES($workspace, $credential);
+                    """;
+                leaseCommand.Parameters.AddWithValue("$lease", "s14-lease");
+                leaseCommand.Parameters.AddWithValue("$account", user.AccountId);
+                leaseCommand.Parameters.AddWithValue("$project", project.ProjectId!);
+                leaseCommand.Parameters.AddWithValue("$workspace", project.WorkspaceId);
+                leaseCommand.Parameters.AddWithValue("$credential", user.Token);
+                leaseCommand.ExecuteNonQuery();
+            }
+            var seededAuthority = new RouteRecoveryAuthorityResolver(connectionString).Resolve(user.AccountId, project.ProjectId!);
+            _output.WriteLine($"S14-AUTHORITY canContinue={seededAuthority.CanContinue} count={seededAuthority.AuthorityCount} blockers={string.Join(',', seededAuthority.Blockers)} sources={string.Join('|', seededAuthority.SourceEvidence)}");
+            isolationHandle = RunnerIsolationPolicy.PrepareWorkspace(new RunnerIsolationDescriptor(
+                user.AccountId,
+                project.ProjectId!,
+                "NT AUTHORITY\\LOCAL SERVICE",
+                projectRoot,
+                LowPrivilegeRequired: true,
+                JobObjectRequired: OperatingSystem.IsWindows(),
+                NtfsAclRequired: OperatingSystem.IsWindows()));
+            File.WriteAllText(Path.Combine(projectRoot, "s14-content.txt"), "S14");
 
             var url = $"http://127.0.0.1:{FreePort()}";
             process = StartServer(url, databasePath, workspaceRoot);
             using var healthClient = new HttpClient { BaseAddress = new Uri(url), Timeout = TimeSpan.FromSeconds(10) };
             await WaitForHealthAsync(healthClient, process);
 
-            var operations = new[]
-            {
-                new OperationRequest("snapshot", $"/api/projects/{project.ProjectId}/snapshots", "s14-snapshot"),
-                new OperationRequest("restore", $"/api/projects/{project.ProjectId}/restores", "s14-restore"),
-                new OperationRequest("acl-repair", $"/api/projects/{project.ProjectId}/acl-repairs", "s14-acl-repair")
-            };
+            var snapshotRequest = new OperationRequest("snapshot", $"/api/projects/{project.ProjectId}/snapshots", "s14-snapshot");
+            var snapshotAdmission = await InvokeThenDisconnectAsync(url, user.Token, snapshotRequest);
+            var snapshotRun = await WaitForRunAsync(url, user.Token, snapshotAdmission.OperationId!);
+            _output.WriteLine($"S14-SNAPSHOT status={snapshotRun.Status} progress={snapshotRun.ProgressLabel} exit={snapshotRun.ExitCode} stderr={snapshotRun.Stderr}");
+            var snapshotReentry = await InvokeThenDisconnectAsync(url, user.Token, snapshotRequest);
+            Require(snapshotAdmission.StatusCode == HttpStatusCode.Accepted &&
+                    snapshotAdmission.OperationId == snapshotReentry.OperationId,
+                "FAILURE-O-11DDC0AAE540", "Snapshot admission was not idempotent after client disconnect.");
+            Require(snapshotRun.Status == "succeeded" && !string.IsNullOrWhiteSpace(snapshotRun.SnapshotId),
+                "FAILURE-O-11DDC0AAE540", "Snapshot operation did not produce a persisted business result.");
 
-            var admitted = new List<OperationObservation>();
-            var reentered = new List<OperationObservation>();
-            foreach (var operation in operations)
+            var queuedBeforeRestart = await store.GetOrCreateProjectOperationRunAsync(
+                project.ProjectId!, project.WorkspaceId!, "workspace-snapshot:s14-restart-queued");
+            var runningBeforeRestart = await store.GetOrCreateProjectOperationRunAsync(
+                project.ProjectId!, project.WorkspaceId!, "workspace-restore:s14-restart-running");
+            await store.MarkRunStartedAsync(runningBeforeRestart.RunId);
+            Require(queuedBeforeRestart.Status == "queued" &&
+                    (await store.GetRunSnapshotAsync(runningBeforeRestart.RunId))?.Status == "running",
+                "FAILURE-O-11DDC0AAE540", "Restart fixture did not persist both interrupted operation states.");
+
+            process.Kill(entireProcessTree: true);
+            await process.WaitForExitAsync();
+            process.Dispose();
+            process = StartServer(url, databasePath, workspaceRoot);
+            await WaitForHealthAsync(healthClient, process);
+            foreach (var interrupted in new[] { queuedBeforeRestart, runningBeforeRestart })
             {
-                admitted.Add(await InvokeThenDisconnectAsync(url, user.Token, operation));
-                reentered.Add(await InvokeThenDisconnectAsync(url, user.Token, operation));
+                var recovered = await WaitForRunAsync(url, user.Token, interrupted.RunId);
+                Require(recovered.Status == "failed" &&
+                        recovered.ExitCode == 500 &&
+                        recovered.Stderr.Contains("service restarted", StringComparison.Ordinal),
+                    "FAILURE-O-11DDC0AAE540", "Restart did not durably fail an interrupted workspace operation.");
             }
+            var queuedReentry = await InvokeThenDisconnectAsync(
+                url, user.Token,
+                new OperationRequest("snapshot", $"/api/projects/{project.ProjectId}/snapshots", "s14-restart-queued"));
+            Require(queuedReentry.OperationId == queuedBeforeRestart.RunId &&
+                    (await WaitForRunAsync(url, user.Token, queuedReentry.OperationId!)).Status == "failed",
+                "FAILURE-O-11DDC0AAE540", "Interrupted operation reentry did not retain its stable failed result.");
+            _output.WriteLine("S14-OBSERVATION durable-operation-state-survives-application-restart");
 
-            var allAdmitted = admitted.All(observation =>
-                observation.StatusCode == HttpStatusCode.Accepted &&
-                !string.IsNullOrWhiteSpace(observation.OperationId) &&
-                !string.IsNullOrWhiteSpace(observation.Result));
-            var stableReentry = admitted.Zip(reentered).All(pair =>
-                pair.First.StatusCode == HttpStatusCode.Accepted &&
-                pair.Second.StatusCode == HttpStatusCode.Accepted &&
-                string.Equals(pair.First.OperationId, pair.Second.OperationId, StringComparison.Ordinal) &&
-                string.Equals(pair.First.Result, pair.Second.Result, StringComparison.Ordinal));
+            var alternateRoot = Path.Combine(root, "alternate-restore-root");
+            var restoreRequest = new OperationRequest("restore", $"/api/projects/{project.ProjectId}/restores", "s14-restore", snapshotRun.SnapshotId, alternateRoot);
+            var restoreAdmission = await InvokeThenDisconnectAsync(url, user.Token, restoreRequest);
+            RunObservation restoreRun;
+            try
+            {
+                restoreRun = await WaitForRunAsync(url, user.Token, restoreAdmission.OperationId!);
+            }
+            catch (Exception error)
+            {
+                var checkpoints = Directory.Exists(Path.Combine(alternateRoot, ".restore-checkpoints"))
+                    ? string.Join('|', Directory.EnumerateFiles(Path.Combine(alternateRoot, ".restore-checkpoints"), "*.json", SearchOption.AllDirectories).Select(Path.GetFileName))
+                    : "";
+                _output.WriteLine($"S14-RESTORE-TIMEOUT checkpoints={checkpoints} error={error.GetType().Name}");
+                throw;
+            }
+            _output.WriteLine($"S14-RESTORE status={restoreRun.Status} progress={restoreRun.ProgressLabel} exit={restoreRun.ExitCode} failure={restoreRun.FailureCategory} detail={restoreRun.FailureDetail} stderr={restoreRun.Stderr}");
+            Require(restoreRun.Status == "succeeded" &&
+                    File.Exists(Path.Combine(alternateRoot, ".restore-current", "s14-content.txt")),
+                "FAILURE-O-11DDC0AAE540", "Restore did not publish the selected Snapshot to the alternate root.");
 
-            Require(allAdmitted, "FAILURE-O-11DDC0AAE540", "Snapshot, Restore, and ACL repair were not all admitted as durable authenticated operations.");
-            Require(stableReentry, "FAILURE-O-11DDC0AAE540", "Authorized re-entry did not return each durable operation identity and result after client disconnection.");
+            var aclRequest = new OperationRequest("acl-repair", $"/api/projects/{project.ProjectId}/acl-repairs", "s14-acl-repair");
+            var aclAdmission = await InvokeThenDisconnectAsync(url, user.Token, aclRequest);
+            var aclRun = await WaitForRunAsync(url, user.Token, aclAdmission.OperationId!);
+            _output.WriteLine($"S14-ACL status={aclRun.Status} progress={aclRun.ProgressLabel} exit={aclRun.ExitCode} failure={aclRun.FailureCategory} detail={aclRun.FailureDetail} stderr={aclRun.Stderr}");
+            Require(aclRun.Status == "succeeded", "FAILURE-O-11DDC0AAE540", "ACL repair did not persist a successful business result.");
             _output.WriteLine("S14-OBSERVATION O-11DDC0AAE540 durable-operations-survive-browser-disconnect");
         }
         finally
@@ -94,6 +169,8 @@ public sealed class S14BoundaryTests
                 await process.WaitForExitAsync();
             }
             process?.Dispose();
+            isolationHandle?.Dispose();
+            Environment.SetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT", previousKeyRoot);
             SqliteConnection.ClearAllPools();
             if (Directory.Exists(root))
             {
@@ -108,13 +185,58 @@ public sealed class S14BoundaryTests
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         using var request = new HttpRequestMessage(HttpMethod.Post, operation.Path)
         {
-            Content = JsonContent.Create(new { operationKey = operation.Key })
+            Content = JsonContent.Create(new { operationKey = operation.Key, snapshotId = operation.SnapshotId, targetRoot = operation.TargetRoot })
         };
         request.Headers.ConnectionClose = true;
-        using var response = await client.SendAsync(request);
-        var body = await response.Content.ReadAsStringAsync();
-        var (operationId, result) = ReadOperationFields(body);
-        return new OperationObservation(operation.Name, response.StatusCode, operationId, result);
+        using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+        var location = response.Headers.Location?.ToString();
+        var operationId = location?.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+        return new OperationObservation(operation.Name, response.StatusCode, operationId, "accepted");
+    }
+
+    private static async Task<RunObservation> WaitForRunAsync(string url, string token, string runId)
+    {
+        using var client = new HttpClient { BaseAddress = new Uri(url), Timeout = TimeSpan.FromSeconds(60) };
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var lastStatus = "unknown";
+        for (var attempt = 0; attempt < 240; attempt++)
+        {
+            using var response = await client.GetAsync($"/api/runs/{runId}");
+            if (response.IsSuccessStatusCode)
+            {
+                using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                var run = document.RootElement.GetProperty("run");
+                var evidence = run.TryGetProperty("evidenceJson", out var evidenceNode) ? evidenceNode.GetString() : null;
+                string? snapshotId = null;
+                string? failureCategory = null;
+                string? failureDetail = null;
+                if (!string.IsNullOrWhiteSpace(evidence))
+                {
+                    using var evidenceDocument = JsonDocument.Parse(evidence);
+                    if (evidenceDocument.RootElement.TryGetProperty("snapshotId", out var snapshotNode))
+                        snapshotId = snapshotNode.GetString();
+                    if (evidenceDocument.RootElement.TryGetProperty("failureCategory", out var failureNode) && failureNode.ValueKind == JsonValueKind.String)
+                        failureCategory = failureNode.GetString();
+                    if (evidenceDocument.RootElement.TryGetProperty("failureDetail", out var detailNode) && detailNode.ValueKind == JsonValueKind.String)
+                        failureDetail = detailNode.GetString();
+                }
+                var status = run.GetProperty("status").GetString() ?? "";
+                lastStatus = status;
+                if (run.TryGetProperty("progressLabel", out var progress) && progress.ValueKind == JsonValueKind.String)
+                    lastStatus += "/" + progress.GetString();
+                if (status is "succeeded" or "failed")
+                    return new RunObservation(
+                        status,
+                        snapshotId,
+                        run.TryGetProperty("progressLabel", out var progressLabelNode) && progressLabelNode.ValueKind == JsonValueKind.String ? progressLabelNode.GetString() ?? "" : "",
+                        run.TryGetProperty("exitCode", out var exitCodeNode) && exitCodeNode.ValueKind == JsonValueKind.Number ? exitCodeNode.GetInt32() : null,
+                        run.TryGetProperty("stderrText", out var stderrNode) && stderrNode.ValueKind == JsonValueKind.String ? stderrNode.GetString() ?? "" : "",
+                        failureCategory,
+                        failureDetail);
+            }
+            await Task.Delay(250);
+        }
+        throw new TimeoutException($"Run {runId} did not complete; last status={lastStatus}.");
     }
 
     private static (string? OperationId, string? Result) ReadOperationFields(string body)
@@ -131,6 +253,28 @@ public sealed class S14BoundaryTests
         {
             return (null, null);
         }
+    }
+
+    private static void SeedRouteRecoverySources(string connectionString, string projectId, string projectRoot)
+    {
+        Directory.CreateDirectory(Path.Combine(projectRoot, "repo", "meta"));
+        Directory.CreateDirectory(Path.Combine(projectRoot, "repo", "routes", "prototype-contract"));
+        Directory.CreateDirectory(Path.Combine(projectRoot, "repo", "meta", "routes", "prototype"));
+        File.WriteAllText(Path.Combine(projectRoot, "repo", "meta", "project-execution-guide.md"), "S14 execution guide");
+        File.WriteAllText(Path.Combine(projectRoot, "repo", "routes", "prototype-contract", "latest.json"), "{}");
+        File.WriteAllText(Path.Combine(projectRoot, "repo", "meta", "routes", "prototype", "latest.json"), "{}");
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+        using var update = connection.CreateCommand();
+        update.CommandText = "UPDATE projects SET game_type_match_json=$match WHERE id=$project";
+        update.Parameters.AddWithValue("$match", "{\"game_type\":\"manual\"}");
+        update.Parameters.AddWithValue("$project", projectId);
+        update.ExecuteNonQuery();
+        using var binding = connection.CreateCommand();
+        binding.CommandText = "INSERT INTO project_route_prompt_evidence_bindings(project_id,route_id,execution_prompt_hash,persisted_prompt_hash,prompt_artifact_ref,prompt_evidence_ref,updated_utc) VALUES($project,'s14-route','hash-a','hash-b','meta/prompt.json','meta/prompt-evidence.json',$utc)";
+        binding.Parameters.AddWithValue("$project", projectId);
+        binding.Parameters.AddWithValue("$utc", DateTimeOffset.UtcNow.ToString("O"));
+        binding.ExecuteNonQuery();
     }
 
     private static Process StartServer(string url, string databasePath, string workspaceRoot)
@@ -225,6 +369,7 @@ public sealed class S14BoundaryTests
         }
     }
 
-    private sealed record OperationRequest(string Name, string Path, string Key);
+    private sealed record OperationRequest(string Name, string Path, string Key, string? SnapshotId = null, string? TargetRoot = null);
     private sealed record OperationObservation(string Name, HttpStatusCode StatusCode, string? OperationId, string? Result);
+    private sealed record RunObservation(string Status, string? SnapshotId, string ProgressLabel, int? ExitCode, string Stderr, string? FailureCategory, string? FailureDetail);
 }

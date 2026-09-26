@@ -91,7 +91,7 @@ public sealed class S4BoundaryTests
             var root = Directory.CreateTempSubdirectory("s4-boundary-").FullName;
             var connectionString = new SqliteConnectionStringBuilder { DataSource = Path.Combine(root, "metadata.sqlite3"), Pooling = false }.ToString();
             SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
-            _ = new RestoreService(connectionString);
+            _ = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
             // ADR-0061: use a real enabled account while exercising the restore boundary.
             var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
@@ -104,6 +104,7 @@ public sealed class S4BoundaryTests
                 "s4-project", account.AccountId, "S4 boundary", "S4 boundary", "manual", "default", false, [],
                 projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
                 Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
+            RouteAuthorityFixture.Seed(connectionString, account.AccountId, "s4-project", projectRoot.FullName);
             var manifest = SnapshotManifest.Create("s4-snapshot", "s4-workspace", account.AccountId, "s4-project", "s4-policy", [("project.godot", "s4 source content"u8.ToArray())]);
             manifest = manifest with { ProtectedContent = SnapshotManifest.ProtectContent([("project.godot", "s4 source content"u8.ToArray())], manifest.KeyReference) };
             var context = RequestContext.FromIdentity(new AccountIdentity(account.AccountId, "owner", PhaseAAuth.UserRole), "s4-principal", "s4-current-credential", "s4-correlation");
@@ -115,7 +116,10 @@ public sealed class S4BoundaryTests
             return new Fixture(root, connectionString, manifest, context, lease);
         }
 
-        public RestoreAttempt Restore(SnapshotManifest manifest, string key = "s4-request") => new RestoreService(ConnectionString).Restore(Context, manifest, Source, Destination, Lease, key);
+        public RestoreAttempt Restore(SnapshotManifest manifest, string key = "s4-request")
+        {
+            return new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(Context, manifest, Source, Destination, Lease, key);
+        }
         public SnapshotManifest CorruptHash() => Manifest with { Files = Manifest.Files.SetItem(0, Manifest.Files[0] with { Sha256 = new string('0', 64) }) };
         public SnapshotManifest CorruptSize() => Manifest with { Files = Manifest.Files.SetItem(0, Manifest.Files[0] with { Length = Manifest.Files[0].Length + 1 }) };
         public SnapshotManifest UnsafePath() => Manifest with { Files = Manifest.Files.SetItem(0, Manifest.Files[0] with { RelativePath = "../escape.godot" }) };
@@ -211,15 +215,20 @@ public sealed class S4BoundaryTests
             var initial = Restore(Manifest, "capability-initial");
             if (initial.Status != RestoreAttemptStatus.Published) return false;
             var previous = CurrentCredential();
-            try { _ = new RestoreService(ConnectionString).Restore(Context with { CredentialId = "s4-reallocated-credential" }, Manifest, Source, Destination, new RunnerLease("s4-reallocated", AccountId, "s4-project", 2), "capability-current"); }
-            catch (UnauthorizedAccessException) { }
-            return previous == Context.CredentialId && CurrentCredential() == "s4-reallocated-credential";
+            var nextLease = new RunnerLease("s4-reallocated", AccountId, "s4-project", 2);
+            InsertLease(nextLease);
+            SetCurrentCredential("s4-reallocated-credential");
+            var next = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(Context with { CredentialId = "s4-reallocated-credential" }, Manifest, Source, Destination, nextLease, "capability-current");
+            return initial.Status == RestoreAttemptStatus.Published && next.Status == RestoreAttemptStatus.Published && previous == Context.CredentialId && CurrentCredential() == "s4-reallocated-credential";
         }
         public bool PreRestoreCredentialIsNotAuthoritative()
         {
             var initial = Restore(Manifest, "initial");
             if (initial.Status != RestoreAttemptStatus.Published) return false;
-            try { _ = new RestoreService(ConnectionString).Restore(Context with { CredentialId = "s4-new-credential" }, Manifest, Source, Destination, new RunnerLease("s4-next", AccountId, "s4-project", 2), "new-runtime"); }
+            var nextLease = new RunnerLease("s4-next", AccountId, "s4-project", 2);
+            InsertLease(nextLease);
+            SetCurrentCredential("s4-new-credential");
+            try { _ = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(Context, Manifest, Source, Destination, nextLease, "new-runtime"); }
             catch (UnauthorizedAccessException) { }
             return CurrentCredential() != Context.CredentialId;
         }
@@ -236,6 +245,18 @@ public sealed class S4BoundaryTests
         private string? AttemptStatus(string attemptId) { using var c = new SqliteConnection(ConnectionString); c.Open(); using var q = c.CreateCommand(); q.CommandText = "SELECT status FROM restore_attempts WHERE attempt_id=$id"; q.Parameters.AddWithValue("$id", attemptId); return q.ExecuteScalar()?.ToString(); }
         private bool HasHistory(string attemptId, string stage, string outcome) { using var c = new SqliteConnection(ConnectionString); c.Open(); using var q = c.CreateCommand(); q.CommandText = "SELECT COUNT(*) FROM restore_attempt_history WHERE attempt_id=$id AND stage=$stage AND outcome=$outcome"; q.Parameters.AddWithValue("$id", attemptId); q.Parameters.AddWithValue("$stage", stage); q.Parameters.AddWithValue("$outcome", outcome); return Convert.ToInt32(q.ExecuteScalar()) == 1; }
         private string? CurrentCredential() { using var c = new SqliteConnection(ConnectionString); c.Open(); using var q = c.CreateCommand(); q.CommandText = "SELECT credential_id FROM restore_runtime_credentials WHERE workspace_id='s4-workspace'"; return q.ExecuteScalar()?.ToString(); }
+        private void SetCurrentCredential(string credential)
+        {
+            using var c = new SqliteConnection(ConnectionString); c.Open(); using var q = c.CreateCommand();
+            q.CommandText = "INSERT INTO restore_runtime_credentials(workspace_id,credential_id) VALUES('s4-workspace',$credential) ON CONFLICT(workspace_id) DO UPDATE SET credential_id=$credential";
+            q.Parameters.AddWithValue("$credential", credential); q.ExecuteNonQuery();
+        }
+        private void InsertLease(RunnerLease lease)
+        {
+            using var c = new SqliteConnection(ConnectionString); c.Open(); using var q = c.CreateCommand();
+            q.CommandText = "INSERT INTO runner_leases(lease_id,account_id,project_id,fence) VALUES($id,$account,$project,$fence)";
+            q.Parameters.AddWithValue("$id", lease.LeaseId); q.Parameters.AddWithValue("$account", lease.AccountId); q.Parameters.AddWithValue("$project", lease.ProjectId); q.Parameters.AddWithValue("$fence", lease.Fence); q.ExecuteNonQuery();
+        }
         private bool HasAuditAction(string action)
         {
             using var c = new SqliteConnection(ConnectionString); c.Open(); using var q = c.CreateCommand();

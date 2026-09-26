@@ -187,6 +187,7 @@ public sealed class S32BoundaryTests
                 ProjectId, account.AccountId, "S32 boundary", "S32 boundary", "manual", "default", false, [],
                 projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
                 Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
+            RouteAuthorityFixture.Seed(connectionString, account.AccountId, ProjectId, projectRoot.FullName);
             var manifest = SnapshotManifest.Create(
                 "snapshot-s32",
                 WorkspaceId,
@@ -218,7 +219,9 @@ public sealed class S32BoundaryTests
                 .Sum(path => new FileInfo(path).Length);
             var stopwatch = Stopwatch.StartNew();
             var startedUtc = DateTimeOffset.UtcNow;
-            var restore = new RestoreService(_connectionString).Restore(
+            var restore = new RestoreService(
+                _connectionString,
+                new RouteRecoveryAuthorityResolver(_connectionString)).Restore(
                 _context,
                 _manifest,
                 _sourceRoot,

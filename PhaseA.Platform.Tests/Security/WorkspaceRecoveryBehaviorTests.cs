@@ -3,6 +3,7 @@ using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Workflow;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.PhaseB;
@@ -158,7 +159,18 @@ public sealed class WorkspaceRecoveryBehaviorTests
         try
         {
             using (var connection = new SqliteConnection($"Data Source={path}"))
-            { connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "CREATE TABLE runner_leases (lease_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, fence INTEGER NOT NULL); INSERT INTO runner_leases VALUES('lease','a','p',2);"; command.ExecuteNonQuery(); }
+            {
+                connection.Open();
+                using var command = connection.CreateCommand();
+                command.CommandText = "CREATE TABLE accounts (id TEXT PRIMARY KEY, is_disabled INTEGER NOT NULL); INSERT INTO accounts VALUES('a',0);" +
+                    "CREATE TABLE runner_leases (lease_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, fence INTEGER NOT NULL); INSERT INTO runner_leases VALUES('lease','a','p',2);" +
+                    "CREATE TABLE restore_audit (recorded_utc TEXT NOT NULL, action TEXT NOT NULL, account_id TEXT NOT NULL, workspace_id TEXT NOT NULL, correlation_id TEXT NOT NULL);" +
+                    "CREATE TABLE route_recovery_evidence (recorded_utc TEXT NOT NULL, authority_count INTEGER NOT NULL, has_current_blocker INTEGER NOT NULL, is_blocked INTEGER NOT NULL, can_continue INTEGER NOT NULL, source_order_json TEXT NOT NULL, blocker_json TEXT NOT NULL);" +
+                    "INSERT INTO route_recovery_evidence VALUES($utc,8,0,0,1,$sources,'[]');";
+                command.Parameters.AddWithValue("$utc", DateTimeOffset.UtcNow.ToString("O"));
+                command.Parameters.AddWithValue("$sources", System.Text.Json.JsonSerializer.Serialize(HostedRouteRecoveryContract.SourceOrder));
+                command.ExecuteNonQuery();
+            }
             File.WriteAllText(Path.Combine(source.FullName, "project.godot"), "content");
             var manifest = SnapshotManifest.Create("s", "w", "a", "p", "v", [("project.godot", "content"u8.ToArray())]);
             var context = RequestContext.FromIdentity(new AccountIdentity("a", "owner", PhaseAAuth.UserRole), "p", "c", "r");

@@ -33,6 +33,7 @@ public sealed class S48BoundaryTests
 
             var store = CreateStore(connectionString, root.FullName);
             var accountId = await CreateProjectAsync(store, root.FullName);
+            RouteAuthorityFixture.Seed(connectionString, accountId, ProjectId, Path.Combine(root.FullName, "project"));
             var staleRunId = await store.CreateRunAsync(ProjectId, null, "s48-stale");
             var currentRunId = await store.CreateRunAsync(ProjectId, null, "s48-current");
             var staleAcquired = await store.TryAcquireRunnerLockAsync(ProjectId, staleRunId);
@@ -71,7 +72,9 @@ public sealed class S48BoundaryTests
                 "s48-policy",
                 new HashSet<string>()).Manifest;
 
-            var restore = new RestoreService(connectionString);
+            var restore = new RestoreService(
+                connectionString,
+                new RouteRecoveryAuthorityResolver(connectionString));
             var currentPublication = currentLease is null
                 ? null
                 : restore.Restore(context, currentManifest, currentSource.FullName, destination.FullName, currentLease);

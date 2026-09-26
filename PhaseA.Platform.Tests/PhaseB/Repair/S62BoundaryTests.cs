@@ -37,6 +37,7 @@ public sealed class S62BoundaryTests
                 ProjectId, account.AccountId, "S62 boundary", "S62 boundary", "manual", "default", false, [],
                 projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
                 Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
+            RouteAuthorityFixture.Seed(connectionString, account.AccountId, ProjectId, projectRoot.FullName);
             var context = RequestContext.FromIdentity(
                 new AccountIdentity(account.AccountId, "s62-owner", PhaseAAuth.UserRole),
                 "s62-requester",
@@ -81,7 +82,7 @@ public sealed class S62BoundaryTests
             {
                 Files = manifest.Files.SetItem(0, manifest.Files[0] with { Length = manifest.Files[0].Length + 1 }),
             };
-            var service = new RestoreService(connectionString);
+            var service = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
             var cancelled = service.Restore(context, badHash, source.FullName, destination.FullName, lease, "s62-cancelled");
             var failed = service.Restore(context, badSize, source.FullName, destination.FullName, lease, "s62-failed");
 

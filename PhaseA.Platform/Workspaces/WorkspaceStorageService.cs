@@ -67,7 +67,7 @@ public sealed class WorkspaceStorageService
         {
             if (_snapshots.ContainsKey(snapshotId)) throw new InvalidOperationException("snapshot is immutable");
             var quota = GetCurrentQuota(context.AccountId);
-            var aggregateUsage = checked(quota.UsedBytes + MeasureLiveWorkspaceBytes(root));
+            var aggregateUsage = checked(quota.UsedBytes + MeasureLiveWorkspaceBytes(context.AccountId, root));
             if (total > Math.Max(0, quota.LimitBytes - aggregateUsage))
             {
                 if (!string.IsNullOrWhiteSpace(_connectionString))
@@ -85,7 +85,19 @@ public sealed class WorkspaceStorageService
             var manifest = SnapshotManifest.Create(snapshotId, workspaceId, context.AccountId, projectId, policyVersion, files, blacklist);
             var manifestPath = Path.Combine(root, $".snapshots-{snapshotId}.json");
             var protectedPayloadPath = Path.Combine(root, $".snapshots-{snapshotId}.protected");
-            var protectedPayload = CreateProtectedPayload(files, manifest.KeyReference);
+            var contentByPath = files.ToDictionary(
+                file => file.RelativePath.Replace('\\', '/'),
+                file => file.Content,
+                StringComparer.Ordinal);
+            var protectedFiles = manifest.Files
+                .Select(entry =>
+                {
+                    if (!contentByPath.TryGetValue(entry.RelativePath, out var content))
+                        throw new InvalidDataException("snapshot manifest content is unavailable");
+                    return (entry.RelativePath, content);
+                })
+                .ToArray();
+            var protectedPayload = CreateProtectedPayload(protectedFiles, manifest.KeyReference);
             manifest = manifest with { ProtectedContent = protectedPayload };
             File.WriteAllText(manifestPath, JsonSerializer.Serialize(manifest));
             File.WriteAllBytes(protectedPayloadPath, protectedPayload);
@@ -120,7 +132,7 @@ public sealed class WorkspaceStorageService
         lock (_gate)
         {
             var quota = GetCurrentQuota(accountId);
-            return quota with { UsedBytes = checked(quota.UsedBytes + MeasureLiveWorkspaceBytes()) };
+            return quota with { UsedBytes = checked(quota.UsedBytes + MeasureLiveWorkspaceBytes(accountId, null)) };
         }
     }
 
@@ -170,32 +182,99 @@ public sealed class WorkspaceStorageService
         }
     }
 
-    private long MeasureLiveWorkspaceBytes(string? excludedRoot = null)
+    private long MeasureLiveWorkspaceBytes(string accountId, string? excludedRoot)
     {
-        var storageRoot = GetStorageRoot();
-        if (storageRoot is null) return 0;
+        var roots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var usedLegacyPlacementFallback = false;
+        if (!string.IsNullOrWhiteSpace(_connectionString))
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT w.root_path FROM workspaces w INNER JOIN projects p ON p.id=w.project_id WHERE p.account_id=$account";
+            command.Parameters.AddWithValue("$account", accountId);
+            try
+            {
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    var path = reader.GetString(0);
+                    if (Directory.Exists(path)) roots.Add(Path.GetFullPath(path));
+                }
+            }
+            catch (SqliteException error) when (error.SqliteErrorCode == 1 && error.Message.Contains("no such table", StringComparison.OrdinalIgnoreCase))
+            {
+                // Legacy/unit fixture databases can have quota tables without
+                // the Phase workspace relation. The placement fallback below
+                // preserves their existing accounting behavior.
+            }
+        }
 
-        var placementsRoot = Path.Combine(storageRoot, "placements");
-        if (!Directory.Exists(placementsRoot)) return 0;
+        // Test fixtures and legacy stores may not have a workspace relation;
+        // retain the placement-root fallback without ever mixing another
+        // account's roots into the current account's usage.
+        if (roots.Count == 0)
+        {
+            usedLegacyPlacementFallback = true;
+            var storageRoot = GetStorageRoot();
+            var placementsRoot = storageRoot is null ? null : Path.Combine(storageRoot, "placements");
+            if (placementsRoot is not null && Directory.Exists(placementsRoot)) roots.Add(Path.GetFullPath(placementsRoot));
+        }
 
-        var snapshotRoots = Directory.EnumerateFiles(placementsRoot, ".snapshots-*.json", SkipReparsePointEnumeration)
-            .Select(Path.GetDirectoryName)
-            .Where(path => path is not null)
-            .Select(path => Path.GetFullPath(path!))
-            .ToArray();
         var excluded = string.IsNullOrWhiteSpace(excludedRoot) ? null : Path.GetFullPath(excludedRoot);
+        var snapshotSourceRoots = usedLegacyPlacementFallback
+            ? _snapshots.Values
+                .Select(record => Path.GetDirectoryName(record.ManifestPath))
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Select(path => Path.GetFullPath(path!))
+                .ToArray()
+            : Array.Empty<string>();
+        var counted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        long total = 0;
+        foreach (var root in roots)
+        {
+            foreach (var path in Directory.EnumerateFiles(root, "*", SkipReparsePointEnumeration))
+            {
+                var fullPath = Path.GetFullPath(path);
+                if (!counted.Add(fullPath) || IsWithin(fullPath, excluded)) continue;
+                if (snapshotSourceRoots.Any(snapshotRoot => IsWithin(fullPath, snapshotRoot))) continue;
+                var relative = Path.GetRelativePath(root, fullPath);
+                if (IsSnapshotExcluded(relative, new HashSet<string>(StringComparer.OrdinalIgnoreCase))) continue;
+                total = checked(total + new FileInfo(fullPath).Length);
+            }
+        }
 
-        return Directory.EnumerateFiles(placementsRoot, "*", SkipReparsePointEnumeration)
-            .Where(path => !IsWithin(path, excluded) && !snapshotRoots.Any(root => IsWithin(path, root)))
-            .Sum(path => new FileInfo(path).Length);
+        return total;
     }
 
     private static (string RelativePath, byte[] Content)[] ReadSnapshotFiles(string root, ISet<string> blacklist)
     {
         return Directory.EnumerateFiles(root, "*", SkipReparsePointEnumeration)
-            .Select(path => (RelativePath: Path.GetRelativePath(root, path), Content: File.ReadAllBytes(path)))
-            .Where(file => !blacklist.Contains(Path.GetExtension(file.RelativePath)))
+            .Select(path => (Path: path, RelativePath: Path.GetRelativePath(root, path)))
+            .Where(file => !IsSnapshotExcluded(file.RelativePath, blacklist))
+            .Select(file => (RelativePath: file.RelativePath, Content: File.ReadAllBytes(file.Path)))
             .ToArray();
+    }
+
+    private static bool IsSnapshotExcluded(string relativePath, ISet<string> blacklist)
+    {
+        var normalized = relativePath.Replace('\\', '/');
+        var segments = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Any(segment => segment.Equals(".git", StringComparison.OrdinalIgnoreCase) ||
+                                    segment.Equals(".snapshots", StringComparison.OrdinalIgnoreCase) ||
+                                    segment.Equals("bin", StringComparison.OrdinalIgnoreCase) ||
+                                    segment.Equals("obj", StringComparison.OrdinalIgnoreCase) ||
+                                    segment.Equals("cache", StringComparison.OrdinalIgnoreCase) ||
+                                    segment.Equals("tmp", StringComparison.OrdinalIgnoreCase) ||
+                                    segment.Equals("temp", StringComparison.OrdinalIgnoreCase)))
+            return true;
+        var name = segments[^1];
+        if (name.StartsWith(".snapshots-", StringComparison.OrdinalIgnoreCase) ||
+            name.EndsWith(".protected", StringComparison.OrdinalIgnoreCase) ||
+            name.EndsWith(".ticket", StringComparison.OrdinalIgnoreCase) ||
+            name.EndsWith(".secret", StringComparison.OrdinalIgnoreCase))
+            return true;
+        return blacklist.Contains(Path.GetExtension(normalized));
     }
 
     private static byte[] CreateProtectedPayload(

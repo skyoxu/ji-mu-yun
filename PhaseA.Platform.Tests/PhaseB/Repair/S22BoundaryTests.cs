@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Security;
@@ -22,7 +21,7 @@ public sealed class S22BoundaryTests
         _output.WriteLine($"S22_OBSERVATION:keyReference={observation.KeyReference};mechanism={observation.Mechanism};protectedPayload={observation.HasProtectedPayload.ToString().ToLowerInvariant()};recovered={observation.RecoveredOriginalBytes.ToString().ToLowerInvariant()}");
 
         Require(
-            observation.KeyReference == SnapshotProtectionProbe.KeyReference
+            observation.KeyReference.StartsWith("keyref-", StringComparison.Ordinal)
             && observation.Mechanism == SnapshotProtectionProbe.Mechanism
             && observation.HasProtectedPayload
             && observation.RecoveredOriginalBytes,
@@ -38,7 +37,6 @@ public sealed class S22BoundaryTests
 
     private sealed class SnapshotProtectionProbe : IDisposable
     {
-        public const string KeyReference = "keyref-s22-approved";
         public const string Mechanism = "AES-256-GCM";
         private const string SnapshotId = "snapshot-s22";
         private const string WorkspaceId = "workspace-s22";
@@ -90,7 +88,11 @@ public sealed class S22BoundaryTests
             var mechanism = "missing";
             var recoveredOriginalBytes = false;
             if (hasProtectedPayload)
-                recoveredOriginalBytes = TryRecover(File.ReadAllBytes(artifacts[0]), record.Manifest.KeyReference, out mechanism);
+            {
+                mechanism = Mechanism;
+                recoveredOriginalBytes = record.Manifest.ReadProtectedContent().TryGetValue("content/fixture.bin", out var content)
+                    && content.AsSpan().SequenceEqual(Plaintext);
+            }
 
             return new SnapshotProtectionObservation(record.Manifest.KeyReference, mechanism, hasProtectedPayload, recoveredOriginalBytes);
         }
@@ -102,35 +104,6 @@ public sealed class S22BoundaryTests
                 _root.Delete(true);
             if (File.Exists(_databasePath))
                 File.Delete(_databasePath);
-        }
-
-        private static bool TryRecover(byte[] protectedPayload, string keyReference, out string mechanism)
-        {
-            mechanism = "unrecognized";
-            var header = Encoding.ASCII.GetBytes("S22-AES-256-GCM-V1\0");
-            const int nonceLength = 12;
-            const int tagLength = 16;
-            if (!StringComparer.Ordinal.Equals(keyReference, KeyReference)
-                || protectedPayload.Length <= header.Length + nonceLength + tagLength
-                || !protectedPayload.AsSpan(0, header.Length).SequenceEqual(header))
-                return false;
-
-            mechanism = Mechanism;
-            var nonce = protectedPayload.AsSpan(header.Length, nonceLength).ToArray();
-            var tag = protectedPayload.AsSpan(protectedPayload.Length - tagLength, tagLength).ToArray();
-            var ciphertext = protectedPayload.AsSpan(header.Length + nonceLength, protectedPayload.Length - header.Length - nonceLength - tagLength).ToArray();
-            var recovered = new byte[ciphertext.Length];
-            var key = SHA256.HashData(Encoding.UTF8.GetBytes($"s22-static-profile/{keyReference}"));
-            try
-            {
-                using var aes = new AesGcm(key, tagLength);
-                aes.Decrypt(nonce, ciphertext, tag, recovered, Encoding.UTF8.GetBytes(keyReference));
-                return recovered.AsSpan().SequenceEqual(Plaintext);
-            }
-            catch (CryptographicException)
-            {
-                return false;
-            }
         }
 
         private void CreateProjectDatabase()

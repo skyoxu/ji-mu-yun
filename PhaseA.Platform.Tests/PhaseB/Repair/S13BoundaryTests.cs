@@ -3,6 +3,7 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
+using System.Text.Json;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -278,6 +279,15 @@ public sealed class S13BoundaryTests
             projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
             Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
         _ = new RestoreService(connectionString);
+        using (var connection = new SqliteConnection(connectionString))
+        {
+            connection.Open();
+            using var authority = connection.CreateCommand();
+            authority.CommandText = "INSERT INTO route_recovery_evidence(recorded_utc,authority_count,has_current_blocker,is_blocked,can_continue,source_order_json,blocker_json) VALUES($recorded,8,0,0,1,$sources,'[]')";
+            authority.Parameters.AddWithValue("$recorded", DateTimeOffset.UtcNow.ToString("O"));
+            authority.Parameters.AddWithValue("$sources", JsonSerializer.Serialize(PhaseA.Platform.Workflow.HostedRouteRecoveryContract.SourceOrder));
+            authority.ExecuteNonQuery();
+        }
         return account.AccountId;
     }
 

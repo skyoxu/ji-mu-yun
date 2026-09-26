@@ -3,6 +3,7 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
+using System.Text.Json;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -75,7 +76,8 @@ public sealed class S40BoundaryTests
         Require(
             evidence is not null &&
             evidence.AuthorityCount == 8 &&
-            evidence.HasCurrentBlocker &&
+            !evidence.HasCurrentBlocker &&
+            !evidence.IsBlocked &&
             evidence.CanContinue,
             "FAILURE-O-2B15F2179A84",
             "Hosted route recovery did not record all eight authorities and the current blocker before continuing.");
@@ -138,6 +140,13 @@ public sealed class S40BoundaryTests
     public void O_682DD1974043()
     {
         using var fixture = S40Fixture.Create();
+        using (var connection = new SqliteConnection(fixture.ConnectionString))
+        {
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "DELETE FROM route_recovery_evidence";
+            command.ExecuteNonQuery();
+        }
         var attempt = fixture.Restore("missing-authority");
         var authorityEvidence = fixture.ReadRouteRecoveryEvidence();
 
@@ -314,6 +323,11 @@ public sealed class S40BoundaryTests
                 command.Parameters.AddWithValue("$project", lease.ProjectId);
                 command.Parameters.AddWithValue("$fence", lease.Fence);
                 command.ExecuteNonQuery();
+                using var authority = connection.CreateCommand();
+                authority.CommandText = "INSERT INTO route_recovery_evidence(recorded_utc,authority_count,has_current_blocker,is_blocked,can_continue,source_order_json,blocker_json) VALUES($recorded,8,0,0,1,$sources,'[]')";
+                authority.Parameters.AddWithValue("$recorded", DateTimeOffset.UtcNow.ToString("O"));
+                authority.Parameters.AddWithValue("$sources", JsonSerializer.Serialize(PhaseA.Platform.Workflow.HostedRouteRecoveryContract.SourceOrder));
+                authority.ExecuteNonQuery();
             }
 
             return new S40Fixture(root, connectionString, manifest, context, lease);

@@ -166,6 +166,7 @@ public sealed class S44BoundaryTests
                 Path.Combine(workspace.FullName, "repo"),
                 Path.Combine(workspace.FullName, "runtime"),
                 Path.Combine(workspace.FullName, "meta")));
+            RouteAuthorityFixture.Seed(connectionString, account.AccountId, projectId, workspace.FullName);
 
             var sourceRoot = Directory.CreateDirectory(Path.Combine(root, "source")).FullName;
             var destinationRoot = Directory.CreateDirectory(Path.Combine(root, "destination")).FullName;
@@ -203,7 +204,7 @@ public sealed class S44BoundaryTests
         }
 
         public RestoreAttempt Restore(string category, string condition) =>
-            new RestoreService(ConnectionString).Restore(
+            new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(
                 Context,
                 Manifest,
                 condition switch

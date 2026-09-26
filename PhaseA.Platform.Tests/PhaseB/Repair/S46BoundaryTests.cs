@@ -119,6 +119,7 @@ public sealed class S46BoundaryTests
             var projectId = $"s46-project-{Guid.NewGuid():N}";
             var workspace = Directory.CreateDirectory(Path.Combine(root, "workspace"));
             store.CreateProjectAsync(new ProjectCreationCommand(projectId, account.AccountId, "S46 boundary", "S46 boundary", "manual", "default", false, [], workspace.FullName, Path.Combine(workspace.FullName, "repo"), Path.Combine(workspace.FullName, "runtime"), Path.Combine(workspace.FullName, "meta"))).GetAwaiter().GetResult();
+            RouteAuthorityFixture.Seed(connectionString, account.AccountId, projectId, workspace.FullName);
             var source = Directory.CreateDirectory(Path.Combine(root, "source")).FullName;
             var destination = Directory.CreateDirectory(Path.Combine(root, "destination")).FullName;
             File.WriteAllText(Path.Combine(source, "project.godot"), "s46-current-content", Encoding.UTF8);
@@ -135,7 +136,7 @@ public sealed class S46BoundaryTests
             var snapshot = storage.CreateSnapshot(_context, _source, _snapshotId, _workspaceId, ProjectId, _policy, new HashSet<string>());
             var lease = new RunnerLease("s46-lease", AccountId, ProjectId, 1);
             InsertLease(lease);
-            var attempt = new RestoreService(ConnectionString).Restore(_context, snapshot.Manifest, _source, _destination, lease, "s46-restore");
+            var attempt = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(_context, snapshot.Manifest, _source, _destination, lease, "s46-restore");
             if (attempt.Status != RestoreAttemptStatus.Published) throw new InvalidOperationException("S46 restore did not publish.");
             return _destination;
         }
@@ -178,6 +179,7 @@ public sealed class S46BoundaryTests
                     var projectId = $"s46-topology-project-{Guid.NewGuid():N}";
                     var workspace = Directory.CreateDirectory(Path.Combine(root, "workspace"));
                     store.CreateProjectAsync(new ProjectCreationCommand(projectId, account.AccountId, "S46 topology", "S46 topology", "manual", "default", false, [], workspace.FullName, Path.Combine(workspace.FullName, "repo"), Path.Combine(workspace.FullName, "runtime"), Path.Combine(workspace.FullName, "meta"))).GetAwaiter().GetResult();
+                    RouteAuthorityFixture.Seed(db, account.AccountId, projectId, workspace.FullName);
                     var source = Directory.CreateDirectory(Path.Combine(root, "source")).FullName;
                     var destination = Directory.CreateDirectory(Path.Combine(root, "destination")).FullName;
                     var bytes = Encoding.UTF8.GetBytes("s46-topology-content");
@@ -188,7 +190,7 @@ public sealed class S46BoundaryTests
                     var lease = new RunnerLease($"s46-topology-lease-{sequence}", account.AccountId, projectId, 1);
                     InsertLease(db, lease);
                     var placementReference = condition == "null" ? null : $"{category}-{condition}";
-                    var attempt = new RestoreService(db).Restore(context, manifest, source, destination, lease, $"s46-topology-{category}-{condition}");
+                    var attempt = new RestoreService(db, new RouteRecoveryAuthorityResolver(db)).Restore(context, manifest, source, destination, lease, $"s46-topology-{category}-{condition}");
                     var restored = File.ReadAllText(Path.Combine(destination, ".restore-current", "project.godot"), Encoding.UTF8);
                     cases.Add(new TopologyCase(category, condition, placementReference, attempt.Status == RestoreAttemptStatus.Published, restored == "s46-topology-content"));
                 }

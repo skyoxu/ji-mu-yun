@@ -1,5 +1,7 @@
 using System.Collections.Immutable;
 using System.Security.Cryptography;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 
 namespace PhaseA.Platform.Workspaces;
@@ -66,7 +68,7 @@ public sealed record SnapshotManifest(
             .OrderBy(item => item.RelativePath, StringComparer.Ordinal)
             .ToImmutableArray();
 
-        var keyReference = CreateKeyReference(policyVersion);
+        var keyReference = SnapshotKeyStore.CreateReference(policyVersion);
         return new SnapshotManifest(
             snapshotId,
             workspaceId,
@@ -97,7 +99,7 @@ public sealed record SnapshotManifest(
         var nonce = RandomNumberGenerator.GetBytes(SnapshotProtectionNonceLength);
         var ciphertext = new byte[plaintext.Length];
         var tag = new byte[SnapshotProtectionTagLength];
-        var key = SHA256.HashData(Encoding.UTF8.GetBytes($"s22-static-profile/{keyReference}"));
+        var key = SnapshotKeyStore.Load(keyReference);
         using var aes = new AesGcm(key, SnapshotProtectionTagLength);
         aes.Encrypt(nonce, plaintext, ciphertext, tag, Encoding.UTF8.GetBytes(keyReference));
 
@@ -122,7 +124,7 @@ public sealed record SnapshotManifest(
         var ciphertextOffset = nonceOffset + SnapshotProtectionNonceLength;
         var ciphertextLength = protectedContent.Length - ciphertextOffset - SnapshotProtectionTagLength;
         var plaintext = new byte[ciphertextLength];
-        var key = SHA256.HashData(Encoding.UTF8.GetBytes($"s22-static-profile/{KeyReference}"));
+        var key = SnapshotKeyStore.Load(KeyReference);
         using (var aes = new AesGcm(key, SnapshotProtectionTagLength))
         {
             aes.Decrypt(
@@ -158,11 +160,68 @@ public sealed record SnapshotManifest(
         return normalized;
     }
 
-    private static string CreateKeyReference(string policyVersion)
+}
+
+internal static class SnapshotKeyStore
+{
+    private static string Root => Environment.GetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT") is { Length: > 0 } configured
+        ? configured
+        : OperatingSystem.IsWindows()
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "JiMuYun", "snapshot-keys")
+            : Path.Combine(Path.GetTempPath(), "jimuyun-snapshot-keys");
+
+    public static string CreateReference(string policyVersion)
     {
-        var policyIdentifier = policyVersion.StartsWith("policy-", StringComparison.Ordinal)
-            ? policyVersion["policy-".Length..]
-            : policyVersion;
-        return $"keyref-{policyIdentifier}-approved";
+        ArgumentException.ThrowIfNullOrWhiteSpace(policyVersion);
+        Directory.CreateDirectory(Root);
+        var reference = $"keyref-{Guid.NewGuid():N}";
+        var path = Path.Combine(Root, reference + ".key");
+        var key = RandomNumberGenerator.GetBytes(32);
+        File.WriteAllBytes(path, key);
+        TryRestrict(path);
+        return reference;
+    }
+
+    public static byte[] Load(string reference)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reference);
+        if (reference.Contains(Path.DirectorySeparatorChar) || reference.Contains(Path.AltDirectorySeparatorChar) ||
+            reference.Contains("..", StringComparison.Ordinal))
+            throw new CryptographicException("snapshot key reference is invalid");
+        var path = Path.Combine(Root, reference + ".key");
+        if (!File.Exists(path)) throw new CryptographicException("snapshot key is unavailable");
+        var key = File.ReadAllBytes(path);
+        if (key.Length != 32) throw new CryptographicException("snapshot key is invalid");
+        return key;
+    }
+
+    private static void TryRestrict(string path)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            try
+            {
+                var identity = WindowsIdentity.GetCurrent();
+                var sid = identity.User ?? throw new UnauthorizedAccessException("snapshot key owner is unavailable");
+                var security = new FileSecurity();
+                security.SetOwner(sid);
+                security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+                security.AddAccessRule(new FileSystemAccessRule(
+                    sid,
+                    FileSystemRights.FullControl,
+                    AccessControlType.Allow));
+                FileSystemAclExtensions.SetAccessControl(new FileInfo(path), security);
+            }
+            catch (PlatformNotSupportedException) { throw; }
+            catch (Exception error)
+            {
+                throw new UnauthorizedAccessException("snapshot key could not be protected at rest", error);
+            }
+            return;
+        }
+        if (!OperatingSystem.IsWindows())
+        {
+            try { File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite); } catch (PlatformNotSupportedException) { }
+        }
     }
 }

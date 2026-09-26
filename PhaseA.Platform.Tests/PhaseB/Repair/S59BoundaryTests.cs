@@ -44,7 +44,7 @@ public sealed class S59BoundaryTests
                 new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
             File.Delete(sourceFile);
-            var restored = new RestoreService(connectionString).Restore(
+            var restored = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(
                 context,
                 snapshot.Manifest,
                 source.FullName,
@@ -96,7 +96,7 @@ public sealed class S59BoundaryTests
                 "s59-policy",
                 new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
-            var published = new RestoreService(connectionString).Restore(
+            var published = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(
                 context,
                 snapshotA.Manifest,
                 source.FullName,
@@ -125,12 +125,19 @@ public sealed class S59BoundaryTests
 
             storage.SetQuota(accountId, 1024 * 1024);
             File.Delete(sourceFile);
-            var restored = new RestoreService(connectionString).Restore(
+            var recoveryStore = CreateStore(connectionString, root.FullName);
+            await recoveryStore.ReleaseRunnerLockAsync(ProjectId, lease.LeaseId);
+            var recoveryRunId = await recoveryStore.CreateRunAsync(ProjectId, null, "s59-rpo-recovery-run");
+            if (!await recoveryStore.TryAcquireRunnerLockAsync(ProjectId, recoveryRunId))
+                throw new InvalidOperationException("The disposable S59 recovery runner lease could not be acquired.");
+            var recoveryLease = await ReadLeaseAsync(connectionString, recoveryRunId)
+                ?? throw new InvalidOperationException("The disposable S59 recovery runner lease could not be read.");
+            var restored = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(
                 context,
                 snapshotA.Manifest,
                 source.FullName,
                 destination.FullName,
-                lease,
+                recoveryLease,
                 "s59-rpo-restore-a");
             var recoveredFile = Path.Combine(destination.FullName, ".restore-current", "project.godot");
             var recoveredPublishedA = restored.Status == RestoreAttemptStatus.Published &&
@@ -190,7 +197,7 @@ public sealed class S59BoundaryTests
         string prefix)
     {
         var store = CreateStore(connectionString, root);
-        var accountId = await CreateProjectAsync(store, root, prefix);
+        var accountId = await CreateProjectAsync(store, connectionString, root, prefix);
         var leaseId = await store.CreateRunAsync(ProjectId, null, $"{prefix}-run");
         if (!await store.TryAcquireRunnerLockAsync(ProjectId, leaseId))
         {
@@ -216,7 +223,7 @@ public sealed class S59BoundaryTests
         return new PhaseAMetadataStore(connectionString, options);
     }
 
-    private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, string root, string prefix)
+    private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, string connectionString, string root, string prefix)
     {
         var account = await store.CreateUserAccountAsync($"{prefix}-user-{Guid.NewGuid():N}", 1);
         var projectRoot = Directory.CreateDirectory(Path.Combine(root, "project"));
@@ -237,6 +244,8 @@ public sealed class S59BoundaryTests
         {
             throw new InvalidOperationException("The disposable S59 project could not be created.");
         }
+
+        RouteAuthorityFixture.Seed(connectionString, account.AccountId, ProjectId, projectRoot.FullName);
 
         return account.AccountId;
     }

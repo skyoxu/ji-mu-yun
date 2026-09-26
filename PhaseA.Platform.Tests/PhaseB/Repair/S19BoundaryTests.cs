@@ -114,6 +114,7 @@ public sealed class S19BoundaryTests
                 Path.Combine(projectRoot.FullName, "repo"),
                 Path.Combine(projectRoot.FullName, "runtime"),
                 Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
+            RouteAuthorityFixture.Seed(connectionString, account.AccountId, "s19-project", projectRoot.FullName);
 
             var manifest = SnapshotManifest.Create(
                 "s19-snapshot",
@@ -165,7 +166,7 @@ public sealed class S19BoundaryTests
                 _ => throw new ArgumentOutOfRangeException(nameof(variant))
             };
             var idempotencyKey = $"s19-{variant.ToString().ToLowerInvariant()}";
-            var attempt = new RestoreService(ConnectionString).Restore(
+            var attempt = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(
                 Context,
                 Manifest,
                 placementReference!,

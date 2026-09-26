@@ -106,6 +106,7 @@ public sealed class S52BoundaryTests
                 "s52-project", account.AccountId, "S52 boundary", "S52 boundary", "manual", "default", false, [],
                 projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
                 Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
+            RouteAuthorityFixture.Seed(connectionString, account.AccountId, "s52-project", projectRoot.FullName);
 
             var content = "s52-preview-content"u8.ToArray();
             var manifest = SnapshotManifest.Create(
@@ -149,7 +150,7 @@ public sealed class S52BoundaryTests
                 new ProjectAssetPreviewTicketService(options));
         }
 
-        public RestoreAttempt Restore() => new RestoreService(ConnectionString).Restore(
+        public RestoreAttempt Restore() => new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(
             Context,
             Manifest,
             SourceRoot,

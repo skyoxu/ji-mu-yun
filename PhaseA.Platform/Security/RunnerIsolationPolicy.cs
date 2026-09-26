@@ -41,12 +41,19 @@ public static class RunnerIsolationPolicy
             RunIcacls(descriptor.WorkspaceRoot, $"/inheritance:r /grant:r \"*S-1-5-32-544:(OI)(CI)F\" \"*{runnerSid}:(OI)(CI)M\"");
         }
         var marker = Path.Combine(descriptor.WorkspaceRoot, ".runner-isolation.json");
-        File.WriteAllText(marker, $"{{\"accountId\":\"{descriptor.AccountId}\",\"projectId\":\"{descriptor.ProjectId}\",\"lowPrivilegeRequired\":{descriptor.LowPrivilegeRequired.ToString().ToLowerInvariant()},\"jobObjectRequired\":{descriptor.JobObjectRequired.ToString().ToLowerInvariant()},\"ntfsAclRequired\":{descriptor.NtfsAclRequired.ToString().ToLowerInvariant()}}}\n");
+        File.WriteAllText(marker, System.Text.Json.JsonSerializer.Serialize(new PersistedIsolationDescriptor(
+            descriptor.AccountId, descriptor.ProjectId, descriptor.OsIdentity,
+            descriptor.LowPrivilegeRequired, descriptor.JobObjectRequired, descriptor.NtfsAclRequired)) + Environment.NewLine);
         var normalized = descriptor with { WorkspaceRoot = Path.GetFullPath(descriptor.WorkspaceRoot) };
         Workspaces[normalized.WorkspaceRoot] = normalized;
         if (OperatingSystem.IsWindows())
         {
-            WorkspaceSecurityDescriptors[normalized.WorkspaceRoot] = ReadSecurityDescriptor(normalized.WorkspaceRoot);
+            var securityDescriptor = ReadSecurityDescriptor(normalized.WorkspaceRoot);
+            WorkspaceSecurityDescriptors[normalized.WorkspaceRoot] = securityDescriptor;
+            File.WriteAllText(marker, System.Text.Json.JsonSerializer.Serialize(new PersistedIsolationDescriptor(
+                normalized.AccountId, normalized.ProjectId, normalized.OsIdentity,
+                normalized.LowPrivilegeRequired, normalized.JobObjectRequired, normalized.NtfsAclRequired,
+                securityDescriptor)) + Environment.NewLine);
         }
         return new RunnerIsolationHandle(normalized, marker);
     }
@@ -63,6 +70,25 @@ public static class RunnerIsolationPolicy
                 descriptor = entry.Value;
                 return true;
             }
+        }
+        for (var current = new DirectoryInfo(candidate); current is not null; current = current.Parent)
+        {
+            var marker = Path.Combine(current.FullName, ".runner-isolation.json");
+            if (!File.Exists(marker)) continue;
+            try
+            {
+                var persisted = System.Text.Json.JsonSerializer.Deserialize<PersistedIsolationDescriptor>(File.ReadAllText(marker));
+                if (persisted is null || !persisted.LowPrivilegeRequired ||
+                    (OperatingSystem.IsWindows() && (!persisted.JobObjectRequired || !persisted.NtfsAclRequired))) continue;
+                var restored = new RunnerIsolationDescriptor(persisted.AccountId, persisted.ProjectId, persisted.OsIdentity,
+                    current.FullName, persisted.LowPrivilegeRequired, persisted.JobObjectRequired, persisted.NtfsAclRequired);
+                if (OperatingSystem.IsWindows() && string.IsNullOrWhiteSpace(persisted.SecurityDescriptor)) continue;
+                if (OperatingSystem.IsWindows()) WorkspaceSecurityDescriptors[restored.WorkspaceRoot] = persisted.SecurityDescriptor!;
+                Workspaces[restored.WorkspaceRoot] = restored;
+                descriptor = restored;
+                return true;
+            }
+            catch (Exception) when (File.Exists(marker)) { }
         }
         descriptor = null!;
         return false;
@@ -219,6 +245,9 @@ public static class RunnerIsolationPolicy
         if (expected.LeaseId != actual.LeaseId || expected.AccountId != actual.AccountId || expected.ProjectId != actual.ProjectId || expected.Fence != actual.Fence)
             throw new InvalidOperationException("stale runner lease");
     }
+
+    private sealed record PersistedIsolationDescriptor(string AccountId, string ProjectId, string OsIdentity,
+        bool LowPrivilegeRequired, bool JobObjectRequired, bool NtfsAclRequired, string? SecurityDescriptor = null);
 }
 
 public sealed class RunnerIsolationHandle : IDisposable
@@ -232,9 +261,15 @@ public sealed class RunnerIsolationHandle : IDisposable
     {
         ArgumentNullException.ThrowIfNull(process);
         if (!OperatingSystem.IsWindows() || !Descriptor.JobObjectRequired) return;
-        _job = CreateJobObject(nint.Zero, $"phase-runner-{Descriptor.AccountId}-{Descriptor.ProjectId}");
-        if (_job == nint.Zero || !ConfigureKillOnClose(_job) || !AssignProcessToJobObject(_job, process.Handle))
-            throw new InvalidOperationException("runner process could not be attached to a Job Object");
+        // Each dispatch owns a private Job Object. A shared named object would
+        // make parallel independent Runner launches contend for the same job.
+        _job = CreateJobObject(nint.Zero, null);
+        if (_job == nint.Zero)
+            throw new InvalidOperationException($"runner process could not create a Job Object (win32={Marshal.GetLastWin32Error()})");
+        if (!ConfigureKillOnClose(_job))
+            throw new InvalidOperationException($"runner Job Object could not be configured (win32={Marshal.GetLastWin32Error()})");
+        if (!AssignProcessToJobObject(_job, process.Handle))
+            throw new InvalidOperationException($"runner process could not be attached to a Job Object (win32={Marshal.GetLastWin32Error()})");
     }
 
     public void Dispose()

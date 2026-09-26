@@ -1209,6 +1209,15 @@ public static class SqliteMetadataSchema
             FOREIGN KEY (run_id) REFERENCES runs(id) ON DELETE SET NULL
         );
         """,
+        // ADR-0061: runner lease fencing must exist on both fresh and migrated metadata stores.
+        """
+        CREATE TABLE IF NOT EXISTS runner_leases (
+            lease_id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            fence INTEGER NOT NULL
+        );
+        """,
         """
         CREATE TABLE IF NOT EXISTS account_llm_bindings (
             account_id TEXT PRIMARY KEY,

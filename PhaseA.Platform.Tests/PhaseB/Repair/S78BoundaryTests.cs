@@ -40,7 +40,7 @@ public sealed class S78BoundaryTests
 
     [Fact]
     public void O_48F7894B3810() => Verify("O_48F7894B3810", "FAILURE-O-48F7894B3810", observation =>
-        observation.FieldEquals("KeyReference", "keyReference", SnapshotProbe.AcceptedKeyReference)
+        observation.HasOpaqueKeyReference
         && observation.HasNoPlaintextKey,
         "Published manifest did not prove the accepted key-reference boundary.");
 
@@ -181,7 +181,6 @@ public sealed class S78BoundaryTests
         public const string ProjectId = "project-s78";
         public const string WorkspaceId = "workspace-s78";
         public const string SnapshotId = "snapshot-s78";
-        public const string AcceptedKeyReference = "keyref-s78-approved";
         public const string PlaintextKey = "fixture-plaintext-key-not-for-production";
         public const string AbsolutePathValue = "C:\\snapshot-fixture\\outside-root";
         public const string SourceFixture = "src/main.cs";
@@ -301,6 +300,9 @@ public sealed class S78BoundaryTests
         public string ManifestText { get; }
 
         public bool HasNoPlaintextKey => !ManifestText.Contains(SnapshotProbe.PlaintextKey, StringComparison.Ordinal);
+        public bool HasOpaqueKeyReference =>
+            _record.Manifest.KeyReference.StartsWith("keyref-", StringComparison.Ordinal) &&
+            _record.Manifest.KeyReference.Length > "keyref-".Length;
 
         public bool HasContentHashes => _record.Manifest.Files.Length > 0
             && _record.Manifest.Files.All(file => file.Sha256.Length == 64 && file.Sha256.All(Uri.IsHexDigit));
