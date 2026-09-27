@@ -467,7 +467,6 @@ internal sealed class WindowsIsolatedProcess : IDisposable
 {
     private const uint LogonWithProfile = 1;
     private const uint CreateUnicodeEnvironment = 0x00000400;
-    private const uint CreateBreakawayFromJob = 0x01000000;
     private const uint CreateNoWindow = 0x08000000;
     private const uint CreateSuspended = 0x00000004;
     private const uint StartfUseStdHandles = 0x00000100;
@@ -534,7 +533,14 @@ internal sealed class WindowsIsolatedProcess : IDisposable
                 StandardError = childStderr
             };
             var commandLine = new StringBuilder(BuildCommandLine(command.FileName, command.Arguments));
-            var flags = CreateUnicodeEnvironment | CreateBreakawayFromJob | CreateNoWindow | CreateSuspended;
+            // Do not request CREATE_BREAKAWAY_FROM_JOB here. The hosted service
+            // may itself run inside a platform-managed Job Object that does not
+            // grant breakaway rights; CreateProcessWithLogonW then fails with
+            // ERROR_ACCESS_DENIED before the child can be attached to the
+            // per-dispatch containment job. A child created without breakaway
+            // inherits the platform job and is still contained; when the host
+            // is not already job-bound, AttachProcess adds the private job.
+            var flags = CreateUnicodeEnvironment | CreateNoWindow | CreateSuspended;
             if (!CreateProcessWithLogonW(
                     identity.UserName,
                     identity.Domain,

@@ -269,7 +269,18 @@ public sealed class RunnerIsolationHandle : IDisposable
         if (!ConfigureKillOnClose(_job))
             throw new InvalidOperationException($"runner Job Object could not be configured (win32={Marshal.GetLastWin32Error()})");
         if (!AssignProcessToJobObject(_job, process.Handle))
-            throw new InvalidOperationException($"runner process could not be attached to a Job Object (win32={Marshal.GetLastWin32Error()})");
+        {
+            var error = Marshal.GetLastWin32Error();
+            // A process launched by a host already inside a non-breakaway Job
+            // Object inherits that containment. In that case Windows rejects
+            // assignment to a second job with ERROR_ACCESS_DENIED; accepting
+            // the inherited containment preserves cleanup without weakening the
+            // isolation boundary. Any other attach failure remains fatal.
+            if (error != 5 || !IsProcessInJob(process.Handle, nint.Zero, out var isInJob) || !isInJob)
+                throw new InvalidOperationException($"runner process could not be attached to a Job Object (win32={error})");
+            CloseHandle(_job);
+            _job = nint.Zero;
+        }
     }
 
     public void Dispose()
@@ -279,6 +290,7 @@ public sealed class RunnerIsolationHandle : IDisposable
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] private static extern nint CreateJobObject(nint attributes, string? name);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern bool AssignProcessToJobObject(nint job, nint process);
+    [DllImport("kernel32.dll", SetLastError = true)] private static extern bool IsProcessInJob(nint process, nint job, out bool result);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern bool CloseHandle(nint handle);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern bool SetInformationJobObject(nint job, int infoClass, ref JobObjectExtendedLimitInformation info, uint length);
 
