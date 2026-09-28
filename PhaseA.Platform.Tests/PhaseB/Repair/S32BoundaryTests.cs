@@ -142,6 +142,7 @@ public sealed class S32BoundaryTests
         private readonly SnapshotManifest _manifest;
         private readonly RequestContext _context;
         private readonly RunnerLease _lease;
+        private readonly TestRunnerCredentialScope _runnerScope;
 
         private SubstituteRootDrillFixture(
             string root,
@@ -150,7 +151,8 @@ public sealed class S32BoundaryTests
             string connectionString,
             SnapshotManifest manifest,
             RequestContext context,
-            RunnerLease lease)
+            RunnerLease lease,
+            TestRunnerCredentialScope runnerScope)
         {
             _root = root;
             _sourceRoot = sourceRoot;
@@ -159,6 +161,7 @@ public sealed class S32BoundaryTests
             _manifest = manifest;
             _context = context;
             _lease = lease;
+            _runnerScope = runnerScope;
         }
 
         public static SubstituteRootDrillFixture Create()
@@ -208,7 +211,8 @@ public sealed class S32BoundaryTests
                 "s32-correlation");
             var lease = new RunnerLease("s32-lease", account.AccountId, ProjectId, 1);
             InsertLease(connectionString, lease);
-            return new SubstituteRootDrillFixture(root, sourceRoot, substituteRoot, connectionString, manifest, context, lease);
+            var runnerScope = TestRunnerCredentialScope.Create(account.AccountId, ProjectId);
+            return new SubstituteRootDrillFixture(root, sourceRoot, substituteRoot, connectionString, manifest, context, lease, runnerScope);
         }
 
         public async Task<DrillSample> ExecuteAsync()
@@ -227,7 +231,8 @@ public sealed class S32BoundaryTests
                 _sourceRoot,
                 _substituteRoot,
                 _lease,
-                sampleId);
+                sampleId,
+                _runnerScope.Describe(_manifest.AccountId, _manifest.ProjectId, _substituteRoot));
             var restoredWorkspaceRoot = Path.Combine(_substituteRoot, ".restore-current");
             var restoredContentPath = Path.Combine(restoredWorkspaceRoot, "project.godot");
             var restoredContentValidated = restore.Status == RestoreAttemptStatus.Published &&
@@ -279,6 +284,7 @@ public sealed class S32BoundaryTests
 
         public void Dispose()
         {
+            _runnerScope.Dispose();
             SqliteConnection.ClearAllPools();
             try
             {

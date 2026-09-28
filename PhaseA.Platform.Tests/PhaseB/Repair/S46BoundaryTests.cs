@@ -95,13 +95,14 @@ public sealed class S46BoundaryTests
         private readonly RequestContext _context;
         private readonly string _source;
         private readonly string _destination;
+        private readonly TestRunnerCredentialScope _runnerScope;
         private readonly string _snapshotId = "s46-snapshot";
         private readonly string _workspaceId = "s46-workspace";
         private readonly string _policy = "policy-s46";
 
-        private BoundaryFixture(string root, string connectionString, PhaseAMetadataStore store, string accountId, string projectId, RequestContext context, string source, string destination)
+        private BoundaryFixture(string root, string connectionString, PhaseAMetadataStore store, string accountId, string projectId, RequestContext context, string source, string destination, TestRunnerCredentialScope runnerScope)
         {
-            Root = root; ConnectionString = connectionString; _store = store; AccountId = accountId; ProjectId = projectId; _context = context; _source = source; _destination = destination;
+            Root = root; ConnectionString = connectionString; _store = store; AccountId = accountId; ProjectId = projectId; _context = context; _source = source; _destination = destination; _runnerScope = runnerScope;
         }
 
         public string Root { get; }
@@ -124,7 +125,8 @@ public sealed class S46BoundaryTests
             var destination = Directory.CreateDirectory(Path.Combine(root, "destination")).FullName;
             File.WriteAllText(Path.Combine(source, "project.godot"), "s46-current-content", Encoding.UTF8);
             var context = RequestContext.FromIdentity(new AccountIdentity(account.AccountId, "s46-owner", PhaseAAuth.UserRole), "s46-principal", "s46-credential", "s46-correlation");
-            return new BoundaryFixture(root, connectionString, store, account.AccountId, projectId, context, source, destination);
+            return new BoundaryFixture(root, connectionString, store, account.AccountId, projectId, context, source, destination,
+                TestRunnerCredentialScope.Create(account.AccountId, projectId));
         }
 
         public static async Task<BoundaryFixture> CreateAsync() => await Task.Run(Create);
@@ -136,7 +138,9 @@ public sealed class S46BoundaryTests
             var snapshot = storage.CreateSnapshot(_context, _source, _snapshotId, _workspaceId, ProjectId, _policy, new HashSet<string>());
             var lease = new RunnerLease("s46-lease", AccountId, ProjectId, 1);
             InsertLease(lease);
-            var attempt = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(_context, snapshot.Manifest, _source, _destination, lease, "s46-restore");
+            var attempt = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
+                _context, snapshot.Manifest, _source, _destination, lease, "s46-restore",
+                _runnerScope.Describe(AccountId, ProjectId, _destination));
             if (attempt.Status != RestoreAttemptStatus.Published) throw new InvalidOperationException("S46 restore did not publish.");
             return _destination;
         }
@@ -189,8 +193,11 @@ public sealed class S46BoundaryTests
                     var context = RequestContext.FromIdentity(new AccountIdentity(account.AccountId, "s46-topology-owner", PhaseAAuth.UserRole), "s46-topology-principal", "s46-topology-credential", "s46-topology-correlation");
                     var lease = new RunnerLease($"s46-topology-lease-{sequence}", account.AccountId, projectId, 1);
                     InsertLease(db, lease);
+                    using var runnerScope = TestRunnerCredentialScope.Create(account.AccountId, projectId);
                     var placementReference = condition == "null" ? null : $"{category}-{condition}";
-                    var attempt = new RestoreService(db, new RouteRecoveryAuthorityResolver(db)).RestorePrepared(context, manifest, source, destination, lease, $"s46-topology-{category}-{condition}");
+                    var attempt = new RestoreService(db, new RouteRecoveryAuthorityResolver(db)).RestorePrepared(
+                        context, manifest, source, destination, lease, $"s46-topology-{category}-{condition}",
+                        runnerScope.Describe(account.AccountId, projectId, destination));
                     var restored = File.ReadAllText(Path.Combine(destination, ".restore-current", "project.godot"), Encoding.UTF8);
                     cases.Add(new TopologyCase(category, condition, placementReference, attempt.Status == RestoreAttemptStatus.Published, restored == "s46-topology-content"));
                 }
@@ -236,7 +243,7 @@ public sealed class S46BoundaryTests
         private void InsertLease(RunnerLease lease) => InsertLease(ConnectionString, lease);
         private static void InsertLease(string connectionString, RunnerLease lease) { using var c = new SqliteConnection(connectionString); c.Open(); using var cmd = c.CreateCommand(); cmd.CommandText = "CREATE TABLE IF NOT EXISTS runner_leases (lease_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, project_id TEXT NOT NULL, fence INTEGER NOT NULL); INSERT INTO runner_leases(lease_id,account_id,project_id,fence) VALUES($id,$account,$project,$fence)"; cmd.Parameters.AddWithValue("$id", lease.LeaseId); cmd.Parameters.AddWithValue("$account", lease.AccountId); cmd.Parameters.AddWithValue("$project", lease.ProjectId); cmd.Parameters.AddWithValue("$fence", lease.Fence); cmd.ExecuteNonQuery(); }
         private static EvidenceArtifact Artifact(string kind, string content) => new(kind, content, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content))).ToLowerInvariant());
-        public void Dispose() { SqliteConnection.ClearAllPools(); try { Directory.Delete(Root, true); } catch { } }
+        public void Dispose() { _runnerScope.Dispose(); SqliteConnection.ClearAllPools(); try { Directory.Delete(Root, true); } catch { } }
 
         private const string EvidenceVerifierScript = "import hashlib,json,os,sys,datetime\n" +
             "e=json.load(open(sys.argv[1],encoding='utf-8-sig')); now=datetime.datetime.now(datetime.timezone.utc); ts=datetime.datetime.fromisoformat(e['CreatedUtc'].replace('Z','+00:00')); a=e['Artifacts'];\n" +

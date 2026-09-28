@@ -137,7 +137,10 @@ public static class IndependentEvidenceReader
                 "permission" => Text("runnerSid").StartsWith("S-1-", StringComparison.Ordinal) &&
                     Text("runnerSid") != Text("platformSid") && value.GetProperty("exitCode").GetInt32() == 5 &&
                     Text("stdout").Contains(Text("runnerSid"), StringComparison.Ordinal) &&
-                    Text("stdout").Contains("S53_ACCESS_DENIED:5", StringComparison.Ordinal) &&
+                    value.GetProperty("existingErrorCode").GetInt32() == 5 &&
+                    value.GetProperty("missingErrorCode").GetInt32() == 2 &&
+                    Text("stdout").Contains("S53_EXISTING_ERROR:5", StringComparison.Ordinal) &&
+                    Text("stdout").Contains("S53_MISSING_ERROR:2", StringComparison.Ordinal) &&
                     File.ReadAllText(PathFor("ownedPath")).Trim() == "runner-owned",
                 "fault" => Text("status") == "Quarantined" && Text("failureCategory") == "snapshot_corrupt" &&
                     !Directory.Exists(PathFor("publishedPath")) && Directory.Exists(PathFor("quarantinePath")),

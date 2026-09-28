@@ -58,6 +58,8 @@ public sealed class S53BoundaryTests
     private static string CurrentMethod() => new StackTrace().GetFrame(2)?.GetMethod()?.Name
         ?? throw new InvalidOperationException("S53 could not identify its boundary method.");
 
+    private static string EscapePowerShell(string path) => path.Replace("'", "''", StringComparison.Ordinal);
+
     private void Observe(string obligation, IndependentResult result) => _output.WriteLine(
         $"S53-OBSERVATION {obligation};accepted={result.Accepted.ToString().ToLowerInvariant()};" +
         $"reason={result.Reason};processId={result.ProcessId};artifacts={string.Join(',', result.CheckedArtifacts)}");
@@ -142,6 +144,7 @@ public sealed class S53BoundaryTests
             var owned = Path.Combine(destination, ".restore-current", "runner-owned.txt");
             var secretRoot = Directory.CreateDirectory(Path.Combine(root, "platform-secret")).FullName;
             var secret = Path.Combine(secretRoot, "secret.txt");
+            var missingSecret = Path.Combine(secretRoot, "missing-secret.txt");
             File.WriteAllText(secret, "platform-only");
             using (var acl = Process.Start(new ProcessStartInfo("icacls.exe", $"\"{secretRoot}\" /inheritance:r /grant:r \"*S-1-5-32-544:(OI)(CI)F\"") { UseShellExecute = false, CreateNoWindow = true }))
             {
@@ -149,14 +152,24 @@ public sealed class S53BoundaryTests
                 acl!.WaitForExit();
                 Require(acl.ExitCode == 0, "FAILURE-S53-PERMISSION", "ACL preparation failed.");
             }
-            var script = $"whoami /user /fo csv /nh & echo S53_OPERATION_ATTEMPTED & echo runner-owned>{owned} & type {secret} >nul 2>&1 & if errorlevel 1 (echo S53_ACCESS_DENIED:5 & exit /b 5) else (exit /b 6)";
-            var probe = new HostedProcessRunner().RunAsync(new HostedProcessCommand("cmd.exe",
-                ["/d", "/s", "/c", script],
+            var script = "$ErrorActionPreference='Stop'; " +
+                "function Win32Code($e) { $code=0; while ($null -ne $e) { $code=[Runtime.InteropServices.Marshal]::GetHRForException($e) -band 0xffff; if ($code -eq 2 -or $code -eq 5) { return $code }; $e=$e.InnerException }; return $code }; " +
+                "$existingCode=0; try { $s=[IO.File]::OpenRead('" + EscapePowerShell(secret) + "'); $s.Dispose(); } catch { $existingCode=Win32Code $_.Exception }; " +
+                "$missingCode=0; try { $s=[IO.File]::OpenRead('" + EscapePowerShell(missingSecret) + "'); $s.Dispose(); } catch { $missingCode=Win32Code $_.Exception }; " +
+                "$runnerSid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value; Write-Output ('S53_RUNNER_SID:' + $runnerSid); Write-Output 'S53_OPERATION_ATTEMPTED'; " +
+                "[IO.File]::WriteAllText('" + EscapePowerShell(owned) + "','runner-owned'); " +
+                "Write-Output ('S53_EXISTING_ERROR:' + $existingCode); Write-Output ('S53_MISSING_ERROR:' + $missingCode); " +
+                "if ($existingCode -eq 5 -and $missingCode -eq 2) { exit 5 } else { exit 6 }";
+            var probeScriptPath = Path.Combine(probeRoot, "s53-probe.ps1");
+            File.WriteAllText(probeScriptPath, script, new UTF8Encoding(false));
+            var probe = new HostedProcessRunner().RunAsync(new HostedProcessCommand("powershell.exe",
+                ["-NoProfile", "-NonInteractive", "-File", probeScriptPath],
                 probeRoot, new Dictionary<string, string>())).GetAwaiter().GetResult();
             var runnerSid = ((SecurityIdentifier)new NTAccount(Environment.MachineName, "phase-r-a-p").Translate(typeof(SecurityIdentifier))).Value;
             var platformSid = WindowsIdentity.GetCurrent().User!.Value;
             var permissionObserved = probe.ExitCode == 5 && probe.Stdout.Contains(runnerSid, StringComparison.Ordinal) &&
-                runnerSid != platformSid && probe.Stdout.Contains("S53_ACCESS_DENIED:5", StringComparison.Ordinal) && File.ReadAllText(owned).Trim() == "runner-owned";
+                runnerSid != platformSid && probe.Stdout.Contains("S53_EXISTING_ERROR:5", StringComparison.Ordinal) &&
+                probe.Stdout.Contains("S53_MISSING_ERROR:2", StringComparison.Ordinal) && File.ReadAllText(owned).Trim() == "runner-owned";
 
             var faultRoot = Directory.CreateDirectory(Path.Combine(root, "fault-destination")).FullName;
             using var faultIsolation = RunnerIsolationPolicy.PrepareWorkspace(new RunnerIsolationDescriptor(
@@ -173,11 +186,11 @@ public sealed class S53BoundaryTests
             var redactionObserved = !redacted.Contains("sk-abcdefghijklmnop", StringComparison.Ordinal) && redacted.Contains("[redacted]", StringComparison.Ordinal);
 
             Require(snapshotObserved && permissionObserved && faultObserved && migration.Status == "completed" && redactionObserved,
-                "FAILURE-S53-FIXTURE", $"S53 could not materialize current production evidence for independent validation: snapshot={snapshotObserved};permission={permissionObserved};fault={faultObserved};migration={migration.Status};redaction={redactionObserved};probeExit={probe.ExitCode};probeOut={probe.Stdout}");
+                "FAILURE-S53-FIXTURE", $"S53 could not materialize current production evidence for independent validation: snapshot={snapshotObserved};permission={permissionObserved};fault={faultObserved};migration={migration.Status};redaction={redactionObserved};probeExit={probe.ExitCode};probeOut={probe.Stdout};probeErr={probe.Stderr}");
             var artifacts = new[]
             {
                 Artifact(root, "snapshot", JsonSerializer.Serialize(new { status = restore.Status.ToString(), restoredPath = Path.GetRelativePath(root, restored), expectedSha256 = snapshot.Manifest.Files.Single().Sha256 })),
-                Artifact(root, "permission", JsonSerializer.Serialize(new { platformSid, runnerSid, exitCode = probe.ExitCode, stdout = probe.Stdout, ownedPath = Path.GetRelativePath(root, owned) })),
+                Artifact(root, "permission", JsonSerializer.Serialize(new { platformSid, runnerSid, exitCode = probe.ExitCode, stdout = probe.Stdout, existingErrorCode = 5, missingErrorCode = 2, ownedPath = Path.GetRelativePath(root, owned) })),
                 Artifact(root, "fault", JsonSerializer.Serialize(new { status = fault.Status.ToString(), failureCategory = fault.FailureCategory, publishedPath = Path.GetRelativePath(root, Path.Combine(faultRoot, ".restore-current")), quarantinePath = Path.GetRelativePath(root, Path.Combine(faultRoot, ".restore-quarantine", fault.AttemptId)) })),
                 Artifact(root, "migration", JsonSerializer.Serialize(new { status = migration.Status })),
                 Artifact(root, "redaction", redacted),

@@ -25,8 +25,7 @@ public sealed class S28BoundaryTests
         using var oldCancellation = new CancellationTokenSource();
 
         var oldPidPath = Path.Combine(fixture.Root, "pre-restore.pid");
-        var releasePath = Path.Combine(fixture.Root, "release-current");
-        var oldRun = fixture.RunAsync(fixture.PreRestoreRoot, oldPidPath, oldCancellation.Token);
+            var oldRun = fixture.RunAsync(fixture.PreRestoreRoot, oldPidPath, oldCancellation.Token);
         Task<HostedProcessResult>? currentRun = null;
         try
         {
@@ -46,6 +45,7 @@ public sealed class S28BoundaryTests
             }
 
             var currentPidPath = Path.Combine(fixture.Root, "current.pid");
+            var releasePath = Path.Combine(fixture.RestoredRoot, "release-current");
             currentRun = fixture.RunAsync(fixture.RestoredRoot, currentPidPath, CancellationToken.None, releasePath);
             await WaitForFileAsync(currentPidPath, currentRun);
             var currentPid = int.Parse(await File.ReadAllTextAsync(currentPidPath), CultureInfo.InvariantCulture);
@@ -73,10 +73,7 @@ public sealed class S28BoundaryTests
         {
             // ADR-0061: a failed assertion must not leave the pre-restore Runner alive.
             oldCancellation.Cancel();
-            if (currentRun is { IsCompleted: false })
-            {
-                await File.WriteAllTextAsync(releasePath, "release");
-            }
+                if (currentRun is { IsCompleted: false }) await File.WriteAllTextAsync(Path.Combine(fixture.RestoredRoot, "release-current"), "release");
         }
     }
 
@@ -189,7 +186,7 @@ public sealed class S28BoundaryTests
 
     private sealed class S28Fixture : IAsyncDisposable
     {
-        private S28Fixture(string root, string connectionString, SnapshotManifest manifest, string accountId)
+        private S28Fixture(string root, string connectionString, SnapshotManifest manifest, string accountId, TestRunnerCredentialScope runnerScope)
         {
             Root = root;
             ConnectionString = connectionString;
@@ -201,6 +198,7 @@ public sealed class S28BoundaryTests
             CurrentContext = RequestContext.FromIdentity(new AccountIdentity(accountId, "current", PhaseAAuth.UserRole), "principal-current", "credential-current", "s28-current");
             OldLease = new RunnerLease("lease-old", accountId, "project-s28", 1);
             CurrentLease = new RunnerLease("lease-current", accountId, "project-s28", 2);
+            RunnerScope = runnerScope;
         }
 
         public string Root { get; }
@@ -213,6 +211,7 @@ public sealed class S28BoundaryTests
         public RequestContext CurrentContext { get; }
         public RunnerLease OldLease { get; }
         public RunnerLease CurrentLease { get; }
+        public TestRunnerCredentialScope RunnerScope { get; }
 
         public static async Task<S28Fixture> CreateAsync()
         {
@@ -246,13 +245,16 @@ public sealed class S28BoundaryTests
                 "policy-s28",
                 [("scope.txt", scope)]);
             manifest = manifest with { ProtectedContent = SnapshotManifest.ProtectContent([("scope.txt", scope)], manifest.KeyReference) };
-            var fixture = new S28Fixture(root, connectionString, manifest, account.AccountId);
+            var runnerScope = TestRunnerCredentialScope.Create(account.AccountId, "project-s28");
+            var fixture = new S28Fixture(root, connectionString, manifest, account.AccountId, runnerScope);
             await fixture.InsertLeaseAsync(fixture.OldLease);
             return fixture;
         }
 
         public RestoreAttempt Restore(RequestContext context, RunnerLease lease, string idempotencyKey) =>
-            new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(context, Manifest, PreRestoreRoot, RestoredRoot, lease, idempotencyKey);
+            new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
+                context, Manifest, PreRestoreRoot, RestoredRoot, lease, idempotencyKey,
+                RunnerScope.Describe(Manifest.AccountId, Manifest.ProjectId, RestoredRoot));
 
         public Task ActivateCurrentLeaseAsync() => InsertLeaseAsync(CurrentLease);
 
@@ -298,6 +300,7 @@ public sealed class S28BoundaryTests
 
         public ValueTask DisposeAsync()
         {
+            RunnerScope.Dispose();
             SqliteConnection.ClearAllPools();
             try { Directory.Delete(Root, recursive: true); }
             catch (IOException) { }
