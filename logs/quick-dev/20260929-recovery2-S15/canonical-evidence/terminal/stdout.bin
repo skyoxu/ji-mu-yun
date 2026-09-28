@@ -1,0 +1,33 @@
+...F                                                                     [100%]
+================================== FAILURES ===================================
+_____________________________ test_o_9fda0b49e011 _____________________________
+
+    @pytest.mark.cer_assertion("A-9FDA-1")
+    def test_o_9fda0b49e011() -> None:
+        result = invoke_boundary_test(f"{CASE_PREFIX}.O_9FDA0B49E011")
+>       assert_behavior(
+            result,
+            "S15-OBSERVATION O-9FDA0B49E011 admin-bearer-not-persisted-as-general-human-browser-credential",
+            "FAILURE-O-9FDA0B49E011",
+        )
+
+tests\phase_b_c_identity_isolation\current\test_s15.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+result = BoundaryResult(case_name='PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_9FDA0B49E011', outcome='Failed', deta... previous location ---</ns0:StackTrace>\n        </ns0:ErrorInfo>\n      </ns0:Output>\n    </ns0:UnitTestResult>\n  ')
+expected_observation = 'S15-OBSERVATION O-9FDA0B49E011 admin-bearer-not-persisted-as-general-human-browser-credential'
+failure_id = 'FAILURE-O-9FDA0B49E011'
+
+    def assert_behavior(result: BoundaryResult, expected_observation: str, failure_id: str) -> None:
+        if result.outcome == "Passed" and expected_observation in result.details:
+            return
+        if result.outcome != "Failed" or failure_id not in result.details:
+>           raise RuntimeError(
+                f"S15 boundary did not report a behavioral assertion failure for {result.case_name}"
+            )
+E           RuntimeError: S15 boundary did not report a behavioral assertion failure for PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_9FDA0B49E011
+
+tests\phase_b_c_identity_isolation\current\s15_fixture.py:99: RuntimeError
+=========================== short test summary info ===========================
+FAILED tests/phase_b_c_identity_isolation/current/test_s15.py::test_o_9fda0b49e011
+1 failed, 3 passed in 33.58s
