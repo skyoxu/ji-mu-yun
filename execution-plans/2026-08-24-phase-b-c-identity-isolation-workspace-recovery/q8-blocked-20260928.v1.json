@@ -1,11 +1,11 @@
 {
-  "schema": "quick-dev.q8-attempt.v1",
+  "schema": "quick-dev.q8-attempt.v2",
   "status": "blocked",
-  "reason": "terminal predecessor set does not match slices",
-  "slice_ready_current": [
+  "reason": "terminal predecessor invalid",
+  "attempted_at_commit": "575aa3f7",
+  "available_current_predecessors": [
     "S53"
   ],
-  "required": "one valid current terminal predecessor for every plan slice",
-  "attempted_at_commit": "033e43acb43a7297bb24ba4eaf1d98a274c4c927",
+  "required": "current valid terminal predecessor for all 73 slices",
   "no_completion_published": true
 }
