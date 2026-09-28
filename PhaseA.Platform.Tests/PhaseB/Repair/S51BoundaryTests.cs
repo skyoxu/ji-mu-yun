@@ -90,7 +90,7 @@ public sealed class S51BoundaryTests
         var lease = new RunnerLease("s51-lease", account.AccountId, project.ProjectId, 1);
         await InsertLeaseAsync(cs, lease);
         await InsertRouteAuthorityAsync(cs);
-        var control = service.Restore(context, manifest, source, Path.Combine(root, "service", "control"), lease, "s51-control");
+        var control = service.RestorePrepared(context, manifest, source, Path.Combine(root, "service", "control"), lease, "s51-control");
         if (control.Status != RestoreAttemptStatus.Published) throw new InvalidOperationException("S51 service control restore failed.");
 
         try { RunnerIsolationPolicy.RequireContainedPath(source, "../escape"); observed["path_escape"] = new { induced = false }; }
@@ -116,7 +116,7 @@ public sealed class S51BoundaryTests
                     requestLease = new RunnerLease("s51-" + item.Name, account.AccountId, project.ProjectId, caseIndex + 2);
                     await InsertLeaseAsync(cs, requestLease);
                 }
-                var result = service.Restore(context with { CorrelationId = "s51-" + item.Name }, item.Manifest, source, Path.Combine(root, "service", item.Name), requestLease, item.Key);
+                var result = service.RestorePrepared(context with { CorrelationId = "s51-" + item.Name }, item.Manifest, source, Path.Combine(root, "service", item.Name), requestLease, item.Key);
                 var category = ReadCategory(cs, result.AttemptId);
                 observed[item.Name] = new { status = result.Status.ToString(), category };
                 if (category == item.Name) valid.Add(item.Name);
@@ -299,7 +299,7 @@ public sealed class S51BoundaryTests
         var contextNode = item.GetProperty("context");
         var context = new RequestContext(contextNode.GetProperty("PrincipalId").GetString()!, contextNode.GetProperty("AccountId").GetString()!, new HashSet<string> { "user" }, contextNode.GetProperty("CredentialId").GetString()!, contextNode.GetProperty("CorrelationId").GetString()!);
         var service = new RestoreService(item.GetProperty("cs").GetString());
-        var result = service.Restore(context, item.GetProperty("manifest").Deserialize<SnapshotManifest>()!, item.GetProperty("source").GetString()!, item.GetProperty("destination").GetString()!, item.GetProperty("lease").Deserialize<RunnerLease>()!, "s51-r4-request-" + item.GetProperty("checkpoint").GetString());
+        var result = service.RestorePrepared(context, item.GetProperty("manifest").Deserialize<SnapshotManifest>()!, item.GetProperty("source").GetString()!, item.GetProperty("destination").GetString()!, item.GetProperty("lease").Deserialize<RunnerLease>()!, "s51-r4-request-" + item.GetProperty("checkpoint").GetString());
         if (Environment.GetEnvironmentVariable("S51_R4_REQUIRE_PUBLISHED") == "1" &&
             result.Status != RestoreAttemptStatus.Published)
             throw new Xunit.Sdk.XunitException("FAILURE-R4-CONCURRENT: retry worker did not observe the published result.");
@@ -315,7 +315,7 @@ public sealed class S51BoundaryTests
         var item = data.RootElement; var contextJson = item.GetProperty("context");
         var context = new RequestContext(contextJson.GetProperty("PrincipalId").GetString()!, contextJson.GetProperty("AccountId").GetString()!, new HashSet<string> { "user" }, contextJson.GetProperty("CredentialId").GetString()!, contextJson.GetProperty("CorrelationId").GetString()!);
         var service = new RestoreService(item.GetProperty("cs").GetString());
-        service.Restore(context, item.GetProperty("manifest").Deserialize<SnapshotManifest>()!, item.GetProperty("source").GetString()!, item.GetProperty("destination").GetString()!, item.GetProperty("lease").Deserialize<RunnerLease>()!, "s51-interrupted-request");
+        service.RestorePrepared(context, item.GetProperty("manifest").Deserialize<SnapshotManifest>()!, item.GetProperty("source").GetString()!, item.GetProperty("destination").GetString()!, item.GetProperty("lease").Deserialize<RunnerLease>()!, "s51-interrupted-request");
     }
 
     private static async Task ObserveHttpFamiliesAsync(string repository, string root, Dictionary<string, object> observed, HashSet<string> valid)

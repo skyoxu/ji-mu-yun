@@ -91,3 +91,16 @@ The pre-freeze GDD lane may use one selected game-type guide whose ID, path, and
 - `docs/workflows/prototype-lane-playbook.md`
 - `docs/workflows/prototype-tdd.md`
 - `docs/workflows/phase-b-agf-godogen-absorption.md`
+
+## Workspace restore recovery checks
+
+`RouteRecoveryAuthorityResolver` rejects empty or malformed route artifacts,
+changed persisted prompts, stale frozen contracts, active sessions without a
+current goal, and needs-fix sessions without current diagnostics. Contract
+validation reuses `PrototypeContractFreezeService` so restore and normal
+contract consumption share source-hash semantics.
+
+Restore requires an account/project-matching isolation descriptor and applies
+ACLs to the restored tree. It verifies all objects before the directory switch
+and again before committing Published; parent-directory SDDL alone is not
+publication evidence. See ADR-0061 and the recovery regression tests.

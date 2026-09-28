@@ -47,7 +47,7 @@ public sealed class S31BoundaryTests
         var controlLease = new RunnerLease("lease-control", account.AccountId, project.ProjectId, 1);
         await SeedLeaseAsync(connectionString, controlLease);
         var destination = Path.Combine(root, "control");
-        var control = service.Restore(context, manifest, source, destination, controlLease, "control");
+        var control = service.RestorePrepared(context, manifest, source, destination, controlLease, "control");
         if (control.Status != RestoreAttemptStatus.Published || File.ReadAllText(Path.Combine(destination, ".restore-current", "retained.txt")) != nonce) throw new InvalidOperationException("S31 positive nonempty restore control failed.");
         var controlRow = ReadFailure(connectionString, control.AttemptId);
         if (controlRow.Category is not null || controlRow.Envelope is not null) issues.Add("published-control:unexpected-failure-fields");
@@ -63,7 +63,7 @@ public sealed class S31BoundaryTests
             else storage.SetQuota(account.AccountId, 0);
             var request = context with { CorrelationId = "s31-" + family + "-" + nonce };
             var target = Path.Combine(root, family);
-            var result = service.Restore(request, damaged, source, target, lease, Guid.NewGuid().ToString("N"));
+            var result = service.RestorePrepared(request, damaged, source, target, lease, Guid.NewGuid().ToString("N"));
             var row = ReadFailure(connectionString, result.AttemptId);
             if (result.Status != RestoreAttemptStatus.Quarantined) issues.Add(family + ":not-quarantined");
             if (Directory.Exists(Path.Combine(target, ".restore-current"))) issues.Add(family + ":invalid-content-published");

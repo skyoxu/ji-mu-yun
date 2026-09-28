@@ -17,7 +17,14 @@ public static class IndependentEvidenceReader
 {
     private static readonly string[] RequiredArtifacts = ["snapshot", "permission", "fault", "migration", "redaction"];
 
+    // ADR-0038/0061: package integrity alone never establishes execution.
     public static IndependentEvidenceResult Validate(string packagePath, string expectedRunId, DateTimeOffset? now = null)
+    {
+        var result = ValidatePackage(packagePath, expectedRunId, now);
+        return result.Accepted ? Reject("run_evidence_binding_missing") : result;
+    }
+
+    private static IndependentEvidenceResult ValidatePackage(string packagePath, string expectedRunId, DateTimeOffset? now = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(packagePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(expectedRunId);
@@ -84,7 +91,7 @@ public static class IndependentEvidenceReader
             boundArtifacts.ValueKind != JsonValueKind.Array)
             return Reject("run_evidence_binding_missing");
 
-        var result = Validate(packagePath, run.RunId, now);
+        var result = ValidatePackage(packagePath, run.RunId, now);
         if (!result.Accepted)
             return result;
 
@@ -98,7 +105,48 @@ public static class IndependentEvidenceReader
                 !string.Equals(binding.GetProperty("path").GetString(), pair.Value.GetProperty("path").GetString(), StringComparison.Ordinal) ||
                 !string.Equals(binding.GetProperty("sha256").GetString(), pair.Value.GetProperty("sha256").GetString(), StringComparison.OrdinalIgnoreCase)))
             return Reject("run_evidence_binding_mismatch");
+        foreach (var artifact in packageArtifacts.Values)
+            if (!ValidateObservation(Path.GetDirectoryName(Path.GetFullPath(packagePath))!, artifact))
+                return Reject("behavior_evidence_invalid");
         return result;
+    }
+
+    private static bool ValidateObservation(string root, JsonElement artifact)
+    {
+        var kind = artifact.GetProperty("kind").GetString();
+        var content = artifact.GetProperty("content").GetString() ?? "";
+        if (kind == "redaction") return content.Contains("[redacted]", StringComparison.Ordinal) &&
+            !content.Contains("sk-", StringComparison.Ordinal);
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            var value = document.RootElement;
+            string Text(string key) => value.GetProperty(key).GetString() ?? "";
+            string PathFor(string key)
+            {
+                var relative = Text(key);
+                if (string.IsNullOrWhiteSpace(relative) || Path.IsPathRooted(relative)) throw new InvalidDataException();
+                var path = Path.GetFullPath(Path.Combine(root, relative));
+                if (!IsWithin(root, path)) throw new InvalidDataException();
+                return path;
+            }
+            return kind switch
+            {
+                "snapshot" => Text("status") == "Published" &&
+                    Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(PathFor("restoredPath")))).ToLowerInvariant() == Text("expectedSha256"),
+                "permission" => Text("runnerSid").StartsWith("S-1-", StringComparison.Ordinal) &&
+                    Text("runnerSid") != Text("platformSid") && value.GetProperty("exitCode").GetInt32() == 5 &&
+                    Text("stdout").Contains(Text("runnerSid"), StringComparison.Ordinal) &&
+                    Text("stdout").Contains("S53_ACCESS_DENIED:5", StringComparison.Ordinal) &&
+                    File.ReadAllText(PathFor("ownedPath")) == "runner-owned",
+                "fault" => Text("status") == "Quarantined" && Text("failureCategory") == "snapshot_corrupt" &&
+                    !Directory.Exists(PathFor("publishedPath")) && Directory.Exists(PathFor("quarantinePath")),
+                "migration" => Text("status") == "completed",
+                _ => false
+            };
+        }
+        catch (Exception error) when (error is JsonException or InvalidOperationException or KeyNotFoundException or IOException or UnauthorizedAccessException or FormatException)
+        { return false; }
     }
 
     private static IndependentEvidenceResult Reject(string reason) => new(false, reason, []);

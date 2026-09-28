@@ -115,7 +115,7 @@ public sealed class S11BoundaryTests
                 "project-drill",
                 "policy-drill",
                 new HashSet<string>(StringComparer.OrdinalIgnoreCase));
-            var attempt = new RestoreService().Restore(
+            var attempt = new RestoreService().RestorePrepared(
                 context,
                 snapshot.Manifest,
                 root.FullName,

@@ -192,7 +192,7 @@ public sealed class S25BoundaryTests
             var firstLease = new RunnerLease("control-lease", account.AccountId, project.ProjectId, 1);
             await SeedLeaseAsync(connectionString, firstLease);
             var controlDestination = Path.Combine(caseRoot, "control-restore");
-            var control = restore.Restore(context, manifest, source, controlDestination, firstLease, "control-request");
+            var control = restore.RestorePrepared(context, manifest, source, controlDestination, firstLease, "control-request");
             if (control.Status != RestoreAttemptStatus.Published ||
                 File.ReadAllText(Path.Combine(controlDestination, ".restore-current", "retained.txt")) != "S25 nonempty snapshot control")
                 throw new InvalidOperationException("S25 positive restore control failed before fault injection.");
@@ -222,10 +222,10 @@ public sealed class S25BoundaryTests
                     case "snapshot_corrupt":
                         var corrupt = manifest.ProtectedContent!.ToArray();
                         corrupt[^1] ^= 1;
-                        result = restore.Restore(context, manifest with { ProtectedContent = corrupt }, source, destination, lease, correlation);
+                        result = restore.RestorePrepared(context, manifest with { ProtectedContent = corrupt }, source, destination, lease, correlation);
                         break;
                     case "schema_unsupported":
-                        result = restore.Restore(context, manifest with { SchemaVersion = "snapshot-manifest/unsupported" }, source, destination, lease, correlation);
+                        result = restore.RestorePrepared(context, manifest with { SchemaVersion = "snapshot-manifest/unsupported" }, source, destination, lease, correlation);
                         break;
                     case "quota_exceeded":
                         storage.SetQuota(account.AccountId, 0);
@@ -233,10 +233,10 @@ public sealed class S25BoundaryTests
                             "policy-s25", new HashSet<string>(StringComparer.OrdinalIgnoreCase));
                         break;
                     case "restore_conflict":
-                        result = restore.Restore(context, manifest with { SnapshotId = "different-snapshot" }, source, destination, lease, "control-request");
+                        result = restore.RestorePrepared(context, manifest with { SnapshotId = "different-snapshot" }, source, destination, lease, "control-request");
                         break;
                     case "stale_lease":
-                        result = new RestoreService(connectionString).Restore(context, manifest, source, destination, firstLease, correlation);
+                        result = new RestoreService(connectionString).RestorePrepared(context, manifest, source, destination, firstLease, correlation);
                         break;
                     case "restore_interrupted":
                         result = await InterruptOwnedRestoreAsync(caseRoot, repository, connectionString, context, lease);
@@ -358,7 +358,7 @@ public sealed class S25BoundaryTests
         var context = new RequestContext(contextJson.GetProperty("PrincipalId").GetString()!, contextJson.GetProperty("AccountId").GetString()!,
             new HashSet<string> { "user" }, contextJson.GetProperty("CredentialId").GetString()!, contextJson.GetProperty("CorrelationId").GetString()!);
         var service = new RestoreService(data.GetProperty("connectionString").GetString());
-        service.Restore(context, data.GetProperty("manifest").Deserialize<SnapshotManifest>()!,
+        service.RestorePrepared(context, data.GetProperty("manifest").Deserialize<SnapshotManifest>()!,
             data.GetProperty("source").GetString()!, data.GetProperty("destination").GetString()!,
             data.GetProperty("lease").Deserialize<RunnerLease>()!, "interrupted-request");
     }

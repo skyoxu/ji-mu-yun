@@ -105,7 +105,7 @@ public sealed class S27BoundaryTests
                 {
                     try
                     {
-                        var attempt = new RestoreService(connectionString).Restore(
+                        var attempt = new RestoreService(connectionString).RestorePrepared(
                             context,
                             snapshot.Manifest,
                             source.FullName,

@@ -166,7 +166,7 @@ public sealed class S19BoundaryTests
                 _ => throw new ArgumentOutOfRangeException(nameof(variant))
             };
             var idempotencyKey = $"s19-{variant.ToString().ToLowerInvariant()}";
-            var attempt = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(
+            var attempt = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
                 Context,
                 Manifest,
                 placementReference!,

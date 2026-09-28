@@ -44,7 +44,7 @@ public sealed class S59BoundaryTests
                 new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
             File.Delete(sourceFile);
-            var restored = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(
+            var restored = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
                 context,
                 snapshot.Manifest,
                 source.FullName,
@@ -96,7 +96,7 @@ public sealed class S59BoundaryTests
                 "s59-policy",
                 new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
-            var published = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(
+            var published = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
                 context,
                 snapshotA.Manifest,
                 source.FullName,
@@ -132,7 +132,7 @@ public sealed class S59BoundaryTests
                 throw new InvalidOperationException("The disposable S59 recovery runner lease could not be acquired.");
             var recoveryLease = await ReadLeaseAsync(connectionString, recoveryRunId)
                 ?? throw new InvalidOperationException("The disposable S59 recovery runner lease could not be read.");
-            var restored = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(
+            var restored = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
                 context,
                 snapshotA.Manifest,
                 source.FullName,

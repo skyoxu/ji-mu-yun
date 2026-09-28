@@ -118,7 +118,7 @@ public sealed class S4BoundaryTests
 
         public RestoreAttempt Restore(SnapshotManifest manifest, string key = "s4-request")
         {
-            return new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(Context, manifest, Source, Destination, Lease, key);
+            return new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(Context, manifest, Source, Destination, Lease, key);
         }
         public SnapshotManifest CorruptHash() => Manifest with { Files = Manifest.Files.SetItem(0, Manifest.Files[0] with { Sha256 = new string('0', 64) }) };
         public SnapshotManifest CorruptSize() => Manifest with { Files = Manifest.Files.SetItem(0, Manifest.Files[0] with { Length = Manifest.Files[0].Length + 1 }) };
@@ -136,7 +136,7 @@ public sealed class S4BoundaryTests
         public bool WrongTenantDeniedAndPreserves()
         {
             var before = Previous();
-            try { _ = new RestoreService(ConnectionString).Restore(Context with { AccountId = "other-account" }, Manifest, Source, Destination, Lease, "wrong-tenant"); return false; }
+            try { _ = new RestoreService(ConnectionString).RestorePrepared(Context with { AccountId = "other-account" }, Manifest, Source, Destination, Lease, "wrong-tenant"); return false; }
             catch (UnauthorizedAccessException) { return Previous() == before; }
         }
         public bool QuotaDeniedAndPreserves()
@@ -198,7 +198,7 @@ public sealed class S4BoundaryTests
         public bool HasDisablementAuditAfterBoundary()
         {
             var denied = false;
-            try { _ = new RestoreService(ConnectionString).Restore(Context with { AccountId = "disabled-account" }, Manifest, Source, Destination, Lease, "atomic-boundary"); }
+            try { _ = new RestoreService(ConnectionString).RestorePrepared(Context with { AccountId = "disabled-account" }, Manifest, Source, Destination, Lease, "atomic-boundary"); }
             catch (UnauthorizedAccessException) { denied = true; }
             return denied && HasAuditAction("account-disabled");
         }
@@ -206,7 +206,7 @@ public sealed class S4BoundaryTests
         {
             var before = Previous();
             var denied = false;
-            try { _ = new RestoreService(ConnectionString).Restore(Context with { AccountId = "disabled-account" }, Manifest, Source, Destination, Lease, "disabled-at-publication"); }
+            try { _ = new RestoreService(ConnectionString).RestorePrepared(Context with { AccountId = "disabled-account" }, Manifest, Source, Destination, Lease, "disabled-at-publication"); }
             catch (UnauthorizedAccessException) { denied = true; }
             return denied && Previous() == before && HasAuditAction("account-disabled");
         }
@@ -218,7 +218,7 @@ public sealed class S4BoundaryTests
             var nextLease = new RunnerLease("s4-reallocated", AccountId, "s4-project", 2);
             InsertLease(nextLease);
             SetCurrentCredential("s4-reallocated-credential");
-            var next = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(Context with { CredentialId = "s4-reallocated-credential" }, Manifest, Source, Destination, nextLease, "capability-current");
+            var next = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(Context with { CredentialId = "s4-reallocated-credential" }, Manifest, Source, Destination, nextLease, "capability-current");
             return initial.Status == RestoreAttemptStatus.Published && next.Status == RestoreAttemptStatus.Published && previous == Context.CredentialId && CurrentCredential() == "s4-reallocated-credential";
         }
         public bool PreRestoreCredentialIsNotAuthoritative()
@@ -228,7 +228,7 @@ public sealed class S4BoundaryTests
             var nextLease = new RunnerLease("s4-next", AccountId, "s4-project", 2);
             InsertLease(nextLease);
             SetCurrentCredential("s4-new-credential");
-            try { _ = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(Context, Manifest, Source, Destination, nextLease, "new-runtime"); }
+            try { _ = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(Context, Manifest, Source, Destination, nextLease, "new-runtime"); }
             catch (UnauthorizedAccessException) { }
             return CurrentCredential() != Context.CredentialId;
         }

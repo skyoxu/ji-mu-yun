@@ -13,10 +13,10 @@ public sealed class S16BoundaryTests
     public void O_BBE96071CA81()
     {
         using var f = Fixture.Create();
-        _ = new RestoreService(f.Connection).Restore(f.Context, f.Manifest, f.Source, f.Destination, f.Lease, "owner-initial");
+        _ = new RestoreService(f.Connection).RestorePrepared(f.Context, f.Manifest, f.Source, f.Destination, f.Lease, "owner-initial");
         var before = File.ReadAllText(Path.Combine(f.Destination, "published.txt"));
         var revoked = f.Context with { PrincipalId = "revoked-owner", CredentialId = "revoked-credential" };
-        var denied = Assert.Throws<UnauthorizedAccessException>(() => new RestoreService(f.Connection).Restore(revoked, f.Manifest, f.Source, f.Destination, f.Lease, "owner-change"));
+        var denied = Assert.Throws<UnauthorizedAccessException>(() => new RestoreService(f.Connection).RestorePrepared(revoked, f.Manifest, f.Source, f.Destination, f.Lease, "owner-change"));
         Assert.Contains("restore", denied.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(before, File.ReadAllText(Path.Combine(f.Destination, "published.txt")));
     }
@@ -25,9 +25,9 @@ public sealed class S16BoundaryTests
     public void O_F7C65E43B423()
     {
         using var f = Fixture.Create();
-        _ = new RestoreService(f.Connection).Restore(f.Context, f.Manifest, f.Source, f.Destination, f.Lease, "initial");
+        _ = new RestoreService(f.Connection).RestorePrepared(f.Context, f.Manifest, f.Source, f.Destination, f.Lease, "initial");
         var revoked = f.Context with { CredentialId = "rotated-credential" };
-        var denied = Assert.Throws<UnauthorizedAccessException>(() => new RestoreService(f.Connection).Restore(revoked, f.Manifest, f.Source, f.Destination, f.Lease, "credential-revoked"));
+        var denied = Assert.Throws<UnauthorizedAccessException>(() => new RestoreService(f.Connection).RestorePrepared(revoked, f.Manifest, f.Source, f.Destination, f.Lease, "credential-revoked"));
         Assert.Contains("credential", denied.Message, StringComparison.OrdinalIgnoreCase);
         Assert.False(Directory.Exists(Path.Combine(f.Destination, ".restore-current")));
     }

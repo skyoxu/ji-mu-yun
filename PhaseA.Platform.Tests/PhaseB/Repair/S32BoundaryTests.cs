@@ -221,7 +221,7 @@ public sealed class S32BoundaryTests
             var startedUtc = DateTimeOffset.UtcNow;
             var restore = new RestoreService(
                 _connectionString,
-                new RouteRecoveryAuthorityResolver(_connectionString)).Restore(
+                new RouteRecoveryAuthorityResolver(_connectionString)).RestorePrepared(
                 _context,
                 _manifest,
                 _sourceRoot,

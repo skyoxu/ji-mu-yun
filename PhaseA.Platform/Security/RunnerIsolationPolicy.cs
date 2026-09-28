@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Principal;
+using System.Security.AccessControl;
 using System.Runtime.InteropServices;
 
 public sealed record RunnerLease(string LeaseId, string AccountId, string ProjectId, long Fence);
@@ -117,6 +118,90 @@ public static class RunnerIsolationPolicy
         catch (Exception)
         {
             return false;
+        }
+    }
+
+    // ADR-0061: publication validates every restored object, not just its parent.
+    public static void PrepareRestoreTree(RunnerIsolationDescriptor descriptor, string treeRoot)
+    {
+        DemandRestoreTreeLocation(descriptor, treeRoot);
+        if (!OperatingSystem.IsWindows()) return;
+        var sid = new SecurityIdentifier(ResolveSid(descriptor.OsIdentity));
+        var administrator = new SecurityIdentifier("S-1-5-32-544");
+        foreach (var path in RestoreTreePaths(treeRoot))
+        {
+            var directory = Directory.Exists(path);
+            FileSystemSecurity security = directory ? new DirectorySecurity() : new FileSecurity();
+            security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+            security.SetOwner(administrator);
+            var inheritance = directory ? InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit : InheritanceFlags.None;
+            security.AddAccessRule(new FileSystemAccessRule(administrator, FileSystemRights.FullControl,
+                inheritance, PropagationFlags.None, AccessControlType.Allow));
+            security.AddAccessRule(new FileSystemAccessRule(sid, FileSystemRights.Modify,
+                inheritance, PropagationFlags.None, AccessControlType.Allow));
+            if (directory) FileSystemAclExtensions.SetAccessControl(new DirectoryInfo(path), (DirectorySecurity)security);
+            else FileSystemAclExtensions.SetAccessControl(new FileInfo(path), (FileSecurity)security);
+        }
+        if (!HasExpectedRestoreTreeSecurity(descriptor, treeRoot))
+            throw new UnauthorizedAccessException("restore tree ACL verification failed");
+    }
+
+    public static bool HasExpectedRestoreTreeSecurity(RunnerIsolationDescriptor descriptor, string treeRoot)
+    {
+        try
+        {
+            DemandRestoreTreeLocation(descriptor, treeRoot);
+            if (!HasExpectedWorkspaceSecurity(descriptor)) return false;
+            var paths = RestoreTreePaths(treeRoot).ToArray();
+            if (!OperatingSystem.IsWindows()) return true;
+            var runnerSid = ResolveSid(descriptor.OsIdentity);
+            foreach (var path in paths)
+            {
+                var security = new RawSecurityDescriptor(ReadSecurityDescriptor(path));
+                if (security.Owner?.Value != "S-1-5-32-544" || security.DiscretionaryAcl is null ||
+                    (security.ControlFlags & ControlFlags.DiscretionaryAclProtected) == 0) return false;
+                var admin = false;
+                var runner = false;
+                foreach (GenericAce entry in security.DiscretionaryAcl)
+                {
+                    if (entry is not CommonAce ace || ace.AceQualifier != AceQualifier.AccessAllowed ||
+                        (ace.AceFlags & AceFlags.InheritOnly) != 0) return false;
+                    if (ace.SecurityIdentifier.Value == "S-1-5-32-544" && ace.AccessMask == (int)FileSystemRights.FullControl)
+                        admin = true;
+                    else if (ace.SecurityIdentifier.Value == runnerSid &&
+                             ace.AccessMask == (int)(FileSystemRights.Modify | FileSystemRights.Synchronize)) runner = true;
+                    else return false;
+                }
+                if (!admin || !runner) return false;
+            }
+            return true;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or Win32Exception)
+        { return false; }
+    }
+
+    private static void DemandRestoreTreeLocation(RunnerIsolationDescriptor descriptor, string treeRoot)
+    {
+        var relative = Path.GetRelativePath(descriptor.WorkspaceRoot, treeRoot);
+        _ = RequireContainedPath(descriptor.WorkspaceRoot, relative);
+        if (!Directory.Exists(treeRoot)) throw new DirectoryNotFoundException("restore tree is missing");
+    }
+
+    private static IEnumerable<string> RestoreTreePaths(string root)
+    {
+        // Check before descending; SearchOption.AllDirectories can follow a junction.
+        if ((File.GetAttributes(root) & FileAttributes.ReparsePoint) != 0)
+            throw new UnauthorizedAccessException("restore tree contains a reparse point");
+        yield return root;
+        foreach (var path in Directory.EnumerateFileSystemEntries(root))
+        {
+            if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                throw new UnauthorizedAccessException("restore tree contains a reparse point");
+            if (Directory.Exists(path))
+            {
+                foreach (var child in RestoreTreePaths(path)) yield return child;
+            }
+            else yield return path;
         }
     }
 

@@ -65,7 +65,7 @@ public sealed class S13BoundaryTests
                 command.ExecuteNonQuery();
             }
             var service = new RestoreService(connectionString);
-            var currentAttempt = service.Restore(
+            var currentAttempt = service.RestorePrepared(
                 currentSecret,
                 manifest,
                 source.FullName,
@@ -75,7 +75,7 @@ public sealed class S13BoundaryTests
             var oldRejected = false;
             try
             {
-                service.Restore(oldSecret, manifest, source.FullName, destination.FullName, lease, "old-secret");
+                service.RestorePrepared(oldSecret, manifest, source.FullName, destination.FullName, lease, "old-secret");
             }
             catch (UnauthorizedAccessException)
             {
@@ -160,7 +160,7 @@ public sealed class S13BoundaryTests
                 "correlation-lease");
             var staleLease = new RunnerLease("lease-stale", accountId, "project-lease", 1);
             var service = new RestoreService(connectionString);
-            var first = service.Restore(context, manifest, source.FullName, destination.FullName, staleLease, "lease-first");
+            var first = service.RestorePrepared(context, manifest, source.FullName, destination.FullName, staleLease, "lease-first");
             Require(first.Status == RestoreAttemptStatus.Published, "FAILURE-O-F17C15697A79", "Initial restore did not publish its staged result.");
 
             using (var connection = new SqliteConnection(connectionString))
@@ -174,7 +174,7 @@ public sealed class S13BoundaryTests
             var staleRejected = false;
             try
             {
-                service.Restore(context, manifest, source.FullName, destination.FullName, staleLease, "lease-stale-retry");
+                service.RestorePrepared(context, manifest, source.FullName, destination.FullName, staleLease, "lease-stale-retry");
             }
             catch (InvalidOperationException error) when (error.Message.Contains("not authoritative", StringComparison.Ordinal))
             {

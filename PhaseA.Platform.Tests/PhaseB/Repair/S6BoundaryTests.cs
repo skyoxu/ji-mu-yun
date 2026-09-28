@@ -24,7 +24,7 @@ public sealed class S6BoundaryTests
         var service = new RestoreService(
             fixture.ConnectionString,
             new RouteRecoveryAuthorityResolver(fixture.ConnectionString));
-        var first = service.Restore(
+        var first = service.RestorePrepared(
             fixture.Context,
             manifest,
             source.FullName,
@@ -36,7 +36,7 @@ public sealed class S6BoundaryTests
         RestoreAttempt? oldLeaseExercise = null;
         try
         {
-            oldLeaseExercise = service.Restore(
+            oldLeaseExercise = service.RestorePrepared(
                 fixture.Context,
                 manifest,
                 source.FullName,
@@ -81,7 +81,7 @@ public sealed class S6BoundaryTests
             new RouteRecoveryAuthorityResolver(fixture.ConnectionString));
         const string idempotencyKey = "s6-retry-key";
 
-        var failed = service.Restore(
+        var failed = service.RestorePrepared(
             fixture.Context,
             failedManifest,
             source.FullName,
@@ -93,7 +93,7 @@ public sealed class S6BoundaryTests
         RestoreAttempt? retried = null;
         try
         {
-            retried = service.Restore(
+            retried = service.RestorePrepared(
                 fixture.Context,
                 failedManifest,
                 source.FullName,
@@ -140,7 +140,7 @@ public sealed class S6BoundaryTests
         var service = new RestoreService(
             fixture.ConnectionString,
             new RouteRecoveryAuthorityResolver(fixture.ConnectionString));
-        var created = service.Restore(
+        var created = service.RestorePrepared(
             fixture.Context,
             manifest,
             source.FullName,
@@ -154,7 +154,7 @@ public sealed class S6BoundaryTests
         var conflictingRequestRejected = false;
         try
         {
-            service.Restore(
+            service.RestorePrepared(
                 fixture.Context,
                 mutatedManifest,
                 mutatedSource.FullName,

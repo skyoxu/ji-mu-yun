@@ -60,7 +60,7 @@ public sealed class S73BoundaryTests
                 ProjectId,
                 "s73-policy",
                 new HashSet<string>()).Manifest;
-            var published = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(
+            var published = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
                 context,
                 manifest,
                 source.FullName,

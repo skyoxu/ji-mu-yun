@@ -136,7 +136,7 @@ public sealed class S46BoundaryTests
             var snapshot = storage.CreateSnapshot(_context, _source, _snapshotId, _workspaceId, ProjectId, _policy, new HashSet<string>());
             var lease = new RunnerLease("s46-lease", AccountId, ProjectId, 1);
             InsertLease(lease);
-            var attempt = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(_context, snapshot.Manifest, _source, _destination, lease, "s46-restore");
+            var attempt = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(_context, snapshot.Manifest, _source, _destination, lease, "s46-restore");
             if (attempt.Status != RestoreAttemptStatus.Published) throw new InvalidOperationException("S46 restore did not publish.");
             return _destination;
         }
@@ -190,7 +190,7 @@ public sealed class S46BoundaryTests
                     var lease = new RunnerLease($"s46-topology-lease-{sequence}", account.AccountId, projectId, 1);
                     InsertLease(db, lease);
                     var placementReference = condition == "null" ? null : $"{category}-{condition}";
-                    var attempt = new RestoreService(db, new RouteRecoveryAuthorityResolver(db)).Restore(context, manifest, source, destination, lease, $"s46-topology-{category}-{condition}");
+                    var attempt = new RestoreService(db, new RouteRecoveryAuthorityResolver(db)).RestorePrepared(context, manifest, source, destination, lease, $"s46-topology-{category}-{condition}");
                     var restored = File.ReadAllText(Path.Combine(destination, ".restore-current", "project.godot"), Encoding.UTF8);
                     cases.Add(new TopologyCase(category, condition, placementReference, attempt.Status == RestoreAttemptStatus.Published, restored == "s46-topology-content"));
                 }

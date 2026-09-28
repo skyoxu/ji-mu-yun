@@ -77,13 +77,13 @@ public sealed class S48BoundaryTests
                 new RouteRecoveryAuthorityResolver(connectionString));
             var currentPublication = currentLease is null
                 ? null
-                : restore.Restore(context, currentManifest, currentSource.FullName, destination.FullName, currentLease);
+                : restore.RestorePrepared(context, currentManifest, currentSource.FullName, destination.FullName, currentLease);
             var staleRejected = false;
             if (staleLease is not null)
             {
                 try
                 {
-                    restore.Restore(context, staleManifest, staleSource.FullName, destination.FullName, staleLease);
+                    restore.RestorePrepared(context, staleManifest, staleSource.FullName, destination.FullName, staleLease);
                 }
                 catch (InvalidOperationException error) when (error.Message == "runner lease is not authoritative")
                 {

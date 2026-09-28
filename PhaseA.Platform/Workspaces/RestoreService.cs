@@ -117,11 +117,15 @@ public sealed class RestoreService
             RunnerIsolationPolicy.RequireNoReparsePoint(destinationRoot, destinationRoot);
             ValidateManifest(manifest);
             DemandAvailableQuota(manifest);
-            if (RunnerIsolationPolicy.TryGetWorkspaceDescriptor(destinationRoot, out var destinationDescriptor) &&
+            if (!RunnerIsolationPolicy.TryGetWorkspaceDescriptor(destinationRoot, out var destinationDescriptor) ||
+                destinationDescriptor.AccountId != manifest.AccountId || destinationDescriptor.ProjectId != manifest.ProjectId ||
                 !RunnerIsolationPolicy.HasExpectedWorkspaceSecurity(destinationDescriptor))
                 throw new RestoreBoundaryFailure("acl_invalid");
             var capturedFiles = manifest.ReadProtectedContent();
             StageProtectedContent(manifest, capturedFiles, staging);
+            try { RunnerIsolationPolicy.PrepareRestoreTree(destinationDescriptor, staging); }
+            catch (Exception error) when (error is UnauthorizedAccessException or IOException or System.ComponentModel.Win32Exception)
+            { throw new RestoreBoundaryFailure("acl_invalid"); }
             WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "staging-written");
             WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "staging-written");
             // Re-check authority at the publication boundary. A lease or
@@ -133,6 +137,8 @@ public sealed class RestoreService
                 throw new RestoreBoundaryFailure("route_authority_missing");
             WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "post-verification");
             WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "post-verification");
+            if (!RunnerIsolationPolicy.HasExpectedRestoreTreeSecurity(destinationDescriptor, staging))
+                throw new RestoreBoundaryFailure("acl_invalid");
             Directory.CreateDirectory(Path.GetDirectoryName(backup)!);
             if (Directory.Exists(published)) Directory.Move(published, backup);
             WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "previous-moved");
@@ -141,8 +147,7 @@ public sealed class RestoreService
             catch { if (Directory.Exists(backup) && !Directory.Exists(published)) Directory.Move(backup, published); throw; }
             WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "current-switched");
             WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "current-switched");
-            if (RunnerIsolationPolicy.TryGetWorkspaceDescriptor(destinationRoot, out var publishedDescriptor) &&
-                !RunnerIsolationPolicy.HasExpectedWorkspaceSecurity(publishedDescriptor))
+            if (!RunnerIsolationPolicy.HasExpectedRestoreTreeSecurity(destinationDescriptor, published))
                 throw new RestoreBoundaryFailure("acl_invalid");
             var result = attempt.Advance(RestoreAttemptStatus.Published);
             PersistCurrentRuntimeCredential(context, manifest.WorkspaceId);

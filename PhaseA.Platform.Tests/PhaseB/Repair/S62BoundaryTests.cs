@@ -83,8 +83,8 @@ public sealed class S62BoundaryTests
                 Files = manifest.Files.SetItem(0, manifest.Files[0] with { Length = manifest.Files[0].Length + 1 }),
             };
             var service = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
-            var cancelled = service.Restore(context, badHash, source.FullName, destination.FullName, lease, "s62-cancelled");
-            var failed = service.Restore(context, badSize, source.FullName, destination.FullName, lease, "s62-failed");
+            var cancelled = service.RestorePrepared(context, badHash, source.FullName, destination.FullName, lease, "s62-cancelled");
+            var failed = service.RestorePrepared(context, badSize, source.FullName, destination.FullName, lease, "s62-failed");
 
             var schema = ReadAuditColumns(connectionString);
             var audit = ReadAuditRows(connectionString);

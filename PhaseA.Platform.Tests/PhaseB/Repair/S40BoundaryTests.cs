@@ -106,8 +106,8 @@ public sealed class S40BoundaryTests
     {
         using var fixture = S40Fixture.Create();
         var service = new RestoreService(fixture.ConnectionString);
-        var first = service.Restore(fixture.Context, fixture.Manifest, fixture.SourceRoot, fixture.DestinationRoot, fixture.Lease, "equivalent-request");
-        var second = service.Restore(fixture.Context, fixture.Manifest, fixture.SourceRoot, fixture.DestinationRoot, fixture.Lease, "equivalent-request");
+        var first = service.RestorePrepared(fixture.Context, fixture.Manifest, fixture.SourceRoot, fixture.DestinationRoot, fixture.Lease, "equivalent-request");
+        var second = service.RestorePrepared(fixture.Context, fixture.Manifest, fixture.SourceRoot, fixture.DestinationRoot, fixture.Lease, "equivalent-request");
 
         Require(
             first.Status == RestoreAttemptStatus.Published &&
@@ -202,7 +202,7 @@ public sealed class S40BoundaryTests
         var denied = false;
         try
         {
-            _ = new RestoreService(fixture.ConnectionString).Restore(
+            _ = new RestoreService(fixture.ConnectionString).RestorePrepared(
                 unauthorized,
                 fixture.Manifest,
                 fixture.SourceRoot,
@@ -333,7 +333,7 @@ public sealed class S40BoundaryTests
             return new S40Fixture(root, connectionString, manifest, context, lease);
         }
 
-        public RestoreAttempt Restore(string key) => new RestoreService(ConnectionString).Restore(Context, Manifest, SourceRoot, DestinationRoot, Lease, key);
+        public RestoreAttempt Restore(string key) => new RestoreService(ConnectionString).RestorePrepared(Context, Manifest, SourceRoot, DestinationRoot, Lease, key);
 
         public AttemptRow? ReadAttempt(string key)
         {

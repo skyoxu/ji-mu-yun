@@ -129,7 +129,7 @@ public sealed class S24BoundaryTests
             return new S24Fixture(root, connectionString, manifest, context, lease);
         }
 
-        public RestoreAttempt Restore() => new RestoreService(ConnectionString).Restore(Context, Manifest, SourceRoot, DestinationRoot, Lease, IdempotencyKey);
+        public RestoreAttempt Restore() => new RestoreService(ConnectionString).RestorePrepared(Context, Manifest, SourceRoot, DestinationRoot, Lease, IdempotencyKey);
 
         public string? ReadAttemptStatus()
         {

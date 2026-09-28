@@ -249,7 +249,7 @@ public sealed class S17BoundaryTests
                 .ListSnapshots(Context.AccountId, Lease.ProjectId)
                 .SingleOrDefault(record => record.Manifest.SnapshotId == manifest.SnapshotId);
             var untrustedSource = Directory.CreateDirectory(Path.Combine(Root, "untrusted-caller-source")).FullName;
-            var attempt = new RestoreService(ConnectionString).Restore(
+            var attempt = new RestoreService(ConnectionString).RestorePrepared(
                 Context,
                 retained?.Manifest ?? throw new InvalidOperationException("S17 retained snapshot was not found by logical identity."),
                 untrustedSource,
@@ -346,7 +346,7 @@ public sealed class S17BoundaryTests
         }
 
         private RestoreAttempt Restore(SnapshotManifest manifest, string idempotencyKey) =>
-            new RestoreService(ConnectionString).Restore(Context, manifest, Source, Destination, Lease, idempotencyKey);
+            new RestoreService(ConnectionString).RestorePrepared(Context, manifest, Source, Destination, Lease, idempotencyKey);
 
         private FailureResult InjectDirectorySwitchFailure()
         {

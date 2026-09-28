@@ -204,7 +204,7 @@ public sealed class S44BoundaryTests
         }
 
         public RestoreAttempt Restore(string category, string condition) =>
-            new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(
+            new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
                 Context,
                 Manifest,
                 condition switch

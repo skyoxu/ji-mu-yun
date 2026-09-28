@@ -150,7 +150,7 @@ public sealed class S52BoundaryTests
                 new ProjectAssetPreviewTicketService(options));
         }
 
-        public RestoreAttempt Restore() => new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(
+        public RestoreAttempt Restore() => new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
             Context,
             Manifest,
             SourceRoot,

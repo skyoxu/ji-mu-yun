@@ -234,7 +234,7 @@ public sealed class S28BoundaryTests
         }
 
         public RestoreAttempt Restore(RequestContext context, RunnerLease lease, string idempotencyKey) =>
-            new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).Restore(context, Manifest, PreRestoreRoot, RestoredRoot, lease, idempotencyKey);
+            new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(context, Manifest, PreRestoreRoot, RestoredRoot, lease, idempotencyKey);
 
         public Task ActivateCurrentLeaseAsync() => InsertLeaseAsync(CurrentLease);
 
