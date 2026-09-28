@@ -413,7 +413,7 @@ internal static class RunnerCredentialStore
         ArgumentException.ThrowIfNullOrWhiteSpace(target);
         if (!OperatingSystem.IsWindows() || !CredRead(target, CredTypeGeneric, 0, out var pointer))
         {
-            throw new InvalidOperationException("managed runner credential is unavailable");
+            throw new InvalidOperationException($"managed runner credential is unavailable: target={target}");
         }
 
         try
@@ -421,13 +421,13 @@ internal static class RunnerCredentialStore
             var credential = Marshal.PtrToStructure<NativeCredential>(pointer);
             if (credential.CredentialBlob == nint.Zero || credential.CredentialBlobSize == 0 || string.IsNullOrWhiteSpace(credential.UserName))
             {
-                throw new InvalidOperationException("managed runner credential is incomplete");
+                throw new InvalidOperationException($"managed runner credential is incomplete: target={target}");
             }
 
             var password = Marshal.PtrToStringUni(credential.CredentialBlob, checked((int)credential.CredentialBlobSize / sizeof(char)));
             if (string.IsNullOrEmpty(password))
             {
-                throw new InvalidOperationException("managed runner credential is incomplete");
+                throw new InvalidOperationException($"managed runner credential is incomplete: target={target}");
             }
 
             return new RunnerCredential(credential.UserName, password);
