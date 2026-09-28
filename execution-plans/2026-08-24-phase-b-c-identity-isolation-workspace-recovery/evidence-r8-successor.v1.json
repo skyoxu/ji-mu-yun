@@ -1,0 +1,86 @@
+{
+  "schema": "r8-successor-evidence-manifest.v1",
+  "commit": "033e43acb43a7297bb24ba4eaf1d98a274c4c927",
+  "items": [
+    {
+      "path": "logs/quick-dev/20260928-external-repair-windows/r8-s53-full-r13.trx",
+      "sha256": "sha256:6b9a89fc89754845da4e562546fc2595e2edea2020b54fca0736c22b9c6691b8",
+      "bytes": 17703
+    },
+    {
+      "path": "logs/quick-dev/20260928-external-repair-windows/r8-s32-r14.trx",
+      "sha256": "sha256:ff8dbe5547d6a5d9319f0b3e6aa5473040cb6cb3fbf35bdac74f7017d6101eb4",
+      "bytes": 11637
+    },
+    {
+      "path": "logs/quick-dev/20260928-external-repair-windows/r8-s46-r15.trx",
+      "sha256": "sha256:3b72fbe9c21ad158893b936beb86b70de77425df8cf051e1fdd911fc0149bdb7",
+      "bytes": 6274
+    },
+    {
+      "path": "logs/quick-dev/20260928-external-repair-windows/r8-s28-full-r20.trx",
+      "sha256": "sha256:1ac2bca9987cf4a47aca314f80161ba61c5130d5ca8f9669e0107a1c4586d91a",
+      "bytes": 5851
+    },
+    {
+      "path": "logs/quick-dev/20260928-external-repair-windows/restore-regression-r22.trx",
+      "sha256": "sha256:f23890d6357a974c7ec5e8a54ab965f1928f992a1c4d31a426d53bc199649f67",
+      "bytes": 165669
+    },
+    {
+      "path": "logs/quick-dev/20260928-r8-s53-successor/canonical-evidence/probe/observation.v2.json",
+      "sha256": "sha256:6f48a0848a0b3d6869727741d7a0a80c1dc7297ebdab2a782400c9bf536f4fbb",
+      "bytes": 645
+    },
+    {
+      "path": "logs/quick-dev/20260928-r8-s53-successor/canonical-evidence/probe/process-receipt.v2.json",
+      "sha256": "sha256:9625ae5d62638bab692a22b564fe49bc764d6a49ca4592795213bbcb513140d3",
+      "bytes": 8792
+    },
+    {
+      "path": "logs/quick-dev/20260928-r8-s53-successor/canonical-evidence/probe/stage-result.v2.json",
+      "sha256": "sha256:2ddb176ae93e0b4746521c68fc92c2ea2472d65b28e6c5cf6f5e6224cf0369f4",
+      "bytes": 6042
+    },
+    {
+      "path": "logs/quick-dev/20260928-r8-s53-successor/canonical-evidence/regression/observation.v2.json",
+      "sha256": "sha256:26ac44beed295c0b71511cf2a83fbc16c97bf6bcc301a1765af7d83f1579cd1b",
+      "bytes": 660
+    },
+    {
+      "path": "logs/quick-dev/20260928-r8-s53-successor/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:1ff026ee7ff9e5398f18e5fbafbc42d887072b24d2507cde8727d295453e2ac8",
+      "bytes": 8802
+    },
+    {
+      "path": "logs/quick-dev/20260928-r8-s53-successor/canonical-evidence/regression/regression-gate.v1.json",
+      "sha256": "sha256:51ff6da2ab3187322c085cb13599d9ef79aef0ac43dfdc714a5910f8585bbab7",
+      "bytes": 592
+    },
+    {
+      "path": "logs/quick-dev/20260928-r8-s53-successor/canonical-evidence/regression/stage-result.v2.json",
+      "sha256": "sha256:6ec34dcc670080c16caa810a61366a0fda1588df4572f5f6bf8a67f9dd3a9369",
+      "bytes": 5924
+    },
+    {
+      "path": "logs/quick-dev/20260928-r8-s53-successor/canonical-evidence/terminal/observation.v2.json",
+      "sha256": "sha256:fbb11ce5d9e1851686737d3a39267ba68e29f1d6298259ec774214f335e6f970",
+      "bytes": 654
+    },
+    {
+      "path": "logs/quick-dev/20260928-r8-s53-successor/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:291b67daf22830a5eb25701908314bc21e3a2fa31618ec49d05b948b036fdac4",
+      "bytes": 8798
+    },
+    {
+      "path": "logs/quick-dev/20260928-r8-s53-successor/canonical-evidence/terminal/stage-result.v2.json",
+      "sha256": "sha256:c6790cbcd336ac2f69e8fb9fa0b3bcd2bf88fa4c5e7ea141d2fd2ff53749fa55",
+      "bytes": 5699
+    },
+    {
+      "path": "logs/quick-dev/20260928-r8-s53-successor/slice-ready.v1.json",
+      "sha256": "sha256:989315cb878beced6228855833833daa834c22409e4fa6c95c3e66fdb14a50b5",
+      "bytes": 2630
+    }
+  ]
+}
