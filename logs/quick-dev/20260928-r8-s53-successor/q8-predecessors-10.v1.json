@@ -1,0 +1,62 @@
+[
+  {
+    "slice_id": "S53",
+    "run_root": "logs/quick-dev/20260928-r8-s53-successor",
+    "result_ref": "logs/quick-dev/20260928-r8-s53-successor/slice-ready-batch3.v1.json",
+    "result_sha256": "sha256:3093af0bcf97d6309337d157c8a5c60c1ffb6eec29378404933f692eaf4f179e"
+  },
+  {
+    "slice_id": "S12",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S12",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S12/slice-ready-batch3.v1.json",
+    "result_sha256": "sha256:938fbb5c4394bb3261aedfdd96fdb319996f4982d20cba7ed62dd317b01d13f5"
+  },
+  {
+    "slice_id": "S47",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S47",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S47/slice-ready-batch3.v1.json",
+    "result_sha256": "sha256:57a674092e65fccb231abc910cc93cc7d749a705cb8010e195dce113acd48935"
+  },
+  {
+    "slice_id": "S66",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S66",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S66/slice-ready-batch3.v1.json",
+    "result_sha256": "sha256:cc756353714652a729c9f4094d0c2aa4284a5c4aa48cfde3fcc4f4fd94c40d30"
+  },
+  {
+    "slice_id": "S69",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S69",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S69/slice-ready-batch3.v1.json",
+    "result_sha256": "sha256:400fc1d55d4470cc740eef22314ee29bf818f9637471ed2a38d0938cba4db083"
+  },
+  {
+    "slice_id": "S11",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S11-r2",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S11-r2/slice-ready-batch2.v2.json",
+    "result_sha256": "sha256:e8e59c00ec2ac63ade9b5b4d50c0968ad83a2d5c08761aac332f9b9468c19bee"
+  },
+  {
+    "slice_id": "S29",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S29-r2",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S29-r2/slice-ready-batch2.v2.json",
+    "result_sha256": "sha256:aeb9a7040d5ab324a4c317f6897ff9bdee8752363f50d2a0060de78b3cda53e0"
+  },
+  {
+    "slice_id": "S79",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S79-r2",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S79-r2/slice-ready-batch2.v2.json",
+    "result_sha256": "sha256:c481e1017567922261261cf4ad77ef16ca91dbab59098f486f30eee3a4ab6f65"
+  },
+  {
+    "slice_id": "S38",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S38",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S38/slice-ready-batch2.v2.json",
+    "result_sha256": "sha256:d4fd1596ec198ad026e8b05a907351d32d857e5919657ee19b1bb454dabf6828"
+  },
+  {
+    "slice_id": "S55",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S55",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S55/slice-ready-batch2.v2.json",
+    "result_sha256": "sha256:ecd604004bde9105cee9eba3e1fdb6957994908ef9807da87eaf1ab417bb9995"
+  }
+]

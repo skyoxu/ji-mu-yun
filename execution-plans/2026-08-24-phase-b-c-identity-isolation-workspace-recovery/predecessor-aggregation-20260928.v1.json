@@ -26,6 +26,31 @@
       "slice_id": "S69",
       "status": "current",
       "q7": "pass"
+    },
+    {
+      "slice_id": "S11",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S29",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S79",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S38",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S55",
+      "status": "current",
+      "q7": "pass"
     }
   ],
   "missing_or_not_current": [
@@ -117,6 +142,6 @@
     ]
   },
   "q8_last_block_reason": "terminal predecessor set does not match slices",
-  "validated_current_count": 5,
-  "next_missing_count": 68
+  "validated_current_count": 10,
+  "next_missing_count": 63
 }
