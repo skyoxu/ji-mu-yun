@@ -1,0 +1,78 @@
+{
+  "schema": "quick-dev.closeout-progress.v3",
+  "source_commit": "3ef456e8",
+  "current_predecessors": [
+    {
+      "slice_id": "S53",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S12",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S47",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S66",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S69",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S11",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S29",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S79",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S38",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S55",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S9",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S10",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S23",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S76",
+      "status": "current",
+      "q7": "pass"
+    }
+  ],
+  "remaining_slices": 59,
+  "q8_result": "blocked: terminal predecessor set does not match slices"
+}

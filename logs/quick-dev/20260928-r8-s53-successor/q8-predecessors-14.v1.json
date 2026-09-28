@@ -1,0 +1,86 @@
+[
+  {
+    "slice_id": "S53",
+    "run_root": "logs/quick-dev/20260928-r8-s53-successor",
+    "result_ref": "logs/quick-dev/20260928-r8-s53-successor/slice-ready-final.v1.json",
+    "result_sha256": "sha256:ef3d3a9396b7460c95528f02007eef1c7ebba092c25b355041ef6f2313e594a8"
+  },
+  {
+    "slice_id": "S12",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S12",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S12/slice-ready-final.v1.json",
+    "result_sha256": "sha256:ea62465e4e04bcaefc7eb2b06f5fbb1a3d939362e67647606aab3ec8e56889ae"
+  },
+  {
+    "slice_id": "S47",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S47",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S47/slice-ready-final.v1.json",
+    "result_sha256": "sha256:8835a802b4d3610c0e1ea8d191d35475db7d6212865a1032bcb605e54e048872"
+  },
+  {
+    "slice_id": "S66",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S66",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S66/slice-ready-final.v1.json",
+    "result_sha256": "sha256:e37ddffbbad96cfa53d71cba2b56581330c11fdcb3e0acf8b300c1c2cdfad9cb"
+  },
+  {
+    "slice_id": "S69",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S69",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S69/slice-ready-final.v1.json",
+    "result_sha256": "sha256:345b983c3bcac7c17e223b9a9852001669d286f4a41f1e2406f64725009408d1"
+  },
+  {
+    "slice_id": "S11",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S11-r2",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S11-r2/slice-ready-final.v1.json",
+    "result_sha256": "sha256:d6efb8ed97d5ffa8f9af7165aaeaf7583ff3d5d2563fe120784d0ad30defc192"
+  },
+  {
+    "slice_id": "S29",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S29-r2",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S29-r2/slice-ready-final.v1.json",
+    "result_sha256": "sha256:bf2ac06b85003f4d440e3238d97e84bb273736340df9085c4299e1b5f0c1e8f4"
+  },
+  {
+    "slice_id": "S79",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S79-r2",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S79-r2/slice-ready-final.v1.json",
+    "result_sha256": "sha256:c82687995b16810c964adbb162245d032045431fbd68c41df90bc50bda17c443"
+  },
+  {
+    "slice_id": "S38",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S38",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S38/slice-ready-final.v1.json",
+    "result_sha256": "sha256:89852fb93d48499004b5950c6df255897a472d9c0bd0e515c8edfff40d2e73ee"
+  },
+  {
+    "slice_id": "S55",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S55",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S55/slice-ready-final.v1.json",
+    "result_sha256": "sha256:d94fcdec2756a5bfbf7b64130486da415dfed2037f04c0924311dad5f92d36f8"
+  },
+  {
+    "slice_id": "S9",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S9-r3",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S9-r3/slice-ready-final.v1.json",
+    "result_sha256": "sha256:f93750483fb15ee9e94d0e0797fb79f32725385d65c73830e12c91c1c89167de"
+  },
+  {
+    "slice_id": "S10",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S10-r3",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S10-r3/slice-ready-final.v1.json",
+    "result_sha256": "sha256:150d8e4edbe76bb90642562a310d379403d9c290b9b833b403cf6674745b0677"
+  },
+  {
+    "slice_id": "S23",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S23-r3",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S23-r3/slice-ready-final.v1.json",
+    "result_sha256": "sha256:17557ae25688f962b6127f9f0c15789d2c080c9362edc28872e53d064dcb5151"
+  },
+  {
+    "slice_id": "S76",
+    "run_root": "logs/quick-dev/20260928-plan-closeout/S76-r3",
+    "result_ref": "logs/quick-dev/20260928-plan-closeout/S76-r3/slice-ready-final.v1.json",
+    "result_sha256": "sha256:de7b044c6b61cd38241d11b558fd92ecb073172c5b46b439cc44722fb9f8253e"
+  }
+]
