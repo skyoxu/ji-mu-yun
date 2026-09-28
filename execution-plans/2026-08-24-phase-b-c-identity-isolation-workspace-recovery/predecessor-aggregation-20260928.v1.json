@@ -4,9 +4,28 @@
   "available": [
     {
       "slice_id": "S53",
-      "path": "logs/quick-dev/20260928-r8-s53-successor/slice-ready-current.v1.json",
       "status": "current",
-      "affected_by_r8": true
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S12",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S47",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S66",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S69",
+      "status": "current",
+      "q7": "pass"
     }
   ],
   "missing_or_not_current": [
@@ -97,5 +116,7 @@
       "result_sha256"
     ]
   },
-  "q8_last_block_reason": "terminal predecessor set does not match slices"
+  "q8_last_block_reason": "terminal predecessor set does not match slices",
+  "validated_current_count": 5,
+  "next_missing_count": 68
 }
