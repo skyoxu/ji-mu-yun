@@ -47,7 +47,7 @@ public sealed class S28BoundaryTests
 
             var currentPidPath = Path.Combine(fixture.Root, "current.pid");
             currentRun = fixture.RunAsync(fixture.RestoredRoot, currentPidPath, CancellationToken.None, releasePath);
-            await WaitForFileAsync(currentPidPath);
+            await WaitForFileAsync(currentPidPath, currentRun);
             var currentPid = int.Parse(await File.ReadAllTextAsync(currentPidPath), CultureInfo.InvariantCulture);
             var currentProcessWasAlive = IsProcessAlive(currentPid);
 
@@ -133,6 +133,24 @@ public sealed class S28BoundaryTests
 
         if (!File.Exists(path))
         {
+            throw new InvalidOperationException($"S28 process fixture did not create PID file: {path}");
+        }
+    }
+
+    private static async Task WaitForFileAsync(string path, Task<HostedProcessResult> run)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        while (!File.Exists(path) && DateTime.UtcNow < deadline)
+        {
+            if (run.IsFaulted)
+                throw run.Exception?.GetBaseException() ?? new InvalidOperationException("S28 runner failed before creating PID file.");
+            await Task.Delay(25);
+        }
+
+        if (!File.Exists(path))
+        {
+            if (run.IsFaulted)
+                throw run.Exception?.GetBaseException() ?? new InvalidOperationException("S28 runner failed before creating PID file.");
             throw new InvalidOperationException($"S28 process fixture did not create PID file: {path}");
         }
     }

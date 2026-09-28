@@ -138,7 +138,7 @@ public static class IndependentEvidenceReader
                     Text("runnerSid") != Text("platformSid") && value.GetProperty("exitCode").GetInt32() == 5 &&
                     Text("stdout").Contains(Text("runnerSid"), StringComparison.Ordinal) &&
                     Text("stdout").Contains("S53_ACCESS_DENIED:5", StringComparison.Ordinal) &&
-                    File.ReadAllText(PathFor("ownedPath")) == "runner-owned",
+                    File.ReadAllText(PathFor("ownedPath")).Trim() == "runner-owned",
                 "fault" => Text("status") == "Quarantined" && Text("failureCategory") == "snapshot_corrupt" &&
                     !Directory.Exists(PathFor("publishedPath")) && Directory.Exists(PathFor("quarantinePath")),
                 "migration" => Text("status") == "completed",

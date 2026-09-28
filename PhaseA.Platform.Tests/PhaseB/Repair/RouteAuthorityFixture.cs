@@ -4,11 +4,14 @@ using System.Security.Cryptography;
 using System.Text;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Workflow;
+using PhaseA.Platform.Prototypes;
 
 namespace PhaseA.Platform.Tests.PhaseB.Repair;
 
 internal static class RouteAuthorityFixture
 {
+    private static readonly string GameTypeJson = ProjectGameTypeMatchEvidence.Empty().ToJson();
     private static string Route(string route, string schema) => JsonSerializer.Serialize(new {
         route, schema_version = schema, status_dimension = "route_readback", status = "ready",
         status_allowed_values = new[] { "ready", "blocked", "stale", "unknown" }
@@ -17,23 +20,57 @@ internal static class RouteAuthorityFixture
     private static string Contract(string repoRoot, string projectId)
     {
         const string gdd = "Fixture GDD";
-        const string requirements = "{\"requirements\":[{\"id\":\"R1\"}]}";
-        var scene = JsonSerializer.SerializeToElement(new { scene_count_intent = "single", entry_scene = "res://main.tscn",
-            scenes = new[] { new { path = "res://main.tscn" } }, transitions = Array.Empty<object>(), single_scene_confirmation = new { confirmed = true } });
+        var gddHash = GddToModuleAuthorityHashes.Sha256(gdd);
+        var scene = JsonSerializer.SerializeToNode(new
+        {
+            schema_version = "scene-route.v1",
+            route = "scene-route-confirmation",
+            status = "confirmed",
+            status_dimension = "scene_route_confirmation",
+            status_allowed_values = new[] { "confirmed", "blocked", "stale", "unknown" },
+            source_game_type_structured_hash = GddToModuleAuthorityHashes.ComputeStructuredGameTypeHash(GameTypeJson),
+            source_contract_snapshot_hash = GddToModuleAuthorityHashes.ComputeContractSnapshotHash(GameTypeJson),
+            source_generated_gdd_hash = gddHash,
+            scene_count_intent = "single",
+            entry_scene = "res://main.tscn",
+            scenes = new[] { new { scene_id = "main", path = "res://main.tscn" } },
+            transitions = Array.Empty<object>(),
+            single_scene_confirmation = new { confirmed = true }
+        })!;
+        var sceneHash = GddToModuleAuthorityHashes.ComputeSceneRouteHash(JsonDocument.Parse(scene.ToJsonString()).RootElement);
+        scene["confirmed_scene_route_hash"] = sceneHash;
+        var requirementMap = JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            status = "ready",
+            source_scene_route_hash = sceneHash,
+            source_godot_ui_contract_hash = GodotUiStyleCatalog.CatalogHash,
+            requirements = new[] { new { requirement_id = "R1", status = "covered", priority = "P2" } }
+        });
+        var gddDocument = JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-document-generation.v1",
+            route = "gdd-document-generation",
+            status = "ready",
+            generated_gdd_hash = gddHash,
+            source_scene_route_hash = sceneHash
+        });
         foreach (var (relative, content) in new[] { ("docs/gdd/GDD.md", gdd),
-            ("meta/routes/scene-route/latest.json", scene.GetRawText()), ("meta/routes/gdd-requirements/latest.json", requirements) })
+            ("meta/routes/scene-route/latest.json", scene.ToJsonString()),
+            ("meta/routes/gdd-requirements/latest.json", requirementMap),
+            ("meta/routes/gdd-document/latest.json", gddDocument) })
         {
             var path = Path.Combine(repoRoot, relative); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, content);
         }
         var value = new Dictionary<string, object?> {
             ["schema_version"] = "prototype-contract.v2", ["route"] = "prototype-contract", ["project_id"] = projectId,
             ["source_gdd_hash"] = GddToModuleAuthorityHashes.Sha256(gdd),
-            ["source_scene_route_hash"] = GddToModuleAuthorityHashes.ComputeSceneRouteHash(scene),
-            ["source_requirement_map_hash"] = GddToModuleAuthorityHashes.Sha256(requirements),
-            ["source_contract_snapshot_hash"] = GddToModuleAuthorityHashes.ComputeContractSnapshotHash("{\"game_type\":\"manual\"}"),
-            ["godot_ui_contract_version"] = "fixture", ["source_godot_ui_contract_hash"] = "fixture", ["ui_style_id"] = "fixture",
-            ["ui_style_version"] = "fixture", ["source_ui_style_contract_hash"] = "fixture", ["ui_style_snapshot_hash"] = "fixture",
-            ["ui_style_applicability"] = new { status = "not_applicable" }, ["requirement_traceability"] = Array.Empty<object>(),
+            ["source_scene_route_hash"] = sceneHash,
+            ["source_requirement_map_hash"] = GddToModuleAuthorityHashes.Sha256(requirementMap),
+            ["source_contract_snapshot_hash"] = GddToModuleAuthorityHashes.ComputeContractSnapshotHash(GameTypeJson),
+            ["godot_ui_contract_version"] = "godot-ui-capability.v1", ["source_godot_ui_contract_hash"] = GodotUiStyleCatalog.CatalogHash, ["ui_style_id"] = "",
+            ["ui_style_version"] = "", ["source_ui_style_contract_hash"] = GodotUiStyleCatalog.CatalogHash, ["ui_style_snapshot_hash"] = "",
+            ["ui_style_applicability"] = new { status = "reviewed_not_applicable", reason = "No visible UI requirement is present in the frozen requirement map.", reviewed_by = "system", recheck_trigger = "when a visible UI requirement is added" }, ["requirement_traceability"] = new[] { new { requirement_id = "R1" } },
             ["status_dimension"] = "route_readback", ["status_allowed_values"] = new[] { "ready", "blocked", "stale", "unknown" },
             ["status"] = "ready", ["freshness"] = new { status = "fresh" }
         };
@@ -63,7 +100,7 @@ internal static class RouteAuthorityFixture
         using (var update = connection.CreateCommand())
         {
             update.CommandText = "UPDATE projects SET game_type_match_json=$profile WHERE id=$project";
-            update.Parameters.AddWithValue("$profile", "{\"game_type\":\"manual\"}");
+            update.Parameters.AddWithValue("$profile", GameTypeJson);
             update.Parameters.AddWithValue("$project", projectId);
             if (update.ExecuteNonQuery() != 1)
                 throw new InvalidOperationException("Route fixture project was not found.");

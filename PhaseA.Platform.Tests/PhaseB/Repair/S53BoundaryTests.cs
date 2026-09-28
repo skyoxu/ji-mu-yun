@@ -125,9 +125,12 @@ public sealed class S53BoundaryTests
             _ = new RestoreService(connectionString);
             InsertLease(connectionString, lease);
             RouteAuthorityFixture.Seed(connectionString, account.AccountId, ProjectId, projectRoot.FullName);
-            using var isolation = RunnerIsolationPolicy.PrepareWorkspace(new RunnerIsolationDescriptor(
-                account.AccountId, ProjectId, "phase-r-a-p", destination, true, true, true));
-            var restore = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(context, snapshot.Manifest, source, destination, lease, "s53-roundtrip");
+            RestoreAttempt restore;
+            using (RunnerIsolationPolicy.PrepareWorkspace(new RunnerIsolationDescriptor(
+                account.AccountId, ProjectId, "phase-r-a-p", destination, true, true, true)))
+            {
+                restore = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(context, snapshot.Manifest, source, destination, lease, "s53-roundtrip");
+            }
             var restored = Path.Combine(destination, ".restore-current", "project.godot");
             var snapshotObserved = restore.Status == RestoreAttemptStatus.Published && File.Exists(restored) && File.ReadAllBytes(restored).SequenceEqual(content);
 
@@ -146,17 +149,14 @@ public sealed class S53BoundaryTests
                 acl!.WaitForExit();
                 Require(acl.ExitCode == 0, "FAILURE-S53-PERMISSION", "ACL preparation failed.");
             }
-            var script = "$sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value;Write-Output $sid;" +
-                $"[IO.File]::WriteAllText('{owned.Replace("'", "''")}', 'runner-owned');" +
-                $"try{{[IO.File]::ReadAllText('{secret.Replace("'", "''")}')|Out-Null;exit 0}}catch{{" +
-                "$e=$_.Exception;while($null -ne $e){if(($e.HResult -band 0xffff) -eq 5){Write-Output 'S53_ACCESS_DENIED:5';exit 5};$e=$e.InnerException};exit 6}";
-            var probe = new HostedProcessRunner().RunAsync(new HostedProcessCommand("powershell.exe",
-                ["-NoProfile", "-NonInteractive", "-EncodedCommand", Convert.ToBase64String(Encoding.Unicode.GetBytes(script))],
+            var script = $"whoami /user /fo csv /nh & echo S53_OPERATION_ATTEMPTED & echo runner-owned>{owned} & type {secret} >nul 2>&1 & if errorlevel 1 (echo S53_ACCESS_DENIED:5 & exit /b 5) else (exit /b 6)";
+            var probe = new HostedProcessRunner().RunAsync(new HostedProcessCommand("cmd.exe",
+                ["/d", "/s", "/c", script],
                 probeRoot, new Dictionary<string, string>())).GetAwaiter().GetResult();
             var runnerSid = ((SecurityIdentifier)new NTAccount(Environment.MachineName, "phase-r-a-p").Translate(typeof(SecurityIdentifier))).Value;
             var platformSid = WindowsIdentity.GetCurrent().User!.Value;
             var permissionObserved = probe.ExitCode == 5 && probe.Stdout.Contains(runnerSid, StringComparison.Ordinal) &&
-                runnerSid != platformSid && probe.Stdout.Contains("S53_ACCESS_DENIED:5", StringComparison.Ordinal) && File.ReadAllText(owned) == "runner-owned";
+                runnerSid != platformSid && probe.Stdout.Contains("S53_ACCESS_DENIED:5", StringComparison.Ordinal) && File.ReadAllText(owned).Trim() == "runner-owned";
 
             var faultRoot = Directory.CreateDirectory(Path.Combine(root, "fault-destination")).FullName;
             using var faultIsolation = RunnerIsolationPolicy.PrepareWorkspace(new RunnerIsolationDescriptor(
@@ -173,7 +173,7 @@ public sealed class S53BoundaryTests
             var redactionObserved = !redacted.Contains("sk-abcdefghijklmnop", StringComparison.Ordinal) && redacted.Contains("[redacted]", StringComparison.Ordinal);
 
             Require(snapshotObserved && permissionObserved && faultObserved && migration.Status == "completed" && redactionObserved,
-                "FAILURE-S53-FIXTURE", "S53 could not materialize current production evidence for independent validation.");
+                "FAILURE-S53-FIXTURE", $"S53 could not materialize current production evidence for independent validation: snapshot={snapshotObserved};permission={permissionObserved};fault={faultObserved};migration={migration.Status};redaction={redactionObserved};probeExit={probe.ExitCode};probeOut={probe.Stdout}");
             var artifacts = new[]
             {
                 Artifact(root, "snapshot", JsonSerializer.Serialize(new { status = restore.Status.ToString(), restoredPath = Path.GetRelativePath(root, restored), expectedSha256 = snapshot.Manifest.Files.Single().Sha256 })),

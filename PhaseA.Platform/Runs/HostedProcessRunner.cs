@@ -554,7 +554,8 @@ internal sealed class WindowsIsolatedProcess : IDisposable
                     ref startup,
                     out var processInformation))
             {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), "isolated runner process could not be started with breakaway job semantics");
+                var errorCode = Marshal.GetLastWin32Error();
+                throw new Win32Exception(errorCode, $"isolated runner process could not be started with breakaway job semantics (win32={errorCode}; user={identity.Domain}\\{identity.UserName})");
             }
 
             CloseHandle(childStdin);
