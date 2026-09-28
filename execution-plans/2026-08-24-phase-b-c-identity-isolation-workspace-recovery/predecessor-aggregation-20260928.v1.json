@@ -4,7 +4,7 @@
   "available": [
     {
       "slice_id": "S53",
-      "path": "logs/quick-dev/20260928-r8-s53-successor/slice-ready.v1.json",
+      "path": "logs/quick-dev/20260928-r8-s53-successor/slice-ready-current.v1.json",
       "status": "current",
       "affected_by_r8": true
     }
@@ -84,5 +84,18 @@
     "S46"
   ],
   "q8_ready": false,
-  "reason": "only S53 has a current exact-cover predecessor; prior legacy or stale receipts are not re-bound"
+  "reason": "only S53 has a current exact-cover predecessor; prior legacy or stale receipts are not re-bound",
+  "q8_input_schema_verified": true,
+  "q8_input_format_check": {
+    "duplicates": false,
+    "invalid_entries": false,
+    "validated_entry_count": 1,
+    "validated_fields": [
+      "slice_id",
+      "run_root",
+      "result_ref",
+      "result_sha256"
+    ]
+  },
+  "q8_last_block_reason": "terminal predecessor set does not match slices"
 }
