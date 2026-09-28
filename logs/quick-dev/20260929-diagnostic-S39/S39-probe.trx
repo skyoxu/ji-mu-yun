@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="59fe0362-6c23-4dad-9f7f-d69eb428b509" name="Administrator@IZ3H5BJSZD44YHZ 2026-09-29 02:04:57" runUser="IZ3H5BJSZD44YHZ\Administrator" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-09-29T02:04:57.0113785+08:00" queuing="2026-09-29T02:04:57.0113787+08:00" start="2026-09-29T02:04:55.5567504+08:00" finish="2026-09-29T02:04:57.0182241+08:00" />
+  <TestSettings name="default" id="f0c98f78-5b5d-48c7-92d8-3dac479a3c1e">
+    <Deployment runDeploymentRoot="Administrator_IZ3H5BJSZD44YHZ_2026-09-29_02_04_57" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="b8630f21-2d0b-409a-b403-3e709675b691" testId="9f1c8007-fe7e-ef54-ccbf-f350024e989e" testName="PhaseA.Platform.Tests.PhaseB.Repair.S39BoundaryTests.O_9CC6D75341B4" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.1502762" startTime="2026-09-29T02:04:56.7518908+08:00" endTime="2026-09-29T02:04:56.7519143+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b8630f21-2d0b-409a-b403-3e709675b691" />
+    <UnitTestResult executionId="10adc2b4-4d29-40d8-b847-e5997bee3ebf" testId="b6b7e40f-0bde-f33c-08c4-954f4c9e1c96" testName="PhaseA.Platform.Tests.PhaseB.Repair.S39BoundaryTests.O_C0DC8313E8FC" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0605791" startTime="2026-09-29T02:04:56.8137168+08:00" endTime="2026-09-29T02:04:56.8137171+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="10adc2b4-4d29-40d8-b847-e5997bee3ebf" />
+    <UnitTestResult executionId="7299937f-b453-4951-89bb-7e4f051f6eb7" testId="30587a6b-ab9f-7e18-e91b-ea5a903c2edd" testName="PhaseA.Platform.Tests.PhaseB.Repair.S39BoundaryTests.O_26EB3FEDC908" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0893116" startTime="2026-09-29T02:04:56.9012403+08:00" endTime="2026-09-29T02:04:56.9012406+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7299937f-b453-4951-89bb-7e4f051f6eb7" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S39BoundaryTests.O_C0DC8313E8FC" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="b6b7e40f-0bde-f33c-08c4-954f4c9e1c96">
+      <Execution id="10adc2b4-4d29-40d8-b847-e5997bee3ebf" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S39BoundaryTests" name="O_C0DC8313E8FC" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S39BoundaryTests.O_9CC6D75341B4" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="9f1c8007-fe7e-ef54-ccbf-f350024e989e">
+      <Execution id="b8630f21-2d0b-409a-b403-3e709675b691" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S39BoundaryTests" name="O_9CC6D75341B4" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S39BoundaryTests.O_26EB3FEDC908" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="30587a6b-ab9f-7e18-e91b-ea5a903c2edd">
+      <Execution id="7299937f-b453-4951-89bb-7e4f051f6eb7" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S39BoundaryTests" name="O_26EB3FEDC908" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="9f1c8007-fe7e-ef54-ccbf-f350024e989e" executionId="b8630f21-2d0b-409a-b403-3e709675b691" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b6b7e40f-0bde-f33c-08c4-954f4c9e1c96" executionId="10adc2b4-4d29-40d8-b847-e5997bee3ebf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="30587a6b-ab9f-7e18-e91b-ea5a903c2edd" executionId="7299937f-b453-4951-89bb-7e4f051f6eb7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="列表中未列出的结果" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="所有已加载的结果" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="3" executed="3" passed="3" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.7+8f2703126a (64-bit .NET 8.0.21)&#xD;
+[xUnit.net 00:00:00.14]   Discovering: PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.35]   Discovered:  PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.35]   Starting:    PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.77]   Finished:    PhaseA.Platform.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

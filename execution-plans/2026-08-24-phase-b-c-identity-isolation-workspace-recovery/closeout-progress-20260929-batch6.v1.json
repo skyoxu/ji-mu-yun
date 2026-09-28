@@ -1,0 +1,26 @@
+{
+  "schema": "quick-dev.closeout-progress.v1",
+  "plan_id": "PLAN-E24BDCAA6457",
+  "source_commit": "5ac71cc4eb501e68deb3b4badb169c7ab500d0ba",
+  "plan_slice_count": 73,
+  "valid_predecessor_count": 35,
+  "remaining_predecessor_count": 38,
+  "valid_predecessor_source": "predecessor-aggregation-20260929-batch6.v1.json",
+  "newly_closed": [
+    "S6",
+    "S8",
+    "S18",
+    "S20",
+    "S30",
+    "S39",
+    "S48",
+    "S58",
+    "S59",
+    "S60",
+    "S74"
+  ],
+  "probe_blockers": [
+    "S15"
+  ],
+  "q8_status": "not-run-incomplete-predecessor-set"
+}\n

@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="3f2b8da2-3386-4109-b4f9-92c6890d2c0c" name="Administrator@IZ3H5BJSZD44YHZ 2026-09-29 02:04:57" runUser="IZ3H5BJSZD44YHZ\Administrator" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-09-29T02:04:57.8731631+08:00" queuing="2026-09-29T02:04:57.8731634+08:00" start="2026-09-29T02:04:55.4194117+08:00" finish="2026-09-29T02:04:57.8829047+08:00" />
+  <TestSettings name="default" id="3c13f875-3526-492f-b170-0ac323f24b18">
+    <Deployment runDeploymentRoot="Administrator_IZ3H5BJSZD44YHZ_2026-09-29_02_04_57" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="322a5be9-a45d-4d23-a99e-c7336770f7af" testId="e96c44c5-292c-12ee-86a4-cb117d766d45" testName="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_701386E2D77D" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0002481" startTime="2026-09-29T02:04:57.7775963+08:00" endTime="2026-09-29T02:04:57.7775966+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="322a5be9-a45d-4d23-a99e-c7336770f7af">
+      <Output>
+        <StdOut>S15-OBSERVATION O-701386E2D77D no-external-provider-deployment-or-runtime-claim</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="c9519da0-e1e7-42b5-b396-510d90117968" testId="ec1542ad-20ca-f0d2-dcc1-eb3dbf411d8c" testName="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_4708C4D8EFAA" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0117521" startTime="2026-09-29T02:04:57.7768706+08:00" endTime="2026-09-29T02:04:57.7768709+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c9519da0-e1e7-42b5-b396-510d90117968">
+      <Output>
+        <StdOut>S15-OBSERVATION O-4708C4D8EFAA oidc-first-declared-credential-compatibility-without-provider-deployment</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="f1af7513-9bf9-4681-9701-9aeb5cbb960a" testId="f4c6cc2c-3a36-2c70-948c-713e5c6bf412" testName="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_4BA49CF633BC" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0003123" startTime="2026-09-29T02:04:57.7771728+08:00" endTime="2026-09-29T02:04:57.7771728+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f1af7513-9bf9-4681-9701-9aeb5cbb960a">
+      <Output>
+        <StdOut>S15-OBSERVATION O-4BA49CF633BC no-password-authentication-system-required</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="471be31b-66c0-47a7-942a-7489dc3cf632" testId="69e7c446-ac54-0b87-d00a-074bf50089de" testName="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_9FDA0B49E011" computerName="IZ3H5BJSZD44YHZ" duration="00:00:01.3855883" startTime="2026-09-29T02:04:57.7677362+08:00" endTime="2026-09-29T02:04:57.7677535+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="471be31b-66c0-47a7-942a-7489dc3cf632">
+      <Output>
+        <StdOut>S15-OBSERVATION O-9FDA0B49E011 admin-bearer-not-persisted-as-general-human-browser-credential</StdOut>
+        <ErrorInfo>
+          <Message>System.IO.IOException : The process cannot access the file 'metadata.sqlite3' because it is being used by another process.</Message>
+          <StackTrace>   at System.IO.FileSystem.RemoveDirectoryRecursive(String fullPath, WIN32_FIND_DATA&amp; findData, Boolean topLevel)&#xD;
+   at System.IO.FileSystem.RemoveDirectory(String fullPath, Boolean recursive)&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_9FDA0B49E011() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S15BoundaryTests.cs:line 114&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_701386E2D77D" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="e96c44c5-292c-12ee-86a4-cb117d766d45">
+      <Execution id="322a5be9-a45d-4d23-a99e-c7336770f7af" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests" name="O_701386E2D77D" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_9FDA0B49E011" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="69e7c446-ac54-0b87-d00a-074bf50089de">
+      <Execution id="471be31b-66c0-47a7-942a-7489dc3cf632" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests" name="O_9FDA0B49E011" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_4708C4D8EFAA" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="ec1542ad-20ca-f0d2-dcc1-eb3dbf411d8c">
+      <Execution id="c9519da0-e1e7-42b5-b396-510d90117968" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests" name="O_4708C4D8EFAA" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_4BA49CF633BC" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="f4c6cc2c-3a36-2c70-948c-713e5c6bf412">
+      <Execution id="f1af7513-9bf9-4681-9701-9aeb5cbb960a" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests" name="O_4BA49CF633BC" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="e96c44c5-292c-12ee-86a4-cb117d766d45" executionId="322a5be9-a45d-4d23-a99e-c7336770f7af" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ec1542ad-20ca-f0d2-dcc1-eb3dbf411d8c" executionId="c9519da0-e1e7-42b5-b396-510d90117968" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f4c6cc2c-3a36-2c70-948c-713e5c6bf412" executionId="f1af7513-9bf9-4681-9701-9aeb5cbb960a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="69e7c446-ac54-0b87-d00a-074bf50089de" executionId="471be31b-66c0-47a7-942a-7489dc3cf632" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="列表中未列出的结果" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="所有已加载的结果" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="4" executed="4" passed="3" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.7+8f2703126a (64-bit .NET 8.0.21)&#xD;
+[xUnit.net 00:00:00.15]   Discovering: PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.38]   Discovered:  PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.39]   Starting:    PhaseA.Platform.Tests&#xD;
+info: Microsoft.Hosting.Lifetime[14]&#xD;
+      Now listening on: http://127.0.0.1:52290&#xD;
+info: Microsoft.Hosting.Lifetime[0]&#xD;
+      Application started. Press Ctrl+C to shut down.&#xD;
+info: Microsoft.Hosting.Lifetime[0]&#xD;
+      Hosting environment: Production&#xD;
+info: Microsoft.Hosting.Lifetime[0]&#xD;
+      Content root path: C:\jimuyun\PhaseA.Platform&#xD;
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]&#xD;
+      Request starting HTTP/1.1 GET http://127.0.0.1:52290/healthz - - -&#xD;
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]&#xD;
+      Executing endpoint 'HTTP: GET /healthz'&#xD;
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]&#xD;
+      Setting HTTP status code 200.&#xD;
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]&#xD;
+      Writing value of type '&lt;&gt;f__AnonymousType21`2' as Json.&#xD;
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]&#xD;
+      Executed endpoint 'HTTP: GET /healthz'&#xD;
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]&#xD;
+      Request finished HTTP/1.1 GET http://127.0.0.1:52290/healthz - 200 - application/json;+charset=utf-8 409.5955ms&#xD;
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]&#xD;
+      Request starting HTTP/1.1 GET http://127.0.0.1:52290/api/session - - -&#xD;
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]&#xD;
+      Executing endpoint 'HTTP: GET /api/session'&#xD;
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]&#xD;
+      Setting HTTP status code 200.&#xD;
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]&#xD;
+      Writing value of type '&lt;&gt;f__AnonymousType23`4' as Json.&#xD;
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]&#xD;
+      Executed endpoint 'HTTP: GET /api/session'&#xD;
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]&#xD;
+      Request finished HTTP/1.1 GET http://127.0.0.1:52290/api/session - 200 - application/json;+charset=utf-8 6.7689ms&#xD;
+[xUnit.net 00:00:01.89]       System.IO.IOException : The process cannot access the file 'metadata.sqlite3' because it is being used by another process.&#xD;
+[xUnit.net 00:00:01.89]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.89]            at System.IO.FileSystem.RemoveDirectoryRecursive(String fullPath, WIN32_FIND_DATA&amp; findData, Boolean topLevel)&#xD;
+[xUnit.net 00:00:01.89]            at System.IO.FileSystem.RemoveDirectory(String fullPath, Boolean recursive)&#xD;
+[xUnit.net 00:00:01.89]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S15BoundaryTests.cs(114,0): at PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_9FDA0B49E011()&#xD;
+[xUnit.net 00:00:01.89]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:01.89]       Output:&#xD;
+[xUnit.net 00:00:01.89]         S15-OBSERVATION O-9FDA0B49E011 admin-bearer-not-persisted-as-general-human-browser-credential&#xD;
+[xUnit.net 00:00:01.91]   Finished:    PhaseA.Platform.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-29T02:04:57.7653692+08:00">
+        <Text>[xUnit.net 00:00:01.88]     PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_9FDA0B49E011 [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>
