@@ -3,12 +3,15 @@ from __future__ import annotations
 
 import pytest
 
+_CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-7C4C-isolated-evidence")]
+
 from scripts.toolchain import candidate_content_paths
 
 
 FAILURE_ID = "ESCAPING_TARGET_ACCEPTED"
 
 
+@pytest.mark.cer_assertion("A-7C4C-isolated-evidence")
 @pytest.mark.cer_assertion("A-O-51605D0F7943-ESCAPING-TARGET")
 def test_escaping_target_is_rejected_before_use() -> None:
     try:
