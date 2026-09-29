@@ -1,7 +1,7 @@
 {
   "schema": "quick-dev.predecessor-aggregation-audit.v1",
   "plan_id": "PLAN-E24BDCAA6457",
-  "audited_commit": "7d445efc78e435cd486f1b12cf2a161d9ea55ccb",
+  "audited_commit": "b4105f98",
   "candidate_source": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/predecessor-aggregation-20260930-batch27.v1.json",
   "plan_slice_count": 73,
   "verified_predecessors": [
@@ -277,9 +277,9 @@
     },
     {
       "slice_id": "S49",
-      "run_root": "logs/quick-dev/20260930-S49-r2",
-      "result_ref": "logs/quick-dev/20260930-S49-r2/slice-ready-postcommit.v1.json",
-      "result_sha256": "sha256:663414803a968cb49164a22893ad94e064bfa4a7060990d71f00d2224bf1d694"
+      "run_root": "logs/quick-dev/20260930-S49-r3",
+      "result_ref": "logs/quick-dev/20260930-S49-r3/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:a0dabe1ff562229fdd767e0c41f672470efa4c74f63c1ba541dcf191e7c90ac4"
     },
     {
       "slice_id": "S50",
