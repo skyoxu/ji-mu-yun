@@ -54,8 +54,11 @@ public sealed class S14BoundaryTests
             var project = await store.CreateProjectAsync(new ProjectCreationCommand(
                 "project-s14", user.AccountId, "S14", "S14", "manual", "default", false, [],
                 projectRoot, Path.Combine(projectRoot, "repo"), Path.Combine(projectRoot, "runtime"), Path.Combine(projectRoot, "repo", "meta")));
+            if (Directory.Exists(projectRoot))
+                Directory.Delete(projectRoot, recursive: true);
+            Directory.CreateDirectory(projectRoot);
             await store.SetProjectBootstrapStatusAsync(project.ProjectId!, "succeeded", null);
-            SeedRouteRecoverySources(connectionString, project.ProjectId!, projectRoot);
+            RouteAuthorityFixture.Seed(connectionString, user.AccountId, project.ProjectId!, projectRoot);
             _ = new RestoreService(connectionString);
             _ = new WorkspaceStorageService(connectionString).SetQuota(user.AccountId, 1_000_000_000);
             using (var leaseConnection = new SqliteConnection(connectionString))
@@ -80,7 +83,7 @@ public sealed class S14BoundaryTests
             isolationHandle = RunnerIsolationPolicy.PrepareWorkspace(new RunnerIsolationDescriptor(
                 user.AccountId,
                 project.ProjectId!,
-                "NT AUTHORITY\\LOCAL SERVICE",
+                "phase-r-a-p",
                 projectRoot,
                 LowPrivilegeRequired: true,
                 JobObjectRequired: OperatingSystem.IsWindows(),
@@ -88,7 +91,9 @@ public sealed class S14BoundaryTests
             File.WriteAllText(Path.Combine(projectRoot, "s14-content.txt"), "S14");
 
             var url = $"http://127.0.0.1:{FreePort()}";
-            process = StartServer(url, databasePath, workspaceRoot);
+            var seedSourceRoot = Path.Combine(root, "seed-source");
+            Directory.CreateDirectory(seedSourceRoot);
+            process = StartServer(url, databasePath, workspaceRoot, seedSourceRoot);
             using var healthClient = new HttpClient { BaseAddress = new Uri(url), Timeout = TimeSpan.FromSeconds(10) };
             await WaitForHealthAsync(healthClient, process);
 
@@ -115,7 +120,7 @@ public sealed class S14BoundaryTests
             process.Kill(entireProcessTree: true);
             await process.WaitForExitAsync();
             process.Dispose();
-            process = StartServer(url, databasePath, workspaceRoot);
+            process = StartServer(url, databasePath, workspaceRoot, seedSourceRoot);
             await WaitForHealthAsync(healthClient, process);
             foreach (var interrupted in new[] { queuedBeforeRestart, runningBeforeRestart })
             {
@@ -277,7 +282,7 @@ public sealed class S14BoundaryTests
         binding.ExecuteNonQuery();
     }
 
-    private static Process StartServer(string url, string databasePath, string workspaceRoot)
+    private static Process StartServer(string url, string databasePath, string workspaceRoot, string seedSourceRoot)
     {
         var start = new ProcessStartInfo("dotnet", $"\"{PlatformAssemblyPath}\"")
         {
@@ -292,7 +297,7 @@ public sealed class S14BoundaryTests
         start.Environment["PUBLIC_BASE_URL"] = "https://localhost";
         start.Environment["PHASEA_METADATA_DB_PATH"] = databasePath;
         start.Environment["HOSTED_WORKSPACE_ROOT"] = workspaceRoot;
-        start.Environment["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot;
+        start.Environment["PHASEA_REPOSITORY_ROOT"] = seedSourceRoot;
         start.Environment["ASPNETCORE_CONTENTROOT"] = Path.Combine(RepositoryRoot, "PhaseA.Platform");
         return Process.Start(start) ?? throw new InvalidOperationException("Failed to start PhaseA.Platform.");
     }
