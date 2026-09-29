@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+_CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-6F1570D39AE8-1")]
+
 
 ROOT = Path(__file__).resolve().parents[4]
 ENTRY = ROOT / "scripts" / "sc" / "skill_package_replay.py"
@@ -43,6 +45,7 @@ def _assert_observed(condition: bool, failure_id: str, message: str) -> None:
     assert condition, message
 
 
+@pytest.mark.cer_assertion("A-6F1570D39AE8-1")
 @pytest.mark.cer_assertion("ASSERT-PINNED-FRESH-VERDICT-REPRODUCTION")
 def test_pinned_fresh_checkout_reproduces_semantic_verdict() -> None:
     receipt = _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "fresh"))
