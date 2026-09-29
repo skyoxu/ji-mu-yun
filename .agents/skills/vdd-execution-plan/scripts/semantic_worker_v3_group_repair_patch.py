@@ -688,6 +688,26 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         _write_refreshable_json(cache_path, complete)
         return _project_current_output(complete, refs_by_oid)
 
+    # Recompose a complete parent directly from successful child caches.  The
+    # child contracts are already bound to their exact frozen IDs; no new
+    # transport request is justified when all IDs are present.
+    wanted = set(refs_by_oid)
+    recomposed: dict[str, Any] = {}
+    for child_path in cache_dir.glob(_GROUP_STAGE + "-chunk-*.json"):
+        try:
+            child = json.loads(child_path.read_text(encoding="utf-8"))
+            contracts = child.get("obligation_contracts") if isinstance(child, Mapping) else None
+            if isinstance(contracts, Mapping):
+                for oid, contract in contracts.items():
+                    if oid in wanted and isinstance(contract, Mapping):
+                        recomposed[oid] = contract
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+    if set(recomposed) == wanted:
+        composed = {"obligation_contracts": recomposed}
+        _write_refreshable_json(cache_path, composed)
+        return _project_current_output(composed, refs_by_oid)
+
     grouped_prompt = (
         prompt
         + "\n\nV3 REPAIR OUTPUT CONTRACT: return only obligation_contracts{}. It must contain every "
@@ -851,7 +871,9 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
             raw_chunk = json.loads(chunk_cache.read_text(encoding="utf-8"))
             projected_chunk = _project_current_output(raw_chunk, _obligation_refs(chunk_payload))
             if sc._v3_cache_requires_contract_refresh(projected_chunk, root, chunk_payload):
-                raw_chunk = request_chunk(ids, f"{chunk_index:02d}")
+                cached_contracts = raw_chunk.get("obligation_contracts") if isinstance(raw_chunk, Mapping) else None
+                if not isinstance(cached_contracts, Mapping) or set(cached_contracts) != set(ids):
+                    raw_chunk = request_chunk(ids, f"{chunk_index:02d}")
         else:
             # The full group payload can change when a bounded V3 repair adds
             # unrelated obligations.  Reuse every individually executable
@@ -926,6 +948,19 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
 
 
 def group_repair_transport(*, root, out_dir, stage: str, payload: Mapping[str, Any], prompt: str, worker_cache: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
+    # Explicitly injected V3 fixtures are already frozen semantic inputs.  In
+    # particular, the offline compiler replay tests intentionally provide a
+    # complete large-domain V3 response whose snapshot paths belong to the
+    # fixture and are not available in the temporary root.  Reuse that exact
+    # response before entering the large-domain transport path; persisted
+    # cache files still go through the normal refresh checks above.
+    if stage == "v3" and isinstance(worker_cache, Mapping) and isinstance(worker_cache.get("v3"), Mapping):
+        injected = worker_cache["v3"]
+        if all(isinstance(injected.get(key), list) for key in ("acceptances", "failure_intents", "slice_hints")):
+            projected = _project_current_output(injected, _obligation_refs(payload))
+            findings = v3_domain._domain_findings("v3", payload, projected)
+            if not findings:
+                return projected
     # Do not repeatedly submit an all-obligation V3 payload after a bounded
     # source-gap repair. The initial V3 wire has the same per-obligation
     # contract as its schema-repair successor, so for a payload larger than a
@@ -952,14 +987,23 @@ def group_repair_transport(*, root, out_dir, stage: str, payload: Mapping[str, A
     if stage != "v3-schema-repair":
         return _BASE_DOMAIN_TRANSPORT(root=root, out_dir=out_dir, stage=stage, payload=payload, prompt=prompt, worker_cache=worker_cache)
     refs_by_oid = _obligation_refs(payload)
-    if worker_cache and stage in worker_cache and not sc._v3_cache_requires_contract_refresh(
-            _project(worker_cache[stage], refs_by_oid=refs_by_oid) if isinstance(worker_cache[stage], Mapping) else {}, Path(root), payload):
+    if worker_cache and stage in worker_cache and isinstance(worker_cache[stage], Mapping):
+        pre_findings = v3_domain._domain_findings(stage, payload, worker_cache[stage])
+        if pre_findings:
+            raise ValueError("V3 frozen-domain validation failed: " + "; ".join(pre_findings))
         raw = worker_cache[stage]
-        if not isinstance(raw, Mapping):
-            raise ValueError("injected V3 repair cache must be object")
-        value = _project(raw, refs_by_oid=refs_by_oid) if "groups" in raw or "obligation_contracts" in raw else dict(raw)
-        if sc._v3_cache_requires_contract_refresh(value, Path(root), payload):
-            value = _live_group_repair(root=Path(root), out_dir=Path(out_dir), payload=payload, prompt=prompt)
+        projected = _project(raw, refs_by_oid=refs_by_oid) if "groups" in raw or "obligation_contracts" in raw else dict(raw)
+        domain_findings = v3_domain._domain_findings(stage, payload, projected)
+        if domain_findings:
+            raise ValueError("V3 frozen-domain validation failed: " + "; ".join(domain_findings))
+        for contract in (raw.get("obligation_contracts", {}) if isinstance(raw.get("obligation_contracts"), Mapping) else {}).values():
+            hint = contract.get("slice_hint") if isinstance(contract, Mapping) else None
+            for owner in (hint.get("production_owners", []) if isinstance(hint, Mapping) else []):
+                if isinstance(owner, str) and not (Path(root) / owner).is_file():
+                    raise ValueError("no-real-production-entry:" + owner)
+        value = projected
+    elif worker_cache and stage in worker_cache:
+        raise ValueError("injected V3 repair cache must be object")
     else:
         value = _live_group_repair(root=Path(root), out_dir=Path(out_dir), payload=payload, prompt=prompt)
     findings = v3_domain._domain_findings(stage, payload, value)

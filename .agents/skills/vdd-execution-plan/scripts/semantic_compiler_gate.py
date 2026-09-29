@@ -151,6 +151,50 @@ def normative_invoke_worker(
     raw: Mapping[str, Any] | None = None
     findings: list[str] = []
     try:
+        if stage.startswith("v3-schema-repair") and isinstance(effective_worker_cache, Mapping):
+            candidates = [effective_worker_cache.get(stage), effective_worker_cache.get("v3-schema-repair")]
+            for candidate in candidates:
+                if not isinstance(candidate, Mapping) or not isinstance(candidate.get("obligation_contracts"), Mapping):
+                    continue
+                for contract in candidate["obligation_contracts"].values():
+                    hint = contract.get("slice_hint") if isinstance(contract, Mapping) else None
+                    for owner in (hint.get("production_owners", []) if isinstance(hint, Mapping) else []):
+                        if isinstance(owner, str) and not (root / owner).is_file():
+                            raise ValueError("no-real-production-entry:" + owner)
+        # A schema-repair successor may already be present in the explicit
+        # worker cache.  Reuse that frozen result before routing through the
+        # transport layer; this is the bounded cache-reuse path and must not
+        # trigger a new model call merely because the initial V3 envelope was
+        # incomplete.
+        if stage == "v3" and isinstance(effective_worker_cache, Mapping):
+            successor = effective_worker_cache.get("v3-schema-repair")
+            if isinstance(successor, Mapping) and all(
+                isinstance(successor.get(key), list)
+                for key in ("acceptances", "failure_intents", "slice_hints")
+            ):
+                raw = successor
+                findings = _worker_schema_findings(stage, raw)
+                if not findings:
+                    elapsed = int((time.perf_counter() - started) * 1000)
+                    _write_worker_receipt(
+                        root=root, out_dir=out_dir, stage=stage, payload=payload,
+                        prompt=prompt, result=raw, findings=[], duration_ms=elapsed,
+                        repair_attempted=True, injected=True, exit_status="cache-reused",
+                    )
+                    return raw
+            elif isinstance(successor, Mapping) and isinstance(successor.get("obligation_contracts"), Mapping):
+                import semantic_worker_v3_group_repair_patch as grouped
+                refs = grouped._obligation_refs({"input": payload})
+                raw = grouped._project_current_output(successor, refs)
+                findings = _worker_schema_findings(stage, raw)
+                if not findings:
+                    elapsed = int((time.perf_counter() - started) * 1000)
+                    _write_worker_receipt(
+                        root=root, out_dir=out_dir, stage=stage, payload=payload,
+                        prompt=prompt, result=raw, findings=[], duration_ms=elapsed,
+                        repair_attempted=True, injected=True, exit_status="cache-reused",
+                    )
+                    return raw
         try:
             raw = _ORIGINAL_INVOKE_WORKER(
                 root=root,
@@ -455,6 +499,25 @@ def _resolved_atomic_recall_worker(*, root, out_dir, payload, prompt, worker_cac
     if not isinstance(raw, Mapping):
         raise ValueError("resolved atomic recall result must be object")
     findings = _worker_schema_findings(stage, raw) + _domain_findings(stage, payload, raw)
+    # A fresh V4 worker response can be structurally valid JSON yet violate
+    # the frozen partition (most commonly by placing one ID in both sets).
+    # Give that single invocation the same bounded schema-repair path already
+    # used for stale resolved receipts.  The repair remains subject to the
+    # exact frozen domain and is rejected if it still overlaps or omits IDs.
+    if findings and not repair_required and worker_cache is None:
+        raw = sc.invoke_worker(
+            root=root,
+            out_dir=out_dir,
+            stage=f"{stage}-schema-repair",
+            payload={
+                "original_stage": stage,
+                "input": payload,
+                "validator_findings": ["resolved-atomic-recall:" + item for item in findings],
+            },
+            prompt=prompt + "\n\nReturn a corrected JSON object only; the previous V4 partition violated the frozen ID domain. Classify every frozen obligation exactly once.",
+            worker_cache=None,
+        )
+        findings = _worker_schema_findings(stage, raw) + _domain_findings(stage, payload, raw)
     if findings:
         raise ValueError("resolved atomic recall contract invalid: " + ";".join(findings))
     if not cached:
@@ -601,6 +664,9 @@ def compile_plan(
     recommendation_only: bool = False,
     resume_from: str | None = None,
 ) -> dict[str, Any]:
+    if not resume_from:
+        import semantic_v3_contract_repair as published_repair
+        published_repair.reset_published_overlays()
     """Run fail-closed semantic compilation with optional cache-backed resume."""
     if resume_from not in {None, "first-failed-stage"}:
         raise ValueError("unsupported VDD resume mode")
