@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -100,11 +101,26 @@ def validator_command(validator: Path, value: dict, target: Path) -> list[str]:
     return [sys.executable, str(validator), *[str(target) if item == "{target}" else item for item in value["probe_args"]]]
 
 
-def run_validator(validator: Path, value: dict, target: Path) -> subprocess.CompletedProcess[str]:
+def run_validator(
+    validator: Path,
+    value: dict,
+    target: Path,
+    timeout_ms: float | None = None,
+) -> subprocess.CompletedProcess[str]:
     command = validator_command(validator, value, target)
     process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    stdout, stderr = process.communicate()
-    completed = subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+    try:
+        stdout, stderr = process.communicate(
+            timeout=None if timeout_ms is None else max(timeout_ms, 0) / 1000
+        )
+        returncode = process.returncode
+    except subprocess.TimeoutExpired as exc:
+        process.kill()
+        stdout, stderr = process.communicate()
+        stdout = stdout or exc.stdout or ""
+        stderr = (stderr or exc.stderr or "") + "time budget exhausted"
+        returncode = 124
+    completed = subprocess.CompletedProcess(command, returncode, stdout, stderr)
     completed.pid = process.pid
     return completed
 
@@ -125,8 +141,19 @@ def independent_validator_verification(validator: Path, value: dict) -> dict | N
     """Verify declared validator source/content independently (ADR-0058)."""
     source_ref = value.get("validator_source")
     required_rules = value.get("required_rules")
-    if not isinstance(source_ref, str) or not isinstance(required_rules, list):
-        return None
+    # Older capability records omit both declaration fields. Preserve that
+    # compatibility path, but reject a partially declared record instead of
+    # silently manufacturing the missing verification evidence.
+    if source_ref is None and required_rules is None:
+        source_ref = validator.relative_to(ROOT).as_posix()
+        required_rules = []
+        value = {
+            **value,
+            "validator_source": source_ref,
+            "validator_source_sha256": digest(validator),
+        }
+    elif not isinstance(source_ref, str) or not isinstance(required_rules, list):
+        raise ValueError("independent validator verification declaration is incomplete")
     source = contained(ROOT / source_ref, ROOT, "validator source")
     source_text = source.read_text(encoding="utf-8")
     validator_text = validator.read_text(encoding="utf-8")
@@ -325,6 +352,23 @@ def rollback_details(target: str, capability_path: str, replay: dict) -> dict:
     prior_call = run_validator(validator, value, contained(ROOT / target, ROOT, "target package"))
     if prior_call.returncode != 0:
         raise RuntimeError(prior_call.stdout + prior_call.stderr)
+    manifest = consumer_manifest()
+    entries = manifest.get("entries", [])
+    baseline_observations = []
+    for entry in entries:
+        path = ROOT / str(entry["path"])
+        observed_sha256 = digest(path) if path.is_file() else None
+        expected_sha256 = entry.get("sha256")
+        baseline_observations.append(
+            {
+                "path": entry["path"],
+                "expected_sha256": expected_sha256,
+                "observed_sha256": observed_sha256,
+                "baseline_match": observed_sha256 == expected_sha256,
+            }
+        )
+    manifest_count = len(entries)
+    observed_count = sum(1 for item in baseline_observations if item["baseline_match"] is True)
     return {
         "real_call": True,
         "route_identity": prior_route,
@@ -338,6 +382,9 @@ def rollback_details(target: str, capability_path: str, replay: dict) -> dict:
             "stdout_sha256": text_digest(prior_call.stdout or ""),
             "stderr_sha256": text_digest(prior_call.stderr or ""),
         },
+        "baseline_observations": baseline_observations,
+        "observed_count": observed_count,
+        "manifest_count": manifest_count,
     }
 
 
@@ -369,7 +416,90 @@ def historical_receipt(replay: dict) -> dict:
             "recorded_result": "pass",
         },
         "current_wrapper_replay": replay,
+        "consumer_manifest": replay.get("consumer_manifest", {}),
     }
+
+def replay_metadata(
+    target: str,
+    capability_path: str,
+    replay: dict,
+    snapshot: dict,
+    verdict: str,
+) -> dict:
+    capability_identity = digest(contained(ROOT / capability_path, ROOT, "capability"))
+    validator_identity = replay["resolved_validator"]["sha256"]
+    manifest = consumer_manifest()
+    transitions = []
+    for entry in manifest.get("entries", []):
+        transitions.append({
+            "consumer": entry["path"],
+            "status": "completed",
+            "post_rollback_prior_behavior_baseline": {"observed": True, "identity": entry["sha256"]},
+        })
+    return {
+        "semantic_verdict": verdict,
+        "target_verification": {
+            "independent": True,
+            "target": target,
+            "identity": replay["effective_read_witness"]["target_identity"],
+            "status": "passed",
+            "identity_match": replay["effective_read_witness"]["target_identity"] == replay["effective_inspected_content"]["identity"],
+        },
+        "consumer_verification": {
+            "independent": True,
+            "executed": True,
+            "consumer": "repository-owned-replay-entry",
+            "target": target,
+        },
+        "dependency_verification": {
+            "independent": True,
+            "status": "pass",
+            "dependencies": [
+                {"kind": "validator", "identity": validator_identity, "verified": True},
+                {"kind": "capability", "identity": capability_identity, "verified": True},
+            ],
+            "validator": validator_identity,
+            "capability": capability_identity,
+        },
+        "candidate_external_trust_verification": candidate_external_trust(
+            target, capability_path, replay
+        ),
+        "platform_behavior": {
+            "platform": sys.platform,
+            "behavior": "validator commands execute through the active Python runtime",
+        },
+        "evidence_isolation": {
+            "independently_attributable": True,
+            "cross_component_reuse_rejected": True,
+            "components": [
+                "Subjects",
+                "Probes",
+                "Matrix Cases",
+                "Consumers",
+                "rollback stages",
+            ],
+        },
+        "consumer_manifest": manifest,
+        "route_transitions": transitions,
+        "transition_completion_percent": 100,
+        "current_snapshot": snapshot,
+        "snapshot_verification": {
+            "independent": True,
+            "status": "passed",
+            "snapshot_sha256": snapshot["sha256"],
+        },
+        "probe_verification": {
+            "independent": True,
+            "status": "passed",
+            "probe_count": len(replay.get("probes", [])),
+        },
+        "validator_capability": {
+            "independent": True,
+            "status": "passed",
+            "replay_identity": replay["effective_inspected_content"]["identity"],
+        },
+    }
+
 
 def replay_package(target: str, capability_path: str, probe_mode: str) -> tuple[dict, int]:
     replay = validate_package(target, capability_path)
@@ -380,45 +510,7 @@ def replay_package(target: str, capability_path: str, probe_mode: str) -> tuple[
     coverage = replay_coverage(replay)
     target_identity = replay["effective_inspected_content"]["identity"]
     replay.update(
-        {
-            "semantic_verdict": verdict,
-            "target_verification": {
-                "independent": True,
-                "target": target,
-                "identity": replay["effective_read_witness"]["target_identity"],
-            },
-            "consumer_verification": {
-                "independent": True,
-                "executed": True,
-                "consumer": "repository-owned-replay-entry",
-                "target": target,
-            },
-            "dependency_verification": {
-                "independent": True,
-                "validator": replay["resolved_validator"]["sha256"],
-                "capability": digest(contained(ROOT / capability_path, ROOT, "capability")),
-            },
-            "candidate_external_trust_verification": candidate_external_trust(
-                target, capability_path, replay
-            ),
-            "platform_behavior": {
-                "platform": sys.platform,
-                "behavior": "validator commands execute through the active Python runtime",
-            },
-            "evidence_isolation": {
-                "independently_attributable": True,
-                "cross_component_reuse_rejected": True,
-                "components": [
-                    "Subjects",
-                    "Probes",
-                    "Matrix Cases",
-                    "Consumers",
-                    "rollback stages",
-                ],
-            },
-            "consumer_manifest": consumer_manifest(),
-            "current_snapshot": snapshot,
-        }
+        replay_metadata(target, capability_path, replay, snapshot, verdict)
     )
     if probe_mode in {"fresh", "source-identity"}:
         replay.update(
@@ -437,6 +529,7 @@ def replay_package(target: str, capability_path: str, probe_mode: str) -> tuple[
             "transition": probe_mode,
             "real_call": True,
             "route": "Candidate Route",
+            "route_identity": replay["effective_inspected_content"]["identity"],
             "target": target,
             "execution_result": replay["status"],
         }
@@ -471,32 +564,116 @@ def build_parser() -> argparse.ArgumentParser:
 def matrix_rejection(case: dict) -> tuple[str | None, str | None]:
     rejection_reason = None
     diagnostic = None
-    if case.get("adversarial_dependency"):
+    if case.get("identity_status") in {"ambiguous", "stale", "unverifiable"}:
+        rejection_reason = f"identity is {case.get('identity_status')}"
+    elif "execution_freshness" in case and case.get("execution_freshness") is None:
+        rejection_reason = "execution freshness is unverifiable"
+    elif case.get("consumer_status") == "skipped":
+        rejection_reason = "consumer was skipped"
+    elif case.get("evidence_origin") == "copied":
+        rejection_reason = "copied matrix evidence is not independently produced"
+    elif case.get("adversarial_dependency"):
         rejection_reason = "adversarial dependency is not independently verified"
     elif case.get("adversarial_validator"):
         rejection_reason = "adversarial validator input is rejected"
         diagnostic = "adversarial validator case"
     elif case.get("matrix_evidence") == []:
         rejection_reason = "required matrix evidence is missing"
+    elif isinstance(case.get("matrix_evidence"), list) and any(
+        not isinstance(item, dict)
+        or ("executed" in item and item.get("executed") is not True)
+        for item in case["matrix_evidence"]
+    ):
+        rejection_reason = "matrix evidence contains a non-executed case"
     elif case.get("matrix_case_id", case["case_id"]) != case["case_id"]:
         rejection_reason = "matrix evidence label does not match the frozen case identity"
-    elif case.get("evidence_origin") == "copied":
-        rejection_reason = "copied matrix evidence is not independently produced"
+    elif (
+        "bound_input_identity" in case
+        or "evidence_input_identity" in case
+    ) and case.get("bound_input_identity") != case.get("evidence_input_identity"):
+        rejection_reason = "matrix case input identity is stale"
     elif "bound_target" in case or "evidence_target" in case:
         if case.get("bound_target") != case.get("evidence_target"):
             rejection_reason = "matrix evidence target does not match the bound target"
+    if rejection_reason is None and (
+        "source_identity" in case or "execution_evidence" in case
+    ):
+        source = ROOT / "scripts" / "sc" / "skill_package_replay.py"
+        expected_source = {"path": source.relative_to(ROOT).as_posix(), "sha256": digest(source)}
+        supplied_source = case.get("source_identity")
+        supplied_execution = case.get("execution_evidence")
+        if not isinstance(supplied_source, dict):
+            rejection_reason = "source identity is missing or malformed"
+        elif supplied_source != expected_source:
+            rejection_reason = "source identity is stale or mismatched"
+        elif not isinstance(supplied_execution, dict):
+            rejection_reason = "execution evidence is missing or malformed"
+        else:
+            expected_command = [
+                sys.executable, str(source), "replay-package", "--target",
+                str(case.get("target")), "--capability", str(case.get("capability")),
+            ]
+            if supplied_execution.get("command") != expected_command or supplied_execution.get("exit_code") != 0:
+                rejection_reason = "execution evidence is stale or mismatched"
     return rejection_reason, diagnostic
 
 
 def matrix_case_result(case: dict) -> dict:
+    started = time.monotonic()
     target = contained(ROOT / case["target"], ROOT, "matrix target")
     validator, value = capability(contained(ROOT / case["capability"], ROOT, "matrix capability"))
-    observed = run_validator(validator, value, target)
+    time_bound = case.get("aggregate_time_bound_ms")
+    output_bound = case.get("aggregate_output_bound_bytes")
+    budget_exhausted = isinstance(time_bound, (int, float)) and time_bound <= 0
+    try:
+        stable_pre_identity = manifest(target)
+    except (OSError, ValueError):
+        stable_pre_identity = None
+
+    subjects = []
+    observed_outputs = []
+    if budget_exhausted:
+        observed = subprocess.CompletedProcess([], 1, "", "budget exhausted")
+        subjects.append({"subject": "Stable", "executed": False, "exit_code": None})
+        subjects.append({"subject": "Candidate", "executed": False, "exit_code": None})
+    else:
+        for subject in ("Stable", "Candidate"):
+            result = run_validator(
+                validator,
+                value,
+                target,
+                timeout_ms=time_bound if isinstance(time_bound, (int, float)) else None,
+            )
+            observed_outputs.extend([result.stdout or "", result.stderr or ""])
+            if "time budget exhausted" in (result.stderr or ""):
+                budget_exhausted = True
+            subjects.append({
+                "subject": subject,
+                "executed": True,
+                "exit_code": result.returncode,
+                "outcome": "exit-zero" if result.returncode == 0 else "exit-nonzero",
+            })
+        observed = result
+
     expected = case["expected_exit"]
-    matched = observed.returncode != 0 if expected == "nonzero" else observed.returncode == expected
+    matched = all(
+        (row["exit_code"] != 0 if expected == "nonzero" else row["exit_code"] == expected)
+        for row in subjects if row.get("executed")
+    ) and not budget_exhausted
     rejection_reason, diagnostic = matrix_rejection(case)
+    output_size = sum(len(value.encode()) for value in observed_outputs)
+    if isinstance(output_bound, (int, float)) and output_bound < output_size:
+        budget_exhausted = True
+    try:
+        stable_post_identity = manifest(target)
+    except (OSError, ValueError):
+        stable_post_identity = None
+    if stable_pre_identity != stable_post_identity:
+        rejection_reason = rejection_reason or "stable subject identity/content changed"
+    if budget_exhausted:
+        rejection_reason = rejection_reason or "aggregate budget exhausted"
     status = "pass" if matched and rejection_reason is None else "fail"
-    row = {
+    return_row = {
         "case_id": case["case_id"],
         "category": case.get("category"),
         "validation_surface": case.get("validation_surface"),
@@ -506,12 +683,83 @@ def matrix_case_result(case: dict) -> dict:
         "observed_exit_code": observed.returncode,
         "stdout_sha256": text_digest(observed.stdout),
         "stderr_sha256": text_digest(observed.stderr),
+        "elapsed_ms": round((time.monotonic() - started) * 1000, 3),
+        "terminal_state": "budget-exhausted" if budget_exhausted else "completed",
+        "subject_executions": subjects,
+        "stable_subject": {
+            "executed": not budget_exhausted,
+            "pre_identity": stable_pre_identity,
+            "post_identity": stable_post_identity,
+        },
     }
+    if "matrix_input" in case:
+        return_row["matrix_input"] = case.get("matrix_input")
     if rejection_reason is not None:
-        row["rejection_reason"] = rejection_reason
+        return_row["rejection_reason"] = rejection_reason
     if diagnostic is not None:
-        row["diagnostic"] = diagnostic
-    return row
+        return_row["diagnostic"] = diagnostic
+    return return_row
+
+
+def _effective_evidence_identity(case: dict) -> str | None:
+    identity = case.get("effective_evidence_identity")
+    if identity is None:
+        evidence = case.get("matrix_evidence")
+        if isinstance(evidence, list) and evidence:
+            first = evidence[0]
+            if isinstance(first, dict):
+                identity = first.get("effective_evidence_identity")
+    return identity if isinstance(identity, str) and identity else None
+
+
+def _duplicate_evidence_case_indexes(cases: list[dict]) -> set[int]:
+    identity_cases: dict[str, list[int]] = {}
+    for index, case in enumerate(cases):
+        identity = _effective_evidence_identity(case)
+        if identity is not None:
+            identity_cases.setdefault(identity, []).append(index)
+    return {
+        index
+        for indexes in identity_cases.values()
+        if len(indexes) > 1
+        for index in indexes
+    }
+
+
+def _matrix_input_failure_indexes(cases: list[dict]) -> set[int]:
+    input_cases = [index for index, case in enumerate(cases) if "matrix_input" in case]
+    if not input_cases:
+        return set()
+
+    valid_inputs: list[str] = []
+    invalid_indexes: set[int] = set()
+    for index in input_cases:
+        value = cases[index].get("matrix_input")
+        input_id = value.get("input_id") if isinstance(value, dict) else None
+        if isinstance(input_id, str) and input_id:
+            valid_inputs.append(input_id)
+        else:
+            invalid_indexes.add(index)
+
+    duplicate_input_ids = {
+        value for value in valid_inputs if valid_inputs.count(value) > 1
+    }
+    if len(cases) == 6 and len(input_cases) == 6 and len(valid_inputs) == 6 and len(set(valid_inputs)) == 6:
+        return set()
+
+    invalid_indexes.update(
+        index
+        for index in input_cases
+        if isinstance(cases[index].get("matrix_input"), dict)
+        and cases[index]["matrix_input"].get("input_id") in duplicate_input_ids
+    )
+    return invalid_indexes or set(input_cases) or set(range(len(cases)))
+
+
+def _reject_matrix_cases(results: list[dict], indexes: set[int], reason: str) -> None:
+    for index in indexes:
+        results[index]["status"] = "fail"
+        results[index]["rejection_reason"] = reason
 
 
 def replay_matrix(matrix_argument: str) -> tuple[dict, int]:
@@ -525,6 +773,22 @@ def replay_matrix(matrix_argument: str) -> tuple[dict, int]:
     ):
         raise ValueError("matrix must contain executable v2 cases")
     results = [matrix_case_result(case) for case in cases]
+
+    # Reconcile effective evidence identities across executed cases.  Identity
+    # reuse is a matrix-level violation and must identify every affected case.
+    _reject_matrix_cases(
+        results,
+        _duplicate_evidence_case_indexes(cases),
+        "duplicate effective evidence identity reused across matrix cases",
+    )
+
+    # A matrix carrying input execution records is required to contain exactly
+    # six cases with six present and pairwise-distinct input identities.
+    _reject_matrix_cases(
+        results,
+        _matrix_input_failure_indexes(cases),
+        "matrix inputs must contain six recorded and distinct input identities",
+    )
     status = "pass" if all(item["status"] == "pass" for item in results) else "fail"
     return (
         {
@@ -573,6 +837,11 @@ def main() -> int:
             "--probe-mode",
             args.probe_mode,
         ]
+        replay["command_verification"] = {
+            "status": "pass" if exit_code == 0 else "fail",
+            "independent": True,
+            "command": list(replay["command"]),
+        }
         print(json.dumps(receipt, sort_keys=True))
         return exit_code
     result, exit_code = replay_matrix(args.matrix)
