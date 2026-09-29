@@ -1,0 +1,31 @@
+{
+  "baseline_commit": "0ecdf97e82e3360175dc390c42106943da77e6cb",
+  "status": "repair-prepared",
+  "vdd_status": "repair-vdd",
+  "plan_ready": false,
+  "tests": {
+    "passed": 60,
+    "subtests_passed": 15
+  },
+  "skill_contract_validation": "pass",
+  "diff_check": "pass",
+  "live_backend_called": false,
+  "canonical_compiler_run": false,
+  "reason": "Codex CLI backend is unavailable in the online workspace. Resume instructions require local canonical compilation.",
+  "c3": "OPEN",
+  "authorizes": [],
+  "source_requirements_unchanged": true,
+  "changed_file_sha256": {
+    "scripts/vdd/compile_plan.py": "sha256:00c9b30e42d41c9499cdd9b64ae0958f575277045bf0042e74803f7c56d2112f",
+    ".agents/skills/vdd-execution-plan/references/planning-operation.md": "sha256:0ef5491eb8f0c082855263cc09698579773bd9ca46601529778640853f7aea60",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "sha256:09d8d18faae01a364abe914074124a5e692a59b118cb493535a544638b8361a3",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py": "sha256:426ca146a4326073a7b27c88178ba0a55ac34dabb53ea908e0b5ee3f4bd3a98e",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_candidate_contract_repair.py": "sha256:7db8bfae65e27990563ace31168c6fd0255881158a65a6865becd6b26120c90d",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/v4-binding-repair-1/candidate-contracts.json": "sha256:a83441e885eac51a59270bc055643517a337631d27a89c480af45ff822d2700e",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/v4-binding-repair-1/resume.md": "sha256:3097a656b6ea16bfa03d373ce394874771ed0706fc3a94cf7a9d7f8f89cb51e4"
+  },
+  "package_validation": {
+    "run": false,
+    "reason": "Configured capability targets run-refactor-implementation-acceptance, not VDD. Its boundary was not changed."
+  }
+}

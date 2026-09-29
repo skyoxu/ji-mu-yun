@@ -73,9 +73,10 @@ def test_v3_receives_exact_v0a_frozen_source_projection_without_rereading_worktr
         {
             "requirement_id": "FR-1",
             "source_ref": "requirements.md#FR-1",
-            "repository_relative_source_path": "requirements.md",
-            "source_text": frozen["entries"][0]["source_text"],
-            "source_sha256": frozen["entries"][0]["source_sha256"],
+                "repository_relative_source_path": "requirements.md",
+                "source_text": frozen["entries"][0]["source_text"],
+                "execution_context_text": frozen["entries"][0]["source_text"],
+                "source_sha256": frozen["entries"][0]["source_sha256"],
             "text_sha256": frozen["entries"][0]["text_sha256"],
             "source_order": 1,
         }

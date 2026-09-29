@@ -1,0 +1,18 @@
+{
+  "base_commit": "699b2b0110ee16161ea1152940b10799e2bd2cd7",
+  "status": "plan-ready",
+  "affected_slices": [
+    "S1"
+  ],
+  "unaffected_slices_unchanged": 44,
+  "targeted_tests_passed": 61,
+  "skipped": 0,
+  "s1_preflight": "preflight-passed",
+  "model_called": false,
+  "user_local_s1_replayed": false,
+  "windows_verified": false,
+  "production_changes": false,
+  "authorizes": [],
+  "plan": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/s1-red-repair/current-plan",
+  "semantic_plan_sha256": "sha256:8088050fe55da69f9f640c22c74f6a830aa76fbb34b9dacc4f8387f2ace6cf71"
+}

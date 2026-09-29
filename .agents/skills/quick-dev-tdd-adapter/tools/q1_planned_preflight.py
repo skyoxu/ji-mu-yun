@@ -110,7 +110,11 @@ def validate_planned_preflight(
         raise ValueError("agent-context selector projection drift")
 
     selector_text = " ".join([*argv, *selector_intents])
-    target_refs = [ref for ref in snapshots if ref in selector_text]
+    # Match the runtime descriptor: prose fixture references are not targets.
+    argv_paths = {part.split("::", 1)[0] for part in argv}
+    target_refs = [ref for ref in snapshots if ref in argv_paths]
+    if not target_refs:
+        target_refs = [ref for ref in snapshots if ref in selector_text]
     if not target_refs:
         target_refs = [ref for ref in snapshots if Path(ref).suffix.lower() in _CODE_SUFFIXES]
     if not target_refs:

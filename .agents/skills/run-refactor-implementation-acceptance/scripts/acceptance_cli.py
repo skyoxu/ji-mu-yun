@@ -1511,7 +1511,8 @@ def main() -> int:
     recover_stale.add_argument("--contract-hash", required=True)
     recover_stale.add_argument("--knowledge-context-hash")
     recover_stale.add_argument("--minimum-age-seconds", type=int, default=60)
-    subcommands.add_parser("validate-package")
+    validate_package_parser = subcommands.add_parser("validate-package")
+    validate_package_parser.add_argument("--skill-root")
     args = parser.parse_args()
     if args.command == "parse-run-input":
         print(json.dumps(parse_run_input(json.loads(Path(args.input).read_text(encoding="utf-8"))), sort_keys=True))
@@ -1710,7 +1711,8 @@ def main() -> int:
             args.knowledge_context_hash, minimum_age_seconds=args.minimum_age_seconds,
         ), sort_keys=True))
         return 0
-    findings = validate_package(Path(__file__).resolve().parents[1])
+    skill_root = Path(args.skill_root).resolve() if args.skill_root else Path(__file__).resolve().parents[1]
+    findings = validate_package(skill_root)
     print(json.dumps({"status": "pass" if not findings else "fail", "findings": findings, "authorizes": []}, sort_keys=True))
     return 0 if not findings else 1
 

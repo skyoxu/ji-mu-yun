@@ -1,0 +1,68 @@
+{
+  "acceptance_ids": [
+    "A-A7D97C4F2619",
+    "A-F9FFD7C4D078"
+  ],
+  "allowed_paths": [
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py",
+    "scripts/sc/skill_package_replay.py",
+    "scripts/sc/tests/tc_d1_cer/test_s15.py",
+    "scripts/vdd/probe_real_worker.py"
+  ],
+  "contracts": [
+    "vdd.semantic-plan-bundle.v1",
+    "(The bound false-negative selector produces a failed detached Probe verdict even when the underlying process exits successfully.) AND (每个 detached positive Probe 都有独立进程执行记录，且该记录可证明输入绑定和输出通道绑定。)",
+    "Test-author entry: scripts/sc/tests/tc_d1_cer/test_s15.py. Create real tests for every assertion in this slice, using @pytest.mark.cer_assertion for exact assertion IDs. Read the actual production behavior and bound oracle. Never create unconditional RED, skip/xfail, empty cases or prewritten execution receipts. Missing markers are authoring work; only an actual probe decides present/missing."
+  ],
+  "forbidden_paths": [
+    "PhaseA.Platform",
+    "logs/phase-a-innernet",
+    "runtime/phase-a"
+  ],
+  "obligation_ids": [
+    "O-B0ECAFB3019C",
+    "O-BBAD25910009"
+  ],
+  "requirement_ids": [
+    "FR-4"
+  ],
+  "selector_intents": [
+    "Run the detached Probe with a bound always-success false-negative selector and require semantic Probe evaluation to emit a failed outcome.",
+    "以缺失独立进程启动、输入绑定或输出绑定的 detached positive Probe 运行配置执行。"
+  ],
+  "slice_id": "S15",
+  "source_refs": [
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-4"
+  ],
+  "validation_commands": [
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/tc_d1_cer/test_s15.py"
+    ],
+    [
+      "py",
+      "-3",
+      "scripts/vdd/probe_real_worker.py",
+      "--help"
+    ],
+    [
+      "py",
+      "-3",
+      "scripts/sc/skill_package_replay.py",
+      "validate-package",
+      "--target",
+      ".agents/skills/vdd-conformance-exact-cover",
+      "--capability",
+      "scripts/sc/config/skill-package-validator-capability.v1.json"
+    ],
+    [
+      "py",
+      "-3",
+      "-m",
+      "unittest",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py"
+    ]
+  ]
+}

@@ -109,6 +109,60 @@ def test_default_preflight_and_recommendation_only_are_distinct(tmp_path: Path, 
     assert rec["model_called"] is False and rec["tests_executed"] is False and rec["writes_performed"] is False
 
 
+def test_descriptor_inputs_combines_equivalent_declared_pytest_commands(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(stable_runner, "ROOT", tmp_path)
+    plan = tmp_path / "plan"
+    (plan / "agent-context" / "S1").mkdir(parents=True)
+    context = {
+        "slice_id": "S1",
+        "validation_commands": [
+            [sys.executable, "-m", "pytest", "tests/test_one.py", "-q"],
+            [sys.executable, "-m", "pytest", "tests/test_two.py"],
+        ],
+    }
+    (plan / "agent-context" / "S1" / "agent-context.json").write_text(json.dumps(context), encoding="utf-8")
+    bundle = _bundle()
+    bundle["slices"][0]["execution_snapshot_paths"] = ["tests/test_one.py", "tests/test_two.py", "tests/fixture.txt"]
+    argv, targets, fixtures = stable_runner._descriptor_inputs(bundle, plan, "S1")
+    assert argv == [sys.executable, "-m", "pytest", "tests/test_one.py", "tests/test_two.py", "-q"]
+    assert targets == ["tests/test_one.py", "tests/test_two.py"]
+    assert fixtures == ["tests/fixture.txt"]
+
+
+def test_descriptor_inputs_combines_windows_launcher_pytest_commands(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(stable_runner, "ROOT", tmp_path)
+    plan = tmp_path / "plan"
+    (plan / "agent-context" / "S1").mkdir(parents=True)
+    context = {"slice_id": "S1", "validation_commands": [
+        ["py", "-3", "-m", "pytest", "tests/test_one.py", "-q"],
+        ["py", "-3", "-m", "pytest", "tests/test_two.py"],
+    ]}
+    (plan / "agent-context" / "S1" / "agent-context.json").write_text(json.dumps(context), encoding="utf-8")
+    bundle = _bundle()
+    bundle["slices"][0]["execution_snapshot_paths"] = ["tests/test_one.py", "tests/test_two.py", "tests/fixture.txt"]
+    argv, targets, fixtures = stable_runner._descriptor_inputs(bundle, plan, "S1")
+    assert argv == ["py", "-3", "-m", "pytest", "tests/test_one.py", "tests/test_two.py", "-q"]
+    assert targets == ["tests/test_one.py", "tests/test_two.py"]
+    assert fixtures == ["tests/fixture.txt"]
+
+
+def test_descriptor_inputs_deduplicates_equivalent_pytest_targets(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(stable_runner, "ROOT", tmp_path)
+    plan = tmp_path / "plan"
+    (plan / "agent-context" / "S1").mkdir(parents=True)
+    context = {"slice_id": "S1", "validation_commands": [
+        [sys.executable, "-m", "pytest", "tests/test_one.py", "-q"],
+        [sys.executable, "-m", "pytest", "tests/test_one.py", "-q"],
+    ]}
+    (plan / "agent-context" / "S1" / "agent-context.json").write_text(json.dumps(context), encoding="utf-8")
+    bundle = _bundle()
+    bundle["slices"][0]["execution_snapshot_paths"] = ["tests/test_one.py", "tests/fixture.txt"]
+    argv, targets, fixtures = stable_runner._descriptor_inputs(bundle, plan, "S1")
+    assert argv == [sys.executable, "-m", "pytest", "tests/test_one.py", "-q"]
+    assert targets == ["tests/test_one.py"]
+    assert fixtures == ["tests/fixture.txt"]
+
+
 def test_recommendation_fails_closed_without_snapshot_inputs(tmp_path: Path, monkeypatch) -> None:
     root, semantic, _roots = _repo(tmp_path)
     monkeypatch.setattr(stable_runner, "ROOT", root)

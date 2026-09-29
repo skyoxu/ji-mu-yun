@@ -130,6 +130,30 @@ def test_injected_v3_schema_repair_projects_group_before_domain_validation(tmp_p
     assert result["acceptances"][0]["source_refs"] == ["req.md#FR-1"]
 
 
+def test_large_initial_v3_uses_exact_key_chunk_composer(monkeypatch, tmp_path: Path) -> None:
+    payload = {
+        "obligations": [
+            {"obligation_id": f"O-{index}", "source_refs": ["req.md#FR-1"], "status": "active"}
+            for index in range(5)
+        ]
+    }
+    expected = {"acceptances": [], "failure_intents": [], "slice_hints": []}
+    seen = {}
+
+    def compose(**kwargs):
+        seen.update(kwargs)
+        return expected
+
+    monkeypatch.setattr(group_patch, "_live_group_repair", compose)
+    monkeypatch.setattr(group_patch.v3_domain, "_domain_findings", lambda *_args: [])
+    result = group_patch.group_repair_transport(
+        root=tmp_path, out_dir=tmp_path / "plan", stage="v3", payload=payload, prompt="Compile V3."
+    )
+    assert result == expected
+    assert seen["payload"]["input"] == payload
+    assert seen["payload"]["original_stage"] == "v3"
+
+
 def test_proven_source_gap_gets_one_bounded_obligation_addition(monkeypatch, tmp_path: Path) -> None:
     original = {
         "obligation_id": "O-1",
@@ -212,6 +236,45 @@ def test_exact_invented_partition_projects_candidate_after_clean_recheck(monkeyp
         worker_cache=None,
     )
     assert [item["obligation_id"] for item in result] == ["O-1"]
+
+
+def test_exact_invented_partition_removes_a_requirement_only_candidate(monkeypatch, tmp_path: Path) -> None:
+    # Exact V4 recall is stronger than the V1 extractor's heuristic that every
+    # source heading must retain an active candidate.
+    kept = {"obligation_id": "O-KEEP", "requirement_id": "FR-KEEP", "status": "active", "depends_on": []}
+    invented = {"obligation_id": "O-ONLY", "requirement_id": "FR-ONLY", "status": "active", "depends_on": []}
+    recalls = iter([
+        {"valid": False, "findings": ["atomic-recall:invented-obligation:O-ONLY"],
+         "source_gap_claims": [], "worker": {"supported_obligation_ids": ["O-KEEP"],
+         "invented_obligation_ids": ["O-ONLY"], "source_gap_claims": []}},
+        {"valid": True, "findings": [], "source_gap_claims": [], "worker": {}},
+    ])
+    monkeypatch.setattr(gap_patch, "_BASE_COMPILE_OBLIGATIONS", lambda **_kwargs: [dict(kept), dict(invented)])
+    monkeypatch.setattr(gate, "atomic_recall_alignment", lambda **_kwargs: next(recalls))
+    monkeypatch.setattr(gap_patch.sc, "guard_obligations", lambda *_args, **_kwargs: {"valid": True, "findings": []})
+    result = gap_patch.compile_obligations_with_gap_repair(
+        root=tmp_path, out_dir=tmp_path / "plan",
+        source_index={"entries": [{"requirement_id": "FR-KEEP", "source_ref": "req.md#FR-KEEP"}, {"requirement_id": "FR-ONLY", "source_ref": "req.md#FR-ONLY"}]},
+        worker_cache=None,
+    )
+    assert [item["obligation_id"] for item in result] == ["O-KEEP"]
+
+
+def test_resume_uses_only_latest_post_v4_gap_set(tmp_path: Path, monkeypatch) -> None:
+    # Historical feedback stays append-only, but an older V4 judgment must not
+    # be merged into a later, superseding current V4 judgment.
+    monkeypatch.setattr(gap_patch, "_pending_post_v4_source_gaps", [])
+    gap_patch.configure_pending_post_v4_source_gaps(
+        [{"source_ref": "req.md#FR-1", "subject": "old", "behavior": "old", "reason": "old"}],
+        out_dir=tmp_path,
+    )
+    gap_patch.configure_pending_post_v4_source_gaps(
+        [{"source_ref": "req.md#FR-2", "subject": "new", "behavior": "new", "reason": "new"}],
+        out_dir=tmp_path,
+    )
+    assert gap_patch._persisted_post_v4_source_gaps(tmp_path) == [
+        {"source_ref": "req.md#FR-2", "subject": "new", "behavior": "new", "reason": "new"}
+    ]
 
 
 def test_invented_projection_recheck_failure_keeps_original_candidates(monkeypatch, tmp_path: Path) -> None:

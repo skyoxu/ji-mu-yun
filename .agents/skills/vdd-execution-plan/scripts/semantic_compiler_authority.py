@@ -149,6 +149,48 @@ def _attempt(out_dir: Path, label: str, value: Mapping[str, Any]) -> None:
     gate.sc.atomic_json(out_dir / ".compiler-attempts" / f"{label}-{digest}.json", dict(value))
 
 
+def _archive_repair_publications(out_dir: Path) -> None:
+    """Move prior canonical publications aside before an append-only repair publish."""
+    names = (
+        "source-index.v1.json", "obligations.v1.json", "acceptances.v1.json",
+        "failure-intents.v1.json", "pre-slice-coverage.v1.json", "slices.v1.json",
+        "final-plan-coverage.v1.json", "semantic-alignment.v1.json", "feasibility.v1.json",
+        "semantic-plan-bundle.v1.json", "compiler-state.v1.json",
+    )
+    for name in names:
+        path = out_dir / name
+        if not path.is_file():
+            continue
+        sidecar = path.with_name(path.name + ".stale-p1-round-7-refresh")
+        suffix = 1
+        while sidecar.exists():
+            sidecar = path.with_name(path.name + f".stale-p1-round-7-refresh-{suffix}")
+            suffix += 1
+        path.rename(sidecar)
+    context_root = out_dir / "agent-context"
+    if context_root.is_dir():
+        for path in context_root.glob("*/agent-context.json"):
+            sidecar = path.with_name(path.name + ".stale-p1-round-7-refresh")
+            suffix = 1
+            while sidecar.exists():
+                sidecar = path.with_name(path.name + f".stale-p1-round-7-refresh-{suffix}")
+                suffix += 1
+            path.rename(sidecar)
+
+
+def _archive_stale_publication(out_dir: Path, name: str) -> None:
+    """Preserve a superseded intermediate publication before a repaired reissue."""
+    path = out_dir / name
+    if not path.is_file():
+        return
+    sidecar = path.with_name(path.name + ".stale-p1-round-7-refresh")
+    suffix = 1
+    while sidecar.exists():
+        sidecar = path.with_name(path.name + f".stale-p1-round-7-refresh-{suffix}")
+        suffix += 1
+    path.rename(sidecar)
+
+
 def _explicit_fixture_cache_wins(out_dir: Path, worker_cache: Mapping[str, Any] | None) -> None:
     """An explicitly supplied deterministic worker fixture supersedes old cache.
 
@@ -174,8 +216,29 @@ def _plan_chain_audit(out_dir: Path) -> Mapping[str, Any]:
     audit = audit_bundle(bundle)
     if not audit["valid"]:
         raise ValueError("plan-ready semantic chain audit failed: " + ",".join(audit["findings"]))
-    gate.sc.atomic_json(out_dir / "semantic-chain-audit.v1.json", audit)
+    audit_path = out_dir / "semantic-chain-audit.v1.json"
+    if audit_path.is_file() and audit_path.read_bytes() != gate.sc.canonical_bytes(audit):
+        # The chain audit is a derived current publication. Preserve its prior
+        # successful snapshot as append-only repair history before publishing
+        # the audit for the repaired semantic bundle.
+        _archive_stale_publication(out_dir, audit_path.name)
+    gate.sc.atomic_json(audit_path, audit)
     return audit
+
+
+def _published_recall_matches_obligations(out_dir: Path) -> bool:
+    """Require the published V4 witness to cover the actual published V1 set."""
+    try:
+        obligations = json.loads((out_dir / "obligations.v1.json").read_text(encoding="utf-8"))
+        recall = json.loads((out_dir / "atomic-recall-alignment.v1.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return False
+    if not isinstance(obligations, list) or not isinstance(recall, Mapping) or recall.get("valid") is not True:
+        return False
+    active = {str(item.get("obligation_id")) for item in obligations if isinstance(item, Mapping) and item.get("status") == "active"}
+    worker = recall.get("worker")
+    supported = worker.get("supported_obligation_ids") if isinstance(worker, Mapping) else None
+    return bool(active) and isinstance(supported, list) and set(supported) == active
 
 
 def compile_plan(
@@ -195,9 +258,17 @@ def compile_plan(
 
     if resume_from == "first-failed-stage":
         completed = gate._completed_resume(out_dir)
-        if completed is not None:
+        if completed is not None and _published_recall_matches_obligations(out_dir):
+            from quick_dev_handoff import handoff_findings
+            handoff_errors = handoff_findings(json.loads((out_dir / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8")), workspace=root)
+            if handoff_errors:
+                return {"status": "repair-vdd", "stage": "quick-dev-handoff", "findings": handoff_errors}
             audit = _plan_chain_audit(out_dir)
             return {**completed, "semantic_chain_metrics": audit["metrics"]}
+        if completed is not None:
+            _archive_repair_publications(out_dir)
+        elif not _published_recall_matches_obligations(out_dir):
+            _archive_stale_publication(out_dir, "atomic-recall-alignment.v1.json")
 
     if recommendation_only:
         return gate._ORIGINAL_COMPILE_PLAN(
@@ -244,6 +315,20 @@ def compile_plan(
         worker_cache=worker_cache,
     )
     if not recall["valid"]:
+        if (
+            isinstance(recall.get("findings"), list)
+            and recall["findings"]
+            and all(str(item).startswith("atomic-recall:source-gap-count:") for item in recall["findings"])
+            and isinstance(recall.get("source_gap_claims"), list)
+            and recall["source_gap_claims"]
+        ):
+            import semantic_obligation_gap_repair_patch as gap_repair
+            gap_repair.configure_pending_post_v4_source_gaps(recall["source_gap_claims"], out_dir=out_dir)
+            return compile_plan(
+                requirements=requirements, out_dir=out_dir, companions=companions,
+                profile=profile, worker_cache=worker_cache,
+                recommendation_only=False, resume_from=None,
+            )
         result = {
             "status": "repair-vdd",
             "stage": "V4",
@@ -255,10 +340,6 @@ def compile_plan(
         _attempt(out_dir, "v4-atomic-recall", {**result, "alignment": recall})
         return result
 
-    # Canonical recall exists only after the gate is valid. This keeps a failed
-    # attempt from poisoning a repaired resume via create-if-absent semantics.
-    gate.sc.atomic_json(out_dir / "atomic-recall-alignment.v1.json", recall)
-
     result = dict(
         gate._ORIGINAL_COMPILE_PLAN(
             requirements=requirements,
@@ -269,10 +350,71 @@ def compile_plan(
             recommendation_only=False,
         )
     )
-    result["atomic_quality_metrics"] = recall["metrics"]
     if result.get("status") != "plan-ready":
+        pending_ref = result.get("semantic_handoff_pending")
+        if result.get("stage") == "quick-dev-handoff" and isinstance(pending_ref, str):
+            pending = root / pending_ref
+            try:
+                pending_bundle = json.loads((pending / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))
+                pending_obligations = json.loads((pending / "obligations.v1.json").read_text(encoding="utf-8"))
+                pending_recall = stage_call(out_dir, "V4-pending-handoff", gate.atomic_recall_alignment,
+                    root=root, out_dir=out_dir, source_index=source_index,
+                    obligations=pending_obligations, worker_cache=worker_cache)
+                if pending_recall.get("valid") and gate.sc.sha256_value(pending_bundle) == json.loads(
+                    (pending / "compiler-state.v1.json").read_text(encoding="utf-8"))["semantic_plan_sha256"]:
+                    gate.sc.atomic_json(pending / "atomic-recall-alignment.v1.json", pending_recall)
+                    audit = audit_bundle(pending_bundle)
+                    if not audit["valid"]:
+                        raise ValueError("pending semantic chain audit failed")
+                    gate.sc.atomic_json(pending / "semantic-chain-audit.v1.json", audit)
+                else:
+                    result = {"status": "repair-vdd", "stage": "V4", "gate": "atomic-source-recall",
+                              "findings": pending_recall.get("findings", [])}
+            except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+                result = {"status": "repair-vdd", "stage": "semantic-handoff-pending", "reason": str(exc)}
+        findings = result.get("findings")
+        gaps = result.get("source_gap_claims")
+        # Feed back only a final V4 result that contains *only* independently
+        # stated source gaps.  This is a new V1 candidate on the same frozen
+        # source, not an acceptance-only repair and not a licence to discard
+        # current V3 contracts.  One bounded feedback pass keeps a malformed or
+        # oscillating worker result fail-closed for the caller to inspect.
+        if (
+            result.get("stage") == "V4"
+            and isinstance(findings, list)
+            and findings
+            and all(str(item).startswith("atomic-recall:source-gap-count:") for item in findings)
+            and isinstance(gaps, list)
+            and gaps
+        ):
+            import semantic_obligation_gap_repair_patch as gap_repair
+            gap_repair.configure_pending_post_v4_source_gaps(gaps, out_dir=out_dir)
+            return compile_plan(
+                requirements=requirements, out_dir=out_dir, companions=companions,
+                profile=profile, worker_cache=worker_cache,
+                recommendation_only=False, resume_from=None,
+            )
         _attempt(out_dir, str(result.get("stage") or "compile"), result)
         return result
+    # The lower-level publisher recomputes V1 while composing its canonical
+    # bundle. Bind the V4 witness to those *published* obligations, never to an
+    # earlier candidate from the authority preflight.
+    published_obligations = json.loads((out_dir / "obligations.v1.json").read_text(encoding="utf-8"))
+    final_recall = stage_call(out_dir, "V4-published-obligations", gate.atomic_recall_alignment,
+        root=root, out_dir=out_dir, source_index=source_index,
+        obligations=published_obligations, worker_cache=worker_cache,
+    )
+    if not final_recall.get("valid"):
+        _archive_repair_publications(out_dir)
+        result = {"status": "repair-vdd", "stage": "V4", "gate": "atomic-source-recall",
+                  "findings": final_recall.get("findings", []),
+                  "atomic_quality_metrics": final_recall.get("metrics", {}),
+                  "source_gap_claims": final_recall.get("source_gap_claims", [])}
+        _attempt(out_dir, "v4-published-obligations", result)
+        return result
+    _archive_stale_publication(out_dir, "atomic-recall-alignment.v1.json")
+    gate.sc.atomic_json(out_dir / "atomic-recall-alignment.v1.json", final_recall)
+    result["atomic_quality_metrics"] = final_recall["metrics"]
     audit = _plan_chain_audit(out_dir)
     result["semantic_chain_metrics"] = audit["metrics"]
     if resume_from is not None:

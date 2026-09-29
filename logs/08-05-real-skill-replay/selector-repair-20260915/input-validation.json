@@ -1,0 +1,31 @@
+{
+  "base_commit": "c3f814e25ed851ae60f14c2f20e86e60fb9df8a0",
+  "checks": {
+    "original_source_preserved": true,
+    "requirement_sections": 26,
+    "bound_obligations": 114,
+    "original_slice_contexts": 42,
+    "all_snapshot_paths_existing_or_planned": true,
+    "repository_explicit_source_parser": "passed",
+    "reported_missing_targets_absent_from_input": true
+  },
+  "compiler_input_sha256": "44bdd09f45d09587f058bd6e946bb65e5c979a94b8544c701cb5d2d3be3bfd7c",
+  "canonical_compilation_executed": false,
+  "runtime_tests_executed": false,
+  "authorizes": [],
+  "method": "Python executed against GitHub-fetched source bytes and the complete fixed-commit Git tree; repository explicit-source parser executed in isolation via AST, without compiler transport imports.",
+  "inputs": [
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md",
+      "git_blob_sha": "796708a09f98cb4c7ab839498d2c7f8cc9c41956"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/current-plan/semantic-plan-bundle.v1.json",
+      "git_blob_sha": "2bc9621f3d8f9e255e58666d660bcf925cda5d98"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_explicit_path_contract_patch.py",
+      "git_blob_sha": "5445c11c40cefa6b8002669f2b519760c672f147"
+    }
+  ]
+}

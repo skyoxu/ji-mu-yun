@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "checks": [
+    "required-files",
+    "required-headings",
+    "governance-policy",
+    "input-routing",
+    "runtime-entry",
+    "static-lifecycle",
+    "review-reentry",
+    "profile-cases",
+    "clarification-fixtures",
+    "generic-source"
+  ],
+  "findings": []
+}

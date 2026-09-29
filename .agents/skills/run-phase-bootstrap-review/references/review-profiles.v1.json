@@ -3,7 +3,7 @@
   "profiles": {
     "bootstrap-upstream-plan": {
       "reviewProfile": "review-policy://bootstrap-upstream-plan/v1",
-      "policyRevision": "sha256:2bccdae31913e984e6108157733554a97fa117d83c5007fe19a41b7d9e88dd78",
+      "policyRevision": "sha256:1bc5c561ffdc62e6658dc9a49830cb7b16cf6d95eb9ce67037071027af28b14a",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -23,33 +23,30 @@
         "acceptance_auditor"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-5.6-terra",
-        "fallbackModels": [
-          "gpt-5.5",
-          "gpt-5.4"
-        ],
+        "preferredModel": "gpt-6-sol",
+        "fallbackModels": [],
         "forbiddenModels": [],
         "toolProbeRequired": true,
         "roundModelOverrides": {
-          "3": "gpt-5.6-sol"
+          "3": "gpt-6-sol"
         },
         "roundReasoningEffortOverrides": {
           "3": {
-            "blind_hunter": "high",
-            "edge_case_hunter": "high",
-            "acceptance_auditor": "high"
+            "blind_hunter": "xhigh",
+            "edge_case_hunter": "xhigh",
+            "acceptance_auditor": "xhigh"
           }
         },
         "reasoningEffortByRole": {
-          "blind_hunter": "medium",
+          "blind_hunter": "high",
           "edge_case_hunter": "high",
           "acceptance_auditor": "high",
           "independent_verifier": "high"
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-5.6-terra",
-        "escalatedModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-6-sol",
+        "escalatedModel": "gpt-6-sol",
         "fallbackModels": [],
         "modelEscalateOnSeverities": [
           "P0"
@@ -63,8 +60,8 @@
           "protected_path",
           "shared_entrypoint"
         ],
-        "defaultReasoningEffort": "high",
-        "escalatedReasoningEffort": "max",
+        "defaultReasoningEffort": "medium",
+        "escalatedReasoningEffort": "high",
         "escalateOnSeverities": [
           "P0"
         ],
@@ -188,7 +185,7 @@
     },
     "bootstrap-implementation-conformance": {
       "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
-      "policyRevision": "sha256:36bcd27f0967109fe63217593fc3742be76f9520ac67faa60494fa50cd2cae3f",
+      "policyRevision": "sha256:11ef402af4f0d32492fce0ce71dab4abf96b02f671261ecc826a70cbefced247",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -218,21 +215,18 @@
         "acceptance_auditor"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-5.6-terra",
-        "fallbackModels": [
-          "gpt-5.5",
-          "gpt-5.4"
-        ],
+        "preferredModel": "gpt-6-sol",
+        "fallbackModels": [],
         "forbiddenModels": [],
         "toolProbeRequired": true,
         "roundModelOverrides": {
-          "3": "gpt-5.6-sol"
+          "3": "gpt-6-sol"
         },
         "roundReasoningEffortOverrides": {
           "3": {
-            "blind_hunter": "high",
-            "edge_case_hunter": "high",
-            "acceptance_auditor": "high"
+            "blind_hunter": "xhigh",
+            "edge_case_hunter": "xhigh",
+            "acceptance_auditor": "xhigh"
           }
         },
         "reasoningEffortByRole": {
@@ -243,8 +237,8 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-5.6-terra",
-        "escalatedModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-6-sol",
+        "escalatedModel": "gpt-6-sol",
         "fallbackModels": [],
         "modelEscalateOnSeverities": [
           "P0"
@@ -258,8 +252,8 @@
           "protected_path",
           "shared_entrypoint"
         ],
-        "defaultReasoningEffort": "high",
-        "escalatedReasoningEffort": "max",
+        "defaultReasoningEffort": "medium",
+        "escalatedReasoningEffort": "high",
         "escalateOnSeverities": [
           "P0"
         ],
@@ -383,7 +377,7 @@
     },
     "bootstrap-skill-route": {
       "reviewProfile": "review-policy://bootstrap-skill-route/v1",
-      "policyRevision": "sha256:189d5eef49314aadfa639541b7029500061d47739ca2d8e244d2c740eceb665c",
+      "policyRevision": "sha256:21ae66da1e7e48cd3e9aed14efb0a47bfeb4274fc87af552db5b73c245edb1fe",
       "companionCapabilities": [
         {
           "capabilityId": "acceptance-inventory-attestation",
@@ -414,21 +408,18 @@
         "acceptance_auditor"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-5.6-terra",
-        "fallbackModels": [
-          "gpt-5.5",
-          "gpt-5.4"
-        ],
+        "preferredModel": "gpt-6-sol",
+        "fallbackModels": [],
         "forbiddenModels": [],
         "toolProbeRequired": true,
         "roundModelOverrides": {
-          "3": "gpt-5.6-sol"
+          "3": "gpt-6-sol"
         },
         "roundReasoningEffortOverrides": {
           "3": {
-            "blind_hunter": "high",
-            "edge_case_hunter": "high",
-            "acceptance_auditor": "high"
+            "blind_hunter": "xhigh",
+            "edge_case_hunter": "xhigh",
+            "acceptance_auditor": "xhigh"
           }
         },
         "reasoningEffortByRole": {
@@ -439,8 +430,8 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-5.6-terra",
-        "escalatedModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-6-sol",
+        "escalatedModel": "gpt-6-sol",
         "fallbackModels": [],
         "modelEscalateOnSeverities": [
           "P0"
@@ -454,8 +445,8 @@
           "protected_path",
           "shared_entrypoint"
         ],
-        "defaultReasoningEffort": "high",
-        "escalatedReasoningEffort": "max",
+        "defaultReasoningEffort": "medium",
+        "escalatedReasoningEffort": "high",
         "escalateOnSeverities": [
           "P0"
         ],
@@ -579,7 +570,7 @@
     },
     "bootstrap-focused-change": {
       "reviewProfile": "review-policy://bootstrap-focused-change/v1",
-      "policyRevision": "sha256:8f7b25659bda7e811cb506ec283edfd4877249b2e974a585439c235d1e72510b",
+      "policyRevision": "sha256:cb42ddd6da805f0ef38bb7107655ddd194e74daef6be27c64ad75717a72f12f1",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -599,33 +590,30 @@
         "acceptance_auditor"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-5.6-terra",
-        "fallbackModels": [
-          "gpt-5.5",
-          "gpt-5.4"
-        ],
+        "preferredModel": "gpt-6-sol",
+        "fallbackModels": [],
         "forbiddenModels": [],
         "toolProbeRequired": true,
         "roundModelOverrides": {
-          "3": "gpt-5.6-sol"
+          "3": "gpt-6-sol"
         },
         "roundReasoningEffortOverrides": {
           "3": {
-            "blind_hunter": "high",
-            "edge_case_hunter": "high",
-            "acceptance_auditor": "high"
+            "blind_hunter": "xhigh",
+            "edge_case_hunter": "xhigh",
+            "acceptance_auditor": "xhigh"
           }
         },
         "reasoningEffortByRole": {
-          "blind_hunter": "medium",
+          "blind_hunter": "high",
           "edge_case_hunter": "high",
-          "acceptance_auditor": "medium",
+          "acceptance_auditor": "high",
           "independent_verifier": "high"
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-5.6-terra",
-        "escalatedModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-6-sol",
+        "escalatedModel": "gpt-6-sol",
         "fallbackModels": [],
         "modelEscalateOnSeverities": [
           "P0"
@@ -639,8 +627,8 @@
           "protected_path",
           "shared_entrypoint"
         ],
-        "defaultReasoningEffort": "high",
-        "escalatedReasoningEffort": "max",
+        "defaultReasoningEffort": "medium",
+        "escalatedReasoningEffort": "high",
         "escalateOnSeverities": [
           "P0"
         ],
@@ -763,7 +751,7 @@
     },
     "bootstrap-focused-repair-verification": {
       "reviewProfile": "review-policy://bootstrap-focused-repair-verification/v1",
-      "policyRevision": "sha256:12c7ee7e1c12ede2c59e31d7ae5b49f3d79c1a20497960566218fc3d9a39e900",
+      "policyRevision": "sha256:c359cd5465c0900df4b6129765415bf85e00a928d1c130009526515057ec2576",
       "authorityRootRegistry": {
         "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
         "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
@@ -786,7 +774,7 @@
         "focused_repair_verifier"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-5.6-terra",
+        "preferredModel": "gpt-6-sol",
         "fallbackModels": [],
         "forbiddenModels": [],
         "toolProbeRequired": true,
@@ -798,8 +786,8 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-5.6-terra",
-        "escalatedModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-6-sol",
+        "escalatedModel": "gpt-6-sol",
         "fallbackModels": [],
         "modelEscalateOnSeverities": [
           "P0"
@@ -813,8 +801,8 @@
           "protected_path",
           "shared_entrypoint"
         ],
-        "defaultReasoningEffort": "high",
-        "escalatedReasoningEffort": "max",
+        "defaultReasoningEffort": "medium",
+        "escalatedReasoningEffort": "high",
         "escalateOnSeverities": [
           "P0"
         ],

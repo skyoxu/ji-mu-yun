@@ -134,8 +134,19 @@ def normative_invoke_worker(
     worker_cache: Mapping[str, Any] | None = None,
 ) -> Mapping[str, Any]:
     """Invoke one read-only semantic worker with schema repair and stop-loss."""
+    effective_worker_cache = worker_cache
+    if stage == "v3" and worker_cache:
+        # Do not let a pre-contract V3 fixture bypass the current path guard.
+        # Other stage caches remain eligible for normal resume reuse.
+        cache_text = json.dumps(worker_cache, ensure_ascii=False, sort_keys=True)
+        if ("PhaseA.Platform/" in cache_text or "runtime/phase-a/" in cache_text or
+                "candidate-identity.v1.json" in cache_text):
+            effective_worker_cache = {
+                key: value for key, value in worker_cache.items()
+                if key not in {"v3", "v3-schema-repair"}
+            }
     started = time.perf_counter()
-    injected = bool(worker_cache and stage in worker_cache)
+    injected = bool(effective_worker_cache and stage in effective_worker_cache)
     repair_attempted = False
     raw: Mapping[str, Any] | None = None
     findings: list[str] = []
@@ -147,7 +158,7 @@ def normative_invoke_worker(
                 stage=stage,
                 payload=payload,
                 prompt=prompt,
-                worker_cache=worker_cache,
+                worker_cache=effective_worker_cache,
             )
             findings = _worker_schema_findings(stage, raw)
         except (ValueError, RuntimeError) as first_error:
@@ -174,7 +185,7 @@ def normative_invoke_worker(
                 stage=f"{stage}-schema-repair",
                 payload={"original_stage": stage, "input": payload, "validator_findings": findings},
                 prompt=repair_prompt,
-                worker_cache=worker_cache,
+                worker_cache=effective_worker_cache,
             )
             second_findings = _worker_schema_findings(stage, repaired)
             second_fingerprint = sc.sha256_value({
@@ -396,7 +407,10 @@ def _resolved_atomic_recall_worker(*, root, out_dir, payload, prompt, worker_cac
     identity = {"schema": "vdd.resolved-atomic-recall.v1", "stage": stage,
                 "input_sha256": sc.sha256_value(payload), "prompt_sha256": sc.sha256_value(prompt)}
     path = Path(out_dir) / ".compiler-work" / "resolved-atomic-recall" / (sc.sha256_value(identity).split(":")[-1] + ".json")
+    repair_path = path.with_name(path.stem + "-schema-repair" + path.suffix)
     cached = path.is_file()
+    selected_path = path
+    repair_required = False
     if cached:
         receipt = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(receipt, Mapping) or any(receipt.get(k) != v for k, v in identity.items()):
@@ -404,9 +418,39 @@ def _resolved_atomic_recall_worker(*, root, out_dir, payload, prompt, worker_cac
         raw = receipt.get("result")
         if receipt.get("result_sha256") != sc.sha256_value(raw):
             raise ValueError("resolved atomic recall result hash mismatch")
-    else:
-        raw = sc.invoke_worker(root=root, out_dir=out_dir, stage=stage, payload=payload,
-                               prompt=prompt, worker_cache=None)
+        # Keep the historical receipt, but never reuse a response which a
+        # newer deterministic V4 domain rule proves contradictory.  Route it
+        # through the normal one-shot schema-repair path below instead.
+        from semantic_worker_v4_domain_patch import _domain_findings
+        if not isinstance(raw, Mapping) or _worker_schema_findings(stage, raw) or _domain_findings(stage, payload, raw):
+            cached = False
+            repair_required = True
+            selected_path = repair_path
+            if repair_path.is_file():
+                receipt = json.loads(repair_path.read_text(encoding="utf-8"))
+                if not isinstance(receipt, Mapping) or any(receipt.get(k) != v for k, v in identity.items()):
+                    raise ValueError("resolved atomic recall repair identity mismatch")
+                raw = receipt.get("result")
+                if receipt.get("result_sha256") != sc.sha256_value(raw):
+                    raise ValueError("resolved atomic recall repair result hash mismatch")
+                cached = isinstance(raw, Mapping) and not _worker_schema_findings(stage, raw) and not _domain_findings(stage, payload, raw)
+    if not cached:
+        if repair_required:
+            raw = sc.invoke_worker(
+                root=root,
+                out_dir=out_dir,
+                stage=f"{stage}-schema-repair",
+                payload={
+                    "original_stage": stage,
+                    "input": payload,
+                    "validator_findings": ["resolved-atomic-recall:historical-contract-invalid"],
+                },
+                prompt=prompt + "\n\nReturn a corrected JSON object only; the historical V4 partition was contradictory.",
+                worker_cache=None,
+            )
+        else:
+            raw = sc.invoke_worker(root=root, out_dir=out_dir, stage=stage, payload=payload,
+                                   prompt=prompt, worker_cache=None)
     from semantic_worker_v4_domain_patch import _domain_findings
     if not isinstance(raw, Mapping):
         raise ValueError("resolved atomic recall result must be object")
@@ -414,7 +458,7 @@ def _resolved_atomic_recall_worker(*, root, out_dir, payload, prompt, worker_cac
     if findings:
         raise ValueError("resolved atomic recall contract invalid: " + ";".join(findings))
     if not cached:
-        sc.atomic_json(path, {**identity, "result": raw, "result_sha256": sc.sha256_value(raw), "authorizes": []})
+        sc.atomic_json(selected_path, {**identity, "result": raw, "result_sha256": sc.sha256_value(raw), "authorizes": []})
     return raw
 
 

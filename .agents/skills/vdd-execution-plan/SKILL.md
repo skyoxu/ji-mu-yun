@@ -49,6 +49,13 @@ py -3 scripts/vdd/compile_plan.py --requirements <requirements.md> --out-dir <ex
 
 For an existing failed compiler directory, add `--resume-from first-failed-stage`. A nonzero exit or any status other than `plan-ready` remains a VDD repair result; no caller may promote it. `--recommendation-only` performs no plan publication and never represents readiness.
 
+For an already reviewed plan whose only defect is the Quick Dev execution
+handoff, use `--repair-quick-dev-handoff-from <predecessor-dir>` with the
+unchanged requirements and a distinct empty successor `--out-dir` inside the
+same repair scope. The predecessor profile is retained. This mode preserves
+semantic scope and records V1/V4 reuse; it performs no model calls. Read
+[the planning guide](references/planning-operation.md) for its exact limits.
+
 For real-worker quality evaluation, `scripts/vdd/evaluate_real_semantic_quality.py`
 supervises the compiler with `--compile-timeout-seconds` (default 3600), distinct
 from the optional `--repair-timeout-seconds` override. It prints the progress
@@ -132,3 +139,9 @@ py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/sk
 
 
 For Skill maintenance also run `py -3 .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan` and its unit tests.
+
+An explicit `--runtime-red-intent <failure-intent-id>` on handoff repair binds
+a reviewed executable assertion to an expected-red role without changing its
+requirement category or existing diagnostic family. This is not automatic
+Governance conversion. See the planning guide and ADR-0041; approval decisions
+can never become runtime implementation authority through this option.

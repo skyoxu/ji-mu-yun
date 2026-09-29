@@ -9,6 +9,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from current_router import materialize_descriptor, successor_descriptor
+from regression_gate import run_regression_gate
 from runtime_evidence import create_json
 from stage_pipeline import execute_stage
 
@@ -110,3 +111,30 @@ def test_q6_failed_declared_regression_blocks_refactor_result(tmp_path: Path) ->
         raise AssertionError("failing Q6 regression command must block REFACTOR publication")
     assert not (run / "canonical-evidence" / "refactor" / "stage-result.v2.json").exists()
     assert not (run / "canonical-evidence" / "refactor" / "runtime-edges").exists()
+
+
+def test_fast_ship_skips_extra_declared_regressions_but_keeps_primary_truth_floor(tmp_path: Path) -> None:
+    primary = [sys.executable, "-m", "pytest", "tests/test_behavior.py", "-q"]
+    failing_extra = [sys.executable, "-c", "raise SystemExit(7)"]
+    bundle = _bundle([primary, failing_extra])
+    result = run_regression_gate(
+        workspace=tmp_path,
+        bundle=bundle,
+        slice_id="S1",
+        profile="fast-ship",
+        primary_argv=primary,
+        primary_receipt={
+            "exit_code": 0,
+            "timed_out": False,
+            "test_executions": 1,
+            "cases": 1,
+            "stdout_sha256": "sha256:" + "a" * 64,
+            "stderr_sha256": "sha256:" + "b" * 64,
+        },
+        timeout_seconds=30,
+        out=tmp_path / "q6.json",
+    )
+    assert result["status"] == "pass"
+    assert result["declared_command_count"] == 2
+    assert len(result["commands"]) == 1
+    assert result["commands"][0]["status"] == "covered-by-primary-refactor-selector"

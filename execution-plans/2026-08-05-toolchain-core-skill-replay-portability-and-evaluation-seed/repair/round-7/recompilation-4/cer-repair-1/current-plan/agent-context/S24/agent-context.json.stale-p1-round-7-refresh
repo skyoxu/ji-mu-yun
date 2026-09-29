@@ -1,0 +1,140 @@
+{
+  "acceptance_ids": [
+    "A-2696BD3A6ED5",
+    "A-29BE1B0FB4A9",
+    "A-62C9B0D66360",
+    "A-636B22AC4640",
+    "A-A57B912ACE03",
+    "A-BF5F9FBD0D16",
+    "A-C4D77DA15D1B",
+    "A-DC59C3BDE8B3",
+    "A-DF26D16C9F77",
+    "A-E106EE96480D",
+    "A-E23612FC9244"
+  ],
+  "allowed_paths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py",
+    "scripts/sc/config/skill-package-validator-capability.v1.json",
+    "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+    "scripts/sc/skill_package_replay.py",
+    "scripts/sc/tests/tc_d1_cer/test_s24.py",
+    "scripts/sc/tests/test_skill_package_replay.py"
+  ],
+  "contracts": [
+    "vdd.semantic-plan-bundle.v1",
+    "(A matrix execution receipt is rejected unless it identifies both its Matrix Case and immutable executed subject.) AND (A validator whose bytes differ from the capability digest is rejected by the Toolchain validation path.) AND (No aggregate containing infrastructure-failed matrix evidence can be accepted.) AND (Replay success artifact contains an independent snapshot verification record matching the bound snapshot identity.) AND (Replay success is accepted only when an independent Validator Capability verification artifact references the same replay result; missing, mismatched, or inferred proof fails.) AND (Success predicate is false whenever case authority differs from current authority; verdict must be non-success with mismatch evidence.) AND (The adversarial target case cannot contribute to a passing matrix result when it is observed as success.) AND (The focused mislabeled-evidence selector observes a nonzero replay-matrix result and an aggregate receipt with status \"fail\"; no accepted aggregate is emitted.) AND (The stale-input fixture is rejected as non-success by the Toolchain evaluator.) AND (同一固定输入在新鲜检出重放后，coverage result 与基线 coverage result 一致。) AND (同一固定输入在新鲜检出重放后，semantic verdict 与基线 semantic verdict 一致。)",
+    "Test-author entry: scripts/sc/tests/tc_d1_cer/test_s24.py. Create real tests for every assertion in this slice, using @pytest.mark.cer_assertion for exact assertion IDs. Read the actual production behavior and bound oracle. Never create unconditional RED, skip/xfail, empty cases or prewritten execution receipts. Missing markers are authoring work; only an actual probe decides present/missing."
+  ],
+  "forbidden_paths": [
+    "PhaseA.Platform",
+    "PhaseA.Platform/**",
+    "logs/phase-a-innernet",
+    "runtime/phase-a",
+    "runtime/phase-a/**"
+  ],
+  "obligation_ids": [
+    "O-04BDE4D05D87",
+    "O-6B7CC58F1CA6",
+    "O-802D030355E0",
+    "O-803F9A786E8B",
+    "O-80E6F7396DD4",
+    "O-829D8B75C2D7",
+    "O-A7FB094E51A8",
+    "O-B0C5B5034583",
+    "O-B1497C6F0849",
+    "O-F43128370517",
+    "O-F82AB4A3D86A"
+  ],
+  "requirement_ids": [
+    "FR-3",
+    "FR-7",
+    "FR-8",
+    "NFR-3",
+    "SM-2",
+    "SM-5"
+  ],
+  "selector_intents": [
+    "Bind an adversarial target case that exits successfully where a non-success result is required and require replay-matrix evaluation to fail.",
+    "Inject an infrastructure-failed matrix execution result into aggregate evaluation and require invalid non-accepted output.",
+    "Invoke replay-matrix with an isolated matrix fixture whose evidence label is deliberately mismatched from its bound case category; fail the guard if the aggregate does not reject that evidence.",
+    "Modify the test validator after capability digest creation and require the capability-validation invocation to fail for validator identity drift.",
+    "Omit or mutate Validator Capability verification while leaving the replay result successful; validation must reject the result.",
+    "Provide a case whose authority identifier differs from the current authority; success evaluation must return non-success.",
+    "Run the mapped cases against the unchanged real production owner. Required observable: Each structured matrix-case result binds case identifier, subject role, and immutable executed-subject identity. Required result: Each execution receipt identifies its Matrix Case and the immutable identity of the Stable or Candidate subject actually executed. Emit CER-A-DF26D16C9F77-BEHAVIOR only immediately before a genuine assertion failure demonstrating this unmet behavior. Do not emit it for setup/import/timeout/missing-marker failures, and do not force already-present behavior to fail.",
+    "Run the mapped cases against the unchanged real production owner. Required observable: The capability evaluation either records matching validator content identity or rejects with validator identity drift. Required result: The capability is accepted only when the independently recomputed validator digest equals the declared validator digest. Emit CER-A-C4D77DA15D1B-BEHAVIOR only immediately before a genuine assertion failure demonstrating this unmet behavior. Do not emit it for setup/import/timeout/missing-marker failures, and do not force already-present behavior to fail.",
+    "Run the matrix receipt validator with a missing or mismatched Matrix Case or executed-subject identity and require rejection.",
+    "Select a replay result whose success path omits or bypasses independent snapshot verification and assert rejection.",
+    "Use the stale validation-result fixture through the Toolchain evaluation selector; fail the guard if its stale binding can yield success.",
+    "使新鲜检出重放的 coverage result 与同一固定输入的基线结果不同。",
+    "使新鲜检出重放的 semantic verdict 与同一固定输入的基线 verdict 不同。"
+  ],
+  "slice_id": "S24",
+  "source_refs": [
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-3",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-7",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-8",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#NFR-3",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#SM-2",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#SM-5"
+  ],
+  "validation_commands": [
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/tc_d1_cer/test_s24.py"
+    ],
+    [
+      "py",
+      "-3",
+      "-B",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/test_skill_package_replay.py"
+    ],
+    [
+      "python",
+      "-m",
+      "pytest",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py",
+      "-q"
+    ],
+    [
+      "py",
+      "-3",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/test_skill_package_replay.py"
+    ],
+    [
+      "py",
+      "-3",
+      "-B",
+      "scripts/sc/skill_package_replay.py",
+      "replay-matrix",
+      "--matrix",
+      "scripts/sc/config/skill-package-validator-capability.v1.json"
+    ],
+    [
+      "python",
+      "scripts/sc/skill_package_replay.py",
+      "--help"
+    ],
+    [
+      "py",
+      "-3",
+      "-m",
+      "unittest",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py"
+    ],
+    [
+      "python",
+      "-m",
+      "pytest",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py",
+      "-q"
+    ]
+  ]
+}

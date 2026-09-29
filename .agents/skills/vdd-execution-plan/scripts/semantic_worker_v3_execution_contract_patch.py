@@ -188,6 +188,9 @@ def _findings(root: Path, stage: str, payload: Mapping[str, Any], value: Mapping
                 continue
             allowed_set = set(allowed)
             planned_set = set(planned)
+            for path_value in owners + allowed + snapshots + planned:
+                if path_value == "PhaseA.Platform" or path_value.startswith("PhaseA.Platform/"):
+                    findings.append(f"v3-contract:slice_hints[{index}]:phase-protected-path:{path_value}")
             existing_owner = False
             for owner in owners:
                 path = _safe_path(root, owner)

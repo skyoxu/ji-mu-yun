@@ -111,6 +111,19 @@ def _domain_findings(stage: str, payload: Mapping[str, Any], value: Mapping[str,
         unknown = sorted({str(item) for item in raw if isinstance(item, str)} - allowed_ids)
         if unknown:
             findings.append(f"{field}:unknown-frozen-id:" + ",".join(unknown))
+    supported = set(value.get("supported_obligation_ids") or [])
+    invented = set(value.get("invented_obligation_ids") or [])
+    overlap = sorted(supported & invented)
+    if overlap:
+        # The source-recall response is a partition, not two independent
+        # tag sets.  Retrying this exact worker response is safe only after a
+        # schema repair resolves every contradictory classification.
+        findings.append("supported-invented-overlap:" + ",".join(overlap))
+    missing = sorted(allowed_ids - (supported | invented))
+    if missing:
+        # ADR-0041: an incomplete classification cannot be reused as an
+        # independent source-recall judgment.
+        findings.append("obligation-partition-incomplete:" + ",".join(missing))
     gaps = value.get("source_gap_claims")
     if isinstance(gaps, list):
         for index, raw_gap in enumerate(gaps):
@@ -119,6 +132,74 @@ def _domain_findings(stage: str, payload: Mapping[str, Any], value: Mapping[str,
             source_ref = raw_gap.get("source_ref")
             if isinstance(source_ref, str) and source_ref not in allowed_refs:
                 findings.append(f"source_gap_claims[{index}]:unknown-frozen-source-ref:{source_ref}")
+    return findings
+
+
+def _merge_partition_completion(
+    payload: Mapping[str, Any],
+    original: Mapping[str, Any],
+    completion: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Join a missing-ID-only classification to an otherwise valid V4 result."""
+    ids, _ = _domains("v4-atomic-recall", payload)
+    original_supported = original.get("supported_obligation_ids")
+    original_invented = original.get("invented_obligation_ids")
+    completion_supported = completion.get("supported_obligation_ids")
+    completion_invented = completion.get("invented_obligation_ids")
+    if not all(isinstance(value, list) for value in (
+        original_supported, original_invented, completion_supported, completion_invented,
+    )):
+        raise ValueError("partition completion requires id arrays")
+    original_ids = set(original_supported) | set(original_invented)
+    missing = set(ids) - original_ids
+    completion_ids = set(completion_supported) | set(completion_invented)
+    if completion_ids != missing or set(completion_supported) & set(completion_invented):
+        raise ValueError("partition completion must classify exactly the missing frozen ids")
+    merged = {
+        "supported_obligation_ids": list(original_supported) + list(completion_supported),
+        "invented_obligation_ids": list(original_invented) + list(completion_invented),
+        "source_gap_claims": list(original.get("source_gap_claims") or []),
+    }
+    findings = _domain_findings("v4-atomic-recall", payload, merged)
+    if findings:
+        raise ValueError("partition completion produced invalid V4 result: " + "; ".join(findings))
+    return merged
+
+
+def _missing_partition_ids(payload: Mapping[str, Any], value: Mapping[str, Any]) -> list[str] | None:
+    """Return missing IDs only for an otherwise valid, incomplete partition."""
+    findings = _domain_findings("v4-atomic-recall", payload, value)
+    prefix = "obligation-partition-incomplete:"
+    if len(findings) != 1 or not findings[0].startswith(prefix):
+        return None
+    return [item for item in findings[0][len(prefix):].split(",") if item]
+
+
+def _completion_schema(ids: list[str]) -> dict[str, Any]:
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "supported_obligation_ids": _enum_array(ids),
+            "invented_obligation_ids": _enum_array(ids),
+        },
+        "required": ["supported_obligation_ids", "invented_obligation_ids"],
+    }
+
+
+def _completion_findings(ids: list[str], value: Mapping[str, Any]) -> list[str]:
+    supported = value.get("supported_obligation_ids")
+    invented = value.get("invented_obligation_ids")
+    if not isinstance(supported, list) or not isinstance(invented, list):
+        return ["partition-completion:id-arrays"]
+    actual = set(supported) | set(invented)
+    findings: list[str] = []
+    if actual != set(ids):
+        findings.append("partition-completion:wrong-id-domain")
+    if set(supported) & set(invented):
+        findings.append("partition-completion:overlap")
+    if len(supported) != len(set(supported)) or len(invented) != len(set(invented)):
+        findings.append("partition-completion:duplicates")
     return findings
 
 
@@ -148,13 +229,45 @@ def v4_transport_invoke_worker(
             worker_cache=worker_cache,
         )
 
+    is_partition_repair = stage.endswith("-partition-repair")
+    repair_ids = payload.get("missing_obligation_ids") if is_partition_repair else None
+    if is_partition_repair:
+        if not isinstance(repair_ids, list) or not repair_ids or not all(isinstance(item, str) and item for item in repair_ids):
+            raise ValueError("partition repair requires nonempty missing_obligation_ids")
+        repair_ids = sorted(set(repair_ids))
+
+    def validate(value: Mapping[str, Any]) -> list[str]:
+        if is_partition_repair:
+            return _completion_findings(repair_ids, value)
+        return _domain_findings(stage, payload, value)
+
+    def complete_if_needed(value: Mapping[str, Any]) -> Mapping[str, Any]:
+        if stage not in {"v4-atomic-recall", "v4-atomic-recall-schema-repair"}:
+            return value
+        semantic_payload = _semantic_payload(stage, payload)
+        missing = _missing_partition_ids(semantic_payload, value)
+        if missing is None:
+            return value
+        completion = v4_transport_invoke_worker(
+            root=root,
+            out_dir=out_dir,
+            stage="v4-atomic-recall-partition-repair",
+            payload={"input": semantic_payload, "missing_obligation_ids": missing},
+            prompt=(
+                "Classify exactly the supplied missing frozen obligation IDs as supported or invented. "
+                "Do not reassess source gaps and do not output any other IDs."
+            ),
+            worker_cache=worker_cache,
+        )
+        return _merge_partition_completion(semantic_payload, value, completion)
+
     cache_dir = out_dir / ".compiler-cache"
     cache_path = cache_dir / sc._worker_cache_key(stage, payload)
     if cache_path.is_file():
         value = json.loads(cache_path.read_text(encoding="utf-8"))
         if not isinstance(value, Mapping):
             raise ValueError("worker cache is malformed")
-        findings = _domain_findings(stage, payload, value)
+        findings = validate(value)
         if findings:
             raise ValueError("V4 worker output violates frozen id domain: " + "; ".join(findings))
         return value
@@ -162,7 +275,8 @@ def v4_transport_invoke_worker(
         value = worker_cache[stage]
         if not isinstance(value, Mapping):
             raise ValueError(f"injected worker cache {stage} must be object")
-        findings = _domain_findings(stage, payload, value)
+        value = complete_if_needed(value)
+        findings = validate(value)
         if findings:
             raise ValueError("V4 worker output violates frozen id domain: " + "; ".join(findings))
         sc.atomic_json(cache_path, value)
@@ -185,13 +299,20 @@ def v4_transport_invoke_worker(
         output.unlink()
 
     ids, refs = _domains(stage, payload)
-    frozen_contract = (
-        "\n\nFROZEN V4 ID DOMAIN: supported_obligation_ids and invented_obligation_ids may contain ONLY these exact ids: "
-        + json.dumps(ids, ensure_ascii=False)
-        + ". Do not create, rewrite, abbreviate, duplicate, or infer identifier tokens. source_gap_claims.source_ref may contain ONLY: "
-        + json.dumps(refs, ensure_ascii=False)
-        + ". An empty source_gap_claims array is valid when no independently observable source behavior is missing."
-    )
+    if is_partition_repair:
+        frozen_contract = (
+            "\n\nFROZEN V4 PARTITION REPAIR: supported_obligation_ids and invented_obligation_ids may contain ONLY these exact missing ids: "
+            + json.dumps(repair_ids, ensure_ascii=False)
+            + ". Classify each exactly once. Do not output source_gap_claims or any other ID."
+        )
+    else:
+        frozen_contract = (
+            "\n\nFROZEN V4 ID DOMAIN: supported_obligation_ids and invented_obligation_ids may contain ONLY these exact ids: "
+            + json.dumps(ids, ensure_ascii=False)
+            + ". Do not create, rewrite, abbreviate, duplicate, or infer identifier tokens. source_gap_claims.source_ref may contain ONLY: "
+            + json.dumps(refs, ensure_ascii=False)
+            + ". Classify every frozen obligation exactly once as supported or invented. An empty source_gap_claims array is valid when no independently observable source behavior is missing."
+        )
     full_prompt = (
         "You are a read-only semantic compiler worker. Do not modify files. "
         "Return JSON only. Do not invent requirements or runtime evidence.\n\n"
@@ -204,7 +325,7 @@ def v4_transport_invoke_worker(
     is_repair = stage.endswith("-schema-repair")
     timeout_sec = transport._REPAIR_TIMEOUT_SECONDS if is_repair else transport._NORMAL_TIMEOUT_SECONDS
     reasoning = "medium" if is_repair else "high"
-    schema = _output_schema(stage, payload)
+    schema = _completion_schema(repair_ids) if is_partition_repair else _output_schema(stage, payload)
     extra_args: list[str] = []
     if backend == "codex-cli":
         extra_args = ["--output-schema", str(_schema_path(out_dir, stage, schema))]
@@ -230,7 +351,8 @@ def v4_transport_invoke_worker(
         raise RuntimeError(f"semantic worker {stage} failed: {transport._bounded_trace(trace)}")
 
     value = sc._parse_json_output(output.read_text(encoding="utf-8"))
-    findings = _domain_findings(stage, payload, value)
+    value = complete_if_needed(value)
+    findings = validate(value)
     if findings:
         raise ValueError("V4 worker output violates frozen id domain: " + "; ".join(findings))
     sc.atomic_json(cache_path, value)

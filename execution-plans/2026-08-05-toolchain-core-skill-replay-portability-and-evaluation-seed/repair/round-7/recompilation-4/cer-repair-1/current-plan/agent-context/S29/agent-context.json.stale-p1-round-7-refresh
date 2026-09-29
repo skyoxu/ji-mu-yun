@@ -1,0 +1,52 @@
+{
+  "acceptance_ids": [
+    "A-9F0E39D422A0"
+  ],
+  "allowed_paths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py",
+    "scripts/sc/_semantic_gate_all_runtime.py",
+    "scripts/sc/skill_package_replay.py",
+    "scripts/sc/tests/tc_d1_cer/test_s29.py"
+  ],
+  "contracts": [
+    "vdd.semantic-plan-bundle.v1",
+    "The validator cannot emit success unless a dedicated candidate-external-trust check passes for the same candidate identity and is independently observable in the result.",
+    "Test-author entry: scripts/sc/tests/tc_d1_cer/test_s29.py. Create real tests for every assertion in this slice, using @pytest.mark.cer_assertion for exact assertion IDs. Read the actual production behavior and bound oracle. Never create unconditional RED, skip/xfail, empty cases or prewritten execution receipts. Missing markers are authoring work; only an actual probe decides present/missing."
+  ],
+  "forbidden_paths": [
+    "PhaseA.Platform",
+    "runtime/phase-a"
+  ],
+  "obligation_ids": [
+    "O-42A5A51ADC81"
+  ],
+  "requirement_ids": [
+    "FR-3"
+  ],
+  "selector_intents": [
+    "Run the mapped cases against the unchanged real production owner. Required observable: The validator output contains a dedicated candidate-external-trust assertion and evidence record whose candidate identity matches the evaluated package. Required result: An independent candidate-external-trust check executes and records evidence tied to the candidate identity; validation passes only when that check succeeds independently. Emit CER-A-9F0E39D422A0-BEHAVIOR only immediately before a genuine assertion failure demonstrating this unmet behavior. Do not emit it for setup/import/timeout/missing-marker failures, and do not force already-present behavior to fail.",
+    "Select a validator result containing source, content, and compatibility checks but no dedicated candidate-external-trust assertion; validation must fail for omitted independent trust verification."
+  ],
+  "slice_id": "S29",
+  "source_refs": [
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-3"
+  ],
+  "validation_commands": [
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/tc_d1_cer/test_s29.py"
+    ],
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/test_skill_package_replay.py"
+    ],
+    [
+      "python",
+      "scripts/sc/_semantic_gate_all_runtime.py"
+    ]
+  ]
+}

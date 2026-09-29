@@ -31,6 +31,29 @@ def test_v1_and_v3_have_native_structured_output_schemas() -> None:
     assert "semantic-contract-gap" in family["enum"]
 
 
+def test_transport_retry_budget_is_three_attempts() -> None:
+    assert transport._MAX_TRANSPORT_ATTEMPTS == 3
+
+
+def test_codex_worker_isolation_disables_each_configured_mcp_without_changing_provider(
+    tmp_path: Path, monkeypatch
+) -> None:
+    config = tmp_path / "config.toml"
+    config.write_text(
+        "[mcp_servers.context7]\ncommand = 'context7'\n"
+        "[mcp_servers.\"sequential-thinking\"]\ncommand = 'thinking'\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(transport, "_codex_config_path", lambda: config)
+
+    args = transport.codex_worker_isolation_args()
+
+    assert args[:3] == ["-c", "features.skills=false", "--ignore-rules"]
+    assert "mcp_servers.context7.enabled=false" in args
+    assert "mcp_servers.sequential-thinking.enabled=false" in args
+    assert "--ignore-user-config" not in args
+
+
 def test_schema_repair_transport_uses_bounded_longer_timeout_and_medium_reasoning(tmp_path: Path, monkeypatch) -> None:
     calls: list[dict] = []
 
@@ -48,7 +71,9 @@ def test_schema_repair_transport_uses_bounded_longer_timeout_and_medium_reasonin
     )
     monkeypatch.setitem(sys.modules, "_llm_backend", fake)
 
-    stale = tmp_path / "plan" / ".compiler-work" / "v3-schema-repair-last-message.json"
+    payload = {"original_stage": "v3", "input": {"obligations": []}, "validator_findings": ["x"]}
+    output_name = transport.sc._worker_cache_key("v3-schema-repair", payload)[:-5] + "-last-message.json"
+    stale = tmp_path / "plan" / ".compiler-work" / output_name
     stale.parent.mkdir(parents=True, exist_ok=True)
     stale.write_text("stale", encoding="utf-8")
 
@@ -56,14 +81,16 @@ def test_schema_repair_transport_uses_bounded_longer_timeout_and_medium_reasonin
         root=tmp_path,
         out_dir=tmp_path / "plan",
         stage="v3-schema-repair",
-        payload={"original_stage": "v3", "input": {"obligations": []}, "validator_findings": ["x"]},
+        payload=payload,
         prompt="Repair the V3 JSON object.",
     )
     assert set(result) == {"acceptances", "failure_intents", "slice_hints"}
     assert len(calls) == 1
+    assert list(stale.parent.glob(stale.stem + ".prior-*.json")), "prior diagnostic must be retained"
     call = calls[0]
     assert call["timeout_sec"] == 300
     assert 'model_reasoning_effort="medium"' in call["codex_configs"]
+    assert "features.skills=false" in call["codex_extra_args"]
     assert "--output-schema" in call["codex_extra_args"]
     schema_path = Path(call["codex_extra_args"][call["codex_extra_args"].index("--output-schema") + 1])
     assert schema_path.is_file()
@@ -75,7 +102,7 @@ def test_old_codex_without_output_schema_falls_back_only_at_transport_layer(tmp_
     def run_llm_exec(**kwargs):
         extra = list(kwargs.get("codex_extra_args") or [])
         calls.append(extra)
-        if extra:
+        if "--output-schema" in extra:
             return 2, "error: unexpected argument '--output-schema'", ["codex", "exec"]
         output = kwargs["output_last_message"]
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -98,4 +125,5 @@ def test_old_codex_without_output_schema_falls_back_only_at_transport_layer(tmp_
     assert result["obligations"][0]["subject"] == "x"
     assert len(calls) == 2
     assert "--output-schema" in calls[0]
-    assert calls[1] == []
+    assert "--output-schema" not in calls[1]
+    assert "features.skills=false" in calls[1]

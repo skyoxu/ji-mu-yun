@@ -32,10 +32,10 @@ use the existing explicit source/scope decision path.
 Select `standard`, `resumable`, or `self-hosted` entirely from the profile table
 before model routing. Then pass that already-selected profile to
 `scripts/model_routing.py`; do not add another VDD complexity classifier.
-All three ordinary profiles currently request Sol/high. Only a closed typed
-complex-recovery trigger may request Sol/max, and that route remains blocked
-until an exact backend/model/effort/sandbox capability probe and its shadow
-predicate both pass. Free-form recovery reasons fail closed.
+All three ordinary profiles and the typed complex-recovery route currently
+request `gpt-6-sol/high`. Complex recovery remains blocked until its exact
+backend/model/effort/sandbox capability probe and shadow predicate both pass.
+Free-form recovery reasons fail closed.
 
 The emitted route decision is hash-bound and non-authorizing. The shared
 workflow launcher alone may start a child process. In `observe_only`, continue
@@ -44,8 +44,74 @@ nor replaces that session's model.
 
 The canonical policy owns VDD's independent consumer enablement. A disabled
 VDD consumer emits `disabled` without changing Quick Dev or Refactor
-Acceptance. Sol/max recovery evidence is loaded only from policy-bound
+Acceptance. Sol/high recovery evidence is loaded only from policy-bound
 path/hash references under the controlled capability-evidence root. Callers
 cannot supply or synthesize a capability-proof dictionary; activation requires
 the bound producer receipt, its successful process result, and representative
 shadow execution receipts to replay against the requested route identity.
+
+## Bounded V3 cache repair
+
+For an unchanged frozen input, resume the original failed output directory with the canonical compiler's `--resume-from first-failed-stage`. Keep its disk caches; `--worker-cache` is explicit fixture injection and is not a resume-cache selector. An invalid inline V3 chunk is checked per obligation so valid peer contracts are retained and only invalid contracts are requested again. Invalid cache bytes remain in sidecars. Missing-selector diagnostics guide the worker but never create path authority or relax execution-contract validation. A changed source identity still requires its affected stages to be revalidated; there is no V3-only bypass.
+
+
+## Explicit V3 candidate correction
+
+When V4 finds a wrong executable binding that cannot be repaired as Acceptance
+wording, the canonical compiler accepts `--v3-contract-repair <json>` for a
+failed or unpublished output directory. This is reviewed authoring input, not
+a worker result or readiness receipt. The input contains
+`schema: vdd.v3-candidate-repair.v1`, the exact requirements byte hash in
+`requirements_sha256`, `authorizes: []`, and `obligation_contracts` using the
+existing V3 inline contract shape. Each selected ID retains its frozen source
+references; supply its complete Acceptance, failure intents and slice hint.
+
+Resume the original failed directory and retain its caches. Only named
+contracts are replaced after cache replay; source extraction and unrelated
+contracts are unchanged. The compiler recalculates Acceptance/RED identities,
+checks normal V3 execution contracts, and requires independent V4 and all
+downstream gates before publication. Missing final targets or unconsumed
+corrections fail closed. Projection sidecars preserve the exact correction
+input without rewriting old worker output. Do not combine this option with
+worker fixtures, companions, recommendation-only or execution-only handoff
+repair. It does not extend repair budgets or permit skipping a failed V4.
+
+## Execution-only handoff repair
+
+Use the public compiler's `--repair-quick-dev-handoff-from` only for a
+hash-bound plan-ready predecessor with valid semantic alignment and exact
+atomic recall. Keep the original requirements path and choose a distinct empty
+successor under the same repair scope. Do not combine this with worker caches,
+resume, companions, V1 reuse overrides or V4 repair overrides.
+
+The mode retains obligations, oracles, assertions, slice membership, production
+owners and terminal predicates. It declares dedicated pytest authoring entries,
+separates frozen tests from production writes and adds missing expected-red
+roles only for eligible executable behaviors. It records every original command
+and its retained regression or bounded-test oracle replacement. Quick Dev must
+author those real tests; VDD creates no test placeholders or execution evidence.
+
+The successor report explicitly records reused V1/V4 checks and the exact
+unchanged semantic projection. A stale source byte hash can be rebound only
+when the entire current text equals all frozen source entries; changed source
+meaning or dropped text requires ordinary recompilation. New deterministic
+source, semantic preflight, exact cover, feasibility and handoff checks must
+pass. The predecessor, caches, prior failures and C3 approvals stay unchanged.
+
+Publication and current consumption reject production/snapshot overlap, missing
+primary authorable pytest entry, and missing RED roles for eligible behavior.
+A constraints/governance failure still blocks; never manufacture expected RED
+just to keep the implementation loop running.
+
+### Slice-local runtime-role correction
+
+If a real machine assertion was excluded only because its requirement is
+categorized Governance or its diagnostic family is non-RED, first review the
+actual production entry and bound acceptance oracle. Then explicitly select
+its existing failure intent using `--runtime-red-intent` together with
+`--repair-quick-dev-handoff-from`. This variant appends a separate expected-red
+intent with the same runtime marker, preserves the original diagnosis and
+changes only selected slice contexts. It does not re-author other selectors
+or rerun semantic workers. Never use it for a missing human approval, Trust
+Approval, Consumer exception, setup failure or invalid execution evidence.
+Only fresh controlled probe/RED case evidence can authorize implementation.

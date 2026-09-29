@@ -30,6 +30,22 @@ _CONTENT_IDENTITY_KEYS = {
     "snapshot_sha256",
     "error_codes",
 }
+_RESULT_DETERMINING_INPUT_CATEGORIES = {
+    "git_baseline",
+    "skill_input_v2_selection",
+    "skill_input_v2_content",
+    "code",
+    "fixtures",
+    "contracts",
+    "consumers",
+    "tests",
+    "targets",
+    "validators",
+    "dependencies",
+    "sources",
+    "evidence",
+    "normalization_policy",
+}
 
 
 def _sha256(data: bytes) -> str:
@@ -174,15 +190,28 @@ def current_git_fingerprint(*, root: Path | None = None) -> dict[str, Any]:
         "untracked_manifest_sha256": _canonical_hash(untracked_entries) if rc_untracked == 0 and not untracked_errors else "",
         "untracked_file_count": len(untracked_entries),
     }
+    result_determining_inputs = {
+        category: {
+            "immutable_identity": _canonical_hash(
+                {"category": category, "snapshot_inputs": identity_inputs}
+            )
+        }
+        for category in sorted(_RESULT_DETERMINING_INPUT_CATEGORIES)
+    }
     complete = not errors
+    snapshot_inputs = {
+        **identity_inputs,
+        "result_determining_inputs": result_determining_inputs,
+    }
     return {
         "schema_version": GIT_FINGERPRINT_SCHEMA,
         "head": head,
         "status_short": status_short,
+        "result_determining_inputs": result_determining_inputs,
         "content_identity": {
             **identity_inputs,
             "complete": complete,
-            "snapshot_sha256": _canonical_hash(identity_inputs) if complete else "",
+            "snapshot_sha256": _canonical_hash(snapshot_inputs) if complete else "",
             "error_codes": sorted(set(errors)),
         },
     }
@@ -191,7 +220,13 @@ def current_git_fingerprint(*, root: Path | None = None) -> dict[str, Any]:
 def has_complete_content_identity(value: dict[str, Any] | None) -> bool:
     payload = value if isinstance(value, dict) else {}
     identity = payload.get("content_identity") if isinstance(payload.get("content_identity"), dict) else {}
-    if set(payload) != {"schema_version", "head", "status_short", "content_identity"}:
+    if set(payload) != {
+        "schema_version",
+        "head",
+        "status_short",
+        "result_determining_inputs",
+        "content_identity",
+    }:
         return False
     if set(identity) != _CONTENT_IDENTITY_KEYS:
         return False
@@ -204,6 +239,17 @@ def has_complete_content_identity(value: dict[str, Any] | None) -> bool:
     if not isinstance(status_short, list) or not all(isinstance(item, str) and item.strip() for item in status_short):
         return False
     if identity.get("head") != head or identity.get("status_short") != status_short:
+        return False
+    result_inputs = payload.get("result_determining_inputs")
+    if not isinstance(result_inputs, dict) or set(result_inputs) != _RESULT_DETERMINING_INPUT_CATEGORIES:
+        return False
+    if any(
+        not isinstance(entry, dict)
+        or set(entry) != {"immutable_identity"}
+        or not isinstance(entry.get("immutable_identity"), str)
+        or _SHA256_RE.fullmatch(entry["immutable_identity"]) is None
+        for entry in result_inputs.values()
+    ):
         return False
     for key in (
         "tracked_worktree_diff_sha256",
@@ -220,12 +266,23 @@ def has_complete_content_identity(value: dict[str, Any] | None) -> bool:
     if identity.get("complete") is not True or identity.get("error_codes") != []:
         return False
     identity_inputs = {key: identity[key] for key in _CONTENT_IDENTITY_KEYS - {"complete", "snapshot_sha256", "error_codes"}}
-    return identity.get("snapshot_sha256") == _canonical_hash(identity_inputs)
+    if any(
+        entry["immutable_identity"]
+        != _canonical_hash({"category": category, "snapshot_inputs": identity_inputs})
+        for category, entry in result_inputs.items()
+    ):
+        return False
+    snapshot_inputs = {**identity_inputs, "result_determining_inputs": result_inputs}
+    return identity.get("snapshot_sha256") == _canonical_hash(snapshot_inputs)
 
 
 def uses_versioned_content_identity(value: dict[str, Any] | None) -> bool:
     payload = value if isinstance(value, dict) else {}
-    return "schema_version" in payload or "content_identity" in payload
+    return (
+        "schema_version" in payload
+        or "content_identity" in payload
+        or "result_determining_inputs" in payload
+    )
 
 
 def same_head_and_status(previous: dict[str, Any] | None, current: dict[str, Any] | None) -> bool:

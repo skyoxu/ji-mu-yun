@@ -1,0 +1,36 @@
+{
+  "schema_version": "skill-input-request.v2",
+  "plan_id": "08-05-s8-authority-repair",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "policy_revision": "s8-authority-v2-repair-v1",
+  "storage": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/s8-authority-v2-repair/skill-input-v2/repair",
+  "sources": [
+    {
+      "role": "implementation_input",
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/s8-authority-v2-repair/input/target-plan.json",
+      "module": "target-plan",
+      "resource_set": "s8-authority-repair",
+      "authority": "maintainer-request",
+      "sha256": "sha256:bf4b59311f8ae01127fa6cabd1b577dd0b945d0bb5257ea9ec239df049f61ecb"
+    },
+    {
+      "role": "normative_source",
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/s8-authority-v2-repair/input/repair-finding.md",
+      "module": "repair-finding",
+      "resource_set": "s8-authority-repair",
+      "authority": "maintainer-request",
+      "sha256": "sha256:fc3a5b76d25c4fb5883a2862812e254d15794c97667938a0922cbc20e258f666"
+    }
+  ],
+  "inputs": {
+    "target_plan": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/s8-authority-v2-repair/input"],
+    "repair_finding": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/s8-authority-v2-repair/input/repair-finding.md"]
+  },
+  "bindings": {
+    "contract": {"path": ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json", "sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9"},
+    "registry": {"path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json", "sha256": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939"},
+    "authority": {"path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/s8-authority-v2-repair/skill-input-authority.v1.json", "sha256": "sha256:6d8baecc11dfee2793d42cfb52638904aa22a119330877382c97c8ddc403a6d2"},
+    "knowledge_freeze": {"path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/s8-authority-v2-repair/skill-input-freeze.v2.json", "sha256": "sha256:abe69ed6e3a907ef9cc50bff7e58fb88b50dfce0ef0eac067ca1de4a72a02175"}
+  }
+}

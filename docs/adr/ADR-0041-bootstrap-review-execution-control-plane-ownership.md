@@ -246,3 +246,87 @@ Refactor checks reentry before worker invocation. Historical results without
 these bindings are not silently upgraded. This decision is limited to 8-17
 reentry, stop-loss wiring and CER-compatible recovery fixtures; 8-13 advanced
 sharding and CH456 live acceptance are outside scope.
+
+
+## 2026-09-19: reviewed-plan execution handoff repair
+
+The canonical compiler may repair only the execution bindings of an existing
+hash-bound, independently reviewed CER plan without rerunning semantic workers.
+The public `--repair-quick-dev-handoff-from` mode publishes a distinct successor;
+it does not overwrite the predecessor or claim that V1/V4 ran again. The repair
+report binds the predecessor, reused reviews and unchanged semantic projection.
+Obligations, acceptance Given/When/Then/oracles/assertions, slice membership,
+production owners, terminal predicates and existing failure intents are retained.
+Automatic handoff repair selects only executable non-Governance behavior/quality
+for a new test expected-red role. Subject rejection required by an oracle is a passing test; infrastructure
+faults and governance guards never acquire implementation authority.
+
+Dedicated planned test entries are authored by Quick Dev. Production owners
+remain candidate-bound but cannot also be frozen execution snapshots. Explicit
+command targets outrank prose references to fixtures. Existing test regressions
+are retained with proper argv/test-runner syntax; raw diagnostic and negative
+validator invocations become explicit bounded-fixture oracle responsibilities
+of the bound test, not zero-exit commands or independent behavior proof.
+
+A source byte-identity correction is permitted only if the entire current UTF-8
+source text equals the ordered frozen source entries after universal newline
+and outer-whitespace normalization. Every affected old/new hash is recorded;
+changed text, omitted preambles or new execution metadata require ordinary
+semantic recompilation. Source files and historical records remain immutable.
+
+Normal publication, completed-plan resume, and current Quick Dev validation
+reject incompatible handoffs. The deterministic gates rerun before publication.
+No test execution, present/missing disposition, implementation completion, C3
+approval, or Acceptance authority is created; `authorizes` remains empty.
+
+
+### Explicit runtime RED role for a governance-related machine check
+
+Requirement category and observed test outcome are separate. A Governance
+requirement can include an executable independent-verification assertion.
+After reviewing that concrete machine oracle, the maintainer-directed repair
+may explicitly select its existing failure intent with `--runtime-red-intent`
+under the canonical handoff repair mode. This appends an expected-red role
+using the existing failure ID and preserves the original diagnostic intent.
+It changes only the bound slices and their coverage projections, preserving
+all other slice contexts. It does not automatically convert governance or
+constraint families. The current CER judge still requires a real case-bound
+failing AssertionError after successful setup; a marker alone is insufficient.
+Human authorization, substitute Trust Approval and Consumer exception decisions
+remain outside this runtime role, regardless of the requirement category.
+
+For 08-05 S1, `FI-6AED86AC07D0` binds a unit-level check of candidate-external
+trust in `candidate_workspace.py`. Its unchanged oracle requires independent
+verification instead of accepting the candidate declaration. Testing that
+behavior is implementable; granting trust approval is not. The original
+`target-binding-failure` remains diagnostic intent, and the new role binds
+`UNVERIFIED-CANDIDATE-EXTERNAL-TRUST-REJECTED` as a test assertion failure.
+
+
+### Q4 requires actual production progress (2026-09-19)
+
+An implementation worker entered after clean expected RED must produce a
+content change under a declared production owner. A zero exit, prose claim,
+non-production-only change or edit restored to its original bytes is not
+implementation progress. The worker adapter returns task-implementation-failure
+with reason no-production-change; the independent Q4 finish gate enforces the
+same rule using resolver-derived changes. Failed Q4 cannot publish a GREEN
+descriptor or request run-green, and the public CLI returns a nonzero exit.
+
+This is a necessary progress gate, not proof that a nonempty patch is correct.
+Real GREEN and downstream gates remain required. A no-op REFACTOR after valid
+GREEN remains legal. Historical attempts are immutable; repeated failures are
+not retried until a relevant input or control-plane defect is repaired.
+
+### Bounded V3 Candidate Correction (2026-09-20)
+
+An explicit canonical-compiler input may correct named V3 candidate contracts
+when independent V4 has exposed a wrong executable binding. The input is bound
+to unchanged requirements bytes, retains exact source references, and has an
+empty authorization set. It is authoring input, never a worker result, review
+judgment or plan-ready receipt. Unselected contracts and historical caches are
+retained. Normal deterministic identity construction, V3 execution validation,
+independent V4, coverage, slicing and final publication gates remain required.
+The correction cannot reuse a completed plan or increase the repair budget.
+Runtime expected-RED is limited to an executable assertion; C3 approvals are
+not supplied or inferred by a candidate correction.

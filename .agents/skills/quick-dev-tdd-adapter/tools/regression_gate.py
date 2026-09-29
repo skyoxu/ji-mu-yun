@@ -34,8 +34,12 @@ def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,pr
     declared=[list(cmd) for cmd in commands]
     if required and context is None:
         raise ValueError("Q6 standard/self-hosted profile requires agent-context regression projection")
+    # fast-ship keeps the primary selector truth floor but explicitly omits
+    # additional agent-context regression commands.  Standard/self-hosted
+    # retain the complete declared command set.
+    commands_to_run = declared if required else [argv for argv in declared if argv == primary]
     records=[]
-    for argv in declared:
+    for argv in commands_to_run:
         if argv==primary:
             executions=primary_receipt.get("test_executions")
             cases=primary_receipt.get("cases")

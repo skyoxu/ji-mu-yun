@@ -34,6 +34,8 @@ RUNTIME_FIELDS = {
     "exit_code", "timed_out", "process_attempts", "test_executions", "cases",
     "verification_outcome", "actual_stage_outcome", "predicate_result",
 }
+_v1_reuse_predecessor_text_hashes: dict[str, str] = {}
+_v1_reuse_predecessor_plan: dict[str, Any] | None = None
 
 
 def repository_root(start: Path) -> Path:
@@ -118,6 +120,21 @@ def _sections(text: str) -> list[tuple[str, str, int]]:
     return result
 
 
+_EXECUTION_CONTEXT_START = "<!-- selector-repair-binding-start -->"
+_EXECUTION_CONTEXT_END = "<!-- selector-repair-binding-end -->"
+
+
+def _semantic_requirement_text(source_text: str) -> str:
+    """Exclude plan-local V3 authoring metadata from V1/V4 requirement meaning."""
+    before, marker, remainder = source_text.partition(_EXECUTION_CONTEXT_START)
+    if not marker:
+        return source_text
+    _, end, after = remainder.partition(_EXECUTION_CONTEXT_END)
+    if not end:
+        raise ValueError("unterminated selector-repair execution context")
+    return (before.rstrip() + ("\n" + after.lstrip() if after.strip() else "")).strip()
+
+
 def build_source_index(root: Path, requirements: Path, companions: Sequence[Path] = ()) -> dict[str, Any]:
     paths = [requirements, *companions]
     entries: list[dict[str, Any]] = []
@@ -136,14 +153,18 @@ def build_source_index(root: Path, requirements: Path, companions: Sequence[Path
                 raise ValueError(f"duplicate source anchor: {source_ref}")
             seen.add(source_ref)
             order += 1
+            semantic_text = _semantic_requirement_text(source_text)
+            if not semantic_text:
+                raise ValueError(f"requirement {req_id} has no semantic text outside execution context")
             entries.append({
                 "requirement_id": req_id,
                 "repository_relative_source_path": relative,
                 "anchor": req_id,
                 "source_ref": source_ref,
-                "source_text": source_text,
+                "source_text": semantic_text,
+                "execution_context_text": source_text,
                 "source_sha256": source_hash,
-                "text_sha256": sha256_bytes(source_text.encode("utf-8")),
+                "text_sha256": sha256_bytes(semantic_text.encode("utf-8")),
                 "source_order": order,
                 "line": line_no,
             })
@@ -196,6 +217,261 @@ def _worker_cache_key(stage: str, payload: Any) -> str:
     return f"{stage}-{sha256_value(payload)[7:31]}.json"
 
 
+def configure_v1_reuse_predecessor_text_hashes(values: Mapping[str, str]) -> None:
+    """Configure explicitly verified predecessor text identities for V1 cache reuse."""
+    global _v1_reuse_predecessor_text_hashes
+    if not all(isinstance(ref, str) and isinstance(digest, str) for ref, digest in values.items()):
+        raise ValueError("V1 reuse predecessor identities are invalid")
+    _v1_reuse_predecessor_text_hashes = dict(values)
+
+
+def configure_v1_reuse_predecessor_plan(plan_dir: Path) -> None:
+    """Load one explicitly selected, independently successful V1 predecessor.
+
+    Raw worker caches are an optimization only: older versions did not bind every
+    cache filename to the complete source entry.  A published plan-ready bundle
+    plus its successful V4 recall result is instead a durable semantic witness.
+    Keep this selection explicit; scanning neighbouring repair directories would
+    turn incidental history into authority.
+    """
+    global _v1_reuse_predecessor_plan
+    required = {
+        "state": plan_dir / "compiler-state.v1.json",
+        "recall": plan_dir / "atomic-recall-alignment.v1.json",
+        "source": plan_dir / "source-index.v1.json",
+        "obligations": plan_dir / "obligations.v1.json",
+    }
+    try:
+        values = {
+            name: json.loads(path.read_text(encoding="utf-8"))
+            for name, path in required.items()
+        }
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError("V1 reuse predecessor bundle is unreadable") from exc
+    if not all(isinstance(values[name], Mapping) for name in ("state", "recall", "source")) or not isinstance(values["obligations"], list):
+        raise ValueError("V1 reuse predecessor bundle is malformed")
+    if values["state"].get("state") != "plan-ready":
+        raise ValueError("V1 reuse predecessor is not plan-ready")
+    if values["recall"].get("valid") is not True:
+        raise ValueError("V1 reuse predecessor lacks valid atomic recall")
+    entries = values["source"].get("entries")
+    obligations = values["obligations"]
+    if not isinstance(entries, list) or not entries or not isinstance(obligations, list) or not obligations:
+        raise ValueError("V1 reuse predecessor is incomplete")
+    by_requirement: dict[str, Mapping[str, Any]] = {}
+    for entry in entries:
+        if not isinstance(entry, Mapping):
+            raise ValueError("V1 reuse predecessor source entry is malformed")
+        requirement_id = entry.get("requirement_id")
+        source_ref = entry.get("source_ref")
+        digest = entry.get("text_sha256")
+        if (not isinstance(requirement_id, str) or requirement_id in by_requirement
+                or not isinstance(source_ref, str) or not isinstance(digest, str)):
+            raise ValueError("V1 reuse predecessor source identity is invalid")
+        by_requirement[requirement_id] = entry
+    active_ids = {
+        item.get("obligation_id") for item in obligations
+        if isinstance(item, Mapping) and item.get("status") == "active"
+    }
+    supported = values["recall"].get("worker", {}).get("supported_obligation_ids")
+    if (not active_ids or not all(isinstance(item, str) for item in active_ids)
+            or not isinstance(supported, list) or not active_ids.issubset(set(supported))):
+        raise ValueError("V1 reuse predecessor recall does not support every active obligation")
+    for obligation in obligations:
+        if not isinstance(obligation, Mapping):
+            raise ValueError("V1 reuse predecessor obligation is malformed")
+        refs = obligation.get("source_refs")
+        if not isinstance(refs, list) or len(refs) != 1 or refs[0] not in {
+            entry["source_ref"] for entry in by_requirement.values()
+        }:
+            raise ValueError("V1 reuse predecessor obligation source binding is invalid")
+    _v1_reuse_predecessor_plan = {
+        "entries": by_requirement,
+        "obligations": [dict(item) for item in obligations],
+    }
+
+
+def _reusable_predecessor_obligations(source_index: Mapping[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    """Rebind verified predecessor obligations by unchanged semantic anchor.
+
+    Recompute every current obligation ID after changing its source reference and
+    translate only dependencies whose old IDs are also reused.  An unresolved
+    cross-anchor dependency fails closed to the V1 worker for that anchor.
+    """
+    if _v1_reuse_predecessor_plan is None:
+        return {}
+    candidates: dict[str, tuple[Mapping[str, Any], list[Mapping[str, Any]], set[str]]] = {}
+    old_to_new: dict[str, str] = {}
+    predecessor_entries = _v1_reuse_predecessor_plan["entries"]
+    predecessor_obligations = _v1_reuse_predecessor_plan["obligations"]
+    for entry in source_index.get("entries", []):
+        if not isinstance(entry, Mapping):
+            continue
+        requirement_id = entry.get("requirement_id")
+        prior = predecessor_entries.get(requirement_id)
+        if not isinstance(prior, Mapping) or prior.get("text_sha256") != entry.get("text_sha256"):
+            continue
+        prior_ref = prior.get("source_ref")
+        if not isinstance(prior_ref, str):
+            continue
+        raw_items = [item for item in predecessor_obligations if item.get("source_refs") == [prior_ref]]
+        if not raw_items:
+            continue
+        rebound: list[Mapping[str, Any]] = []
+        try:
+            for item in raw_items:
+                raw = dict(item)
+                raw["source_refs"] = [entry["source_ref"]]
+                normalized = _normalize_obligation(entry, raw)
+                old_id = item.get("obligation_id")
+                if not isinstance(old_id, str) or old_id in old_to_new:
+                    raise ValueError("ambiguous predecessor obligation identity")
+                old_to_new[old_id] = normalized["obligation_id"]
+                rebound.append(raw)
+        except (KeyError, TypeError, ValueError):
+            continue
+        candidates[str(requirement_id)] = (entry, rebound, {str(item["obligation_id"]) for item in raw_items})
+
+    # Dependencies can form a graph.  Remove an anchor only when it names an
+    # old obligation that this exact reusable graph cannot translate.
+    usable = set(candidates)
+    changed = True
+    while changed:
+        changed = False
+        usable_old_ids = set().union(*(candidates[key][2] for key in usable)) if usable else set()
+        for requirement_id in tuple(usable):
+            _entry, raw_items, _old_ids = candidates[requirement_id]
+            if any(
+                isinstance(dep, str) and dep.startswith("O-") and dep not in usable_old_ids
+                for raw in raw_items for dep in raw.get("depends_on", [])
+            ):
+                usable.remove(requirement_id)
+                changed = True
+    result: dict[str, list[dict[str, Any]]] = {}
+    for requirement_id in usable:
+        entry, raw_items, _old_ids = candidates[requirement_id]
+        normalized_items: list[dict[str, Any]] = []
+        try:
+            for raw in raw_items:
+                rebound = dict(raw)
+                rebound["depends_on"] = [old_to_new.get(dep, dep) for dep in raw.get("depends_on", [])]
+                normalized_items.append(_normalize_obligation(entry, rebound))
+        except (KeyError, TypeError, ValueError):
+            continue
+        result[requirement_id] = normalized_items
+    return result
+
+
+def _v1_cached_value_matches_entry(value: Mapping[str, Any], entry: Mapping[str, Any]) -> bool:
+    """Accept a prior V1 result only when it is wholly bound to one unchanged source entry."""
+    obligations = value.get("obligations")
+    source_ref = entry.get("source_ref")
+    if not isinstance(obligations, list) or not obligations or not isinstance(source_ref, str):
+        return False
+    return all(
+        isinstance(obligation, Mapping) and obligation.get("source_refs") == [source_ref]
+        for obligation in obligations
+    )
+
+
+def _v1_prior_source_text_matches(out_dir: Path, entry: Mapping[str, Any]) -> bool:
+    """Find a retained source index proving that this individual V1 input is unchanged.
+
+    A requirements file can change for one anchor without invalidating every other
+    anchor.  The source file digest is intentionally stricter than this reuse
+    check; retained source-index entries provide the per-anchor text identity
+    needed to reuse a peer's read-only extraction safely.
+    """
+    source_ref = entry.get("source_ref")
+    text_sha256 = entry.get("text_sha256")
+    if not isinstance(source_ref, str) or not isinstance(text_sha256, str):
+        return False
+    if _v1_reuse_predecessor_text_hashes.get(source_ref) == text_sha256:
+        return True
+    candidates = [out_dir / "source-index.v1.json"]
+    if len(out_dir.parents) >= 2:
+        candidates.extend((out_dir.parents[1] / "current-plan").glob("source-index.v1.json*"))
+    for candidate in candidates:
+        if not candidate.is_file() or candidate.name.endswith(".tmp"):
+            continue
+        try:
+            value = json.loads(candidate.read_text(encoding="utf-8"))
+            entries = value.get("entries") if isinstance(value, Mapping) else None
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        if isinstance(entries, list) and any(
+            isinstance(prior, Mapping)
+            and prior.get("source_ref") == source_ref
+            and prior.get("text_sha256") == text_sha256
+            for prior in entries
+        ):
+            return True
+    return False
+
+
+def _v1_prior_index_paths(out_dir: Path) -> list[Path]:
+    paths = [out_dir / "source-index.v1.json"]
+    if len(out_dir.parents) >= 2:
+        paths.extend((out_dir.parents[1] / "current-plan").glob("source-index.v1.json*"))
+    return [path for path in paths if path.is_file() and not path.name.endswith(".tmp")]
+
+
+def _rebind_v1_source_ref(value: Mapping[str, Any], prior_ref: str, current_ref: str) -> Mapping[str, Any] | None:
+    """Rebind only source provenance after exact anchor-text identity is proven."""
+    if prior_ref == current_ref:
+        return value
+    cloned = json.loads(json.dumps(value))
+    obligations = cloned.get("obligations")
+    if not isinstance(obligations, list):
+        return None
+    for obligation in obligations:
+        if not isinstance(obligation, dict) or obligation.get("source_refs") != [prior_ref]:
+            return None
+        obligation["source_refs"] = [current_ref]
+    return cloned
+
+
+def _reusable_prior_v1_cache(cache_dir: Path, stage: str, payload: Mapping[str, Any], out_dir: Path) -> Mapping[str, Any] | None:
+    source = payload.get("source")
+    if not isinstance(source, Mapping):
+        return None
+    current_ref = source.get("source_ref")
+    text_sha256 = source.get("text_sha256")
+    if not isinstance(current_ref, str) or not isinstance(text_sha256, str):
+        return None
+    if _v1_prior_source_text_matches(out_dir, source):
+        cache_sets = [(cache_dir, dict(source))]
+    else:
+        cache_sets = []
+    for index_path in _v1_prior_index_paths(out_dir):
+        try:
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        entries = index.get("entries") if isinstance(index, Mapping) else None
+        if not isinstance(entries, list):
+            continue
+        for prior in entries:
+            if isinstance(prior, Mapping) and prior.get("text_sha256") == text_sha256 and isinstance(prior.get("source_ref"), str):
+                cache_sets.append((index_path.parent / ".compiler-cache", dict(prior)))
+    for prior_cache_dir, prior_entry in cache_sets:
+        prior_ref = prior_entry.get("source_ref")
+        if not isinstance(prior_ref, str):
+            continue
+        # The cache key binds every source-entry byte.  Never pick an arbitrary
+        # same-stage file merely because it happens to name the same source ref.
+        candidate = prior_cache_dir / _worker_cache_key(stage, {"source": prior_entry})
+        try:
+            value = json.loads(candidate.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        if isinstance(value, Mapping) and _v1_cached_value_matches_entry(value, {"source_ref": prior_ref}):
+            rebound = _rebind_v1_source_ref(value, prior_ref, current_ref)
+            if rebound is not None:
+                return rebound
+    return None
+
+
 def _parse_json_output(text: str) -> Mapping[str, Any]:
     stripped = text.strip()
     try:
@@ -210,6 +486,35 @@ def _parse_json_output(text: str) -> Mapping[str, Any]:
     return value
 
 
+def _v3_cache_requires_contract_refresh(
+    value: Mapping[str, Any], root: Path, payload: Mapping[str, Any] | None = None,
+) -> bool:
+    """Refresh only a V3 contract whose declared execution target is unusable.
+
+    ADR-0041: a V3 worker payload may gain unrelated obligations during a bounded repair.
+    That changes a group cache key, but it does not make an already-produced
+    per-obligation contract unusable.  Governance classification, write scope,
+    and failure-family policy are validated by their owning compiler gates; they
+    must not discard an otherwise executable contract from the V3 cache.
+    """
+    hints = value.get("slice_hints")
+    if not isinstance(hints, list) and isinstance(value.get("obligation_contracts"), Mapping):
+        hints = [item.get("slice_hint") for item in value["obligation_contracts"].values()
+                 if isinstance(item, Mapping)]
+    if not isinstance(hints, list):
+        return False
+    for hint in hints:
+        if not isinstance(hint, Mapping):
+            continue
+        planned = set(hint.get("planned_new_files") or [])
+        for snapshot in hint.get("execution_snapshot_paths") or []:
+            if isinstance(snapshot, str):
+                candidate = root / Path(snapshot)
+                if not candidate.is_file() and snapshot not in planned:
+                    return True
+    return False
+
+
 def invoke_worker(*, root: Path, out_dir: Path, stage: str, payload: Mapping[str, Any], prompt: str, worker_cache: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
     cache_dir = out_dir / ".compiler-cache"
     cache_path = cache_dir / _worker_cache_key(stage, payload)
@@ -217,13 +522,20 @@ def invoke_worker(*, root: Path, out_dir: Path, stage: str, payload: Mapping[str
         value = json.loads(cache_path.read_text(encoding="utf-8"))
         if not isinstance(value, Mapping):
             raise ValueError("worker cache is malformed")
-        return value
+        if stage != "v3" or not _v3_cache_requires_contract_refresh(value, root, payload):
+            return value
+    if stage.startswith("v1-"):
+        prior = _reusable_prior_v1_cache(cache_dir, stage, payload, out_dir)
+        if prior is not None:
+            atomic_json(cache_path, prior)
+            return prior
     if worker_cache and stage in worker_cache:
         value = worker_cache[stage]
         if not isinstance(value, Mapping):
             raise ValueError(f"injected worker cache {stage} must be object")
-        atomic_json(cache_path, value)
-        return value
+        if stage != "v3" or not _v3_cache_requires_contract_refresh(value, root, payload):
+            atomic_json(cache_path, value)
+            return value
     sc = root / "scripts" / "sc"
     if str(sc) not in sys.path:
         sys.path.insert(0, str(sc))
@@ -282,6 +594,13 @@ def _normalize_obligation(entry: Mapping[str, Any], raw: Mapping[str, Any]) -> d
     status = raw.get("status", "active")
     if status not in {"active", "deferred", "not_applicable"}:
         raise ValueError("obligation status is invalid")
+    # A witness pending future Quick Dev execution is a planned verification
+    # activity, not an unresolved requirement. Keep it in the active plan so
+    # it receives a real RED/GREEN route instead of becoming an unrouteable
+    # deferred obligation.
+    if status == "deferred" and unresolved == ["pending independent witness"]:
+        status = "active"
+        unresolved = []
     return {
         "obligation_id": obligation_id, "requirement_id": entry["requirement_id"],
         "source_refs": list(source_refs), "subject": semantics["subject"], "trigger": semantics["trigger"],
@@ -295,14 +614,18 @@ def _normalize_obligation(entry: Mapping[str, Any], raw: Mapping[str, Any]) -> d
 
 def compile_obligations(*, root: Path, out_dir: Path, source_index: Mapping[str, Any], worker_cache: Mapping[str, Any] | None) -> list[dict[str, Any]]:
     obligations: list[dict[str, Any]] = []
+    reused = _reusable_predecessor_obligations(source_index)
     for entry in source_index["entries"]:
+        if entry["requirement_id"] in reused:
+            obligations.extend(reused[entry["requirement_id"]])
+            continue
         stage = f"v1-{entry['requirement_id']}"
         payload = {"source": entry}
         raw = invoke_worker(
             root=root, out_dir=out_dir, stage=stage, payload=payload, worker_cache=worker_cache,
             prompt=(
                 "Extract all atomic obligations from the one requirement. Return {\"obligations\":[...]}. "
-                "Each obligation must contain source_refs (exactly the supplied source_ref), subject, trigger, state_before, state_after, expected_behavior, observable_result, forbidden_result[], requirement_type Product|Platform|Governance, obligation_kind behavior|quality|constraint|governance, unresolved_fragments[], status active|deferred|not_applicable, depends_on[]. Split independent behaviors; do not collapse multiple observable rules into one obligation."
+                "Each obligation must contain source_refs (exactly the supplied source_ref), subject, trigger, state_before, state_after, expected_behavior, observable_result, forbidden_result[], requirement_type Product|Platform|Governance, obligation_kind behavior|quality|constraint|governance, unresolved_fragments[], status active|deferred|not_applicable, depends_on[]. A future independent witness is planned implementation work: use status=active and unresolved_fragments=[]; reserve deferred for a genuinely unresolved requirement dependency. Split independent behaviors; do not collapse multiple observable rules into one obligation."
             ),
         )
         items = raw.get("obligations")
@@ -366,8 +689,8 @@ def compile_acceptances(*, root: Path, out_dir: Path, obligations: Sequence[Mapp
             "Compile observable Acceptance contracts, RED failure intents, and slice_hints. Return {\"acceptances\":[],\"failure_intents\":[],\"slice_hints\":[]}. "
             "Acceptance: obligation_ids[], source_refs[], given, when, then, oracle{observable,expected,forbidden[]}, assertion_ids[]. Do not include acceptance_id or red_intent_ids; they are assigned deterministically. "
             "Failure intent: obligation_ids[] identifying the Acceptance it serves, failure_family from the allowed taxonomy, selector_intent, expected_outcome='fail', failure_id uppercase token. "
-            "Treat expected-red as a runtime observation role, never as a generic label for RED-process guards. It is eligible only when every bound frozen obligation has obligation_kind behavior or quality and requirement_type is not Governance. Constraint/governance obligations and rules about RED construction, failure-marker emission, validation commands, write scope, fixtures, or harness integrity must retain a failure intent but use the appropriate non-expected-red family. "
-            "Each slice_hint: obligation_ids[], production_owners[], verification_lane unit|integration|matrix|runtime, behavior_change, affected_subjects[], state_transition, rollback_scope{production_paths[],state_or_schema_compatibility}, allowed_write_paths[], execution_snapshot_paths[], planned_new_files[], terminal_predicate, forbidden_paths[], validation_commands as argv arrays. Paths must be repository-relative POSIX."
+            "Treat expected-red as a runtime observation role, never as a generic label for RED-process guards. For non-Governance obligations, it is eligible only when every bound frozen obligation has obligation_kind behavior or quality. Constraint obligations and rules about RED construction, failure-marker emission, validation commands, write scope, fixtures, or harness integrity must retain a failure intent but use the appropriate non-expected-red family. Governance classification does not change V3 runtime-marker eligibility. "
+            "Each slice_hint: obligation_ids[], production_owners[], verification_lane unit|integration|matrix|runtime, behavior_change, affected_subjects[], state_transition, rollback_scope{production_paths[],state_or_schema_compatibility}, allowed_write_paths[], execution_snapshot_paths[], planned_new_files[], terminal_predicate, forbidden_paths[], validation_commands as argv arrays. Paths must be repository-relative POSIX. Production owners and execution snapshots must point to real existing repository files; inspect the repository and never invent a missing helper path. If the obligation truly requires a new file, put that exact path in planned_new_files (and do not claim it is an existing production owner). Never assign PhaseA.Platform or runtime/phase-a files as production owners or allowed writes for this Toolchain plan; bind to repository Toolchain implementations and tests instead. Derived evidence contracts must always have authorizes=[]; preserve complete FR-9 Consumer Manifest and real-call-surface reconciliation, and require replay obligations to rebuild the original binding identity before replaying with that same identity."
         ),
     )
     raw_acceptances = raw.get("acceptances")
@@ -750,11 +1073,51 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
         "agent_contexts": contexts,
     }
     # ADR-0041: project probe intent without claiming current behavior or running tests.
-    from semantic_behavior_contract import SCHEMA, project_intents
-    bundle["behavior_routing"] = {"schema": SCHEMA, "intents": project_intents(bundle), "deferred": []}
+    from semantic_behavior_contract import SCHEMA, project_deferred, project_intents
+    bundle["behavior_routing"] = {
+        "schema": SCHEMA,
+        "intents": project_intents(bundle),
+        "deferred": project_deferred(bundle),
+    }
     valid, findings = stage_call(out_dir, "final-validation", validate_semantic_bundle, bundle)
     if not valid:
         return {"status": "repair-vdd", "stage": "final-validation", "findings": findings}
+    from quick_dev_handoff import handoff_findings
+    handoff_errors = handoff_findings(bundle, workspace=root)
+    if handoff_errors:
+        # Preserve an independently validated *semantic* candidate for the
+        # execution-only repair path.  This is deliberately not a plan
+        # publication: Quick Dev cannot consume it and it has no lifecycle
+        # authority.  Without this sidecar the handoff repair has no exact
+        # bundle to repair, while its old predecessor rule requires a bundle
+        # that cannot be published until the very handoff defects are fixed.
+        digest = sha256_value(bundle)[7:31]
+        pending = out_dir / ".compiler-work" / "semantic-handoff-pending" / digest
+        for name, value in {
+            "source-index": source_index, "obligations": obligations,
+            "acceptances": acceptances, "failure-intents": failures,
+            "pre-slice-coverage": pre_edges, "slices": slices,
+            "final-plan-coverage": final_edges, "semantic-alignment": alignment,
+            "feasibility": feasibility_result, "semantic-plan-bundle": bundle,
+        }.items():
+            atomic_json(pending / (name + ".v1.json"), value)
+        for context in contexts:
+            atomic_json(pending / "agent-context" / context["slice_id"] / "agent-context.json", context)
+        pending_receipt = {
+            "schema": "vdd.semantic-handoff-pending.v1", "authorizes": [],
+            "semantic_plan_sha256": sha256_value(bundle),
+            "origin_out_dir": out_dir.resolve().relative_to(root.resolve()).as_posix(),
+            "findings": handoff_errors,
+        }
+        atomic_json(pending / "semantic-handoff-pending.v1.json", pending_receipt)
+        atomic_json(pending / "compiler-state.v1.json", {
+            "schema": "vdd.compiler-state.v1", "plan_id": plan_id,
+            "state": "semantic-validated-pending-handoff",
+            "completed_stages": ["V0", "V0A", "V1", "V2", "V3", "V3A", "V5", "V6", "V6A", "V7", "final-validation"],
+            "semantic_plan_sha256": sha256_value(bundle),
+        })
+        return {"status": "repair-vdd", "stage": "quick-dev-handoff", "findings": handoff_errors,
+                "semantic_handoff_pending": pending.resolve().relative_to(root.resolve()).as_posix()}
     atomic_json(out_dir / "source-index.v1.json", source_index)
     atomic_json(out_dir / "obligations.v1.json", obligations)
     atomic_json(out_dir / "acceptances.v1.json", acceptances)
@@ -770,4 +1133,3 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
     state = {"schema": "vdd.compiler-state.v1", "plan_id": plan_id, "state": "plan-ready", "completed_stages": ["V0", "V0A", "V1", "V2", "V3", "V3A", "V4", "V5", "V6", "V6A", "V7"], "semantic_plan_sha256": sha256_value(bundle)}
     atomic_json(out_dir / "compiler-state.v1.json", state)
     return {"status": "plan-ready", "plan_id": plan_id, "semantic_plan_sha256": sha256_value(bundle), "slices": [s["slice_id"] for s in slices]}
-

@@ -1,0 +1,49 @@
+{
+  "acceptance_ids": [
+    "A-AB958CCB6700"
+  ],
+  "allowed_paths": [
+    ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+    ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py",
+    ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+    "scripts/sc/tests/tc_d1_cer/test_s38.py"
+  ],
+  "contracts": [
+    "vdd.semantic-plan-bundle.v1",
+    "The validator records passing forward and reverse coverage for every Atomic Obligation-to-witness edge and no orphan nodes.",
+    "Test-author entry: scripts/sc/tests/tc_d1_cer/test_s38.py. Create real tests for every assertion in this slice, using @pytest.mark.cer_assertion for exact assertion IDs. Read the actual production behavior and bound oracle. Never create unconditional RED, skip/xfail, empty cases or prewritten execution receipts. Missing markers are authoring work; only an actual probe decides present/missing."
+  ],
+  "forbidden_paths": [
+    "PhaseA.Platform",
+    "runtime/phase-a"
+  ],
+  "obligation_ids": [
+    "O-96E6BF09247C"
+  ],
+  "requirement_ids": [
+    "FR-11"
+  ],
+  "selector_intents": [
+    "Select a graph fixture with a one-way Atomic Obligation-to-witness link or an orphan witness; exact-cover validation must fail."
+  ],
+  "slice_id": "S38",
+  "source_refs": [
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-11"
+  ],
+  "validation_commands": [
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/tc_d1_cer/test_s38.py"
+    ],
+    [
+      "python",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py"
+    ],
+    [
+      "python",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py"
+    ]
+  ]
+}

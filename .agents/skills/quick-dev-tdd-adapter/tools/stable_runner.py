@@ -121,13 +121,48 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str)
     argv = [str(item) for item in commands[0]]
     if any(not item for item in argv):
         raise ValueError("validation command contains empty argv")
+    # A CER slice may distribute its assertion cases over several explicit
+    # pytest commands.  Its stage selector must execute that whole declared
+    # case surface, rather than silently treating only command zero as the
+    # proof floor.  Combine only the mechanically equivalent, shell-free form
+    # so heterogeneous commands retain their own explicit routing.
+    normalized = [[str(item) for item in command] for command in commands]
+    def pytest_parts(command: list[str]):
+        offset = 2 if command[:2] == ["py", "-3"] else 1
+        return offset if (len(command) >= offset + 3 and command[offset:offset + 2] == ["-m", "pytest"]
+                          and all(item == "-q" or not item.startswith("-") for item in command[offset + 2:])) else None
+    pytest_offsets = [pytest_parts(command) for command in normalized]
+    pytest_commands = (
+        len(normalized) > 1
+        and all(offset is not None for offset in pytest_offsets)
+    )
+    if pytest_commands:
+        prefixes = {tuple(command[:offset]) for command, offset in zip(normalized, pytest_offsets)}
+        if len(prefixes) == 1:
+            prefix = list(prefixes.pop())
+            # Repeated validation commands may legitimately arise when a
+            # single assertion is projected through both its target and
+            # fixture context.  Pytest will execute the same node twice in
+            # that form, which violates CER's unique-case requirement.
+            # Preserve declaration order while making each non-option input
+            # occur once in the combined shell-free selector.
+            selector_items: list[str] = []
+            for command, offset in zip(normalized, pytest_offsets):
+                for item in command[offset + 2:]:
+                    if item != "-q" and item not in selector_items:
+                        selector_items.append(item)
+            argv = [*prefix, "-m", "pytest", *selector_items, "-q"]
     snapshots = [safe_relative(str(item)) for item in selected.get("execution_snapshot_paths", [])]
     if not snapshots:
         raise ValueError("slice execution snapshot paths missing")
     selector_text = " ".join(
         [*argv, *[str(item) for item in (selected.get("proof") or {}).get("selector_intents", [])]]
     )
-    targets = [path for path in snapshots if path in selector_text]
+    # Explicit argv targets outrank prose references to fixture paths.
+    argv_paths = {part.split("::", 1)[0] for part in argv}
+    targets = [path for path in snapshots if path in argv_paths]
+    if not targets:
+        targets = [path for path in snapshots if path in selector_text]
     if not targets:
         targets = [path for path in snapshots if Path(path).suffix.lower() in {".py", ".cs", ".gd", ".js", ".ts"}]
     if not targets:
@@ -219,15 +254,22 @@ def q2_author_red(
     argv, target_refs, fixture_refs = _descriptor_inputs(bundle, plan_dir, slice_id)
     selected = _slice(bundle, slice_id)
     missing = [path for path in sorted(set(target_refs + fixture_refs)) if not (ROOT / path).is_file()]
-    planned = set(str(item) for item in selected.get("planned_new_files", []))
-    worker_required = bool(missing or planned.intersection(target_refs + fixture_refs))
+    # `planned_new_files` is a plan-time declaration which permits an absent
+    # RED input.  It is not evidence that an already materialized, correctly
+    # mapped input still needs a model author.  Treating it as such needlessly
+    # re-authorizes workers during resumed runs and can strand an otherwise
+    # deterministic probe behind an unrelated backend timeout.
+    worker_required = bool(missing)
     if "behavior_routing" in bundle:
         # A new plan may bind existing tests with new assertion IDs. This only
         # decides whether authoring is needed; the probe alone proves behavior.
         import ast
         required = {sid for a in bundle["acceptances"] if a["acceptance_id"] in selected["acceptance_ids"] for sid in a["assertion_ids"]}
         declared = set()
-        for ref in target_refs:
+        # Assertions may be deliberately split between the primary selector
+        # and frozen fixture tests.  Both are executed by the descriptor, so
+        # authoring is necessary only when their combined mapping is incomplete.
+        for ref in sorted(set(target_refs + fixture_refs)):
             try:
                 tree = ast.parse((ROOT / ref).read_text(encoding="utf-8"))
             except (OSError, SyntaxError):
@@ -356,7 +398,23 @@ def q4_finish(
         slice_item=selected,
         base_commit=base_commit,
     )
-    return {**result, "plan_id": bundle.get("plan_id"), "slice_id": slice_id, "run_id": run_dir.name}
+    result = {**result, "plan_id": bundle.get("plan_id"), "slice_id": slice_id, "run_id": run_dir.name}
+    if result.get("status") != "implementation-successor":
+        return result
+    red_descriptor = load_json(_stage_descriptor(run_dir, "red"))
+    identity = candidate_identity(ROOT, bundle, slice_id)
+    green = successor_descriptor(
+        red_descriptor, stage="green", run_id=run_dir.name,
+        candidate_hash=identity["candidate_hash"],
+    )
+    green_path = _stage_descriptor(run_dir, "green")
+    create_json(green_path, green)
+    return {
+        **result,
+        "green_descriptor_ref": green_path.relative_to(ROOT).as_posix(),
+        "green_descriptor_sha256": sha256_value(green),
+        "required_next_action": "run-green",
+    }
 
 
 def q4_implementation_worker(
@@ -386,26 +444,27 @@ def q4_implementation_worker(
         backend=backend,
     )
     if worker.get("status") != "worker-changes-valid":
-        return {"schema": "quick-dev.implementation-worker-result.v1", "status": worker.get("status"), "worker": worker, "handoff": handoff, "authorizes": []}
+        return {"schema": "quick-dev.implementation-worker-result.v1", "status": worker.get("status"), "failure_family": worker.get("failure_family"), "reason_code": worker.get("reason_code"), "worker": worker, "handoff": handoff, "authorizes": []}
     gate = q4_finish(
         semantic=semantic, slice_id=slice_id, run_dir=run_dir, before=handoff["before"],
         snapshot_roots=snapshot_roots, source_commit=source_commit, base_commit=base_commit,
         claimed_changed_paths=worker.get("changed_paths", []),
     )
-    bundle = load_json(semantic)
-    red_descriptor = load_json(_stage_descriptor(_inside_root(run_dir, "run-dir"), "red"))
-    identity = candidate_identity(ROOT, bundle, slice_id)
-    green = successor_descriptor(red_descriptor, stage="green", run_id=_inside_root(run_dir, "run-dir").name, candidate_hash=identity["candidate_hash"])
-    green_path = _stage_descriptor(_inside_root(run_dir, "run-dir"), "green")
-    create_json(green_path, green)
+    if gate.get("status") != "implementation-successor":
+        return {
+            "schema": "quick-dev.implementation-worker-result.v1",
+            "status": gate.get("status"), "failure_family": gate.get("failure_family"),
+            "reason_code": gate.get("reason_code"), "worker": worker, "q4_gate": gate,
+            "authorizes_evidence": False, "authorizes": [],
+        }
     return {
         "schema": "quick-dev.implementation-worker-result.v1",
         "status": "implementation-successor",
         "worker": worker,
         "q4_gate": gate,
-        "green_descriptor_ref": green_path.relative_to(ROOT).as_posix(),
-        "green_descriptor_sha256": sha256_value(green),
-        "required_next_action": "run-green",
+        "green_descriptor_ref": gate["green_descriptor_ref"],
+        "green_descriptor_sha256": gate["green_descriptor_sha256"],
+        "required_next_action": gate["required_next_action"],
         "authorizes_evidence": False,
         "authorizes": [],
     }
@@ -720,7 +779,7 @@ def main() -> int:
         print(json.dumps({"status": "blocked", "recommended_action": "repair-vdd", "reason": str(exc)}, sort_keys=True))
         return 1
     print(json.dumps(result, sort_keys=True))
-    return 0
+    return 1 if result.get("status") == "task-implementation-failure" else 0
 
 
 if __name__ == "__main__":

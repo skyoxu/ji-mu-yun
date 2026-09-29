@@ -55,15 +55,11 @@ def test_ordinary_documentation_change_is_excluded_from_runtime_snapshot(tmp_pat
     assert after["sha256"] == before["sha256"]
 
 
-def test_unknown_code_or_config_outside_runtime_roots_fails_closed(tmp_path: Path) -> None:
+def test_unknown_code_or_config_outside_runtime_roots_is_not_an_implicit_slice_input(tmp_path: Path) -> None:
     base, roots = _init(tmp_path)
     (tmp_path / "unknown.cfg").write_text("semantic_or_runtime_unknown=true\n", encoding="utf-8")
-    try:
-        current_snapshot(tmp_path, roots, source_commit=base, base_commit=base)
-    except ValueError as exc:
-        assert "unlisted runtime root" in str(exc)
-    else:
-        raise AssertionError("unknown non-documentation delta outside runtime roots must fail closed")
+    snap = current_snapshot(tmp_path, roots, source_commit=base, base_commit=base)
+    assert snap["git_delta"] == {"base_commit": base, "additions": [], "deletions": [], "renames": []}
 
 
 def test_governance_provenance_change_is_excluded_when_not_explicitly_bound(tmp_path: Path) -> None:

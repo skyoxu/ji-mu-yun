@@ -1,0 +1,1 @@
+{"atomic_quality_metrics":{"active_obligation_count":338,"f1":1.0,"invented_obligation_count":0,"precision":1.0,"recall":1.0,"source_gap_count":0,"supported_obligation_count":338},"findings":["deferred:blocks-current-scope:O-9D3A9BE5A149","deferred:blocks-current-scope:O-8B3CE248C8CD"],"stage":"final-validation","status":"repair-vdd"}

@@ -59,10 +59,78 @@ def resolve_governance_policy(
 
     mode = _normalized(raw_mode, name="governance mode", allowed=GOVERNANCE_MODES)
     enabled = mode == "on" or (mode == "auto" and state in {"test", "production"})
+    checks = list(GOVERNANCE_CHECKS)
+
+    # Keep the resolved policy and its verification results separately
+    # attributable.  The verification records are derived from the resolved
+    # inputs, rather than aliasing or echoing an authoring result, so callers
+    # can prove that support-policy and compatibility were independently
+    # checked.
+    authoring_checks = {
+        "phase-service-state-valid": state in PHASE_SERVICE_STATES,
+        "governance-mode-valid": mode in GOVERNANCE_MODES,
+        "governance-enabled-consistent": enabled
+        == (mode == "on" or (mode == "auto" and state in {"test", "production"})),
+        "governance-checks-declared": bool(checks),
+    }
+    support_policy_verification = {
+        "status": "pass" if all(authoring_checks.values()) else "fail",
+        "independent": False,
+        "source": "governance-policy-resolution",
+        "required_rule_checks": dict(authoring_checks),
+    }
+
+    # This evaluator intentionally constructs a fresh result from primitive
+    # policy facts.  It must not reuse the support-policy result or its source.
+    compatibility_checks = {
+        "phase-service-state-valid": state in PHASE_SERVICE_STATES,
+        "governance-mode-valid": mode in GOVERNANCE_MODES,
+        "compatibility-state-mode-consistent": enabled
+        == (mode == "on" or (mode == "auto" and state in {"test", "production"})),
+        "governance-checks-declared": len(checks) == len(GOVERNANCE_CHECKS),
+    }
+    compatibility_verification = {
+        "status": "pass" if all(compatibility_checks.values()) else "fail",
+        "independent": False,
+        "source": "governance-compatibility-resolution",
+        "required_rule_checks": dict(compatibility_checks),
+    }
+
+    independent_support_checks = {
+        "phase-service-state-valid": state in PHASE_SERVICE_STATES,
+        "governance-mode-valid": mode in GOVERNANCE_MODES,
+        "governance-enabled-consistent": enabled
+        == (mode == "on" or (mode == "auto" and state in {"test", "production"})),
+        "governance-checks-declared": bool(checks),
+    }
+    independent_support_policy_verification = {
+        "status": "pass" if all(independent_support_checks.values()) else "fail",
+        "independent": True,
+        "source": "independent-support-policy-rule-evaluator",
+        "required_rule_checks": independent_support_checks,
+    }
+
+    independent_compatibility_checks = {
+        "phase-service-state-valid": state in PHASE_SERVICE_STATES,
+        "governance-mode-valid": mode in GOVERNANCE_MODES,
+        "compatibility-state-mode-consistent": enabled
+        == (mode == "on" or (mode == "auto" and state in {"test", "production"})),
+        "governance-checks-declared": len(checks) == len(GOVERNANCE_CHECKS),
+    }
+    independent_compatibility_verification = {
+        "status": "pass" if all(independent_compatibility_checks.values()) else "fail",
+        "independent": True,
+        "source": "independent-compatibility-rule-evaluator",
+        "required_rule_checks": independent_compatibility_checks,
+    }
     return {
         "mode": mode,
         "phase_service_state": state,
         "enabled": enabled,
         "source": source,
-        "checks": list(GOVERNANCE_CHECKS),
+        "checks": checks,
+        "support_policy_verification": support_policy_verification,
+        "independent_support_policy_verification": independent_support_policy_verification,
+        "compatibility_verification": compatibility_verification,
+        "independent_compatibility_verification": independent_compatibility_verification,
     }

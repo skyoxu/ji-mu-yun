@@ -92,3 +92,125 @@ def test_duplicate_ids_remain_a_deterministic_domain_failure() -> None:
         },
     )
     assert findings == ["supported_obligation_ids:duplicate-frozen-id:O-1"]
+
+
+def test_overlapping_partition_routes_through_existing_single_repair(tmp_path: Path) -> None:
+    result = gate.normative_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v4-atomic-recall",
+        payload=_payload(),
+        prompt="Classify only frozen obligation ids.",
+        worker_cache={
+            "v4-atomic-recall": {
+                "supported_obligation_ids": ["O-1", "O-2"],
+                "invented_obligation_ids": ["O-2"],
+                "source_gap_claims": [],
+            },
+            "v4-atomic-recall-schema-repair": {
+                "supported_obligation_ids": ["O-1", "O-2"],
+                "invented_obligation_ids": [],
+                "source_gap_claims": [],
+            },
+        },
+    )
+    assert result == {
+        "supported_obligation_ids": ["O-1", "O-2"],
+        "invented_obligation_ids": [],
+        "source_gap_claims": [],
+    }
+
+
+def test_incomplete_frozen_partition_requires_repair() -> None:
+    findings = v4_domain._domain_findings(
+        "v4-atomic-recall",
+        _payload(),
+        {"supported_obligation_ids": ["O-1"], "invented_obligation_ids": [], "source_gap_claims": []},
+    )
+    assert findings == ["obligation-partition-incomplete:O-2"]
+
+
+def test_partition_completion_merges_only_the_missing_frozen_id() -> None:
+    merged = v4_domain._merge_partition_completion(
+        _payload(),
+        {
+            "supported_obligation_ids": ["O-1"],
+            "invented_obligation_ids": [],
+            "source_gap_claims": [
+                {
+                    "source_ref": "req.md#FR-1",
+                    "subject": "compiler",
+                    "behavior": "emits plan",
+                    "reason": "missing obligation",
+                }
+            ],
+        },
+        {
+            "supported_obligation_ids": [],
+            "invented_obligation_ids": ["O-2"],
+        },
+    )
+    assert merged == {
+        "supported_obligation_ids": ["O-1"],
+        "invented_obligation_ids": ["O-2"],
+        "source_gap_claims": [
+            {
+                "source_ref": "req.md#FR-1",
+                "subject": "compiler",
+                "behavior": "emits plan",
+                "reason": "missing obligation",
+            }
+        ],
+    }
+
+
+def test_incomplete_partition_repairs_only_missing_id_through_transport(tmp_path: Path) -> None:
+    result = gate.normative_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v4-atomic-recall",
+        payload=_payload(),
+        prompt="Classify only frozen obligation ids.",
+        worker_cache={
+            "v4-atomic-recall": {
+                "supported_obligation_ids": ["O-1"],
+                "invented_obligation_ids": [],
+                "source_gap_claims": [],
+            },
+            "v4-atomic-recall-partition-repair": {
+                "supported_obligation_ids": [],
+                "invented_obligation_ids": ["O-2"],
+            },
+        },
+    )
+    assert result == {
+        "supported_obligation_ids": ["O-1"],
+        "invented_obligation_ids": ["O-2"],
+        "source_gap_claims": [],
+    }
+
+
+def test_schema_repair_partial_partition_repairs_only_missing_id(tmp_path: Path) -> None:
+    result = v4_domain.v4_transport_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v4-atomic-recall-schema-repair",
+        payload={"input": _payload(), "validator_findings": ["worker-call:RuntimeError:timeout"]},
+        prompt="Return a corrected JSON object only.",
+        worker_cache={
+            "v4-atomic-recall-schema-repair": {
+                "supported_obligation_ids": ["O-1"],
+                "invented_obligation_ids": [],
+                "source_gap_claims": [],
+            },
+            "v4-atomic-recall-partition-repair": {
+                "supported_obligation_ids": [],
+                "invented_obligation_ids": ["O-2"],
+            },
+        },
+    )
+    assert result == {
+        "supported_obligation_ids": ["O-1"],
+        "invented_obligation_ids": ["O-2"],
+        "source_gap_claims": [],
+    }

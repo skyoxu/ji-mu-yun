@@ -1,0 +1,26 @@
+[
+  {
+    "slice_id": "RMAP-R6-S0",
+    "run_root": "logs/08-05-real-skill-replay/quick-dev/full-round6/s0-v4",
+    "result_ref": "logs/08-05-real-skill-replay/quick-dev/full-round6/s0-v4/slice-ready.v2.json",
+    "result_sha256": "sha256:9a4d55604848ee647d1207c118a07f82523651e07da81139ab1bb67535748fa2"
+  },
+  {
+    "slice_id": "RMAP-R6-S1",
+    "run_root": "logs/08-05-real-skill-replay/quick-dev/full-round6/s1-v4",
+    "result_ref": "logs/08-05-real-skill-replay/quick-dev/full-round6/s1-v4/slice-ready.v2.json",
+    "result_sha256": "sha256:34c8629f33e89ea6643261b0b56788819ded6d227d636328f0ce0cdb91aaa147"
+  },
+  {
+    "slice_id": "RMAP-R6-S2",
+    "run_root": "logs/08-05-real-skill-replay/quick-dev/full-round6/s2-v4",
+    "result_ref": "logs/08-05-real-skill-replay/quick-dev/full-round6/s2-v4/slice-ready.v2.json",
+    "result_sha256": "sha256:d375aae2029815c8d599a1685f2e9693a438a7557793d6f11938b12a01499a8d"
+  },
+  {
+    "slice_id": "RMAP-R6-S3",
+    "run_root": "logs/08-05-real-skill-replay/quick-dev/full-round6/s3-v4",
+    "result_ref": "logs/08-05-real-skill-replay/quick-dev/full-round6/s3-v4/slice-ready.v2.json",
+    "result_sha256": "sha256:9d74638d407254fbef37d693c12f2318593da0815701ec967256e4790b090ce6"
+  }
+]

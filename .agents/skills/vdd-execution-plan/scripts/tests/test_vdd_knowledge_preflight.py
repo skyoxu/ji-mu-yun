@@ -4,6 +4,7 @@ import importlib.util
 import hashlib
 import io
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -17,9 +18,14 @@ SKILL_ROOT = Path(__file__).resolve().parents[2]
 PREFLIGHT_PATH = SKILL_ROOT / "scripts" / "vdd_knowledge_preflight.py"
 PREPARE_PATH = SKILL_ROOT / "scripts" / "prepare_knowledge_context.py"
 TEST_SUPPORT = SKILL_ROOT.parents[2] / "scripts" / "python" / "tests"
+REPOSITORY_ROOT = SKILL_ROOT.parents[2]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 if str(TEST_SUPPORT) not in sys.path:
     sys.path.insert(0, str(TEST_SUPPORT))
 
+from scripts.python.tests.test_skill_input_consumer_migration import actual_request  # noqa: E402
+from scripts.python.tests.test_toolchain_workflow_repair_e2e import complete  # noqa: E402
 from skill_input_composition_support import publish_ready_receipt  # noqa: E402
 
 
@@ -94,15 +100,6 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             root = Path(raw) / "repo"
             target = root / "execution-plans" / "plan"
             target.mkdir(parents=True)
-            requirements = root / "requirements.md"
-            requirements.write_text("# Requirements\n", encoding="utf-8", newline="\n")
-            artifacts = publish_ready_receipt(
-                root,
-                consumer="vdd-execution-plan",
-                operation="create",
-                target="execution-plans/plan",
-                role_paths={"requirements": ["requirements.md"]},
-            )
             snapshot = {"ref": "refs/heads/main", "commit": "a" * 40}
             payload = bound_payload(module, {
                 "required_modules": ["repository-rules"],
@@ -112,20 +109,62 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             })
             input_path = target / "knowledge-preflight-input.json"
             input_path.write_text(json.dumps(payload), encoding="utf-8")
+            request = actual_request(root, "vdd-execution-plan")
+            complete(root, request)
+            receipt = root / request["storage"] / "current.v1.json"
+            contract = root / "contract.json"
             output = io.StringIO()
             with mock.patch.object(sys, "argv", [
                 "vdd_knowledge_preflight.py",
                 "--input", str(input_path),
                 "--repository-root", str(root),
-                "--skill-input-receipt", str(artifacts["receipt"]),
-                "--skill-input-contract", str(artifacts["contract"]),
+                "--skill-input-receipt", str(receipt),
+                "--skill-input-contract", str(contract),
                 "--skill-input-operation", "create",
             ]), mock.patch.object(module, "validate_context", return_value=None), \
                  mock.patch.object(module, "validate_worktree_sources", return_value=None), \
                  mock.patch("sys.stdout", output):
                 self.assertEqual(0, module.main())
             result = json.loads(output.getvalue())
-            self.assertEqual(artifacts["context"].resolve().relative_to(root.resolve()).as_posix(), result["skill_input"]["context_artifact"])
+            self.assertTrue((root / result["skill_input"]["context_artifact"]).is_file())
+
+    def test_cli_normalizes_a_relative_repository_root_for_v2_input(self) -> None:
+        module = load_preflight()
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw) / "repo"
+            target = root / "execution-plans" / "plan"
+            target.mkdir(parents=True)
+            snapshot = {"ref": "refs/heads/main", "commit": "a" * 40}
+            payload = bound_payload(module, {
+                "required_modules": ["repository-rules"],
+                "locator_request": {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": "request-1", "snapshot": snapshot},
+                "locator_result": {"schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "request-1", "snapshot": snapshot, "status": "matched", "candidates": [{"path": "AGENTS.md", "source_sha256": "b" * 64}]},
+                "decisions": [{"owner": "adapter", "decision": "accepted", "satisfies": ["repository-rules"], "candidate": {"path": "AGENTS.md", "source_sha256": "b" * 64}}],
+            })
+            input_path = target / "knowledge-preflight-input.json"
+            input_path.write_text(json.dumps(payload), encoding="utf-8")
+            request = actual_request(root, "vdd-execution-plan")
+            complete(root, request)
+            receipt = root / request["storage"] / "current.v1.json"
+            contract = root / "contract.json"
+            output = io.StringIO()
+            original_cwd = Path.cwd()
+            try:
+                os.chdir(root)
+                with mock.patch.object(sys, "argv", [
+                    "vdd_knowledge_preflight.py",
+                    "--input", str(input_path),
+                    "--repository-root", ".",
+                    "--skill-input-receipt", str(receipt),
+                    "--skill-input-contract", str(contract),
+                    "--skill-input-operation", "create",
+                ]), mock.patch.object(module, "validate_context", return_value=None), \
+                    mock.patch.object(module, "validate_worktree_sources", return_value=None), \
+                    mock.patch("sys.stdout", output):
+                    self.assertEqual(0, module.main())
+            finally:
+                os.chdir(original_cwd)
+            self.assertTrue(json.loads(output.getvalue())["skill_input"]["context_artifact"])
 
     def test_cli_blocks_missing_wrong_and_stale_ready_receipts(self) -> None:
         module = load_preflight()

@@ -1,0 +1,1 @@
+{"reason": "semantic worker v3-schema-repair failed: openai-api request failed: Error code: 403 - {'error': {'code': 'unsupported_country_region_territory', 'message': 'Country, region, or territory not supported', 'param': None, 'type': 'request_forbidden'}}", "status": "repair-vdd"}

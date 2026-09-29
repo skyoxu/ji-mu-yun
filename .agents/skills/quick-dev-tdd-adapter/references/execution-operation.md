@@ -75,3 +75,27 @@ resolved during implementation while keeping every proof requirement.
 ## Profiles
 
 Execution profiles are `fast-ship`, `standard`, and `self-hosted`. Profiles may change scope/cost only; none may bypass real execution, selector identity, exact cover, failure classification, current snapshot or terminal truth. `self-hosted` additionally requires the detached promotion/judge contract when promotion is requested. Its detached bundle must contain external read-only `positive`, `negative`, and `mutation` fixture kinds and must exactly cover every current failure family; missing/unknown family coverage, candidate-local judge/oracle bytes, mutable artifacts, or current evidence-writer imports block promotion. This execution profile is distinct from any older VDD plan-shape profile such as `resumable`.
+
+## CER handoff compatibility
+
+Current preflight and route validation reject a production owner that is also
+a frozen execution snapshot, a missing authorable primary pytest entry, and
+an executable behavior without a legal expected-red role. Explicit argv test
+targets take precedence over fixture names mentioned in selector prose. A
+planned test path may be absent until Q2; absence is not an observed RED.
+
+Read `handoff-repair.v1.json` when consuming an execution-only successor. Start
+a fresh current run because the plan/selector identity changed. Prior slice
+receipts remain historical. Author every exact assertion mapping and preserve
+its independent oracle, including fixture-based replacement of old raw CLI
+commands. Existing guard failures keep their non-authorizing family.
+
+## Q4 no-production-change failure
+
+After expected RED, the implementation worker and Q4 finish gate both require
+an actual content delta under a declared production owner. No change, restored
+bytes, or changes only to other allowed paths yield task-implementation-failure
+(reason no-production-change), a nonzero CLI exit, and no GREEN descriptor.
+Do not proceed to run-green or retry the same unchanged attempt. Retain its
+evidence and resolve the worker/control-plane cause before a fresh run.
+No-op refactoring of already-GREEN behavior is still permitted.

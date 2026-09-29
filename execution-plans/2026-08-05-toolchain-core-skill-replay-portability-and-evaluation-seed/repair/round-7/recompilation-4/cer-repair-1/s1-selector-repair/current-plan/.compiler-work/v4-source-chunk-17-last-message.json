@@ -1,0 +1,119 @@
+{
+  "covered_obligation_ids": [
+    "O-33F5A5073AB6",
+    "O-95DBA4A40D2D",
+    "O-D0968A5CD01B"
+  ],
+  "missing_obligation_ids": [],
+  "invented_obligation_ids": [],
+  "misaligned_acceptance_ids": [],
+  "oracle_alignment": {
+    "source_recall_gate": "separate_not_evaluated",
+    "obligations": {
+      "O-33F5A5073AB6": {
+        "aligned": true,
+        "source_anchor": "NFR-4",
+        "source_mapping": "S31 execution context; canonical obligation identity maps to the locator-only original binding O-8CA61F7AC174.",
+        "acceptance_ids": [
+          "A-B8ECC9932D58"
+        ],
+        "red_intent_ids": [
+          "FI-C359FB5B879F"
+        ],
+        "oracle_checks": {
+          "required_test_path": "scripts/sc/tests/tc_d1_cer/test_s31.py",
+          "required_selector": "py -3 -m pytest scripts/sc/tests/tc_d1_cer/test_s31.py",
+          "production_entry_point": ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py",
+          "declaration_alone_rejected": true,
+          "fixture_existence_alone_rejected": true,
+          "real_assertion_execution_required": true
+        }
+      },
+      "O-95DBA4A40D2D": {
+        "aligned": true,
+        "source_anchor": "NFR-4",
+        "source_mapping": "S7 execution context; canonical obligation identity maps to the locator-only original binding O-DE783F6F3DF4.",
+        "acceptance_ids": [
+          "A-9CF20DABC26F"
+        ],
+        "red_intent_ids": [
+          "FI-E24B88CA67DA"
+        ],
+        "oracle_checks": {
+          "required_test_path": "scripts/sc/tests/tc_d1_cer/test_s7.py",
+          "required_selector": "py -3 -m pytest scripts/sc/tests/tc_d1_cer/test_s7.py",
+          "production_entry_point": "scripts/sc/skill_package_replay.py",
+          "declaration_alone_rejected": true,
+          "fixture_existence_alone_rejected": true,
+          "real_assertion_execution_required": true
+        }
+      },
+      "O-D0968A5CD01B": {
+        "aligned": true,
+        "source_anchor": "NFR-4",
+        "source_mapping": "Direct semantic match to the stated prohibition on shared mutable state or evidence producing false success.",
+        "acceptance_ids": [
+          "A-C18EF2F6C4F0"
+        ],
+        "red_intent_ids": [
+          "FI-3891F0E64E51",
+          "FI-79DDC6FDEA8D"
+        ],
+        "oracle_checks": {
+          "mutable_state_isolation_required": true,
+          "evidence_isolation_required": true,
+          "cross_entity_false_success_rejected": true
+        }
+      }
+    },
+    "acceptances": {
+      "A-B8ECC9932D58": {
+        "aligned": true,
+        "obligation_ids": [
+          "O-33F5A5073AB6"
+        ],
+        "red_intent_ids": [
+          "FI-C359FB5B879F"
+        ]
+      },
+      "A-9CF20DABC26F": {
+        "aligned": true,
+        "obligation_ids": [
+          "O-95DBA4A40D2D"
+        ],
+        "red_intent_ids": [
+          "FI-E24B88CA67DA"
+        ]
+      },
+      "A-C18EF2F6C4F0": {
+        "aligned": true,
+        "obligation_ids": [
+          "O-D0968A5CD01B"
+        ],
+        "red_intent_ids": [
+          "FI-3891F0E64E51",
+          "FI-79DDC6FDEA8D"
+        ]
+      }
+    },
+    "failure_intents": {
+      "FI-C359FB5B879F": {
+        "aligned": true,
+        "expected_outcome": "fail"
+      },
+      "FI-E24B88CA67DA": {
+        "aligned": true,
+        "expected_outcome": "fail"
+      },
+      "FI-3891F0E64E51": {
+        "aligned": true,
+        "expected_outcome": "fail"
+      },
+      "FI-79DDC6FDEA8D": {
+        "aligned": true,
+        "expected_outcome": "fail"
+      }
+    }
+  },
+  "repairs": []
+}

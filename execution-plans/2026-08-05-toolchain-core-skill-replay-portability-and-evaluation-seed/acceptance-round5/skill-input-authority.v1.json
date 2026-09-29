@@ -1,0 +1,7 @@
+{
+  "schema_version": "jimuyun.skill-input-authority-envelope.v1",
+  "skill_input_baseline": "d8219f5a867e2a1bb2ed22c86f0437367617da06",
+  "target_plan": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "operation": "acceptance",
+  "authorizes": []
+}

@@ -53,6 +53,15 @@ def implement(root, present):
     (root/"candidate.py").write_text(f"def value(kind):\n return {values!r}[kind]\n", encoding="utf-8")
 
 
+def test_runtime_hash_closure_ignores_non_obligation_dependency_labels(tmp_path: Path) -> None:
+    semantic, _roots = fixture(tmp_path)
+    bundle = json.loads(semantic.read_text(encoding="utf-8"))
+    bundle["obligations"][0]["depends_on"] = ["SM-6.1 governance label"]
+    from semantic_behavior_contract import project_intents
+    bundle["behavior_routing"]["intents"] = project_intents(bundle)
+    assert production_hashes(tmp_path, bundle, "S1") == {"candidate.py": sha256_bytes((tmp_path / "candidate.py").read_bytes())}
+
+
 def execute(root, semantic, stage, route=None, *, run_name="RUN-1", materialize_only=False):
     bundle = json.loads(semantic.read_text())
     run = root/run_name
@@ -237,6 +246,9 @@ def test_green_cannot_borrow_present_assertion_or_change_disposition(tmp_path):
 def test_existing_tests_with_new_assertion_ids_route_through_bounded_author(tmp_path,monkeypatch):
     import stable_runner
     semantic,_=fixture(tmp_path)
+    bundle=json.loads(semantic.read_text(encoding="utf-8"))
+    bundle["slices"][0]["execution_snapshot_paths"]=["tests/test_one.py"]
+    semantic.write_text(json.dumps(bundle),encoding="utf-8")
     monkeypatch.setattr(stable_runner,"ROOT",tmp_path)
     test=tmp_path/"tests/test_one.py"
     bound=test.read_text()
@@ -252,6 +264,40 @@ def test_existing_tests_with_new_assertion_ids_route_through_bounded_author(tmp_
         profile="standard",timeout_seconds=10,backend="offline-disabled")
     assert calls==["S1"] and result["required_next_action"]=="run-probe"
     assert (tmp_path/"candidate.py").read_bytes()==before
+
+
+def test_materialized_planned_test_with_required_assertion_does_not_reinvoke_author(tmp_path,monkeypatch):
+    import stable_runner
+    semantic,_=fixture(tmp_path)
+    bundle=json.loads(semantic.read_text(encoding="utf-8"))
+    bundle["slices"][0]["planned_new_files"]=["tests/test_one.py"]
+    semantic.write_text(json.dumps(bundle),encoding="utf-8")
+    monkeypatch.setattr(stable_runner,"ROOT",tmp_path)
+    calls=[]
+    monkeypatch.setattr(stable_runner,"run_red_author",lambda **kwargs: calls.append(kwargs) or {"status":"worker-changes-valid"})
+    result=stable_runner.q2_author_red(semantic=semantic,slice_id="S1",run_dir=tmp_path/"RUN-1",
+        profile="standard",timeout_seconds=10,backend="offline-disabled")
+    assert calls==[]
+    assert result["worker"]["status"]=="worker-not-required"
+    assert result["required_next_action"]=="run-probe"
+
+
+def test_fixture_assertion_mapping_does_not_reinvoke_author(tmp_path,monkeypatch):
+    import stable_runner
+    semantic,_=fixture(tmp_path)
+    bundle=json.loads(semantic.read_text(encoding="utf-8"))
+    bundle["slices"][0]["execution_snapshot_paths"]=["tests/test_one.py","tests/test_fixture.py"]
+    semantic.write_text(json.dumps(bundle),encoding="utf-8")
+    test=tmp_path/"tests/test_one.py"
+    test.write_text(test.read_text(encoding="utf-8").replace("@pytest.mark.cer_assertion('AS-2')\n",""),encoding="utf-8")
+    (tmp_path/"tests/test_fixture.py").write_text("import pytest\n@pytest.mark.cer_assertion('AS-2')\ndef test_fixture_mapping():\n assert True\n",encoding="utf-8")
+    monkeypatch.setattr(stable_runner,"ROOT",tmp_path)
+    calls=[]
+    monkeypatch.setattr(stable_runner,"run_red_author",lambda **kwargs: calls.append(kwargs) or {"status":"worker-changes-valid"})
+    result=stable_runner.q2_author_red(semantic=semantic,slice_id="S1",run_dir=tmp_path/"RUN-1",
+        profile="standard",timeout_seconds=10,backend="offline-disabled")
+    assert calls==[]
+    assert result["worker"]["status"]=="worker-not-required"
 
 
 def test_change_impact_invalidates_regression_observations(tmp_path):
