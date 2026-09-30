@@ -1,0 +1,6 @@
+{
+  "schema_version": "jimuyun.acceptance-authority.v1",
+  "plan_id": "2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "skill_input_baseline": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+  "authorizes": []
+}
