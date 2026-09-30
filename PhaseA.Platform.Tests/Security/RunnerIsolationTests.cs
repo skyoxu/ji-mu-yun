@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Tests.PhaseB.Repair;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.PhaseB;
@@ -22,7 +23,11 @@ public sealed class RunnerIsolationTests
         var root = Directory.CreateTempSubdirectory("phase-runner-isolation");
         try
         {
-            var descriptor = RunnerIsolationPolicy.Describe("account-a", "project-a", root.FullName);
+            using var credentials = OperatingSystem.IsWindows()
+                ? TestRunnerCredentialScope.Create("account-a", "project-a")
+                : null;
+            var descriptor = credentials?.Describe("account-a", "project-a", root.FullName)
+                ?? RunnerIsolationPolicy.Describe("account-a", "project-a", root.FullName);
             using var handle = RunnerIsolationPolicy.PrepareWorkspace(descriptor);
             File.Exists(handle.MarkerPath).Should().BeTrue();
             File.ReadAllText(handle.MarkerPath).Should().Contain("account-a").And.Contain("project-a");
