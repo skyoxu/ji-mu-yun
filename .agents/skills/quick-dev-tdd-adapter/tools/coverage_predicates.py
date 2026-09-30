@@ -26,6 +26,15 @@ def _git_changed_paths(workspace: Path, source_commit: str, root_path: str) -> s
     )
     if untracked.returncode == 0:
         values.update(line.replace("\\", "/") for line in untracked.stdout.splitlines() if line.strip())
+    # Acceptance materializes its own run inputs after the Q8 snapshot was
+    # frozen. Those files are evidence transport, not runtime plan content.
+    values = {
+        item for item in values
+        if "/acceptance-inputs/" not in item
+        and "/.acceptance-snapshots/" not in item
+        and not item.endswith("/acceptance-projection-request.v1.json")
+        and "/acceptance-run-request." not in item
+    }
     return values
 
 
