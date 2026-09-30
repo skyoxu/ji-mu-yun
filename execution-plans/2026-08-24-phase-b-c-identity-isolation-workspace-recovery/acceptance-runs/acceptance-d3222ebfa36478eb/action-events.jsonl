@@ -1,0 +1,10 @@
+{"actionId": "s0-green", "authorizes": [], "commandId": "s0-green", "recordedUtc": "2026-09-30T12:42:16.788566Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 1, "status": "completed"}
+{"actionId": "s1-green", "authorizes": [], "commandId": "s1-green", "recordedUtc": "2026-09-30T12:42:30.812362Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 2, "status": "completed"}
+{"actionId": "s2-green", "authorizes": [], "commandId": "s2-green", "recordedUtc": "2026-09-30T12:42:42.928110Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 3, "status": "completed"}
+{"actionId": "s3-green", "authorizes": [], "commandId": "s3-green", "recordedUtc": "2026-09-30T12:42:54.897532Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 4, "status": "completed"}
+{"actionId": "s4-green", "authorizes": [], "commandId": "s4-green", "recordedUtc": "2026-09-30T12:43:06.851720Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 5, "status": "completed"}
+{"actionId": "s0-terminal", "authorizes": [], "commandId": "s0-terminal", "recordedUtc": "2026-09-30T12:43:18.936020Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 6, "status": "completed"}
+{"actionId": "s1-terminal", "authorizes": [], "commandId": "s1-terminal", "recordedUtc": "2026-09-30T12:43:31.902193Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 7, "status": "completed"}
+{"actionId": "s2-terminal", "authorizes": [], "commandId": "s2-terminal", "recordedUtc": "2026-09-30T12:43:43.803028Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 8, "status": "completed"}
+{"actionId": "s3-terminal", "authorizes": [], "commandId": "s3-terminal", "recordedUtc": "2026-09-30T12:43:55.750731Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 9, "status": "completed"}
+{"actionId": "s4-terminal", "authorizes": [], "commandId": "s4-terminal", "recordedUtc": "2026-09-30T12:44:07.693183Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 10, "status": "completed"}
