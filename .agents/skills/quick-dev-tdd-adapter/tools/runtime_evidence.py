@@ -414,10 +414,13 @@ def hash_path(path: Path) -> str:
             return sha256_bytes(stream.read())
     if os.path.isdir(extended):
         rows = []
+        dotnet_project = any(name.endswith(".csproj") for name in os.listdir(extended))
         for current, directories, files in os.walk(extended, followlinks=False):
             # Build outputs and test-run artifacts are generated during the
             # registered commands and are not candidate source/runtime inputs.
-            directories[:] = sorted(name for name in directories if name not in {"bin", "obj", "TestResults"})
+            if current == extended and dotnet_project:
+                directories[:] = [name for name in directories if name not in {"bin", "obj", "TestResults"}]
+            directories.sort()
             files.sort()
             for name in directories + files:
                 candidate = os.path.join(current, name)
