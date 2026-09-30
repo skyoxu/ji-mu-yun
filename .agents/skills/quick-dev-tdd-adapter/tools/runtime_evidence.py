@@ -415,7 +415,10 @@ def hash_path(path: Path) -> str:
     if os.path.isdir(extended):
         rows = []
         for current, directories, files in os.walk(extended, followlinks=False):
-            directories.sort(); files.sort()
+            # Build outputs and test-run artifacts are generated during the
+            # registered commands and are not candidate source/runtime inputs.
+            directories[:] = sorted(name for name in directories if name not in {"bin", "obj", "TestResults"})
+            files.sort()
             for name in directories + files:
                 candidate = os.path.join(current, name)
                 if os.path.islink(candidate): raise ValueError("snapshot tree contains symlink")
