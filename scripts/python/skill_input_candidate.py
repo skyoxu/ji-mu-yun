@@ -40,6 +40,10 @@ def observe_candidate(root, authority_path, storage):
             # bind the current Skill-input pointer and must not recursively
             # change the candidate whose pointer they carry.
             or Path(path).name.startswith('acceptance-coordinator-request.')
+            or '/acceptance-inputs/' in path
+            or '/.acceptance-snapshots/' in path
+            or Path(path).name.startswith('acceptance-run-request.')
+            or Path(path).name == 'acceptance-projection-request.v1.json'
         ):
             continue
         file = contained(root, path)
