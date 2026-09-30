@@ -22,18 +22,12 @@ import subprocess
 import sys
 
 from solution_target import resolve_test_solution_arg
+from ci_process import env_timeout_ms, run_logged_command
 
 
 def run_cmd(args, cwd=None, timeout=900_000):
-    p = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         text=True, encoding='utf-8', errors='ignore')
-    try:
-        out, _ = p.communicate(timeout=timeout/1000.0)
-    except subprocess.TimeoutExpired:
-        p.kill()
-        out, _ = p.communicate()
-        return 124, out
-    return p.returncode, out
+    rc, out, _ = run_logged_command(args, cwd=cwd, timeout=timeout)
+    return rc, out
 
 
 def read_json(path):
@@ -213,9 +207,12 @@ def main():
     }
 
     # 1) Dotnet tests + coverage (soft gate on coverage)
+    # The stage budget includes restore and tests. The wrapper gets a bounded
+    # cleanup margin so the child can write its terminal summary first.
+    dotnet_budget = env_timeout_ms('CI_DOTNET_STAGE_TIMEOUT_MS', 1_800_000)
     rc, out = run_cmd(['py', '-3', 'scripts/python/run_dotnet.py',
                        '--solution', resolved_solution,
-                       '--configuration', args.configuration], cwd=root)
+                       '--configuration', args.configuration], cwd=root, timeout=dotnet_budget + 60_000)
     with io.open(os.path.join(ci_dir, 'run-dotnet-console.txt'), 'w', encoding='utf-8') as f:
         f.write(out)
     dotnet_sum = read_json(os.path.join('logs', 'unit', date, 'summary.json')) or {}
@@ -250,7 +247,10 @@ def main():
     sc_args = ['py', '-3', 'scripts/python/godot_selfcheck.py', 'run', '--godot-bin', args.godot_bin, '--project', args.project]
     if args.build_solutions:
         sc_args.append('--build-solutions')
-    rc2, out2 = run_cmd(sc_args, cwd=root, timeout=600_000)
+    # Preserve internal budgets: optional build (600s), run (300s), prewarm
+    # (120s), retry (300s), then bounded cleanup/summary time.
+    selfcheck_budget = (600_000 if args.build_solutions else 0) + 300_000 + 120_000 + 300_000
+    rc2, out2 = run_cmd(sc_args, cwd=root, timeout=selfcheck_budget + 60_000)
     # persist raw stdout for diagnosis
     os.makedirs(os.path.join('logs', 'ci', date), exist_ok=True)
     with io.open(os.path.join('logs', 'ci', date, 'selfcheck-stdout.txt'), 'w', encoding='utf-8') as f:

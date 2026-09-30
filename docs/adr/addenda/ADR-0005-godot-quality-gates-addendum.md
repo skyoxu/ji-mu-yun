@@ -29,3 +29,23 @@ scope: Windows-only CI, Godot 4.5 (.NET)
 
 - CI 中可看到：覆盖率摘要 + GdUnit4 pass/fail + 对应 `logs/**` 工件。
 
+## CI process-budget implementation clarification (2026-09-30)
+
+The existing Windows workflow declares `CI_DOTNET_STAGE_TIMEOUT_MS=4200000`.
+The Python driver and .NET runner must consume that total restore/test budget,
+with a bounded wrapper margin for cleanup and terminal-summary persistence.
+Without an override, the runner retains its original 900-second restore and
+test bounds. Invalid non-positive or non-integer overrides fail closed.
+
+The Godot wrapper budget must cover its existing internal attempt bounds:
+optional build (600 seconds), first run (300 seconds), prewarm (120 seconds),
+retry (300 seconds), and a bounded cleanup/summary margin. This changes neither
+the gate set nor any acceptance or coverage threshold.
+
+`scripts/python/ci_process.py` persists subprocess output under `logs/ci/**`
+while the command runs. On timeout it terminates the process tree before the
+next gate starts and retains exit code 124. Windows CI runs real subprocess
+cleanup regressions and archives `logs/unit/**` with the CI diagnostic package.
+Timeouts and non-zero test exits remain hard failures; incomplete tests cannot
+be reported as passed.
+

@@ -23,6 +23,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from solution_target import resolve_test_solution_arg
+from ci_process import env_timeout_ms, run_logged_command
+import time
 
 
 def candidate_dotnet_paths(root: Path) -> list[Path]:
@@ -63,15 +65,8 @@ def resolve_dotnet(root: Path) -> str:
 
 
 def run_cmd(args, cwd=None, timeout=900_000):
-    p = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         text=True, encoding='utf-8', errors='ignore')
-    try:
-        out, _ = p.communicate(timeout=timeout/1000.0)
-    except subprocess.TimeoutExpired:
-        p.kill()
-        out, _ = p.communicate()
-        return 124, out
-    return p.returncode, out
+    rc, out, _ = run_logged_command(args, cwd=cwd, timeout=timeout)
+    return rc, out
 
 
 def ensure_dir(path):
@@ -148,8 +143,12 @@ def main():
         'status': 'fail',
     }
 
-    # Restore
-    rc, out = run_cmd([dotnet_bin, 'restore', resolved_solution], cwd=root)
+    # Honor the workflow's existing total stage budget (ADR-0005). Without an
+    # override retain the original restore/test per-command bounds.
+    stage_budget = env_timeout_ms('CI_DOTNET_STAGE_TIMEOUT_MS', 1_800_000)
+    deadline = time.monotonic() + stage_budget / 1000
+    rc, out = run_cmd([dotnet_bin, 'restore', resolved_solution], cwd=root,
+                      timeout=min(900_000, stage_budget))
     with io.open(os.path.join(out_dir, 'dotnet-restore.log'), 'w', encoding='utf-8') as f:
         f.write(out)
     summary['restore_rc'] = rc
@@ -167,7 +166,9 @@ def main():
                 '--logger', 'trx;LogFileName=tests.trx']
     if args.filter:
         test_cmd.extend(['--filter', args.filter])
-    rc, out = run_cmd(test_cmd, cwd=root)
+    remaining = max(1, int((deadline - time.monotonic()) * 1000))
+    test_budget = remaining if 'CI_DOTNET_STAGE_TIMEOUT_MS' in os.environ else min(900_000, remaining)
+    rc, out = run_cmd(test_cmd, cwd=root, timeout=test_budget)
     with io.open(os.path.join(out_dir, 'dotnet-test-output.txt'), 'w', encoding='utf-8') as f:
         f.write(out)
     summary['test_rc'] = rc

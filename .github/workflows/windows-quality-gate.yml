@@ -98,6 +98,14 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: CI process runner regression (Python)
+        shell: pwsh
+        run: |
+          py -3 -m unittest discover -s scripts/sc/tests -p test_ci_process.py -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          py -3 -m unittest discover -s scripts/sc/tests -p test_ci_stage_budgets.py -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Hard gates bundle (Python)
         shell: pwsh
         run: |
@@ -215,7 +223,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Continue'
           $PSNativeCommandUseErrorActionPreference = $false
-          & py -3 scripts/python/ci_pipeline.py all --solution Game.sln --configuration Debug --godot-bin "$env:GODOT_BIN" --build-solutions
+          & py -3 -u scripts/python/ci_pipeline.py all --solution Game.sln --configuration Debug --godot-bin "$env:GODOT_BIN" --build-solutions
           $code = $LASTEXITCODE
           if ($code -ne 0) {
             if ($env:GITHUB_STEP_SUMMARY) {
@@ -359,7 +367,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ci-logs
-          path: logs/ci/**
+          path: |
+            logs/ci/**
+            logs/unit/**
           if-no-files-found: ignore
 
       - name: Soft gates bundle (Python)

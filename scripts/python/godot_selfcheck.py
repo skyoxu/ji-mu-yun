@@ -67,23 +67,9 @@ def ensure_autoload(project_path: str) -> bool:
 
 
 def run_cmd(args: list[str], cwd: str | None = None, timeout: int = 120000) -> tuple[int, str, str]:
-    """Run a command and capture stdout/stderr separately (UTF-8 text)."""
-    p = subprocess.Popen(
-        args,
-        cwd=cwd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding='utf-8',
-        errors='ignore',
-    )
-    try:
-        out, err = p.communicate(timeout=timeout / 1000.0)
-    except subprocess.TimeoutExpired:
-        p.kill()
-        out, err = p.communicate()
-        return 124, out, err
-    return p.returncode, out, err
+    """Keep raw output and terminate descendants on timeout (ADR-0005)."""
+    from ci_process import run_logged_command
+    return run_logged_command(args, cwd=cwd, timeout=timeout, separate_stderr=True)
 
 
 def run_selfcheck(godot_bin: str, project_godot: str, build_solutions: bool) -> dict:
