@@ -365,7 +365,7 @@ def prepare_run(input_path: str, output_path: str, knowledge_context_path: str |
             receipt_path.relative_to(REPOSITORY_ROOT.resolve())
             if bundle["currentQuickDev"].get("receipt") != {"path": implementation_receipt["path"], "sha256": implementation_receipt["sha256"]}:
                 raise InputError("current Quick Dev receipt binding mismatch")
-            verify_current_handoff(REPOSITORY_ROOT, bundle["currentQuickDev"])
+            verify_current_handoff(REPOSITORY_ROOT, bundle["currentQuickDev"], allowed_changed_paths=value.get("changed_paths", []))
         if not receipt_path.is_file() or _file_hash(receipt_path) != implementation_receipt["sha256"]:
             raise InputError("prerequisite bundle implementation receipt is stale")
         prerequisite_binding = {

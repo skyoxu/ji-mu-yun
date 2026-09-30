@@ -188,7 +188,7 @@ def _verified_quick_dev_receipt(root: Path, target: Path, prepared: dict[str, An
         terminal = bundle.get("terminalRunner", {})
         if terminal.get("sha256") != _sha(OWNER / "coverage_predicates.py"):
             raise InputError("current Quick Dev validator is stale")
-        result = verify_current_handoff(root, current)
+        result = verify_current_handoff(root, current, allowed_changed_paths=prepared.get("input", {}).get("changed_paths", []))
         return {**receipt_ref, "currentQuickDevResult": result}
     receipt_path = _inside(target, receipt_ref["path"], "Quick Dev implementation receipt")
     if not receipt_path.is_file() or _sha(receipt_path) != receipt_ref["sha256"]:
@@ -426,4 +426,3 @@ def finalize_deterministic_run(
         with event_path.open("a", encoding="utf-8", newline="\n") as handle:
             handle.write(json.dumps(event, sort_keys=True) + "\n")
     return {"status": "acceptance-passed", "final": final_ref, "wrapper": {"path": "finalization/acceptance-result-final.v1.json", "sha256": _sha(wrapper_path)}, "authorizes": ["acceptance-passed"]}
-

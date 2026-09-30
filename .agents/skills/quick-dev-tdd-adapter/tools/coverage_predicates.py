@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import subprocess
 import sys
 from typing import Any, Mapping, Sequence
 
@@ -10,6 +11,26 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 from closure_predicate import validate_runtime_closure
 from runtime_evidence import HASH_RE, current_snapshot, create_json, expected_tuple_keys, load_json, resolve_file, sha256_bytes, sha256_value
+
+
+def _git_changed_paths(workspace: Path, source_commit: str, root_path: str) -> set[str]:
+    """Return tracked and untracked paths changed below one frozen root."""
+    args = ["git", "diff", "--name-only", source_commit, "--", root_path]
+    tracked = subprocess.run(args, cwd=workspace, capture_output=True, text=True, check=False)
+    if tracked.returncode != 0:
+        return set()
+    values = {line.replace("\\", "/") for line in tracked.stdout.splitlines() if line.strip()}
+    untracked = subprocess.run(
+        ["git", "ls-files", "--others", "--exclude-standard", "--", root_path],
+        cwd=workspace, capture_output=True, text=True, check=False,
+    )
+    if untracked.returncode == 0:
+        values.update(line.replace("\\", "/") for line in untracked.stdout.splitlines() if line.strip())
+    return values
+
+
+def _path_allowed(path: str, allowed: set[str]) -> bool:
+    return any(path == item or path.startswith(item.rstrip("/") + "/") for item in allowed)
 
 
 def _semantic_index(bundle: Mapping[str, Any], slice_id: str) -> tuple[Mapping[str, Any], dict[str, set[str]]]:
@@ -180,7 +201,7 @@ def _validate_detached_binding(binding: Mapping[str, Any] | None, profile: str) 
     return dict(binding)
 
 
-def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_input):
+def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_input, allowed_changed_paths=None):
     """Recheck frozen runtime roots; Acceptance's new evidence is not runtime input."""
     from runtime_evidence import ROOT_KINDS, hash_path, safe_relative
     snapshot = terminal_input.get("snapshot_manifest")
@@ -199,7 +220,14 @@ def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_inpu
         path = (workspace / safe_relative(row["repository_relative_posix_path"])).resolve()
         path.relative_to(workspace.resolve())
         if hash_path(path) != row["content_sha256"]:
-            raise ValueError("completion runtime root stale: " + row["root_kind"])
+            allowed = {str(item).replace("\\", "/").strip("/") for item in (allowed_changed_paths or [])}
+            if row["root_kind"] not in {"plan", "plan_state_transition"} or not allowed:
+                raise ValueError("completion runtime root stale: " + row["root_kind"])
+            changed = _git_changed_paths(workspace, source_commit, row["repository_relative_posix_path"])
+            root_prefix = row["repository_relative_posix_path"].rstrip("/") + "/"
+            scoped = {item for item in changed if item == row["repository_relative_posix_path"] or item.startswith(root_prefix)}
+            if not scoped or any(not _path_allowed(item, allowed) for item in scoped):
+                raise ValueError("completion runtime root stale: " + row["root_kind"])
     return snapshot
 
 
@@ -215,6 +243,7 @@ def publish_implementation_complete(
     detached_promotion_binding: Mapping[str, Any] | None = None,
     profile: str = "standard",
     verify_existing: bool = False,
+    allowed_changed_paths: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     detached_binding = _validate_detached_binding(detached_promotion_binding, profile)
     bundle = load_json(semantic_plan)
@@ -223,7 +252,7 @@ def publish_implementation_complete(
     validate_plan(bundle)
     expected_keys = set() if routed else expected_tuple_keys(bundle)
     frozen_input = load_json(out.with_name("terminal-input.v2.json")) if verify_existing else None
-    before = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input)
+    before = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input, allowed_changed_paths)
               if verify_existing else current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit))
     cover = bundle.get("final_plan_coverage")
     acceptance_by_slice: dict[str, set[str]] = {}

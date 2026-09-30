@@ -302,7 +302,7 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
         from current_quick_dev_handoff import verify_current_handoff, OWNER
         if current.get("receipt") != {"path": request["implementationReceiptPath"], "sha256": request["implementationReceiptHash"]}:
             raise InputError("current Quick Dev receipt binding does not match projection")
-        verify_current_handoff(root, current)
+        verify_current_handoff(root, current, allowed_changed_paths=request["changedPaths"])
         receipt_path = (root / request["implementationReceiptPath"]).resolve()
         validator = OWNER / "coverage_predicates.py"
         entries = [{"path": path, "role": "implementation", "slice_ids": [],
