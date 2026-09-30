@@ -4,7 +4,7 @@
   "runId": "acceptance-8-24-20260930-r2",
   "changeId": "identity-isolation-acceptance-evidence",
   "baselineRevision": "0ce9e72496fa292b705ec3076068d927f4a74fad",
-  "candidateRevision": "79dbffdc1f4044d8696548d27280d13a1f7dd47f",
+  "candidateRevision": "c780c5a03ddc355a5646c28f137308383334f853",
   "changedPaths": [
     ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
     ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
