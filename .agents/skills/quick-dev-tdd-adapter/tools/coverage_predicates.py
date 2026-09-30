@@ -32,6 +32,7 @@ def _git_changed_paths(workspace: Path, source_commit: str, root_path: str) -> s
         item for item in values
         if "/acceptance-inputs/" not in item
         and "/.acceptance-snapshots/" not in item
+        and "/acceptance-runs/" not in item
         and "/skill-input" not in item
         and not item.endswith("/acceptance-projection-request.v1.json")
         and "/acceptance-run-request." not in item
