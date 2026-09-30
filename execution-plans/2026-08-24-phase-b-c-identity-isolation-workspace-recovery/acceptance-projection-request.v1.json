@@ -1,7 +1,7 @@
 {
   "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
   "targetPlan": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
-  "runId": "acceptance-8-24-20260930-r4",
+  "runId": "acceptance-8-24-20260930-r5",
   "changeId": "identity-isolation-acceptance-evidence",
   "baselineRevision": "0ce9e72496fa292b705ec3076068d927f4a74fad",
   "candidateRevision": "1f0667e36a0824368c98123592a99993cfdef5b7",
@@ -32,27 +32,27 @@
   "knowledgeContextPath": "knowledge-context.refactor-acceptance.v2.json",
   "codeReviewDomain": "toolchain",
   "codeReviewPolicyPath": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
-  "implementationReceiptPath": "logs/acceptance/8-24-r2/implementation-complete-successor.v2.json",
-  "implementationReceiptHash": "sha256:1ac09edc8dfdbfbf2bc2a1e679984655d774bebe5e5569643df741fefdd2b5a1",
+  "implementationReceiptPath": "logs/acceptance/8-24-r4/implementation-complete-successor.v2.json",
+  "implementationReceiptHash": "sha256:2d287d139a005299b09418234195f4544d74ed5b393f680f8f9772dcd992e18d",
   "currentQuickDev": {
     "semanticPlan": {
       "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/semantic-plan-bundle.v1.json",
       "sha256": "sha256:ac9467055efc34e3312044386666f226ded19f8643bcad8d0a0cb71d4d909132"
     },
       "receipt": {
-      "path": "logs/acceptance/8-24-r2/implementation-complete-successor.v2.json",
-      "sha256": "sha256:1ac09edc8dfdbfbf2bc2a1e679984655d774bebe5e5569643df741fefdd2b5a1"
+      "path": "logs/acceptance/8-24-r4/implementation-complete-successor.v2.json",
+      "sha256": "sha256:2d287d139a005299b09418234195f4544d74ed5b393f680f8f9772dcd992e18d"
     },
     "snapshotRoots": [
       {
-        "content_sha256": "sha256:f497cbeb42e48358eb031a5504d645abe013e17f78c8f22165a46443f35a75f3",
+        "content_sha256": "sha256:4f53496adf1adef358fd6290a4b0c8f5a7f35ea24159a983beb1972db4b532f9",
         "inclusion_reason": "current candidate test tree",
         "repository_relative_posix_path": "PhaseA.Platform.Tests",
         "root_kind": "candidate_tree",
         "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
       },
       {
-        "content_sha256": "sha256:6ac44640f8d6aba9104da06f37d7aa955975b122f85e009f9928a183cfc6cf38",
+        "content_sha256": "sha256:38843003c85a6bf4985841acd89a8bd66eb4bc531000255ef484f7e5ddc2f0f0",
         "inclusion_reason": "current execution plan tree",
         "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
         "root_kind": "plan",
@@ -80,7 +80,7 @@
         "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
       },
       {
-        "content_sha256": "sha256:1b16e65402ae605c051032cc8fd954f50036aadb8f071406a6c1ba31713414b4",
+        "content_sha256": "sha256:0848a7ca357bc0203a0660de33ef29302bcb1eb9b407d3996545522e2f7ef3c0",
         "inclusion_reason": "declared production source tree",
         "repository_relative_posix_path": "PhaseA.Platform",
         "root_kind": "source",
@@ -94,7 +94,7 @@
         "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
       },
       {
-        "content_sha256": "sha256:6ac44640f8d6aba9104da06f37d7aa955975b122f85e009f9928a183cfc6cf38",
+        "content_sha256": "sha256:38843003c85a6bf4985841acd89a8bd66eb4bc531000255ef484f7e5ddc2f0f0",
         "inclusion_reason": "current plan state transition tree",
         "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
         "root_kind": "plan_state_transition",
