@@ -1,0 +1,80 @@
+.........FF.F                                                            [100%]
+================================== FAILURES ===================================
+_____________________________ test_o_b21a2e1bf669 _____________________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-184/test_o_b21a2e1bf6690')
+
+    @pytest.mark.cer_assertion("A-O-B21A2E1BF669")
+>   def test_o_b21a2e1bf669(tmp_path): assert_boundary(tmp_path, "O_B21A2E1BF669", "FAILURE-O-B21A2E1BF669")
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:31: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-184/test_o_b21a2e1bf6690')
+method = 'O_B21A2E1BF669', failure_id = 'FAILURE-O-B21A2E1BF669'
+
+    def assert_boundary(tmp_path, method, failure_id):
+        if invoke_s54_boundary(tmp_path, method):
+            return
+        print(f"FAILURE_ID:{failure_id}")
+>       raise AssertionError(f"{failure_id}: real HostedProcessRunner boundary is not enforced")
+E       AssertionError: FAILURE-O-B21A2E1BF669: real HostedProcessRunner boundary is not enforced
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:9: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-B21A2E1BF669
+_____________________________ test_o_c5e83411e41d _____________________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-184/test_o_c5e83411e41d0')
+
+    @pytest.mark.cer_assertion("A-O-C5E83411E41D")
+>   def test_o_c5e83411e41d(tmp_path): assert_boundary(tmp_path, "O_C5E83411E41D", "FAILURE-O-C5E83411E41D")
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-184/test_o_c5e83411e41d0')
+method = 'O_C5E83411E41D', failure_id = 'FAILURE-O-C5E83411E41D'
+
+    def assert_boundary(tmp_path, method, failure_id):
+        if invoke_s54_boundary(tmp_path, method):
+            return
+        print(f"FAILURE_ID:{failure_id}")
+>       raise AssertionError(f"{failure_id}: real HostedProcessRunner boundary is not enforced")
+E       AssertionError: FAILURE-O-C5E83411E41D: real HostedProcessRunner boundary is not enforced
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:9: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-C5E83411E41D
+_____________________ test_o_824_account_root_enumeration _____________________
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-184/test_o_824_account_root_enumer0')
+
+    @pytest.mark.cer_assertion("ASSERT-824-ACCOUNT-ROOT-ENUMERATION")
+>   def test_o_824_account_root_enumeration(tmp_path): assert_boundary(tmp_path, "O_824_ACCOUNT_ROOT_ENUMERATION", "FAILURE-O-824-ACCOUNT-ROOT-ENUMERATION")
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/1/pytest-of-Administrator/pytest-184/test_o_824_account_root_enumer0')
+method = 'O_824_ACCOUNT_ROOT_ENUMERATION'
+failure_id = 'FAILURE-O-824-ACCOUNT-ROOT-ENUMERATION'
+
+    def assert_boundary(tmp_path, method, failure_id):
+        if invoke_s54_boundary(tmp_path, method):
+            return
+        print(f"FAILURE_ID:{failure_id}")
+>       raise AssertionError(f"{failure_id}: real HostedProcessRunner boundary is not enforced")
+E       AssertionError: FAILURE-O-824-ACCOUNT-ROOT-ENUMERATION: real HostedProcessRunner boundary is not enforced
+
+tests\phase_b_c_identity_isolation\current\test_s54.py:9: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAILURE-O-824-ACCOUNT-ROOT-ENUMERATION
+=========================== short test summary info ===========================
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_b21a2e1bf669
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_c5e83411e41d
+FAILED tests/phase_b_c_identity_isolation/current/test_s54.py::test_o_824_account_root_enumeration
+3 failed, 10 passed in 86.42s (0:01:26)

@@ -1,0 +1,411 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="fdeac568-b1cb-4bf8-95da-bc91b8113d21" name="Administrator@IZ3H5BJSZD44YHZ 2026-09-28 21:49:54" runUser="IZ3H5BJSZD44YHZ\Administrator" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-09-28T21:49:54.9866256+08:00" queuing="2026-09-28T21:49:54.9866258+08:00" start="2026-09-28T21:49:53.1569440+08:00" finish="2026-09-28T21:50:06.0328110+08:00" />
+  <TestSettings name="default" id="5e9f3de4-5aa5-41ee-87f2-bceb2f199912">
+    <Deployment runDeploymentRoot="Administrator_IZ3H5BJSZD44YHZ_2026-09-28_21_49_54" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="fab3072b-8df5-4816-8817-89303ed1353a" testId="a187c4f6-f8fd-ba4d-154d-5478eb6b5150" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_6BE8DC802311" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9364714" startTime="2026-09-28T21:50:05.9708716+08:00" endTime="2026-09-28T21:50:05.9708720+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fab3072b-8df5-4816-8817-89303ed1353a">
+      <Output>
+        <StdOut>S53-OBSERVATION O_6BE8DC802311;accepted=true;reason=accepted;processId=0;artifacts=fault,migration,permission,redaction,snapshot</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="9ca44225-6a81-4016-b52c-0a4b6899c666" testId="baa645fd-8052-0649-623a-f66d8b2434f8" testName="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_3180CF499B2D" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.4359974" startTime="2026-09-28T21:49:56.9210097+08:00" endTime="2026-09-28T21:49:56.9210098+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9ca44225-6a81-4016-b52c-0a4b6899c666">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.28952e6760b54102906e9f582fc74ede.s32-project</Message>
+          <StackTrace>   at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 416&#xD;
+   at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 54&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 243&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_3180CF499B2D() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 41&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="98881009-1de0-4647-80e8-cfdd5d09bee4" testId="b0d19b03-dd13-fef7-3f53-5facc8fe1ba3" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_A18_REJECTS_REHASHED_NON_BEHAVIOR" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9316760" startTime="2026-09-28T21:50:05.0342029+08:00" endTime="2026-09-28T21:50:05.0342032+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="98881009-1de0-4647-80e8-cfdd5d09bee4">
+      <Output>
+        <StdOut>S53-OBSERVATION O_A18_REJECTS_REHASHED_NON_BEHAVIOR;accepted=false;reason=behavior_evidence_invalid;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="34778ec3-52d7-4214-9090-316b7cf360a9" testId="e11e4e0e-f145-a4f1-6b1c-b3fcdbb91147" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_C1832CCFAB00" computerName="IZ3H5BJSZD44YHZ" duration="00:00:01.1376854" startTime="2026-09-28T21:49:58.1916064+08:00" endTime="2026-09-28T21:49:58.1916067+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="34778ec3-52d7-4214-9090-316b7cf360a9">
+      <Output>
+        <StdOut>S53-OBSERVATION O_C1832CCFAB00;accepted=true;reason=accepted;processId=0;artifacts=fault,migration,permission,redaction,snapshot</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b6cef3b6-cac1-452a-b09c-6a293e1ac586" testId="e93d7c61-405c-8f50-97a5-cd1aa6573675" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_184C7201648B" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9289057" startTime="2026-09-28T21:50:03.1874357+08:00" endTime="2026-09-28T21:50:03.1874360+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b6cef3b6-cac1-452a-b09c-6a293e1ac586">
+      <Output>
+        <StdOut>S53-OBSERVATION O_184C7201648B;accepted=false;reason=stale_evidence;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="f8bc16ee-5932-49a6-8a01-2ab6d90eac49" testId="7aa80f41-ec05-36c6-ab27-b23b196d8229" testName="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_9F7DA3182063" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.6977486" startTime="2026-09-28T21:49:54.5872394+08:00" endTime="2026-09-28T21:49:54.5872552+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f8bc16ee-5932-49a6-8a01-2ab6d90eac49">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.de132525dc9e42d9bb432b52adb234ee.s32-project</Message>
+          <StackTrace>   at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 416&#xD;
+   at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 54&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 243&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_9F7DA3182063() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 87&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="6cb1b846-8e3f-4bfd-b0e0-171a18da8d1f" testId="cb4f3aa9-6d0c-28e4-b04e-15b1fdb3f248" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_AD7298625129" computerName="IZ3H5BJSZD44YHZ" duration="00:00:01.9752009" startTime="2026-09-28T21:49:55.8422241+08:00" endTime="2026-09-28T21:49:55.8422244+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6cb1b846-8e3f-4bfd-b0e0-171a18da8d1f">
+      <Output>
+        <StdOut>S53-OBSERVATION O_AD7298625129;accepted=true;reason=accepted;processId=0;artifacts=fault,migration,permission,redaction,snapshot</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="5c64a5a1-fe6e-4015-b140-977322406dd0" testId="73691a83-5f43-0dd7-1d75-366d6f5ed2c7" testName="PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_DB28C97417D0" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.5606066" startTime="2026-09-28T21:49:55.8037270+08:00" endTime="2026-09-28T21:49:55.8037273+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5c64a5a1-fe6e-4015-b140-977322406dd0">
+      <Output>
+        <StdOut>S28-OBSERVATION old-runner-credential-denied-after-restore</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e79f9f56-29da-484c-9c92-d3ddacede18b" testId="9619f93f-fa47-a81b-06e2-d582c3483599" testName="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_24C61509CBFA" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.5067893" startTime="2026-09-28T21:49:56.0579827+08:00" endTime="2026-09-28T21:49:56.0579829+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e79f9f56-29da-484c-9c92-d3ddacede18b">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.abcf51514b0e4d19b035ffdfe3d127c4.s32-project</Message>
+          <StackTrace>   at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 416&#xD;
+   at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 54&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 243&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_24C61509CBFA() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 24&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="8801a792-f00f-4c8d-81ef-1476e8ba2fb0" testId="139333f8-e36c-8c89-1b3d-dd56358875c4" testName="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_54814D965C36" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.4267612" startTime="2026-09-28T21:49:56.4844837+08:00" endTime="2026-09-28T21:49:56.4844840+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8801a792-f00f-4c8d-81ef-1476e8ba2fb0">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.fbfeadb455fe4e1c90f8161105b188d6.s32-project</Message>
+          <StackTrace>   at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 416&#xD;
+   at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 54&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 243&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_54814D965C36() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 72&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="badb9aea-6c9e-4e01-bbd7-e2a3fc7c9f99" testId="2285bd51-b47a-9d2a-ed64-950414bc5a62" testName="PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests.O_16352853820E" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.4821188" startTime="2026-09-28T21:50:00.7417852+08:00" endTime="2026-09-28T21:50:00.7417857+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="badb9aea-6c9e-4e01-bbd7-e2a3fc7c9f99">
+      <Output>
+        <StdOut>S46-OBSERVATION O-16352853820E independent-process-evidence-validated</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="aa62af52-f992-4bea-81a3-cf4da9fa5bcb" testId="bc5e213c-3400-8013-cecb-2c336da2693f" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_8A188783399E" computerName="IZ3H5BJSZD44YHZ" duration="00:00:01.2112284" startTime="2026-09-28T21:49:57.0536668+08:00" endTime="2026-09-28T21:49:57.0536672+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aa62af52-f992-4bea-81a3-cf4da9fa5bcb">
+      <Output>
+        <StdOut>S53-OBSERVATION O_8A188783399E;accepted=false;reason=missing_required_evidence;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="c0ad0410-714a-4a3f-a805-b0eb40f82e0e" testId="313ba094-0c83-941f-73a9-1bee357e72ad" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_1758D7FA26D7" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9480860" startTime="2026-09-28T21:50:02.2582781+08:00" endTime="2026-09-28T21:50:02.2582784+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c0ad0410-714a-4a3f-a805-b0eb40f82e0e">
+      <Output>
+        <StdOut>S53-OBSERVATION O_1758D7FA26D7;accepted=false;reason=missing_required_evidence;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e919a81f-7407-4c1b-91a8-f17d5dcf5018" testId="9e513b4b-0a90-6c06-9ae8-32673f146b9e" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_B2296F39A759" computerName="IZ3H5BJSZD44YHZ" duration="00:00:01.0602489" startTime="2026-09-28T21:50:01.3100056+08:00" endTime="2026-09-28T21:50:01.3100059+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e919a81f-7407-4c1b-91a8-f17d5dcf5018">
+      <Output>
+        <StdOut>S53-OBSERVATION O_B2296F39A759;accepted=true;reason=accepted;processId=0;artifacts=fault,migration,permission,redaction,snapshot</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="0b04db8d-565e-4a2a-9c15-854120098f34" testId="e109e966-dd5f-0ae9-4e8b-7c170ab3e8b1" testName="PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests.O_CDE3E478FF2D" computerName="IZ3H5BJSZD44YHZ" duration="00:00:06.3924414" startTime="2026-09-28T21:50:00.2594833+08:00" endTime="2026-09-28T21:50:00.2594836+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0b04db8d-565e-4a2a-9c15-854120098f34">
+      <Output>
+        <StdOut>S46-OBSERVATION O-CDE3E478FF2D topology-seed-independently-revalidated</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="fff49d4b-480b-4f19-bb69-0001064073a8" testId="a4bcfa2d-e97f-654c-f682-5f02fa492176" testName="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_A1983E093799" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.4976687" startTime="2026-09-28T21:49:55.5499493+08:00" endTime="2026-09-28T21:49:55.5499497+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fff49d4b-480b-4f19-bb69-0001064073a8">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.6f28229312ce475c91df64771894aafb.s32-project</Message>
+          <StackTrace>   at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 416&#xD;
+   at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 54&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 243&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_A1983E093799() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 100&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b272351d-3906-4697-a870-9ef53c57136f" testId="4471c2ec-c778-f4f8-58fd-be8cac50b6f8" testName="PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_80DBEB1AFBC6" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.4715558" startTime="2026-09-28T21:49:55.2426485+08:00" endTime="2026-09-28T21:49:55.2426489+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b272351d-3906-4697-a870-9ef53c57136f">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.314317cf093e4698be752464d3ea569e.project-s28</Message>
+          <StackTrace>   at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 416&#xD;
+   at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 54&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_80DBEB1AFBC6() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs:line 89&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_80DBEB1AFBC6() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs:line 98&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="45cea223-8aba-4a5c-96b9-e458ab4d5c16" testId="0b2241cd-0729-88cf-9e56-c44c3d1fe95d" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_DAA21E146840" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9736120" startTime="2026-09-28T21:50:00.2495975+08:00" endTime="2026-09-28T21:50:00.2495978+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="45cea223-8aba-4a5c-96b9-e458ab4d5c16">
+      <Output>
+        <StdOut>S53-OBSERVATION O_DAA21E146840;accepted=false;reason=verification_not_executed;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="19b16566-1225-410e-8d70-0e09a1aabaa2" testId="fce775ca-b7fd-ab6e-18f1-7267861ca559" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_A18_PERSISTED_PLATFORM_RUN_BINDING" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9146924" startTime="2026-09-28T21:50:04.1023159+08:00" endTime="2026-09-28T21:50:04.1023162+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="19b16566-1225-410e-8d70-0e09a1aabaa2">
+      <Output>
+        <StdOut>S53-OBSERVATION O_A18_PERSISTED_PLATFORM_RUN_BINDING;accepted=true;reason=accepted;processId=0;artifacts=fault,migration,permission,redaction,snapshot</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="bc08e8b9-7900-4ded-8388-b9b39c1731ab" testId="faee2fe8-1589-6da1-89a9-be065f84cc49" testName="PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests.O_08BA4578BEC0" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.4445841" startTime="2026-09-28T21:50:01.1874329+08:00" endTime="2026-09-28T21:50:01.1874331+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bc08e8b9-7900-4ded-8388-b9b39c1731ab">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.169c52d2ffa8412790789b1402ea1c6e.s46-project-88fe7edd35b54abf8d43b96c88ae70fd</Message>
+          <StackTrace>   at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 416&#xD;
+   at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 54&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests.O_08BA4578BEC0() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S46BoundaryTests.cs:line 36&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="224a24b5-1f12-437e-b059-a6a0f54beeff" testId="d79a7467-2f8d-e9bc-6e7a-1907def1ebc3" testName="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_51B1E0927330" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.4681666" startTime="2026-09-28T21:49:55.0514517+08:00" endTime="2026-09-28T21:49:55.0514520+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="224a24b5-1f12-437e-b059-a6a0f54beeff">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.dec03a78ed674707b941ca09b492955f.s32-project</Message>
+          <StackTrace>   at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 416&#xD;
+   at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken) in C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs:line 54&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 243&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_51B1E0927330() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs:line 57&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="803ca5d7-b7f5-4fc9-a80b-00f7abe467f7" testId="eec7c2e9-8f21-246f-26d8-e1e7923ea136" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_8FF9DCF91EDE" computerName="IZ3H5BJSZD44YHZ" duration="00:00:01.0836015" startTime="2026-09-28T21:49:59.2756793+08:00" endTime="2026-09-28T21:49:59.2756795+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="803ca5d7-b7f5-4fc9-a80b-00f7abe467f7">
+      <Output>
+        <StdOut>S53-OBSERVATION O_8FF9DCF91EDE;accepted=false;reason=integrity_failure;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d5d98926-2ce2-42dc-a60d-bc9c3c118900" testId="c4ebe49a-df58-182e-e691-116c4941258f" testName="PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_5277C4B77BBF" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9024309" startTime="2026-09-28T21:49:54.7702947+08:00" endTime="2026-09-28T21:49:54.7702949+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d5d98926-2ce2-42dc-a60d-bc9c3c118900">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.116eefefaffd48a3ab4cbad5b5b78344.project-s28</Message>
+          <StackTrace>   at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.WaitForFileAsync(String path, Task`1 run) in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs:line 146&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_5277C4B77BBF() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs:line 50&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_5277C4B77BBF() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs:line 80&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_5277C4B77BBF() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs:line 80&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_184C7201648B" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="e93d7c61-405c-8f50-97a5-cd1aa6573675">
+      <Execution id="b6cef3b6-cac1-452a-b09c-6a293e1ac586" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_184C7201648B" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests.O_CDE3E478FF2D" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="e109e966-dd5f-0ae9-4e8b-7c170ab3e8b1">
+      <Execution id="0b04db8d-565e-4a2a-9c15-854120098f34" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests" name="O_CDE3E478FF2D" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_AD7298625129" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="cb4f3aa9-6d0c-28e4-b04e-15b1fdb3f248">
+      <Execution id="6cb1b846-8e3f-4bfd-b0e0-171a18da8d1f" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_AD7298625129" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_24C61509CBFA" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="9619f93f-fa47-a81b-06e2-d582c3483599">
+      <Execution id="e79f9f56-29da-484c-9c92-d3ddacede18b" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests" name="O_24C61509CBFA" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_54814D965C36" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="139333f8-e36c-8c89-1b3d-dd56358875c4">
+      <Execution id="8801a792-f00f-4c8d-81ef-1476e8ba2fb0" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests" name="O_54814D965C36" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_6BE8DC802311" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="a187c4f6-f8fd-ba4d-154d-5478eb6b5150">
+      <Execution id="fab3072b-8df5-4816-8817-89303ed1353a" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_6BE8DC802311" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_DB28C97417D0" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="73691a83-5f43-0dd7-1d75-366d6f5ed2c7">
+      <Execution id="5c64a5a1-fe6e-4015-b140-977322406dd0" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests" name="O_DB28C97417D0" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_8A188783399E" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="bc5e213c-3400-8013-cecb-2c336da2693f">
+      <Execution id="aa62af52-f992-4bea-81a3-cf4da9fa5bcb" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_8A188783399E" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_80DBEB1AFBC6" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="4471c2ec-c778-f4f8-58fd-be8cac50b6f8">
+      <Execution id="b272351d-3906-4697-a870-9ef53c57136f" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests" name="O_80DBEB1AFBC6" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_DAA21E146840" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="0b2241cd-0729-88cf-9e56-c44c3d1fe95d">
+      <Execution id="45cea223-8aba-4a5c-96b9-e458ab4d5c16" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_DAA21E146840" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_A1983E093799" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="a4bcfa2d-e97f-654c-f682-5f02fa492176">
+      <Execution id="fff49d4b-480b-4f19-bb69-0001064073a8" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests" name="O_A1983E093799" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_A18_PERSISTED_PLATFORM_RUN_BINDING" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="fce775ca-b7fd-ab6e-18f1-7267861ca559">
+      <Execution id="19b16566-1225-410e-8d70-0e09a1aabaa2" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_A18_PERSISTED_PLATFORM_RUN_BINDING" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_B2296F39A759" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="9e513b4b-0a90-6c06-9ae8-32673f146b9e">
+      <Execution id="e919a81f-7407-4c1b-91a8-f17d5dcf5018" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_B2296F39A759" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_5277C4B77BBF" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="c4ebe49a-df58-182e-e691-116c4941258f">
+      <Execution id="d5d98926-2ce2-42dc-a60d-bc9c3c118900" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests" name="O_5277C4B77BBF" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_A18_REJECTS_REHASHED_NON_BEHAVIOR" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="b0d19b03-dd13-fef7-3f53-5facc8fe1ba3">
+      <Execution id="98881009-1de0-4647-80e8-cfdd5d09bee4" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_A18_REJECTS_REHASHED_NON_BEHAVIOR" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_C1832CCFAB00" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="e11e4e0e-f145-a4f1-6b1c-b3fcdbb91147">
+      <Execution id="34778ec3-52d7-4214-9090-316b7cf360a9" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_C1832CCFAB00" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_1758D7FA26D7" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="313ba094-0c83-941f-73a9-1bee357e72ad">
+      <Execution id="c0ad0410-714a-4a3f-a805-b0eb40f82e0e" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_1758D7FA26D7" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_3180CF499B2D" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="baa645fd-8052-0649-623a-f66d8b2434f8">
+      <Execution id="9ca44225-6a81-4016-b52c-0a4b6899c666" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests" name="O_3180CF499B2D" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_51B1E0927330" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="d79a7467-2f8d-e9bc-6e7a-1907def1ebc3">
+      <Execution id="224a24b5-1f12-437e-b059-a6a0f54beeff" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests" name="O_51B1E0927330" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests.O_16352853820E" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="2285bd51-b47a-9d2a-ed64-950414bc5a62">
+      <Execution id="badb9aea-6c9e-4e01-bbd7-e2a3fc7c9f99" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests" name="O_16352853820E" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests.O_08BA4578BEC0" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="faee2fe8-1589-6da1-89a9-be065f84cc49">
+      <Execution id="bc08e8b9-7900-4ded-8388-b9b39c1731ab" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests" name="O_08BA4578BEC0" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_8FF9DCF91EDE" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="eec7c2e9-8f21-246f-26d8-e1e7923ea136">
+      <Execution id="803ca5d7-b7f5-4fc9-a80b-00f7abe467f7" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_8FF9DCF91EDE" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_9F7DA3182063" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="7aa80f41-ec05-36c6-ab27-b23b196d8229">
+      <Execution id="f8bc16ee-5932-49a6-8a01-2ab6d90eac49" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests" name="O_9F7DA3182063" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="a187c4f6-f8fd-ba4d-154d-5478eb6b5150" executionId="fab3072b-8df5-4816-8817-89303ed1353a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="baa645fd-8052-0649-623a-f66d8b2434f8" executionId="9ca44225-6a81-4016-b52c-0a4b6899c666" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b0d19b03-dd13-fef7-3f53-5facc8fe1ba3" executionId="98881009-1de0-4647-80e8-cfdd5d09bee4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e11e4e0e-f145-a4f1-6b1c-b3fcdbb91147" executionId="34778ec3-52d7-4214-9090-316b7cf360a9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e93d7c61-405c-8f50-97a5-cd1aa6573675" executionId="b6cef3b6-cac1-452a-b09c-6a293e1ac586" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7aa80f41-ec05-36c6-ab27-b23b196d8229" executionId="f8bc16ee-5932-49a6-8a01-2ab6d90eac49" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cb4f3aa9-6d0c-28e4-b04e-15b1fdb3f248" executionId="6cb1b846-8e3f-4bfd-b0e0-171a18da8d1f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="73691a83-5f43-0dd7-1d75-366d6f5ed2c7" executionId="5c64a5a1-fe6e-4015-b140-977322406dd0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9619f93f-fa47-a81b-06e2-d582c3483599" executionId="e79f9f56-29da-484c-9c92-d3ddacede18b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="139333f8-e36c-8c89-1b3d-dd56358875c4" executionId="8801a792-f00f-4c8d-81ef-1476e8ba2fb0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2285bd51-b47a-9d2a-ed64-950414bc5a62" executionId="badb9aea-6c9e-4e01-bbd7-e2a3fc7c9f99" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bc5e213c-3400-8013-cecb-2c336da2693f" executionId="aa62af52-f992-4bea-81a3-cf4da9fa5bcb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="313ba094-0c83-941f-73a9-1bee357e72ad" executionId="c0ad0410-714a-4a3f-a805-b0eb40f82e0e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9e513b4b-0a90-6c06-9ae8-32673f146b9e" executionId="e919a81f-7407-4c1b-91a8-f17d5dcf5018" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e109e966-dd5f-0ae9-4e8b-7c170ab3e8b1" executionId="0b04db8d-565e-4a2a-9c15-854120098f34" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a4bcfa2d-e97f-654c-f682-5f02fa492176" executionId="fff49d4b-480b-4f19-bb69-0001064073a8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4471c2ec-c778-f4f8-58fd-be8cac50b6f8" executionId="b272351d-3906-4697-a870-9ef53c57136f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0b2241cd-0729-88cf-9e56-c44c3d1fe95d" executionId="45cea223-8aba-4a5c-96b9-e458ab4d5c16" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fce775ca-b7fd-ab6e-18f1-7267861ca559" executionId="19b16566-1225-410e-8d70-0e09a1aabaa2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="faee2fe8-1589-6da1-89a9-be065f84cc49" executionId="bc08e8b9-7900-4ded-8388-b9b39c1731ab" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d79a7467-2f8d-e9bc-6e7a-1907def1ebc3" executionId="224a24b5-1f12-437e-b059-a6a0f54beeff" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="eec7c2e9-8f21-246f-26d8-e1e7923ea136" executionId="803ca5d7-b7f5-4fc9-a80b-00f7abe467f7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c4ebe49a-df58-182e-e691-116c4941258f" executionId="d5d98926-2ce2-42dc-a60d-bc9c3c118900" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="列表中未列出的结果" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="所有已加载的结果" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="23" executed="23" passed="14" failed="9" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.7+8f2703126a (64-bit .NET 8.0.21)&#xD;
+[xUnit.net 00:00:00.23]   Discovering: PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.37]   Discovered:  PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.37]   Starting:    PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:01.12]       System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.de132525dc9e42d9bb432b52adb234ee.s32-project&#xD;
+[xUnit.net 00:00:01.12]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.12]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(416,0): at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target)&#xD;
+[xUnit.net 00:00:01.12]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(54,0): at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:01.12]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(243,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync()&#xD;
+[xUnit.net 00:00:01.12]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(87,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_9F7DA3182063()&#xD;
+[xUnit.net 00:00:01.12]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:01.31]       System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.116eefefaffd48a3ab4cbad5b5b78344.project-s28&#xD;
+[xUnit.net 00:00:01.31]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.31]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs(146,0): at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.WaitForFileAsync(String path, Task`1 run)&#xD;
+[xUnit.net 00:00:01.31]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs(50,0): at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_5277C4B77BBF()&#xD;
+[xUnit.net 00:00:01.31]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs(80,0): at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_5277C4B77BBF()&#xD;
+[xUnit.net 00:00:01.31]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs(80,0): at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_5277C4B77BBF()&#xD;
+[xUnit.net 00:00:01.31]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:01.59]       System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.dec03a78ed674707b941ca09b492955f.s32-project&#xD;
+[xUnit.net 00:00:01.59]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.59]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(416,0): at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target)&#xD;
+[xUnit.net 00:00:01.59]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(54,0): at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:01.59]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(243,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync()&#xD;
+[xUnit.net 00:00:01.59]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(57,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_51B1E0927330()&#xD;
+[xUnit.net 00:00:01.59]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:01.78]       System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.314317cf093e4698be752464d3ea569e.project-s28&#xD;
+[xUnit.net 00:00:01.78]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.78]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(416,0): at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target)&#xD;
+[xUnit.net 00:00:01.78]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(54,0): at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:01.78]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs(89,0): at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_80DBEB1AFBC6()&#xD;
+[xUnit.net 00:00:01.78]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S28BoundaryTests.cs(98,0): at PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_80DBEB1AFBC6()&#xD;
+[xUnit.net 00:00:01.78]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:02.09]       System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.6f28229312ce475c91df64771894aafb.s32-project&#xD;
+[xUnit.net 00:00:02.09]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.09]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(416,0): at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target)&#xD;
+[xUnit.net 00:00:02.09]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(54,0): at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:02.09]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(243,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync()&#xD;
+[xUnit.net 00:00:02.09]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(100,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_A1983E093799()&#xD;
+[xUnit.net 00:00:02.09]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:02.59]       System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.abcf51514b0e4d19b035ffdfe3d127c4.s32-project&#xD;
+[xUnit.net 00:00:02.59]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.59]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(416,0): at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target)&#xD;
+[xUnit.net 00:00:02.59]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(54,0): at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:02.59]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(243,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync()&#xD;
+[xUnit.net 00:00:02.59]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(24,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_24C61509CBFA()&#xD;
+[xUnit.net 00:00:02.59]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:03.02]       System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.fbfeadb455fe4e1c90f8161105b188d6.s32-project&#xD;
+[xUnit.net 00:00:03.02]       Stack Trace:&#xD;
+[xUnit.net 00:00:03.02]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(416,0): at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target)&#xD;
+[xUnit.net 00:00:03.02]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(54,0): at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:03.02]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(243,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync()&#xD;
+[xUnit.net 00:00:03.02]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(72,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_54814D965C36()&#xD;
+[xUnit.net 00:00:03.02]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:03.46]       System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.28952e6760b54102906e9f582fc74ede.s32-project&#xD;
+[xUnit.net 00:00:03.46]       Stack Trace:&#xD;
+[xUnit.net 00:00:03.46]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(416,0): at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target)&#xD;
+[xUnit.net 00:00:03.46]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(54,0): at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:03.46]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(243,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.SubstituteRootDrillFixture.ExecuteAsync()&#xD;
+[xUnit.net 00:00:03.46]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S32BoundaryTests.cs(41,0): at PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_3180CF499B2D()&#xD;
+[xUnit.net 00:00:03.46]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:07.72]       System.InvalidOperationException : managed runner credential is unavailable: target=PhaseA.Runner.169c52d2ffa8412790789b1402ea1c6e.s46-project-88fe7edd35b54abf8d43b96c88ae70fd&#xD;
+[xUnit.net 00:00:07.72]       Stack Trace:&#xD;
+[xUnit.net 00:00:07.72]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(416,0): at PhaseA.Platform.Runs.RunnerCredentialStore.Read(String target)&#xD;
+[xUnit.net 00:00:07.72]         C:\jimuyun\PhaseA.Platform\Runs\HostedProcessRunner.cs(54,0): at PhaseA.Platform.Runs.HostedProcessRunner.RunAsync(HostedProcessCommand command, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:07.72]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S46BoundaryTests.cs(36,0): at PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests.O_08BA4578BEC0()&#xD;
+[xUnit.net 00:00:07.72]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:12.51]   Finished:    PhaseA.Platform.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-28T21:49:54.5850573+08:00">
+        <Text>[xUnit.net 00:00:01.12]     PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_9F7DA3182063 [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-28T21:49:54.7706956+08:00">
+        <Text>[xUnit.net 00:00:01.31]     PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_5277C4B77BBF [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-28T21:49:55.0513552+08:00">
+        <Text>[xUnit.net 00:00:01.59]     PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_51B1E0927330 [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-28T21:49:55.2425113+08:00">
+        <Text>[xUnit.net 00:00:01.78]     PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_80DBEB1AFBC6 [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-28T21:49:55.5497272+08:00">
+        <Text>[xUnit.net 00:00:02.09]     PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_A1983E093799 [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-28T21:49:56.0578594+08:00">
+        <Text>[xUnit.net 00:00:02.59]     PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_24C61509CBFA [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-28T21:49:56.4843547+08:00">
+        <Text>[xUnit.net 00:00:03.02]     PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_54814D965C36 [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-28T21:49:56.9211714+08:00">
+        <Text>[xUnit.net 00:00:03.46]     PhaseA.Platform.Tests.PhaseB.Repair.S32BoundaryTests.O_3180CF499B2D [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-28T21:50:01.1873461+08:00">
+        <Text>[xUnit.net 00:00:07.72]     PhaseA.Platform.Tests.PhaseB.Repair.S46BoundaryTests.O_08BA4578BEC0 [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

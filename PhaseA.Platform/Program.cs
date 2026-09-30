@@ -18,6 +18,30 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+if (args.Length >= 3 && string.Equals(args[0], "--independent-evidence-reader", StringComparison.Ordinal))
+{
+    var result = IndependentEvidenceReader.Validate(args[1], args[2]);
+    Console.WriteLine(JsonSerializer.Serialize(result));
+    return;
+}
+
+if (args.Length >= 4 && string.Equals(args[0], "--independent-evidence-run", StringComparison.Ordinal))
+{
+    var runOptions = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+    {
+        ["PHASEA_METADATA_DB_PATH"] = args[3],
+    });
+    var runStore = new PhaseAMetadataStore(
+        new SqliteConnectionStringBuilder { DataSource = runOptions.MetadataDatabasePath }.ToString(),
+        runOptions);
+    var run = await runStore.GetRunSnapshotAsync(args[2]);
+    var result = run is null
+        ? new IndependentEvidenceResult(false, "run_not_found", [])
+        : IndependentEvidenceReader.ValidatePersistedRun(run, args[1]);
+    Console.WriteLine(JsonSerializer.Serialize(result));
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 var options = PhaseAPlatformOptionsLoader.FromEnvironment();
 var metadataDirectory = Path.GetDirectoryName(options.MetadataDatabasePath);
@@ -34,6 +58,10 @@ await SqliteMetadataSchema.InitializeAsync(connectionString);
 
 builder.Services.AddSingleton(options);
 builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options));
+builder.Services.AddSingleton(new WorkspaceStorageService(connectionString));
+builder.Services.AddSingleton(new RestoreService(
+    connectionString,
+    string.IsNullOrWhiteSpace(connectionString) ? null : new RouteRecoveryAuthorityResolver(connectionString)));
 if (options.HostedContextSigningKeyRing is { } hostedContextKeyRing)
 {
     builder.Services.AddSingleton(new HostedContextManifestSignatureService(
@@ -119,6 +147,7 @@ builder.Services.AddSingleton<PrototypeCommandService>();
 builder.Services.AddSingleton<SkillActionCatalog>();
 builder.Services.AddSingleton<SkillActionService>();
 builder.Services.AddSingleton<ArtifactReadbackService>();
+builder.Services.AddSingleton(new ExtensionPolicyState());
 builder.Services.AddSingleton<ProjectWebPreviewService>();
 builder.Services.AddSingleton<ProjectPackageService>();
 builder.Services.AddSingleton<ProjectAssetInventoryService>();
@@ -223,8 +252,9 @@ app.Use(async (context, next) =>
         await RecordUnhandledRequestDiagnosticAsync(options, context, ex, CancellationToken.None);
         if (!context.Response.HasStarted)
         {
+            await RecordRequestFailureDiagnosticAsync(options, context, "internal_failure", StatusCodes.Status500InternalServerError);
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await context.Response.WriteAsJsonAsync(new { error = "unhandled_request_failed" });
+            await context.Response.WriteAsJsonAsync(new { error = "unhandled_request_failed", requestId = context.TraceIdentifier });
         }
     }
 });
@@ -271,8 +301,19 @@ app.Use(async (context, next) =>
     var identity = await ResolveIdentityAsync(context, adminAccountId);
     if (identity is null)
     {
+        var failureFamily = "unauthenticated";
+        var token = PhaseAAuth.ReadBearerOrHeaderToken(context.Request);
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            var inactive = await metadataStore.ResolveAccountByTokenHashIncludingInactiveAsync(
+                PhaseAAuth.HashTokenForStorage(token),
+                context.RequestAborted);
+            failureFamily = inactive?.IsDisabled == true ? "account_disabled" : "credential_revoked";
+        }
+
+        await RecordRequestFailureDiagnosticAsync(options, context, failureFamily, StatusCodes.Status401Unauthorized);
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        await context.Response.WriteAsJsonAsync(new { error = PhaseAAuth.AuthFailureCode });
+        await context.Response.WriteAsJsonAsync(new { error = PhaseAAuth.AuthFailureCode, requestId = context.TraceIdentifier });
         return;
     }
 
@@ -280,8 +321,9 @@ app.Use(async (context, next) =>
         TryReadApiProjectId(context.Request.Path, out var projectId) &&
         !await metadataStore.ProjectBelongsToAccountAsync(identity.AccountId, projectId, context.RequestAborted))
     {
+        await RecordRequestFailureDiagnosticAsync(options, context, "ownership_mismatch", StatusCodes.Status404NotFound);
         context.Response.StatusCode = StatusCodes.Status404NotFound;
-        await context.Response.WriteAsJsonAsync(new { error = "project_not_found" });
+        await context.Response.WriteAsJsonAsync(new { error = "project_not_found", requestId = context.TraceIdentifier });
         return;
     }
 
@@ -289,7 +331,10 @@ app.Use(async (context, next) =>
     context.Items["phasea.role"] = identity.Role;
     context.Items["phasea.accountId"] = identity.AccountId;
     context.Items["phasea.username"] = identity.Username;
-    PersistAccessTokenCookie(context);
+    if (!identity.IsAdmin && !context.Request.Headers.ContainsKey("Authorization"))
+    {
+        PersistAccessTokenCookie(context);
+    }
     await next(context);
 });
 
@@ -363,6 +408,230 @@ app.MapGet("/api/account/active-run", async (
 {
     return Results.Ok(await readback.GetActiveRunAsync(CurrentAccountId(context), cancellationToken));
 });
+
+app.MapGet("/api/admin/extension-policy", (
+    HttpContext context,
+    [FromServices] ExtensionPolicyState policy) =>
+{
+    if (RejectNonAdministrator(context) is { } rejection)
+    {
+        return rejection;
+    }
+
+    return Results.Ok(policy.Read());
+});
+
+app.MapPost("/api/admin/extension-policy", (
+    ExtensionPolicyRequest request,
+    HttpContext context,
+    [FromServices] ExtensionPolicyState policy) =>
+{
+    if (RejectNonAdministrator(context) is { } rejection)
+    {
+        return rejection;
+    }
+
+    return Results.Ok(policy.Update(request.Blacklist));
+});
+
+app.MapPost("/api/projects/{projectId}/snapshots", HandleDurableWorkspaceOperationAsync);
+app.MapPost("/api/projects/{projectId}/restores", HandleDurableWorkspaceOperationAsync);
+app.MapPost("/api/projects/{projectId}/acl-repairs", HandleDurableWorkspaceOperationAsync);
+
+static async Task<IResult> HandleDurableWorkspaceOperationAsync(
+    string projectId,
+    DurableWorkspaceOperationRequest request,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    [FromServices] WorkspaceStorageService workspaceStorage,
+    [FromServices] RestoreService restoreService,
+    [FromServices] ExtensionPolicyState extensionPolicy,
+    [FromServices] HeavyRunnerQueueService queue,
+    CancellationToken cancellationToken)
+{
+    if (string.IsNullOrWhiteSpace(request.OperationKey))
+    {
+        return Results.BadRequest(new { error = "operation_key_required" });
+    }
+
+    var project = (await store.ListProjectSnapshotsAsync(cancellationToken))
+        .FirstOrDefault(candidate => string.Equals(candidate.ProjectId, projectId, StringComparison.Ordinal));
+    if (project is null || !string.Equals(project.AccountId, CurrentAccountId(context), StringComparison.Ordinal))
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var operationType = ResolveDurableWorkspaceOperationType(context.Request.Path);
+    var runType = $"{operationType}:{request.OperationKey.Trim()}";
+    var run = await store.GetOrCreateProjectOperationRunAsync(project.ProjectId, project.WorkspaceId, runType, cancellationToken);
+    if (string.Equals(run.Status, "queued", StringComparison.Ordinal))
+    {
+        // The HTTP request only admits durable work.  The queue owns execution;
+        // awaiting it here makes a client disconnect indistinguishable from a
+        // failed operation and can exhaust the request timeout before work runs.
+        var identity = CurrentIdentity(context);
+        var credential = PhaseAAuth.ReadBearerOrHeaderToken(context.Request) ?? string.Empty;
+        var requestContext = RequestContext.FromIdentity(identity, identity.Username, credential, context.TraceIdentifier);
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await queue.ExecuteAsync(
+                    run.RunId,
+                    project.AccountId,
+                    project.ProjectId,
+                    operationType,
+                    async (start, token) =>
+                    {
+                        if (!await store.TryMarkRunStartedAsync(run.RunId, start.QueuePositionAtStart, token))
+                        {
+                            return false;
+                        }
+
+                        if (operationType == "workspace-snapshot")
+                        {
+                            await store.UpdateRunProgressAsync(run.RunId, "workspace", "snapshot", "snapshot-started", token);
+                            var policy = extensionPolicy.ReadSnapshotPolicy();
+                            var snapshot = workspaceStorage.CreateSnapshot(
+                                requestContext,
+                                project.WorkspaceRootPath,
+                                $"snapshot-{run.RunId}",
+                                project.WorkspaceId,
+                                project.ProjectId,
+                                policy.Version,
+                                policy.Blacklist);
+                            await store.UpdateRunProgressAsync(run.RunId, "workspace", "snapshot", "snapshot-created", token);
+                            await store.CompleteRunAsync(
+                                run.RunId,
+                                "succeeded",
+                                0,
+                                "workspace snapshot completed",
+                                string.Empty,
+                                JsonSerializer.Serialize(new { producerRunId = run.RunId, snapshotId = snapshot.Manifest.SnapshotId, manifestPath = snapshot.ManifestPath }),
+                                token);
+                            return true;
+                        }
+
+                        if (operationType == "workspace-restore")
+                        {
+                            await store.UpdateRunProgressAsync(run.RunId, "workspace", "restore", "restore-started", token);
+                            var requestedSnapshotId = request.SnapshotId;
+                            var snapshot = workspaceStorage
+                                .ListSnapshots(project.AccountId, project.ProjectId)
+                                .Where(candidate => string.IsNullOrWhiteSpace(requestedSnapshotId) ||
+                                    string.Equals(candidate.Manifest.SnapshotId, requestedSnapshotId, StringComparison.Ordinal))
+                                .OrderByDescending(candidate => candidate.Manifest.CreatedAt)
+                                .FirstOrDefault()
+                                ?? throw new KeyNotFoundException("workspace snapshot not found");
+                            var lease = restoreService.GetAuthoritativeLease(project.AccountId, project.ProjectId)
+                                ?? throw new InvalidOperationException("authoritative runner lease is unavailable");
+                            var destinationRoot = string.IsNullOrWhiteSpace(request.TargetRoot)
+                                ? project.WorkspaceRootPath
+                                : Path.GetFullPath(request.TargetRoot);
+                            if (!WorkspacePathPolicy.IsUnderRoot(project.WorkspaceRootPath, destinationRoot))
+                                throw new UnauthorizedAccessException("restore target is outside the server-owned workspace root");
+                            if (!RunnerIsolationPolicy.TryGetWorkspaceDescriptor(destinationRoot, out _))
+                            {
+                                // A caller-selected target remains under the server-owned
+                                // workspace root, but must inherit the project's registered
+                                // OS identity.  Never invent a synthetic Windows account
+                                // name that cannot be resolved by the ACL boundary.
+                                var registered = RunnerIsolationPolicy.TryGetWorkspaceDescriptor(
+                                    project.WorkspaceRootPath, out var projectDescriptor)
+                                    ? projectDescriptor
+                                    : RunnerIsolationPolicy.Describe(project.AccountId, project.ProjectId, project.WorkspaceRootPath);
+                                using var preparedDestination = RunnerIsolationPolicy.PrepareWorkspace(
+                                    registered with { WorkspaceRoot = destinationRoot });
+                            }
+                            var restored = restoreService.Restore(
+                                requestContext,
+                                snapshot.Manifest,
+                                project.WorkspaceRootPath,
+                                destinationRoot,
+                                lease,
+                                request.OperationKey.Trim());
+                            await store.CompleteRunAsync(
+                                run.RunId,
+                                restored.Status == RestoreAttemptStatus.Published ? "succeeded" : "failed",
+                                restored.Status == RestoreAttemptStatus.Published ? 0 : 409,
+                                restored.Status == RestoreAttemptStatus.Published ? "workspace restore completed" : "workspace restore did not publish",
+                                string.Empty,
+                                JsonSerializer.Serialize(new { producerRunId = run.RunId, snapshotId = restored.SnapshotId, attemptId = restored.AttemptId, status = restored.Status.ToString(), failureCategory = restored.FailureCategory, failureDetail = restored.FailureDetail }),
+                                token);
+                            return restored.Status == RestoreAttemptStatus.Published;
+                        }
+
+                        if (operationType == "workspace-acl-repair")
+                        {
+                            await store.UpdateRunProgressAsync(run.RunId, "workspace", "acl-repair", "acl-repair-started", token);
+                            if (!RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.WorkspaceRootPath, out var descriptor))
+                            {
+                                throw new UnauthorizedAccessException("workspace isolation registration is unavailable");
+                            }
+                            using var isolation = RunnerIsolationPolicy.PrepareWorkspace(descriptor);
+                            if (!RunnerIsolationPolicy.HasExpectedWorkspaceSecurity(descriptor))
+                            {
+                                throw new UnauthorizedAccessException("workspace ACL repair did not produce the expected security boundary");
+                            }
+
+                            await store.CompleteRunAsync(
+                                run.RunId,
+                                "succeeded",
+                                0,
+                                "workspace ACL repair completed",
+                                string.Empty,
+                                JsonSerializer.Serialize(new
+                                {
+                                    producerRunId = run.RunId,
+                                    operation = operationType,
+                                    workspaceRoot = project.WorkspaceRootPath,
+                                    policy = descriptor.NtfsAclRequired ? "ntfs-acl-and-runner-isolation" : "workspace-boundary"
+                                }),
+                                token);
+                            return true;
+                        }
+
+                        await store.CompleteRunAsync(
+                            run.RunId,
+                            "failed",
+                            501,
+                            "durable workspace operation executor is not connected",
+                            string.Empty,
+                            JsonSerializer.Serialize(new { code = "workspace_operation_executor_missing", operationType }),
+                            token);
+                        return false;
+                    },
+                    CancellationToken.None);
+            }
+            catch (Exception error)
+            {
+                try
+                {
+                    await store.CompleteRunAsync(
+                        run.RunId,
+                        "failed",
+                        500,
+                        "durable workspace operation failed",
+                        $"{error.GetType().Name}: {error.Message}",
+                        JsonSerializer.Serialize(new { code = "workspace_operation_failed", error = error.Message }),
+                        CancellationToken.None);
+                }
+                catch
+                {
+                    // The durable run remains non-successful if persistence itself
+                    // is unavailable; never turn an executor exception into success.
+                }
+            }
+        });
+    }
+
+    return Results.Accepted($"/api/runs/{run.RunId}", new
+    {
+        operationId = run.RunId,
+        evidencePointer = $"/api/runs/{run.RunId}",
+        result = new { status = "accepted", runType = run.RunType }
+    });
+}
 
 app.MapPost("/api/runs/{runId}/cancel", async (
     string runId,
@@ -2049,7 +2318,12 @@ app.MapGet("/api/admin/users", async (
     ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return AdminForbidden();
+        await RecordRequestFailureDiagnosticAsync(
+            context.RequestServices.GetRequiredService<PhaseAPlatformOptions>(),
+            context,
+            "forbidden",
+            StatusCodes.Status403Forbidden);
+        return Results.Json(new { error = "admin_required", requestId = context.TraceIdentifier }, statusCode: StatusCodes.Status403Forbidden);
     }
 
     return Results.Ok(new { users = await store.ListAccountsAsync(cancellationToken) });
@@ -2063,8 +2337,19 @@ app.MapPost("/api/admin/users/{accountId}/status", async (
     CancellationToken cancellationToken) =>
 {
     ApplyNoStore(context);
-    if (!CurrentIdentity(context).IsAdmin)
+    var identity = CurrentIdentity(context);
+    if (!identity.IsAdmin)
     {
+        await store.RecordAdminAccountAuditEventAsync(
+            identity.AccountId,
+            request.Disabled ? "user_disabled" : "user_enabled",
+            accountId,
+            AdminLifecycleAuditMetadata(
+                request.Disabled ? "user_disabled" : "user_enabled",
+                accountId,
+                "denied",
+                "admin_required"),
+            cancellationToken);
         return AdminForbidden();
     }
 
@@ -2077,10 +2362,14 @@ app.MapPost("/api/admin/users/{accountId}/status", async (
     if (updated)
     {
         await store.RecordAdminAccountAuditEventAsync(
-            CurrentAccountId(context),
+            identity.AccountId,
             request.Disabled ? "user_disabled" : "user_enabled",
             accountId,
-            new { disabled = request.Disabled },
+            AdminLifecycleAuditMetadata(
+                request.Disabled ? "user_disabled" : "user_enabled",
+                accountId,
+                "authorized",
+                "completed"),
             cancellationToken);
     }
     return updated ? Results.Ok(new { accountId, disabled = request.Disabled }) : Results.NotFound(new { error = "user_not_found" });
@@ -2093,8 +2382,15 @@ app.MapPost("/api/admin/users/{accountId}/rotate-token", async (
     CancellationToken cancellationToken) =>
 {
     ApplyNoStore(context);
-    if (!CurrentIdentity(context).IsAdmin)
+    var identity = CurrentIdentity(context);
+    if (!identity.IsAdmin)
     {
+        await store.RecordAdminAccountAuditEventAsync(
+            identity.AccountId,
+            "user_token_rotated",
+            accountId,
+            AdminLifecycleAuditMetadata("user_token_rotated", accountId, "denied", "admin_required"),
+            cancellationToken);
         return AdminForbidden();
     }
 
@@ -2107,10 +2403,10 @@ app.MapPost("/api/admin/users/{accountId}/rotate-token", async (
     if (result is not null)
     {
         await store.RecordAdminAccountAuditEventAsync(
-            CurrentAccountId(context),
+            identity.AccountId,
             "user_token_rotated",
             accountId,
-            new { username = result.Username },
+            AdminLifecycleAuditMetadata("user_token_rotated", accountId, "authorized", "completed"),
             cancellationToken);
     }
     return result is null ? Results.NotFound(new { error = "user_not_found" }) : Results.Ok(result);
@@ -3361,9 +3657,56 @@ static string CurrentAccountId(HttpContext context)
     return CurrentIdentity(context).AccountId;
 }
 
+static string ResolveDurableWorkspaceOperationType(PathString requestPath)
+{
+    var suffix = requestPath.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+    return suffix switch
+    {
+        "snapshots" => "workspace-snapshot",
+        "restores" => "workspace-restore",
+        "acl-repairs" => "workspace-acl-repair",
+        _ => throw new InvalidOperationException("Unknown durable workspace operation."),
+    };
+}
+
 static IResult AdminForbidden()
 {
     return Results.Json(new { error = "admin_required" }, statusCode: StatusCodes.Status403Forbidden);
+}
+
+static IResult? RejectNonAdministrator(HttpContext context)
+{
+    ApplyNoStore(context);
+    if (CurrentIdentity(context).IsAdmin)
+    {
+        return null;
+    }
+
+    var options = context.RequestServices.GetRequiredService<PhaseAPlatformOptions>();
+    RecordRequestFailureDiagnosticAsync(
+        options,
+        context,
+        "forbidden",
+        StatusCodes.Status403Forbidden).GetAwaiter().GetResult();
+    return AdminForbidden();
+}
+
+static Dictionary<string, string> AdminLifecycleAuditMetadata(
+    string action,
+    string accountId,
+    string outcome,
+    string operationOutcome)
+{
+    return new Dictionary<string, string>
+    {
+        ["operation_id"] = Guid.NewGuid().ToString("N"),
+        ["account_id"] = accountId,
+        ["correlation_id"] = Guid.NewGuid().ToString("N"),
+        ["action"] = action,
+        ["status"] = outcome,
+        ["outcome"] = outcome,
+        [outcome == "denied" ? "denial_outcome" : "drain_outcome"] = operationOutcome
+    };
 }
 
 static IResult CancelledRunResult()
@@ -3417,6 +3760,42 @@ static async Task RecordProjectDeleteDiagnosticAsync(
     catch
     {
         // Diagnostics must never break the delete route.
+    }
+}
+
+static async Task RecordRequestFailureDiagnosticAsync(
+    PhaseAPlatformOptions options, HttpContext context, string failureFamily, int statusCode)
+{
+    // ADR-0061/0038: platform failures may precede project identity. Keep this
+    // operator-only evidence outside workspace artifacts and browser readback.
+    // Never persist caller headers, tokens, query strings or exception messages.
+    var directory = ResolveRuntimeDiagnosticsDirectory(options);
+    if (directory is null) return;
+    var line = JsonSerializer.Serialize(new
+    {
+        timestampUtc = DateTimeOffset.UtcNow,
+        requestId = context.TraceIdentifier,
+        failureFamily,
+        statusCode,
+        method = context.Request.Method,
+        message = "Request rejected or failed."
+    }) + Environment.NewLine;
+    await Program.RequestFailureDiagnosticGate.WaitAsync();
+    try
+    {
+        Directory.CreateDirectory(directory);
+        await File.AppendAllTextAsync(Path.Combine(directory, "request-failure-diagnostics.jsonl"), line, Encoding.UTF8);
+    }
+    catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+    {
+        // Preserve the original denial. Missing diagnostics remain an observable
+        // operational failure, never a fabricated successful evidence record.
+        context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("RequestFailureDiagnostics")
+            .LogError("Request failure diagnostic persistence failed. RequestId={RequestId}", context.TraceIdentifier);
+    }
+    finally
+    {
+        Program.RequestFailureDiagnosticGate.Release();
     }
 }
 
@@ -3616,4 +3995,54 @@ static bool TryReadApiProjectId(PathString path, out string projectId)
     return !string.IsNullOrWhiteSpace(projectId);
 }
 
-public partial class Program;
+public sealed record DurableWorkspaceOperationRequest(string OperationKey, string? SnapshotId = null, string? TargetRoot = null);
+
+public sealed record ExtensionPolicyRequest(IReadOnlyList<string>? Blacklist);
+
+public sealed class ExtensionPolicyState
+{
+    private readonly object _gate = new();
+    private int _version = 1;
+    private string[] _blacklist = [];
+
+    public object Read()
+    {
+        lock (_gate)
+        {
+            return new { version = _version, blacklist = _blacklist.ToArray() };
+        }
+    }
+
+    public (string Version, ISet<string> Blacklist) ReadSnapshotPolicy()
+    {
+        lock (_gate)
+        {
+            return ($"policy-v{_version}", new HashSet<string>(_blacklist, StringComparer.OrdinalIgnoreCase));
+        }
+    }
+
+    public object Update(IReadOnlyList<string>? blacklist)
+    {
+        lock (_gate)
+        {
+            _blacklist = NormalizeBlacklist(blacklist);
+            _version++;
+            return new { version = _version, blacklist = _blacklist.ToArray(), updated = true };
+        }
+    }
+
+    private static string[] NormalizeBlacklist(IReadOnlyList<string>? blacklist)
+    {
+        return (blacklist ?? [])
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .Select(item => item.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(item => item, StringComparer.Ordinal)
+            .ToArray();
+    }
+}
+
+public partial class Program
+{
+    internal static readonly SemaphoreSlim RequestFailureDiagnosticGate = new(1, 1);
+}

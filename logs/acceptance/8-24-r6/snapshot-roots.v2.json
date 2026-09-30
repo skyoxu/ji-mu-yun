@@ -1,0 +1,58 @@
+[
+  {
+    "root_kind": "candidate_tree",
+    "repository_relative_posix_path": "PhaseA.Platform.Tests",
+    "content_sha256": "sha256:3bde1a272fdc677c2e136ae56489dd9e533bbdf9abecc7aa75cb490dcb69a434",
+    "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+    "inclusion_reason": "current candidate test tree"
+  },
+  {
+    "root_kind": "plan",
+    "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+    "content_sha256": "sha256:eb92b048e6a2ad3ef7a4cb4f1ad2702a33f33b6e5df6570b0d239bc60a9ab392",
+    "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+    "inclusion_reason": "current execution plan tree"
+  },
+  {
+    "root_kind": "contract",
+    "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/implementation-contract.v1.json",
+    "content_sha256": "sha256:206e7c33c9df9aa2cc59d7373a07e1e19104c4e578805c503ca3f7e4ebe5da15",
+    "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+    "inclusion_reason": "current execution contract"
+  },
+  {
+    "root_kind": "descriptor",
+    "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context",
+    "content_sha256": "sha256:e7f1a7c2b021c395549a5aa4b12affc60eb5cbfdb214f8633fd0d987d0a4e2ea",
+    "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+    "inclusion_reason": "all current execution descriptors"
+  },
+  {
+    "root_kind": "fixture",
+    "repository_relative_posix_path": "tests/phase_b_c_identity_isolation/current",
+    "content_sha256": "sha256:e42a96702da27bb04d8534feaa321f8f1e0109cc9e2d94af142376d8a1dea8b2",
+    "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+    "inclusion_reason": "current fixture tree"
+  },
+  {
+    "root_kind": "source",
+    "repository_relative_posix_path": "PhaseA.Platform",
+    "content_sha256": "sha256:202514df0f94e9ea71473475556542e86f9320bca901b9940c861625e5232531",
+    "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+    "inclusion_reason": "declared production source tree"
+  },
+  {
+    "root_kind": "validator_judge",
+    "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+    "content_sha256": "sha256:7c2f654dede96cb178f8d4c09aabf249d4fdd1d304440aa3573ccf715859e718",
+    "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+    "inclusion_reason": "current observation judge"
+  },
+  {
+    "root_kind": "plan_state_transition",
+    "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+    "content_sha256": "sha256:eb92b048e6a2ad3ef7a4cb4f1ad2702a33f33b6e5df6570b0d239bc60a9ab392",
+    "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+    "inclusion_reason": "current plan state transition tree"
+  }
+]

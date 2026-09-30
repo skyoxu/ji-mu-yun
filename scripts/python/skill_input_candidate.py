@@ -32,7 +32,20 @@ def observe_candidate(root, authority_path, storage):
     for path in sorted(changed):
         relative(path)
         # Runtime evidence and adapter-owned storage are not candidate authority.
-        if path.startswith(('logs/', '.skill-input-work/')) or path == storage or path.startswith(storage + '/'):
+        if (
+            path.startswith(('logs/', '.skill-input-work/'))
+            or path == storage
+            or path.startswith(storage + '/')
+            # Coordinator request/result files are transport artifacts. They
+            # bind the current Skill-input pointer and must not recursively
+            # change the candidate whose pointer they carry.
+            or Path(path).name.startswith('acceptance-coordinator-request.')
+            or '/acceptance-inputs/' in path
+            or '/.acceptance-snapshots/' in path
+            or '/acceptance-runs/' in path
+            or Path(path).name.startswith('acceptance-run-request.')
+            or Path(path).name == 'acceptance-projection-request.v1.json'
+        ):
             continue
         file = contained(root, path)
         if file.exists() and not file.is_file():

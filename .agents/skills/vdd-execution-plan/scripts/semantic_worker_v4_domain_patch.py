@@ -41,6 +41,18 @@ def _semantic_payload(stage: str, payload: Mapping[str, Any]) -> Mapping[str, An
     return payload
 
 
+def _worker_input_payload(stage: str, payload: Mapping[str, Any]) -> Mapping[str, Any]:
+    """Keep the one-shot repair envelope out of the model context.
+
+    The envelope's ``input`` is the complete frozen V4 semantic payload.  V4
+    already reads that nested value for its ID/source domains; serializing the
+    outer envelope as well needlessly duplicates a large source index and can
+    exceed the backend's request limit.  The validator findings remain in the
+    repair prompt supplied by the canonical dispatcher.
+    """
+    return _semantic_payload(stage, payload)
+
+
 def _domains(stage: str, payload: Mapping[str, Any]) -> tuple[list[str], list[str]]:
     semantic = _semantic_payload(stage, payload)
     obligations = semantic.get("obligations")
@@ -188,7 +200,7 @@ def v4_transport_invoke_worker(
     frozen_contract = (
         "\n\nFROZEN V4 ID DOMAIN: supported_obligation_ids and invented_obligation_ids may contain ONLY these exact ids: "
         + json.dumps(ids, ensure_ascii=False)
-        + ". Do not create, rewrite, abbreviate, duplicate, or infer identifier tokens. source_gap_claims.source_ref may contain ONLY: "
+        + ". Each identifier may appear at most once in each array; do not create, rewrite, abbreviate, duplicate, or infer identifier tokens. source_gap_claims.source_ref may contain ONLY: "
         + json.dumps(refs, ensure_ascii=False)
         + ". An empty source_gap_claims array is valid when no independently observable source behavior is missing."
     )
@@ -198,7 +210,7 @@ def v4_transport_invoke_worker(
         + prompt
         + frozen_contract
         + "\n\nINPUT:\n"
-        + json.dumps(payload, ensure_ascii=False, sort_keys=True)
+        + json.dumps(_worker_input_payload(stage, payload), ensure_ascii=False, sort_keys=True)
     )
     backend = resolve_llm_backend(None)
     is_repair = stage.endswith("-schema-repair")

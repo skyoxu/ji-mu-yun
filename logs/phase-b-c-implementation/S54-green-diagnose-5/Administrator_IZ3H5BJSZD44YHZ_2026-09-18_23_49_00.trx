@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="d5ac907b-c3d8-45b7-b85a-0bbbd47314cf" name="Administrator@IZ3H5BJSZD44YHZ 2026-09-18 23:49:00" runUser="IZ3H5BJSZD44YHZ\Administrator" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-09-18T23:49:00.7917823+08:00" queuing="2026-09-18T23:49:00.7917825+08:00" start="2026-09-18T23:48:59.8939841+08:00" finish="2026-09-18T23:49:00.7965658+08:00" />
+  <TestSettings name="default" id="38f1107b-1fe2-4a2f-979f-a324cb429681">
+    <Deployment runDeploymentRoot="Administrator_IZ3H5BJSZD44YHZ_2026-09-18_23_49_00" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="518c6e33-3480-4abe-957a-a2b0d5a8c6aa" testId="c5b0fb4c-22b4-69a3-fce3-222134b67f6a" testName="PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.O_B21A2E1BF669" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.1047477" startTime="2026-09-18T23:49:00.7036446+08:00" endTime="2026-09-18T23:49:00.7036574+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="518c6e33-3480-4abe-957a-a2b0d5a8c6aa">
+      <Output>
+        <StdOut>S54_OBSERVATION:distinct-restricted-os-token=true</StdOut>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.O_B21A2E1BF669" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="c5b0fb4c-22b4-69a3-fce3-222134b67f6a">
+      <Execution id="518c6e33-3480-4abe-957a-a2b0d5a8c6aa" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests" name="O_B21A2E1BF669" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="c5b0fb4c-22b4-69a3-fce3-222134b67f6a" executionId="518c6e33-3480-4abe-957a-a2b0d5a8c6aa" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="列表中未列出的结果" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="所有已加载的结果" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="1" executed="1" passed="1" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.7+8f2703126a (64-bit .NET 8.0.21)&#xD;
+[xUnit.net 00:00:00.23]   Discovering: PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.36]   Discovered:  PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.36]   Starting:    PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.50]   Finished:    PhaseA.Platform.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

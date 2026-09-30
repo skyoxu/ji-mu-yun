@@ -1,0 +1,352 @@
+{
+  "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
+  "targetPlan": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "runId": "acceptance-8-24-20260930-r6",
+  "changeId": "identity-isolation-acceptance-evidence",
+  "baselineRevision": "0ce9e72496fa292b705ec3076068d927f4a74fad",
+  "candidateRevision": "295ebda8c974a541eb48fb90670b7f27d9303ee7",
+  "changedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+    "PhaseA.Platform.Tests/Security/RunnerIsolationTests.cs",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/acceptance-authority.v1.json",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/acceptance-input-projection.v1.json",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/knowledge-context-routes/da450d51a44e667ddb4ed7b7ffd8991ac4c47d50f6db3fab2f993589f76e4c4f.json",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/knowledge-context.refactor-acceptance.v1.json",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/knowledge-context.refactor-acceptance.v2.json"
+  ],
+  "affectedConsumerRefs": [
+    ".agents/skills/quick-dev-tdd-adapter",
+    ".agents/skills/run-refactor-implementation-acceptance",
+    "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery"
+  ],
+  "targetPlanPaths": [
+    "acceptances.v1.json",
+    "command-registry.v1.json",
+    "implementation-contract.v1.json",
+    "semantic-plan-bundle.v1.json"
+  ],
+  "knowledgeContextPath": "knowledge-context.refactor-acceptance.v2.json",
+  "codeReviewDomain": "toolchain",
+  "codeReviewPolicyPath": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+  "implementationReceiptPath": "logs/acceptance/8-24-r6/implementation-complete-successor.v2.json",
+  "implementationReceiptHash": "sha256:498ede0d3d6bc6c04c8299a679914106563468204d3bec1072132e311df99b58",
+  "currentQuickDev": {
+    "semanticPlan": {
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:ac9467055efc34e3312044386666f226ded19f8643bcad8d0a0cb71d4d909132"
+    },
+      "receipt": {
+      "path": "logs/acceptance/8-24-r6/implementation-complete-successor.v2.json",
+      "sha256": "sha256:498ede0d3d6bc6c04c8299a679914106563468204d3bec1072132e311df99b58"
+    },
+    "snapshotRoots": [
+      {
+        "content_sha256": "sha256:4f53496adf1adef358fd6290a4b0c8f5a7f35ea24159a983beb1972db4b532f9",
+        "inclusion_reason": "current candidate test tree",
+        "repository_relative_posix_path": "PhaseA.Platform.Tests",
+        "root_kind": "candidate_tree",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:38843003c85a6bf4985841acd89a8bd66eb4bc531000255ef484f7e5ddc2f0f0",
+        "inclusion_reason": "current execution plan tree",
+        "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+        "root_kind": "plan",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:206e7c33c9df9aa2cc59d7373a07e1e19104c4e578805c503ca3f7e4ebe5da15",
+        "inclusion_reason": "current execution contract",
+        "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/implementation-contract.v1.json",
+        "root_kind": "contract",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:e7f1a7c2b021c395549a5aa4b12affc60eb5cbfdb214f8633fd0d987d0a4e2ea",
+        "inclusion_reason": "all current execution descriptors",
+        "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context",
+        "root_kind": "descriptor",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:e42a96702da27bb04d8534feaa321f8f1e0109cc9e2d94af142376d8a1dea8b2",
+        "inclusion_reason": "current fixture tree",
+        "repository_relative_posix_path": "tests/phase_b_c_identity_isolation/current",
+        "root_kind": "fixture",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:0848a7ca357bc0203a0660de33ef29302bcb1eb9b407d3996545522e2f7ef3c0",
+        "inclusion_reason": "declared production source tree",
+        "repository_relative_posix_path": "PhaseA.Platform",
+        "root_kind": "source",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:7c2f654dede96cb178f8d4c09aabf249d4fdd1d304440aa3573ccf715859e718",
+        "inclusion_reason": "current observation judge",
+        "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+        "root_kind": "validator_judge",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:38843003c85a6bf4985841acd89a8bd66eb4bc531000255ef484f7e5ddc2f0f0",
+        "inclusion_reason": "current plan state transition tree",
+        "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+        "root_kind": "plan_state_transition",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      }
+    ],
+    "sourceCommit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+    "baseCommit": "295ebda8c974a541eb48fb90670b7f27d9303ee7"
+  },
+  "commands": [
+    {
+      "id": "s0-green",
+      "executable": "dotnet",
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.IdentityContextTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "s1-green",
+      "executable": "dotnet",
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.RunnerIsolationTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "s2-green",
+      "executable": "dotnet",
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.SnapshotTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "s3-green",
+      "executable": "dotnet",
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.RestoreRecoveryTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "s4-green",
+      "executable": "dotnet",
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.MigrationEvidenceTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "s0-terminal",
+      "executable": "dotnet",
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.IdentityContextTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "s1-terminal",
+      "executable": "dotnet",
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.RunnerIsolationTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "s2-terminal",
+      "executable": "dotnet",
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.SnapshotTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "s3-terminal",
+      "executable": "dotnet",
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.RestoreRecoveryTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "s4-terminal",
+      "executable": "dotnet",
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.MigrationEvidenceTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    }
+  ],
+  "actions": [
+    {
+      "actionId": "s0-green",
+      "activation": true,
+      "commandId": "s0-green",
+      "dependsOn": [],
+      "order": 1
+    },
+    {
+      "actionId": "s1-green",
+      "activation": true,
+      "commandId": "s1-green",
+      "dependsOn": [],
+      "order": 2
+    },
+    {
+      "actionId": "s2-green",
+      "activation": true,
+      "commandId": "s2-green",
+      "dependsOn": [],
+      "order": 3
+    },
+    {
+      "actionId": "s3-green",
+      "activation": true,
+      "commandId": "s3-green",
+      "dependsOn": [],
+      "order": 4
+    },
+    {
+      "actionId": "s4-green",
+      "activation": true,
+      "commandId": "s4-green",
+      "dependsOn": [],
+      "order": 5
+    },
+    {
+      "actionId": "s0-terminal",
+      "activation": true,
+      "commandId": "s0-terminal",
+      "dependsOn": [],
+      "order": 6
+    },
+    {
+      "actionId": "s1-terminal",
+      "activation": true,
+      "commandId": "s1-terminal",
+      "dependsOn": [],
+      "order": 7
+    },
+    {
+      "actionId": "s2-terminal",
+      "activation": true,
+      "commandId": "s2-terminal",
+      "dependsOn": [],
+      "order": 8
+    },
+    {
+      "actionId": "s3-terminal",
+      "activation": true,
+      "commandId": "s3-terminal",
+      "dependsOn": [],
+      "order": 9
+    },
+    {
+      "actionId": "s4-terminal",
+      "activation": true,
+      "commandId": "s4-terminal",
+      "dependsOn": [],
+      "order": 10
+    }
+  ],
+  "authorizes": []
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "jimuyun.acceptance-coordinator-request.v3",
+  "targetPlan": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "preparedRunInput": {
+    "path": "prepared-run-input.v1.json",
+    "sha256": "sha256:45f074f3cdc4968daa23ae69a84f4087c74e0fa81334a035c402519b73f1a07c"
+  },
+  "skillInputReceipt": {
+    "path": "current.v1.json",
+    "sha256": "sha256:d64d0ef0c96d21dca15b8f161d2f856a5e68eb7e8530a046f9ddb3330b86654b"
+  },
+  "skillInputContract": {
+    "path": "skill-input-contract.v1.json",
+    "sha256": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0"
+  },
+  "authorizes": []
+}

@@ -149,6 +149,31 @@ def _attempt(out_dir: Path, label: str, value: Mapping[str, Any]) -> None:
     gate.sc.atomic_json(out_dir / ".compiler-attempts" / f"{label}-{digest}.json", dict(value))
 
 
+def _publish_atomic_recall(out_dir: Path, recall: Mapping[str, Any]) -> Mapping[str, str]:
+    """Publish current V4 output without letting an old canonical file authorize it.
+
+    Failed runs are immutable evidence.  If an earlier run already published a
+    different root-level alignment, preserve that file and publish the current
+    validated value under its content address instead.  The returned binding is
+    included in the current compiler result, so consumers never discover an
+    alignment by filename ordering or mistake the historical root artifact for
+    current authority.
+    """
+    canonical = out_dir / "atomic-recall-alignment.v1.json"
+    payload = gate.sc.canonical_bytes(dict(recall))
+    digest = gate.sc.sha256_value(recall)
+    if not canonical.exists() or canonical.read_bytes() == payload:
+        gate.sc.atomic_json(canonical, dict(recall))
+        path = canonical
+    else:
+        path = out_dir / ".compiler-attempts" / f"v4-atomic-recall-alignment-{digest[7:31]}.json"
+        gate.sc.atomic_json(path, dict(recall))
+    return {
+        "path": path.relative_to(out_dir).as_posix(),
+        "sha256": digest,
+    }
+
+
 def _explicit_fixture_cache_wins(out_dir: Path, worker_cache: Mapping[str, Any] | None) -> None:
     """An explicitly supplied deterministic worker fixture supersedes old cache.
 
@@ -192,10 +217,18 @@ def compile_plan(
         raise ValueError("unsupported VDD resume mode")
     if recommendation_only and resume_from is not None:
         raise ValueError("recommendation-only cannot be combined with resume")
+    root = gate.sc.repository_root(requirements.parent)
+    source_index = gate.sc.build_source_index(root, requirements, companions)
 
     if resume_from == "first-failed-stage":
-        completed = gate._completed_resume(out_dir)
+        completed = gate._completed_resume(
+            out_dir,
+            source_index_sha256=source_index["sha256"],
+            profile=profile,
+        )
         if completed is not None:
+            if completed.get("status") != "plan-ready":
+                return completed
             audit = _plan_chain_audit(out_dir)
             return {**completed, "semantic_chain_metrics": audit["metrics"]}
 
@@ -210,8 +243,6 @@ def compile_plan(
         )
 
     _explicit_fixture_cache_wins(out_dir, worker_cache)
-    root = gate.sc.repository_root(requirements.parent)
-    source_index = stage_call(out_dir, "V0", gate.sc.build_source_index, root, requirements, companions)
     preflight = stage_call(out_dir, "V0A", gate.sc.source_preflight, root, source_index)
     if not preflight["valid"]:
         result = {"status": "repair-vdd", "stage": "V0A", "source_index": source_index, "preflight": preflight}
@@ -255,9 +286,10 @@ def compile_plan(
         _attempt(out_dir, "v4-atomic-recall", {**result, "alignment": recall})
         return result
 
-    # Canonical recall exists only after the gate is valid. This keeps a failed
-    # attempt from poisoning a repaired resume via create-if-absent semantics.
-    gate.sc.atomic_json(out_dir / "atomic-recall-alignment.v1.json", recall)
+    # Canonical recall exists only after the gate is valid. A distinct old
+    # alignment remains immutable historical evidence; the current output gets
+    # an explicit content-addressed binding instead of overwriting it.
+    recall_binding = _publish_atomic_recall(out_dir, recall)
 
     result = dict(
         gate._ORIGINAL_COMPILE_PLAN(
@@ -270,6 +302,7 @@ def compile_plan(
         )
     )
     result["atomic_quality_metrics"] = recall["metrics"]
+    result["atomic_recall_alignment"] = recall_binding
     if result.get("status") != "plan-ready":
         _attempt(out_dir, str(result.get("stage") or "compile"), result)
         return result

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from semantic_progress import worker_call, stage_call
 
+from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
 import sys
@@ -17,11 +18,22 @@ from typing import Any, Mapping
 import semantic_compiler_gate as gate
 import semantic_worker_transport_patch as transport
 import semantic_worker_v3_domain_patch as v3_domain
+from semantic_worker_v3_path_grounding_patch import ground_v3_paths
 from semantic_repository_context import enrich_repository_context, PATH_CONTEXT_PROMPT
 
 sc = gate.sc
 _BASE_DOMAIN_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
 _GROUP_STAGE = "v3-schema-repair-group-v5-inline-context"
+# Keep each worker schema bounded while avoiding one network round trip per
+# atomic contract. Exact IDs are still enforced by the group schema and the
+# frozen-domain merge below.
+_MAX_OBLIGATIONS_PER_CALL = 4
+_MAX_TRANSIENT_WORKER_ATTEMPTS = 10
+_BEFORE_SPLIT_TRANSIENT_ATTEMPTS = 2
+
+
+class TransientV3WorkerFailure(RuntimeError):
+    """A worker process exited before producing a parseable candidate."""
 
 
 def _string_array(*, nonempty: bool = False, enum: list[str] | None = None) -> dict[str, Any]:
@@ -42,6 +54,24 @@ def _repair_obligations(payload: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     if not isinstance(values, list):
         return []
     return [item for item in values if isinstance(item, Mapping) and item.get("status", "active") == "active"]
+
+
+def group_cache_identity_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the semantic cache identity, excluding discovery-only observations.
+
+    ``repository_path_context`` helps the worker select existing files but has
+    no normative authority. Including its current-worktree hashes made V3
+    cache reuse depend on unrelated compiler/test edits. Schema-repair wrappers
+    likewise carry diagnostics, not new frozen semantics, so their nested
+    input shares the same identity as the original V3 request.
+    """
+    nested = payload.get("input")
+    semantic = nested if isinstance(nested, Mapping) else payload
+    return {
+        **{"projection_contract": "vdd-v3-path-grounding-v2"},
+        **{str(key): value for key, value in semantic.items()
+           if key != "repository_path_context"},
+    }
 
 
 def _obligation_refs(payload: Mapping[str, Any]) -> dict[str, list[str]]:
@@ -382,7 +412,133 @@ def _project_current_output(value: Mapping[str, Any], refs_by_oid: Mapping[str, 
     return _project(value, refs_by_oid=refs_by_oid)
 
 
-def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any], prompt: str) -> Mapping[str, Any]:
+def _ground_group_result(root: Path, payload: Mapping[str, Any], value: Mapping[str, Any]) -> Mapping[str, Any]:
+    """Apply finite stale-path projection after group aggregation."""
+    source = payload.get("input")
+    if not isinstance(source, Mapping):
+        source = payload
+    grounded, _changes = ground_v3_paths(Path(root), source, value)
+    return grounded
+
+
+def _live_group_repair(
+    *, root: Path, out_dir: Path, payload: Mapping[str, Any], prompt: str,
+    max_obligations: int | None = None,
+) -> Mapping[str, Any]:
+    obligations = _repair_obligations(payload)
+    limit = max_obligations or _MAX_OBLIGATIONS_PER_CALL
+    if len(obligations) > limit:
+        combined = {"acceptances": [], "failure_intents": [], "slice_hints": []}
+        original = payload.get("input")
+        if not isinstance(original, Mapping):
+            raise ValueError("V3 repair input is missing")
+        chunks = []
+        for offset in range(0, len(obligations), limit):
+            chunk = obligations[offset:offset + limit]
+            chunk_payload = dict(payload)
+            chunk_payload["input"] = {**original, "obligations": chunk}
+            chunks.append((chunk, chunk_payload))
+
+        def compile_chunk(item):
+            chunk, chunk_payload = item
+            try:
+                return _live_group_repair_one(
+                    root=root, out_dir=out_dir, payload=chunk_payload, prompt=prompt,
+                    max_attempts=_BEFORE_SPLIT_TRANSIENT_ATTEMPTS if len(chunk) > 1 else None,
+                )
+            except (TransientV3WorkerFailure, ValueError):
+                if len(chunk) == 1:
+                    raise
+                return _live_group_repair(
+                    root=root, out_dir=out_dir, payload=chunk_payload, prompt=prompt,
+                    max_obligations=max(1, len(chunk) // 2),
+                )
+
+        with ThreadPoolExecutor(max_workers=min(4, len(chunks))) as executor:
+            projected_chunks = list(executor.map(compile_chunk, chunks))
+        for projected in projected_chunks:
+            for key in combined:
+                values = projected.get(key)
+                if not isinstance(values, list):
+                    raise ValueError(f"V3 chunk output is missing {key}")
+                combined[key].extend(values)
+        return _ground_group_result(root, payload, combined)
+
+    if len(obligations) > 1:
+        try:
+            return _ground_group_result(
+                root,
+                payload,
+                _live_group_repair_one(
+                    root=root, out_dir=out_dir, payload=payload, prompt=prompt,
+                    max_attempts=_BEFORE_SPLIT_TRANSIENT_ATTEMPTS,
+                ),
+            )
+        except (TransientV3WorkerFailure, ValueError):
+            return _live_group_repair(
+                root=root, out_dir=out_dir, payload=payload, prompt=prompt,
+                max_obligations=max(1, len(obligations) // 2),
+            )
+    return _live_group_repair_one(root=root, out_dir=out_dir, payload=payload, prompt=prompt)
+
+
+def _cached_group_result(*, root: Path, out_dir: Path, payload: Mapping[str, Any]):
+    """ADR-0041: reuse only an exact input after current contract validation."""
+    path = out_dir / ".compiler-cache" / sc._worker_cache_key(
+        _GROUP_STAGE, group_cache_identity_payload(payload))
+    if not path.is_file():
+        return None
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(raw, Mapping):
+            return None
+        projected = _ground_group_result(
+            root, payload, _project_current_output(raw, _obligation_refs(payload)))
+        if v3_domain._domain_findings("v3-schema-repair", payload, projected):
+            return None
+        return projected
+    except (OSError, ValueError):
+        return None
+
+
+def _cached_split_result(*, root: Path, out_dir: Path, payload: Mapping[str, Any]):
+    """Replay the existing deterministic split tree without retrying its parent.
+
+    Cache files remain the only storage; no new receipt format or history scan.
+    An incomplete split is not a completed judgment.
+    """
+    cached = _cached_group_result(root=root, out_dir=out_dir, payload=payload)
+    if cached is not None:
+        return cached
+    obligations = _repair_obligations(payload)
+    if len(obligations) <= 1:
+        return None
+    limit = max(1, len(obligations) // 2)
+    combined = {"acceptances": [], "failure_intents": [], "slice_hints": []}
+    for offset in range(0, len(obligations), limit):
+        child = {**payload, "input": {**payload["input"],
+                 "obligations": obligations[offset:offset + limit]}}
+        result = _cached_split_result(root=root, out_dir=out_dir, payload=child)
+        if result is None:
+            return None
+        for key in combined:
+            combined[key].extend(result[key])
+    combined = _ground_group_result(root, payload, combined)
+    if v3_domain._domain_findings("v3-schema-repair", payload, combined):
+        return None
+    return combined
+
+
+def _live_group_repair_one(
+    *, root: Path, out_dir: Path, payload: Mapping[str, Any], prompt: str,
+    max_attempts: int | None = None,
+) -> Mapping[str, Any]:
+
+    # Cache hits need current path/domain checks, but not model discovery context
+    # or backend initialization. Successful child caches also survive a restart.
+    cached = _cached_split_result(root=root, out_dir=out_dir, payload=payload)
+    if cached is not None:
+        return cached
     payload = enrich_repository_context(root, payload)
     prompt += PATH_CONTEXT_PROMPT
     scripts = root / "scripts" / "sc"
@@ -394,19 +550,16 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
         raise RuntimeError("shared LLM backend is unavailable") from exc
 
     cache_dir = out_dir / ".compiler-cache"
-    cache_path = cache_dir / sc._worker_cache_key(_GROUP_STAGE, payload)
+    cache_identity = group_cache_identity_payload(payload)
+    cache_path = cache_dir / sc._worker_cache_key(_GROUP_STAGE, cache_identity)
     refs_by_oid = _obligation_refs(payload)
-    if cache_path.is_file():
-        cached = json.loads(cache_path.read_text(encoding="utf-8"))
-        if not isinstance(cached, Mapping):
-            raise ValueError("V3 group repair cache is malformed")
-        return _project_current_output(cached, refs_by_oid)
-
-    output = out_dir / ".compiler-work" / f"{_GROUP_STAGE}-last-message.json"
+    call_suffix = sc._worker_cache_key(_GROUP_STAGE, cache_identity).rsplit("-", 1)[-1].removesuffix(".json")
+    call_stage = f"{_GROUP_STAGE}-{call_suffix}"
+    output = out_dir / ".compiler-work" / f"{call_stage}-last-message.json"
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         output.unlink()
-    schema_path = transport._schema_path(out_dir, _GROUP_STAGE, _group_schema(payload))
+    schema_path = transport._schema_path(out_dir, call_stage, _group_schema(payload))
     grouped_prompt = (
         prompt
         + "\n\nV3 REPAIR OUTPUT CONTRACT: return only obligation_contracts{}. It must contain every "
@@ -427,19 +580,25 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
     extra_args = ["--output-schema", str(schema_path)] if backend == "codex-cli" else []
 
     def run(extra: list[str]):
-        return worker_call(run_llm_exec, progress_dir=out_dir, progress_stage="v3-schema-repair",
+        return worker_call(run_llm_exec, progress_dir=out_dir, progress_stage=call_stage,
             backend=backend, root=root, prompt=grouped_prompt, output_last_message=output,
             timeout_sec=transport._REPAIR_TIMEOUT_SECONDS,
             codex_configs=['model_reasoning_effort="medium"'], codex_sandbox="read-only", codex_extra_args=extra,
         )
 
-    code, trace, _argv = run(extra_args)
-    if code != 0 and extra_args and transport._unsupported_output_schema(trace):
+    trace = ""
+    attempts = max_attempts or _MAX_TRANSIENT_WORKER_ATTEMPTS
+    for attempt in range(1, attempts + 1):
         if output.exists():
             output.unlink()
-        code, trace, _argv = run([])
-    if code != 0 or not output.is_file():
-        raise RuntimeError(f"semantic worker v3-schema-repair failed: {_trace_summary(trace)}")
+        code, trace, _argv = run(extra_args)
+        if code == 0 and output.is_file():
+            break
+    else:
+        raise TransientV3WorkerFailure(
+            "semantic worker v3-schema-repair failed after "
+            f"{attempts} attempts: {_trace_summary(trace)}"
+        )
     raw = sc._parse_json_output(output.read_text(encoding="utf-8"))
     projected = _project_current_output(raw, refs_by_oid)
     sc.atomic_json(cache_path, raw)
@@ -447,6 +606,17 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
 
 
 def group_repair_transport(*, root, out_dir, stage: str, payload: Mapping[str, Any], prompt: str, worker_cache: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
+    if stage == "v3":
+        obligations = payload.get("obligations")
+        active = [item for item in obligations or [] if isinstance(item, Mapping) and item.get("status", "active") == "active"]
+        if len(active) > _MAX_OBLIGATIONS_PER_CALL and not (worker_cache and stage in worker_cache):
+            repair_payload = {"original_stage": stage, "input": payload, "validator_findings": ["worker-input:bounded-transport"]}
+            value = _live_group_repair(root=Path(root), out_dir=Path(out_dir), payload=repair_payload, prompt=prompt)
+            value = _ground_group_result(root, payload, value)
+            findings = v3_domain._domain_findings(stage, payload, value)
+            if findings:
+                raise ValueError("V3 frozen-domain validation failed: " + "; ".join(findings))
+            return value
     if stage != "v3-schema-repair":
         return _BASE_DOMAIN_TRANSPORT(root=root, out_dir=out_dir, stage=stage, payload=payload, prompt=prompt, worker_cache=worker_cache)
     refs_by_oid = _obligation_refs(payload)
@@ -457,6 +627,7 @@ def group_repair_transport(*, root, out_dir, stage: str, payload: Mapping[str, A
         value = _project(raw, refs_by_oid=refs_by_oid) if "groups" in raw or "obligation_contracts" in raw else dict(raw)
     else:
         value = _live_group_repair(root=Path(root), out_dir=Path(out_dir), payload=payload, prompt=prompt)
+    value = _ground_group_result(root, payload, value)
     findings = v3_domain._domain_findings(stage, payload, value)
     if findings:
         raise ValueError("V3 frozen-domain validation failed: " + "; ".join(findings))

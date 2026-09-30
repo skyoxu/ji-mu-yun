@@ -1,0 +1,21 @@
+{
+  "schema": "quick-dev.closeout-progress.v1",
+  "plan_id": "PLAN-E24BDCAA6457",
+  "source_commit": "HEAD",
+  "plan_slice_count": 73,
+  "valid_predecessor_count": 56,
+  "remaining_predecessor_count": 17,
+  "valid_predecessor_source": "predecessor-aggregation-20260929-batch12.v1.json",
+  "newly_closed": [
+    "S74",
+    "S75",
+    "S80"
+  ],
+  "invalid_predecessor_refs": [],
+  "probe_blockers": [
+    "S13",
+    "S14",
+    "S49"
+  ],
+  "q8_status": "not-run-incomplete-predecessor-set"
+}

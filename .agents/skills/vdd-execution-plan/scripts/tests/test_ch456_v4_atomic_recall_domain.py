@@ -41,6 +41,17 @@ def test_v4_structured_schema_is_closed_over_frozen_active_ids_and_source_refs()
     assert "uniqueItems" not in schema["properties"]["invented_obligation_ids"]
 
 
+def test_v4_schema_repair_sends_only_the_frozen_semantic_payload() -> None:
+    payload = _payload()
+    repair = {
+        "original_stage": "v4-atomic-recall",
+        "input": payload,
+        "validator_findings": ["worker-output:unsupported"],
+    }
+    assert v4_domain._worker_input_payload("v4-atomic-recall-schema-repair", repair) == payload
+
+
+
 def test_unknown_supported_id_routes_through_existing_single_repair(tmp_path: Path) -> None:
     payload = _payload()
     invalid = {

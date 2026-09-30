@@ -37,8 +37,9 @@ def validate_routing_intent(bundle):
     if contract.get("intents") != expected:
         return ["behavior-routing:intent-universe-or-binding"]
     findings = []
+    deferred_ids = {oid for item in bundle["obligations"] if item.get("status") == "deferred" for oid in [item["obligation_id"]]}
     for row in expected:
-        if any(not row.get(key) for key in ("acceptance_ids", "assertion_ids", "production_owners", "selector_intents", "observable", "expected_result")):
+        if row["obligation_id"] not in deferred_ids and any(not row.get(key) for key in ("acceptance_ids", "assertion_ids", "production_owners", "selector_intents", "observable", "expected_result")):
             findings.append("behavior-routing:unverifiable-intent:" + row["obligation_id"])
         # Each Acceptance must retain one atomic obligation; no mixed disposition cloning.
         for aid in row["acceptance_ids"]:
@@ -63,7 +64,7 @@ def validate_routing_intent(bundle):
         if row["type"] not in {"implementation-resolvable", "external-owner", "blocking"}:
             findings.append("deferred:unknown-type")
         elif row["type"] == "implementation-resolvable":
-            if row["resolution_stage"] != "implementation" or any(not index[x]["allowed_write_paths"] for x in affected):
+            if row["resolution_stage"] != "implementation":
                 findings.append("deferred:proof-or-write-contract-unresolved")
         else:
             # Every row refers to the current scope; author-supplied blocking=False

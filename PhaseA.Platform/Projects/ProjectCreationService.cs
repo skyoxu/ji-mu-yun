@@ -237,7 +237,22 @@ public sealed class ProjectCreationService
         }
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null || (!isAdmin && !string.Equals(project.AccountId, accountId, StringComparison.Ordinal)))
+        if (project is null)
+        {
+            // S20/AD-11: a repeated confirmed delete is an idempotent protected-cleanup request.
+            // The tombstone retains owner resolution after the normal project view is withdrawn.
+            var tombstone = (await _metadataStore.ListProjectDeleteTombstonesForAdminAsync(cancellationToken: cancellationToken))
+                .SingleOrDefault(item => item.ProjectId == projectId);
+            if (tombstone is null || (!isAdmin && !string.Equals(tombstone.AccountId, accountId, StringComparison.Ordinal)))
+            {
+                return ProjectDeletionResult.Failure("project_not_found");
+            }
+
+            await _metadataStore.SoftDeleteProjectAsync(projectId, cancellationToken);
+            return ProjectDeletionResult.Deleted(projectId);
+        }
+
+        if (!isAdmin && !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             return ProjectDeletionResult.Failure("project_not_found");
         }
@@ -249,25 +264,7 @@ public sealed class ProjectCreationService
             return ProjectDeletionResult.Failure("project_busy");
         }
 
-        await _metadataStore.DeleteProjectAsync(projectId, cancellationToken);
-        var warningCode = (string?)null;
-        if (Directory.Exists(project.WorkspaceRootPath))
-        {
-            try
-            {
-                Directory.Delete(project.WorkspaceRootPath, recursive: true);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                warningCode = "workspace_delete_failed";
-                _logger?.LogWarning(
-                    ex,
-                    "Project {ProjectId} was deleted from metadata, but workspace deletion failed for {WorkspaceRootPath}.",
-                    projectId,
-                    project.WorkspaceRootPath);
-            }
-        }
-
-        return ProjectDeletionResult.Deleted(projectId, warningCode);
+        await _metadataStore.SoftDeleteProjectAsync(projectId, cancellationToken);
+        return ProjectDeletionResult.Deleted(projectId);
     }
 }

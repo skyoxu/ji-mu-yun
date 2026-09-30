@@ -1,10 +1,9 @@
 """Static anti-fabrication guard for a planned/actual RED selector.
 
-The initial Chapter 4/5/6 execution envelope is Windows + pytest/Python.  Before
-any public RED process launch, require the bound Python test to import and call at
-least one declared Python production owner.  This is intentionally conservative:
-an unsupported/dynamic binding is a VDD/RED-contract repair, never an assumed
-expected RED.
+The execution envelope is pytest. Require a direct Python production call or
+verified pytest-to-.NET static binding (ADR-0041). Static binding is admission
+only; actual CER cases and product assertions still decide RED. Unsupported
+bindings fail closed.
 """
 from __future__ import annotations
 
@@ -114,8 +113,6 @@ def validate_red_production_entry(
     selected = _slice(bundle, slice_id)
     owners = [str(item) for item in selected.get("production_owners", []) if isinstance(item, str) and item]
     python_owners = [(owner, module) for owner in owners if (module := _module_for_owner(owner))]
-    if not python_owners:
-        raise ValueError("RED production-entry guard has no supported Python production owner")
 
     candidate_refs: list[str] = []
     for raw in [*descriptor.get("target_refs", []), *selected.get("execution_snapshot_paths", [])]:
@@ -157,7 +154,12 @@ def validate_red_production_entry(
         for ref, _source, tree in parsed:
             if _owner_called(tree, module):
                 bindings.append({"production_owner": owner, "module": module, "test_ref": ref})
+    if not bindings and any(owner.endswith(".cs") for owner in owners):
+        from dotnet_production_entry import dotnet_bindings
+        bindings.extend(dotnet_bindings(workspace=root, selected=selected, parsed=parsed))
     if not bindings:
+        if not python_owners:
+            raise ValueError("RED production-entry guard has no supported Python production owner or verified .NET test binding")
         raise ValueError("RED test does not import and call any declared production owner")
 
     return {

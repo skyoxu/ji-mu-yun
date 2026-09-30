@@ -1,0 +1,8 @@
+[
+  {
+    "slice_id": "S53",
+    "run_root": "logs/quick-dev/20260928-r8-s53-successor",
+    "result_ref": "logs/quick-dev/20260928-r8-s53-successor/slice-ready-current.v1.json",
+    "result_sha256": "sha256:73074922c0c9511c1aa7ae294f79c912d4f7b3858f252df5048408b45ea7c84c"
+  }
+]

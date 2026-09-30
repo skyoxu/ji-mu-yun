@@ -1,0 +1,14 @@
+{
+  "schema": "quick-dev.closeout-progress.v1",
+  "current_snapshot": "sha256:44bbab4a348f910171e7bd3834b4da3c1805d0ce9a9447369f02032b05ecac5e",
+  "current_predecessors": [
+    "S53",
+    "S12",
+    "S47",
+    "S66",
+    "S69"
+  ],
+  "q8_result": "blocked: terminal predecessor set does not match slices",
+  "remaining_slices": 68,
+  "red_green_entered": false
+}

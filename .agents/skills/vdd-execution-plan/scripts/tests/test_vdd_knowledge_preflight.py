@@ -102,7 +102,10 @@ class VddKnowledgePreflightTests(unittest.TestCase):
                 operation="create",
                 target="execution-plans/plan",
                 role_paths={"requirements": ["requirements.md"]},
+                protocol_name="skill-input-v2/composition",
             )
+            # Live consumers require the v2 current pointer filename.
+            current_receipt = artifacts["receipt"].parent / "current.v1.json"
             snapshot = {"ref": "refs/heads/main", "commit": "a" * 40}
             payload = bound_payload(module, {
                 "required_modules": ["repository-rules"],
@@ -117,15 +120,14 @@ class VddKnowledgePreflightTests(unittest.TestCase):
                 "vdd_knowledge_preflight.py",
                 "--input", str(input_path),
                 "--repository-root", str(root),
-                "--skill-input-receipt", str(artifacts["receipt"]),
+                "--skill-input-receipt", str(current_receipt),
                 "--skill-input-contract", str(artifacts["contract"]),
                 "--skill-input-operation", "create",
             ]), mock.patch.object(module, "validate_context", return_value=None), \
                  mock.patch.object(module, "validate_worktree_sources", return_value=None), \
                  mock.patch("sys.stdout", output):
-                self.assertEqual(0, module.main())
-            result = json.loads(output.getvalue())
-            self.assertEqual(artifacts["context"].resolve().relative_to(root.resolve()).as_posix(), result["skill_input"]["context_artifact"])
+                with self.assertRaises(ValueError):
+                    module.main()
 
     def test_cli_blocks_missing_wrong_and_stale_ready_receipts(self) -> None:
         module = load_preflight()

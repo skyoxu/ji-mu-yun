@@ -1,0 +1,159 @@
+{
+  "actionDag": {
+    "actions": [
+      {
+        "actionId": "s0-green",
+        "activation": true,
+        "commandId": "s0-green",
+        "dependsOn": [],
+        "order": 1
+      },
+      {
+        "actionId": "s1-green",
+        "activation": true,
+        "commandId": "s1-green",
+        "dependsOn": [],
+        "order": 2
+      },
+      {
+        "actionId": "s2-green",
+        "activation": true,
+        "commandId": "s2-green",
+        "dependsOn": [],
+        "order": 3
+      },
+      {
+        "actionId": "s3-green",
+        "activation": true,
+        "commandId": "s3-green",
+        "dependsOn": [],
+        "order": 4
+      },
+      {
+        "actionId": "s4-green",
+        "activation": true,
+        "commandId": "s4-green",
+        "dependsOn": [],
+        "order": 5
+      },
+      {
+        "actionId": "s0-terminal",
+        "activation": true,
+        "commandId": "s0-terminal",
+        "dependsOn": [],
+        "order": 6
+      },
+      {
+        "actionId": "s1-terminal",
+        "activation": true,
+        "commandId": "s1-terminal",
+        "dependsOn": [],
+        "order": 7
+      },
+      {
+        "actionId": "s2-terminal",
+        "activation": true,
+        "commandId": "s2-terminal",
+        "dependsOn": [],
+        "order": 8
+      },
+      {
+        "actionId": "s3-terminal",
+        "activation": true,
+        "commandId": "s3-terminal",
+        "dependsOn": [],
+        "order": 9
+      },
+      {
+        "actionId": "s4-terminal",
+        "activation": true,
+        "commandId": "s4-terminal",
+        "dependsOn": [],
+        "order": 10
+      }
+    ]
+  },
+  "actionDagHash": "sha256:e01d90d42f55db8bda3d7681ac645686cbced363cc483e5f72e288c6a742c1bc",
+  "authorizes": [],
+  "bootstrapInvoked": false,
+  "executedActionCount": 10,
+  "finalization": {
+    "authorizes": [
+      "acceptance-passed"
+    ],
+    "final": {
+      "path": "finalization/acceptance-passed.v1.json",
+      "sha256": "sha256:56b16843ef175b54c76078b980a97b8253014f7d0af14b2c146e72bc3429e6a3"
+    },
+    "status": "acceptance-passed",
+    "wrapper": {
+      "path": "finalization/acceptance-result-final.v1.json",
+      "sha256": "sha256:3a28cab442478fe1fcbcc8fa5775ba3fba8316efffa7774b5245e0888da187cb"
+    }
+  },
+  "persistedActionState": {
+    "actionStates": {
+      "s0-green": "completed",
+      "s0-terminal": "completed",
+      "s1-green": "completed",
+      "s1-terminal": "completed",
+      "s2-green": "completed",
+      "s2-terminal": "completed",
+      "s3-green": "completed",
+      "s3-terminal": "completed",
+      "s4-green": "completed",
+      "s4-terminal": "completed"
+    },
+    "authorizes": [],
+    "dependencyClosed": {
+      "s0-green": true,
+      "s0-terminal": true,
+      "s1-green": true,
+      "s1-terminal": true,
+      "s2-green": true,
+      "s2-terminal": true,
+      "s3-green": true,
+      "s3-terminal": true,
+      "s4-green": true,
+      "s4-terminal": true
+    },
+    "missingDependencies": {
+      "s0-green": [],
+      "s0-terminal": [],
+      "s1-green": [],
+      "s1-terminal": [],
+      "s2-green": [],
+      "s2-terminal": [],
+      "s3-green": [],
+      "s3-terminal": [],
+      "s4-green": [],
+      "s4-terminal": []
+    },
+    "nextAction": null,
+    "readyActionIds": [],
+    "runId": "acceptance-d3222ebfa36478eb",
+    "schemaVersion": "acceptance-run-inspection.v1",
+    "sortingBasis": "dependency-topology,action-order,command-registry-order,command-id"
+  },
+  "requestAuthority": "none",
+  "route": "deterministic_only",
+  "runBinding": {
+    "actionDagHash": "sha256:e01d90d42f55db8bda3d7681ac645686cbced363cc483e5f72e288c6a742c1bc",
+    "contractHash": "sha256:ec41131cb3d843388a629b2721b5bfc555aff029a778bbf99386dc9d452f5122",
+    "knowledgeContextHash": "sha256:87fffd05e1a980668adab3dfab74c19e0cfa595a73b70fa99bfc12af84e65a51",
+    "runDirectory": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/acceptance-runs/acceptance-d3222ebfa36478eb",
+    "runId": "acceptance-d3222ebfa36478eb",
+    "runInputHash": "sha256:06204d0de39a93faceb9e3739619ab0a77866ffdc34b6ac6bd19414d4a7df0fa"
+  },
+  "runBindingHash": "sha256:3afcd55f2e575cfee70c655d1e680fb876d766c5218093d992f2968320bca21c",
+  "runDirectory": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/acceptance-runs/acceptance-d3222ebfa36478eb",
+  "runId": "acceptance-d3222ebfa36478eb",
+  "runInputHash": "sha256:06204d0de39a93faceb9e3739619ab0a77866ffdc34b6ac6bd19414d4a7df0fa",
+  "schemaVersion": "acceptance-coordinator-result.v4",
+  "status": "completed",
+  "telemetry": {
+    "path": "coordinator-telemetry.jsonl",
+    "schemaVersion": "acceptance-coordinator-telemetry.v1"
+  },
+  "typedHandoff": null
+}

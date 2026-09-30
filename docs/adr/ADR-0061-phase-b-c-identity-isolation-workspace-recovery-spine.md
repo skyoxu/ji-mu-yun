@@ -41,3 +41,23 @@ It does not authorize implementation, deployment, migration execution, or releas
 - `_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/ARCHITECTURE-SPINE.md`
 - `_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/SPEC.md`
 - `docs/architecture/ADR_INDEX_PHASE.md`
+
+## Recovery implementation clarification (2026-09-28)
+
+This clarification implements the existing AD-1..AD-13 boundary; it does not
+change public API routes or introduce a new delivery workflow.
+
+- Restore recovery reads current content and the canonical frozen-contract
+  consumer recomputes source hashes. Applicable active sessions need their
+  current goal; needs-fix sessions need current diagnostics. Absence is only
+  not-applicable when no current session/repair requires the source.
+- Restore requires a matching account/project workspace descriptor. Every
+  staged and published object receives and passes the explicit Administrator
+  full-control / Runner modify ACL; a missing descriptor, reparse point, or
+  child ACL drift fails closed before Published.
+- An independent A18 reader needs a persisted succeeded producer run and
+  exact artifact bindings. Package integrity alone is insufficient. Its
+  producer exercises the Windows Runner access boundary and corrupt-snapshot
+  quarantine, and the reader checks the resulting artifacts and observations.
+- Windows execution evidence remains mandatory. Syntax checks and this
+  clarification do not certify implementation-complete or a passed Q8.

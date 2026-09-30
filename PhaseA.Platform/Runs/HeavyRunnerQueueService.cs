@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+
 namespace PhaseA.Platform.Runs;
 
 public sealed class HeavyRunnerQueueService
@@ -46,6 +48,37 @@ public sealed class HeavyRunnerQueueService
             cancellationToken);
     }
 
+    public async Task<T> ExecuteAuthorizedAsync<T>(
+        string runId,
+        string accountId,
+        string projectId,
+        string runType,
+        RequestContext context,
+        Func<RequestContext, CancellationToken, Task<bool>> reauthorizeAtStart,
+        Func<CancellationToken, Task<T>> work,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(reauthorizeAtStart);
+        context.DemandAccount(accountId);
+
+        return await ExecuteAsync(
+            runId,
+            accountId,
+            projectId,
+            runType,
+            async token =>
+            {
+                if (!await reauthorizeAtStart(context, token))
+                {
+                    throw new UnauthorizedAccessException("queued work is no longer authorized at execution");
+                }
+
+                return await work(token);
+            },
+            cancellationToken);
+    }
+
     public async Task<T> ExecuteAsync<T>(
         string runId,
         string accountId,
@@ -60,17 +93,19 @@ public sealed class HeavyRunnerQueueService
         ArgumentException.ThrowIfNullOrWhiteSpace(runType);
         ArgumentNullException.ThrowIfNull(work);
 
+        using var itemCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var item = new HeavyRunnerQueueItem(
             runId,
             accountId,
             projectId,
             runType,
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow,
+            itemCancellation);
 
         Enqueue(item);
         try
         {
-            await item.Ready.Task.WaitAsync(cancellationToken);
+            await item.Ready.Task.WaitAsync(itemCancellation.Token);
         }
         catch
         {
@@ -80,7 +115,7 @@ public sealed class HeavyRunnerQueueService
 
         try
         {
-            return await work(new HeavyRunnerStartContext(item.QueuePositionAtStart), cancellationToken);
+            return await work(new HeavyRunnerStartContext(item.QueuePositionAtStart), itemCancellation.Token);
         }
         finally
         {
@@ -100,25 +135,32 @@ public sealed class HeavyRunnerQueueService
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(runType);
 
+        var itemCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var item = new HeavyRunnerQueueItem(
             runId,
             accountId,
             projectId,
             runType,
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow,
+            itemCancellation);
 
         Enqueue(item);
         try
         {
-            await item.Ready.Task.WaitAsync(cancellationToken);
+            await item.Ready.Task.WaitAsync(itemCancellation.Token);
         }
         catch
         {
             Cancel(item);
+            itemCancellation.Dispose();
             throw;
         }
 
-        return new HeavyRunnerLease(item.QueuePositionAtStart, () => Complete(item));
+        return new HeavyRunnerLease(item.QueuePositionAtStart, () =>
+        {
+            Complete(item);
+            itemCancellation.Dispose();
+        });
     }
 
     public HeavyRunnerQueueReadback GetReadback(string accountId, bool includeAll)
@@ -161,7 +203,7 @@ public sealed class HeavyRunnerQueueService
             var running = _running.FirstOrDefault(item => string.Equals(item.RunId, runId, StringComparison.Ordinal));
             if (running is not null)
             {
-                running.Ready.TrySetCanceled();
+                running.Cancellation.Cancel();
                 return true;
             }
 
@@ -172,6 +214,7 @@ public sealed class HeavyRunnerQueueService
                 var waiting = _waiting.Dequeue();
                 if (string.Equals(waiting.RunId, runId, StringComparison.Ordinal))
                 {
+                    waiting.Cancellation.Cancel();
                     waiting.Ready.TrySetCanceled();
                     cancelled = true;
                     continue;
@@ -235,12 +278,36 @@ public sealed class HeavyRunnerQueueService
 
     private void TryStartNextLocked()
     {
-        while (_running.Count < _maxConcurrentRuns && _waiting.Count > 0)
+        while (_running.Count < _maxConcurrentRuns)
         {
-            var next = _waiting.Dequeue();
+            var next = DequeueNextEligibleLocked();
+            if (next is null)
+            {
+                return;
+            }
+
             _running.Add(next);
             next.Ready.TrySetResult();
         }
+    }
+
+    private HeavyRunnerQueueItem? DequeueNextEligibleLocked()
+    {
+        var next = _waiting.FirstOrDefault(candidate => _running.All(running =>
+            !string.Equals(running.ProjectId, candidate.ProjectId, StringComparison.Ordinal)));
+        if (next is null)
+        {
+            return null;
+        }
+
+        var retained = _waiting.Where(candidate => !ReferenceEquals(candidate, next)).ToArray();
+        _waiting.Clear();
+        foreach (var waiting in retained)
+        {
+            _waiting.Enqueue(waiting);
+        }
+
+        return next;
     }
 
     private int? EstimateWaitSeconds(int? position)
@@ -277,7 +344,8 @@ public sealed class HeavyRunnerQueueService
         string AccountId,
         string ProjectId,
         string RunType,
-        DateTimeOffset EnqueuedUtc)
+        DateTimeOffset EnqueuedUtc,
+        CancellationTokenSource Cancellation)
     {
         public TaskCompletionSource Ready { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public int QueuePositionAtStart { get; set; }

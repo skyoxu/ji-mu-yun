@@ -128,6 +128,32 @@ def test_resume_from_completed_plan_revalidates_without_worker_cache(tmp_path: P
     assert resumed["resume_strategy"] == "validated-completed-state"
 
 
+def test_resume_does_not_reuse_completed_plan_after_source_change(tmp_path: Path) -> None:
+    root, req, owner, selector = _repo(tmp_path)
+    out = root / "plan"
+    cache = _cache(owner, selector)
+    first = compile_plan(requirements=req, out_dir=out, worker_cache=cache)
+    assert first["status"] == "plan-ready"
+
+    req.write_text(
+        "# FR-1\nThe compiler must emit a deterministic plan with a stable identifier.\n",
+        encoding="utf-8",
+    )
+    resumed = compile_plan(
+        requirements=req,
+        out_dir=out,
+        worker_cache=cache,
+        resume_from="first-failed-stage",
+    )
+
+    assert resumed == {
+        "status": "repair-vdd",
+        "stage": "resume-context",
+        "reason": "current VDD inputs differ from the completed plan",
+        "resume_strategy": "context-mismatch",
+    }
+
+
 def test_public_cli_is_the_canonical_plan_ready_entry(tmp_path: Path) -> None:
     # ADR-0041: exercise the repository-owned entry as a process, not an internal import.
     root, req, owner, selector = _repo(tmp_path)

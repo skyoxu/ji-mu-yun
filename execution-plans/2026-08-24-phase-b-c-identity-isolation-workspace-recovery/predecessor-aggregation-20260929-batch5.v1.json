@@ -1,0 +1,206 @@
+{
+  "schema": "quick-dev.predecessor-aggregation.v2",
+  "plan_id": "PLAN-E24BDCAA6457",
+  "source_commit": "a7562e4904bdde9a51882862036842c74eae1c1c",
+  "valid_predecessors": [
+    {
+      "slice_id": "S9",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S9-r3",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S9-r3/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:db46c2f9bdbf7d7cca039148fd75813e21a7a2a1f1424d5f25a970609ad2a332"
+    },
+    {
+      "slice_id": "S10",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S10-r3",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S10-r3/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:ff9420fcac3cf671f23e6819f85ad240983341e5fed9c268ba659e604fd724a0"
+    },
+    {
+      "slice_id": "S11",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S11-r2",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S11-r2/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:1ccd853509b04b09f52a544315da751a0e8e67724fadfd9a748709ded292eb3f"
+    },
+    {
+      "slice_id": "S12",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S12",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S12/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:4e55857e8ca5a8c94ed2f30b41c44e73c98b221f5a423bc37243198d1ec4dd42"
+    },
+    {
+      "slice_id": "S21",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S21-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S21-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:f37990d781f5cd6d5b6f0e9f42f31f3fdf8cd3aa4c42f4507c1234f8964d42a0"
+    },
+    {
+      "slice_id": "S22",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S22-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S22-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:993898b835fb6439e93bc4d7945789d67473f8f6bbc75a3585f1bfcdc95568a6"
+    },
+    {
+      "slice_id": "S23",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S23-r3",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S23-r3/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:5e0246567e9f1f42cf82542290cb0f404e545c518934a540ca0e9da17117d2d9"
+    },
+    {
+      "slice_id": "S29",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S29-r2",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S29-r2/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:f43b7fb227416ff543266671aa66764792490aa63237cc6c4d6ae629f0794434"
+    },
+    {
+      "slice_id": "S2",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S2-r4",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S2-r4/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:1608a60e04173c56376dab1c8fd0cdfcf3d0fe0fa10a6217e6a0a2f8c96d7b5e"
+    },
+    {
+      "slice_id": "S3",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S3-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S3-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:c8d86897a7237b9535911ebaabcfef932250616b7d0c335ae7aa1b7cecf001ae"
+    },
+    {
+      "slice_id": "S33",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S33-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S33-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:98a3c27d4792d643757f6da71511a4fb80464fb16de92c0ab5270a898a5fca4e"
+    },
+    {
+      "slice_id": "S38",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S38",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S38/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:cbfdc872904899af82d412acebb27b4df574851e8b220dc93d143d4dc893827c"
+    },
+    {
+      "slice_id": "S43",
+      "run_root": "logs\\quick-dev\\20260929-s43-fe73-run",
+      "result_ref": "logs/quick-dev/20260929-s43-fe73-run/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:cbc98d8d4630b5214e4fff81e0c8a71c65a9cf060c1bbe0af1be9df2943f4e87"
+    },
+    {
+      "slice_id": "S47",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S47",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S47/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:c73d2222ee562b52156a80e10bbdeea591f24ce12261996e59509e9261057b8a"
+    },
+    {
+      "slice_id": "S54",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S54-r6",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S54-r6/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:398ebe09b3732dc30655d514b4f1c3641c06da704f77ba5d27a132476021cd8d"
+    },
+    {
+      "slice_id": "S55",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S55",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S55/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:4aeb3c3c8807d8e45bab9021b317d3300cc16014769881963ae54666bc1e22ec"
+    },
+    {
+      "slice_id": "S57",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S57-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S57-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:26da71bf2ca8a2d1e9532273a791ac2dae3a24607a1f40e0d71f8d4d2194e3e2"
+    },
+    {
+      "slice_id": "S66",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S66",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S66/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:3474942408ce87cbd369d7e2777f97e3169c6a57e3bb3b851eabe9cd8342e8da"
+    },
+    {
+      "slice_id": "S67",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S67-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S67-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:99325e2f01661fc041aba75aeb3938f082678e405fcb28dd1629040454cb5ebd"
+    },
+    {
+      "slice_id": "S68",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S68-r4",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S68-r4/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:c2bed95236832060babd9c0e5d14ef100def98b2d1f44e8b519e28a4775d1210"
+    },
+    {
+      "slice_id": "S69",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S69",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S69/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:ffe721c9c57e1049d1a68af2a811df234b8bfa7849ff2d255570bb428c4777bd"
+    },
+    {
+      "slice_id": "S76",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S76-r3",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S76-r3/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:3c89a65e6869ae75788b909497291858581cc941ba63c96ba56e269014ca9c9f"
+    },
+    {
+      "slice_id": "S78",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S78-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S78-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:510e622a7e62aa30c52be8730f6d1ece26b65cdcdf267d39a11bcf4a25ae756a"
+    },
+    {
+      "slice_id": "S79",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S79-r2",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S79-r2/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:59b20d46c21e87adf71b566ee7e5bc6c8b51fe66cbe384297549ba3438447236"
+    }
+  ],
+  "valid_count": 24,
+  "missing_slices": [
+    "S15",
+    "S18",
+    "S39",
+    "S58",
+    "S63",
+    "S35",
+    "S50",
+    "S56",
+    "S61",
+    "S73",
+    "S80",
+    "S20",
+    "S30",
+    "S48",
+    "S59",
+    "S75",
+    "S6",
+    "S8",
+    "S60",
+    "S74",
+    "S40",
+    "S4",
+    "S19",
+    "S24",
+    "S26",
+    "S31",
+    "S34",
+    "S37",
+    "S52",
+    "S65",
+    "S14",
+    "S16",
+    "S17",
+    "S28",
+    "S44",
+    "S49",
+    "S51",
+    "S62",
+    "S1",
+    "S13",
+    "S25",
+    "S32",
+    "S42",
+    "S45",
+    "S64",
+    "S5",
+    "S27",
+    "S53",
+    "S46"
+  ],
+  "duplicate_slices": [],
+  "invalid_entries": [],
+  "plan_slice_count": 73
+}\n

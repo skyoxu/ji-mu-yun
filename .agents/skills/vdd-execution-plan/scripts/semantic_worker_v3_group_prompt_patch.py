@@ -24,7 +24,7 @@ def _subject_domains(payload: Mapping[str, Any]) -> dict[str, list[str]]:
     }
 
 
-def _live_group_repair(*, root, out_dir, payload, prompt):
+def _live_group_repair(*, root, out_dir, payload, prompt, max_obligations=None):
     domains = _subject_domains(payload)
     augmented = prompt + (
         "\n\nV3 REPAIR INVARIANTS: obligation_contracts must contain every active frozen obligation "
@@ -47,7 +47,10 @@ def _live_group_repair(*, root, out_dir, payload, prompt):
         "do not copy expected-red intents from another obligation. Never weaken lifecycle, owner, write-set, oracle, or "
         "failure semantics merely to make grouping easier."
     )
-    return _BASE_LIVE_GROUP_REPAIR(root=root, out_dir=out_dir, payload=payload, prompt=augmented)
+    return _BASE_LIVE_GROUP_REPAIR(
+        root=root, out_dir=out_dir, payload=payload, prompt=augmented,
+        max_obligations=max_obligations,
+    )
 
 
 def install() -> None:

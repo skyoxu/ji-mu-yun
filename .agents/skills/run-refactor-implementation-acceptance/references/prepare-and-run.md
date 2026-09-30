@@ -68,7 +68,10 @@ run request, and prerequisite bundle. Historical snapshots, `in/` artifacts,
 and prior Acceptance inputs are never copied into a successor candidate.
 
 Before `start-or-resume`, bind `implementation_target` and
-`acceptance_requirements` for the `acceptance` operation.
+`acceptance_requirements` for the `acceptance` operation. For large current
+plans, `implementation_target` may bind a hash-verified bounded projection
+file beneath the target plan directory; the Coordinator still requires the
+declared `targetPlan` directory and rejects projections outside that directory.
 Use the v2 request and commands in `docs/workflows/skill-input-v2.md`
 (ADR-0060). Bind the real consumer contract, explicit required-input roots,
 registry, authority envelope with `skill_input_baseline`, and Knowledge freeze.

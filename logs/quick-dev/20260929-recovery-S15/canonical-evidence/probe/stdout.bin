@@ -1,0 +1,88 @@
+F..F                                                                     [100%]
+================================== FAILURES ===================================
+_____________________________ test_o_4708c4d8efaa _____________________________
+
+    @pytest.mark.cer_assertion("A-4708-1")
+    def test_o_4708c4d8efaa() -> None:
+>       result = invoke_boundary_test(f"{CASE_PREFIX}.O_4708C4D8EFAA")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\phase_b_c_identity_isolation\current\test_s15.py:11: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+case_name = 'PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_4708C4D8EFAA'
+
+    def invoke_boundary_test(case_name: str) -> BoundaryResult:
+        temporary_directory = tempfile.TemporaryDirectory(
+            prefix="s15-trx-", dir=TEMP_ROOT, ignore_cleanup_errors=True
+        )
+        try:
+            results_directory = temporary_directory.name
+            argv = [
+                "dotnet",
+                "test",
+                PROJECT_PATH,
+                "--filter",
+                f"FullyQualifiedName={case_name}",
+                "--logger",
+                "trx",
+                "--results-directory",
+                results_directory,
+            ]
+            try:
+                completed = subprocess.run(
+                    argv,
+                    cwd=REPOSITORY_ROOT,
+                    shell=False,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=180,
+                )
+            except subprocess.TimeoutExpired as error:
+                raise RuntimeError(f"S15 harness timeout for {case_name}") from error
+    
+            trx_files = list(Path(results_directory).glob("*.trx"))
+            if len(trx_files) != 1:
+                diagnostics = (completed.stdout + completed.stderr).strip()[-2000:]
+>               raise RuntimeError(
+                    f"S15 harness did not produce one fresh TRX for {case_name}: "
+                    f"exit={completed.returncode}, trx_count={len(trx_files)}, diagnostics={diagnostics!r}"
+                )
+E               RuntimeError: S15 harness did not produce one fresh TRX for PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_4708C4D8EFAA: exit=1, trx_count=0, diagnostics='latform.csproj]\nC:\\jimuyun\\PhaseA.Platform\\Security\\RunnerIsolationPolicy.cs(253,16): warning CA1416: 可在所有平台上访问此调用站点。"SecurityIdentifier.Value" 仅在 \'windows\' 上受支持。 (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1416) [C:\\jimuyun\\PhaseA.Platform\\PhaseA.Platform.csproj]\nC:\\jimuyun\\PhaseA.Platform\\Security\\RunnerIsolationPolicy.cs(251,15): warning CA1416: 可在所有平台上访问此调用站点。"NTAccount" 仅在 \'windows\' 上受支持。 (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1416) [C:\\jimuyun\\PhaseA.Platform\\PhaseA.Platform.csproj]\nC:\\jimuyun\\PhaseA.Platform\\Runs\\HostedProcessRunner.cs(59,13): warning CA1416: 可在所有平台上访问此调用站点。"ProcessStartInfo.LoadUserProfile" 在 \'windows\' 上受支持。 (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1416) [C:\\jimuyun\\PhaseA.Platform\\PhaseA.Platform.csproj]\nC:\\jimuyun\\PhaseA.Platform\\Runs\\HostedProcessRunner.cs(132,13): warning CA1416: 可在所有平台上访问此调用站点。"ProcessStartInfo.PasswordInClearText" 在 \'windows\' 上受支持。 (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1416) [C:\\jimuyun\\PhaseA.Platform\\PhaseA.Platform.csproj]\nC:\\jimuyun\\PhaseA.Platform\\Runs\\HostedProcessRunner.cs(58,13): warning CA1416: 可在所有平台上访问此调用站点。"ProcessStartInfo.PasswordInClearText" 在 \'windows\' 上受支持。 (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1416) [C:\\jimuyun\\PhaseA.Platform\\PhaseA.Platform.csproj]\nC:\\jimuyun\\PhaseA.Platform\\Runs\\HostedProcessRunner.cs(57,13): warning CA1416: 可在所有平台上访问此调用站点。"ProcessStartInfo.Domain" 在 \'windows\' 上受支持。 (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1416) [C:\\jimuyun\\PhaseA.Platform\\PhaseA.Platform.csproj]\nCSC : error CS2012: 无法打开“C:\\jimuyun\\PhaseA.Platform\\obj\\Debug\\net8.0\\PhaseA.Platform.dll”进行写入 --“The process cannot access the file \'C:\\jimuyun\\PhaseA.Platform\\obj\\Debug\\net8.0\\PhaseA.Platform.dll\' because it is being used by another process.” [C:\\jimuyun\\PhaseA.Platform\\PhaseA.Platform.csproj]'
+
+tests\phase_b_c_identity_isolation\current\s15_fixture.py:57: RuntimeError
+_____________________________ test_o_9fda0b49e011 _____________________________
+
+    @pytest.mark.cer_assertion("A-9FDA-1")
+    def test_o_9fda0b49e011() -> None:
+        result = invoke_boundary_test(f"{CASE_PREFIX}.O_9FDA0B49E011")
+>       assert_behavior(
+            result,
+            "S15-OBSERVATION O-9FDA0B49E011 admin-bearer-not-persisted-as-general-human-browser-credential",
+            "FAILURE-O-9FDA0B49E011",
+        )
+
+tests\phase_b_c_identity_isolation\current\test_s15.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+result = BoundaryResult(case_name='PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_9FDA0B49E011', outcome='Failed', deta... previous location ---</ns0:StackTrace>\n        </ns0:ErrorInfo>\n      </ns0:Output>\n    </ns0:UnitTestResult>\n  ')
+expected_observation = 'S15-OBSERVATION O-9FDA0B49E011 admin-bearer-not-persisted-as-general-human-browser-credential'
+failure_id = 'FAILURE-O-9FDA0B49E011'
+
+    def assert_behavior(result: BoundaryResult, expected_observation: str, failure_id: str) -> None:
+        if result.outcome == "Passed" and expected_observation in result.details:
+            return
+        if result.outcome != "Failed" or failure_id not in result.details:
+>           raise RuntimeError(
+                f"S15 boundary did not report a behavioral assertion failure for {result.case_name}"
+            )
+E           RuntimeError: S15 boundary did not report a behavioral assertion failure for PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_9FDA0B49E011
+
+tests\phase_b_c_identity_isolation\current\s15_fixture.py:99: RuntimeError
+=========================== short test summary info ===========================
+FAILED tests/phase_b_c_identity_isolation/current/test_s15.py::test_o_4708c4d8efaa
+FAILED tests/phase_b_c_identity_isolation/current/test_s15.py::test_o_9fda0b49e011
+2 failed, 2 passed in 117.31s (0:01:57)

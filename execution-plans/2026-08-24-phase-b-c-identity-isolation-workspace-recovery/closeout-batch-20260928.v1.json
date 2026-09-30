@@ -1,0 +1,20 @@
+{
+  "schema": "quick-dev.closeout-batch.v1",
+  "status": "partial",
+  "reason": "author-red batch exceeded bounded wait at S47; no predecessor published from partial runs",
+  "processed": [
+    {
+      "slice_id": "S12",
+      "run_dir": "logs/quick-dev/20260928-plan-closeout/S12",
+      "descriptor_exists": true,
+      "status": "interrupted-before-completion"
+    },
+    {
+      "slice_id": "S47",
+      "run_dir": "logs/quick-dev/20260928-plan-closeout/S47",
+      "descriptor_exists": true,
+      "status": "interrupted-before-completion"
+    }
+  ],
+  "not_completion_evidence": true
+}

@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="106f021f-bcef-40fb-a573-b7b342e70846" name="Administrator@IZ3H5BJSZD44YHZ 2026-09-18 23:11:34" runUser="IZ3H5BJSZD44YHZ\Administrator" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-09-18T23:11:34.4809373+08:00" queuing="2026-09-18T23:11:34.4809376+08:00" start="2026-09-18T23:11:33.5175005+08:00" finish="2026-09-18T23:11:34.4863995+08:00" />
+  <TestSettings name="default" id="e38b73d3-7cf5-4a69-9e1d-c3addfce3522">
+    <Deployment runDeploymentRoot="Administrator_IZ3H5BJSZD44YHZ_2026-09-18_23_11_34" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="d3fb7e1b-fb92-4b3f-a9f0-8cb7c3b498a5" testId="c5b0fb4c-22b4-69a3-fce3-222134b67f6a" testName="PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.O_B21A2E1BF669" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0968283" startTime="2026-09-18T23:11:34.3958729+08:00" endTime="2026-09-18T23:11:34.3958853+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d3fb7e1b-fb92-4b3f-a9f0-8cb7c3b498a5">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.NotEqual() Failure: Strings are equal&#xD;
+Expected: Not "\"iz3h5bjszd44yhz\\administrator\",\"S-1-5-21-1663"···&#xD;
+Actual:       "\"iz3h5bjszd44yhz\\administrator\",\"S-1-5-21-1663"···</Message>
+          <StackTrace>   at PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.O_B21A2E1BF669() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S54BoundaryTests.cs:line 34&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.O_B21A2E1BF669" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="c5b0fb4c-22b4-69a3-fce3-222134b67f6a">
+      <Execution id="d3fb7e1b-fb92-4b3f-a9f0-8cb7c3b498a5" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests" name="O_B21A2E1BF669" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="c5b0fb4c-22b4-69a3-fce3-222134b67f6a" executionId="d3fb7e1b-fb92-4b3f-a9f0-8cb7c3b498a5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="列表中未列出的结果" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="所有已加载的结果" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.7+8f2703126a (64-bit .NET 8.0.21)&#xD;
+[xUnit.net 00:00:00.25]   Discovering: PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.38]   Discovered:  PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.39]   Starting:    PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.52]       Assert.NotEqual() Failure: Strings are equal&#xD;
+[xUnit.net 00:00:00.52]       Expected: Not "\"iz3h5bjszd44yhz\\administrator\",\"S-1-5-21-1663"···&#xD;
+[xUnit.net 00:00:00.52]       Actual:       "\"iz3h5bjszd44yhz\\administrator\",\"S-1-5-21-1663"···&#xD;
+[xUnit.net 00:00:00.52]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.52]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S54BoundaryTests.cs(34,0): at PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.O_B21A2E1BF669()&#xD;
+[xUnit.net 00:00:00.52]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:00.53]   Finished:    PhaseA.Platform.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-18T23:11:34.3939386+08:00">
+        <Text>[xUnit.net 00:00:00.52]     PhaseA.Platform.Tests.PhaseB.Repair.S54BoundaryTests.O_B21A2E1BF669 [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

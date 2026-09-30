@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import json
 from pathlib import Path
 from types import SimpleNamespace
 import sys
@@ -13,6 +14,7 @@ for path in (SCRIPTS, TESTS):
 
 from semantic_compiler import _normalize_obligation
 from semantic_compiler_authority import compile_plan
+import semantic_compiler_gate as gate
 from test_ch456_compiler_closure import _cache, _repo
 
 
@@ -93,3 +95,29 @@ def test_atomic_recall_failure_can_be_repaired_in_same_out_dir_and_resumed(tmp_p
     assert (out / "atomic-recall-alignment.v1.json").is_file()
     assert (out / "semantic-plan-bundle.v1.json").is_file()
     assert (out / "compiler-state.v1.json").is_file()
+
+
+def test_stale_root_alignment_is_preserved_and_current_recall_is_explicitly_bound(tmp_path: Path) -> None:
+    root, req, owner, selector = _repo(tmp_path)
+    out = root / "plan"
+    old_alignment = {
+        "schema": "vdd.atomic-recall-alignment.v1",
+        "valid": True,
+        "findings": [],
+        "metrics": {"active_obligation_count": 999},
+        "source_gap_claims": [],
+        "worker": {"supported_obligation_ids": []},
+        "authorizes": [],
+    }
+    old_path = out / "atomic-recall-alignment.v1.json"
+    gate.sc.atomic_json(old_path, old_alignment)
+
+    result = compile_plan(requirements=req, out_dir=out, worker_cache=_cache(owner, selector))
+
+    assert result["status"] == "plan-ready"
+    assert gate.sc.canonical_bytes(old_alignment) == old_path.read_bytes()
+    binding = result["atomic_recall_alignment"]
+    assert binding["path"].startswith(".compiler-attempts/v4-atomic-recall-alignment-")
+    current_path = out / binding["path"]
+    assert current_path.is_file()
+    assert binding["sha256"] == gate.sc.sha256_value(json.loads(current_path.read_text(encoding="utf-8")))

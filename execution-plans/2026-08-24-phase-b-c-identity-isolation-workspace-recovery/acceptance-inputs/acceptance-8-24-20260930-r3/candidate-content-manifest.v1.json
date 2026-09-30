@@ -1,0 +1,118 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+      "baseline_sha256": "sha256:0160736a0a2c836f0fc53df7bee259405ce511b63a734a0c5c78a5ba7aba850f",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+      "candidate_sha256": "sha256:bd72d29deaf87ffb960d0d1513963a5a42593a76b9e30c5a1e6d3591807761bd",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "baseline_sha256": "sha256:aa6d5af002d100294086fe19f90d6fbf4121de5fce513773f62a9bedd9311d8c",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "candidate_sha256": "sha256:e5bcf1c18408b77c9d9a1460e7fa6baf8e3660e02b183e34c3d60b013ba458aa",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "baseline_sha256": "sha256:e12c2969570ca431f4f5902e55b64e2ed65ed323aacdbe8dc25815e36b800fde",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "candidate_sha256": "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py",
+      "baseline_sha256": "sha256:7e888e20e922e45571800f42dfdec3fe947848bbf1b87ff9bd00109974d54f04",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py",
+      "candidate_sha256": "sha256:d39375b2a2dc9d9f2e3dc9884231fd17badc185da9941e02d97a00cc3a3bd846",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "baseline_sha256": "sha256:7a5478ebd1d5ab9a9b494eb5852510b9357f6684b0d6bbf8167a6e77e3d9ace6",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "candidate_sha256": "sha256:bd8742ee5a9d0c66d0a9115452d31c69de7a45977c87ced98af8714b0f81ca6b",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/acceptance-authority.v1.json",
+      "candidate_sha256": "sha256:de2eb3d3a688c7a3d714d9176e0ad55e10aabb485705db801f285048ece59c95",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/acceptance-input-projection.v1.json",
+      "candidate_sha256": "sha256:6a22ad292ce076c477d7e4dfa897852fb02493c7c0599ec7898039eee4afeb67",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/knowledge-context-routes/da450d51a44e667ddb4ed7b7ffd8991ac4c47d50f6db3fab2f993589f76e4c4f.json",
+      "candidate_sha256": "sha256:f65ee6d45c508a7fd605c83f670bd20fa52de12152f0842a83cc49efce4f9a63",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/knowledge-context.refactor-acceptance.v1.json",
+      "candidate_sha256": "sha256:72e01f41dd4d1769e8e76585cdbe623174636d84a02b4f326b352d77334db284",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/knowledge-context.refactor-acceptance.v2.json",
+      "candidate_sha256": "sha256:87fffd05e1a980668adab3dfab74c19e0cfa595a73b70fa99bfc12af84e65a51",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete"
+}

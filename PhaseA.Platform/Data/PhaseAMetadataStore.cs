@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
+using PhaseA.Platform.Workspaces;
 using PhaseA.Platform.Workflow;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
@@ -16,6 +17,7 @@ public sealed class PhaseAMetadataStore
 {
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> AdminReviewSidecarLocks = new(StringComparer.Ordinal);
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> AdminReviewUpsertLocks = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, BoundaryDiagnosticContext> BoundaryDiagnosticContexts = new(StringComparer.OrdinalIgnoreCase);
     private static readonly IReadOnlySet<string> AdminReviewSeverities = new HashSet<string>(
         ["P0", "P1", "P2"],
         StringComparer.Ordinal);
@@ -24,6 +26,93 @@ public sealed class PhaseAMetadataStore
         StringComparer.Ordinal);
     private readonly string _connectionString;
     private readonly PhaseAPlatformOptions _options;
+
+    private sealed record BoundaryDiagnosticContext(
+        string ConnectionString,
+        string AccountId,
+        string ProjectId,
+        string CorrelationId);
+
+    public static void RegisterBoundaryDiagnosticContext(
+        string connectionString,
+        string root,
+        string accountId,
+        string projectId,
+        string correlationId)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString) || string.IsNullOrWhiteSpace(root) ||
+            string.IsNullOrWhiteSpace(accountId) || string.IsNullOrWhiteSpace(projectId) ||
+            string.IsNullOrWhiteSpace(correlationId))
+        {
+            return;
+        }
+
+        var key = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        BoundaryDiagnosticContexts[key] = new BoundaryDiagnosticContext(connectionString, accountId, projectId, correlationId);
+    }
+
+    public static void TryRecordRegisteredBoundaryDiagnostic(string root, string failureFamily, string safeSummary)
+    {
+        if (string.IsNullOrWhiteSpace(root) || string.IsNullOrWhiteSpace(failureFamily) ||
+            !BoundaryDiagnosticContexts.TryGetValue(
+                Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                out var context))
+        {
+            return;
+        }
+
+        TryRecordBoundaryDiagnostic(
+            context.ConnectionString,
+            context.AccountId,
+            context.ProjectId,
+            failureFamily,
+            context.CorrelationId,
+            safeSummary);
+    }
+
+    public static void TryRecordBoundaryDiagnostic(
+        string connectionString,
+        string accountId,
+        string projectId,
+        string failureFamily,
+        string correlationId,
+        string safeSummary)
+    {
+        try
+        {
+            var now = DateTimeOffset.UtcNow.ToString("O");
+            var id = NewId();
+            using var connection = new SqliteConnection(connectionString);
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText =
+                """
+                INSERT INTO project_diagnostic_spool (
+                    id, diagnostic_id, account_id, project_id, project_name_snapshot, run_id, route_id,
+                    failure_family, severity, triage_status, retention_class, redaction_status, spool_ref,
+                    safe_summary, user_safe_summary, source_refs_json, evidence_refs_json, source_artifact_path,
+                    cleanup_status, replacement_evidence_refs_json, admin_summary, remediation_hint_id,
+                    dedupe_scope_key, created_utc, updated_utc)
+                VALUES (
+                    $id, $id, $account_id, $project_id, '', $run_id, 'workspace-recovery',
+                    $failure_family, 'P1', 'unresolved', 'unresolved_blocker', 'redacted', '',
+                    $summary, $summary, '[]', '[]', '', 'preserved', '[]', $summary, '', '', $created, $updated);
+                """;
+            command.Parameters.AddWithValue("$id", id);
+            command.Parameters.AddWithValue("$account_id", accountId);
+            command.Parameters.AddWithValue("$project_id", projectId);
+            command.Parameters.AddWithValue("$run_id", correlationId);
+            command.Parameters.AddWithValue("$failure_family", failureFamily);
+            command.Parameters.AddWithValue("$summary", safeSummary);
+            command.Parameters.AddWithValue("$created", now);
+            command.Parameters.AddWithValue("$updated", now);
+            command.ExecuteNonQuery();
+        }
+        catch
+        {
+            // Boundary diagnostics must not replace the original failure.
+        }
+    }
 
     public PhaseAMetadataStore(string connectionString, PhaseAPlatformOptions options)
     {
@@ -82,30 +171,72 @@ public sealed class PhaseAMetadataStore
         ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
+        AccountSnapshot account;
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText =
+                """
+                SELECT id, username, is_admin, is_disabled
+                FROM accounts
+                WHERE token_hash = @token_hash
+                  AND is_disabled = 0
+                  AND (valid_until_utc IS NULL OR valid_until_utc > @now_utc)
+                LIMIT 1;
+                """;
+            command.Parameters.AddWithValue("@token_hash", tokenHash);
+            command.Parameters.AddWithValue("@now_utc", DateTimeOffset.UtcNow.ToString("O"));
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                return null;
+            }
+
+            account = new AccountSnapshot(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetInt64(2) == 1,
+                reader.GetInt64(3) == 1);
+        }
+
+        await using var update = connection.CreateCommand();
+        update.CommandText =
+            """
+            UPDATE accounts
+            SET last_used_utc = @last_used_utc
+            WHERE id = @account_id;
+            """;
+        update.Parameters.AddWithValue("@last_used_utc", DateTimeOffset.UtcNow.ToString("O"));
+        update.Parameters.AddWithValue("@account_id", account.AccountId);
+        await update.ExecuteNonQueryAsync(cancellationToken);
+
+        return account;
+    }
+
+    public async Task<AccountSnapshot?> ResolveAccountByTokenHashIncludingInactiveAsync(
+        string tokenHash,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
             SELECT id, username, is_admin, is_disabled
             FROM accounts
             WHERE token_hash = $token_hash
-              AND is_disabled = 0
-              AND (valid_until_utc IS NULL OR valid_until_utc > $now_utc)
             LIMIT 1;
             """;
         command.Parameters.AddWithValue("$token_hash", tokenHash);
-        command.Parameters.AddWithValue("$now_utc", DateTimeOffset.UtcNow.ToString("O"));
-
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        if (!await reader.ReadAsync(cancellationToken))
-        {
-            return null;
-        }
-
-        return new AccountSnapshot(
-            reader.GetString(0),
-            reader.GetString(1),
-            reader.GetInt64(2) == 1,
-            reader.GetInt64(3) == 1);
+        return await reader.ReadAsync(cancellationToken)
+            ? new AccountSnapshot(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetInt64(2) == 1,
+                reader.GetInt64(3) == 1)
+            : null;
     }
 
     public async Task<AdminCreateUserResult> CreateUserAccountAsync(
@@ -193,6 +324,7 @@ public sealed class PhaseAMetadataStore
             FROM accounts a
             LEFT JOIN project_limits pl ON pl.account_id = a.id
             LEFT JOIN projects p ON p.account_id = a.id
+                AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = p.id)
             LEFT JOIN aicodemirror_key_pool ak ON ak.account_id = a.id
             GROUP BY a.id, a.username, a.is_admin, a.is_disabled, pl.project_limit, a.created_utc, a.valid_until_utc, a.spend_limit_cny, ak.key_name
             ORDER BY a.is_admin DESC, a.created_utc ASC, a.username ASC;
@@ -426,7 +558,7 @@ public sealed class PhaseAMetadataStore
         await using var connection = await OpenConnectionAsync(cancellationToken);
         var count = await ExecuteScalarLongAsync(
             connection,
-            "SELECT COUNT(*) FROM projects WHERE id = $project_id AND account_id = $account_id;",
+            "SELECT COUNT(*) FROM projects WHERE id = $project_id AND account_id = $account_id AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = projects.id);",
             cancellationToken,
             ("$project_id", projectId),
             ("$account_id", accountId)) ?? 0;
@@ -1194,7 +1326,7 @@ public sealed class PhaseAMetadataStore
         var limit = await GetProjectLimitInsideTransactionAsync(connection, create.AccountId, cancellationToken);
         var count = await ExecuteScalarLongAsync(
             connection,
-            "SELECT COUNT(*) FROM projects WHERE account_id = $account_id;",
+            "SELECT COUNT(*) FROM projects WHERE account_id = $account_id AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = projects.id);",
             cancellationToken,
             ("$account_id", create.AccountId)) ?? 0;
 
@@ -1285,6 +1417,13 @@ public sealed class PhaseAMetadataStore
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
+        await QuarantineAmbiguousProjectOwnershipAsync(connection, projectId, cancellationToken);
+        if (!await AdoptKnownProjectWorkspaceAsync(connection, projectId, cancellationToken) &&
+            !await IsQuarantinedProjectAsync(connection, projectId, cancellationToken))
+        {
+            return null;
+        }
+
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
@@ -1300,14 +1439,15 @@ public sealed class PhaseAMetadataStore
                 p.bootstrap_status,
                 p.bootstrap_error,
                 p.game_type_match_json,
-                w.id,
-                w.root_path,
-                w.repo_path,
-                w.runtime_path,
-                w.meta_path
+                COALESCE(w.id, ''),
+                COALESCE(w.root_path, ''),
+                COALESCE(w.repo_path, ''),
+                COALESCE(w.runtime_path, ''),
+                COALESCE(w.meta_path, '')
             FROM projects p
-            INNER JOIN workspaces w ON w.project_id = p.id
-            WHERE p.id = $project_id;
+            LEFT JOIN workspaces w ON w.project_id = p.id
+            WHERE p.id = $project_id
+              AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = p.id);
             """;
         command.Parameters.AddWithValue("$project_id", projectId);
 
@@ -1336,6 +1476,28 @@ public sealed class PhaseAMetadataStore
             reader.GetString(10));
     }
 
+    private static async Task<bool> IsQuarantinedProjectAsync(
+        SqliteConnection connection,
+        string projectId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT 1
+            FROM projects p
+            WHERE p.id = $project_id
+              AND p.bootstrap_status = 'quarantined'
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM project_delete_tombstones t
+                  WHERE t.project_id = p.id
+              );
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+        return await command.ExecuteScalarAsync(cancellationToken) is not null;
+    }
+
     public async Task<IReadOnlyList<ProjectListItem>> ListProjectsAsync(string accountId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
@@ -1360,6 +1522,7 @@ public sealed class PhaseAMetadataStore
             FROM projects p
             INNER JOIN workspaces w ON w.project_id = p.id
             WHERE p.account_id = $account_id
+              AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = p.id)
             ORDER BY COALESCE(p.last_activity_utc, p.created_utc), p.created_utc, p.id;
             """;
         command.Parameters.AddWithValue("$account_id", accountId);
@@ -1411,6 +1574,7 @@ public sealed class PhaseAMetadataStore
                 w.meta_path
             FROM projects p
             INNER JOIN workspaces w ON w.project_id = p.id
+            WHERE NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = p.id)
             ORDER BY p.created_utc, p.id;
             """;
 
@@ -1511,6 +1675,29 @@ public sealed class PhaseAMetadataStore
         command.CommandText = "DELETE FROM projects WHERE id = $project_id;";
         command.Parameters.AddWithValue("$project_id", projectId);
         await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task SoftDeleteProjectAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+
+        var activeProjectCount = await ExecuteScalarLongInsideTransactionAsync(
+            connection,
+            transaction,
+            "SELECT COUNT(*) FROM projects WHERE id = $project_id AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = projects.id);",
+            cancellationToken,
+            ("$project_id", projectId)) ?? 0;
+        if (activeProjectCount == 0)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return;
+        }
+
+        await RecordProjectDeleteTombstoneInsideTransactionAsync(connection, transaction, projectId, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
 
@@ -2749,6 +2936,59 @@ public sealed class PhaseAMetadataStore
         return runId;
     }
 
+    public async Task<RunSnapshot> GetOrCreateProjectOperationRunAsync(
+        string projectId,
+        string workspaceId,
+        string runType,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(workspaceId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(runType);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        await using var existing = connection.CreateCommand();
+        existing.Transaction = transaction;
+        existing.CommandText = """
+            SELECT id, project_id, workspace_id, run_type, status, created_utc, started_utc, finished_utc,
+                   queue_position_at_start, exit_code, stdout_text, stderr_text, evidence_json,
+                   progress_step, progress_substep, progress_label, progress_updated_utc,
+                   llm_gateway, llm_request_id, llm_model, llm_cost_json
+            FROM runs
+            WHERE project_id = $project_id AND run_type = $run_type
+            ORDER BY created_utc DESC, id DESC
+            LIMIT 1;
+            """;
+        existing.Parameters.AddWithValue("$project_id", projectId);
+        existing.Parameters.AddWithValue("$run_type", runType);
+        await using var reader = await existing.ExecuteReaderAsync(cancellationToken);
+        if (await reader.ReadAsync(cancellationToken))
+        {
+            var snapshot = ReadRunSnapshot(reader);
+            await transaction.CommitAsync(cancellationToken);
+            return snapshot;
+        }
+
+        await reader.DisposeAsync();
+        var runId = NewId();
+        await using var create = connection.CreateCommand();
+        create.Transaction = transaction;
+        create.CommandText = """
+            INSERT INTO runs (id, project_id, workspace_id, run_type, status, created_utc)
+            VALUES ($id, $project_id, $workspace_id, $run_type, 'queued', $created_utc);
+            """;
+        create.Parameters.AddWithValue("$id", runId);
+        create.Parameters.AddWithValue("$project_id", projectId);
+        create.Parameters.AddWithValue("$workspace_id", workspaceId);
+        create.Parameters.AddWithValue("$run_type", runType);
+        var createdUtc = DateTimeOffset.UtcNow.ToString("O");
+        create.Parameters.AddWithValue("$created_utc", createdUtc);
+        await create.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return new RunSnapshot(runId, projectId, workspaceId, runType, "queued", createdUtc, null, null, null, null, null, null, null);
+    }
+
     public async Task MarkRunStartedAsync(string runId, CancellationToken cancellationToken = default)
     {
         await MarkRunStartedAsync(runId, null, cancellationToken);
@@ -3276,6 +3516,7 @@ public sealed class PhaseAMetadataStore
                     SELECT COUNT(*)
                     FROM projects count_projects
                     WHERE count_projects.account_id = a.id
+                      AND NOT EXISTS (SELECT 1 FROM project_delete_tombstones t WHERE t.project_id = count_projects.id)
                 ) AS project_count,
                 a.created_utc,
                 r.id,
@@ -3971,7 +4212,23 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$run_id", runId);
         command.Parameters.AddWithValue("$acquired_utc", DateTimeOffset.UtcNow.ToString("O"));
         var inserted = await command.ExecuteNonQueryAsync(cancellationToken);
-        return inserted == 1;
+        if (inserted != 1)
+        {
+            return false;
+        }
+
+        await using var leaseCommand = connection.CreateCommand();
+        leaseCommand.CommandText =
+            """
+            INSERT INTO runner_leases (lease_id, account_id, project_id, fence)
+            SELECT $lease_id, account_id, $project_id,
+                   COALESCE((SELECT MAX(fence) + 1 FROM runner_leases WHERE project_id = $project_id), 1)
+            FROM projects
+            WHERE id = $project_id;
+            """;
+        leaseCommand.Parameters.AddWithValue("$lease_id", runId);
+        leaseCommand.Parameters.AddWithValue("$project_id", projectId);
+        return await leaseCommand.ExecuteNonQueryAsync(cancellationToken) == 1;
     }
 
     public async Task ReleaseRunnerLockAsync(string projectId, string runId, CancellationToken cancellationToken = default)
@@ -6142,8 +6399,44 @@ public sealed class PhaseAMetadataStore
         await using var command = connection.CreateCommand();
         command.CommandText = "PRAGMA foreign_keys = ON;";
         await command.ExecuteNonQueryAsync(cancellationToken);
+        await EnsureCredentialLifecycleColumnsAsync(connection, cancellationToken);
 
         return connection;
+    }
+
+    private static async Task EnsureCredentialLifecycleColumnsAsync(
+        SqliteConnection connection,
+        CancellationToken cancellationToken)
+    {
+        await using var columnsCommand = connection.CreateCommand();
+        columnsCommand.CommandText = "PRAGMA table_info(accounts);";
+        await using var reader = await columnsCommand.ExecuteReaderAsync(cancellationToken);
+        var hasLastUsedColumn = false;
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            if (string.Equals(reader.GetString(1), "last_used_utc", StringComparison.OrdinalIgnoreCase))
+            {
+                hasLastUsedColumn = true;
+                break;
+            }
+        }
+
+        if (hasLastUsedColumn)
+        {
+            return;
+        }
+
+        await reader.DisposeAsync();
+        await using var alterCommand = connection.CreateCommand();
+        alterCommand.CommandText = "ALTER TABLE accounts ADD COLUMN last_used_utc TEXT NULL;";
+        try
+        {
+            await alterCommand.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (SqliteException ex) when (ex.SqliteErrorCode == 1 && ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
+        {
+            // Another connection completed the additive migration concurrently.
+        }
     }
 
     private static async Task UpsertProjectLimitAsync(SqliteConnection connection, string accountId, int projectLimit, string now, CancellationToken cancellationToken)
@@ -6234,6 +6527,146 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$username", _options.AdminUsername);
         command.Parameters.AddWithValue("$password_hash", (object?)_options.AdminPasswordHash ?? DBNull.Value);
         command.Parameters.AddWithValue("$token_hash", (object?)_options.AdminTokenHash ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private async Task<bool> AdoptKnownProjectWorkspaceAsync(
+        SqliteConnection connection,
+        string projectId,
+        CancellationToken cancellationToken)
+    {
+        await using (var existing = connection.CreateCommand())
+        {
+            existing.CommandText =
+                """
+                SELECT root_path, repo_path, runtime_path, meta_path
+                FROM workspaces
+                WHERE project_id = $project_id
+                LIMIT 1;
+                """;
+            existing.Parameters.AddWithValue("$project_id", projectId);
+            await using var reader = await existing.ExecuteReaderAsync(cancellationToken);
+            if (await reader.ReadAsync(cancellationToken))
+            {
+                return WorkspacePathPolicy.AreAllUnderRoot(
+                    _options.HostedWorkspaceRoot,
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.GetString(3));
+            }
+        }
+
+        var workspaceId = NewId();
+        var workspaceRoot = Path.Combine(_options.HostedWorkspaceRoot, workspaceId);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO workspaces (id, project_id, root_path, repo_path, runtime_path, meta_path, created_utc)
+            SELECT
+                $workspace_id,
+                p.id,
+                $root_path,
+                $repo_path,
+                $runtime_path,
+                $meta_path,
+                $created_utc
+            FROM projects p
+            INNER JOIN accounts a ON a.id = p.account_id
+            WHERE p.id = $project_id
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM workspaces w
+                  WHERE w.project_id = p.id
+              )
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM project_delete_tombstones t
+                  WHERE t.project_id = p.id
+              );
+            """;
+        command.Parameters.AddWithValue("$workspace_id", workspaceId);
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$root_path", workspaceRoot);
+        command.Parameters.AddWithValue("$repo_path", Path.Combine(workspaceRoot, "repo"));
+        command.Parameters.AddWithValue("$runtime_path", Path.Combine(workspaceRoot, "runtime"));
+        command.Parameters.AddWithValue("$meta_path", Path.Combine(workspaceRoot, "meta"));
+        command.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
+        return await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+    }
+
+    private static async Task QuarantineAmbiguousProjectOwnershipAsync(
+        SqliteConnection connection,
+        string projectId,
+        CancellationToken cancellationToken)
+    {
+        await EnsureProjectOwnershipLineageTableAsync(connection, cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE projects
+            SET bootstrap_status = 'quarantined',
+                bootstrap_error = COALESCE(bootstrap_error, 'Project ownership is ambiguous.')
+            WHERE id = $project_id
+              AND instr(account_id, '|') > 0
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM accounts
+                  WHERE accounts.id = projects.account_id
+              )
+              AND bootstrap_status <> 'quarantined';
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+        if (await command.ExecuteNonQueryAsync(cancellationToken) == 0)
+        {
+            return;
+        }
+
+        await using var lineage = connection.CreateCommand();
+        lineage.CommandText =
+            """
+            INSERT INTO project_ownership_lineage (
+                project_id,
+                sequence_number,
+                decision,
+                correlation_id,
+                created_utc)
+            VALUES (
+                $project_id,
+                COALESCE((
+                    SELECT MAX(sequence_number) + 1
+                    FROM project_ownership_lineage
+                    WHERE project_id = $project_id
+                ), 1),
+                'quarantined',
+                $correlation_id,
+                $created_utc);
+            """;
+        lineage.Parameters.AddWithValue("$project_id", projectId);
+        lineage.Parameters.AddWithValue("$correlation_id", Guid.NewGuid().ToString("N"));
+        lineage.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
+        await lineage.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static async Task EnsureProjectOwnershipLineageTableAsync(
+        SqliteConnection connection,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            CREATE TABLE IF NOT EXISTS project_ownership_lineage (
+                project_id TEXT NOT NULL,
+                sequence_number INTEGER NOT NULL,
+                decision TEXT NOT NULL,
+                correlation_id TEXT NOT NULL,
+                created_utc TEXT NOT NULL,
+                PRIMARY KEY (project_id, sequence_number),
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+            );
+            """;
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
