@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import os
+import os
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
@@ -399,13 +400,31 @@ def validate_closure(tuples: Sequence[Mapping[str, Any]], expected_keys: Iterabl
 
 
 def hash_path(path: Path) -> str:
-    if path.is_symlink(): raise ValueError("snapshot root may not be symlink")
-    if path.is_file(): return sha256_bytes(path.read_bytes())
-    if path.is_dir():
+    # Windows can address repository evidence paths beyond MAX_PATH through
+    # the extended-length prefix. Keep logical relative names unchanged while
+    # using the prefixed filesystem path for traversal and reads.
+    raw = str(path)
+    extended = raw
+    if os.name == "nt" and not raw.startswith("\\\\?\\"):
+        absolute = os.path.abspath(raw)
+        extended = "\\\\?\\" + absolute
+    if os.path.islink(extended): raise ValueError("snapshot root may not be symlink")
+    if os.path.isfile(extended):
+        with open(extended, "rb") as stream:
+            return sha256_bytes(stream.read())
+    if os.path.isdir(extended):
         rows = []
-        for child in sorted(path.rglob("*")):
-            if child.is_symlink(): raise ValueError("snapshot tree contains symlink")
-            if child.is_file(): rows.append((child.relative_to(path).as_posix(), sha256_bytes(child.read_bytes())))
+        for current, directories, files in os.walk(extended, followlinks=False):
+            directories.sort(); files.sort()
+            for name in directories + files:
+                candidate = os.path.join(current, name)
+                if os.path.islink(candidate): raise ValueError("snapshot tree contains symlink")
+            for name in files:
+                candidate = os.path.join(current, name)
+                logical = os.path.relpath(candidate, extended).replace(os.sep, "/")
+                with open(candidate, "rb") as stream:
+                    rows.append((logical, sha256_bytes(stream.read())))
+        rows.sort()
         return sha256_value(rows)
     raise ValueError("snapshot root missing")
 
