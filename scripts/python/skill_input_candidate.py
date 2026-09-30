@@ -42,6 +42,7 @@ def observe_candidate(root, authority_path, storage):
             or Path(path).name.startswith('acceptance-coordinator-request.')
             or '/acceptance-inputs/' in path
             or '/.acceptance-snapshots/' in path
+            or '/acceptance-runs/' in path
             or Path(path).name.startswith('acceptance-run-request.')
             or Path(path).name == 'acceptance-projection-request.v1.json'
         ):
