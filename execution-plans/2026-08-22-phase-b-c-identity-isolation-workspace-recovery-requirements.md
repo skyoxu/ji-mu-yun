@@ -648,3 +648,26 @@ Architecture 应：
 > Phase 服务层能够可信地证明“谁在操作哪个账户/项目”，Sandbox/Runner 能够在 OS 边界内限制“代码实际能碰到什么”，Workspace 能够通过版本化、可校验的快照在新位置恢复，而浏览器和 Agent 会话都只是这些权威合同的消费者。
 
 本需求不追求一次完成未来树状 SaaS。它只要求当前单节点实现不再把账户、Workspace、绝对路径、Runner 进程和模型会话绑成一个不可迁移的整体，并用负例和恢复演练证明边界真实存在。
+
+## Recovery Metadata Supplement (2026-09-30)
+
+Added for recovery-document schema completeness. Original source text,
+authority notices, paused states, non-goals, and evidence remain unchanged.
+These fields are source locators, not a new implementation status or approval.
+
+- Branch: main
+- Git Head: da39fac3af33fa7471070a21d8898623848360e7
+- Goal: Define upstream identity, account isolation, OS execution isolation, and portable Workspace snapshot/restore requirements.
+- Current step: Source-document recovery only; this supplement does not assert current implementation or lifecycle state.
+- Last completed step: The original source document was recorded; implementation progress is owned by separate consumer evidence.
+- Stop-loss: Preserve original authority and non-goals; do not infer acceptance, activate a paused plan, or rewrite historical evidence.
+- Next action: Consult the downstream BMAD PRD, Spec, and Architecture and their separate current evidence; this original input grants no implementation or release authority.
+- Recovery command: py -3 -c "from pathlib import Path; print(Path('execution-plans/2026-08-22-phase-b-c-identity-isolation-workspace-recovery-requirements.md').read_text(encoding='utf-8'))"
+- Open questions: Consult the original body and its authority notice for unresolved decisions; this supplement resolves none.
+- Exit criteria: The original requirements and acceptance conditions remain unchanged; any completion claim requires separate current consumer evidence.
+- Related ADRs: Accepted Phase ADRs and ADR_INDEX_PHASE as required in sections 11 and 13; decisions belong to downstream architecture, not this source supplement
+- Related decision logs: n/a - no decision-log binding was captured in the original source metadata
+- Related task id(s): n/a - this source document does not bind a stable implementation task identifier
+- Related run id: n/a - this source document does not bind a canonical current execution run
+- Related latest.json: n/a - this source document does not bind a canonical current latest.json pointer
+- Related pipeline artifacts: n/a - this supplement produces no implementation or acceptance artifacts; retain any original evidence references in the body

@@ -1504,3 +1504,28 @@ E2 readiness 必须由 current evidence 机械计算，不能人工填写。全�
 - Added: the `maintain-knowledge-base` Skill contract, `existing-only` and `targeted` modes, pinned local-main authority, provisional handling for target-only worktree content, source-mutation prohibition, and append-only maintenance evidence.
 - Added: the deterministic Knowledge Locator core, CLI-first JSON request/result contract, caller/LLM responsibility split, exact source-location output, hash revalidation, and `insufficient_match` behavior.
 - Preserved: Projection remains `derived_cache`; no new provider or invocation path is introduced; ambiguity still delegates only through `scripts/sc/_llm_backend.py::run_llm_exec`; E3 and Phase production integration remain outside this amendment.
+
+## Recovery Metadata Supplement (2026-09-30)
+
+Added for recovery-document schema completeness. Original source text,
+authority notices, paused states, non-goals, and evidence remain unchanged.
+These fields are source locators, not a new implementation status or approval.
+
+- Title: Ji Mu Yun 四域知识与上下文工程 Canonical 实施合同
+- Branch: n/a - the original source did not capture an authoring branch
+- Git Head: n/a - the original source did not capture an authoring commit; no historical binding is inferred
+- Goal: Preserve the pre-split four-domain knowledge/context requirements for Phase E1 and E2; exclude E3.
+- Scope: Original requirements provenance; current executable authority belongs to the split plan and Accepted ADR-0044.
+- Current step: Source-document recovery only; this supplement does not assert current implementation or lifecycle state.
+- Last completed step: The original source document was recorded; implementation progress is owned by separate consumer evidence.
+- Stop-loss: Preserve original authority and non-goals; do not infer acceptance, activate a paused plan, or rewrite historical evidence.
+- Next action: Consult execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/00-index.md and its machine contracts for current state.
+- Recovery command: py -3 -c "from pathlib import Path; print(Path('execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan.md').read_text(encoding='utf-8'))"
+- Open questions: Consult the original body and its authority notice for unresolved decisions; this supplement resolves none.
+- Exit criteria: The original requirements and acceptance conditions remain unchanged; any completion claim requires separate current consumer evidence.
+- Related ADRs: ADR-0044 (Original Requirements Authority Notice above)
+- Related decision logs: n/a - no decision-log binding was captured in the original source metadata
+- Related task id(s): n/a - this source document does not bind a stable implementation task identifier
+- Related run id: n/a - this source document does not bind a canonical current execution run
+- Related latest.json: n/a - this source document does not bind a canonical current latest.json pointer
+- Related pipeline artifacts: n/a - this supplement produces no implementation or acceptance artifacts; retain any original evidence references in the body

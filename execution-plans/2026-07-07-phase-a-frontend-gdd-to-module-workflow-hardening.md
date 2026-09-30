@@ -2737,3 +2737,29 @@ Start with Phase 0, then the smallest Phase 1 slice. Phase 1 work must not begin
 16. Add tests for deckbuilder GDD -> requirement map -> fresh contract, including route-map UI, hand drag/drop, combat HUD feedback, reward selection UI, Godot-only UI capability classification, selected Godot UI style snapshot, runtime environment readback, design DNA coverage, structured style-token coverage including border/opacity/rarity-HUD/gradient-glow or bottom-accent families when applicable, semantic usage/action-role coverage, component defaults coverage, component family baseline coverage, component coverage matrix coverage, variant coverage, component exception rule refs, composition rule coverage, pointer/gesture coverage for phases, pointer event shape, drag/drop payload, cancel, commit, rollback, supported devices, and keyboard/gamepad equivalents, state ownership coverage, text/form state negative paths where applicable, UI lifecycle Godot hook/signal/subscription cleanup coverage, scroll/list/grid/timeline virtualization coverage with item extent or measurement rules when large lists are required, file-upload security non-applicability or policy coverage, Toast queue/duration/enter-exit behavior when supported, motion/transition coverage, font-size unit coverage, localization/overflow coverage, game composition template coverage, theme resource required/resolved/unresolved token coverage, UI tree readback coverage, visual evidence matrix method/viewport/device coverage, deterministic substitute limitation negative path coverage, contrast/readability coverage, density/scale coverage, safe theme/visual refs, custom-style negative path coverage, repo-owned style ID coverage, structured alias-approval coverage, and interaction-region artifact coverage.
 
 This first slice gives the largest drift reduction with the least UI disruption.
+
+## Recovery Metadata Supplement (2026-09-30)
+
+Added for recovery-document schema completeness. Original source text,
+authority notices, paused states, non-goals, and evidence remain unchanged.
+These fields are source locators, not a new implementation status or approval.
+
+- Title: Phase A Frontend GDD-To-Module Workflow Hardening Plan
+- Status: source-history - current implementation authority is the split plan named above
+- Branch: n/a - the original source did not capture an authoring branch
+- Git Head: n/a - the original source did not capture an authoring commit; no historical binding is inferred
+- Goal: Preserve the original GDD-to-module workflow-hardening requirements and provenance.
+- Scope: Frontend-visible GDD, scene route, requirement map, prototype contract, iteration plan, execution, and UI closure.
+- Current step: Source-document recovery only; this supplement does not assert current implementation or lifecycle state.
+- Last completed step: The original source document was recorded; implementation progress is owned by separate consumer evidence.
+- Stop-loss: Preserve original authority and non-goals; do not infer acceptance, activate a paused plan, or rewrite historical evidence.
+- Next action: Consult execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md for current recovery and implementation state.
+- Recovery command: py -3 -c "from pathlib import Path; print(Path('execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening.md').read_text(encoding='utf-8'))"
+- Open questions: Consult the original body and its authority notice for unresolved decisions; this supplement resolves none.
+- Exit criteria: The original requirements and acceptance conditions remain unchanged; any completion claim requires separate current consumer evidence.
+- Related ADRs: n/a - this source-history header does not bind an Accepted ADR; consult the split plan for current authority
+- Related decision logs: n/a - no decision-log binding was captured in the original source metadata
+- Related task id(s): n/a - this source document does not bind a stable implementation task identifier
+- Related run id: n/a - this source document does not bind a canonical current execution run
+- Related latest.json: n/a - this source document does not bind a canonical current latest.json pointer
+- Related pipeline artifacts: n/a - this supplement produces no implementation or acceptance artifacts; retain any original evidence references in the body
