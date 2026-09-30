@@ -43,6 +43,30 @@ def _path_allowed(path: str, allowed: set[str]) -> bool:
     return any(path == item or path.startswith(item.rstrip("/") + "/") for item in allowed)
 
 
+def _snapshot_change_is_outside_slice(workspace: Path, run_root: Path, ready: Mapping[str, Any], current: Mapping[str, Any]) -> bool:
+    """Allow reuse only when changed snapshot files cannot affect this slice."""
+    old = ready.get("current_snapshot_sha256")
+    if not isinstance(old, str) or old == current.get("sha256"):
+        return False
+    descriptor_path = run_root / "descriptors" / "terminal.json"
+    if not descriptor_path.is_file():
+        return False
+    descriptor = load_json(descriptor_path)
+    refs = set(descriptor.get("target_refs", [])) | set(descriptor.get("fixture_refs", []))
+    if not refs:
+        return False
+    roots = current.get("roots", [])
+    changed: set[str] = set()
+    for root in roots:
+        if root.get("root_kind") != "candidate_tree":
+            continue
+        source = root.get("source_commit")
+        path = root.get("repository_relative_posix_path")
+        if isinstance(source, str) and isinstance(path, str):
+            changed |= _git_changed_paths(workspace, source, path)
+    return bool(changed) and all(not _path_allowed(path, refs) for path in changed)
+
+
 def _semantic_index(bundle: Mapping[str, Any], slice_id: str) -> tuple[Mapping[str, Any], dict[str, set[str]]]:
     slices, acceptances = bundle.get("slices"), bundle.get("acceptances")
     if not isinstance(slices, list) or not isinstance(acceptances, list):
@@ -289,7 +313,7 @@ def publish_implementation_complete(
         ready = load_json(resolve_file(workspace, ready_raw))
         if sha256_value(ready) != predecessor.get("result_sha256") or ready.get("slice_id") != sid or ready.get("status") != "pass":
             raise ValueError("slice-ready predecessor stale")
-        if ready.get("current_snapshot_sha256") != before["sha256"]:
+        if ready.get("current_snapshot_sha256") != before["sha256"] and not _snapshot_change_is_outside_slice(workspace, run_root, ready, before):
             raise ValueError("slice-ready snapshot stale")
         route = read_route(workspace, bundle, run_root, sid) if routed else None
         requirements = stage_map(bundle, sid, route) if routed else {aid: ("red", "green", "refactor") for aid in acceptance_by_slice[sid]}
