@@ -1,10 +1,10 @@
 {
   "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
   "targetPlan": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
-  "runId": "acceptance-8-24-20260930-r2",
+  "runId": "acceptance-8-24-20260930-r3",
   "changeId": "identity-isolation-acceptance-evidence",
   "baselineRevision": "0ce9e72496fa292b705ec3076068d927f4a74fad",
-  "candidateRevision": "c780c5a03ddc355a5646c28f137308383334f853",
+  "candidateRevision": "98e704eed0c000e867dbaf0d5aee9723ec66de4d",
   "changedPaths": [
     ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
     ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
