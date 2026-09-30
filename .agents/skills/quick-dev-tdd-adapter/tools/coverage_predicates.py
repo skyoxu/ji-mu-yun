@@ -416,7 +416,7 @@ def publish_implementation_complete(
         "detached_promotion_binding": detached_binding,
     }
 
-    after = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input)
+    after = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input, allowed_changed_paths)
              if verify_existing else current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit))
     if after["sha256"] != before["sha256"]:
         raise ValueError("current snapshot changed during Q8")
