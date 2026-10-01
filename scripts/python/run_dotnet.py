@@ -188,7 +188,9 @@ def main():
     with io.open(os.path.join(out_dir, 'dotnet-test-output.txt'), 'w', encoding='utf-8') as f:
         f.write(out)
     summary['test_rc'] = rc
-    summary['execution_complete'] = rc != 124
+    aborted_host = any(marker in out.lower() for marker in (
+        'test run aborted', 'test run was aborted', 'test host process crashed', 'aborting test run'))
+    summary['execution_complete'] = rc != 124 and not aborted_host
     # Preserve every project's TRX and hang sequence, including aborted hosts.
     archived = []
     for project_results in Path(root).glob('*.Tests/TestResults'):

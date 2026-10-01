@@ -1,0 +1,13 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "parent_commit": "21af9d129e754cf67011adb2a2eb761a1fcb5075",
+  "change": "Treat an explicitly aborted or crashed VSTest host as incomplete even when the CLI returns 1 rather than wrapper timeout 124.",
+  "validation": {
+    "command": "python -m unittest discover -s scripts/sc/tests -p test_ci_*.py",
+    "python_regression_passed": 9,
+    "exit_code": 0,
+    "windows": "pending for this follow-up; the parent Windows build and expanded preflight passed"
+  },
+  "failure_semantics": "A nonzero test return code remains failed; incomplete host execution is never promoted to pass.",
+  "completion": "Not claimed"
+}

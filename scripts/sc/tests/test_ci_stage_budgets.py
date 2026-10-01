@@ -91,6 +91,23 @@ class CiStageBudgetTests(unittest.TestCase):
         self.assertIn('--blame-hang-timeout', calls[0])
         self.assertEqual('none', calls[0][calls[0].index('--blame-hang-dump-type') + 1])
 
+    def test_hang_collector_abort_is_incomplete_even_with_exit_one(self):
+        import json
+        with tempfile.TemporaryDirectory() as directory:
+            old = os.getcwd()
+            os.chdir(directory)
+            try:
+                with mock.patch.object(sys, 'argv', ['run_dotnet.py', '--solution', 'Game.sln', '--no-build', '--no-restore']), \
+                     mock.patch.object(run_dotnet, 'resolve_test_solution_arg', return_value='Game.sln'), \
+                     mock.patch.object(run_dotnet, 'resolve_dotnet', return_value='dotnet'), \
+                     mock.patch.object(run_dotnet, 'run_cmd', return_value=(1, 'The active test run was aborted.')):
+                    self.assertEqual(1, run_dotnet.main())
+                summary = json.loads(next(Path(directory).rglob('summary.json')).read_text())
+                self.assertFalse(summary['execution_complete'])
+                self.assertEqual('tests_failed', summary['status'])
+            finally:
+                os.chdir(old)
+
     def test_fail_fast_forwards_reuse_and_records_later_gates_not_run(self):
         import json
         calls = []
