@@ -102,13 +102,14 @@ def extract_failed_tests(dotnet_test_output: str):
         return []
 
     failed = []
+    # VSTest emits milliseconds, seconds, and compound minute/hour durations.
+    duration = r'\[(?:[0-9]+(?:\.[0-9]+)?\s*(?:ms|s|m|h)\s*)+\]'
     for raw in dotnet_test_output.splitlines():
         line = raw.strip()
         if not line:
             continue
 
-        # Pattern: "Failed Namespace.Class.Test [123 ms]"
-        m = re.match(r'^Failed\s+(.+?)\s+\[[0-9]+(?:\.[0-9]+)?\s*ms\]$', line)
+        m = re.match(r'^Failed\s+(.+?)\s+' + duration + r'$', line)
         if m:
             failed.append(m.group(1).strip())
             continue
@@ -119,8 +120,13 @@ def extract_failed_tests(dotnet_test_output: str):
             failed.append(m.group(1).strip())
             continue
 
-        # Pattern: "X Namespace.Class.Test [123ms]"
-        m = re.match(r'^[xX]\s+(.+?)\s+\[[0-9]+(?:\.[0-9]+)?\s*ms\]$', line)
+        # xUnit's diagnostic failure line includes its elapsed-time prefix.
+        m = re.match(r'^\[xUnit\.net\s+[^\]]+\]\s+(.+?)\s+\[FAIL\]$', line)
+        if m:
+            failed.append(m.group(1).strip())
+            continue
+
+        m = re.match(r'^[xX]\s+(.+?)\s+' + duration + r'$', line)
         if m:
             failed.append(m.group(1).strip())
 

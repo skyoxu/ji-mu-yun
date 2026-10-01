@@ -12,6 +12,24 @@ import run_dotnet
 
 
 class CiStageBudgetTests(unittest.TestCase):
+    def test_failed_test_names_include_long_vstest_durations_and_xunit_diagnostics(self):
+        output = '\n'.join([
+            'Failed Namespace.Fixture.LongFailure [3 m 12 s]',
+            '[xUnit.net 00:03:12.03] Namespace.Fixture.LongFailure [FAIL]',
+            'Failed Namespace.Fixture.SecondFailure [11 s]',
+            'Failed Namespace.Fixture.HourFailure [1 h 2 m]',
+            'X Namespace.Fixture.MillisecondFailure [123ms]',
+            '[FAIL] Namespace.Fixture.PlainFailure',
+            'Passed Namespace.Fixture.Success [3 m 12 s]',
+        ])
+        self.assertEqual([
+            'Namespace.Fixture.LongFailure',
+            'Namespace.Fixture.SecondFailure',
+            'Namespace.Fixture.HourFailure',
+            'Namespace.Fixture.MillisecondFailure',
+            'Namespace.Fixture.PlainFailure',
+        ], ci_pipeline.extract_failed_tests(output))
+
     def test_pipeline_honors_configured_stage_and_all_selfcheck_attempts(self):
         calls = []
         def fake(args, cwd=None, timeout=900000):
