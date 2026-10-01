@@ -1,0 +1,18 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_run": 36810250849,
+  "source_commit": "5adea0bb715afd451dc5fba76d06d79bc29b0f4e",
+  "actual": {
+    "passed": 7,
+    "failed": 12,
+    "skipped": 0,
+    "total": 19
+  },
+  "diagnosis": "RunnerIsolationTests prepared and disposed the same account-a/project-a credential target owned by the fixed S54 CI baseline. Its disposal deleted the shared target. S54 then failed with managed runner credential is unavailable.",
+  "change": "Give the disposable RunnerIsolationTests fixture unique account/project ids and verify those exact ids in the marker. Keep the baseline and all other scopes unchanged.",
+  "validation": {
+    "windows": "Pending successor run; targeted preflight retains RunnerIsolationTests and S54 together.",
+    "full_suite": "Not yet run after fixture repair."
+  },
+  "completion": "Not claimed"
+}
