@@ -38,6 +38,7 @@ jobs:
       DELIVERY_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.delivery_profile || 'fast-ship' }}
       WHITELIST_WARN_DAYS: '90'
       CI_DOTNET_STAGE_TIMEOUT_MS: '4200000'
+      PHASEA_CI_FIXTURES: '1'
     steps:
       - name: Enable Windows long paths
         shell: pwsh
@@ -217,6 +218,17 @@ jobs:
           if ($prewarm.ExitCode -ne 0) {
             Write-Warning "Godot prewarm exited with code $($prewarm.ExitCode); continue because hard runtime gates run in CI pipeline."
           }
+
+      - name: Phase fixture regression (Windows)
+        shell: pwsh
+        run: |
+          $date = Get-Date -Format 'yyyy-MM-dd'
+          $out = "logs/unit/$date/fixture-regression"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Release --no-build `
+            --filter 'FullyQualifiedName~S54BoundaryTests|FullyQualifiedName~RunnerIsolationTests|FullyQualifiedName~S35BoundaryTests|FullyQualifiedName~SqliteMetadataSchemaTests.AdminReviewQueueDecision_IsIdempotentForSamePayloadAndConflictsForDifferentPayload|FullyQualifiedName~SqliteMetadataSchemaTests.ProjectChatHistory_MarksLatestSuggestedAssistantMessageConsumed_AfterFormalFeedback|FullyQualifiedName~Program_AdminPrivateReadbackAndQueueDecisionEndpointsAreAdminOnlyNoStoreAndStablyMapped' `
+            --logger 'trx;LogFileName=fixture-regression.trx' --results-directory $out
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: CI pipeline (Python)
         shell: pwsh
