@@ -639,7 +639,9 @@ const Engine = (function () {
             await queueBlocker.DisposeAsync();
             var result = await generation.WaitAsync(TimeSpan.FromSeconds(5));
             result.Status.Should().Be("godot3_export_failed");
-            exportRunner.CallCount.Should().Be(1);
+            // ADR-0005: a failed release export is followed by the existing debug fallback.
+            exportRunner.Commands.Select(command => command.Arguments.Single(argument =>
+                argument is "--export" or "--export-debug")).Should().Equal("--export", "--export-debug");
             webPreviewQueue.GetReadback(account.AccountId, includeAll: true).QueuedCount.Should().Be(0);
         }
         finally { Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", previousGodot); }
@@ -1682,10 +1684,10 @@ const Engine = (function () {
 
     private sealed class FailingQueueWebExportRunner : IHostedProcessRunner
     {
-        public int CallCount { get; private set; }
+        public List<HostedProcessCommand> Commands { get; } = [];
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
-            CallCount++;
+            Commands.Add(command);
             return Task.FromResult(new HostedProcessResult(1, string.Empty, "queue fixture export failure"));
         }
     }

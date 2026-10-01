@@ -1,0 +1,17 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_run": 36819320224,
+  "source_commit": "48363ffe76395a23f7f3793f8c3bd9a3bbdd6df5",
+  "actual": {
+    "passed": 33,
+    "failed": 1,
+    "skipped": 0,
+    "total": 34
+  },
+  "remaining_failure": "GenerateQueuedPreviewAsync_WaitsForDedicatedWebPreviewQueue expected one simulated export invocation, but the production release-failure/debug-fallback policy invoked it twice.",
+  "repair": "Record fixture commands and require exactly the ordered --export, --export-debug attempts. Preserve godot3_export_failed, queued readback and final queue-empty assertions. No production changes.",
+  "validation": {
+    "windows": "Pending successor preflight and unchanged full pipeline.",
+    "completion": "Not claimed"
+  }
+}
