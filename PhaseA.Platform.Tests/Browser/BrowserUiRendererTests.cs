@@ -4632,6 +4632,7 @@ public sealed class BrowserUiRendererTests
         }
     }
 
+
     [Fact]
     public void PrototypeSkeletonRunNotes_AreEmbeddedAsResource()
     {
@@ -4646,4 +4647,77 @@ public sealed class BrowserUiRendererTests
         var html = new BrowserUiRenderer().RenderShellV2();
 
         html.Should().Contain("const workflowStageTimeline = [");
-        html.Should().Contain("[\"gdd\", \"GDD\
+        html.Should().Contain("[\"gdd\", \"GDD\", [\"gdd-question-form\"]]");
+        html.Should().Contain("[\"scene-confirmation\", \"Scene Confirmation\", [\"scene-route-confirmation\"]]");
+        html.Should().Contain("[\"gdd-document-generation\", \"GDD Document Generation\", [\"gdd-document-generation\"]]");
+        html.Should().Contain("[\"requirement-map\", \"Requirement Map\", [\"gdd-requirements\"]]");
+        html.Should().Contain("[\"contract-freeze\", \"Contract Freeze\", [\"prototype-contract\"]]");
+        html.Should().Contain("[\"game-modules\", \"Game Modules\", [\"prototype-skeleton\"]]");
+        html.Should().Contain("[\"task-execution\", \"Task Execution\", [\"iteration-plan\", \"execute-next-goal\"]]");
+        html.Should().Contain("[\"ui-closure\", \"UI Closure\", [\"ui-wiring\"]]");
+        html.Should().Contain("[\"preview-package\", \"Preview/Package\", [\"preview-package\"]]");
+        html.Should().Contain("const workflowRouteStatusValues = [\"queued\", \"running\", \"ready\", \"blocked\", \"needs_fix\", \"succeeded\", \"failed\", \"cancelled\", \"stale\", \"unknown\"]");
+        html.Should().Contain("const workflowStageStatusValues = [\"not_started\", \"ready\", \"running\", \"needs_review\", \"blocked\", \"completed\", \"stale\"]");
+        html.Should().Contain("const workflowRequirementStatusValues = [\"mapped\", \"missing_scene\", \"missing_module\", \"needs_review\", \"explicitly_deferred\", \"conflict\"]");
+        html.Should().Contain("const workflowUiSurfaceStatusValues = [\"covered\", \"missing_ui\", \"missing_feedback\", \"needs_fix\", \"no_ui_needed\"]");
+        html.Should().Contain("routeReadbackToStageStatusMap");
+        html.Should().Contain("const workflowUiSurfaceStatusValues = [\"covered\", \"missing_ui\", \"missing_feedback\", \"needs_fix\", \"no_ui_needed\"]");
+        html.Should().NotContain("covered: \"completed\"");
+        html.Should().Contain("data-workflow-stage-timeline=\"true\"");
+        html.Should().Contain("data-requirement-map-review=\"true\"");
+        html.Should().Contain("Requirement ID</th><th>Source section</th><th>Requirement</th><th>Priority</th><th>Kind</th><th>Scenes</th><th>Required modules</th><th>Goals</th><th>Status</th><th>Issue / conflict reason");
+        html.Should().Contain("data-contract-freshness-banner=\"true\"");
+        html.Should().Contain("Generated GDD no longer matches the confirmed scene route");
+        html.Should().Contain("Project type analysis changed after scene confirmation");
+        html.Should().Contain("data-module-plan-confirmation=\"true\"");
+        html.Should().Contain("data-ui-wiring-closure-panel=\"true\"");
+        html.Should().Contain("layout, input/focus, feedback, custom drawing, camera/layer, rendering/material, animation, geometry sizing, procedural visualization, typed state");
+        html.Should().Contain("data-final-readiness-boundary=\"true\"");
+        html.Should().Contain("Ordinary package download is not final readiness");
+        html.Should().Contain("workflowRenderRouteReadback(message?.workflowRoute)");
+    }
+
+    [Fact]
+    public void DetailView_IterationPlanUsesRealHashBoundConfirmationAndTraceability()
+    {
+        var html = new BrowserUiRenderer().RenderShellV2();
+
+        html.Should().Contain("id=\"confirmIterationPlan\"");
+        html.Should().Contain("async function confirmIterationPlan()");
+        html.Should().Contain("/iteration-plan/confirm");
+        html.Should().Contain("confirmation?.status === \"confirmed\"");
+        html.Should().Contain("plan.planHash");
+        html.Should().Contain("traceabilityGoals");
+        html.Should().Contain("requirementIds");
+        html.Should().Contain("sourceReason");
+        html.Should().Contain("interactionArtifactRef");
+        html.Should().Contain("styleSummary");
+        html.Should().Contain("styleApplicability?.status === \"reviewed_not_applicable\"");
+        html.Should().Contain("styleApplicability?.reviewedBy");
+        html.Should().Contain("styleApplicability?.reason");
+        html.Should().Contain("styleApplicability?.recheckTrigger");
+        html.Should().NotContain("requirement_ids_pending");
+    }
+
+    [Fact]
+    public void Renderer_ContextCapturingActionsGuardBusyCleanup()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Browser",
+            "BrowserUiRenderer.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        source.Should().MatchRegex("(?s)async function sendChat\\(\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*state\\.chatBusy = false;");
+        source.Should().MatchRegex("(?s)async function startGddDocumentRoute\\(message(?:, sceneRoute = null)?\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*if \\(succeeded\\) clearChatAttachments\\(\\);");
+        source.Should().MatchRegex("(?s)async function createRepairPlan\\(\\).*?catch \\(error\\) \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*showError\\(error\\);\\s*\\} finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;");
+        source.Should().MatchRegex("(?s)async function submitFormalFeedbackText\\(feedback, busyText\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*try \\{\\s*await loadProjectPackages\\(\\);");
+        source.Should().MatchRegex("(?s)async function submitNeedsFixRouteRequest\\(payload, busyText\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*try \\{\\s*await refreshActiveRun\\(\\);");
+    }
+
+}
