@@ -2,6 +2,7 @@ using System.Net;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
@@ -36,6 +37,81 @@ public sealed class S51BoundaryTests
         var missing = expected.Where(name => !valid.Contains(name)).ToArray();
         if (missing.Length > 0)
             throw new Xunit.Sdk.XunitException("FAILURE-O-E9499880E6EF: missing valid owning-boundary inductions: " + string.Join(",", missing));
+    }
+
+    [Fact]
+    public async Task Reconciliation_PreservesPublicationCompletedByActiveLockOwner()
+    {
+        // ADR-0061: model a live publisher's journal and exclusive coordination handle.
+        var root = Path.Combine(Path.GetTempPath(), "s51-live-publication-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var cs = new SqliteConnectionStringBuilder
+        {
+            DataSource = Path.Combine(root, "metadata.sqlite3"),
+            Pooling = false
+        }.ToString();
+        _ = new RestoreService(cs);
+        const string attemptId = "s51-active-attempt";
+        const string key = "s51-active-publication";
+        var destination = Path.Combine(root, "destination");
+        var staging = Path.Combine(destination, ".restore-staging", attemptId);
+        var published = Path.Combine(destination, ".restore-current");
+        Directory.CreateDirectory(staging);
+        File.WriteAllText(Path.Combine(staging, "retained.txt"), "active publisher content");
+        await using (var connection = new SqliteConnection(cs))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                INSERT INTO restore_attempts(attempt_id,idempotency_key,snapshot_id,workspace_id,
+                    account_id,project_id,status,fence,updated_utc,target)
+                VALUES($attempt,$key,'snapshot','workspace','account','project','Staging',1,$updated,$target)
+                """;
+            command.Parameters.AddWithValue("$attempt", attemptId);
+            command.Parameters.AddWithValue("$key", key);
+            command.Parameters.AddWithValue("$updated", DateTimeOffset.UtcNow.ToString("O"));
+            command.Parameters.AddWithValue("$target", destination);
+            await command.ExecuteNonQueryAsync();
+        }
+        var suffix = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key))).ToLowerInvariant()[..24];
+        var publisher = new FileStream(Path.Combine(destination, ".restore-lock-" + suffix),
+            FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 1, FileOptions.DeleteOnClose);
+        var finishPublication = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(300);
+                Directory.Move(staging, published);
+                await using var connection = new SqliteConnection(cs);
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE restore_attempts SET status='Published' WHERE attempt_id=$attempt";
+                command.Parameters.AddWithValue("$attempt", attemptId);
+                await command.ExecuteNonQueryAsync();
+            }
+            finally
+            {
+                publisher.Dispose();
+            }
+        });
+        try
+        {
+            _ = new RestoreService(cs);
+            await finishPublication;
+            await using var connection = new SqliteConnection(cs);
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT status FROM restore_attempts WHERE attempt_id=$attempt";
+            command.Parameters.AddWithValue("$attempt", attemptId);
+            Assert.Equal("Published", (await command.ExecuteScalarAsync())?.ToString());
+            Assert.Equal("active publisher content", File.ReadAllText(Path.Combine(published, "retained.txt")));
+            Assert.False(Directory.Exists(Path.Combine(destination, ".restore-quarantine", attemptId)));
+        }
+        finally
+        {
+            try { await finishPublication; }
+            finally { Directory.Delete(root, recursive: true); }
+        }
     }
 
     [Fact]
@@ -217,6 +293,7 @@ public sealed class S51BoundaryTests
     {
         var input = Path.Combine(caseRoot, "input.json");
         var workers = new List<Process>();
+        var outputTasks = new List<(Task<string> Stdout, Task<string> Stderr)>();
         try
         {
             for (var index = 0; index < 2; index++)
@@ -225,7 +302,9 @@ public sealed class S51BoundaryTests
                 {
                     WorkingDirectory = repository,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
                 };
                 foreach (var argument in new[]
                 {
@@ -236,12 +315,30 @@ public sealed class S51BoundaryTests
                 start.Environment["S51_R4_INPUT"] = input;
                 start.Environment["S51_R4_REQUIRE_PUBLISHED"] = "1";
                 start.Environment["S51_R4_RESULT_FILE"] = Path.Combine(caseRoot, "retry-result-" + index + ".json");
-                workers.Add(Process.Start(start) ?? throw new InvalidOperationException("R4 concurrent retry worker did not start."));
+                var worker = Process.Start(start) ?? throw new InvalidOperationException("R4 concurrent retry worker did not start.");
+                workers.Add(worker);
+                outputTasks.Add((worker.StandardOutput.ReadToEndAsync(), worker.StandardError.ReadToEndAsync()));
             }
             await Task.WhenAll(workers.Select(worker => worker.WaitForExitAsync()))
                 .WaitAsync(TimeSpan.FromSeconds(90));
             if (workers.Any(worker => worker.ExitCode != 0))
-                throw new Xunit.Sdk.XunitException("FAILURE-R4-CONCURRENT: a same-key retry worker failed.");
+            {
+                var evidence = Path.Combine(repository, "logs", "ci", DateTime.UtcNow.ToString("yyyy-MM-dd"),
+                    "s51-concurrent-retry", Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(evidence);
+                for (var index = 0; index < workers.Count; index++)
+                {
+                    File.WriteAllText(Path.Combine(evidence, $"worker-{index}.stdout.txt"), await outputTasks[index].Stdout);
+                    File.WriteAllText(Path.Combine(evidence, $"worker-{index}.stderr.txt"), await outputTasks[index].Stderr);
+                    var resultFile = Path.Combine(caseRoot, $"retry-result-{index}.json");
+                    if (File.Exists(resultFile)) File.Copy(resultFile, Path.Combine(evidence, $"worker-{index}.result.json"));
+                    var trxRoot = Path.Combine(caseRoot, $"retry-trx-{index}");
+                    if (Directory.Exists(trxRoot))
+                        foreach (var trx in Directory.EnumerateFiles(trxRoot, "*.trx", SearchOption.AllDirectories))
+                            File.Copy(trx, Path.Combine(evidence, $"worker-{index}-" + Path.GetFileName(trx)));
+                }
+                throw new Xunit.Sdk.XunitException("FAILURE-R4-CONCURRENT: a same-key retry worker failed; child evidence: " + evidence);
+            }
 
             using var data = JsonDocument.Parse(File.ReadAllText(input));
             var item = data.RootElement;
@@ -283,7 +380,11 @@ public sealed class S51BoundaryTests
         {
             foreach (var worker in workers)
             {
-                if (!worker.HasExited) worker.Kill(entireProcessTree: true);
+                if (!worker.HasExited)
+                {
+                    worker.Kill(entireProcessTree: true);
+                    await worker.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
+                }
                 worker.Dispose();
             }
         }
@@ -300,12 +401,18 @@ public sealed class S51BoundaryTests
         var context = new RequestContext(contextNode.GetProperty("PrincipalId").GetString()!, contextNode.GetProperty("AccountId").GetString()!, new HashSet<string> { "user" }, contextNode.GetProperty("CredentialId").GetString()!, contextNode.GetProperty("CorrelationId").GetString()!);
         var service = new RestoreService(item.GetProperty("cs").GetString());
         var result = service.RestorePrepared(context, item.GetProperty("manifest").Deserialize<SnapshotManifest>()!, item.GetProperty("source").GetString()!, item.GetProperty("destination").GetString()!, item.GetProperty("lease").Deserialize<RunnerLease>()!, "s51-r4-request-" + item.GetProperty("checkpoint").GetString());
-        if (Environment.GetEnvironmentVariable("S51_R4_REQUIRE_PUBLISHED") == "1" &&
-            result.Status != RestoreAttemptStatus.Published)
-            throw new Xunit.Sdk.XunitException("FAILURE-R4-CONCURRENT: retry worker did not observe the published result.");
         var resultFile = Environment.GetEnvironmentVariable("S51_R4_RESULT_FILE");
         if (!string.IsNullOrWhiteSpace(resultFile))
-            File.WriteAllText(resultFile, JsonSerializer.Serialize(new { attemptId = result.AttemptId, status = result.Status.ToString() }));
+            File.WriteAllText(resultFile, JsonSerializer.Serialize(new
+            {
+                attemptId = result.AttemptId,
+                status = result.Status.ToString(),
+                failureCategory = result.FailureCategory,
+                failureDetail = result.FailureDetail
+            }));
+        if (Environment.GetEnvironmentVariable("S51_R4_REQUIRE_PUBLISHED") == "1" &&
+            result.Status != RestoreAttemptStatus.Published)
+            throw new Xunit.Sdk.XunitException($"FAILURE-R4-CONCURRENT: retry worker did not observe the published result (status={result.Status}, category={result.FailureCategory}).");
     }
 
     private static void InterruptedWorker()
