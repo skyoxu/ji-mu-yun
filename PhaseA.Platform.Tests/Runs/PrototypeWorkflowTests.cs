@@ -1911,6 +1911,8 @@ public sealed class PrototypeWorkflowTests : IDisposable
 
         var result = await service.RepairAsync(accountId, projectId, new PrototypeRepairRequest("gpt-5.4"));
         await WaitForCommandsAsync(runner, 3);
+        // ADR-0061: command capture precedes terminal metadata/audit persistence.
+        await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
 
         result.Status.Should().Be("queued");
         runner.Commands[0].StandardInput.Should().Contain("PreferredPrototypeShellScene: res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn");
