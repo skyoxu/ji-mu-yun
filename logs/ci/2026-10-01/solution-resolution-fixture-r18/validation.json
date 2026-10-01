@@ -1,0 +1,18 @@
+{
+  "schema": "ci-fix-validation.v1",
+  "basis_head": "60884fc91a5ce16e25d3cbeff55b162406abcbb1",
+  "observed": {
+    "run": 36876167871,
+    "failed_case": "test_ci_pipeline_solution_resolution.CiPipelineSolutionResolutionTests.test_all_should_resolve_test_solution_when_auto",
+    "reason": "Success mock omitted required runtime receipt; command selection depended on stale ordinal positions"
+  },
+  "fix": "Provide an explicit successful receipt and identify mocked commands by script; retain exact Game.sln auto-resolution assertions",
+  "validation": {
+    "local_ci_regressions": {
+      "executed": 20,
+      "failed": 0,
+      "errors": 0
+    },
+    "windows": "pending"
+  }
+}
