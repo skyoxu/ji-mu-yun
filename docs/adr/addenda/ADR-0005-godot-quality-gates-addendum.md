@@ -75,3 +75,8 @@ by the heartbeat. Existing total stage budgets remain unchanged.
 Run 36849950332 completed all 1846 PhaseA and 44 Core tests. Its .NET stage took 2821.756 seconds; the three GDD source-seeding test classes accounted for 2563.1 summed test seconds. Those fixtures repeatedly seeded the CI checkout, including generated Godot downloads and caches. Reuse a source projection per test class, retaining real source/template bytes and custom mutable test repositories while excluding generated root tool/cache payloads. Keep conservative two-collection scheduling and the full covered suite.
 
 Browser fixture subprocesses must drain both pipes while running, use asynchronous waits, and terminate/drain timed-out child trees. A 30-second fixture process budget covers Node startup; it does not change product deadlines. S15 teardown uses bounded asynchronous deletion after child-server exit and does not clear other tests' SQLite pools. Persistent cleanup locks and subprocess timeouts remain failures.
+
+
+### 2026-10-01: build the separate Godot runtime project directly
+
+`Game.sln` contains the pure .NET platform/core projects, while the Godot runtime lives in `GodotGame.csproj`. Reusing the former does not build the latter. Windows Quality Gate explicitly restores/builds the Godot project in Debug before prewarm and self-check, then reuses that output. This preserves the runtime compilation gate without invoking the Godot editor's previously timed-out 600-second `--build-solutions` path. The covered .NET suite and runtime self-check remain required.
