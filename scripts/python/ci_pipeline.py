@@ -144,6 +144,10 @@ def main():
     ap_all.add_argument('--godot-bin', required=True)
     ap_all.add_argument('--project', default='project.godot')
     ap_all.add_argument('--build-solutions', action='store_true')
+    ap_all.add_argument('--no-build', action='store_true')
+    ap_all.add_argument('--no-restore', action='store_true')
+    ap_all.add_argument('--hang-timeout', default=None)
+    ap_all.add_argument('--fail-fast', action='store_true')
 
     args = ap.parse_args()
     if args.cmd != 'all':
@@ -210,9 +214,12 @@ def main():
     # The stage budget includes restore and tests. The wrapper gets a bounded
     # cleanup margin so the child can write its terminal summary first.
     dotnet_budget = env_timeout_ms('CI_DOTNET_STAGE_TIMEOUT_MS', 1_800_000)
-    rc, out = run_cmd(['py', '-3', 'scripts/python/run_dotnet.py',
-                       '--solution', resolved_solution,
-                       '--configuration', args.configuration], cwd=root, timeout=dotnet_budget + 60_000)
+    dotnet_args = ['py', '-3', 'scripts/python/run_dotnet.py',
+                   '--solution', resolved_solution, '--configuration', args.configuration]
+    if args.no_build: dotnet_args.append('--no-build')
+    if args.no_restore: dotnet_args.append('--no-restore')
+    if args.hang_timeout: dotnet_args.extend(['--hang-timeout', args.hang_timeout])
+    rc, out = run_cmd(dotnet_args, cwd=root, timeout=dotnet_budget + 60_000)
     with io.open(os.path.join(ci_dir, 'run-dotnet-console.txt'), 'w', encoding='utf-8') as f:
         f.write(out)
     dotnet_sum = read_json(os.path.join('logs', 'unit', date, 'summary.json')) or {}
@@ -240,6 +247,14 @@ def main():
     }
     if rc not in (0, 2) or summary['dotnet']['status'] == 'tests_failed':
         hard_fail = True
+        if args.fail_fast:
+            # ADR-0005: an incomplete pipeline remains failed; later gates are not passed.
+            summary.update(status='fail', selfcheck={'status': 'not_run', 'reason': 'dotnet_hard_failure'},
+                           encoding={'status': 'not_run', 'reason': 'dotnet_hard_failure'})
+            with io.open(os.path.join(ci_dir, 'ci-pipeline-summary.json'), 'w', encoding='utf-8') as f:
+                json.dump(summary, f, ensure_ascii=False, indent=2)
+            print_failure_diagnostics(summary)
+            return 1
 
     # 2) Godot self-check (hard gate)
     # ensure autoload fixed (explicit project path)

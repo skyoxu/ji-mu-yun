@@ -60,6 +60,64 @@ class CiStageBudgetTests(unittest.TestCase):
         self.assertEqual(900000, calls[0][1])
         self.assertEqual(4198000, calls[1][1])
 
+    def test_reused_build_keeps_coverage_hang_diagnosis_and_aborted_artifacts(self):
+        import json
+        calls = []
+        def fake(args, cwd=None, timeout=900000):
+            calls.append(list(args))
+            return 124, 'aborted host'
+        with tempfile.TemporaryDirectory() as directory:
+            old = os.getcwd()
+            os.chdir(directory)
+            try:
+                result = Path('PhaseA.Platform.Tests/TestResults/run/host_Sequence.xml')
+                result.parent.mkdir(parents=True)
+                result.write_text('<Sequence />')
+                with mock.patch.object(sys, 'argv', ['run_dotnet.py', '--solution', 'Game.sln', '--no-build', '--no-restore', '--hang-timeout', '10m']), \
+                     mock.patch.object(run_dotnet, 'resolve_test_solution_arg', return_value='Game.sln'), \
+                     mock.patch.object(run_dotnet, 'resolve_dotnet', return_value='dotnet'), \
+                     mock.patch.object(run_dotnet, 'run_cmd', side_effect=fake):
+                    self.assertEqual(1, run_dotnet.main())
+                summary = json.loads(next(Path(directory).rglob('summary.json')).read_text())
+                self.assertFalse(summary['execution_complete'])
+                self.assertTrue(summary['restore_reused'])
+                self.assertEqual(1, len(summary['project_result_artifacts']))
+            finally:
+                os.chdir(old)
+        self.assertEqual(1, len(calls))
+        self.assertIn('--collect:XPlat Code Coverage', calls[0])
+        self.assertIn('--no-build', calls[0])
+        self.assertIn('--no-restore', calls[0])
+        self.assertIn('--blame-hang-timeout', calls[0])
+        self.assertEqual('none', calls[0][calls[0].index('--blame-hang-dump-type') + 1])
+
+    def test_fail_fast_forwards_reuse_and_records_later_gates_not_run(self):
+        import json
+        calls = []
+        def fake(args, cwd=None, timeout=900000):
+            calls.append(list(args))
+            return (124, 'aborted') if 'scripts/python/run_dotnet.py' in args else (0, '')
+        with tempfile.TemporaryDirectory() as directory:
+            old = os.getcwd()
+            os.chdir(directory)
+            try:
+                with mock.patch.object(sys, 'argv', ['ci_pipeline.py', 'all', '--solution', 'Game.sln', '--godot-bin', 'godot', '--no-build', '--no-restore', '--hang-timeout', '10m', '--fail-fast']), \
+                     mock.patch.object(ci_pipeline, 'resolve_test_solution_arg', return_value='Game.sln'), \
+                     mock.patch.object(ci_pipeline, 'run_cmd', side_effect=fake), \
+                     mock.patch.object(ci_pipeline, 'read_json', return_value={'status': 'tests_failed'}):
+                    self.assertEqual(1, ci_pipeline.main())
+                summary = json.loads(next(Path(directory).rglob('ci-pipeline-summary.json')).read_text())
+                self.assertEqual('fail', summary['status'])
+                self.assertEqual('not_run', summary['selfcheck']['status'])
+                self.assertEqual('not_run', summary['encoding']['status'])
+            finally:
+                os.chdir(old)
+        dotnet = next(command for command in calls if 'scripts/python/run_dotnet.py' in command)
+        self.assertIn('--no-build', dotnet)
+        self.assertIn('--no-restore', dotnet)
+        self.assertIn('--hang-timeout', dotnet)
+        self.assertFalse(any('scripts/python/godot_selfcheck.py' in command for command in calls))
+
 
 if __name__ == '__main__':
     unittest.main()

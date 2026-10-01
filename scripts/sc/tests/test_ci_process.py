@@ -42,6 +42,25 @@ class CiProcessTests(unittest.TestCase):
             time.sleep(2.1)
             self.assertFalse((Path(directory) / 'escaped').exists())
 
+    def test_heartbeat_and_timing_do_not_stream_child_output(self):
+        import contextlib
+        import io
+        import json
+        with tempfile.TemporaryDirectory() as directory:
+            capture = io.StringIO()
+            with contextlib.redirect_stdout(capture):
+                rc, out, _ = run_logged_command(
+                    [sys.executable, '-c', 'import time; print("private-child-output", flush=True); time.sleep(0.3)'],
+                    cwd=directory, timeout=3000, heartbeat_seconds=0.05)
+            self.assertEqual(0, rc)
+            self.assertIn('private-child-output', out)
+            self.assertIn('CI_PROCESS HEARTBEAT', capture.getvalue())
+            self.assertNotIn('private-child-output', capture.getvalue())
+            timing = json.loads(next(Path(directory).rglob('*.timing.json')).read_text())
+            self.assertEqual(0, timing['rc'])
+            self.assertGreater(timing['stdout_bytes'], 0)
+            self.assertGreater(timing['elapsed_s'], 0)
+
     def test_stage_timeout_override_is_validated(self):
         with mock.patch.dict(os.environ, {'CI_DOTNET_STAGE_TIMEOUT_MS': '4200000'}):
             self.assertEqual(4200000, env_timeout_ms('CI_DOTNET_STAGE_TIMEOUT_MS', 900000))

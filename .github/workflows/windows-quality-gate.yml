@@ -211,7 +211,7 @@ jobs:
           $env:GODOT_DOTNET_CLI = (Get-Command dotnet).Path
           dotnet restore Game.sln
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build Game.sln -c Release -v minimal
+          dotnet build Game.sln -c Debug --no-restore -v minimal
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
           $prewarm = Start-Process -FilePath "$env:GODOT_BIN" -ArgumentList "--headless", "--path", ".", "--quit" -Wait -PassThru -NoNewWindow
@@ -225,7 +225,7 @@ jobs:
           $date = Get-Date -Format 'yyyy-MM-dd'
           $out = "logs/unit/$date/fixture-regression"
           New-Item -ItemType Directory -Force -Path $out | Out-Null
-          dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Release --no-build `
+          dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore `
             --filter 'FullyQualifiedName~S54BoundaryTests|FullyQualifiedName~RunnerIsolationTests|FullyQualifiedName~S35BoundaryTests|FullyQualifiedName~SqliteMetadataSchemaTests.AdminReviewQueueDecision_IsIdempotentForSamePayloadAndConflictsForDifferentPayload|FullyQualifiedName~SqliteMetadataSchemaTests.ProjectChatHistory_MarksLatestSuggestedAssistantMessageConsumed_AfterFormalFeedback|FullyQualifiedName~Program_AdminPrivateReadbackAndQueueDecisionEndpointsAreAdminOnlyNoStoreAndStablyMapped|FullyQualifiedName~HeavyRunnerQueueServiceTests|FullyQualifiedName~CreateAsync_ShouldBoundLastWaiterCleanup_WhenLlmIgnoresCancellation|FullyQualifiedName~DiagnosticSpool_WritesOutsideWorkspace_AndSupportsAdminTriageWithoutRewritingHistory|FullyQualifiedName~SnapshotAndRestore_RoundTripWithQuotaAndSoftDelete|FullyQualifiedName~GenerateQueuedPreviewAsync_WaitsForDedicatedWebPreviewQueue|FullyQualifiedName~S28BoundaryTests.O_5277C4B77BBF|FullyQualifiedName~S15BoundaryTests.O_9FDA0B49E011|FullyQualifiedName~S63BoundaryTests.O_AB9EF0D40F90|FullyQualifiedName~QueueAsync_FailsPostCompletionDirectSmoke_WhenGodotReportsError|FullyQualifiedName~QueueAsync_ConfiguresPrototypeCreationActivityAndTotalTimeouts|FullyQualifiedName~RenderShellV2_GddQuestionFormStartRouteBehaviorSmoke' `
             --logger 'trx;LogFileName=fixture-regression.trx' --results-directory $out
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -235,7 +235,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Continue'
           $PSNativeCommandUseErrorActionPreference = $false
-          & py -3 -u scripts/python/ci_pipeline.py all --solution Game.sln --configuration Debug --godot-bin "$env:GODOT_BIN" --build-solutions
+          & py -3 -u scripts/python/ci_pipeline.py all --solution Game.sln --configuration Debug --godot-bin "$env:GODOT_BIN" --no-build --no-restore --hang-timeout 10m --fail-fast
           $code = $LASTEXITCODE
           if ($code -ne 0) {
             if ($env:GITHUB_STEP_SUMMARY) {

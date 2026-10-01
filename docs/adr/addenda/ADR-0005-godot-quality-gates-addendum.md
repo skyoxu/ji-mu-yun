@@ -49,3 +49,22 @@ cleanup regressions and archives `logs/unit/**` with the CI diagnostic package.
 Timeouts and non-zero test exits remain hard failures; incomplete tests cannot
 be reported as passed.
 
+
+## CI build reuse and bounded diagnosis (2026-10-01)
+
+Windows Quality Gate restores and builds Debug once before its regression and
+full-suite stages. Both stages reuse that same validated configuration; standalone
+Python callers still restore/build by default. Coverage and every test remain enabled.
+The Godot runtime self-check and its existing retry remain hard gates on a successful
+.NET stage, but do not repeat the already completed solution build.
+
+The workflow opts into fail-fast after a hard .NET failure. Unexecuted downstream
+gates are recorded as `not_run`, never passed; the whole pipeline remains failed.
+VSTest uses a 10-minute per-test hang diagnostic with dump type `none`: a hanging
+host is terminated, its sequence/TRX is archived, and the run fails. This bound is
+a diagnostic ceiling, not a relaxed product deadline or a replacement for tests.
+
+Subprocess wrappers print bounded heartbeats containing only elapsed time and
+output byte counts. Per-process timing JSON and all project TRX/hang sequences
+remain under `logs/**`; command arguments and raw child output are not streamed
+by the heartbeat. Existing total stage budgets remain unchanged.

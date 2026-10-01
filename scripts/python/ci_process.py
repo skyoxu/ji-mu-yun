@@ -7,6 +7,7 @@ gate starts; a timeout remains exit code 124.
 from __future__ import annotations
 
 import datetime as dt
+import json
 import os
 from pathlib import Path
 import signal
@@ -65,9 +66,9 @@ def stop_process_tree(process: subprocess.Popen) -> None:
     process.wait(timeout=15)
 
 
-def run_logged_command(args, cwd=None, timeout=900_000, *, separate_stderr=False):
-    if timeout <= 0:
-        raise ValueError('CI process timeout must be positive')
+def run_logged_command(args, cwd=None, timeout=900_000, *, separate_stderr=False, heartbeat_seconds=30):
+    if timeout <= 0 or heartbeat_seconds <= 0:
+        raise ValueError('CI process timeout and heartbeat must be positive')
     root = Path(cwd or os.getcwd())
     directory = root / 'logs' / 'ci' / dt.date.today().isoformat() / 'process-output'
     directory.mkdir(parents=True, exist_ok=True)
@@ -84,13 +85,30 @@ def run_logged_command(args, cwd=None, timeout=900_000, *, separate_stderr=False
             stderr=stderr_file if separate_stderr else subprocess.STDOUT,
             **kwargs,
         )
-        try:
-            rc = process.wait(timeout=timeout / 1000)
-        except subprocess.TimeoutExpired:
-            stop_process_tree(process)
-            rc = 124
+        # ADR-0005: expose liveness without publishing child output or command secrets.
+        deadline = started + timeout / 1000
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                stop_process_tree(process)
+                rc = 124
+                break
+            try:
+                rc = process.wait(timeout=min(remaining, heartbeat_seconds))
+                break
+            except subprocess.TimeoutExpired:
+                if time.monotonic() >= deadline:
+                    stop_process_tree(process)
+                    rc = 124
+                    break
+                print(f'CI_PROCESS HEARTBEAT executable={label} elapsed_s={round(time.monotonic() - started, 1)} '
+                      f'stdout_bytes={stdout_path.stat().st_size} stderr_bytes={stderr_path.stat().st_size}', flush=True)
     out = stdout_path.read_bytes().decode('utf-8', errors='replace')
     err = stderr_path.read_bytes().decode('utf-8', errors='replace') if separate_stderr else ''
     elapsed = round(time.monotonic() - started, 3)
+    metadata = {'executable': label, 'timeout_ms': timeout, 'elapsed_s': elapsed,
+                'rc': rc, 'stdout_bytes': stdout_path.stat().st_size,
+                'stderr_bytes': stderr_path.stat().st_size}
+    (directory / f'{stem}.timing.json').write_text(json.dumps(metadata, indent=2) + '\n', encoding='utf-8')
     print(f'CI_PROCESS END executable={label} rc={rc} elapsed_s={elapsed} stdout={stdout_path}', flush=True)
     return rc, out, err
