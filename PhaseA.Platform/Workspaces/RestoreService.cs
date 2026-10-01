@@ -455,26 +455,39 @@ public sealed class RestoreService
     private void ReconcileInterruptedAttempts(SqliteConnection connection)
     {
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT attempt_id, account_id, project_id, target FROM restore_attempts WHERE status=$staging";
+        command.CommandText = "SELECT attempt_id, idempotency_key, account_id, project_id, target FROM restore_attempts WHERE status=$staging";
         command.Parameters.AddWithValue("$staging", RestoreAttemptStatus.Staging.ToString());
-        var attemptContexts = new List<(string AttemptId, string AccountId, string ProjectId, string? Target)>();
+        var attemptContexts = new List<(string AttemptId, string IdempotencyKey, string AccountId, string ProjectId, string? Target)>();
         using (var contextReader = command.ExecuteReader())
         {
             while (contextReader.Read())
-                attemptContexts.Add((contextReader.GetString(0), contextReader.GetString(1), contextReader.GetString(2), contextReader.IsDBNull(3) ? null : contextReader.GetString(3)));
+                attemptContexts.Add((contextReader.GetString(0), contextReader.GetString(1), contextReader.GetString(2), contextReader.GetString(3), contextReader.IsDBNull(4) ? null : contextReader.GetString(4)));
         }
 
-        foreach (var (attemptId, accountId, projectId, target) in attemptContexts)
+        foreach (var (attemptId, idempotencyKey, accountId, projectId, target) in attemptContexts)
         {
+            // ADR-0061: a staging row can belong to a live publisher in another process.
+            // Coordinate with publication and re-read after taking the same key's lock.
+            using var coordination = string.IsNullOrWhiteSpace(target)
+                ? null
+                : AcquireCrossProcessCoordination(target, idempotencyKey);
+            using var current = connection.CreateCommand();
+            current.CommandText = "SELECT status FROM restore_attempts WHERE attempt_id=$attempt";
+            current.Parameters.AddWithValue("$attempt", attemptId);
+            if (current.ExecuteScalar() as string != RestoreAttemptStatus.Staging.ToString())
+                continue;
+
             ReconcileAttemptDirectories(attemptId, target);
             command.Parameters.Clear();
-            command.CommandText = "UPDATE restore_attempts SET status=$status,updated_utc=$updated,failure_category=$category,error_envelope=$envelope WHERE attempt_id=$attempt";
+            command.CommandText = "UPDATE restore_attempts SET status=$status,updated_utc=$updated,failure_category=$category,error_envelope=$envelope WHERE attempt_id=$attempt AND status=$staging";
             command.Parameters.AddWithValue("$status", RestoreAttemptStatus.Quarantined.ToString());
             command.Parameters.AddWithValue("$updated", DateTimeOffset.UtcNow.ToString("O"));
             command.Parameters.AddWithValue("$category", "restore_interrupted");
             command.Parameters.AddWithValue("$envelope", "{\"code\":\"restore_interrupted\",\"message\":\"Workspace restore was interrupted and quarantined.\"}");
             command.Parameters.AddWithValue("$attempt", attemptId);
-            command.ExecuteNonQuery();
+            command.Parameters.AddWithValue("$staging", RestoreAttemptStatus.Staging.ToString());
+            if (command.ExecuteNonQuery() != 1)
+                continue;
             PhaseAMetadataStore.TryRecordBoundaryDiagnostic(
                 _connectionString ?? string.Empty,
                 accountId,

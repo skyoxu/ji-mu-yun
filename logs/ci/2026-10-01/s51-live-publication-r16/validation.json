@@ -1,0 +1,27 @@
+{
+  "schema": "ci-fix-validation.v1",
+  "basis_head": "26e1746793535d9c1dfaf41b6c80db68003f9d4c",
+  "red": {
+    "run": 36874193447,
+    "head": "26e1746793535d9c1dfaf41b6c80db68003f9d4c",
+    "artifact_id": 11167884385,
+    "artifact_sha256": "38216e35bae1fee6761d2d90cc8fb5628f0a55fadb1cd1a7f5af778b6053fc85",
+    "case": "S51BoundaryTests.Reconciliation_PreservesPublicationCompletedByActiveLockOwner",
+    "outcome": "Failed",
+    "failure": "DirectoryNotFoundException: live staging content was moved by startup reconciliation",
+    "runtime_critical_ports": {
+      "ready": 6,
+      "total": 6
+    }
+  },
+  "fix": [
+    "Startup reconciliation shares destination/idempotency-key publication coordination.",
+    "Re-read status under the lock; skip a completed publication.",
+    "Condition metadata transition on still-Staging and retain append-only failure history."
+  ],
+  "green": {
+    "windows_targeted": "pending",
+    "windows_complete": "pending"
+  },
+  "contracts": "No schema, public API, account/ACL authority, lock budget or plan/Q8 rebinding change"
+}
