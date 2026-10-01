@@ -2354,3 +2354,11 @@ adapter声明的全部权威任务清单required items必须完整抽取、勾�
 8. 首版按S0-S5谓词实施：统一run input、带complete/partial/unavailable状态的双manifest、partitioned source inventory、Phase service code-review policy pack及binding、policy-check exact coverage、task checklist closure、85% changed-line coverage、Phase static/security scope results、command-ID-bound evidence、base matrix、candidate结果、同时拥有全run与Phase/DoD scope effective completeness的impact projection、typed external/protected gate results、final结果、conditional action DAG、Bootstrap immutable requirement decision/capability binding/request/单向launch authorization与consumer-private import receipt/execution projection/import envelope、冻结inventory attestation scope、确定性`map-findings`和`import-mapping-approval`；同时把positive-attestation与Bootstrap-owned单向launch authorization扩展加入仓库级Bootstrap v2控制面，并同步durable standard、仓库级Skill/reference、operator docs、profile/schema registry和ADR-0041复核结果。S0未完成不阻止S1-S3 deterministic core迭代，但阻止S4 semantic integration与S5完整发布。跨模型稳定性属于发布级独立证据，不阻止本地开发迭代。
 9. 代码审核域固定为Phase服务；纯Godot目标返回`unsupported_code_review_domain`，mixed-domain目标只验收Phase partition并等待独立Godot审核权威。commit message检查默认advisory，只有目标计划、adapter或仓库policy显式授权时才能阻断。
 10. `PHASE-CR-TEST-002`最低增量行覆盖率为85%；`PHASE-CR-TRACE-001`要求全部required task checkbox勾选且证据闭合；`PHASE-CR-STATIC-001`与`PHASE-CR-SEC-003`必须使用Phase-aware scanner和exact changed-path read scope，现有Godot/Game.Core-only扫描结果不得授权。
+
+## Recovery Metadata Supplement (2026-09-30)
+
+Added for recovery-document schema completeness. Original source text,
+authority notices, paused states, non-goals, and evidence remain unchanged.
+These fields are source locators, not a new implementation status or approval.
+
+- Git Head: 7243a2a

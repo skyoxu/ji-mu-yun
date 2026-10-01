@@ -35,13 +35,9 @@ class CiPipelineSolutionResolutionTests(unittest.TestCase):
 
         def _fake_run_cmd(args, cwd=None, timeout=900_000):
             commands.append(list(args))
-            if len(commands) == 1:
-                return 0, "ok\n"
-            if len(commands) == 2:
+            if "scripts/python/run_dotnet.py" in args:
                 return 0, "RUN_DOTNET status=ok line=90.0% branch=85.0 out=logs/unit/2026-04-08\n"
-            if len(commands) == 3:
-                return 0, "ok\n"
-            if len(commands) == 4:
+            if "scripts/python/godot_selfcheck.py" in args and "run" in args:
                 return 0, "SELF_CHECK status=ok out=logs/e2e/2026-04-08/selfcheck\n"
             return 0, "ok\n"
 
@@ -62,7 +58,7 @@ class CiPipelineSolutionResolutionTests(unittest.TestCase):
                 mock.patch.object(ci_pipeline.os, "getcwd", return_value=str(root)), \
                 mock.patch.object(ci_pipeline, "resolve_test_solution_arg", return_value="Game.sln") as resolve_mock, \
                 mock.patch.object(ci_pipeline, "run_cmd", side_effect=_fake_run_cmd), \
-                mock.patch.object(ci_pipeline, "read_json", return_value={}), \
+                mock.patch.object(ci_pipeline, "read_json", return_value={"status": "ok"}), \
                 mock.patch.object(ci_pipeline, "copy_if_exists", return_value=False):
                 rc = ci_pipeline.main()
 

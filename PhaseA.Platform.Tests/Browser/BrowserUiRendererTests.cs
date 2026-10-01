@@ -14,7 +14,7 @@ namespace PhaseA.Platform.Tests.Browser;
 public sealed class BrowserUiRendererTests
 {
     [Fact]
-    public void RenderShellV2_EmbeddedScriptsAreSyntacticallyValid()
+    public async Task RenderShellV2_EmbeddedScriptsAreSyntacticallyValid()
     {
         var html = new BrowserUiRenderer().RenderShellV2();
         var scripts = Regex.Matches(html, "<script>([\\s\\S]*?)</script>")
@@ -28,34 +28,7 @@ public sealed class BrowserUiRendererTests
             return;
         }
 
-        var scriptPath = Path.Combine(Path.GetTempPath(), $"phasea-shell-{Guid.NewGuid():N}.js");
-        try
-        {
-            File.WriteAllText(scriptPath, string.Join("\n;\n", scripts));
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = node,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            startInfo.ArgumentList.Add("--check");
-            startInfo.ArgumentList.Add(scriptPath);
-            using var process = Process.Start(startInfo);
-            process.Should().NotBeNull();
-            var checkedProcess = process!;
-            checkedProcess.WaitForExit(10_000).Should().BeTrue();
-            var output = checkedProcess.StandardOutput.ReadToEnd() + checkedProcess.StandardError.ReadToEnd();
-            checkedProcess.ExitCode.Should().Be(0, output);
-        }
-        finally
-        {
-            if (File.Exists(scriptPath))
-            {
-                File.Delete(scriptPath);
-            }
-        }
+        await RunNodeScriptAsync(node, string.Join("\n;\n", scripts), syntaxOnly: true);
     }
 
     [Fact]
@@ -123,7 +96,7 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
-    public void RenderShellV2_GddQuestionFormModalBehaviorSmoke()
+    public async Task RenderShellV2_GddQuestionFormModalBehaviorSmoke()
     {
         var node = RequireNodeForGddQuestionFormTests();
 
@@ -439,11 +412,11 @@ public sealed class BrowserUiRendererTests
             });
             """;
 
-        RunNodeScript(node, script);
+        await RunNodeScriptAsync(node, script);
     }
 
     [Fact]
-    public void RenderShellV2_GddQuestionFormStartRouteBehaviorSmoke()
+    public async Task RenderShellV2_GddQuestionFormStartRouteBehaviorSmoke()
     {
         var node = RequireNodeForGddQuestionFormTests();
 
@@ -571,7 +544,7 @@ public sealed class BrowserUiRendererTests
             });
             """;
 
-        RunNodeScript(node, script);
+        await RunNodeScriptAsync(node, script);
     }
 
     [Theory]
@@ -580,7 +553,7 @@ public sealed class BrowserUiRendererTests
     [InlineData("Deck Demo", "Deck Demo", "deckbuilder", "deck")]
     [InlineData("Survivor Demo", "Survivor Demo", "survivorslike arena", "arena")]
     [InlineData("Generic Demo", "Generic Demo", "puzzle adventure", "generic")]
-    public void RenderShellV2_GddQuestionFormFallbackMatchesBackendCoreContract(
+    public async Task RenderShellV2_GddQuestionFormFallbackMatchesBackendCoreContract(
         string gameName,
         string name,
         string gameTypeSource,
@@ -617,7 +590,7 @@ public sealed class BrowserUiRendererTests
             console.log("__GDD_FALLBACK_JSON_B64__" + Buffer.from(fallbackJson, "utf8").toString("base64"));
             """;
 
-        var output = RunNodeScript(node, script);
+        var output = await RunNodeScriptAsync(node, script);
         const string marker = "__GDD_FALLBACK_JSON_B64__";
         var markerIndex = output.LastIndexOf(marker, StringComparison.Ordinal);
         markerIndex.Should().BeGreaterThanOrEqualTo(0, "the node smoke should print the fallback contract JSON");
@@ -643,7 +616,7 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
-    public void RenderShellV2_TabWorkspaceBehaviorSmoke()
+    public async Task RenderShellV2_TabWorkspaceBehaviorSmoke()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
         if (node is null)
@@ -721,11 +694,11 @@ public sealed class BrowserUiRendererTests
             assert(applied === 2 && renderedTabs === 2 && renderedProgress === 1 && refreshedAcceptance === 1, "render hooks should be invoked");
             """;
 
-        RunNodeScript(node, script);
+        await RunNodeScriptAsync(node, script);
     }
 
     [Fact]
-    public void RenderShellV2_TabWorkspaceDomBehaviorSmoke()
+    public async Task RenderShellV2_TabWorkspaceDomBehaviorSmoke()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
         if (node is null)
@@ -918,11 +891,11 @@ public sealed class BrowserUiRendererTests
             assert(renderedTabs === 5 && renderedProgress === 4 && refreshedAcceptance === 2, "render hooks should match tab operations");
             """;
 
-        RunNodeScript(node, script);
+        await RunNodeScriptAsync(node, script);
     }
 
     [Fact]
-    public void RenderShellV2_GddMilestoneModulePanelBehaviorSmoke()
+    public async Task RenderShellV2_GddMilestoneModulePanelBehaviorSmoke()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
         if (node is null)
@@ -1176,11 +1149,11 @@ public sealed class BrowserUiRendererTests
             assert(cacheWrites.some(write => write.selectedGddMilestoneStepId === "M3"), "nav selection should be cached");
             """;
 
-        RunNodeScript(node, script);
+        await RunNodeScriptAsync(node, script);
     }
 
     [Fact]
-    public void RenderShellV2_MilestoneFeedbackModalBehaviorSmoke()
+    public async Task RenderShellV2_MilestoneFeedbackModalBehaviorSmoke()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
         if (node is null)
@@ -1335,11 +1308,11 @@ public sealed class BrowserUiRendererTests
             });
             """;
 
-        RunNodeScript(node, script);
+        await RunNodeScriptAsync(node, script);
     }
 
     [Fact]
-    public void RenderShellV2_PublicChatSanitizerRemovesPlatformRoutes()
+    public async Task RenderShellV2_PublicChatSanitizerRemovesPlatformRoutes()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
         if (node is null)
@@ -1391,11 +1364,11 @@ public sealed class BrowserUiRendererTests
             assert(chineseLedger === "本轮结论", "Chinese repair ledger should be truncated");
             """;
 
-        RunNodeScript(node, script);
+        await RunNodeScriptAsync(node, script);
     }
 
     [Fact]
-    public void RenderShellV2_ProgressStatusUsesLatestIterationForServerAcceptance()
+    public async Task RenderShellV2_ProgressStatusUsesLatestIterationForServerAcceptance()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
         if (node is null)
@@ -1596,11 +1569,11 @@ public sealed class BrowserUiRendererTests
             assert(v2StepStatus("prototype-acceptance") === "done", "validation after latest round should pass even when historical round is selected");
             """;
 
-        RunNodeScript(node, script);
+        await RunNodeScriptAsync(node, script);
     }
 
     [Fact]
-    public void RenderShellV2_IterationStepStatusPrioritizesLatestGoalRepairOverMilestones()
+    public async Task RenderShellV2_IterationStepStatusPrioritizesLatestGoalRepairOverMilestones()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
         if (node is null)
@@ -1660,11 +1633,11 @@ public sealed class BrowserUiRendererTests
             assert(v2StepStatus("iteration-plan") === "done", "confirmed milestone can mark done after latest goals are done");
             """;
 
-        RunNodeScript(node, script);
+        await RunNodeScriptAsync(node, script);
     }
 
     [Fact]
-    public void RenderShellV2_WorkflowPanelsDoNotMoveChatContent()
+    public async Task RenderShellV2_WorkflowPanelsDoNotMoveChatContent()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
         if (node is null)
@@ -1816,7 +1789,7 @@ public sealed class BrowserUiRendererTests
             assert($("createRepairPlan").parentElement.id === "v2RepairActions", "repair action moves to repair actions");
             """;
 
-        RunNodeScript(node, script);
+        await RunNodeScriptAsync(node, script);
     }
 
     [Fact]
@@ -4614,7 +4587,8 @@ public sealed class BrowserUiRendererTests
         return source[start..end];
     }
 
-    private static string RunNodeScript(string node, string script)
+    // ADR-0005: drain both pipes during execution and terminate timed-out fixture children.
+    private static async Task<string> RunNodeScriptAsync(string node, string script, bool syntaxOnly = false)
     {
         var scriptPath = Path.Combine(Path.GetTempPath(), $"phasea-browser-smoke-{Guid.NewGuid():N}.js");
         try
@@ -4628,25 +4602,36 @@ public sealed class BrowserUiRendererTests
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
+            if (syntaxOnly) startInfo.ArgumentList.Add("--check");
             startInfo.ArgumentList.Add(scriptPath);
             using var process = Process.Start(startInfo);
             process.Should().NotBeNull();
             var running = process!;
-            running.WaitForExit(10_000).Should().BeTrue();
-            var standardOutput = running.StandardOutput.ReadToEnd();
-            var standardError = running.StandardError.ReadToEnd();
-            var output = standardOutput + standardError;
-            running.ExitCode.Should().Be(0, output);
-            return standardOutput.Trim();
+            var stdout = running.StandardOutput.ReadToEndAsync();
+            var stderr = running.StandardError.ReadToEndAsync();
+            try
+            {
+                await running.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+            }
+            finally
+            {
+                if (!running.HasExited)
+                {
+                    running.Kill(entireProcessTree: true);
+                    await running.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                }
+                await Task.WhenAll(stdout, stderr).WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            }
+            var output = await stdout.ConfigureAwait(false);
+            running.ExitCode.Should().Be(0, output + await stderr.ConfigureAwait(false));
+            return output.Trim();
         }
         finally
         {
-            if (File.Exists(scriptPath))
-            {
-                File.Delete(scriptPath);
-            }
+            if (File.Exists(scriptPath)) File.Delete(scriptPath);
         }
     }
+
 
     [Fact]
     public void PrototypeSkeletonRunNotes_AreEmbeddedAsResource()

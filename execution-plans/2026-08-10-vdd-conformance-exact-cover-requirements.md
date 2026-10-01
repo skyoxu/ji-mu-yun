@@ -577,3 +577,25 @@ obligation extraction shards
 > Chapter 5 的价值仅在于治理不稳定 semantic computation；Exact-cover authority 始终来自 frozen source universe 与 deterministic proof。
 >
 > Jitter、consensus、reuse 和 recommended action 均不拥有 PASS 或 lifecycle authority。
+
+## Recovery Metadata Supplement (2026-09-30)
+
+Added for recovery-document schema completeness. Original source text,
+authority notices, paused states, non-goals, and evidence remain unchanged.
+These fields are source locators, not a new implementation status or approval.
+
+- Branch: n/a - the original source did not capture an authoring branch
+- Git Head: n/a - the original source did not capture an authoring commit; no historical binding is inferred
+- Current step: Source-document recovery only; this supplement does not assert current implementation or lifecycle state.
+- Last completed step: The original source document was recorded; implementation progress is owned by separate consumer evidence.
+- Stop-loss: Preserve original authority and non-goals; do not infer acceptance, activate a paused plan, or rewrite historical evidence.
+- Next action: Consult the conformance requirements and their authorized consumer; do not treat a conformance artifact as implementation or release authorization.
+- Recovery command: py -3 -c "from pathlib import Path; print(Path('execution-plans/2026-08-10-vdd-conformance-exact-cover-requirements.md').read_text(encoding='utf-8'))"
+- Open questions: Consult the original body and its authority notice for unresolved decisions; this supplement resolves none.
+- Exit criteria: The original requirements and acceptance conditions remain unchanged; any completion claim requires separate current consumer evidence.
+- Related ADRs: n/a - no explicit Accepted ADR binding is added by this source metadata supplement
+- Related decision logs: n/a - no decision-log binding was captured in the original source metadata
+- Related task id(s): n/a - this source document does not bind a stable implementation task identifier
+- Related run id: n/a - this source document does not bind a canonical current execution run
+- Related latest.json: n/a - this source document does not bind a canonical current latest.json pointer
+- Related pipeline artifacts: n/a - this supplement produces no implementation or acceptance artifacts; retain any original evidence references in the body

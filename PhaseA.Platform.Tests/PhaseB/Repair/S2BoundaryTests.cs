@@ -23,9 +23,10 @@ public sealed class S2BoundaryTests
             using var isolation = RunnerIsolationPolicy.PrepareWorkspace(new RunnerIsolationDescriptor(
                 "account-a", "project-a", "phase-r-a-p", root,
                 LowPrivilegeRequired: true, JobObjectRequired: true, NtfsAclRequired: true));
+            // ADR-0035/0061: consume the prompt to EOF before completing the runner stdin contract.
             var probe = Path.Combine(root, "s2-probe.cmd");
             await File.WriteAllTextAsync(probe,
-                $"@echo off\r\necho S2_PROCESS_STARTED\r\necho s2-ok>\"{output}\"\r\n",
+                $"@echo off\r\necho S2_PROCESS_STARTED\r\npowershell.exe -NoProfile -NonInteractive -Command \"$null = [Console]::In.ReadToEnd()\"\r\necho s2-ok>\"{output}\"\r\n",
                 Encoding.ASCII);
             var request = new CodexHostedProcessRequest(root, output, "", "test-model", "low");
             var command = CodexHostedProcessCommandFactory.Build(request with { Prompt = "write harmless marker" });

@@ -1,0 +1,20 @@
+{
+  "schema": "ci-fix-validation.v1",
+  "observed": {
+    "run": 36866184785,
+    "head": "b35bf7c7e9816f0a2c9dae33376f1cb10f8626c1",
+    "artifact_id": 11167033980,
+    "artifact_sha256": "eb551d1e7c5a078d097f75482d8c7f6200a66233100e22a9c06ee004705d4e26",
+    "failed_case": "S51BoundaryTests.O_R4_PERSISTED_FAULT_POINT_MATRIX",
+    "message": "FAILURE-R4-CONCURRENT: a same-key retry worker failed.",
+    "core_passed": 44,
+    "phase_a_passed": 1845,
+    "phase_a_failed": 1
+  },
+  "analysis": "Startup reconciliation scans Staging rows without publication coordination. Another process can still own the publication lock and stage; startup can move its live files into quarantine.",
+  "validation": {
+    "deterministic_regression": "pending real Windows RED on unchanged production code",
+    "production_fix": "prepared; not included in this regression commit",
+    "runtime_gate": "strict Windows preflight passed on 5af5a63b"
+  }
+}

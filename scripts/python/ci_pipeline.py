@@ -22,18 +22,12 @@ import subprocess
 import sys
 
 from solution_target import resolve_test_solution_arg
+from ci_process import env_timeout_ms, run_logged_command
 
 
 def run_cmd(args, cwd=None, timeout=900_000):
-    p = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         text=True, encoding='utf-8', errors='ignore')
-    try:
-        out, _ = p.communicate(timeout=timeout/1000.0)
-    except subprocess.TimeoutExpired:
-        p.kill()
-        out, _ = p.communicate()
-        return 124, out
-    return p.returncode, out
+    rc, out, _ = run_logged_command(args, cwd=cwd, timeout=timeout)
+    return rc, out
 
 
 def read_json(path):
@@ -108,13 +102,14 @@ def extract_failed_tests(dotnet_test_output: str):
         return []
 
     failed = []
+    # VSTest emits milliseconds, seconds, and compound minute/hour durations.
+    duration = r'\[(?:[0-9]+(?:\.[0-9]+)?\s*(?:ms|s|m|h)\s*)+\]'
     for raw in dotnet_test_output.splitlines():
         line = raw.strip()
         if not line:
             continue
 
-        # Pattern: "Failed Namespace.Class.Test [123 ms]"
-        m = re.match(r'^Failed\s+(.+?)\s+\[[0-9]+(?:\.[0-9]+)?\s*ms\]$', line)
+        m = re.match(r'^Failed\s+(.+?)\s+' + duration + r'$', line)
         if m:
             failed.append(m.group(1).strip())
             continue
@@ -125,8 +120,13 @@ def extract_failed_tests(dotnet_test_output: str):
             failed.append(m.group(1).strip())
             continue
 
-        # Pattern: "X Namespace.Class.Test [123ms]"
-        m = re.match(r'^[xX]\s+(.+?)\s+\[[0-9]+(?:\.[0-9]+)?\s*ms\]$', line)
+        # xUnit's diagnostic failure line includes its elapsed-time prefix.
+        m = re.match(r'^\[xUnit\.net\s+[^\]]+\]\s+(.+?)\s+\[FAIL\]$', line)
+        if m:
+            failed.append(m.group(1).strip())
+            continue
+
+        m = re.match(r'^[xX]\s+(.+?)\s+' + duration + r'$', line)
         if m:
             failed.append(m.group(1).strip())
 
@@ -141,6 +141,29 @@ def extract_failed_tests(dotnet_test_output: str):
     return deduped
 
 
+
+def run_runtime_preflight(godot_bin: str, project: str) -> int:
+    """ADR-0005: fail early through the approved CI entrypoint, without claiming full completion."""
+    root = os.getcwd()
+    ci_dir = os.path.join('logs', 'ci', dt.date.today().strftime('%Y-%m-%d'))
+    os.makedirs(ci_dir, exist_ok=True)
+    rc, output = run_cmd([
+        'py', '-3', 'scripts/python/godot_selfcheck.py', 'run',
+        '--godot-bin', godot_bin, '--project', project,
+    ], cwd=root, timeout=780_000)
+    with io.open(os.path.join(ci_dir, 'runtime-preflight-console.txt'), 'w', encoding='utf-8') as f:
+        f.write(output)
+    runtime_root = os.path.dirname(os.path.abspath(project))
+    selfcheck = read_json(os.path.join(runtime_root, 'logs', 'e2e', dt.date.today().strftime('%Y-%m-%d'), 'selfcheck-summary.json')) or {}
+    ok = rc == 0 and selfcheck.get('status') == 'ok'
+    summary = {'status': 'ok' if ok else 'fail', 'rc': rc, 'selfcheck': selfcheck, 'scope': 'runtime_preflight_only'}
+    with io.open(os.path.join(ci_dir, 'runtime-preflight-summary.json'), 'w', encoding='utf-8') as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
+    print('CI_RUNTIME_PREFLIGHT ' + json.dumps(summary, ensure_ascii=False))
+    if not ok:
+        print(output[-12_000:])
+    return 0 if ok else 1
+
 def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -150,8 +173,18 @@ def main():
     ap_all.add_argument('--godot-bin', required=True)
     ap_all.add_argument('--project', default='project.godot')
     ap_all.add_argument('--build-solutions', action='store_true')
+    ap_all.add_argument('--no-build', action='store_true')
+    ap_all.add_argument('--no-restore', action='store_true')
+    ap_all.add_argument('--hang-timeout', default=None)
+    ap_all.add_argument('--fail-fast', action='store_true')
+
+    ap_runtime = sub.add_parser('runtime')
+    ap_runtime.add_argument('--godot-bin', required=True)
+    ap_runtime.add_argument('--project', default='project.godot')
 
     args = ap.parse_args()
+    if args.cmd == 'runtime':
+        return run_runtime_preflight(args.godot_bin, args.project)
     if args.cmd != 'all':
         print('Unsupported command')
         return 1
@@ -213,9 +246,15 @@ def main():
     }
 
     # 1) Dotnet tests + coverage (soft gate on coverage)
-    rc, out = run_cmd(['py', '-3', 'scripts/python/run_dotnet.py',
-                       '--solution', resolved_solution,
-                       '--configuration', args.configuration], cwd=root)
+    # The stage budget includes restore and tests. The wrapper gets a bounded
+    # cleanup margin so the child can write its terminal summary first.
+    dotnet_budget = env_timeout_ms('CI_DOTNET_STAGE_TIMEOUT_MS', 1_800_000)
+    dotnet_args = ['py', '-3', 'scripts/python/run_dotnet.py',
+                   '--solution', resolved_solution, '--configuration', args.configuration]
+    if args.no_build: dotnet_args.append('--no-build')
+    if args.no_restore: dotnet_args.append('--no-restore')
+    if args.hang_timeout: dotnet_args.extend(['--hang-timeout', args.hang_timeout])
+    rc, out = run_cmd(dotnet_args, cwd=root, timeout=dotnet_budget + 60_000)
     with io.open(os.path.join(ci_dir, 'run-dotnet-console.txt'), 'w', encoding='utf-8') as f:
         f.write(out)
     dotnet_sum = read_json(os.path.join('logs', 'unit', date, 'summary.json')) or {}
@@ -243,6 +282,14 @@ def main():
     }
     if rc not in (0, 2) or summary['dotnet']['status'] == 'tests_failed':
         hard_fail = True
+        if args.fail_fast:
+            # ADR-0005: an incomplete pipeline remains failed; later gates are not passed.
+            summary.update(status='fail', selfcheck={'status': 'not_run', 'reason': 'dotnet_hard_failure'},
+                           encoding={'status': 'not_run', 'reason': 'dotnet_hard_failure'})
+            with io.open(os.path.join(ci_dir, 'ci-pipeline-summary.json'), 'w', encoding='utf-8') as f:
+                json.dump(summary, f, ensure_ascii=False, indent=2)
+            print_failure_diagnostics(summary)
+            return 1
 
     # 2) Godot self-check (hard gate)
     # ensure autoload fixed (explicit project path)
@@ -250,7 +297,10 @@ def main():
     sc_args = ['py', '-3', 'scripts/python/godot_selfcheck.py', 'run', '--godot-bin', args.godot_bin, '--project', args.project]
     if args.build_solutions:
         sc_args.append('--build-solutions')
-    rc2, out2 = run_cmd(sc_args, cwd=root, timeout=600_000)
+    # Preserve internal budgets: optional build (600s), run (300s), prewarm
+    # (120s), retry (300s), then bounded cleanup/summary time.
+    selfcheck_budget = (600_000 if args.build_solutions else 0) + 300_000 + 120_000 + 300_000
+    rc2, out2 = run_cmd(sc_args, cwd=root, timeout=selfcheck_budget + 60_000)
     # persist raw stdout for diagnosis
     os.makedirs(os.path.join('logs', 'ci', date), exist_ok=True)
     with io.open(os.path.join('logs', 'ci', date, 'selfcheck-stdout.txt'), 'w', encoding='utf-8') as f:
@@ -284,8 +334,13 @@ def main():
     except Exception:
         pass
 
-    sc_ok = (sc_sum.get('status') == 'ok') or (rc2 == 0)
-    summary['selfcheck'] = sc_sum or {'status': 'fail', 'note': 'no-summary'}
+    sc_ok = rc2 == 0 and sc_sum.get('status') == 'ok'
+    summary['selfcheck'] = dict(sc_sum) if sc_sum else {'status': 'fail', 'note': 'no-summary'}
+    summary['selfcheck']['wrapper_rc'] = rc2
+    if not sc_ok:
+        summary['selfcheck']['status'] = 'fail'
+        if rc2 != 0:
+            summary['selfcheck']['reason'] = f'self-check producer exited with code {rc2}'
     if not sc_ok:
         hard_fail = True
 

@@ -16,9 +16,9 @@ internal sealed class TestRunnerCredentialScope : IDisposable
     private readonly string _target;
     private bool _disposed;
 
-    private TestRunnerCredentialScope(string accountId, string projectId)
+    private TestRunnerCredentialScope(string accountId, string projectId, string? accountName = null)
     {
-        AccountName = $"pr8{Guid.NewGuid():N}"[..14];
+        AccountName = accountName ?? $"pr8{Guid.NewGuid():N}"[..14];
         Password = CreatePassword();
         _target = RunnerIsolationPolicy.CredentialTarget(new RunnerIsolationDescriptor(
             accountId, projectId, AccountName, Path.GetTempPath(), true, true, true));
@@ -45,6 +45,11 @@ internal sealed class TestRunnerCredentialScope : IDisposable
         return new TestRunnerCredentialScope(accountId, projectId);
     }
 
+    // ADR-0061: the existing fixed fixtures use this exact test boundary.
+    // Dynamic account/project fixtures still create their own scoped identities.
+    internal static TestRunnerCredentialScope CreateCiBaseline() =>
+        new("account-a", "project-a", "phase-r-a-p");
+
     public RunnerIsolationDescriptor Describe(string accountId, string projectId, string workspaceRoot) =>
         new(accountId, projectId, OsIdentity, workspaceRoot, true, true, true);
 
@@ -69,19 +74,36 @@ internal sealed class TestRunnerCredentialScope : IDisposable
 
     private static void AddLocalUser(string name, string password)
     {
-        var script = "$pw=ConvertTo-SecureString '" + EscapePowerShell(password) + "' -AsPlainText -Force; " +
+        var script = "$ErrorActionPreference='Stop'; $pw=ConvertTo-SecureString '" + EscapePowerShell(password) + "' -AsPlainText -Force; " +
             "$u=New-LocalUser -Name '" + EscapePowerShell(name) + "' -Password $pw -AccountNeverExpires -PasswordNeverExpires -UserMayNotChangePassword; " +
             "Add-LocalGroupMember -Group 'Users' -Member $u.Name -ErrorAction SilentlyContinue";
         var encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
-        using var process = Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -NonInteractive -EncodedCommand {encoded}")
+        var windowsPowerShell = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0");
+        var start = new ProcessStartInfo(Path.Combine(windowsPowerShell, "powershell.exe"), $"-NoProfile -NonInteractive -EncodedCommand {encoded}")
         {
             UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true
-        }) ?? throw new InvalidOperationException("test Runner account creation process could not start");
-        process.WaitForExit();
+        };
+        // PowerShell 7's inherited module path cannot load Security in Windows
+        // PowerShell 5.1. Resolve the version-matched built-in modules explicitly.
+        start.Environment["PSModulePath"] = Path.Combine(windowsPowerShell, "Modules");
+        using var process = Process.Start(start)
+            ?? throw new InvalidOperationException("test Runner account creation process could not start");
+        var output = process.StandardOutput.ReadToEndAsync();
+        var error = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(30_000))
+        {
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
+            DeleteLocalUser(name);
+            throw new TimeoutException("test Runner account creation exceeded its bounded wait");
+        }
+        Task.WhenAll(output, error).GetAwaiter().GetResult();
         if (process.ExitCode != 0)
         {
-            var error = process.StandardError.ReadToEnd();
-            throw new Win32Exception(process.ExitCode, $"test Runner account creation failed (exit={process.ExitCode}; error={error.Trim()})");
+            DeleteLocalUser(name);
+            // PowerShell error output can echo the password-bearing script.
+            // Retain the exit code without returning raw output or command bytes.
+            throw new Win32Exception(process.ExitCode, $"test Runner account creation failed (exit={process.ExitCode})");
         }
     }
 

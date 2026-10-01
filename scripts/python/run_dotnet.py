@@ -23,6 +23,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from solution_target import resolve_test_solution_arg
+from ci_process import env_timeout_ms, run_logged_command
+import time
 
 
 def candidate_dotnet_paths(root: Path) -> list[Path]:
@@ -63,15 +65,8 @@ def resolve_dotnet(root: Path) -> str:
 
 
 def run_cmd(args, cwd=None, timeout=900_000):
-    p = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         text=True, encoding='utf-8', errors='ignore')
-    try:
-        out, _ = p.communicate(timeout=timeout/1000.0)
-    except subprocess.TimeoutExpired:
-        p.kill()
-        out, _ = p.communicate()
-        return 124, out
-    return p.returncode, out
+    rc, out, _ = run_logged_command(args, cwd=cwd, timeout=timeout)
+    return rc, out
 
 
 def ensure_dir(path):
@@ -129,6 +124,9 @@ def main():
     ap.add_argument('--configuration', default='Debug')
     ap.add_argument('--filter', default=None, help='Optional dotnet test filter expression.')
     ap.add_argument('--out-dir', default=None)
+    ap.add_argument('--no-build', action='store_true', help='Reuse the caller-validated build.')
+    ap.add_argument('--no-restore', action='store_true', help='Reuse the caller-validated restore.')
+    ap.add_argument('--hang-timeout', default=None, help='Optional VSTest hang diagnostic timeout, e.g. 10m.')
     args = ap.parse_args()
 
     root = os.getcwd()
@@ -146,10 +144,20 @@ def main():
         'filter': args.filter or '',
         'out_dir': out_dir,
         'status': 'fail',
+        'build_reused': args.no_build,
+        'restore_reused': args.no_restore,
+        'hang_timeout': args.hang_timeout,
     }
 
-    # Restore
-    rc, out = run_cmd([dotnet_bin, 'restore', resolved_solution], cwd=root)
+    # Honor the workflow's existing total stage budget (ADR-0005). Without an
+    # override retain the original restore/test per-command bounds.
+    stage_budget = env_timeout_ms('CI_DOTNET_STAGE_TIMEOUT_MS', 1_800_000)
+    deadline = time.monotonic() + stage_budget / 1000
+    if args.no_restore:
+        rc, out = 0, 'Restore reused from the successful workflow build.\n'
+    else:
+        rc, out = run_cmd([dotnet_bin, 'restore', resolved_solution], cwd=root,
+                          timeout=min(900_000, stage_budget))
     with io.open(os.path.join(out_dir, 'dotnet-restore.log'), 'w', encoding='utf-8') as f:
         f.write(out)
     summary['restore_rc'] = rc
@@ -165,12 +173,34 @@ def main():
                 f'-c', args.configuration,
                 '--collect:XPlat Code Coverage',
                 '--logger', 'trx;LogFileName=tests.trx']
+    if args.no_build:
+        test_cmd.append('--no-build')
+    if args.no_restore:
+        test_cmd.append('--no-restore')
+    if args.hang_timeout:
+        test_cmd.extend(['--blame-hang-timeout', args.hang_timeout, '--blame-hang-dump-type', 'none'])
+    test_cmd.extend(['--logger', 'console;verbosity=normal'])
     if args.filter:
         test_cmd.extend(['--filter', args.filter])
-    rc, out = run_cmd(test_cmd, cwd=root)
+    remaining = max(1, int((deadline - time.monotonic()) * 1000))
+    test_budget = remaining if 'CI_DOTNET_STAGE_TIMEOUT_MS' in os.environ else min(900_000, remaining)
+    rc, out = run_cmd(test_cmd, cwd=root, timeout=test_budget)
     with io.open(os.path.join(out_dir, 'dotnet-test-output.txt'), 'w', encoding='utf-8') as f:
         f.write(out)
     summary['test_rc'] = rc
+    aborted_host = any(marker in out.lower() for marker in (
+        'test run aborted', 'test run was aborted', 'test host process crashed', 'aborting test run'))
+    summary['execution_complete'] = rc != 124 and not aborted_host
+    # Preserve every project's TRX and hang sequence, including aborted hosts.
+    archived = []
+    for project_results in Path(root).glob('*.Tests/TestResults'):
+        for artifact in project_results.rglob('*'):
+            if artifact.is_file() and (artifact.suffix == '.trx' or artifact.name.endswith('_Sequence.xml')):
+                destination = Path(out_dir) / 'project-results' / project_results.parent.name / artifact.relative_to(project_results)
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(artifact, destination)
+                archived.append(str(destination))
+    summary['project_result_artifacts'] = archived
 
     # Copy artifacts using paths emitted by dotnet test output (preferred).
     artifacts = parse_paths_from_test_output(out)

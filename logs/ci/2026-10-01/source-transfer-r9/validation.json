@@ -1,0 +1,19 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_run": 36858427511,
+  "source_commit": "ae13c2a509784799d98a7152aca5d7aba91169d1",
+  "failure": "Browser test source tail was lost during local long-file transfer; Windows compile reported CS1009/CS1010.",
+  "repair": "Reconstruct the complete browser test file from original blob 904431a8ffbee1eeed833b092f5332e1a7a533d9 and retain the async Node changes. Original and repaired browser Fact count are both 62.",
+  "source_integrity": {
+    "browser_original_chars": 257675,
+    "browser_repaired_chars": 257524,
+    "gdd_document_expected_chars": 109890,
+    "gdd_question_expected_chars": 35148,
+    "gdd_scene_expected_chars": 23286,
+    "gdd_sources_equal_expected": true
+  },
+  "validation": {
+    "windows": "pending; no local dotnet compiler"
+  },
+  "completion": "Not claimed"
+}

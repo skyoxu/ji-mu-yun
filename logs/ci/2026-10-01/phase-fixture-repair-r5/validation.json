@@ -1,0 +1,17 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_run": 36810843519,
+  "source_commit": "84496531f36e826ad1318336603ae0352313f98f",
+  "actual": {
+    "passed": 18,
+    "failed": 1,
+    "skipped": 0,
+    "total": 19
+  },
+  "remaining": "S54 O_270713F3B6BC child readiness failed before cancellation was exercised.",
+  "change": "Use System.Diagnostics.Process to start a real PowerShell child sleeping for 120 seconds with System.Threading.Thread.Sleep. Remove interactive cmd timeout and module-dependent Start-Process from the fixture. Bound cold-start readiness at 30 seconds and cancel/drain Runner in finally even after readiness failure. Preserve the assertions that the child is alive before cancellation, RunAsync throws cancellation, and the child exits afterwards.",
+  "validation": {
+    "windows": "Pending successor run; unchanged combined 19-case preflight before full pipeline.",
+    "completion": "Not claimed"
+  }
+}

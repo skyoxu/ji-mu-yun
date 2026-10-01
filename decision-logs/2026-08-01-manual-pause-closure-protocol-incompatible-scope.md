@@ -81,3 +81,27 @@ It is not a successor directory or change-ID rename for the old target.
 - `docs/standards/bootstrap-review-control-plane.md`
 - `logs/ci/2026-08-01/manual-pause-closure-protocol-r1/review-candidates.json`
 - `logs/ci/2026-08-01/manual-pause-closure-protocol-r1/review-gate-result.json`
+
+## Recovery Metadata Supplement (2026-09-30)
+
+Added for recovery-document schema completeness. The original narrative,
+conclusions, and evidence above remain unchanged. This supplement does not
+create a new acceptance result or a historical candidate binding.
+
+- Title: Manual-Pause Closure Protocol Incompatible-Scope Decision
+- Supersedes: none
+- Superseded by: none
+- Branch: n/a - the original narrative did not capture its decision-time branch
+- Git Head: n/a - the original narrative did not capture its decision-time commit; this metadata supplement does not infer a historical binding
+- Why now: Round 1 retained six P1 candidates and the required max-effort dependency made the old launch authorization stale.
+- Context: See Context above.
+- Decision: See Decision above: preserve the old stale target and use the explicitly broader v2-max-replay target.
+- Consequences: The new target requires its own complete review and verification; old evidence grants no acceptance.
+- Recovery impact: Preserve the old run and all six candidates; follow Boundaries above for new first-use eligibility.
+- Validation: Round 1 discovery completed with six retained P1 candidates; independent verification had not run under the stale authorization.
+- Related ADRs: ADR-0054, ADR-0051 (References above)
+- Related execution plans: n/a - the original narrative names review targets rather than an execution-plan directory
+- Related task id(s): n/a - no stable task identifier was captured in the original narrative
+- Related run id: manual-pause-closure-protocol-r1
+- Related latest.json: n/a - no canonical latest.json pointer was captured in the original narrative
+- Related pipeline artifacts: `logs/ci/2026-08-01/manual-pause-closure-protocol-r1/review-candidates.json`, `logs/ci/2026-08-01/manual-pause-closure-protocol-r1/review-gate-result.json`

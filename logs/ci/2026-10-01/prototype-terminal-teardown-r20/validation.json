@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "ci-repair-validation",
+  "status": "windows_validation_pending",
+  "source_head": "b729bec35f754554f5bf651751d89d034373473c",
+  "adr_refs": [
+    "ADR-0005",
+    "ADR-0061"
+  ],
+  "failing_run": {
+    "run_id": 36878725935,
+    "job_id": 110424743608,
+    "pipeline_elapsed_seconds": 1694,
+    "core": {
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0
+    },
+    "phase": {
+      "passed": 1846,
+      "failed": 1,
+      "skipped": 0
+    },
+    "ci_logs_artifact_id": 11172536909,
+    "ci_logs_sha256": "4b611983bee01087f8ea2c49340f3c13fdc3b0634341a145f506d0933c1fe840"
+  },
+  "failure": {
+    "test": "RepairAsync_PrefersPrototypeShellSceneOverBattleSceneWhenManifestFallbackIsNeeded",
+    "error": "SQLite file remained locked during fixture DisposeAsync",
+    "cause": "The test waited for three captured commands, then disposed resources before terminal metadata/audit persistence."
+  },
+  "repair": {
+    "test": "Wait for succeeded run status and succeeded progress before teardown; preserve both prototype-shell prompt assertions.",
+    "workflow": "Add the existing failing test to the early targeted regression alongside S2/S51 (six cases)."
+  },
+  "audit": {
+    "other_queued_tests": "All other tests starting queued Prototype work already wait for terminal state; rejection-only tests do not start work.",
+    "production_changed": false,
+    "cleanup_deadline_changed": false,
+    "cleanup_exception_suppressed": false,
+    "full_suite_filtered": false,
+    "formal_evidence_rebound": false
+  },
+  "validation": {
+    "linux_dotnet_available": false,
+    "windows_targeted": "pending",
+    "windows_full": "pending"
+  }
+}

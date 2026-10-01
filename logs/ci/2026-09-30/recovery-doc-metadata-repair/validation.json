@@ -1,0 +1,30 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_commit": "3a3283c4c243f44aeb18325c6ad25b8cddb3de3c",
+  "source_run": 36735818533,
+  "source_attempt": 3,
+  "failed_job": 109974855823,
+  "failed_gate": "validate_recovery_docs",
+  "changed_documents": [
+    "decision-logs/2026-08-01-manual-pause-closure-protocol-incompatible-scope.md",
+    "decision-logs/2026-07-21-rmap-vdd-creation-risk-log.md",
+    "decision-logs/2026-08-09-bootstrap-review-context-window-repair.md",
+    "decision-logs/2026-07-21-rmap-replay-bootstrap-baseline.md",
+    "execution-plans/2026-07-15-refactor-implementation-acceptance-skill-requirements.md",
+    "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan.md",
+    "execution-plans/2026-08-22-phase-b-c-identity-isolation-workspace-recovery-requirements.md",
+    "execution-plans/2026-08-10-vdd-conformance-exact-cover-requirements.md",
+    "execution-plans/2026-07-24-vdd-solo-maintainer-recovery-hardening-requirements.md",
+    "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan.md",
+    "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening.md",
+    "execution-plans/2026-07-24-vdd-solo-maintainer-simplification-requirements.md"
+  ],
+  "repair": "Append missing recovery metadata; preserve original narratives and authority. Do not infer historical bindings or completion.",
+  "validation": {
+    "command": "python scripts/python/validate_recovery_docs.py --scope all",
+    "exit_code": 0,
+    "result": "OK: recovery docs validated",
+    "environment": "Linux, Python; fetched source documents with referenced paths resolved against the exact remote Git tree. No Windows build claimed."
+  },
+  "windows_ci": "Pending on repaired commit; old workflow failure retained."
+}

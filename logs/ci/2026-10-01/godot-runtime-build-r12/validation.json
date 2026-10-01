@@ -1,0 +1,21 @@
+{
+  "schema": "ci-fix-validation.v1",
+  "repository": "skyoxu/ji-mu-yun",
+  "basis_head": "6c6dd064965f4e691765f29d54d830e9ad9ef268",
+  "date": "2026-10-01",
+  "observed": {
+    "pure_dotnet_solution": "Game.sln excludes GodotGame.csproj",
+    "godot_solution": "GodotGame.sln contains GodotGame.csproj and Game.Core",
+    "old_editor_build_timeout_seconds": 600
+  },
+  "changes": [
+    "Build GodotGame.csproj directly in Debug before Godot prewarm and runtime self-check.",
+    "Keep one reusable Game.sln build and full covered tests.",
+    "Do not invoke editor --build-solutions in the later runtime gate."
+  ],
+  "validation": {
+    "windows_runtime_build": "pending",
+    "windows_full_suite": "pending",
+    "thresholds_and_assertions": "unchanged"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "ci-fix-validation.v1",
+  "basis_head": "5fb6b60772af87ea5116ca770abda61f1b3b5a28",
+  "changes": "Require current runtime producer exit zero AND explicit receipt status ok; reject stale/missing successful runtime reports",
+  "validation": {
+    "python_regressions": {
+      "passed": 19,
+      "failed": 0
+    },
+    "windows": "pending"
+  },
+  "s51_red": {
+    "run": 36874193447,
+    "tracked_trx": "logs/ci/2026-10-01/s51-live-publication-r15/s51-publication-red.trx",
+    "sha256": "d8f158df9355af6ee1e3f0ffd92b9fdf2b7364c694f75fdd058efec9263a61ea"
+  }
+}

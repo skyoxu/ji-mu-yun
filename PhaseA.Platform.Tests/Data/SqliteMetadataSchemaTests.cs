@@ -185,7 +185,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task InitializeAsync_ClearsOlderDuplicateRequestIdentitiesBeforeCreatingUniqueIndex()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -232,7 +236,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task DiagnosticSpool_DedupeScopeIsAtomicAcrossStoreInstances()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var firstStore = new PhaseAMetadataStore(database.ConnectionString, options);
         var secondStore = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -326,7 +334,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminReviewQueueDecision_IsIdempotentForSamePayloadAndConflictsForDifferentPayload()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -418,7 +430,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminReviewQueueDecision_ConcurrentSamePayloadCreatesOneHistoryVersion()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -458,7 +474,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminReviewQueueUpsert_ConcurrentDifferentPayloadsSerializeOneCurrentVersion()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -485,7 +505,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminReviewQueueDecision_ExpiredDeferredSamePayloadRetryRemainsIdempotent()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -514,7 +538,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminReviewQueueDecision_DeferredAcceptsExpiryOrRecheckButRequiresEvidence()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -567,7 +595,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminReviewQueueProducerRecheck_ReopensSameDeferredBlockerPayload()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -616,7 +648,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminReviewQueueDecision_AllTerminalDecisionsRequireEvidence(string decisionStatus)
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -638,7 +674,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminReviewQueueDecision_RejectsUnsafeOrMissingEvidenceRefsAndPersistsStructuredRefs()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -709,7 +749,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminReviewQueue_RejectsUnboundedStatusAndSeverityValues()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -737,7 +781,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminReviewQueue_RejectsMalformedOrUnsafeEvidenceRefs(string evidenceRefsJson)
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -754,7 +802,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminReviewQueue_RegenerationSupersedesHistoryAndSupportsFiltersDeferredValidationAndSidecar()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -886,7 +938,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminAccountAudit_PersistenceRedactsSecretsAndHostPaths()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -913,7 +969,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task DeleteProjectAsync_PreservesGovernanceRecordsAndWritesTombstone()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -966,7 +1026,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task DeleteProjectAsync_CountsMalformedDeferredAdminReviewEntriesAsUnresolved()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -1010,7 +1074,9 @@ public sealed class SqliteMetadataSchemaTests
         Directory.CreateDirectory(Path.GetDirectoryName(metadataPath)!);
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
-            ["PHASEA_METADATA_DB_PATH"] = metadataPath
+            ["PHASEA_METADATA_DB_PATH"] = metadataPath,
+            // ADR-0061: this fixture creates its project below the OS temporary root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
         var connectionString = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
         {
@@ -1076,7 +1142,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task DiagnosticSpool_UserReadback_IsScopedToCurrentAccount()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1160,7 +1230,11 @@ public sealed class SqliteMetadataSchemaTests
         }
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         await store.RecordProjectGameTypeMatchFailureAsync(new ProjectGameTypeMatchFailureCommand(
             "account-one",
@@ -1196,7 +1270,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task EnsureSingleAdminAsync_BootstrapsAdminWithDefaultProjectLimit()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1213,7 +1291,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task CreateUserAccountAsync_StoresTokenHashAndProjectLimit()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1234,7 +1316,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AiCodeMirrorKeyPool_ImportsAndAssignsKeysToAccounts()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1294,7 +1380,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task CreateUserAccountAsync_WhenRequired_AssignsNextAvailableAiCodeMirrorKey()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1316,7 +1406,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ProjectBelongsToAccountAsync_ReturnsFalseForOtherAccounts()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1332,7 +1426,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ListAccountsAsync_ReturnsProjectCountsAndLimits()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1356,7 +1454,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task SetUserDisabledAsync_BlocksTokenResolution()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1374,7 +1476,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task RotateUserTokenAsync_InvalidatesPreviousToken()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1393,7 +1499,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task AdminAccountAuditEvents_AreRecordedAndListed()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1420,7 +1530,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ListAdminAccountAuditEventsAsync_FiltersAndOffsetsResults()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1448,7 +1562,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task CreateProjectAsync_EnforcesDefaultAccountQuota()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1471,7 +1589,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ListProjectsAsync_ReturnsCreatedUtcAndLastActivityUtc()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1503,7 +1625,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ProjectChatMessages_AreAccountAndProjectScoped_AndRetained()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1526,7 +1652,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ProjectChatMemory_IsAccountAndProjectScoped()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1549,7 +1679,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ProjectChatHistory_MarksLatestSuggestedAssistantMessageConsumed_AfterFormalFeedback()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1585,7 +1719,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ProjectChatHistory_RemovesInternalRouteBlocks_WhenListingStoredMessages()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1611,7 +1749,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ReconcileAbandonedRunsAsync_FailsOnlyRunsThatExceededHeartbeatTimeout()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1663,7 +1805,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ReconcileAbandonedRunsAsync_FailsQueuedWebPreviewFromPreviousProcess()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1704,7 +1850,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task HasActiveRunAsync_IgnoresRunningChatRuns()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1732,7 +1882,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task CancelRunAsync_ShouldMarkRunningRunCancelKeepLockAndIgnoreLateCompletion()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1775,7 +1929,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task CancelRunAsync_ShouldReleaseQueuedRunLock()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1802,7 +1960,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task HasRunnerLockAsync_ShouldIgnoreCancelledRunLocks()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1824,7 +1986,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task MarkRunStartedAsync_ShouldNotReviveCancelledQueuedRun()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1853,7 +2019,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task TryMarkRunStartedAsync_ShouldNotReviveFailedQueuedRun()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1878,7 +2048,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ReconcileAbandonedRunsAsync_CanRecoverPrototypeQuickFixRuns()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -1921,7 +2095,11 @@ public sealed class SqliteMetadataSchemaTests
     public async Task GetLatestProjectIterationSessionAsync_ReturnsStructuredGoalRuns()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            // ADR-0061: this suite creates disposable projects beneath the OS temp root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
@@ -2148,3 +2326,4 @@ public sealed class SqliteMetadataSchemaTests
         return indexes;
     }
 }
+

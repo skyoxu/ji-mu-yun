@@ -1,0 +1,14 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_run": 36838664713,
+  "source_commit": "251ef0a85bf17ff3d77eda11d961ec86175d9fc9",
+  "observed_failure": "PrototypeWorkflowTests.RepairAsync_UsesSlugFromPrototypeRecordContent_WhenPathSlugDiffers failed while disposing TempSqliteDatabase; a background connection still held the temporary database. The separate PhaseA test-host hang remains unidentified because the aborted host produced no PhaseA TRX/sequence.",
+  "repair": "Add bounded asynchronous database cleanup and use await using in 55 asynchronous PrototypeWorkflow fixtures. Yield to final background audit writes without changing production behavior or assertions; a persistent deletion failure still throws.",
+  "validation": {
+    "new_windows_selector": "TempSqliteDatabaseLifecycleTests.DisposeAsync_RemovesDatabaseAfterActiveConnectionCloses",
+    "affected_failed_selector": "RepairAsync_UsesSlugFromPrototypeRecordContent_WhenPathSlugDiffers",
+    "windows": "pending",
+    "hang_diagnosis": "new fail-closed VSTest sequence is required if the host hangs again"
+  },
+  "completion": "Not claimed"
+}

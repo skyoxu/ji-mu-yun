@@ -1,0 +1,15 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_run": 36862505623,
+  "source_commit": "ba8162ad7273a6f23bafaddb046f6a6e0dabf36e",
+  "observed": {
+    "preflight_total": 192,
+    "preflight_passed": 191,
+    "preflight_failed": 1
+  },
+  "repair": "Bound the dedicated web-preview queue fixture's post-release drain at 30 seconds. Retain queued-state/queued-count assertions before release and exact release/debug export ordering, failure status and empty-queue assertions afterward. Product queue/export deadlines are unchanged.",
+  "validation": {
+    "windows": "pending"
+  },
+  "completion": "Not claimed"
+}

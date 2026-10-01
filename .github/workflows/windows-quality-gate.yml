@@ -38,6 +38,7 @@ jobs:
       DELIVERY_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.delivery_profile || 'fast-ship' }}
       WHITELIST_WARN_DAYS: '90'
       CI_DOTNET_STAGE_TIMEOUT_MS: '4200000'
+      PHASEA_CI_FIXTURES: '1'
     steps:
       - name: Enable Windows long paths
         shell: pwsh
@@ -97,6 +98,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+
+      - name: CI process runner regression (Python)
+        shell: pwsh
+        run: |
+          py -3 -m unittest discover -s scripts/sc/tests -p 'test_ci_*.py' -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Hard gates bundle (Python)
         shell: pwsh
@@ -202,20 +209,48 @@ jobs:
           $env:GODOT_DOTNET_CLI = (Get-Command dotnet).Path
           dotnet restore Game.sln
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build Game.sln -c Release -v minimal
+          dotnet build Game.sln -c Debug --no-restore -v minimal
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-          $prewarm = Start-Process -FilePath "$env:GODOT_BIN" -ArgumentList "--headless", "--path", ".", "--quit" -Wait -PassThru -NoNewWindow
-          if ($prewarm.ExitCode -ne 0) {
-            Write-Warning "Godot prewarm exited with code $($prewarm.ExitCode); continue because hard runtime gates run in CI pipeline."
-          }
+          # ADR-0005: the Godot runtime project is outside the pure .NET solution.
+          # Build it directly once; avoid editor --build-solutions before self-check.
+          dotnet restore GodotGame.csproj
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build GodotGame.csproj -c Debug --no-restore -v minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          # Fail before the expensive covered suite if runtime autoloads are missing.
+          py -3 -u scripts/python/ci_pipeline.py runtime --godot-bin "$env:GODOT_BIN" --project project.godot
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Runner lifecycle regression (Windows)
+        shell: pwsh
+        run: |
+          $date = Get-Date -Format 'yyyy-MM-dd'
+          $out = "logs/unit/$date/runner-publication-regression"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore `
+            --filter 'FullyQualifiedName~S2BoundaryTests|FullyQualifiedName~S51BoundaryTests|FullyQualifiedName~PrototypeWorkflowTests.RepairAsync_PrefersPrototypeShellSceneOverBattleSceneWhenManifestFallbackIsNeeded' `
+            --logger 'trx;LogFileName=s51-publication-regression.trx' --results-directory $out
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Phase fixture regression (Windows)
+        shell: pwsh
+        run: |
+          $date = Get-Date -Format 'yyyy-MM-dd'
+          $out = "logs/unit/$date/fixture-regression"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore `
+            --filter 'FullyQualifiedName~S54BoundaryTests|FullyQualifiedName~RunnerIsolationTests|FullyQualifiedName~S35BoundaryTests|FullyQualifiedName~SqliteMetadataSchemaTests.AdminReviewQueueDecision_IsIdempotentForSamePayloadAndConflictsForDifferentPayload|FullyQualifiedName~SqliteMetadataSchemaTests.ProjectChatHistory_MarksLatestSuggestedAssistantMessageConsumed_AfterFormalFeedback|FullyQualifiedName~Program_AdminPrivateReadbackAndQueueDecisionEndpointsAreAdminOnlyNoStoreAndStablyMapped|FullyQualifiedName~HeavyRunnerQueueServiceTests|FullyQualifiedName~CreateAsync_ShouldBoundLastWaiterCleanup_WhenLlmIgnoresCancellation|FullyQualifiedName~DiagnosticSpool_WritesOutsideWorkspace_AndSupportsAdminTriageWithoutRewritingHistory|FullyQualifiedName~SnapshotAndRestore_RoundTripWithQuotaAndSoftDelete|FullyQualifiedName~GenerateQueuedPreviewAsync_WaitsForDedicatedWebPreviewQueue|FullyQualifiedName~S28BoundaryTests.O_5277C4B77BBF|FullyQualifiedName~S15BoundaryTests.O_9FDA0B49E011|FullyQualifiedName~S63BoundaryTests.O_AB9EF0D40F90|FullyQualifiedName~QueueAsync_FailsPostCompletionDirectSmoke_WhenGodotReportsError|FullyQualifiedName~QueueAsync_ConfiguresPrototypeCreationActivityAndTotalTimeouts|FullyQualifiedName~RepairAsync_UsesSlugFromPrototypeRecordContent_WhenPathSlugDiffers|FullyQualifiedName~TempSqliteDatabaseLifecycleTests|FullyQualifiedName~BrowserUiRendererTests|FullyQualifiedName~GameDesignDocumentServiceTests|FullyQualifiedName~GameDesignQuestionFormServiceTests|FullyQualifiedName~GameDesignSceneRouteServiceTests' `
+            --logger 'trx;LogFileName=fixture-regression.trx' --results-directory $out
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: CI pipeline (Python)
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Continue'
           $PSNativeCommandUseErrorActionPreference = $false
-          & py -3 scripts/python/ci_pipeline.py all --solution Game.sln --configuration Debug --godot-bin "$env:GODOT_BIN" --build-solutions
+          & py -3 -u scripts/python/ci_pipeline.py all --solution Game.sln --configuration Debug --godot-bin "$env:GODOT_BIN" --no-build --no-restore --hang-timeout 10m --fail-fast
           $code = $LASTEXITCODE
           if ($code -ne 0) {
             if ($env:GITHUB_STEP_SUMMARY) {
@@ -359,7 +394,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ci-logs
-          path: logs/ci/**
+          path: |
+            logs/ci/**
+            logs/unit/**
           if-no-files-found: ignore
 
       - name: Soft gates bundle (Python)

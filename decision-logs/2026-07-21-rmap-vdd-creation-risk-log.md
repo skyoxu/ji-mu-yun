@@ -37,3 +37,29 @@ release, or a rewrite of historical evidence.
 - Require multi-baseline lineage transitions to be path-level and hash-bound.
 - Reject plan creation when scoped current changes cannot be assigned to an
   initial baseline, an explicit bootstrap baseline, or a declared slice.
+
+## Recovery Metadata Supplement (2026-09-30)
+
+Added for recovery-document schema completeness. The original narrative,
+conclusions, and evidence above remain unchanged. This supplement does not
+create a new acceptance result or a historical candidate binding.
+
+- Title: RMAP VDD Creation Risk Log
+- Date: 2026-07-21
+- Status: observational - does not authorize acceptance or release
+- Supersedes: none
+- Superseded by: none
+- Branch: n/a - the original narrative did not capture its decision-time branch
+- Git Head: n/a - the original narrative did not capture its decision-time commit; this metadata supplement does not infer a historical binding
+- Why now: Replay exposed missing runtime assets, prerequisite hash failures, and lineage mismatch.
+- Context: See Scope, Findings, and Evidence above.
+- Decision: Record VDD follow-up requirements; do not reinterpret historical acceptance evidence.
+- Consequences: Future plan creation must audit replay prerequisites, ownership, and multi-baseline lineage.
+- Recovery impact: Require explicit hash-bound bootstrap preparation and reject unassigned scoped changes.
+- Validation: The original Evidence section records mismatches, not a passing replay or acceptance result.
+- Related ADRs: n/a - the original risk narrative does not cite an ADR
+- Related execution plans: `execution-plans/2026-07-15-repository-maintenance-tdd-adapter/`
+- Related task id(s): n/a - no stable task identifier was captured in the original narrative
+- Related run id: RUN-20260721T081500Z; replay-preparation-20260721T123500Z (original Evidence section)
+- Related latest.json: n/a - no canonical latest.json pointer was captured in the original narrative
+- Related pipeline artifacts: `logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6/RUN-20260721T081500Z/candidate-lineage-mismatch.v1.json`, `logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6/RUN-20260721T081500Z/candidate-replay-scope.v1.json`; the external replay-preparation path remains recorded above

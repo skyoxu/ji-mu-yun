@@ -413,6 +413,8 @@ app.MapGet("/api/admin/extension-policy", (
     HttpContext context,
     [FromServices] ExtensionPolicyState policy) =>
 {
+    // ADR-0034/ADR-0038: explicit private readback policy, also applied by middleware.
+    ApplyNoStore(context);
     if (RejectNonAdministrator(context) is { } rejection)
     {
         return rejection;
@@ -426,6 +428,8 @@ app.MapPost("/api/admin/extension-policy", (
     HttpContext context,
     [FromServices] ExtensionPolicyState policy) =>
 {
+    // ADR-0034/ADR-0038: explicit private readback policy, also applied by middleware.
+    ApplyNoStore(context);
     if (RejectNonAdministrator(context) is { } rejection)
     {
         return rejection;
@@ -4046,3 +4050,4 @@ public partial class Program
 {
     internal static readonly SemaphoreSlim RequestFailureDiagnosticGate = new(1, 1);
 }
+

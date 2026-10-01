@@ -96,25 +96,38 @@ public sealed class S54BoundaryTests : IDisposable
         var childStarted = Path.Combine(_root, "child-started.txt");
         using var cancellation = new CancellationTokenSource();
         var runner = new HostedProcessRunner();
-        var launcher = $"$child = Start-Process -FilePath 'cmd.exe' -ArgumentList '/d','/c','timeout /t 30 > nul' -PassThru; [IO.File]::WriteAllText('{childStarted}', [string]$child.Id); Start-Sleep -Seconds 30";
+        // ADR-0061: use a real long-lived child without cmd's interactive timeout input.
+        var childCode = Convert.ToBase64String(Encoding.Unicode.GetBytes("[Threading.Thread]::Sleep(120000)"));
+        var launcher = $"$start = [Diagnostics.ProcessStartInfo]::new('powershell.exe', '-NoProfile -NonInteractive -EncodedCommand {childCode}'); $start.UseShellExecute = $false; $start.CreateNoWindow = $true; $child = [Diagnostics.Process]::Start($start); [IO.File]::WriteAllText('{childStarted}', [string]$child.Id); [Threading.Thread]::Sleep(120000)";
         var run = runner.RunAsync(new HostedProcessCommand(
             "powershell.exe",
             ["-NoProfile", "-NonInteractive", "-Command", launcher],
             _root,
             new Dictionary<string, string>()), cancellation.Token);
 
-        await WaitForFileAsync(childStarted, TimeSpan.FromSeconds(5));
-        Assert.True(File.Exists(childStarted), "FAILURE-O-270713F3B6BC: child did not start; cancellation cannot prove cleanup.");
-        var childPid = int.Parse((await File.ReadAllTextAsync(childStarted)).Trim(), System.Globalization.CultureInfo.InvariantCulture);
-        using var child = TryGetProcess(childPid);
-        Assert.NotNull(child);
-        Assert.False(child!.HasExited, "FAILURE-O-270713F3B6BC: child exited before parent cancellation.");
-        cancellation.Cancel();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run);
-        await Task.Delay(TimeSpan.FromMilliseconds(500));
-        child.Refresh();
-        Assert.True(child.HasExited || !IsProcessPresent(childPid), "FAILURE-O-270713F3B6BC: child outlived the runner cancellation.");
-        Observe("children-terminated-after-parent", true);
+        try
+        {
+            // Bound cold-start readiness independently of the cancellation assertion.
+            await WaitForFileAsync(childStarted, TimeSpan.FromSeconds(30));
+            Assert.True(File.Exists(childStarted), "FAILURE-O-270713F3B6BC: child did not start; cancellation cannot prove cleanup.");
+            var childPid = int.Parse((await File.ReadAllTextAsync(childStarted)).Trim(), System.Globalization.CultureInfo.InvariantCulture);
+            using var child = TryGetProcess(childPid);
+            Assert.NotNull(child);
+            Assert.False(child!.HasExited, "FAILURE-O-270713F3B6BC: child exited before parent cancellation.");
+            cancellation.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run);
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
+            child.Refresh();
+            Assert.True(child.HasExited || !IsProcessPresent(childPid), "FAILURE-O-270713F3B6BC: child outlived the runner cancellation.");
+            Observe("children-terminated-after-parent", true);
+        }
+        finally
+        {
+            // Readiness failures must not leave a background Runner in the next test.
+            cancellation.Cancel();
+            try { await run.WaitAsync(TimeSpan.FromSeconds(30)); }
+            catch (OperationCanceledException) { }
+        }
     }
 
     private static Process? TryGetProcess(int processId)

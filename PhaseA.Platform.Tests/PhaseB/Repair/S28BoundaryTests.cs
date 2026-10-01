@@ -25,7 +25,7 @@ public sealed class S28BoundaryTests
         using var oldCancellation = new CancellationTokenSource();
 
         var oldPidPath = Path.Combine(fixture.Root, "pre-restore.pid");
-            var oldRun = fixture.RunAsync(fixture.PreRestoreRoot, oldPidPath, oldCancellation.Token);
+        var oldRun = fixture.RunAsync(fixture.PreRestoreRoot, oldPidPath, oldCancellation.Token);
         Task<HostedProcessResult>? currentRun = null;
         try
         {
@@ -44,9 +44,9 @@ public sealed class S28BoundaryTests
                 staleLeaseRejected = true;
             }
 
-            var currentPidPath = Path.Combine(fixture.Root, "current.pid");
-            var releasePath = Path.Combine(fixture.RestoredRoot, "release-current");
-            currentRun = fixture.RunAsync(fixture.RestoredRoot, currentPidPath, CancellationToken.None, releasePath);
+            var currentPidPath = Path.Combine(fixture.RestoredWorkspaceRoot, "current.pid");
+            var releasePath = Path.Combine(fixture.RestoredWorkspaceRoot, "release-current");
+            currentRun = fixture.RunAsync(fixture.RestoredWorkspaceRoot, currentPidPath, CancellationToken.None, releasePath);
             await WaitForFileAsync(currentPidPath, currentRun);
             var currentPid = int.Parse(await File.ReadAllTextAsync(currentPidPath), CultureInfo.InvariantCulture);
             var currentProcessWasAlive = IsProcessAlive(currentPid);
@@ -73,7 +73,11 @@ public sealed class S28BoundaryTests
         {
             // ADR-0061: a failed assertion must not leave the pre-restore Runner alive.
             oldCancellation.Cancel();
-                if (currentRun is { IsCompleted: false }) await File.WriteAllTextAsync(Path.Combine(fixture.RestoredRoot, "release-current"), "release");
+            await AwaitRunnerAsync(oldRun).WaitAsync(TimeSpan.FromSeconds(30));
+            if (currentRun is { IsCompleted: false })
+                await File.WriteAllTextAsync(Path.Combine(fixture.RestoredWorkspaceRoot, "release-current"), "release");
+            if (currentRun is not null)
+                await AwaitRunnerAsync(currentRun).WaitAsync(TimeSpan.FromSeconds(30));
         }
     }
 
@@ -122,7 +126,7 @@ public sealed class S28BoundaryTests
 
     private static async Task WaitForFileAsync(string path)
     {
-        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
         while (!File.Exists(path) && DateTime.UtcNow < deadline)
         {
             await Task.Delay(25);
@@ -136,7 +140,7 @@ public sealed class S28BoundaryTests
 
     private static async Task WaitForFileAsync(string path, Task<HostedProcessResult> run)
     {
-        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
         while (!File.Exists(path) && DateTime.UtcNow < deadline)
         {
             if (run.IsFaulted)
@@ -263,8 +267,8 @@ public sealed class S28BoundaryTests
             var escapedPid = EscapePowerShell(pidPath);
             var script = $"[IO.File]::WriteAllText('{escapedPid}', [string]$PID);" +
                          (releasePath is null
-                             ? "while ($true) { Start-Sleep -Milliseconds 100 }"
-                             : $"while (-not (Test-Path '{EscapePowerShell(releasePath)}')) {{ Start-Sleep -Milliseconds 100 }}");
+                             ? "while ($true) { [Threading.Thread]::Sleep(100) }"
+                             : $"while (-not [IO.File]::Exists('{EscapePowerShell(releasePath)}')) {{ [Threading.Thread]::Sleep(100) }}");
             return new HostedProcessRunner().RunAsync(new HostedProcessCommand(
                 "powershell.exe",
                 ["-NoProfile", "-NonInteractive", "-Command", script],

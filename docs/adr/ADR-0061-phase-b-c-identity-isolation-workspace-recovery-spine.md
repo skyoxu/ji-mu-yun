@@ -61,3 +61,10 @@ change public API routes or introduce a new delivery workflow.
   quarantine, and the reader checks the resulting artifacts and observations.
 - Windows execution evidence remains mandatory. Syntax checks and this
   clarification do not certify implementation-complete or a passed Q8.
+
+
+## Concurrent publication recovery clarification (2026-10-01)
+
+Startup reconciliation must distinguish an interrupted staging attempt from a live publisher in another process. It takes the existing destination/idempotency-key coordination lock, then re-reads the persisted status before moving staging content or recording interruption. A completed publication remains Published with its ready content intact; an abandoned Staging attempt retains the existing quarantine/recovery behavior. Reconciliation updates only a still-Staging row and appends history for that transition. The existing lock budget, lease/fencing, account/project authority, ACL validation, schema, and public API contracts remain unchanged.
+
+A Windows regression first reproduced the old behavior while an active publisher held its coordination handle, then completed publication. The correction is verified by that regression and the existing S51 independent-process fault matrix and same-key single-publication assertions. This is implementation evidence for the existing ADR boundary, not a reissued plan-level implementation-complete receipt.

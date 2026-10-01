@@ -14,8 +14,15 @@ using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
 
-public sealed class GameDesignDocumentServiceTests
+public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceRepositoryFixture>
 {
+    private readonly HostedSourceRepositoryFixture _sourceFixture;
+
+    public GameDesignDocumentServiceTests(HostedSourceRepositoryFixture sourceFixture)
+    {
+        _sourceFixture = sourceFixture;
+    }
+
     [Fact]
     public async Task CreateAsync_ShouldWriteGddWithBmadContextAndArtifact()
     {
@@ -1765,9 +1772,9 @@ public sealed class GameDesignDocumentServiceTests
         return run;
     }
 
-    private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
+    private PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
-        var resolvedRepoRoot = ResolveRepositoryRoot(repoRoot);
+        var resolvedRepoRoot = _sourceFixture.RepositoryRoot(ResolveRepositoryRoot(repoRoot));
         return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,

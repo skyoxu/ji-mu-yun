@@ -1,0 +1,46 @@
+{
+  "schema": "ci-fix-validation.v1",
+  "repository": "skyoxu/ji-mu-yun",
+  "basis_head": "b35bf7c7e9816f0a2c9dae33376f1cb10f8626c1",
+  "observed_run": {
+    "id": 36864053647,
+    "head": "6c6dd064965f4e691765f29d54d830e9ad9ef268",
+    "artifact_id": 11165147736,
+    "artifact_sha256": "0672b55595824891b7608a8d436c2aac6685a88bd480d8e8f1684813887583e0",
+    "pipeline_wall_seconds": 1960,
+    "previous_failed_pipeline_wall_seconds": 4822,
+    "core": {
+      "executed": 44,
+      "passed": 44
+    },
+    "phase_a": {
+      "executed": 1846,
+      "passed": 1846
+    },
+    "fixture": {
+      "executed": 192,
+      "passed": 192
+    },
+    "execution_complete": true,
+    "failed": 0,
+    "skipped": 0,
+    "legacy_runtime": {
+      "status": "ok",
+      "ports_ok": 0,
+      "ports_total": 6
+    },
+    "qualified_runtime_pass": false
+  },
+  "fix": [
+    "Critical six-port readiness, JSON error and process-exit validation",
+    "Early runtime check after direct Godot compilation to fail before expensive tests"
+  ],
+  "validation": {
+    "local_python_regressions": {
+      "passed": 16,
+      "failed": 0
+    },
+    "windows_latest_runtime": "pending",
+    "windows_latest_quality": "pending"
+  }
+}
