@@ -1,0 +1,19 @@
+{
+  "schema": "ci-fix-validation.v1",
+  "basis_head": "9f66666206f1469ac308116e1a439e6464e8eca8",
+  "observed": {
+    "run": 36871361413,
+    "head": "5af5a63bf7726afbfd8933d786efb62043cad3a7",
+    "artifact_id": 11168712748,
+    "artifact_sha256": "5dff3cf9573f84d2eef86d4d955d376ce2b427323809d035ca81488acaebe4cd",
+    "failed_case": "S2BoundaryTests.O_26DE8E588B36",
+    "exception": "IOException: The pipe is being closed",
+    "location": "HostedProcessRunner.RunAsync stdin flush"
+  },
+  "cause": "The cmd stand-in exits after writing its marker without consuming the factory's required prompt stdin; the parent's send can race with exit.",
+  "fix": "Drain stdin to EOF in the harmless probe before writing the marker file; include S2 with S51 in early Windows regression.",
+  "assertions": "Existing low-privilege identity, job object, ACL, process marker, exit and file-content assertions retained.",
+  "validation": {
+    "windows": "pending"
+  }
+}

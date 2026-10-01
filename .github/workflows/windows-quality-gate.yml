@@ -223,14 +223,14 @@ jobs:
           py -3 -u scripts/python/ci_pipeline.py runtime --godot-bin "$env:GODOT_BIN" --project project.godot
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: S51 publication concurrency regression (Windows)
+      - name: Runner and publication regression (Windows)
         shell: pwsh
         run: |
           $date = Get-Date -Format 'yyyy-MM-dd'
-          $out = "logs/unit/$date/s51-publication-regression"
+          $out = "logs/unit/$date/runner-publication-regression"
           New-Item -ItemType Directory -Force -Path $out | Out-Null
           dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore `
-            --filter 'FullyQualifiedName~S51BoundaryTests' `
+            --filter 'FullyQualifiedName~S2BoundaryTests|FullyQualifiedName~S51BoundaryTests' `
             --logger 'trx;LogFileName=s51-publication-regression.trx' --results-directory $out
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
