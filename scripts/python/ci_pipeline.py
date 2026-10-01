@@ -334,8 +334,13 @@ def main():
     except Exception:
         pass
 
-    sc_ok = (sc_sum.get('status') == 'ok') or (rc2 == 0)
-    summary['selfcheck'] = sc_sum or {'status': 'fail', 'note': 'no-summary'}
+    sc_ok = rc2 == 0 and sc_sum.get('status') == 'ok'
+    summary['selfcheck'] = dict(sc_sum) if sc_sum else {'status': 'fail', 'note': 'no-summary'}
+    summary['selfcheck']['wrapper_rc'] = rc2
+    if not sc_ok:
+        summary['selfcheck']['status'] = 'fail'
+        if rc2 != 0:
+            summary['selfcheck']['reason'] = f'self-check producer exited with code {rc2}'
     if not sc_ok:
         hard_fail = True
 

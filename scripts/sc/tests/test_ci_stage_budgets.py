@@ -36,6 +36,30 @@ class CiStageBudgetTests(unittest.TestCase):
             self.assertEqual(1, ci_pipeline.main())
             runtime.assert_called_once_with('godot', 'project.godot')
 
+    def test_full_pipeline_rejects_stale_or_missing_runtime_success(self):
+        import json
+        cases = ((124, {'status': 'ok'}, 1), (0, {}, 1),
+                 (0, {'status': 'fail'}, 1), (0, {'status': 'ok'}, 0))
+        for runtime_rc, receipt, expected in cases:
+            with self.subTest(runtime_rc=runtime_rc, receipt=receipt), tempfile.TemporaryDirectory() as directory:
+                old = os.getcwd()
+                os.chdir(directory)
+                def command(args, cwd=None, timeout=900000):
+                    return (runtime_rc, 'runtime output') if 'scripts/python/godot_selfcheck.py' in args and 'run' in args else (0, '')
+                def result(path):
+                    return receipt if path.endswith('selfcheck-summary.json') else {'status': 'ok'}
+                try:
+                    with mock.patch.object(sys, 'argv', ['ci_pipeline.py', 'all', '--solution', 'Game.sln', '--godot-bin', 'godot']), \
+                         mock.patch.object(ci_pipeline, 'resolve_test_solution_arg', return_value='Game.sln'), \
+                         mock.patch.object(ci_pipeline, 'run_cmd', side_effect=command), \
+                         mock.patch.object(ci_pipeline, 'read_json', side_effect=result):
+                        self.assertEqual(expected, ci_pipeline.main())
+                    summary = json.loads(next(Path(directory).rglob('ci-pipeline-summary.json')).read_text())
+                    self.assertEqual('ok' if expected == 0 else 'fail', summary['selfcheck']['status'])
+                    self.assertEqual(runtime_rc, summary['selfcheck']['wrapper_rc'])
+                finally:
+                    os.chdir(old)
+
     def test_failed_test_names_include_long_vstest_durations_and_xunit_diagnostics(self):
         output = '\n'.join([
             'Failed Namespace.Fixture.LongFailure [3 m 12 s]',
@@ -67,7 +91,7 @@ class CiStageBudgetTests(unittest.TestCase):
                      mock.patch.object(sys, 'argv', ['ci_pipeline.py', 'all', '--solution', 'Game.sln', '--godot-bin', 'godot', '--build-solutions']), \
                      mock.patch.object(ci_pipeline, 'resolve_test_solution_arg', return_value='Game.sln'), \
                      mock.patch.object(ci_pipeline, 'run_cmd', side_effect=fake), \
-                     mock.patch.object(ci_pipeline, 'read_json', return_value={}):
+                     mock.patch.object(ci_pipeline, 'read_json', return_value={'status': 'ok'}):
                     self.assertEqual(0, ci_pipeline.main())
             finally:
                 os.chdir(old)
