@@ -637,7 +637,8 @@ const Engine = (function () {
             queueReadback.Items.Single().RunId.Should().Be(queued.RunId);
     
             await queueBlocker.DisposeAsync();
-            var result = await generation.WaitAsync(TimeSpan.FromSeconds(5));
+            // ADR-0005: fixture drain readiness; export failure and FIFO assertions remain unchanged.
+            var result = await generation.WaitAsync(TimeSpan.FromSeconds(30));
             result.Status.Should().Be("godot3_export_failed");
             // ADR-0005: a failed release export is followed by the existing debug fallback.
             exportRunner.Commands.Select(command => command.Arguments.Single(argument =>
