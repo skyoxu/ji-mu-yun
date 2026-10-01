@@ -1,0 +1,18 @@
+{
+  "schema": "ci-fix-validation.v1",
+  "basis_head": "c88aff0ee0099894d0994bb3100518dd627d858d",
+  "observed": {
+    "run": 36870325231,
+    "blocked_rule": "unknown_direct_python_script",
+    "blocked_script": "scripts/python/godot_selfcheck.py"
+  },
+  "fix": "Route early runtime validation through approved ci_pipeline.py runtime; do not relax gate policy",
+  "validation": {
+    "local_python_regressions": {
+      "passed": 18,
+      "failed": 0
+    },
+    "workflow_policy": "modified workflow passes existing allowlist/bundle enforcement in source mirror",
+    "windows": "pending"
+  }
+}

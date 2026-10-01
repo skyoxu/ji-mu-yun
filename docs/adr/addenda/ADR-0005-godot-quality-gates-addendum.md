@@ -85,3 +85,5 @@ Browser fixture subprocesses must drain both pipes while running, use asynchrono
 ### 2026-10-01: reject missing critical autoloads before the full suite
 
 Run 36864053647 executed all 1846 PhaseA and 44 Core tests successfully; fixture regression passed 192/192 and the pipeline step fell from 80m22s to 32m40s. Its runtime result nevertheless reported zero of six ports ready while the old parser marked any readable JSON as successful. A runtime result must now report all six expected critical ports as literal `true`, no top-level error, and process exit zero. Optional UI probes remain best-effort. The workflow verifies that same runtime gate after the direct Godot build, before expensive .NET regression, and again at the existing pipeline boundary. This prevents a missing runtime from producing a green gate or consuming a full test run before detection.
+
+Runtime preflight is routed through `ci_pipeline.py runtime`, the existing approved CI driver. Workflow direct-script allowlists and gate-bundle enforcement remain unchanged. This preflight writes a distinct runtime-only receipt and cannot claim complete pipeline success.

@@ -12,6 +12,30 @@ import run_dotnet
 
 
 class CiStageBudgetTests(unittest.TestCase):
+    def test_runtime_preflight_requires_both_successful_process_and_readiness_result(self):
+        import json
+        for rc, result, expected in ((0, {}, 1), (0, {'status': 'fail'}, 1),
+                                     (2, {'status': 'ok'}, 1), (0, {'status': 'ok'}, 0)):
+            with self.subTest(rc=rc, result=result), tempfile.TemporaryDirectory() as directory:
+                old = os.getcwd()
+                os.chdir(directory)
+                try:
+                    with mock.patch.object(ci_pipeline, 'run_cmd', return_value=(rc, 'runtime output')), \
+                         mock.patch.object(ci_pipeline, 'read_json', return_value=result):
+                        self.assertEqual(expected, ci_pipeline.run_runtime_preflight('godot', 'project.godot'))
+                    summary = json.loads(next(Path(directory).rglob('runtime-preflight-summary.json')).read_text())
+                    self.assertEqual('runtime_preflight_only', summary['scope'])
+                    self.assertEqual('ok' if expected == 0 else 'fail', summary['status'])
+                    self.assertFalse(list(Path(directory).rglob('ci-pipeline-summary.json')))
+                finally:
+                    os.chdir(old)
+
+    def test_runtime_cli_routes_through_existing_ci_driver(self):
+        with mock.patch.object(sys, 'argv', ['ci_pipeline.py', 'runtime', '--godot-bin', 'godot']), \
+             mock.patch.object(ci_pipeline, 'run_runtime_preflight', return_value=1) as runtime:
+            self.assertEqual(1, ci_pipeline.main())
+            runtime.assert_called_once_with('godot', 'project.godot')
+
     def test_failed_test_names_include_long_vstest_durations_and_xunit_diagnostics(self):
         output = '\n'.join([
             'Failed Namespace.Fixture.LongFailure [3 m 12 s]',

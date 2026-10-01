@@ -141,6 +141,29 @@ def extract_failed_tests(dotnet_test_output: str):
     return deduped
 
 
+
+def run_runtime_preflight(godot_bin: str, project: str) -> int:
+    """ADR-0005: fail early through the approved CI entrypoint, without claiming full completion."""
+    root = os.getcwd()
+    ci_dir = os.path.join('logs', 'ci', dt.date.today().strftime('%Y-%m-%d'))
+    os.makedirs(ci_dir, exist_ok=True)
+    rc, output = run_cmd([
+        'py', '-3', 'scripts/python/godot_selfcheck.py', 'run',
+        '--godot-bin', godot_bin, '--project', project,
+    ], cwd=root, timeout=780_000)
+    with io.open(os.path.join(ci_dir, 'runtime-preflight-console.txt'), 'w', encoding='utf-8') as f:
+        f.write(output)
+    runtime_root = os.path.dirname(os.path.abspath(project))
+    selfcheck = read_json(os.path.join(runtime_root, 'logs', 'e2e', dt.date.today().strftime('%Y-%m-%d'), 'selfcheck-summary.json')) or {}
+    ok = rc == 0 and selfcheck.get('status') == 'ok'
+    summary = {'status': 'ok' if ok else 'fail', 'rc': rc, 'selfcheck': selfcheck, 'scope': 'runtime_preflight_only'}
+    with io.open(os.path.join(ci_dir, 'runtime-preflight-summary.json'), 'w', encoding='utf-8') as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
+    print('CI_RUNTIME_PREFLIGHT ' + json.dumps(summary, ensure_ascii=False))
+    if not ok:
+        print(output[-12_000:])
+    return 0 if ok else 1
+
 def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -155,7 +178,13 @@ def main():
     ap_all.add_argument('--hang-timeout', default=None)
     ap_all.add_argument('--fail-fast', action='store_true')
 
+    ap_runtime = sub.add_parser('runtime')
+    ap_runtime.add_argument('--godot-bin', required=True)
+    ap_runtime.add_argument('--project', default='project.godot')
+
     args = ap.parse_args()
+    if args.cmd == 'runtime':
+        return run_runtime_preflight(args.godot_bin, args.project)
     if args.cmd != 'all':
         print('Unsupported command')
         return 1
