@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="5e793505-550c-490d-af96-f47f645ff580" name="runneradmin@runnervmdlhio 2026-10-01 16:25:35" runUser="runnervmdlhio\runneradmin" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-01T16:25:35.7467660+00:00" queuing="2026-10-01T16:25:35.7467665+00:00" start="2026-10-01T16:25:08.3631219+00:00" finish="2026-10-01T16:25:51.1907529+00:00" />
+  <TestSettings name="default" id="27611817-3410-4afe-9628-cd4d877d9707">
+    <Deployment runDeploymentRoot="runneradmin_runnervmdlhio_2026-10-01_16_25_35" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="d0601d3d-ebb5-4c54-a941-85f8510c381a" testId="35fb106e-c042-1ae7-f7c9-989e0b5c90bd" testName="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_R4_PERSISTED_FAULT_POINT_MATRIX" computerName="runnervmdlhio" duration="00:00:08.6801487" startTime="2026-10-01T16:25:51.1467151+00:00" endTime="2026-10-01T16:25:51.1467155+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d0601d3d-ebb5-4c54-a941-85f8510c381a" />
+    <UnitTestResult executionId="997366a7-7160-443a-84c3-9a4b4710296b" testId="307f4f5f-54db-5450-3736-01eda8738551" testName="PhaseA.Platform.Tests.PhaseB.Repair.S2BoundaryTests.O_26DE8E588B36" computerName="runnervmdlhio" duration="00:00:25.8576947" startTime="2026-10-01T16:25:35.0204768+00:00" endTime="2026-10-01T16:25:35.0204866+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="997366a7-7160-443a-84c3-9a4b4710296b">
+      <Output>
+        <StdOut>S2_OBSERVATION:0,true,true</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="a7e807b8-9d71-4a1b-bc92-37c0b653d4ac" testId="b142ec25-935d-51bc-e90b-a56ef0fb194a" testName="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.Reconciliation_PreservesPublicationCompletedByActiveLockOwner" computerName="runnervmdlhio" duration="00:00:01.5579213" startTime="2026-10-01T16:25:42.4651372+00:00" endTime="2026-10-01T16:25:42.4651376+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a7e807b8-9d71-4a1b-bc92-37c0b653d4ac" />
+    <UnitTestResult executionId="b9be6bf8-249e-4d6b-bf1c-f7f78394ee0d" testId="a288e7aa-c593-0b03-e7be-127c78cf850a" testName="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_R4_INTERRUPTION_WORKER" computerName="runnervmdlhio" duration="00:00:00.0007199" startTime="2026-10-01T16:25:42.4659796+00:00" endTime="2026-10-01T16:25:42.4659797+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b9be6bf8-249e-4d6b-bf1c-f7f78394ee0d" />
+    <UnitTestResult executionId="67e08ead-194e-417c-adb2-388574700820" testId="a55f7527-57a4-aabc-b6e1-eb54bfb04daf" testName="PhaseA.Platform.Tests.Runs.PrototypeWorkflowTests.RepairAsync_PrefersPrototypeShellSceneOverBattleSceneWhenManifestFallbackIsNeeded" computerName="runnervmdlhio" duration="00:00:28.9553464" startTime="2026-10-01T16:25:37.9015790+00:00" endTime="2026-10-01T16:25:37.9015794+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="67e08ead-194e-417c-adb2-388574700820" />
+    <UnitTestResult executionId="66e3e5d9-f987-4add-985b-57954772d6dc" testId="5fa6dc51-4b92-74b7-4c1c-15452f8227df" testName="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_E9499880E6EF" computerName="runnervmdlhio" duration="00:00:03.0000865" startTime="2026-10-01T16:25:40.9095786+00:00" endTime="2026-10-01T16:25:40.9095789+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="66e3e5d9-f987-4add-985b-57954772d6dc">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : S51 interruption was not observed during real staging.</Message>
+          <StackTrace>   at PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.ObserveInterruptedAsync(String root, String cs, RequestContext context, RunnerLease lease, SnapshotManifest manifest) in D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\PhaseB\Repair\S51BoundaryTests.cs:line 238&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.ObserveServiceFamiliesAsync(String repository, String root, Dictionary`2 observed, HashSet`1 valid) in D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\PhaseB\Repair\S51BoundaryTests.cs:line 213&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_E9499880E6EF() in D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\PhaseB\Repair\S51BoundaryTests.cs:line 33&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.Reconciliation_PreservesPublicationCompletedByActiveLockOwner" storage="d:\a\ji-mu-yun\ji-mu-yun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="b142ec25-935d-51bc-e90b-a56ef0fb194a">
+      <Execution id="a7e807b8-9d71-4a1b-bc92-37c0b653d4ac" />
+      <TestMethod codeBase="D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests" name="Reconciliation_PreservesPublicationCompletedByActiveLockOwner" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S2BoundaryTests.O_26DE8E588B36" storage="d:\a\ji-mu-yun\ji-mu-yun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="307f4f5f-54db-5450-3736-01eda8738551">
+      <Execution id="997366a7-7160-443a-84c3-9a4b4710296b" />
+      <TestMethod codeBase="D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S2BoundaryTests" name="O_26DE8E588B36" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_R4_PERSISTED_FAULT_POINT_MATRIX" storage="d:\a\ji-mu-yun\ji-mu-yun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="35fb106e-c042-1ae7-f7c9-989e0b5c90bd">
+      <Execution id="d0601d3d-ebb5-4c54-a941-85f8510c381a" />
+      <TestMethod codeBase="D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests" name="O_R4_PERSISTED_FAULT_POINT_MATRIX" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.Runs.PrototypeWorkflowTests.RepairAsync_PrefersPrototypeShellSceneOverBattleSceneWhenManifestFallbackIsNeeded" storage="d:\a\ji-mu-yun\ji-mu-yun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="a55f7527-57a4-aabc-b6e1-eb54bfb04daf">
+      <Execution id="67e08ead-194e-417c-adb2-388574700820" />
+      <TestMethod codeBase="D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.Runs.PrototypeWorkflowTests" name="RepairAsync_PrefersPrototypeShellSceneOverBattleSceneWhenManifestFallbackIsNeeded" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_R4_INTERRUPTION_WORKER" storage="d:\a\ji-mu-yun\ji-mu-yun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="a288e7aa-c593-0b03-e7be-127c78cf850a">
+      <Execution id="b9be6bf8-249e-4d6b-bf1c-f7f78394ee0d" />
+      <TestMethod codeBase="D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests" name="O_R4_INTERRUPTION_WORKER" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_E9499880E6EF" storage="d:\a\ji-mu-yun\ji-mu-yun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="5fa6dc51-4b92-74b7-4c1c-15452f8227df">
+      <Execution id="66e3e5d9-f987-4add-985b-57954772d6dc" />
+      <TestMethod codeBase="D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests" name="O_E9499880E6EF" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="35fb106e-c042-1ae7-f7c9-989e0b5c90bd" executionId="d0601d3d-ebb5-4c54-a941-85f8510c381a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="307f4f5f-54db-5450-3736-01eda8738551" executionId="997366a7-7160-443a-84c3-9a4b4710296b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b142ec25-935d-51bc-e90b-a56ef0fb194a" executionId="a7e807b8-9d71-4a1b-bc92-37c0b653d4ac" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a288e7aa-c593-0b03-e7be-127c78cf850a" executionId="b9be6bf8-249e-4d6b-bf1c-f7f78394ee0d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a55f7527-57a4-aabc-b6e1-eb54bfb04daf" executionId="67e08ead-194e-417c-adb2-388574700820" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5fa6dc51-4b92-74b7-4c1c-15452f8227df" executionId="66e3e5d9-f987-4add-985b-57954772d6dc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="6" executed="6" passed="5" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.1+ce9211e970 (64-bit .NET 8.0.21)&#xD;
+[xUnit.net 00:00:00.11]   Discovering: PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.24]   Discovered:  PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.24]   Starting:    PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:32.23]       System.InvalidOperationException : S51 interruption was not observed during real staging.&#xD;
+[xUnit.net 00:00:32.23]       Stack Trace:&#xD;
+[xUnit.net 00:00:32.23]         D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\PhaseB\Repair\S51BoundaryTests.cs(238,0): at PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.ObserveInterruptedAsync(String root, String cs, RequestContext context, RunnerLease lease, SnapshotManifest manifest)&#xD;
+[xUnit.net 00:00:32.23]         D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\PhaseB\Repair\S51BoundaryTests.cs(213,0): at PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.ObserveServiceFamiliesAsync(String repository, String root, Dictionary`2 observed, HashSet`1 valid)&#xD;
+[xUnit.net 00:00:32.23]         D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\PhaseB\Repair\S51BoundaryTests.cs(33,0): at PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_E9499880E6EF()&#xD;
+[xUnit.net 00:00:32.23]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:42.47]   Finished:    PhaseA.Platform.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="runnervmdlhio" outcome="Error" timestamp="2026-10-01T16:25:40.9085996+00:00">
+        <Text>[xUnit.net 00:00:32.23]     PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_E9499880E6EF [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

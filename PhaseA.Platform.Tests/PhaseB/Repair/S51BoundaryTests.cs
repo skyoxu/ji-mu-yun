@@ -226,20 +226,116 @@ public sealed class S51BoundaryTests
         var interruptedManifest = new WorkspaceStorageService(cs).CreateSnapshot(context, source, "s51-interrupted-snapshot", manifest.WorkspaceId, lease.ProjectId, "s51-policy", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
         var input = Path.Combine(root, "service", "interruption-input.json");
         File.WriteAllText(input, JsonSerializer.Serialize(new { cs, context, lease, manifest = interruptedManifest, source, destination }));
-        var watcher = new FileSystemWatcher(destination) { IncludeSubdirectories = true, NotifyFilter = NotifyFilters.FileName, EnableRaisingEvents = true };
-        var staged = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        watcher.Created += (_, args) => { if (args.FullPath.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)) staged.TrySetResult(); };
         var repository = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-        var start = new System.Diagnostics.ProcessStartInfo("dotnet") { WorkingDirectory = repository, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
-        foreach (var argument in new[] { "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--no-restore", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_E9499880E6EF", "--logger", "trx", "--results-directory", Path.Combine(root, "service", "interrupted-trx") }) start.ArgumentList.Add(argument);
+        var start = new ProcessStartInfo("dotnet") { WorkingDirectory = repository, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+        var trxRoot = Path.Combine(root, "service", "interrupted-trx");
+        foreach (var argument in new[] { "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--no-restore", "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S51BoundaryTests.O_E9499880E6EF", "--logger", "trx", "--results-directory", trxRoot }) start.ArgumentList.Add(argument);
         start.Environment["S51_INTERRUPTION_ROOT"] = root;
-        using var worker = System.Diagnostics.Process.Start(start) ?? throw new InvalidOperationException("S51 interruption worker did not start.");
-        var winner = await Task.WhenAny(staged.Task, worker.WaitForExitAsync(), Task.Delay(TimeSpan.FromSeconds(30)));
-        if (winner != staged.Task || worker.HasExited) throw new InvalidOperationException("S51 interruption was not observed during real staging.");
-        worker.Kill(entireProcessTree: true); await worker.WaitForExitAsync(); watcher.Dispose();
-        _ = new RestoreService(cs);
-        await using var connection = new SqliteConnection(cs); await connection.OpenAsync(); await using var command = connection.CreateCommand(); command.CommandText = "SELECT status FROM restore_attempts WHERE idempotency_key='s51-interrupted-request'";
-        return new { stagedFiles = Directory.EnumerateFiles(destination, "*.txt", SearchOption.AllDirectories).Count(), workerExitCode = worker.ExitCode, recoveredStatus = (await command.ExecuteScalarAsync())?.ToString() };
+        // ADR-0061: stop a real publisher at the existing persisted staging boundary.
+        // File creation events alone can arrive after a fast worker has already published.
+        start.Environment["PHASEA_RESTORE_FAULT_POINT"] = "staging-written";
+        using var worker = Process.Start(start) ?? throw new InvalidOperationException("S51 interruption worker did not start.");
+        var stdout = worker.StandardOutput.ReadToEndAsync();
+        var stderr = worker.StandardError.ReadToEndAsync();
+        var evidence = Path.Combine(repository, "logs", "ci", DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            "s51-interruption", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(evidence);
+        string? attemptId = null;
+        string? checkpointPath = null;
+        string? recoveredStatus = null;
+        var stagingFiles = 0;
+        var terminatedAtCheckpoint = false;
+        try
+        {
+            var checkpoints = Path.Combine(destination, ".restore-checkpoints");
+            var deadline = DateTime.UtcNow.AddSeconds(30);
+            while (attemptId is null && !worker.HasExited && DateTime.UtcNow < deadline)
+            {
+                if (Directory.Exists(checkpoints))
+                {
+                    foreach (var path in Directory.EnumerateFiles(checkpoints, "staging-written.json", SearchOption.AllDirectories))
+                    {
+                        try
+                        {
+                            using var checkpoint = JsonDocument.Parse(File.ReadAllText(path));
+                            var id = checkpoint.RootElement.GetProperty("attemptId").GetString();
+                            if (checkpoint.RootElement.GetProperty("checkpoint").GetString() == "staging-written" &&
+                                !string.IsNullOrWhiteSpace(id) &&
+                                StringComparer.Ordinal.Equals(Path.GetFileName(Path.GetDirectoryName(path)), id))
+                            {
+                                attemptId = id;
+                                checkpointPath = path;
+                                break;
+                            }
+                        }
+                        catch (IOException) { }
+                        catch (JsonException) { }
+                    }
+                }
+                if (attemptId is null) await Task.Delay(25);
+            }
+            if (attemptId is null || worker.HasExited)
+                throw new InvalidOperationException("S51 staging checkpoint was not observed in a live worker; child evidence: " + evidence);
+
+            await using (var connection = new SqliteConnection(cs))
+            {
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "SELECT attempt_id,status FROM restore_attempts WHERE idempotency_key='s51-interrupted-request'";
+                await using var reader = await command.ExecuteReaderAsync();
+                if (!await reader.ReadAsync() || reader.GetString(0) != attemptId || reader.GetString(1) != "Staging")
+                    throw new InvalidOperationException("S51 checkpoint did not match a persisted Staging attempt; child evidence: " + evidence);
+            }
+            var stagingRoot = Path.Combine(destination, ".restore-staging");
+            stagingFiles = Directory.EnumerateFiles(Path.Combine(stagingRoot, attemptId), "*", SearchOption.AllDirectories).Count();
+            if (stagingFiles != interruptedManifest.Files.Count() || stagingFiles == 0 || worker.HasExited)
+                throw new InvalidOperationException("S51 checkpoint did not retain the real staged snapshot; child evidence: " + evidence);
+
+            worker.Kill(entireProcessTree: true);
+            await worker.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            terminatedAtCheckpoint = true;
+            _ = new RestoreService(cs);
+            await using (var connection = new SqliteConnection(cs))
+            {
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "SELECT status FROM restore_attempts WHERE idempotency_key='s51-interrupted-request'";
+                recoveredStatus = (await command.ExecuteScalarAsync())?.ToString();
+            }
+            var remainingStagingFiles = Directory.Exists(stagingRoot)
+                ? Directory.EnumerateFiles(stagingRoot, "*", SearchOption.AllDirectories).Count() : 0;
+            if (recoveredStatus is not ("Quarantined" or "Failed") || remainingStagingFiles != 0)
+                throw new InvalidOperationException("S51 interrupted staging did not recover to a typed safe state; child evidence: " + evidence);
+            return new
+            {
+                stagedFiles = Directory.EnumerateFiles(destination, "*.txt", SearchOption.AllDirectories).Count(),
+                stagingFilesAtInterruption = stagingFiles,
+                remainingStagingFiles,
+                workerExitCode = worker.ExitCode,
+                recoveredStatus
+            };
+        }
+        finally
+        {
+            if (!worker.HasExited)
+            {
+                try { worker.Kill(entireProcessTree: true); }
+                catch (InvalidOperationException) when (worker.HasExited) { }
+                await worker.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            File.WriteAllText(Path.Combine(evidence, "worker.stdout.txt"), await stdout.WaitAsync(TimeSpan.FromSeconds(5)));
+            File.WriteAllText(Path.Combine(evidence, "worker.stderr.txt"), await stderr.WaitAsync(TimeSpan.FromSeconds(5)));
+            File.WriteAllText(Path.Combine(evidence, "worker-summary.json"), JsonSerializer.Serialize(new
+            {
+                attemptId, checkpoint = "staging-written", stagingFiles, terminatedAtCheckpoint,
+                workerExitCode = worker.ExitCode, recoveredStatus
+            }));
+            if (checkpointPath is not null && File.Exists(checkpointPath))
+                File.Copy(checkpointPath, Path.Combine(evidence, "staging-written.json"));
+            if (Directory.Exists(trxRoot))
+                foreach (var trx in Directory.EnumerateFiles(trxRoot, "*.trx", SearchOption.AllDirectories))
+                    File.Copy(trx, Path.Combine(evidence, "worker-" + Path.GetFileName(trx)));
+        }
     }
 
     private static async Task<FaultPointObservation> ObserveFaultCheckpointAsync(string repository, string root, string checkpoint)
