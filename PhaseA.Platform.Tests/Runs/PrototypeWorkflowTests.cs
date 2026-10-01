@@ -730,12 +730,14 @@ public sealed class PrototypeWorkflowTests : IDisposable
         var service = Service(store, options, runner);
 
         var result = await service.QueueAsync(accountId, projectId, ValidRequest(confirm: true));
-        await WaitForCommandsAsync(runner, 2);
+        result.Status.Should().Be("queued", result.Stderr);
+        // ADR-0005: the terminal readback is the barrier for final smoke-command assertions.
         var run = await WaitForRunStatusAsync(store, result.RunId, "failed", "failed");
 
         run!.Status.Should().Be("failed");
-        run.ExitCode.Should().Be(1);
+        run.ExitCode.Should().Be(1, run.StderrText);
         run.EvidenceJson.Should().Contain("strict_headless_prototype_scene");
+        runner.Commands.Should().HaveCount(2, run.StderrText);
         runner.Commands[1].Arguments.Should().Contain("scripts/python/smoke_headless.py");
         runner.Commands.Should().NotContain(command => command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"));
     }
@@ -2308,7 +2310,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
 
     private static async Task WaitForCommandsAsync(FakeHostedProcessRunner runner, int expectedCount)
     {
-        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         while (runner.Commands.Count < expectedCount && DateTimeOffset.UtcNow < deadline)
         {
             await Task.Delay(50);
@@ -2319,7 +2321,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
 
     private static async Task WaitForAtLeastCommandsAsync(FakeHostedProcessRunner runner, int expectedCount)
     {
-        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         while (runner.Commands.Count < expectedCount && DateTimeOffset.UtcNow < deadline)
         {
             await Task.Delay(50);
@@ -2330,7 +2332,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
 
     private static async Task WaitForInactiveTimeoutRunnerCommandAsync(InactiveTimeoutHostedProcessRunner runner)
     {
-        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         while (runner.Commands.Count == 0 && DateTimeOffset.UtcNow < deadline)
         {
             await Task.Delay(50);
@@ -2345,7 +2347,8 @@ public sealed class PrototypeWorkflowTests : IDisposable
         string expectedStatus,
         string? expectedProgressStep = null)
     {
-        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        // Readiness under CI load; product creation/activity timeout assertions remain unchanged.
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         RunSnapshot? run = null;
         while (DateTimeOffset.UtcNow < deadline)
         {
@@ -2360,7 +2363,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         }
 
         run.Should().NotBeNull();
-        run!.Status.Should().Be(expectedStatus);
+        run!.Status.Should().Be(expectedStatus, $"stderr={run.StderrText}; evidence={run.EvidenceJson}");
         if (expectedProgressStep is not null)
         {
             run.ProgressStep.Should().Be(expectedProgressStep);
