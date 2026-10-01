@@ -68,3 +68,10 @@ Subprocess wrappers print bounded heartbeats containing only elapsed time and
 output byte counts. Per-process timing JSON and all project TRX/hang sequences
 remain under `logs/**`; command arguments and raw child output are not streamed
 by the heartbeat. Existing total stage budgets remain unchanged.
+
+
+### 2026-10-01: preserve source fixtures without CI tool payloads
+
+Run 36849950332 completed all 1846 PhaseA and 44 Core tests. Its .NET stage took 2821.756 seconds; the three GDD source-seeding test classes accounted for 2563.1 summed test seconds. Those fixtures repeatedly seeded the CI checkout, including generated Godot downloads and caches. Reuse a source projection per test class, retaining real source/template bytes and custom mutable test repositories while excluding generated root tool/cache payloads. Keep conservative two-collection scheduling and the full covered suite.
+
+Browser fixture subprocesses must drain both pipes while running, use asynchronous waits, and terminate/drain timed-out child trees. A 30-second fixture process budget covers Node startup; it does not change product deadlines. S15 teardown uses bounded asynchronous deletion after child-server exit and does not clear other tests' SQLite pools. Persistent cleanup locks and subprocess timeouts remain failures.

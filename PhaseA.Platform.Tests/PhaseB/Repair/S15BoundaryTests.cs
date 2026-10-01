@@ -110,10 +110,19 @@ public sealed class S15BoundaryTests
                 await process.WaitForExitAsync();
             }
             process?.Dispose();
-            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-            if (Directory.Exists(root))
+            // ADR-0061: the parent is unpooled; never clear unrelated test pools.
+            var cleanupDeadline = DateTimeOffset.UtcNow.AddSeconds(5);
+            while (Directory.Exists(root))
             {
-                Directory.Delete(root, recursive: true);
+                try
+                {
+                    Directory.Delete(root, recursive: true);
+                    break;
+                }
+                catch (IOException) when (DateTimeOffset.UtcNow < cleanupDeadline)
+                {
+                    await Task.Delay(50).ConfigureAwait(false);
+                }
             }
         }
     }
