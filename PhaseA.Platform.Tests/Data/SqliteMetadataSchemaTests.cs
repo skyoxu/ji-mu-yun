@@ -1074,7 +1074,9 @@ public sealed class SqliteMetadataSchemaTests
         Directory.CreateDirectory(Path.GetDirectoryName(metadataPath)!);
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
-            ["PHASEA_METADATA_DB_PATH"] = metadataPath
+            ["PHASEA_METADATA_DB_PATH"] = metadataPath,
+            // ADR-0061: this fixture creates its project below the OS temporary root.
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
         var connectionString = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
         {

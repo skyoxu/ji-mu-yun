@@ -599,36 +599,50 @@ const Engine = (function () {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-dedicated-queue-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-web-preview-dedicated-queue-repo");
-        var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
-        var store = new PhaseAMetadataStore(database.ConnectionString, options);
-        var account = await store.CreateUserAccountAsync("web-preview-dedicated-queue-user", 1);
-        var projectId = await CreateProjectAsync(store, options, account.AccountId);
-        var project = (await store.GetProjectSnapshotAsync(projectId))!;
-        var packageFile = "Towerdemo2-v0.1.20260627.002.zip";
-        WriteMinimalGodotPackage(project.RepoPath, packageFile);
-        var webPreviewQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
-        await using var queueBlocker = await webPreviewQueue.EnterAsync(
-            "held-web-preview-run",
-            account.AccountId,
-            project.ProjectId,
-            "project-web-preview");
-        var service = new ProjectWebPreviewService(store, options, webPreviewQueue);
-        var queued = await service.QueuePreviewAsync(account.AccountId, project.ProjectId, packageFile);
-
-        var generation = service.GenerateQueuedPreviewAsync(account.AccountId, project.ProjectId, packageFile, queued.RunId);
-        await Task.Delay(200);
-
-        var runWhileQueued = await store.GetRunSnapshotAsync(queued.RunId);
-        var queueReadback = webPreviewQueue.GetReadback(account.AccountId, includeAll: true);
-        runWhileQueued!.Status.Should().Be("queued");
-        queueReadback.QueuedCount.Should().Be(1);
-        queueReadback.Items.Single().RunId.Should().Be(queued.RunId);
-
-        await queueBlocker.DisposeAsync();
-        var result = await generation.WaitAsync(TimeSpan.FromSeconds(5));
-        result.Status.Should().Be("web_preview_failed");
-        webPreviewQueue.GetReadback(account.AccountId, includeAll: true).QueuedCount.Should().Be(0);
+        // ADR-0005: configure a deterministic failing engine for this queue-boundary test.
+        using var godotRoot = TempDirectory.Create("phase-a-web-preview-queue-engine");
+        var fakeGodot = Path.Combine(godotRoot.Path, "Godot_v3.6.2-stable_win64.exe");
+        await File.WriteAllTextAsync(fakeGodot, "fixture engine", Encoding.UTF8);
+        var previousGodot = Environment.GetEnvironmentVariable("PHASEA_GODOT3_BIN");
+        Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", fakeGodot);
+        try
+        {
+            var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
+            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            var account = await store.CreateUserAccountAsync("web-preview-dedicated-queue-user", 1);
+            var projectId = await CreateProjectAsync(store, options, account.AccountId);
+            var project = (await store.GetProjectSnapshotAsync(projectId))!;
+            var packageFile = "ExperimentalPreview-v0.1.20260627.001.zip";
+            WriteGenericGodotPackage(project.RepoPath, packageFile, "ExperimentalPreview", "Experimental Preview");
+            var webPreviewQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
+            await using var queueBlocker = await webPreviewQueue.EnterAsync(
+                "held-web-preview-run",
+                account.AccountId,
+                project.ProjectId,
+                "project-web-preview");
+            var exportRunner = new FailingQueueWebExportRunner();
+            var service = new ProjectWebPreviewService(store, options, webPreviewQueue,
+                new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
+                exportRunner);
+            var queued = await service.QueuePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+    
+            var generation = service.GenerateQueuedPreviewAsync(account.AccountId, project.ProjectId, packageFile, queued.RunId);
+            await Task.Delay(200);
+    
+            var runWhileQueued = await store.GetRunSnapshotAsync(queued.RunId);
+            var queueReadback = webPreviewQueue.GetReadback(account.AccountId, includeAll: true);
+            runWhileQueued!.Status.Should().Be("queued");
+            queueReadback.QueuedCount.Should().Be(1);
+            queueReadback.Items.Single().RunId.Should().Be(queued.RunId);
+    
+            await queueBlocker.DisposeAsync();
+            var result = await generation.WaitAsync(TimeSpan.FromSeconds(5));
+            result.Status.Should().Be("godot3_export_failed");
+            exportRunner.CallCount.Should().Be(1);
+            webPreviewQueue.GetReadback(account.AccountId, includeAll: true).QueuedCount.Should().Be(0);
+        }
+        finally { Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", previousGodot); }
     }
 
     [Fact]
@@ -1665,6 +1679,16 @@ const Engine = (function () {
     private const string Towerdemo2TextCatalogSha256 = "f4f97dfd524150b36bf36545aa3ed9a95f90a7ec4ba67000ed6763dcae028652";
     private const string Towerdemo2ConverterId = "towerdemo2-template-subset";
     private const string Towerdemo2ConverterCompatibilityId = "towerdemo2-20260627-source-fingerprint-v1";
+
+    private sealed class FailingQueueWebExportRunner : IHostedProcessRunner
+    {
+        public int CallCount { get; private set; }
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            return Task.FromResult(new HostedProcessResult(1, string.Empty, "queue fixture export failure"));
+        }
+    }
 
     private sealed class FakeGodot3WebExportRunner : IHostedProcessRunner
     {

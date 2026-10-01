@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Tests.PhaseB.Repair;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
 using PhaseA.Platform.Workflow;
@@ -61,7 +62,8 @@ public sealed class WorkspaceRecoveryBehaviorTests
             var record = storage.CreateSnapshot(context, root.FullName, "s1", "w", "p", "policy-1", new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg" });
             record.Manifest.Files.Should().ContainSingle();
             var destination = Directory.CreateTempSubdirectory("phase-b-restore");
-            var attempt = new RestoreService().Restore(context, record.Manifest, root.FullName, destination.FullName, new RunnerLease("l", "a", "p", 1));
+            // ADR-0061: a positive restore prepares the real destination isolation boundary.
+            var attempt = new RestoreService().RestorePrepared(context, record.Manifest, root.FullName, destination.FullName, new RunnerLease("l", "a", "p", 1));
             attempt.Status.Should().Be(RestoreAttemptStatus.Published);
             File.ReadAllText(Path.Combine(destination.FullName, ".restore-current", "project.godot")).Should().Be("hello");
             storage.SoftDeleteSnapshot(context, "s1");

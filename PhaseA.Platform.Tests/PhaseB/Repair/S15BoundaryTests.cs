@@ -82,7 +82,9 @@ public sealed class S15BoundaryTests
         try
         {
             Directory.CreateDirectory(workspaceRoot);
-            await SqliteMetadataSchema.InitializeAsync($"Data Source={databasePath}");
+            // ADR-0061: do not pool the parent fixture connection across child-server cleanup.
+            await SqliteMetadataSchema.InitializeAsync(new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+            { DataSource = databasePath, Pooling = false }.ToString());
             var port = FreePort();
             var address = $"http://127.0.0.1:{port}";
             process = StartServer(address, databasePath, workspaceRoot, adminBearer);
