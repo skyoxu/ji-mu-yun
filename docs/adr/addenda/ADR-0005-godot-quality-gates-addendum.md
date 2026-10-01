@@ -80,3 +80,8 @@ Browser fixture subprocesses must drain both pipes while running, use asynchrono
 ### 2026-10-01: build the separate Godot runtime project directly
 
 `Game.sln` contains the pure .NET platform/core projects, while the Godot runtime lives in `GodotGame.csproj`. Reusing the former does not build the latter. Windows Quality Gate explicitly restores/builds the Godot project in Debug before prewarm and self-check, then reuses that output. This preserves the runtime compilation gate without invoking the Godot editor's previously timed-out 600-second `--build-solutions` path. The covered .NET suite and runtime self-check remain required.
+
+
+### 2026-10-01: reject missing critical autoloads before the full suite
+
+Run 36864053647 executed all 1846 PhaseA and 44 Core tests successfully; fixture regression passed 192/192 and the pipeline step fell from 80m22s to 32m40s. Its runtime result nevertheless reported zero of six ports ready while the old parser marked any readable JSON as successful. A runtime result must now report all six expected critical ports as literal `true`, no top-level error, and process exit zero. Optional UI probes remain best-effort. The workflow verifies that same runtime gate after the direct Godot build, before expensive .NET regression, and again at the existing pipeline boundary. This prevents a missing runtime from producing a green gate or consuming a full test run before detection.

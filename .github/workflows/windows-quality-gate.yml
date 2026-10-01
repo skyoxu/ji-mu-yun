@@ -102,9 +102,7 @@ jobs:
       - name: CI process runner regression (Python)
         shell: pwsh
         run: |
-          py -3 -m unittest discover -s scripts/sc/tests -p test_ci_process.py -v
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          py -3 -m unittest discover -s scripts/sc/tests -p test_ci_stage_budgets.py -v
+          py -3 -m unittest discover -s scripts/sc/tests -p 'test_ci_*.py' -v
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Hard gates bundle (Python)
@@ -221,10 +219,9 @@ jobs:
           dotnet build GodotGame.csproj -c Debug --no-restore -v minimal
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-          $prewarm = Start-Process -FilePath "$env:GODOT_BIN" -ArgumentList "--headless", "--path", ".", "--quit" -Wait -PassThru -NoNewWindow
-          if ($prewarm.ExitCode -ne 0) {
-            Write-Warning "Godot prewarm exited with code $($prewarm.ExitCode); continue because hard runtime gates run in CI pipeline."
-          }
+          # Fail before the expensive covered suite if runtime autoloads are missing.
+          py -3 scripts/python/godot_selfcheck.py run --godot-bin "$env:GODOT_BIN" --project project.godot
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Phase fixture regression (Windows)
         shell: pwsh

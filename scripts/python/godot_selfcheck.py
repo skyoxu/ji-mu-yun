@@ -72,6 +72,29 @@ def run_cmd(args: list[str], cwd: str | None = None, timeout: int = 120000) -> t
     return run_logged_command(args, cwd=cwd, timeout=timeout, separate_stderr=True)
 
 
+
+CRITICAL_PORTS = ('time', 'input', 'resourceLoader', 'dataStore', 'logger', 'eventBus')
+
+
+def validate_selfcheck_result(data: object, process_rc: int) -> dict:
+    """ADR-0005: a JSON file alone does not prove critical autoload readiness."""
+    result = {'status': 'fail', 'ports_ok': 0, 'ports_total': len(CRITICAL_PORTS)}
+    if not isinstance(data, dict) or not isinstance(data.get('ports'), dict):
+        result['reason'] = 'self-check output lacks a critical-port map'
+        return result
+    ports = data['ports']
+    unavailable = [name for name in CRITICAL_PORTS if ports.get(name) is not True]
+    result['ports_ok'] = len(CRITICAL_PORTS) - len(unavailable)
+    if process_rc != 0:
+        result['reason'] = f'self-check process exited with code {process_rc}'
+    elif data.get('error'):
+        result['reason'] = f"self-check reported an error: {data['error']}"
+    elif unavailable:
+        result['reason'] = 'critical autoload ports unavailable: ' + ', '.join(unavailable)
+    else:
+        result['status'] = 'ok'
+    return result
+
 def run_selfcheck(godot_bin: str, project_godot: str, build_solutions: bool) -> dict:
     root = os.path.dirname(os.path.abspath(project_godot))
     date = dt.date.today().strftime('%Y-%m-%d')
@@ -139,11 +162,7 @@ def run_selfcheck(godot_bin: str, project_godot: str, build_solutions: bool) -> 
     try:
         with open(dest, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        ports = data.get('ports', {})
-        ok_count = sum(1 for k, v in ports.items() if v is True)
-        summary['ports_ok'] = ok_count
-        summary['ports_total'] = len(ports)
-        summary['status'] = 'ok'
+        summary.update(validate_selfcheck_result(data, summary['selfcheck_rc']))
     except Exception as e:
         summary['reason'] = f'parse json failed: {e}'
     return summary
