@@ -2424,6 +2424,9 @@ public sealed class PrototypeWorkflowTests : IDisposable
                     await using var completed = await _completionQueue.EnterAsync(
                         $"fixture-readback-{Guid.NewGuid():N}", project.AccountId, run.ProjectId,
                         "fixture-readback", readiness.Token);
+                    run = await store.GetRunSnapshotAsync(runId)
+                        ?? throw new InvalidOperationException("Fixture run was not found after queue completion.");
+                    run.Status.Should().Be(expectedStatus, $"stderr={run.StderrText}; evidence={run.EvidenceJson}");
                 }
 
                 return run;
