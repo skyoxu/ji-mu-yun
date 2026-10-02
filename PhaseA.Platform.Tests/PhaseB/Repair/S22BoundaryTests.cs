@@ -7,6 +7,7 @@ using Xunit.Abstractions;
 
 namespace PhaseA.Platform.Tests.PhaseB.Repair;
 
+[Collection("PhaseA snapshot environment")]
 public sealed class S22BoundaryTests
 {
     private readonly ITestOutputHelper _output;
