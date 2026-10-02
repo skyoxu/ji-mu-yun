@@ -35,7 +35,7 @@ jobs:
         shell: pwsh
         run: |
           dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore `
-            --filter 'FullyQualifiedName~ProjectRunnerProvisioningTests|FullyQualifiedName~ProjectCreationServiceTests|FullyQualifiedName~ProjectRouteStateArtifactServiceTests|FullyQualifiedName~GddToModuleFirstSliceTests|FullyQualifiedName~HostedProcessRunnerTests|FullyQualifiedName~CodexHostedProcessCommandFactoryTests|FullyQualifiedName~ProjectWorkflowRouteServiceTests|FullyQualifiedName~AdminReviewQueueHttpIntegrationTests' `
+            --filter 'FullyQualifiedName~ProjectRunnerProvisioningTests|FullyQualifiedName~ProjectCreationServiceTests|FullyQualifiedName~ProjectRouteStateArtifactServiceTests|FullyQualifiedName~GddToModuleFirstSliceTests|FullyQualifiedName~HostedProcessRunnerTests|FullyQualifiedName~CodexHostedProcessCommandFactoryTests|FullyQualifiedName~ProjectWorkflowRouteServiceTests|FullyQualifiedName~AdminReviewQueueHttpIntegrationTests|FullyQualifiedName~S67BoundaryTests|FullyQualifiedName~S33BoundaryTests|FullyQualifiedName~S4BoundaryTests|FullyQualifiedName~S22BoundaryTests|FullyQualifiedName~S14BoundaryTests' `
             --logger 'trx;LogFileName=phase-entry.trx' --results-directory logs/unit/phase-service-entry
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Business acceptance consumer regressions

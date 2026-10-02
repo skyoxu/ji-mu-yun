@@ -224,7 +224,9 @@ public sealed class S4BoundaryTests
         public bool PreRestoreCredentialIsNotAuthoritative()
         {
             var initial = Restore(Manifest, "initial");
-            if (initial.Status != RestoreAttemptStatus.Published) return false;
+            // ADR-0061: retain prerequisite failures separately from the boundary assertion.
+            Require(initial.Status == RestoreAttemptStatus.Published, "FAILURE-O-7391CE6328EE",
+                $"Restore prerequisite failed (status={initial.Status}, category={initial.FailureCategory ?? "unclassified"}).");
             var nextLease = new RunnerLease("s4-next", AccountId, "s4-project", 2);
             InsertLease(nextLease);
             SetCurrentCredential("s4-new-credential");

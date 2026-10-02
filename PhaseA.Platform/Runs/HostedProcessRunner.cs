@@ -11,11 +11,19 @@ namespace PhaseA.Platform.Runs;
 public sealed class HostedProcessRunner : IHostedProcessRunner
 {
     private readonly RunCancellationService _runCancellation;
+    private readonly Func<Process, Task> _cleanupProcess;
     private int _cleanupFailureObserved;
 
     public HostedProcessRunner(RunCancellationService? runCancellation = null)
+        : this(runCancellation, StopProcessAsync)
     {
+    }
+
+    internal HostedProcessRunner(RunCancellationService? runCancellation, Func<Process, Task> cleanupProcess)
+    {
+        ArgumentNullException.ThrowIfNull(cleanupProcess);
         _runCancellation = runCancellation ?? new RunCancellationService();
+        _cleanupProcess = cleanupProcess;
     }
 
     public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
@@ -190,7 +198,6 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
             if (nativeStderrPump is not null) await nativeStderrPump;
             if (!string.IsNullOrWhiteSpace(timeoutReason))
             {
-                Interlocked.Exchange(ref _cleanupFailureObserved, 1);
                 return new HostedProcessResult(408, stdout.ToString(), timeoutReason);
             }
         }
@@ -210,7 +217,6 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
 
             if (!string.IsNullOrWhiteSpace(timeoutReason) && !cancellationToken.IsCancellationRequested)
             {
-                Interlocked.Exchange(ref _cleanupFailureObserved, 1);
                 return new HostedProcessResult(408, stdout.ToString(), timeoutReason);
             }
 
@@ -218,18 +224,43 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
         }
         finally
         {
-            if (!string.IsNullOrWhiteSpace(command.RunId))
+            try
             {
-                _runCancellation.Unregister(command.RunId);
+                // ADR-0035/0061: only an observed cleanup failure fences reuse.
+                await _cleanupProcess(process);
+            }
+            catch
+            {
+                Interlocked.Exchange(ref _cleanupFailureObserved, 1);
+                throw;
+            }
+            finally
+            {
+                if (!string.IsNullOrWhiteSpace(command.RunId))
+                    _runCancellation.Unregister(command.RunId);
             }
         }
 
-        var result = new HostedProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
-        if (result.ExitCode != 0)
+        return new HostedProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
+    }
+
+    private static async Task StopProcessAsync(Process process)
+    {
+        try
         {
-            Interlocked.Exchange(ref _cleanupFailureObserved, 1);
+            _ = process.Id;
         }
-        return result;
+        catch (InvalidOperationException)
+        {
+            // No process is associated when startup itself failed.
+            return;
+        }
+        if (!process.HasExited)
+        {
+            try { process.Kill(entireProcessTree: true); }
+            catch (InvalidOperationException) when (process.HasExited) { }
+            await process.WaitForExitAsync(CancellationToken.None);
+        }
     }
 
     private static async Task MonitorTimeoutsAsync(
@@ -661,19 +692,19 @@ internal sealed class WindowsIsolatedProcess : IDisposable
 
     private static string BuildCommandLine(string fileName, IReadOnlyList<string> arguments)
     {
-        var executable = fileName.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(".bat", StringComparison.OrdinalIgnoreCase)
-            ? Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe"
-            : fileName;
-        var command = string.Join(" ", new[] { Quote(executable) }.Concat(arguments.Select(Quote)));
-        return executable.Equals(fileName, StringComparison.OrdinalIgnoreCase)
-            ? command
-            : $"{Quote(executable)} /d /s /c {Quote(command)}";
+        var isBatch = fileName.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(".bat", StringComparison.OrdinalIgnoreCase);
+        var command = string.Join(" ", new[] { Quote(fileName) }.Concat(arguments.Select(argument => Quote(argument, force: isBatch))));
+        if (!isBatch) return command;
+        var executable = Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe";
+        // ADR-0035: cmd /s removes these outer quotes; do not CRT-escape the
+        // entire inner command or replace the configured batch script with cmd.
+        return $"{Quote(executable)} /d /s /c \"{command}\"";
     }
 
-    private static string Quote(string value)
+    private static string Quote(string value, bool force = false)
     {
         if (value.Length == 0) return "\"\"";
-        if (!value.Any(char.IsWhiteSpace) && !value.Contains('"')) return value;
+        if (!force && !value.Any(char.IsWhiteSpace) && !value.Contains('"')) return value;
         var builder = new StringBuilder("\"");
         var slashes = 0;
         foreach (var character in value)

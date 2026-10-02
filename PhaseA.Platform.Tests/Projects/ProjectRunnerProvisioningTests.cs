@@ -91,6 +91,45 @@ public sealed class ProjectRunnerProvisioningTests
         Assert.True(!Directory.Exists(accountRoot) || !Directory.EnumerateDirectories(accountRoot).Any());
     }
 
+    // ADR-0035/0037/0061: execute a real accessible batch entry with arguments
+    // and stdin, rather than proving only that a command interpreter starts.
+    [Theory]
+    [InlineData(".cmd")]
+    [InlineData(".bat")]
+    public async Task ConfiguredBatchEntryExecutesAndForwardsArgumentsAndInput(string extension)
+    {
+        using var scope = await Scope.CreateAsync();
+        var created = await scope.Service.CreateProjectAsync(scope.AccountId, Request());
+        Assert.True(created.Succeeded, created.FailureCode);
+        var project = (await scope.Store.GetProjectSnapshotAsync(created.ProjectId!))!;
+        Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.RepoPath, out var descriptor));
+        scope.Registrations.Add(descriptor);
+        var script = Path.Combine(project.RepoPath, "configured tool" + extension);
+        await File.WriteAllTextAsync(script,
+            "@echo off\r\necho CONFIGURED_TOOL_STARTED\r\necho FIRST_ARG=%1\r\necho SECOND_ARG=%2\r\n" +
+            "set /p INPUT_LINE=\r\necho INPUT_LINE=%INPUT_LINE%\r\nexit /b 0\r\n", Encoding.ASCII);
+        var command = CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
+            project.RepoPath, Path.Combine(project.RepoPath, "unused-output.txt"), "test-input\n", "test-model", "low"));
+        var runner = new HostedProcessRunner();
+        var result = await runner.RunAsync(command with
+        {
+            FileName = script, Arguments = ["argument with spaces", "symbols&safe"],
+            StandardInput = "test-input\n", TotalTimeout = TimeSpan.FromSeconds(30)
+        });
+        Assert.True(result.ExitCode == 0, result.Stderr + "\n" + result.Stdout);
+        Assert.Contains("CONFIGURED_TOOL_STARTED", result.Stdout);
+        Assert.Contains("FIRST_ARG=\"argument with spaces\"", result.Stdout);
+        Assert.Contains("SECOND_ARG=\"symbols&safe\"", result.Stdout);
+        Assert.Contains("INPUT_LINE=test-input", result.Stdout);
+        var failed = await runner.RunAsync(command with
+        { FileName = "cmd.exe", Arguments = ["/d", "/c", "exit 7"], StandardInput = null });
+        Assert.Equal(7, failed.ExitCode);
+        var retry = await runner.RunAsync(command with
+        { FileName = "cmd.exe", Arguments = ["/d", "/c", "echo NATIVE_RETRY_STARTED"], StandardInput = null });
+        Assert.Equal(0, retry.ExitCode);
+        Assert.Contains("NATIVE_RETRY_STARTED", retry.Stdout);
+    }
+
     private static async Task RunProbeAsync(string repo, RunnerIsolationDescriptor descriptor)
     {
         Assert.True(RunnerIsolationPolicy.HasExpectedWorkspaceSecurity(descriptor));

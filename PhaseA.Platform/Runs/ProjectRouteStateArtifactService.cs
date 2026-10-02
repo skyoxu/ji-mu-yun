@@ -327,6 +327,7 @@ public sealed class ProjectRouteStateArtifactService
         if (uiWiring.Json.HasValue)
         {
             issues.AddRange(ValidateUiWiring(uiWiring.Json.Value));
+            issues.AddRange(context.ValidateFinalClosureEvidence(uiWiring.Json.Value));
             if (ReadString(uiWiring.Json.Value, "status") == "succeeded")
                 issues.AddRange(context.ValidateFinalUiBindings(uiWiring.Json.Value));
         }
@@ -1432,6 +1433,22 @@ public sealed class ProjectRouteStateArtifactService
             var contract = Read("routes/prototype-contract/latest.json");
             var iteration = Read("meta/routes/iteration-plan/latest.json");
             var validation = Read("meta/routes/validation/latest.json");
+            // ADR-0036/0038: equal hash declarations cannot hide invalid sources.
+            foreach (var source in new[]
+            {
+                (Path: "meta/routes/iteration-plan/latest.json", Artifact: iteration),
+                (Path: "meta/routes/validation/latest.json", Artifact: validation)
+            })
+            {
+                foreach (var issueId in source.Artifact.Issues)
+                    issues.Add(Issue($"ui-wiring:final-sources:{issueId}", "diagnostic_blocked", "P1", source.Path));
+            }
+            if (iteration.Status is not ("ready" or "succeeded") || iteration.Freshness != "fresh")
+                issues.Add(Issue("ui-wiring:final-sources:iteration_not_ready_or_fresh", "contract_stale", "P1", "meta/routes/iteration-plan/latest.json"));
+            if (!iteration.Json.HasValue ||
+                string.IsNullOrWhiteSpace(IterationPlanIntegrity.Compute(iteration.Json.Value)) ||
+                ReadString(iteration.Json.Value, "plan_hash") != IterationPlanIntegrity.Compute(iteration.Json.Value))
+                issues.Add(Issue("ui-wiring:final-sources:iteration_plan_integrity_invalid", "contract_stale", "P1", "meta/routes/iteration-plan/latest.json"));
             foreach (var edge in RouteFreshnessPolicy.ForTarget("meta/routes/ui-wiring/latest.json"))
             {
                 var actual = edge.HashField switch
@@ -1449,6 +1466,37 @@ public sealed class ProjectRouteStateArtifactService
             if (validation.Status != "succeeded" || validation.Freshness != "fresh")
                 issues.Add(Issue("ui-wiring:final-sources:validation_not_succeeded", "diagnostic_blocked", "P1", "meta/routes/validation/latest.json"));
             return issues;
+        }
+
+        internal IReadOnlyList<ProjectWorkflowBlockingIssue> ValidateFinalClosureEvidence(JsonElement root)
+        {
+            var issues = new List<ProjectWorkflowBlockingIssue>();
+            foreach (var row in ReadArray(root, "full_target_closure_ledger"))
+            {
+                var capabilityId = ReadString(row, "capability_id");
+                foreach (var evidenceRef in ReadStringArray(row, "validation_evidence_refs"))
+                    if (!HasReadableProjectEvidence(evidenceRef))
+                        issues.Add(Issue($"ui-wiring:full-target:{capabilityId}:validation_evidence_unavailable", "diagnostic_blocked", "P1", "meta/routes/ui-wiring/latest.json"));
+                var reviewRef = ReadString(row, "phase_exit_review_ref");
+                if (!string.IsNullOrWhiteSpace(reviewRef) && !HasReadableProjectEvidence(reviewRef))
+                    issues.Add(Issue($"ui-wiring:full-target:{capabilityId}:phase_exit_review_unavailable", "diagnostic_blocked", "P1", "meta/routes/ui-wiring/latest.json"));
+            }
+            return issues;
+        }
+
+        private bool HasReadableProjectEvidence(string relativePath)
+        {
+            try
+            {
+                var fullPath = Resolve(relativePath);
+                if (fullPath is null || !File.Exists(fullPath)) return false;
+                using var stream = File.OpenRead(fullPath);
+                return stream.CanRead;
+            }
+            catch (Exception exception) when (exception is ArgumentException or NotSupportedException or IOException or UnauthorizedAccessException)
+            {
+                return false;
+            }
         }
 
         private bool SourceHashesMatchAuthority(JsonElement boundary)

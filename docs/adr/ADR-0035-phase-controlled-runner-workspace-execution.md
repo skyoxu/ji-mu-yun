@@ -20,6 +20,8 @@ Use controlled hosted process execution with project-scoped workspace boundaries
 - Read-only artifact and status readback may remain concurrent.
 - Runner commands must be allowlisted route/service/script entrypoints, not arbitrary browser-provided commands.
 - Workspace paths must be normalized and checked against the workspace root before file reads or writes.
+- Windows batch entrypoints retain the configured script path when invoked through `cmd.exe`; arguments and UTF-8 stdin remain part of the controlled dispatch.
+- A nonzero tool exit is an execution failure, not evidence of cleanup failure. A subsequent dispatch may proceed after verified cleanup, including after timeout or cancellation. A detectable process cleanup failure blocks reuse of that Runner instance (ADR-0061 / PIWR-014).
 
 ## Consequences
 

@@ -88,18 +88,49 @@ class BusinessChainAcceptanceTests(unittest.TestCase):
             self.assertEqual(2, code)
             self.assertEqual("unavailable", json.loads(output.read_text(encoding="utf-8"))["status"])
 
+    def test_relative_and_absolute_output_preserve_unavailable_exit_contract(self):
+        # ADR-0038: a valid evidence path must not change the acceptance result.
+        root = Path(__file__).resolve().parents[3]
+        (root / "logs").mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=root / "logs") as temp:
+            for relative in (False, True):
+                with self.subTest(relative=relative):
+                    output = Path(temp) / ("relative.json" if relative else "absolute.json")
+                    argument = os.path.relpath(output) if relative else str(output)
+                    printed = io.StringIO()
+                    with patch.dict(os.environ, {"ACCEPTANCE_TEST_TOKEN": ""}), contextlib.redirect_stdout(printed):
+                        code = acceptance.main(["--base-url", "https://example.invalid", "--project-id", "project-a",
+                            "--token-env", "ACCEPTANCE_TEST_TOKEN", "--output", argument])
+                    self.assertEqual(2, code)
+                    self.assertEqual("unavailable", json.loads(output.read_text(encoding="utf-8"))["status"])
+                    self.assertEqual(str(output.relative_to(root)), json.loads(printed.getvalue())["evidence"])
+
+    def test_output_outside_logs_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as result:
+                acceptance.main(["--base-url", "https://example.invalid", "--project-id", "project-a",
+                                 "--output", str(Path(temp) / "outside.json")])
+            self.assertEqual(2, result.exception.code)
+            self.assertFalse((Path(temp) / "outside.json").exists())
+
     def test_authenticated_http_readback_is_read_only_and_redacted(self):
         self._http_case("ok", "passed", 0)
 
     def test_denied_access_is_unavailable(self):
         self._http_case("denied", "unavailable", 2)
 
+    def test_relative_output_preserves_passed_and_blocked_results(self):
+        self._http_case("ok", "passed", 0, relative_output=True)
+        self._http_case("blocked", "blocked", 2, relative_output=True)
+
     def test_redirect_does_not_forward_the_credential(self):
         self._http_case("redirect", "unavailable", 2)
 
-    def _http_case(self, mode, expected_status, expected_exit):
+    def _http_case(self, mode, expected_status, expected_exit, relative_output=False):
         requests = []
         payloads = dict(zip(("workflow-route", "prototype-contract/status", "ui-wiring-closure/latest"), evidence()))
+        if mode == "blocked":
+            payloads["ui-wiring-closure/latest"]["finalReadinessEligible"] = False
 
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self):
@@ -135,7 +166,8 @@ class BusinessChainAcceptanceTests(unittest.TestCase):
                 printed = io.StringIO()
                 with patch.dict(os.environ, {"ACCEPTANCE_TEST_TOKEN": "fixture-secret"}), contextlib.redirect_stdout(printed):
                     code = acceptance.main(["--base-url", f"http://127.0.0.1:{server.server_port}", "--allow-http",
-                        "--project-id", "project-a", "--token-env", "ACCEPTANCE_TEST_TOKEN", "--output", str(output)])
+                        "--project-id", "project-a", "--token-env", "ACCEPTANCE_TEST_TOKEN", "--output",
+                        os.path.relpath(output) if relative_output else str(output)])
                 report_text = output.read_text(encoding="utf-8")
                 report = json.loads(report_text)
                 self.assertEqual(expected_exit, code)
@@ -143,7 +175,7 @@ class BusinessChainAcceptanceTests(unittest.TestCase):
                 self.assertFalse(report["routes_executed"])
                 self.assertFalse(report["live_model_invoked"])
                 self.assertNotIn("fixture-secret", report_text + printed.getvalue())
-            self.assertEqual(3 if mode == "ok" else 1, len(requests))
+            self.assertEqual(3 if mode in {"ok", "blocked"} else 1, len(requests))
             self.assertTrue(all(method == "GET" and auth == "Bearer fixture-secret" for method, _, auth in requests))
         finally:
             server.shutdown()
