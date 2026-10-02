@@ -139,6 +139,9 @@ public sealed class ProjectRunnerProvisioningTests
         var control = await runner.RunAsync(new HostedProcessCommand("cmd.exe", ["/d", "/c", "type", canaryPath],
             ap.RepoPath, new Dictionary<string, string>(), TotalTimeout: TimeSpan.FromSeconds(30), RequireIsolation: true));
         Assert.DoesNotContain(canary, control.Stdout);
+        // The denied-read control poisons a Runner instance in current production code.
+        // Use a fresh dispatcher for the independent registration-reload counterexample.
+        runner = new HostedProcessRunner();
         var readSddl = typeof(RunnerIsolationPolicy).GetMethod("ReadSecurityDescriptor",
             System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!;
         var sddl = (string)readSddl.Invoke(null, [ap.RepoPath])!;
@@ -165,6 +168,7 @@ public sealed class ProjectRunnerProvisioningTests
         try
         {
             var resolved = RunnerIsolationPolicy.TryGetWorkspaceDescriptor(ap.RepoPath, out var loaded);
+            runner = new HostedProcessRunner();
             HostedProcessResult? result = null;
             string? errorType = null;
             try
@@ -230,6 +234,27 @@ public sealed class ProjectRunnerProvisioningTests
         finally { Environment.SetEnvironmentVariable("PHASEA_CODEX_COMMAND", prior); }
     }
 
+    // ADR-0035/0061: an ordinary child exit is not an unverified cleanup failure.
+    [Fact]
+    public async Task Review_NormalNonzeroExitMustNotDisableHealthyNextDispatch()
+    {
+        using var scope = await Scope.CreateAsync();
+        var created = await scope.Service.CreateProjectAsync(scope.AccountId, Request());
+        Assert.True(created.Succeeded);
+        var project = (await scope.Store.GetProjectSnapshotAsync(created.ProjectId!))!;
+        Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.RepoPath, out var descriptor));
+        scope.Registrations.Add(descriptor);
+        var runner = new HostedProcessRunner();
+        var first = await runner.RunAsync(new HostedProcessCommand("cmd.exe", ["/d", "/c", "exit", "7"],
+            project.RepoPath, new Dictionary<string, string>(), TotalTimeout: TimeSpan.FromSeconds(30), RequireIsolation: true));
+        Assert.Equal(7, first.ExitCode);
+        var next = await runner.RunAsync(new HostedProcessCommand("cmd.exe", ["/d", "/c", "exit", "0"],
+            project.RepoPath, new Dictionary<string, string>(), TotalTimeout: TimeSpan.FromSeconds(30), RequireIsolation: true));
+        var observation = System.Text.Json.JsonSerializer.Serialize(new
+        { firstExit = first.ExitCode, nextExit = next.ExitCode, next.Stderr });
+        Console.WriteLine("REVIEW_NONZERO_DISPATCH=" + observation);
+        Assert.True(next.ExitCode == 0, observation);
+    }
     private static ProjectCreationRequest Request() => new(null, "native-runner", "manual", null, null, null, null);
 
     private sealed class RejectingProvisioner : IProjectRunnerProvisioner
