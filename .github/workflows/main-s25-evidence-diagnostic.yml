@@ -1,0 +1,43 @@
+name: Read main S25 CI evidence
+on:
+  push:
+    branches: [fix/main-s25-diagnostic-20261002]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: windows-2022
+    timeout-minutes: 5
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-logs
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: '37056192883'
+          path: logs/ci/main-evidence
+      - name: Read exact current-run failure
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+          for path in Path('logs/ci/main-evidence').rglob('*.trx'):
+              if '2026-10-02' not in str(path):
+                  continue
+              root = ET.parse(path).getroot()
+              for case in root.findall('t:Results/t:UnitTestResult', ns):
+                  if case.get('outcome') == 'Failed':
+                      print('FAILURE_FILE', path)
+                      print('FAILURE_NAME', case.get('testName'), 'DURATION', case.get('duration'))
+                      for field in ['Message', 'StackTrace']:
+                          node = case.find('t:Output/t:ErrorInfo/t:' + field, ns)
+                          print('FAILURE_' + field.upper(), (node.text if node is not None else '')[:7000])
+          '@ | python -
