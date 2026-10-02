@@ -78,6 +78,7 @@ A Windows regression first reproduced the old behavior while an active publisher
   and obligations to stop the operation and clear all queue state remain intact.
 - Exercise both immediate startup and a deliberate six-second startup delay;
   production startup and execution timeout policy remains unchanged.
-- Pass the fixed fixture script through PowerShell `-EncodedCommand` using
-  UTF-16LE, with stop-on-error behavior. Script parsing or startup write errors
-  must surface as early process failures rather than silent readiness timeouts.
+- Use a real Python child process, consistent with the existing Hosted Runner
+  cancellation fixtures. The queue lifecycle obligation is independent of
+  PowerShell initialization; the process writes readiness, remains active for
+  30 seconds, and must be stopped by production queue cancellation.

@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text;
 using PhaseA.Platform.Runs;
 using Xunit;
 using Xunit.Abstractions;
@@ -25,11 +24,17 @@ public sealed class S33BoundaryTests
         var cancellationRequested = false;
         var stoppedAfterCancellation = false;
         var queueClearedAfterCancellation = false;
-        // ADR-0035/0061: transport this fixture's script as one argument, so
-        // native command-line quoting cannot reinterpret its readiness write.
-        var script = $"$ErrorActionPreference = 'Stop'; Start-Sleep -Milliseconds {startupDelayMilliseconds}; " +
-                     $"[IO.File]::WriteAllText('{started}', 'started'); Start-Sleep -Seconds 30";
-        var encodedScript = Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
+        // ADR-0035/0061: exercise a real Windows child with the same lightweight
+        // interpreter used by the HostedProcessRunner cancellation fixtures.
+        var script = Path.Combine(root.FullName, "heavy-write.py");
+        await File.WriteAllTextAsync(script, """
+import pathlib
+import sys
+import time
+time.sleep(int(sys.argv[2]) / 1000)
+pathlib.Path(sys.argv[1]).write_text("started", encoding="utf-8")
+time.sleep(30)
+""");
 
         try
         {
@@ -39,8 +44,8 @@ public sealed class S33BoundaryTests
                 "s33-project",
                 "heavy-write",
                 token => new HostedProcessRunner().RunAsync(new HostedProcessCommand(
-                    "powershell.exe",
-                    ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodedScript],
+                    "py",
+                    ["-3", script, started, startupDelayMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture)],
                     root.FullName,
                     new Dictionary<string, string>(),
                     RunId: "s33-cancel-run"), token),
