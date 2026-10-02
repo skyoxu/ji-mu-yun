@@ -131,3 +131,6 @@ Current stop-loss families:
 
 - `docs/workflows/phase-a-gdd-to-module-implementation-phases.md`
 - `docs/workflows/phase-a-gdd-to-module-risk-dod-open-questions.md`
+
+- `docs/workflows/phase-service-runner-and-business-acceptance.md`: ordinary production Runner entry and current business acceptance.
+- `docs/workflows/phase-service-deferred-requirements-2026-10-02.md`: incremental Phase service requirements deferred for a single maintainer.

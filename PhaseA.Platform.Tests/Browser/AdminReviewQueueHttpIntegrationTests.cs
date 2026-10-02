@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.Sockets;
+using System.Text.Json;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -138,6 +139,35 @@ public sealed class AdminReviewQueueHttpIntegrationTests
                 new ProjectAdminReviewDecisionRequest("rejected", "different stale payload", 0));
             conflict.StatusCode.Should().Be(HttpStatusCode.Conflict);
             AssertNoStore(conflict);
+
+            // ADR-0036/0038/0061: real host readback preserves hashes but a success
+            // string without current sources or a complete ledger cannot become green.
+            var uiPath = Path.Combine(projectSnapshot.MetaPath, "routes", "ui-wiring", "latest.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(uiPath)!);
+            var sourceHash = new string('a', 64);
+            await File.WriteAllTextAsync(uiPath, JsonSerializer.Serialize(new
+            {
+                schema_version = "ui-wiring-closure.v1", status = "succeeded",
+                source_iteration_session_hash = sourceHash, source_validation_input_hash = sourceHash,
+                source_contract_hash = sourceHash, source_requirement_map_hash = sourceHash,
+                source_godot_ui_contract_hash = sourceHash, source_ui_style_contract_hash = sourceHash,
+                ui_style_snapshot_hash = sourceHash
+            }));
+            var uiReadback = await client.GetAsync($"/api/projects/{project.ProjectId}/ui-wiring-closure/latest");
+            uiReadback.StatusCode.Should().Be(HttpStatusCode.OK);
+            AssertNoStore(uiReadback);
+            using var uiDocument = JsonDocument.Parse(await uiReadback.Content.ReadAsStringAsync());
+            uiDocument.RootElement.GetProperty("sourceIterationSessionHash").GetString().Should().Be(sourceHash);
+            uiDocument.RootElement.GetProperty("sourceValidationInputHash").GetString().Should().Be(sourceHash);
+            uiDocument.RootElement.GetProperty("sourceContractHash").GetString().Should().Be(sourceHash);
+            uiDocument.RootElement.GetProperty("finalReadinessEligible").GetBoolean().Should().BeFalse();
+            uiDocument.RootElement.GetProperty("blockingIssues").GetArrayLength().Should().BeGreaterThan(0);
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", user.Token);
+            var crossAccountUi = await client.GetAsync($"/api/projects/{project.ProjectId}/ui-wiring-closure/latest");
+            crossAccountUi.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            AssertNoStore(crossAccountUi);
+            (await crossAccountUi.Content.ReadAsStringAsync()).Should().NotContain(sourceHash);
         }
         finally
         {

@@ -291,3 +291,21 @@ Minimum evidence commands or files by change type:
 - New architecture rationale belongs under `docs/architecture/phase-service/**` unless it is a full arc42 overlay slice.
 - New Phase architecture docs must update `docs/architecture/phase-service/_index.md`.
 - New workflow evidence or operational runbooks belong under `docs/workflows/**` or `runtime/phase-a/**` as appropriate.
+
+## Ordinary Runner Entry And Business Acceptance
+
+- The production Project creation composition must provide the Windows Runner
+  provisioner; success requires registered identity, persistent vault credential
+  and verified ACLs. Passwords never enter argv, environment, files or logs.
+- Native tests use disposable Projects and remove only their own registrations.
+  Fresh-process verification reloads persisted registration without fixture setup.
+- Final UI readback projects actual source hashes, is no-store, and fails closed
+  for an incomplete full-target ledger or missing/changed current sources.
+- `scripts/python/phase_a_business_chain_acceptance.py` reads authenticated GET
+  evidence and emits passed/blocked/unavailable under logs. No credential means
+  unavailable, never a default pass. It neither runs a model nor mutates a project.
+- Test the native entry with `ProjectRunnerProvisioningTests`, source/readiness
+  consumers with `ProjectRouteStateArtifactServiceTests`, and the Python acceptance
+  command with `scripts.python.tests.test_phase_a_business_chain_acceptance`.
+- Public behavior: `docs/workflows/phase-service-runner-and-business-acceptance.md`.
+  CI fixture success does not prove production deployment or live project acceptance.

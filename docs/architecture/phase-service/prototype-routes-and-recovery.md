@@ -104,3 +104,24 @@ Restore requires an account/project-matching isolation descriptor and applies
 ACLs to the restored tree. It verifies all objects before the directory switch
 and again before committing Published; parent-directory SDDL alone is not
 publication evidence. See ADR-0061 and the recovery regression tests.
+
+## Ordinary project Runner registration and current business acceptance
+
+ADR-0035/0036/0038/0061 also govern the ordinary production CreateProject path.
+The host injects WindowsProjectRunnerProvisioner, registers a dedicated standard
+local Windows user with a platform-user vault credential, protects the account
+namespace and registration marker, and verifies the Project root and seeded child
+ACLs before returning creation success. Failure compensates newly created native
+resources and the new Project/workspace; retained soft-deleted Projects keep their
+registration. Restart uses the same platform Windows identity and persisted marker.
+
+The read-only business acceptance command consumes existing authenticated workflow,
+contract and UI readbacks. It does not become another state authority or execute
+routes. Final UI claims require the existing complete capability ledger and current
+seven source bindings, including a successful fresh validation sidecar. Missing
+producers or sources block acceptance. Fixture/native CI is distinct from a live
+model/Godot project acceptance and from production host deployment verification.
+
+See `docs/workflows/phase-service-runner-and-business-acceptance.md` for behavior
+and `docs/workflows/phase-service-deferred-requirements-2026-10-02.md` for deferred
+service extensions under the single-maintainer operating model.

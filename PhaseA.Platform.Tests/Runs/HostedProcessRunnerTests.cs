@@ -90,20 +90,31 @@ time.sleep(30)
     {
         using var temp = TempDirectory.Create("phase-a-file-activity");
         var marker = Path.Combine(temp.Path, "activity", "marker.txt");
-        var script = Path.Combine(temp.Path, "touch-marker.py");
+        Directory.CreateDirectory(Path.GetDirectoryName(marker)!);
+        var started = Path.Combine(temp.Path, "process-started.txt");
+        var script = Path.Combine(temp.Path, "silent-wait.cmd");
+        // ADR-0061: keep interpreter startup out of the 500ms activity oracle.
+        // A silent real process outlives that budget while a workspace producer
+        // updates only the watched directory. The startup marker is not watched.
         await File.WriteAllTextAsync(script, $"""
-import pathlib
-import time
-path = pathlib.Path(r"{marker}")
-path.parent.mkdir(parents=True, exist_ok=True)
-for index in range(12):
-    path.write_text("x" * (index + 1), encoding="utf-8")
-    time.sleep(0.05)
+@echo off
+echo started>"{started}"
+ping.exe -n 3 127.0.0.1 >nul
 """);
+        async Task UpdateActivityAsync()
+        {
+            await WaitForFileAsync(started);
+            for (var index = 0; index < 24; index++)
+            {
+                await File.WriteAllTextAsync(marker, new string('x', index + 1));
+                await Task.Delay(100);
+            }
+        }
+        var activity = UpdateActivityAsync();
         var runner = new HostedProcessRunner();
         var command = new HostedProcessCommand(
-            "py",
-            ["-3", script],
+            "cmd.exe",
+            ["/d", "/c", script],
             temp.Path,
             new Dictionary<string, string>())
             .WithTimeouts(
@@ -112,27 +123,30 @@ for index in range(12):
             .WithActivityWatchPaths(["activity"], pollInterval: TimeSpan.FromMilliseconds(25));
 
         var result = await runner.RunAsync(command);
+        await activity;
 
         result.ExitCode.Should().Be(0, result.Stderr);
-        File.ReadAllText(marker).Should().Be(new string('x', 12));
+        result.Stdout.Should().BeEmpty();
+        File.ReadAllText(marker).Should().Be(new string('x', 24));
     }
 
     [Fact]
     public async Task RunAsync_ReturnsTimeout_WhenTotalRuntimeExceedsLimitEvenWithOutput()
     {
         using var temp = TempDirectory.Create("phase-a-total-timeout");
-        var script = Path.Combine(temp.Path, "noisy-sleep.py");
+        // ADR-0061: emit immediately from the measured process. Python launcher's
+        // interpreter startup can consume the entire 120ms budget on Windows CI.
+        var script = Path.Combine(temp.Path, "noisy-loop.cmd");
         await File.WriteAllTextAsync(script, """
-import sys
-import time
-while True:
-    print("tick", flush=True)
-    time.sleep(0.03)
+@echo off
+:repeat
+echo tick
+goto repeat
 """);
         var runner = new HostedProcessRunner();
         var command = new HostedProcessCommand(
-            "py",
-            ["-3", script],
+            "cmd.exe",
+            ["/d", "/c", script],
             temp.Path,
             new Dictionary<string, string>())
             .WithTimeouts(

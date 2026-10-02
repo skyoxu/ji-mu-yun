@@ -265,7 +265,10 @@ public sealed class ProjectRouteStateArtifactService
             canonical.Json.HasValue ? ReadString(canonical.Json.Value, "source_requirement_map_hash") : null,
             canonical.Json.HasValue ? ReadString(canonical.Json.Value, "source_godot_ui_contract_hash") : null,
             canonical.Json.HasValue ? ReadString(canonical.Json.Value, "source_ui_style_contract_hash") : null,
-            canonical.Json.HasValue ? ReadString(canonical.Json.Value, "ui_style_snapshot_hash") : null);
+            canonical.Json.HasValue ? ReadString(canonical.Json.Value, "ui_style_snapshot_hash") : null,
+            canonical.Json.HasValue ? ReadString(canonical.Json.Value, "source_iteration_session_hash") : null,
+            canonical.Json.HasValue ? ReadString(canonical.Json.Value, "source_validation_input_hash") : null,
+            canonical.Json.HasValue ? ReadString(canonical.Json.Value, "source_contract_hash") : null);
     }
 
     private static IReadOnlyList<GameDesignRequirementRow> ReadRequirementRows(JsonElement root)
@@ -324,6 +327,8 @@ public sealed class ProjectRouteStateArtifactService
         if (uiWiring.Json.HasValue)
         {
             issues.AddRange(ValidateUiWiring(uiWiring.Json.Value));
+            if (ReadString(uiWiring.Json.Value, "status") == "succeeded")
+                issues.AddRange(context.ValidateFinalUiBindings(uiWiring.Json.Value));
         }
 
         return issues
@@ -511,7 +516,8 @@ public sealed class ProjectRouteStateArtifactService
         foreach (var row in ReadArray(root, "full_target_closure_ledger"))
         {
             var capabilityId = ReadString(row, "capability_id");
-            var status = ReadString(row, "status");
+            var status = string.IsNullOrWhiteSpace(ReadString(row, "closure_status"))
+                ? ReadString(row, "status") : ReadString(row, "closure_status");
             if (GodotUiStyleClosureContract.CapabilityIds.Contains(capabilityId, StringComparer.Ordinal) &&
                 !GodotUiStyleClosureContract.IsFullTargetClosureStatus(status))
             {
@@ -522,6 +528,23 @@ public sealed class ProjectRouteStateArtifactService
             {
                 issues.Add(Issue($"ui-wiring:full-target:{capabilityId}:interim_status_not_final", "diagnostic_blocked", "P1", "meta/routes/ui-wiring/latest.json"));
             }
+        }
+
+        // ADR-0036/0038: a final claim must cover the existing full capability set.
+        // Interim route readiness may omit the ledger; successful closure may not.
+        if (ReadString(root, "status") == "succeeded" || root.TryGetProperty("full_target_closure_ledger", out _))
+        {
+            var rows = ReadArray(root, "full_target_closure_ledger").Select(row => new FullTargetCapabilityLedgerRow(
+                ReadString(row, "capability_id"), ReadString(row, "owner_doc"), ReadString(row, "firstRequiredPhase"),
+                ReadString(row, "trigger"), ReadString(row, "ownerEvidence"), ReadString(row, "currentCoverageStatus"),
+                string.IsNullOrWhiteSpace(ReadString(row, "closure_status")) ? ReadString(row, "status") : ReadString(row, "closure_status"),
+                ReadStringArray(row, "affected_routes"), ReadString(row, "owner"),
+                ReadString(row, "expiry_or_recheck_trigger"), ReadStringArray(row, "validation_evidence_refs"),
+                ReadString(row, "defer_reason"), ReadString(row, "phase_exit_review_ref"))).ToArray();
+            foreach (var violation in GddToModuleFirstSlice.ValidateFinalClosureLedger(rows))
+                issues.Add(Issue($"ui-wiring:full-target:{violation.CapabilityId}:{violation.Reason}", "diagnostic_blocked", "P1", "meta/routes/ui-wiring/latest.json"));
+            foreach (var row in rows.Where(row => row.ClosureStatus == "explicitly_deferred" && string.IsNullOrWhiteSpace(row.DeferReason)))
+                issues.Add(Issue($"ui-wiring:full-target:{row.CapabilityId}:defer_reason_missing", "diagnostic_blocked", "P1", "meta/routes/ui-wiring/latest.json"));
         }
 
         return issues;
@@ -1401,6 +1424,31 @@ public sealed class ProjectRouteStateArtifactService
                 persistedPromptHash,
                 HostedRouteForbiddenSourceGuard.PromptHash(persistedPrompt),
                 StringComparison.Ordinal);
+        }
+
+        internal IReadOnlyList<ProjectWorkflowBlockingIssue> ValidateFinalUiBindings(JsonElement root)
+        {
+            var issues = new List<ProjectWorkflowBlockingIssue>();
+            var contract = Read("routes/prototype-contract/latest.json");
+            var iteration = Read("meta/routes/iteration-plan/latest.json");
+            var validation = Read("meta/routes/validation/latest.json");
+            foreach (var edge in RouteFreshnessPolicy.ForTarget("meta/routes/ui-wiring/latest.json"))
+            {
+                var actual = edge.HashField switch
+                {
+                    "source_iteration_session_hash" => iteration.Json.HasValue ? ReadString(iteration.Json.Value, "plan_hash") : "",
+                    "source_validation_input_hash" => validation.Json.HasValue ? ReadString(validation.Json.Value, "validation_input_hash") : "",
+                    "source_contract_hash" => contract.Json.HasValue ? ReadString(contract.Json.Value, "contract_hash") : "",
+                    "source_requirement_map_hash" => Read(edge.SourceArtifact).Hash,
+                    _ => contract.Json.HasValue ? ReadString(contract.Json.Value, edge.HashField) : ""
+                };
+                var declared = ReadString(root, edge.HashField);
+                if (actual.Length != 64 || actual.Any(character => !char.IsAsciiHexDigit(character)) || declared != actual)
+                    issues.Add(Issue($"ui-wiring:final-sources:{edge.HashField}:missing_or_stale", "contract_stale", "P1", "meta/routes/ui-wiring/latest.json"));
+            }
+            if (validation.Status != "succeeded" || validation.Freshness != "fresh")
+                issues.Add(Issue("ui-wiring:final-sources:validation_not_succeeded", "diagnostic_blocked", "P1", "meta/routes/validation/latest.json"));
+            return issues;
         }
 
         private bool SourceHashesMatchAuthority(JsonElement boundary)
