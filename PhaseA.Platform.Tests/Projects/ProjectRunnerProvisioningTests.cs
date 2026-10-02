@@ -118,8 +118,7 @@ public sealed class ProjectRunnerProvisioningTests
         Assert.Equal(originalMarker, await File.ReadAllBytesAsync(marker));
     }
 
-
-    // ADR-0035/0061 review counterexample: a writable nested marker must not own identity.
+    // ADR-0035/0061: untrusted nested markers must not select another project's credential.
     [Fact]
     public async Task Review_WritableNestedMarkerMustNotSelectAnotherAccountCredential()
     {
@@ -136,6 +135,10 @@ public sealed class ProjectRunnerProvisioningTests
         const string canary = "FOREIGN_PROJECT_REVIEW_CANARY";
         var canaryPath = Path.Combine(bp.RepoPath, "foreign-canary.txt");
         await File.WriteAllTextAsync(canaryPath, canary);
+        var runner = new HostedProcessRunner();
+        var control = await runner.RunAsync(new HostedProcessCommand("cmd.exe", ["/d", "/c", "type", canaryPath],
+            ap.RepoPath, new Dictionary<string, string>(), TotalTimeout: TimeSpan.FromSeconds(30), RequireIsolation: true));
+        Assert.DoesNotContain(canary, control.Stdout);
         var readSddl = typeof(RunnerIsolationPolicy).GetMethod("ReadSecurityDescriptor",
             System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!;
         var sddl = (string)readSddl.Invoke(null, [ap.RepoPath])!;
@@ -146,11 +149,12 @@ public sealed class ProjectRunnerProvisioningTests
             LowPrivilegeRequired = true, JobObjectRequired = true, NtfsAclRequired = true,
             SecurityDescriptor = sddl
         }));
-        var runner = new HostedProcessRunner();
-        var copy = await runner.RunAsync(new HostedProcessCommand("cmd.exe",
-            ["/d", "/c", $"copy /y \"{forgedInput}\" .runner-isolation.json >nul"], ap.RepoPath,
-            new Dictionary<string, string>(), TotalTimeout: TimeSpan.FromSeconds(30), RequireIsolation: true));
-        Assert.Equal(0, copy.ExitCode);
+        var copyScript = Path.Combine(ap.RepoPath, "review-copy.cmd");
+        await File.WriteAllTextAsync(copyScript,
+            $"@echo off\r\ncopy /y \"{forgedInput}\" .runner-isolation.json >nul\r\nexit /b %ERRORLEVEL%\r\n", Encoding.ASCII);
+        var copy = await runner.RunAsync(new HostedProcessCommand("cmd.exe", ["/d", "/c", copyScript],
+            ap.RepoPath, new Dictionary<string, string>(), TotalTimeout: TimeSpan.FromSeconds(30), RequireIsolation: true));
+        Assert.True(copy.ExitCode == 0, $"copy exit={copy.ExitCode}, stderr={copy.Stderr}");
         var nestedMarker = Path.Combine(ap.RepoPath, ".runner-isolation.json");
         var markerOwner = System.IO.FileSystemAclExtensions.GetAccessControl(new FileInfo(nestedMarker))
             .GetOwner(typeof(System.Security.Principal.SecurityIdentifier)).Value;
@@ -165,9 +169,8 @@ public sealed class ProjectRunnerProvisioningTests
             string? errorType = null;
             try
             {
-                result = await runner.RunAsync(new HostedProcessCommand("cmd.exe",
-                    ["/d", "/c", $"whoami & type \"{canaryPath}\""], ap.RepoPath,
-                    new Dictionary<string, string>(), TotalTimeout: TimeSpan.FromSeconds(30), RequireIsolation: true));
+                result = await runner.RunAsync(new HostedProcessCommand("cmd.exe", ["/d", "/c", "type", canaryPath],
+                    ap.RepoPath, new Dictionary<string, string>(), TotalTimeout: TimeSpan.FromSeconds(30), RequireIsolation: true));
             }
             catch (Exception error) { errorType = error.GetType().Name; }
             var observation = System.Text.Json.JsonSerializer.Serialize(new
@@ -175,6 +178,7 @@ public sealed class ProjectRunnerProvisioningTests
                 resolved, expectedAccount = ap.AccountId, actualAccount = loaded?.AccountId,
                 actualRoot = loaded?.WorkspaceRoot, actualProject = loaded?.ProjectId,
                 expectedProject = ap.ProjectId, markerOwnedBySourceRunner = markerOwner == sourceSid,
+                baselineDenied = !control.Stdout.Contains(canary), baselineExitCode = control.ExitCode,
                 exitCode = result?.ExitCode, foreignCanaryRead = result?.Stdout.Contains(canary) == true,
                 stdout = result?.Stdout, stderr = result?.Stderr, errorType
             });
@@ -185,9 +189,9 @@ public sealed class ProjectRunnerProvisioningTests
         finally { RunnerIsolationPolicy.ForgetWorkspace(ap.RepoPath); }
     }
 
-    // ADR-0035/0061 review: cmd registration probes do not establish configured tool access.
+    // ADR-0035/0061: launching cmd itself cannot stand in for executing the configured shim.
     [Fact]
-    public async Task Review_ConfiguredPrivateProfileToolMustBeExecutableByNewRunner()
+    public async Task Review_ConfiguredAccessibleCmdShimMustActuallyExecute()
     {
         using var scope = await Scope.CreateAsync();
         var created = await scope.Service.CreateProjectAsync(scope.AccountId, Request());
@@ -195,28 +199,32 @@ public sealed class ProjectRunnerProvisioningTests
         var project = (await scope.Store.GetProjectSnapshotAsync(created.ProjectId!))!;
         Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.RepoPath, out var descriptor));
         scope.Registrations.Add(descriptor);
-        var tools = Path.Combine(scope.Root, "private-profile", "AppData", "Roaming", "npm");
-        Directory.CreateDirectory(tools);
-        var tool = Path.Combine(tools, "codex.cmd");
+        var tool = Path.Combine(project.RepoPath, "review-codex.cmd");
         await File.WriteAllTextAsync(tool, "@echo off\r\necho REVIEW_CONFIGURED_TOOL_STARTED\r\nexit /b 0\r\n");
-        var security = new System.Security.AccessControl.DirectorySecurity();
-        var administrator = new System.Security.Principal.SecurityIdentifier("S-1-5-32-544");
-        security.SetAccessRuleProtection(true, false); security.SetOwner(administrator);
-        security.AddAccessRule(new System.Security.AccessControl.FileSystemAccessRule(administrator,
-            System.Security.AccessControl.FileSystemRights.FullControl,
-            System.Security.AccessControl.InheritanceFlags.ContainerInherit | System.Security.AccessControl.InheritanceFlags.ObjectInherit,
-            System.Security.AccessControl.PropagationFlags.None, System.Security.AccessControl.AccessControlType.Allow));
-        System.IO.FileSystemAclExtensions.SetAccessControl(new DirectoryInfo(tools), security);
+        var runner = new HostedProcessRunner();
+        var control = await runner.RunAsync(new HostedProcessCommand("cmd.exe", ["/d", "/c", tool],
+            project.RepoPath, new Dictionary<string, string>(), TotalTimeout: TimeSpan.FromSeconds(30), RequireIsolation: true));
+        Assert.True(control.ExitCode == 0 && control.Stdout.Contains("REVIEW_CONFIGURED_TOOL_STARTED"),
+            $"tool access control failed: {control.ExitCode}, {control.Stdout}, {control.Stderr}");
         var prior = Environment.GetEnvironmentVariable("PHASEA_CODEX_COMMAND");
         try
         {
             Environment.SetEnvironmentVariable("PHASEA_CODEX_COMMAND", tool);
             var command = CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
                 project.RepoPath, Path.Combine(project.RepoPath, "unused.txt"), "review only", "test-model", "low"));
-            var result = await new HostedProcessRunner().RunAsync(command with { TotalTimeout = TimeSpan.FromSeconds(30) });
+            var isolatedType = typeof(HostedProcessRunner).Assembly.GetType("PhaseA.Platform.Runs.WindowsIsolatedProcess")!;
+            var actualCommandLine = (string)isolatedType.GetMethod("BuildCommandLine",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!
+                .Invoke(null, [command.FileName, command.Arguments])!;
+            var result = await runner.RunAsync(command with { TotalTimeout = TimeSpan.FromSeconds(30) });
             var observation = System.Text.Json.JsonSerializer.Serialize(new
-            { projectCreated = created.Succeeded, actualTool = command.FileName, exitCode = result.ExitCode, result.Stdout, result.Stderr });
-            Console.WriteLine("REVIEW_PRIVATE_TOOL=" + observation);
+            {
+                projectCreated = created.Succeeded, actualTool = command.FileName,
+                toolAccessibleControl = control.Stdout.Contains("REVIEW_CONFIGURED_TOOL_STARTED"),
+                shimPresentInNativeCommand = actualCommandLine.Contains(tool),
+                exitCode = result.ExitCode, result.Stdout, result.Stderr
+            });
+            Console.WriteLine("REVIEW_CMD_SHIM=" + observation);
             Assert.True(result.ExitCode == 0 && result.Stdout.Contains("REVIEW_CONFIGURED_TOOL_STARTED"), observation);
         }
         finally { Environment.SetEnvironmentVariable("PHASEA_CODEX_COMMAND", prior); }
