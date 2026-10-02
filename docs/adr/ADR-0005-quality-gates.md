@@ -110,3 +110,6 @@ CI 侧应能在 `logs/**` 中找到对应摘要与日志文件；失败时可直
   signal and does not replace the complete quality gate.
 - Test failures remain blocking. Test coverage, profiles, required check names,
   and production execution timeouts remain unchanged.
+- Superseded pull-request quality runs share a concurrency group and are
+  cancelled when a newer commit arrives. Main and manual runs are not actively
+  cancelled; cancelled runs retain their GitHub history.

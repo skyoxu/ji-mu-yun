@@ -28,6 +28,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: windows-quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   quality:
     runs-on: windows-2022

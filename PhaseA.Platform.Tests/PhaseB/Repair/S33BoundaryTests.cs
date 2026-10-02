@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using PhaseA.Platform.Runs;
 using Xunit;
 using Xunit.Abstractions;
@@ -10,8 +11,10 @@ public sealed class S33BoundaryTests
 
     public S33BoundaryTests(ITestOutputHelper output) => _output = output;
 
-    [Fact]
-    public async Task O_BD42DD72212F()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(6000)]
+    public async Task O_BD42DD72212F(int startupDelayMilliseconds)
     {
         var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), maxConcurrentRuns: 1);
         var root = Directory.CreateTempSubdirectory("s33-cancel-");
@@ -31,17 +34,14 @@ public sealed class S33BoundaryTests
                 "heavy-write",
                 token => new HostedProcessRunner().RunAsync(new HostedProcessCommand(
                     "powershell.exe",
-                    ["-NoProfile", "-NonInteractive", "-Command", $"[IO.File]::WriteAllText('{started}', 'started'); Start-Sleep -Seconds 30"],
+                    ["-NoProfile", "-NonInteractive", "-Command", $"Start-Sleep -Milliseconds {startupDelayMilliseconds}; [IO.File]::WriteAllText('{started}', 'started'); Start-Sleep -Seconds 30"],
                     root.FullName,
                     new Dictionary<string, string>(),
                     RunId: "s33-cancel-run"), token),
                 operationCancellation.Token);
 
-            await WaitForFileAsync(started, TimeSpan.FromSeconds(5));
-            if (!File.Exists(started))
-            {
-                throw new InvalidOperationException("S33 cancellation fixture did not start the real heavy-write runner.");
-            }
+            // ADR-0035/0061: readiness is separate from the cancellation deadline.
+            await WaitForFileAsync(started, operation, TimeSpan.FromSeconds(30));
 
             cancellationRequested = queue.CancelRun("s33-cancel-run");
             // ADR-0035/0061: observe the actual cancellation/cleanup boundary,
@@ -76,7 +76,7 @@ public sealed class S33BoundaryTests
             cancellationRequested && stoppedAfterCancellation && queueClearedAfterCancellation,
             "FAILURE-O-BD42DD72212F",
             "The production heavy-write queue accepted cancellation without stopping and releasing the running operation.");
-        Observe("O-BD42DD72212F cancellation-stopped-running-operation-and-cleared-queue");
+        Observe($"O-BD42DD72212F startup-delay-ms={startupDelayMilliseconds} cancellation-stopped-running-operation-and-cleared-queue");
     }
 
     [Fact]
@@ -121,12 +121,25 @@ public sealed class S33BoundaryTests
         Observe("O-8E338FFA23D1 terminal-runner-completed-and-queue-lifecycle-cleared");
     }
 
-    private static async Task WaitForFileAsync(string path, TimeSpan timeout)
+    private static async Task WaitForFileAsync(string path, Task<HostedProcessResult> operation, TimeSpan timeout)
     {
-        var deadline = DateTime.UtcNow + timeout;
-        while (!File.Exists(path) && DateTime.UtcNow < deadline)
+        var elapsed = Stopwatch.StartNew();
+        while (!File.Exists(path) && elapsed.Elapsed < timeout)
         {
+            if (operation.IsCompleted)
+            {
+                var result = await operation;
+                throw new InvalidOperationException(
+                    $"S33 runner exited before readiness: exit={result.ExitCode}; stderr={result.Stderr}.");
+            }
+
             await Task.Delay(25);
+        }
+
+        if (!File.Exists(path))
+        {
+            throw new TimeoutException(
+                $"S33 runner did not publish readiness within {timeout.TotalSeconds:0} seconds; operation={operation.Status}.");
         }
     }
 
