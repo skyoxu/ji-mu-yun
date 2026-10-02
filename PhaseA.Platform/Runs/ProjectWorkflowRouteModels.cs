@@ -102,7 +102,10 @@ public sealed record ProjectRouteStateArtifactSummary(
     string? SourceRequirementMapHash = null,
     string? SourceGodotUiContractHash = null,
     string? SourceUiStyleContractHash = null,
-    string? UiStyleSnapshotHash = null);
+    string? UiStyleSnapshotHash = null,
+    string? SourceIterationSessionHash = null,
+    string? SourceValidationInputHash = null,
+    string? SourceContractHash = null);
 
 public sealed record ProjectRouteStateEvidenceRef(
     string Kind,

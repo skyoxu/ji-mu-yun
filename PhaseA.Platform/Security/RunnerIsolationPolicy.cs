@@ -97,6 +97,14 @@ public static class RunnerIsolationPolicy
 
     public static RunnerIsolationHandle CreateProcessIsolation(RunnerIsolationDescriptor descriptor) => new(descriptor, string.Empty);
 
+    // Remove only this registration; retained Projects keep their identity and marker.
+    internal static void ForgetWorkspace(string root)
+    {
+        var fullRoot = Path.GetFullPath(root);
+        Workspaces.TryRemove(fullRoot, out _);
+        WorkspaceSecurityDescriptors.TryRemove(fullRoot, out _);
+    }
+
     public static bool HasExpectedWorkspaceSecurity(RunnerIsolationDescriptor descriptor)
     {
         ArgumentNullException.ThrowIfNull(descriptor);

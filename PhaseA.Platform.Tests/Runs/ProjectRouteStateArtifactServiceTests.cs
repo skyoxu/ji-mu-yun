@@ -9,6 +9,61 @@ namespace PhaseA.Platform.Tests.Runs;
 
 public sealed class ProjectRouteStateArtifactServiceTests
 {
+    // ADR-0036/0038: final closure cannot be inferred from a success string.
+    [Fact]
+    public void Read_WhenSuccessfulUiClosureOmitsLedgerAndCurrentInputs_BlocksFinalReadiness()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
+        { "schema_version": "ui-wiring-closure.v1", "status": "succeeded", "ui_surface_matrix": [] }
+        """);
+        var readback = fixture.Read();
+        readback.BlockingIssues.Should().Contain(issue => issue.IssueId.EndsWith(":missing_ledger_row"));
+        readback.BlockingIssues.Should().Contain(issue => issue.IssueId == "ui-wiring:final-sources:source_contract_hash:missing_or_stale");
+        readback.BlockingIssues.Should().Contain(issue => issue.IssueId == "ui-wiring:final-sources:validation_not_succeeded");
+    }
+
+    [Fact]
+    public void Read_WhenFullTargetLedgerDuplicatesCapabilityOrOmitsMetadata_BlocksClosure()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
+        {
+          "schema_version": "ui-wiring-closure.v1", "status": "succeeded", "ui_surface_matrix": [],
+          "full_target_closure_ledger": [
+            { "capability_id": "ui_component_system", "status": "covered" },
+            { "capability_id": "ui_component_system", "status": "covered" }
+          ]
+        }
+        """);
+        var issues = fixture.Read().BlockingIssues;
+        issues.Should().Contain(issue => issue.IssueId == "ui-wiring:full-target:ui_component_system:duplicate_ledger_row");
+        issues.Should().Contain(issue => issue.IssueId == "ui-wiring:full-target:ui_component_system:missing_owner_expiry_or_validation_evidence");
+    }
+
+    [Fact]
+    public void Read_ProjectsUiHashesAndRejectsChangedIterationSource()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/iteration-plan/latest.json", """
+        { "schema_version": "iteration-plan.v1", "status": "ready", "plan_hash": "current-plan" }
+        """);
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
+        {
+          "schema_version": "ui-wiring-closure.v1", "status": "succeeded", "ui_surface_matrix": [],
+          "source_iteration_session_hash": "old-plan", "source_validation_input_hash": "validation-input",
+          "source_contract_hash": "contract", "source_requirement_map_hash": "requirements",
+          "source_godot_ui_contract_hash": "godot", "source_ui_style_contract_hash": "style", "ui_style_snapshot_hash": "snapshot"
+        }
+        """);
+        var readback = fixture.Read();
+        var ui = readback.Artifacts.Single(artifact => artifact.Route == "ui-wiring");
+        ui.SourceIterationSessionHash.Should().Be("old-plan");
+        ui.SourceValidationInputHash.Should().Be("validation-input");
+        ui.SourceContractHash.Should().Be("contract");
+        readback.BlockingIssues.Should().Contain(issue => issue.IssueId == "ui-wiring:final-sources:source_iteration_session_hash:missing_or_stale");
+    }
+
     [Theory]
     [InlineData("null")]
     [InlineData("\"ready\"")]

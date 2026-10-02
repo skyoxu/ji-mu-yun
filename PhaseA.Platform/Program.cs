@@ -74,6 +74,7 @@ builder.Services.AddSingleton<ProjectRuleCatalog>();
 builder.Services.AddSingleton<GameTypeTemplateCatalog>();
 builder.Services.AddSingleton<GameTypeGuideCatalog>();
 builder.Services.AddSingleton<IProjectWorkspaceSeeder, ProjectWorkspaceSeeder>();
+builder.Services.AddSingleton<IProjectRunnerProvisioner, WindowsProjectRunnerProvisioner>();
 builder.Services.AddSingleton<ProjectWorkspaceMaintenanceService>();
 builder.Services.AddHttpClient<ISteamGameTypeMetadataProvider, SteamGameTypeMetadataProvider>(client =>
 {
@@ -3519,6 +3520,7 @@ app.MapGet("/api/projects/{projectId}/ui-wiring-closure/latest", async (
     [FromServices] ProjectRouteStateArtifactService routeArtifacts,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
     if (project is null || !string.Equals(project.AccountId, CurrentAccountId(context), StringComparison.Ordinal))
     {
@@ -3538,16 +3540,17 @@ app.MapGet("/api/projects/{projectId}/ui-wiring-closure/latest", async (
         {
             projectId,
             status = ui.Status,
-            sourceIterationSessionHash = "",
-            sourceValidationInputHash = "",
-            sourceContractHash = "",
-            sourceRequirementMapHash = "",
-            sourceGodotUiContractHash = "",
-            sourceUiStyleContractHash = "",
-            uiStyleSnapshotHash = "",
+            freshness = ui.Freshness,
+            sourceIterationSessionHash = ui.SourceIterationSessionHash ?? "",
+            sourceValidationInputHash = ui.SourceValidationInputHash ?? "",
+            sourceContractHash = ui.SourceContractHash ?? "",
+            sourceRequirementMapHash = ui.SourceRequirementMapHash ?? "",
+            sourceGodotUiContractHash = ui.SourceGodotUiContractHash ?? "",
+            sourceUiStyleContractHash = ui.SourceUiStyleContractHash ?? "",
+            uiStyleSnapshotHash = ui.UiStyleSnapshotHash ?? "",
             uiSurfaceMatrixSummary = new { status = ui.Status },
             styleGapSummary = new { unresolved = readback.BlockingIssues.Count(issue => issue.DomainCode == "diagnostic_blocked") },
-            finalReadinessEligible = ui.Status == "succeeded" && readback.BlockingIssues.Count == 0,
+            finalReadinessEligible = ui.Status == "succeeded" && ui.Freshness == "fresh" && readback.BlockingIssues.Count == 0,
             blockingIssues = readback.BlockingIssues.Where(issue => issue.IssueId.Contains("ui-wiring", StringComparison.OrdinalIgnoreCase)).ToArray(),
             evidenceRefs = new[] { new ProjectRouteStateEvidenceRef("sidecar", ui.CanonicalPath) }
         });
@@ -4050,4 +4053,3 @@ public partial class Program
 {
     internal static readonly SemaphoreSlim RequestFailureDiagnosticGate = new(1, 1);
 }
-

@@ -408,6 +408,40 @@ internal static class RunnerCredentialStore
 {
     private const uint CredTypeGeneric = 1;
 
+    // ADR-0061: credentials stay in the platform user's Windows vault across restarts.
+    // Never place the password in an argument, environment variable, or workspace file.
+    internal static void Write(string target, string userName, string password)
+    {
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
+        var targetPointer = Marshal.StringToCoTaskMemUni(target);
+        var passwordPointer = Marshal.StringToCoTaskMemUni(password);
+        try
+        {
+            var credential = new NativeCredential
+            {
+                Type = CredTypeGeneric,
+                TargetName = targetPointer,
+                UserName = userName,
+                CredentialBlobSize = checked((uint)(password.Length * sizeof(char))),
+                CredentialBlob = passwordPointer,
+                Persist = 2 // CRED_PERSIST_LOCAL_MACHINE, scoped to the platform OS user.
+            };
+            if (!CredWrite(ref credential, 0))
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "runner credential registration failed");
+        }
+        finally
+        {
+            Marshal.ZeroFreeCoTaskMemUnicode(passwordPointer);
+            Marshal.FreeCoTaskMem(targetPointer);
+        }
+    }
+
+    internal static void Delete(string target)
+    {
+        if (!CredDelete(target, CredTypeGeneric, 0) && Marshal.GetLastWin32Error() != 1168)
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "runner credential cleanup failed");
+    }
+
     public static RunnerCredential Read(string target)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(target);
@@ -441,6 +475,14 @@ internal static class RunnerCredentialStore
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool CredRead(string target, uint type, uint flags, out nint credential);
+
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CredWrite(ref NativeCredential credential, uint flags);
+
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CredDelete(string target, uint type, uint flags);
 
     [DllImport("advapi32.dll", SetLastError = true)]
     private static extern void CredFree(nint buffer);

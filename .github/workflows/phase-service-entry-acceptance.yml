@@ -1,0 +1,43 @@
+name: Phase Service Entry Acceptance
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, 'fix/phase-runner-business-acceptance-*']
+  workflow_dispatch:
+
+jobs:
+  windows-entry:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    env:
+      PHASEA_CI_FIXTURES: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build platform tests
+        run: dotnet build PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug
+      - name: Ordinary project Runner and business readback regressions
+        shell: pwsh
+        run: |
+          dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore `
+            --filter 'FullyQualifiedName~ProjectRunnerProvisioningTests|FullyQualifiedName~ProjectCreationServiceTests|FullyQualifiedName~ProjectRouteStateArtifactServiceTests|FullyQualifiedName~GddToModuleFirstSliceTests|FullyQualifiedName~HostedProcessRunnerTests|FullyQualifiedName~CodexHostedProcessCommandFactoryTests|FullyQualifiedName~ProjectWorkflowRouteServiceTests' `
+            --logger 'trx;LogFileName=phase-entry.trx' --results-directory logs/unit/phase-service-entry
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Business acceptance consumer regressions
+        shell: pwsh
+        run: |
+          python -m unittest scripts.python.tests.test_phase_a_business_chain_acceptance scripts.python.tests.test_phase_a_gdd_to_module_hardening_smoke -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase-service-entry-evidence
+          path: logs/unit/phase-service-entry/**

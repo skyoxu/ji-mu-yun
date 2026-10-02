@@ -18,6 +18,7 @@ public sealed class ProjectCreationService
     private readonly ProjectCreationConcurrencyLimiter _creationConcurrencyLimiter;
     private readonly IProjectGameTypeMatchService _gameTypeMatchService;
     private readonly ILogger<ProjectCreationService>? _logger;
+    private readonly IProjectRunnerProvisioner? _runnerProvisioner;
 
     public ProjectCreationService(
         PhaseAMetadataStore metadataStore,
@@ -35,7 +36,8 @@ public sealed class ProjectCreationService
         PrototypeRouteStateWriter? routeStateWriter = null,
         ProjectCreationConcurrencyLimiter? creationConcurrencyLimiter = null,
         IProjectGameTypeMatchService? gameTypeMatchService = null,
-        ILogger<ProjectCreationService>? logger = null)
+        ILogger<ProjectCreationService>? logger = null,
+        IProjectRunnerProvisioner? runnerProvisioner = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -45,6 +47,7 @@ public sealed class ProjectCreationService
         _creationConcurrencyLimiter = creationConcurrencyLimiter ?? new ProjectCreationConcurrencyLimiter();
         _gameTypeMatchService = gameTypeMatchService ?? ProjectGameTypeMatchService.Offline(options);
         _logger = logger;
+        _runnerProvisioner = runnerProvisioner;
     }
 
     public async Task<ProjectCreationResult> CreateProjectAsync(
@@ -110,8 +113,11 @@ public sealed class ProjectCreationService
             return result;
         }
 
+        var workspaceAlreadyExisted = Directory.Exists(layout.RootPath);
         try
         {
+            PhaseA.Platform.Security.RunnerIsolationPolicy.RequireNoReparsePoint(
+                Path.GetPathRoot(layout.RootPath)!, layout.RootPath);
             Directory.CreateDirectory(layout.RepoPath);
             Directory.CreateDirectory(layout.RuntimePath);
             Directory.CreateDirectory(layout.MetaPath);
@@ -126,6 +132,9 @@ public sealed class ProjectCreationService
                 command.TemplateRuleId,
                 result.WorkspaceId ?? string.Empty,
                 layout.MetaPath);
+            // ADR-0035/0061: the production host supplies the provisioner. Direct domain
+            // fixtures may omit it, but such workspaces cannot dispatch an isolated Runner.
+            _runnerProvisioner?.Provision(accountId, projectId, layout);
         }
         catch (Exception ex)
         {
@@ -137,8 +146,14 @@ public sealed class ProjectCreationService
                 command.GameTypeSource,
                 command.TemplateRuleId,
                 command.WorkspaceRootPath,
-                $"Project workspace initialization failed before Chapter 2 bootstrap could start. {ex.GetType().Name}: {ex.Message}"), cancellationToken);
-            await _metadataStore.DeleteProjectAsync(projectId, cancellationToken);
+                $"Project workspace initialization failed before Chapter 2 bootstrap could start. {ex.GetType().Name}: {ex.Message}"), CancellationToken.None);
+            await _metadataStore.DeleteProjectAsync(projectId, CancellationToken.None);
+            if (!workspaceAlreadyExisted)
+            {
+                try { Directory.Delete(layout.RootPath, recursive: true); }
+                catch (Exception cleanupError) when (cleanupError is IOException or UnauthorizedAccessException)
+                { _logger?.LogWarning("Project workspace cleanup failed for {ProjectId}: {ErrorType}", projectId, cleanupError.GetType().Name); }
+            }
             return ProjectCreationResult.Failure("project_creation_failed");
         }
 
