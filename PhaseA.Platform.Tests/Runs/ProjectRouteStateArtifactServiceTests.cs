@@ -64,6 +64,34 @@ public sealed class ProjectRouteStateArtifactServiceTests
         readback.BlockingIssues.Should().Contain(issue => issue.IssueId == "ui-wiring:final-sources:source_iteration_session_hash:missing_or_stale");
     }
 
+    [Fact]
+    public void Read_WhenFinalUiLedgerAndSourceBindingsMatch_HasNoLedgerOrFinalSourceBlockers()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", "{}");
+        var requirementHash = GddToModuleAuthorityHashes.Sha256("{}");
+        var hash = new string('a', 64);
+        fixture.WriteJson("routes/prototype-contract/latest.json", JsonSerializer.Serialize(new
+        { contract_hash = hash, source_godot_ui_contract_hash = hash, source_ui_style_contract_hash = hash, ui_style_snapshot_hash = hash }));
+        fixture.WriteJson("meta/routes/iteration-plan/latest.json", JsonSerializer.Serialize(new { plan_hash = hash, status = "ready" }));
+        fixture.WriteJson("meta/routes/validation/latest.json", JsonSerializer.Serialize(new { validation_input_hash = hash, status = "succeeded" }));
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "ui-wiring-closure.v1", status = "succeeded", ui_surface_matrix = Array.Empty<object>(),
+            source_iteration_session_hash = hash, source_validation_input_hash = hash, source_contract_hash = hash,
+            source_requirement_map_hash = requirementHash, source_godot_ui_contract_hash = hash,
+            source_ui_style_contract_hash = hash, ui_style_snapshot_hash = hash,
+            full_target_closure_ledger = GddToModuleFirstSlice.CapabilityIds.Select(id => new
+            {
+                capability_id = id, closure_status = "covered", currentCoverageStatus = "covered",
+                affected_routes = new[] { "ui-wiring" }, owner = "Phase service", expiry_or_recheck_trigger = "source-change",
+                validation_evidence_refs = new[] { "meta/routes/validation/latest.json" }, phase_exit_review_ref = "meta/reviews/final.json"
+            })
+        }));
+        fixture.Read().BlockingIssues.Should().NotContain(issue =>
+            issue.IssueId.StartsWith("ui-wiring:full-target:") || issue.IssueId.StartsWith("ui-wiring:final-sources:"));
+    }
+
     [Theory]
     [InlineData("null")]
     [InlineData("\"ready\"")]

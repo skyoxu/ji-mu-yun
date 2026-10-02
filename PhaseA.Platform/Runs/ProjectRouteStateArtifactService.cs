@@ -516,7 +516,8 @@ public sealed class ProjectRouteStateArtifactService
         foreach (var row in ReadArray(root, "full_target_closure_ledger"))
         {
             var capabilityId = ReadString(row, "capability_id");
-            var status = ReadString(row, "status");
+            var status = string.IsNullOrWhiteSpace(ReadString(row, "closure_status"))
+                ? ReadString(row, "status") : ReadString(row, "closure_status");
             if (GodotUiStyleClosureContract.CapabilityIds.Contains(capabilityId, StringComparer.Ordinal) &&
                 !GodotUiStyleClosureContract.IsFullTargetClosureStatus(status))
             {
@@ -536,7 +537,8 @@ public sealed class ProjectRouteStateArtifactService
             var rows = ReadArray(root, "full_target_closure_ledger").Select(row => new FullTargetCapabilityLedgerRow(
                 ReadString(row, "capability_id"), ReadString(row, "owner_doc"), ReadString(row, "firstRequiredPhase"),
                 ReadString(row, "trigger"), ReadString(row, "ownerEvidence"), ReadString(row, "currentCoverageStatus"),
-                ReadString(row, "status"), ReadStringArray(row, "affected_routes"), ReadString(row, "owner"),
+                string.IsNullOrWhiteSpace(ReadString(row, "closure_status")) ? ReadString(row, "status") : ReadString(row, "closure_status"),
+                ReadStringArray(row, "affected_routes"), ReadString(row, "owner"),
                 ReadString(row, "expiry_or_recheck_trigger"), ReadStringArray(row, "validation_evidence_refs"),
                 ReadString(row, "defer_reason"), ReadString(row, "phase_exit_review_ref"))).ToArray();
             foreach (var violation in GddToModuleFirstSlice.ValidateFinalClosureLedger(rows))
@@ -1441,7 +1443,7 @@ public sealed class ProjectRouteStateArtifactService
                     _ => contract.Json.HasValue ? ReadString(contract.Json.Value, edge.HashField) : ""
                 };
                 var declared = ReadString(root, edge.HashField);
-                if (string.IsNullOrWhiteSpace(actual) || string.IsNullOrWhiteSpace(declared) || declared != actual)
+                if (actual.Length != 64 || actual.Any(character => !char.IsAsciiHexDigit(character)) || declared != actual)
                     issues.Add(Issue($"ui-wiring:final-sources:{edge.HashField}:missing_or_stale", "contract_stale", "P1", "meta/routes/ui-wiring/latest.json"));
             }
             if (validation.Status != "succeeded" || validation.Freshness != "fresh")

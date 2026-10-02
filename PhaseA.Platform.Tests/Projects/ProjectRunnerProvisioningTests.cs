@@ -99,6 +99,7 @@ public sealed class ProjectRunnerProvisioningTests
         await File.WriteAllTextAsync(probe,
             "@echo off\r\nwhoami\r\necho PROJECT_RUNNER_STARTED\r\n" +
             "echo runner-ok>runner-probe-output.txt\r\n" +
+            $"echo tampered>\"{Path.Combine(descriptor.WorkspaceRoot, ".runner-isolation.json")}\" 2>nul\r\nif not errorlevel 1 exit /b 42\r\n" +
             $"dir \"{accountRoot}\" >nul 2>nul\r\nif not errorlevel 1 exit /b 41\r\nexit /b 0\r\n", Encoding.ASCII);
         var factory = CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
             repo, Path.Combine(repo, "unused-output.txt"), "harmless native probe", "test-model", "low"));

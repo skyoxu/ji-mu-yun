@@ -121,18 +121,19 @@ for index in range(12):
     public async Task RunAsync_ReturnsTimeout_WhenTotalRuntimeExceedsLimitEvenWithOutput()
     {
         using var temp = TempDirectory.Create("phase-a-total-timeout");
-        var script = Path.Combine(temp.Path, "noisy-sleep.py");
+        // ADR-0061: emit immediately from the measured process. Python launcher's
+        // interpreter startup can consume the entire 120ms budget on Windows CI.
+        var script = Path.Combine(temp.Path, "noisy-loop.cmd");
         await File.WriteAllTextAsync(script, """
-import sys
-import time
-while True:
-    print("tick", flush=True)
-    time.sleep(0.03)
+@echo off
+:repeat
+echo tick
+goto repeat
 """);
         var runner = new HostedProcessRunner();
         var command = new HostedProcessCommand(
-            "py",
-            ["-3", script],
+            "cmd.exe",
+            ["/d", "/c", script],
             temp.Path,
             new Dictionary<string, string>())
             .WithTimeouts(
