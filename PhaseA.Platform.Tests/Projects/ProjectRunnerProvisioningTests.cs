@@ -31,7 +31,7 @@ public sealed class ProjectRunnerProvisioningTests
         Assert.True(RunnerIsolationPolicy.HasExpectedRestoreTreeSecurity(descriptor, project.RepoPath));
         await RunProbeAsync(project.RepoPath, descriptor);
 
-        // A second testhost has empty registration caches and its own logon session.
+        // A second testhost has empty registration caches in a separate process.
         // The persisted marker and LOCAL_MACHINE vault entry must be sufficient.
         var start = new ProcessStartInfo("dotnet")
         {

@@ -4,8 +4,12 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main, 'fix/phase-runner-business-acceptance-*']
+    branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: phase-service-entry-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   windows-entry:
