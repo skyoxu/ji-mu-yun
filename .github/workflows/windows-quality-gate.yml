@@ -230,7 +230,7 @@ jobs:
           $out = "logs/unit/$date/runner-publication-regression"
           New-Item -ItemType Directory -Force -Path $out | Out-Null
           dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore `
-            --filter 'FullyQualifiedName~S2BoundaryTests|FullyQualifiedName~S51BoundaryTests|FullyQualifiedName~PrototypeWorkflowTests.RepairAsync_PrefersPrototypeShellSceneOverBattleSceneWhenManifestFallbackIsNeeded' `
+            --filter 'FullyQualifiedName~S2BoundaryTests|FullyQualifiedName~S51BoundaryTests|FullyQualifiedName~PrototypeWorkflowTests.RepairAsync_PrefersPrototypeShellSceneOverBattleSceneWhenManifestFallbackIsNeeded|FullyQualifiedName~S43BoundaryTests.O_FE73E295BC86|FullyQualifiedName~HostedProcessRunnerTests' `
             --logger 'trx;LogFileName=s51-publication-regression.trx' --results-directory $out
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 

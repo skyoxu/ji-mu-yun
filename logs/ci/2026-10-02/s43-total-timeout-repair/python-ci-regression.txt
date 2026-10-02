@@ -1,0 +1,208 @@
+test_all_required_ports_ready_passes (test_ci_godot_selfcheck.GodotSelfcheckTests.test_all_required_ports_ready_passes) ... ok
+test_best_effort_ui_probe_does_not_change_critical_port_gate (test_ci_godot_selfcheck.GodotSelfcheckTests.test_best_effort_ui_probe_does_not_change_critical_port_gate) ... ok
+test_each_missing_or_false_required_port_fails (test_ci_godot_selfcheck.GodotSelfcheckTests.test_each_missing_or_false_required_port_fails) ... ok
+test_missing_or_malformed_port_map_fails (test_ci_godot_selfcheck.GodotSelfcheckTests.test_missing_or_malformed_port_map_fails) ... ok
+test_nonzero_exit_or_reported_error_fails_despite_ready_ports (test_ci_godot_selfcheck.GodotSelfcheckTests.test_nonzero_exit_or_reported_error_fails_despite_ready_ports) ... ok
+test_zero_ready_ports_cannot_pass_as_observed_in_run_36864053647 (test_ci_godot_selfcheck.GodotSelfcheckTests.test_zero_ready_ports_cannot_pass_as_observed_in_run_36864053647) ... ok
+test_all_should_resolve_test_solution_when_auto (test_ci_pipeline_solution_resolution.CiPipelineSolutionResolutionTests.test_all_should_resolve_test_solution_when_auto) ... ok
+test_heartbeat_and_timing_do_not_stream_child_output (test_ci_process.CiProcessTests.test_heartbeat_and_timing_do_not_stream_child_output) ... ok
+test_stage_timeout_override_is_validated (test_ci_process.CiProcessTests.test_stage_timeout_override_is_validated) ... ok
+test_success_and_failure_keep_separate_output (test_ci_process.CiProcessTests.test_success_and_failure_keep_separate_output) ... CI_PIPELINE status=ok manual_examples=ok whitelist_expiry=ok dotnet=ok selfcheck=ok encoding_bad=n/a
+CI_PROCESS START executable=python timeout_ms=3000 stdout=/tmp/tmp_0glav4h/logs/ci/2026-10-02/process-output/b9be55c37a4f477bb571cae2a2811db5.stdout.log
+CI_PROCESS END executable=python rc=7 elapsed_s=0.016 stdout=/tmp/tmp_0glav4h/logs/ci/2026-10-02/process-output/b9be55c37a4f477bb571cae2a2811db5.stdout.log
+ok
+test_timeout_stops_descendant_and_preserves_partial_output (test_ci_process.CiProcessTests.test_timeout_stops_descendant_and_preserves_partial_output) ... CI_PROCESS START executable=python timeout_ms=1000 stdout=/tmp/tmpam2nx5qx/logs/ci/2026-10-02/process-output/0f00705216e2472b9aa07dff712b1038.stdout.log
+CI_PROCESS END executable=python rc=124 elapsed_s=1.002 stdout=/tmp/tmpam2nx5qx/logs/ci/2026-10-02/process-output/0f00705216e2472b9aa07dff712b1038.stdout.log
+ok
+test_dotnet_test_uses_remaining_stage_budget_and_failure_stays_failed (test_ci_stage_budgets.CiStageBudgetTests.test_dotnet_test_uses_remaining_stage_budget_and_failure_stays_failed) ... ok
+test_fail_fast_forwards_reuse_and_records_later_gates_not_run (test_ci_stage_budgets.CiStageBudgetTests.test_fail_fast_forwards_reuse_and_records_later_gates_not_run) ... ok
+test_failed_test_names_include_long_vstest_durations_and_xunit_diagnostics (test_ci_stage_budgets.CiStageBudgetTests.test_failed_test_names_include_long_vstest_durations_and_xunit_diagnostics) ... ok
+test_full_pipeline_rejects_stale_or_missing_runtime_success (test_ci_stage_budgets.CiStageBudgetTests.test_full_pipeline_rejects_stale_or_missing_runtime_success) ... ok
+test_hang_collector_abort_is_incomplete_even_with_exit_one (test_ci_stage_budgets.CiStageBudgetTests.test_hang_collector_abort_is_incomplete_even_with_exit_one) ... ok
+test_pipeline_honors_configured_stage_and_all_selfcheck_attempts (test_ci_stage_budgets.CiStageBudgetTests.test_pipeline_honors_configured_stage_and_all_selfcheck_attempts) ... ok
+test_reused_build_keeps_coverage_hang_diagnosis_and_aborted_artifacts (test_ci_stage_budgets.CiStageBudgetTests.test_reused_build_keeps_coverage_hang_diagnosis_and_aborted_artifacts) ... ok
+test_runtime_cli_routes_through_existing_ci_driver (test_ci_stage_budgets.CiStageBudgetTests.test_runtime_cli_routes_through_existing_ci_driver) ... ok
+test_runtime_preflight_requires_both_successful_process_and_readiness_result (test_ci_stage_budgets.CiStageBudgetTests.test_runtime_preflight_requires_both_successful_process_and_readiness_result) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 3.461s
+
+OK
+RUN_DOTNET status=tests_failed line=n/a% branch=n/a out=/tmp/tmpt6zp03h6/logs/unit/2026-10-02
+CI_PIPELINE hard_fail_diagnostics begin
+{
+  "solution": "Game.sln",
+  "solution_input": "Game.sln",
+  "manual_triplet_examples": {
+    "rc": 0,
+    "status": "ok",
+    "hits_count": null,
+    "scanned_files": null,
+    "mode": null
+  },
+  "whitelist_expiry_warning": {
+    "rc": 0,
+    "status": "tests_failed",
+    "expiring_soon_count": null,
+    "expired_count": null,
+    "warn_days": null
+  },
+  "dotnet": {
+    "rc": 124,
+    "line_pct": null,
+    "branch_pct": null,
+    "status": "tests_failed",
+    "run_dotnet_console_log": "logs/ci/2026-10-02/run-dotnet-console.txt",
+    "dotnet_test_output_log": null,
+    "failed_tests_count": 0,
+    "failed_tests": []
+  },
+  "selfcheck": {
+    "status": "not_run",
+    "reason": "dotnet_hard_failure"
+  },
+  "encoding": {
+    "status": "not_run",
+    "reason": "dotnet_hard_failure"
+  },
+  "status": "fail"
+}
+--- run-dotnet-console tail (logs/ci/2026-10-02/run-dotnet-console.txt) ---
+aborted
+CI_PIPELINE hard_fail_diagnostics end
+CI_PIPELINE status=fail manual_examples=ok whitelist_expiry=ok dotnet=ok selfcheck=fail encoding_bad=n/a
+CI_PIPELINE hard_fail_diagnostics begin
+{
+  "solution": "Game.sln",
+  "solution_input": "Game.sln",
+  "manual_triplet_examples": {
+    "rc": 0,
+    "status": "ok",
+    "hits_count": null,
+    "scanned_files": null,
+    "mode": null
+  },
+  "whitelist_expiry_warning": {
+    "rc": 0,
+    "status": "ok",
+    "expiring_soon_count": null,
+    "expired_count": null,
+    "warn_days": null
+  },
+  "dotnet": {
+    "rc": 0,
+    "line_pct": null,
+    "branch_pct": null,
+    "status": "ok",
+    "run_dotnet_console_log": "logs/ci/2026-10-02/run-dotnet-console.txt",
+    "dotnet_test_output_log": null,
+    "failed_tests_count": 0,
+    "failed_tests": []
+  },
+  "selfcheck": {
+    "status": "fail",
+    "wrapper_rc": 124,
+    "reason": "self-check producer exited with code 124"
+  },
+  "encoding": {
+    "status": "ok"
+  },
+  "status": "fail"
+}
+--- selfcheck-stdout tail (logs/ci/2026-10-02/selfcheck-stdout.txt) ---
+runtime output
+CI_PIPELINE hard_fail_diagnostics end
+CI_PIPELINE status=fail manual_examples=ok whitelist_expiry=ok dotnet=ok selfcheck=fail encoding_bad=n/a
+CI_PIPELINE hard_fail_diagnostics begin
+{
+  "solution": "Game.sln",
+  "solution_input": "Game.sln",
+  "manual_triplet_examples": {
+    "rc": 0,
+    "status": "ok",
+    "hits_count": null,
+    "scanned_files": null,
+    "mode": null
+  },
+  "whitelist_expiry_warning": {
+    "rc": 0,
+    "status": "ok",
+    "expiring_soon_count": null,
+    "expired_count": null,
+    "warn_days": null
+  },
+  "dotnet": {
+    "rc": 0,
+    "line_pct": null,
+    "branch_pct": null,
+    "status": "ok",
+    "run_dotnet_console_log": "logs/ci/2026-10-02/run-dotnet-console.txt",
+    "dotnet_test_output_log": null,
+    "failed_tests_count": 0,
+    "failed_tests": []
+  },
+  "selfcheck": {
+    "status": "fail",
+    "note": "no-summary",
+    "wrapper_rc": 0
+  },
+  "encoding": {
+    "status": "ok"
+  },
+  "status": "fail"
+}
+--- selfcheck-stdout tail (logs/ci/2026-10-02/selfcheck-stdout.txt) ---
+runtime output
+CI_PIPELINE hard_fail_diagnostics end
+CI_PIPELINE status=fail manual_examples=ok whitelist_expiry=ok dotnet=ok selfcheck=fail encoding_bad=n/a
+CI_PIPELINE hard_fail_diagnostics begin
+{
+  "solution": "Game.sln",
+  "solution_input": "Game.sln",
+  "manual_triplet_examples": {
+    "rc": 0,
+    "status": "ok",
+    "hits_count": null,
+    "scanned_files": null,
+    "mode": null
+  },
+  "whitelist_expiry_warning": {
+    "rc": 0,
+    "status": "ok",
+    "expiring_soon_count": null,
+    "expired_count": null,
+    "warn_days": null
+  },
+  "dotnet": {
+    "rc": 0,
+    "line_pct": null,
+    "branch_pct": null,
+    "status": "ok",
+    "run_dotnet_console_log": "logs/ci/2026-10-02/run-dotnet-console.txt",
+    "dotnet_test_output_log": null,
+    "failed_tests_count": 0,
+    "failed_tests": []
+  },
+  "selfcheck": {
+    "status": "fail",
+    "wrapper_rc": 0
+  },
+  "encoding": {
+    "status": "ok"
+  },
+  "status": "fail"
+}
+--- selfcheck-stdout tail (logs/ci/2026-10-02/selfcheck-stdout.txt) ---
+runtime output
+CI_PIPELINE hard_fail_diagnostics end
+CI_PIPELINE status=ok manual_examples=ok whitelist_expiry=ok dotnet=ok selfcheck=ok encoding_bad=n/a
+RUN_DOTNET status=tests_failed line=n/a% branch=n/a out=/tmp/tmpjbhne5pt/logs/unit/2026-10-02
+CI_PIPELINE status=ok manual_examples=ok whitelist_expiry=ok dotnet=ok selfcheck=ok encoding_bad=n/a
+RUN_DOTNET status=tests_failed line=n/a% branch=n/a out=/tmp/tmp984uw_dv/logs/unit/2026-10-02
+CI_RUNTIME_PREFLIGHT {"status": "fail", "rc": 0, "selfcheck": {}, "scope": "runtime_preflight_only"}
+runtime output
+CI_RUNTIME_PREFLIGHT {"status": "fail", "rc": 0, "selfcheck": {"status": "fail"}, "scope": "runtime_preflight_only"}
+runtime output
+CI_RUNTIME_PREFLIGHT {"status": "fail", "rc": 2, "selfcheck": {"status": "ok"}, "scope": "runtime_preflight_only"}
+runtime output
+CI_RUNTIME_PREFLIGHT {"status": "ok", "rc": 0, "selfcheck": {"status": "ok"}, "scope": "runtime_preflight_only"}
