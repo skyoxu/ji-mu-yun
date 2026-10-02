@@ -1,4 +1,4 @@
-name: Read main S25 CI evidence
+name: Read main full CI evidence
 on:
   push:
     branches: [fix/main-s25-diagnostic-20261002]
@@ -20,24 +20,31 @@ jobs:
           name: ci-logs
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
-          run-id: '37056192883'
+          run-id: '37063659774'
           path: logs/ci/main-evidence
-      - name: Read exact current-run failure
+      - name: Read exact current-run project results
         shell: pwsh
         run: |
           @'
           from pathlib import Path
           import xml.etree.ElementTree as ET
           ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+          seen = []
           for path in Path('logs/ci/main-evidence').rglob('*.trx'):
-              if '2026-10-02' not in str(path):
+              if '2026-10-02' not in str(path) or 'project-results' not in path.parts:
                   continue
               root = ET.parse(path).getroot()
+              counters = root.find('t:ResultSummary/t:Counters', ns)
+              print('PROJECT_RESULT', path, counters.attrib if counters is not None else {})
+              seen.append(str(path))
               for case in root.findall('t:Results/t:UnitTestResult', ns):
+                  name = case.get('testName', '')
+                  if 'S25BoundaryTests' in name or 'QueueAsync_FailsPostCompletionDirectSmoke' in name or case.get('outcome') == 'Failed':
+                      print('FOCUSED_RESULT', name, case.get('outcome'), case.get('duration'))
                   if case.get('outcome') == 'Failed':
-                      print('FAILURE_FILE', path)
-                      print('FAILURE_NAME', case.get('testName'), 'DURATION', case.get('duration'))
                       for field in ['Message', 'StackTrace']:
                           node = case.find('t:Output/t:ErrorInfo/t:' + field, ns)
-                          print('FAILURE_' + field.upper(), (node.text if node is not None else '')[:7000])
+                          print('FAILURE_' + field.upper(), (node.text if node is not None else '')[:4000])
+          if len(seen) < 2:
+              raise RuntimeError('Expected complete per-project result files; found ' + repr(seen))
           '@ | python -
