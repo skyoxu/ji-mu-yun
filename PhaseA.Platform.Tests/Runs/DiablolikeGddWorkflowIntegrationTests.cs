@@ -190,9 +190,9 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
             {
                 var project = await store.GetProjectSnapshotAsync(run.ProjectId)
                     ?? throw new InvalidOperationException("Fixture project was not found.");
+                var remaining = TimeSpan.FromSeconds(30) - elapsed.Elapsed;
                 using var readiness = new CancellationTokenSource(
-                    elapsed.Elapsed < TimeSpan.FromSeconds(30)
-                        ? TimeSpan.FromSeconds(30) - elapsed.Elapsed : TimeSpan.FromMilliseconds(1));
+                    remaining > TimeSpan.Zero ? remaining : TimeSpan.FromMilliseconds(1));
                 // ADR-0036/0061: observe queue completion after metadata publication.
                 await using var completed = await completionQueue.EnterAsync(
                     $"fixture-readback-{Guid.NewGuid():N}", project.AccountId, run.ProjectId,

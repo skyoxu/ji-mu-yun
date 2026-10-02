@@ -2418,8 +2418,9 @@ public sealed class PrototypeWorkflowTests : IDisposable
                 {
                     var project = await store.GetProjectSnapshotAsync(run.ProjectId)
                         ?? throw new InvalidOperationException("Fixture project was not found.");
+                    var remaining = deadline - DateTimeOffset.UtcNow;
                     using var readiness = new CancellationTokenSource(
-                        deadline > DateTimeOffset.UtcNow ? deadline - DateTimeOffset.UtcNow : TimeSpan.FromMilliseconds(1));
+                        remaining > TimeSpan.Zero ? remaining : TimeSpan.FromMilliseconds(1));
                     await using var completed = await _completionQueue.EnterAsync(
                         $"fixture-readback-{Guid.NewGuid():N}", project.AccountId, run.ProjectId,
                         "fixture-readback", readiness.Token);
