@@ -223,28 +223,8 @@ jobs:
           py -3 -u scripts/python/ci_pipeline.py runtime --godot-bin "$env:GODOT_BIN" --project project.godot
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Runner lifecycle regression (Windows)
-        shell: pwsh
-        run: |
-          $date = Get-Date -Format 'yyyy-MM-dd'
-          $out = "logs/unit/$date/runner-publication-regression"
-          New-Item -ItemType Directory -Force -Path $out | Out-Null
-          dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore `
-            --filter 'FullyQualifiedName~S2BoundaryTests|FullyQualifiedName~S51BoundaryTests|FullyQualifiedName~PrototypeWorkflowTests.RepairAsync_PrefersPrototypeShellSceneOverBattleSceneWhenManifestFallbackIsNeeded|FullyQualifiedName~S43BoundaryTests.O_FE73E295BC86|FullyQualifiedName~HostedProcessRunnerTests' `
-            --logger 'trx;LogFileName=s51-publication-regression.trx' --results-directory $out
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Phase fixture regression (Windows)
-        shell: pwsh
-        run: |
-          $date = Get-Date -Format 'yyyy-MM-dd'
-          $out = "logs/unit/$date/fixture-regression"
-          New-Item -ItemType Directory -Force -Path $out | Out-Null
-          dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore `
-            --filter 'FullyQualifiedName~S54BoundaryTests|FullyQualifiedName~RunnerIsolationTests|FullyQualifiedName~S35BoundaryTests|FullyQualifiedName~SqliteMetadataSchemaTests.AdminReviewQueueDecision_IsIdempotentForSamePayloadAndConflictsForDifferentPayload|FullyQualifiedName~SqliteMetadataSchemaTests.ProjectChatHistory_MarksLatestSuggestedAssistantMessageConsumed_AfterFormalFeedback|FullyQualifiedName~Program_AdminPrivateReadbackAndQueueDecisionEndpointsAreAdminOnlyNoStoreAndStablyMapped|FullyQualifiedName~HeavyRunnerQueueServiceTests|FullyQualifiedName~CreateAsync_ShouldBoundLastWaiterCleanup_WhenLlmIgnoresCancellation|FullyQualifiedName~DiagnosticSpool_WritesOutsideWorkspace_AndSupportsAdminTriageWithoutRewritingHistory|FullyQualifiedName~SnapshotAndRestore_RoundTripWithQuotaAndSoftDelete|FullyQualifiedName~GenerateQueuedPreviewAsync_WaitsForDedicatedWebPreviewQueue|FullyQualifiedName~S28BoundaryTests.O_5277C4B77BBF|FullyQualifiedName~S15BoundaryTests.O_9FDA0B49E011|FullyQualifiedName~S63BoundaryTests.O_AB9EF0D40F90|FullyQualifiedName~QueueAsync_FailsPostCompletionDirectSmoke_WhenGodotReportsError|FullyQualifiedName~QueueAsync_ConfiguresPrototypeCreationActivityAndTotalTimeouts|FullyQualifiedName~RepairAsync_UsesSlugFromPrototypeRecordContent_WhenPathSlugDiffers|FullyQualifiedName~TempSqliteDatabaseLifecycleTests|FullyQualifiedName~BrowserUiRendererTests|FullyQualifiedName~GameDesignDocumentServiceTests|FullyQualifiedName~GameDesignQuestionFormServiceTests|FullyQualifiedName~GameDesignSceneRouteServiceTests' `
-            --logger 'trx;LogFileName=fixture-regression.trx' --results-directory $out
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
+      # ADR-0005: the covered Game.sln suite includes Runner and Phase fixtures.
+      # Execute them once here; the separate entry workflow provides fast feedback.
       - name: CI pipeline (Python)
         shell: pwsh
         run: |

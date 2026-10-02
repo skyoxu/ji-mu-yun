@@ -100,3 +100,13 @@ CI 侧应能在 `logs/**` 中找到对应摘要与日志文件；失败时可直
 - `scripts/sc/llm_review.py`, `scripts/sc/llm_extract_task_obligations.py`, `scripts/sc/llm_check_subtasks_coverage.py`, and `scripts/sc/llm_semantic_gate_all.py` are advisory/diagnostic by default.
 - CI must expose one explicit line in Step Summary: `SecurityProfile: <host-safe|strict>`.
 - Default profile stays `host-safe`; `strict` is opt-in per project phase.
+
+## Addendum (2026-10 CI regression consolidation)
+
+- The Windows quality workflow executes the complete `Game.sln` test suite once
+  with coverage and hang diagnostics, including all Runner and Phase fixtures.
+- Filtered Runner/Phase regressions must not repeat serially before that same
+  covered suite. The independent Phase entry workflow remains a quick focused
+  signal and does not replace the complete quality gate.
+- Test failures remain blocking. Test coverage, profiles, required check names,
+  and production execution timeouts remain unchanged.

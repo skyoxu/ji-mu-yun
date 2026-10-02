@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
@@ -20,7 +21,7 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
     [Fact]
     public async Task DiablolikeStyleGddFlow_ShouldCreateSkeletonStepsAssetsAndPackage()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -173,23 +174,32 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
 
     private static async Task<RunSnapshot> WaitForRunStatusAsync(PhaseAMetadataStore store, string runId, string status)
     {
-        for (var attempt = 0; attempt < 100; attempt++)
+        // ADR-0036: await machine-confirmed completion, including route closure.
+        // A bounded readiness wait is independent of production execution timeouts.
+        var elapsed = Stopwatch.StartNew();
+        RunSnapshot? run = null;
+        while (elapsed.Elapsed < TimeSpan.FromSeconds(30))
         {
-            var run = await store.GetRunSnapshotAsync(runId);
-            if (run is not null && string.Equals(run.Status, status, StringComparison.OrdinalIgnoreCase))
+            run = await store.GetRunSnapshotAsync(runId);
+            if (run is not null &&
+                string.Equals(run.Status, status, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(run.ProgressStep, status, StringComparison.OrdinalIgnoreCase))
             {
                 return run;
             }
 
-            if (run is not null && string.Equals(run.Status, "failed", StringComparison.OrdinalIgnoreCase))
+            if (run?.Status is "failed" or "blocked" or "cancelled" or "cancel")
             {
                 throw new InvalidOperationException($"Run {runId} failed: stderr={run.StderrText}; evidence={run.EvidenceJson}");
             }
 
-            await Task.Delay(20);
+            await Task.Delay(50);
         }
 
-        throw new TimeoutException($"Run {runId} did not reach {status}.");
+        throw new TimeoutException(
+            $"Run {runId} did not reach {status} within 30 seconds: " +
+            $"status={run?.Status ?? "missing"}; progress={run?.ProgressStep ?? "missing"}; " +
+            $"stderr={run?.StderrText}; evidence={run?.EvidenceJson}");
     }
 
     private static void Write(string root, string relativePath, string content)
@@ -232,21 +242,27 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
     {
         public List<HostedProcessCommand> Commands { get; } = [];
 
-        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
             if (command.Arguments.Any(argument => Path.GetFileName(argument).Equals("smoke_headless.py", StringComparison.OrdinalIgnoreCase)))
             {
-                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS\n", ""));
+                return new HostedProcessResult(0, "SMOKE PASS\n", "");
             }
 
             if (command.Arguments.Any(argument => Path.GetFileName(argument).Equals("prototype_main_menu_navigation_smoke.py", StringComparison.OrdinalIgnoreCase)))
             {
-                return Task.FromResult(new HostedProcessResult(0, "MAIN_MENU_PROTOTYPE_NAV PASS scene=res://Game.Godot/Prototypes/phantom-tower-like/PhantomTowerLikePrototype.tscn\n", ""));
+                return new HostedProcessResult(0, "MAIN_MENU_PROTOTYPE_NAV PASS scene=res://Game.Godot/Prototypes/phantom-tower-like/PhantomTowerLikePrototype.tscn\n", "");
+            }
+
+            if (command.Arguments.Contains("run-prototype-workflow"))
+            {
+                // Regression: background completion may exceed the old two-second polling window.
+                await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
             }
 
             WritePrototypeCompletion(command);
-            return Task.FromResult(new HostedProcessResult(0, "prototype workflow ok\n", ""));
+            return new HostedProcessResult(0, "prototype workflow ok\n", "");
         }
 
         private static void WritePrototypeCompletion(HostedProcessCommand command)
