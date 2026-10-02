@@ -78,3 +78,6 @@ A Windows regression first reproduced the old behavior while an active publisher
   and obligations to stop the operation and clear all queue state remain intact.
 - Exercise both immediate startup and a deliberate six-second startup delay;
   production startup and execution timeout policy remains unchanged.
+- Pass the fixed fixture script through PowerShell `-EncodedCommand` using
+  UTF-16LE, with stop-on-error behavior. Script parsing or startup write errors
+  must surface as early process failures rather than silent readiness timeouts.

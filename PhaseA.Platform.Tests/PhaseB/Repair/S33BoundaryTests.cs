@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using PhaseA.Platform.Runs;
 using Xunit;
 using Xunit.Abstractions;
@@ -24,6 +25,11 @@ public sealed class S33BoundaryTests
         var cancellationRequested = false;
         var stoppedAfterCancellation = false;
         var queueClearedAfterCancellation = false;
+        // ADR-0035/0061: transport this fixture's script as one argument, so
+        // native command-line quoting cannot reinterpret its readiness write.
+        var script = $"$ErrorActionPreference = 'Stop'; Start-Sleep -Milliseconds {startupDelayMilliseconds}; " +
+                     $"[IO.File]::WriteAllText('{started}', 'started'); Start-Sleep -Seconds 30";
+        var encodedScript = Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
 
         try
         {
@@ -34,7 +40,7 @@ public sealed class S33BoundaryTests
                 "heavy-write",
                 token => new HostedProcessRunner().RunAsync(new HostedProcessCommand(
                     "powershell.exe",
-                    ["-NoProfile", "-NonInteractive", "-Command", $"Start-Sleep -Milliseconds {startupDelayMilliseconds}; [IO.File]::WriteAllText('{started}', 'started'); Start-Sleep -Seconds 30"],
+                    ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodedScript],
                     root.FullName,
                     new Dictionary<string, string>(),
                     RunId: "s33-cancel-run"), token),
