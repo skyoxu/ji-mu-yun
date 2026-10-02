@@ -96,10 +96,13 @@ public sealed class ProjectRunnerProvisioningTests
         Assert.True(RunnerIsolationPolicy.HasExpectedWorkspaceSecurity(descriptor));
         var probe = Path.Combine(repo, "runner-probe.cmd");
         var accountRoot = Directory.GetParent(descriptor.WorkspaceRoot)!.FullName;
+        var marker = Path.Combine(descriptor.WorkspaceRoot, ".runner-isolation.json");
+        var originalMarker = await File.ReadAllBytesAsync(marker);
         await File.WriteAllTextAsync(probe,
             "@echo off\r\nwhoami\r\necho PROJECT_RUNNER_STARTED\r\n" +
             "echo runner-ok>runner-probe-output.txt\r\n" +
-            $"echo tampered>\"{Path.Combine(descriptor.WorkspaceRoot, ".runner-isolation.json")}\" 2>nul\r\nif not errorlevel 1 exit /b 42\r\n" +
+            // cmd redirection errors do not reliably set ERRORLEVEL; verify the actual file.
+            $"echo tampered>\"{marker}\" 2>nul\r\n" +
             $"dir \"{accountRoot}\" >nul 2>nul\r\nif not errorlevel 1 exit /b 41\r\nexit /b 0\r\n", Encoding.ASCII);
         var factory = CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
             repo, Path.Combine(repo, "unused-output.txt"), "harmless native probe", "test-model", "low"));
@@ -112,6 +115,7 @@ public sealed class ProjectRunnerProvisioningTests
         Assert.Contains("PROJECT_RUNNER_STARTED", result.Stdout);
         Assert.Contains(descriptor.OsIdentity.ToLowerInvariant(), result.Stdout.ToLowerInvariant());
         Assert.Contains("runner-ok", await File.ReadAllTextAsync(Path.Combine(repo, "runner-probe-output.txt")));
+        Assert.Equal(originalMarker, await File.ReadAllBytesAsync(marker));
     }
 
     private static ProjectCreationRequest Request() => new(null, "native-runner", "manual", null, null, null, null);
