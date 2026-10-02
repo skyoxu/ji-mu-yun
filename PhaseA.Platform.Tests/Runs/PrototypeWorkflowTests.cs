@@ -15,10 +15,62 @@ namespace PhaseA.Platform.Tests.Runs;
 public sealed class PrototypeWorkflowTests : IDisposable
 {
     private readonly IDisposable routeProfileOverride = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(false);
+    private HeavyRunnerQueueService? _completionQueue;
 
     public void Dispose()
     {
         routeProfileOverride.Dispose();
+    }
+
+    [Fact]
+    public async Task WaitForRunStatusAsync_WaitsForQueuedWritesAfterTerminalMetadata()
+    {
+        await using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
+        var marker = Path.Combine(workspaceRoot.Path, "queued-write.txt");
+        var published = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var allowWrite = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _completionQueue = new HeavyRunnerQueueService(maxConcurrentRuns: 1, estimatedTaskDuration: TimeSpan.FromSeconds(1));
+        var operation = _completionQueue.ExecuteAsync(runId, accountId, projectId, "prototype-7day-playable", async _ =>
+        {
+            await store.CompleteRunAsync(runId, "succeeded", 0, "", "", "{}");
+            published.TrySetResult();
+            await allowWrite.Task;
+            await File.WriteAllTextAsync(marker, "machine-write-complete");
+            return true;
+        });
+
+        try
+        {
+            await published.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            var completion = WaitForRunStatusAsync(store, runId, "succeeded");
+            var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+            while (!completion.IsCompleted &&
+                   _completionQueue.GetReadback(accountId, includeAll: true).QueuedCount == 0 &&
+                   DateTimeOffset.UtcNow < deadline)
+            {
+                await Task.Delay(10);
+            }
+
+            // ADR-0036/0061: metadata alone cannot close the machine-write obligation.
+            completion.IsCompleted.Should().BeFalse();
+            _completionQueue.GetReadback(accountId, includeAll: true).QueuedCount.Should().Be(1);
+            File.Exists(marker).Should().BeFalse();
+            allowWrite.TrySetResult();
+            (await completion).Status.Should().Be("succeeded");
+            File.ReadAllText(marker).Should().Be("machine-write-complete");
+            _completionQueue.GetReadback(accountId, includeAll: true).Running.Should().BeFalse();
+        }
+        finally
+        {
+            allowWrite.TrySetResult();
+            await operation;
+        }
     }
 
     [Fact]
@@ -2278,7 +2330,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
             "extends Node\n");
     }
 
-    private static PrototypeWorkflowService Service(
+    private PrototypeWorkflowService Service(
         PhaseAMetadataStore store,
         PhaseAPlatformOptions options,
         IHostedProcessRunner runner,
@@ -2290,6 +2342,8 @@ public sealed class PrototypeWorkflowTests : IDisposable
         HostedContextGatePolicy? contextGatePolicy = null,
         IHostedContextManifestValidator? contextManifestValidator = null)
     {
+        heavyRunnerQueue ??= new HeavyRunnerQueueService();
+        _completionQueue = prototypeCreationQueue ?? heavyRunnerQueue;
         return new PrototypeWorkflowService(
             store,
             options,
@@ -2343,7 +2397,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         runner.Commands.Should().NotBeEmpty();
     }
 
-    private static async Task<RunSnapshot> WaitForRunStatusAsync(
+    private async Task<RunSnapshot> WaitForRunStatusAsync(
         PhaseAMetadataStore store,
         string runId,
         string expectedStatus,
@@ -2358,6 +2412,23 @@ public sealed class PrototypeWorkflowTests : IDisposable
             if (run?.Status == expectedStatus &&
                 (expectedProgressStep is null || run.ProgressStep == expectedProgressStep))
             {
+                // ADR-0036/0061: terminal metadata can precede route/audit writes.
+                // A same-project lease is granted only after the queued work exits.
+                if (_completionQueue is not null)
+                {
+                    var project = await store.GetProjectSnapshotAsync(run.ProjectId)
+                        ?? throw new InvalidOperationException("Fixture project was not found.");
+                    var remaining = deadline - DateTimeOffset.UtcNow;
+                    using var readiness = new CancellationTokenSource(
+                        remaining > TimeSpan.Zero ? remaining : TimeSpan.FromMilliseconds(1));
+                    await using var completed = await _completionQueue.EnterAsync(
+                        $"fixture-readback-{Guid.NewGuid():N}", project.AccountId, run.ProjectId,
+                        "fixture-readback", readiness.Token);
+                    run = await store.GetRunSnapshotAsync(runId)
+                        ?? throw new InvalidOperationException("Fixture run was not found after queue completion.");
+                    run.Status.Should().Be(expectedStatus, $"stderr={run.StderrText}; evidence={run.EvidenceJson}");
+                }
+
                 return run;
             }
 
