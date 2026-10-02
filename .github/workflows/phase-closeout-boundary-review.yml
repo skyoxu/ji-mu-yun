@@ -1,0 +1,32 @@
+name: Phase Closeout Boundary Review
+on:
+  push:
+    branches: ['review/phase-closeout-boundaries-20261002-113138']
+jobs:
+  review:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    env:
+      PHASEA_CI_FIXTURES: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - name: Enable long paths
+        run: git config --system core.longpaths true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build review tests
+        run: dotnet build PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug
+      - name: Current source boundary counterexamples
+        shell: pwsh
+        run: |
+          dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore `
+            --filter 'FullyQualifiedName~Review_' --logger 'console;verbosity=detailed' `
+            --logger 'trx;LogFileName=review-counterexamples.trx' --results-directory logs/unit/phase-closeout-review
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase-closeout-review-counterexamples
+          path: logs/unit/phase-closeout-review/**

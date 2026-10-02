@@ -118,6 +118,110 @@ public sealed class ProjectRunnerProvisioningTests
         Assert.Equal(originalMarker, await File.ReadAllBytesAsync(marker));
     }
 
+
+    // ADR-0035/0061 review counterexample: a writable nested marker must not own identity.
+    [Fact]
+    public async Task Review_WritableNestedMarkerMustNotSelectAnotherAccountCredential()
+    {
+        using var source = await Scope.CreateAsync();
+        using var target = await Scope.CreateAsync();
+        var a = await source.Service.CreateProjectAsync(source.AccountId, Request());
+        var b = await target.Service.CreateProjectAsync(target.AccountId, Request());
+        Assert.True(a.Succeeded && b.Succeeded);
+        var ap = (await source.Store.GetProjectSnapshotAsync(a.ProjectId!))!;
+        var bp = (await target.Store.GetProjectSnapshotAsync(b.ProjectId!))!;
+        Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(ap.RepoPath, out var ad));
+        Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(bp.RepoPath, out var bd));
+        source.Registrations.Add(ad); target.Registrations.Add(bd);
+        const string canary = "FOREIGN_PROJECT_REVIEW_CANARY";
+        var canaryPath = Path.Combine(bp.RepoPath, "foreign-canary.txt");
+        await File.WriteAllTextAsync(canaryPath, canary);
+        var readSddl = typeof(RunnerIsolationPolicy).GetMethod("ReadSecurityDescriptor",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!;
+        var sddl = (string)readSddl.Invoke(null, [ap.RepoPath])!;
+        var forgedInput = Path.Combine(ap.RepoPath, "review-forged-input.json");
+        await File.WriteAllTextAsync(forgedInput, System.Text.Json.JsonSerializer.Serialize(new
+        {
+            bd.AccountId, bd.ProjectId, bd.OsIdentity,
+            LowPrivilegeRequired = true, JobObjectRequired = true, NtfsAclRequired = true,
+            SecurityDescriptor = sddl
+        }));
+        var runner = new HostedProcessRunner();
+        var copy = await runner.RunAsync(new HostedProcessCommand("cmd.exe",
+            ["/d", "/c", $"copy /y \"{forgedInput}\" .runner-isolation.json >nul"], ap.RepoPath,
+            new Dictionary<string, string>(), TotalTimeout: TimeSpan.FromSeconds(30), RequireIsolation: true));
+        Assert.Equal(0, copy.ExitCode);
+        var nestedMarker = Path.Combine(ap.RepoPath, ".runner-isolation.json");
+        var markerOwner = System.IO.FileSystemAclExtensions.GetAccessControl(new FileInfo(nestedMarker))
+            .GetOwner(typeof(System.Security.Principal.SecurityIdentifier)).Value;
+        var sourceSid = ((System.Security.Principal.SecurityIdentifier)new System.Security.Principal.NTAccount(
+            Environment.MachineName, ad.OsIdentity).Translate(typeof(System.Security.Principal.SecurityIdentifier))).Value;
+        Assert.Equal(sourceSid, markerOwner);
+        RunnerIsolationPolicy.ForgetWorkspace(ad.WorkspaceRoot);
+        try
+        {
+            var resolved = RunnerIsolationPolicy.TryGetWorkspaceDescriptor(ap.RepoPath, out var loaded);
+            HostedProcessResult? result = null;
+            string? errorType = null;
+            try
+            {
+                result = await runner.RunAsync(new HostedProcessCommand("cmd.exe",
+                    ["/d", "/c", $"whoami & type \"{canaryPath}\""], ap.RepoPath,
+                    new Dictionary<string, string>(), TotalTimeout: TimeSpan.FromSeconds(30), RequireIsolation: true));
+            }
+            catch (Exception error) { errorType = error.GetType().Name; }
+            var observation = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                resolved, expectedAccount = ap.AccountId, actualAccount = loaded?.AccountId,
+                actualRoot = loaded?.WorkspaceRoot, actualProject = loaded?.ProjectId,
+                expectedProject = ap.ProjectId, markerOwnedBySourceRunner = markerOwner == sourceSid,
+                exitCode = result?.ExitCode, foreignCanaryRead = result?.Stdout.Contains(canary) == true,
+                stdout = result?.Stdout, stderr = result?.Stderr, errorType
+            });
+            Console.WriteLine("REVIEW_SHADOW_MARKER=" + observation);
+            Assert.True(!resolved || (loaded.AccountId == ap.AccountId && loaded.ProjectId == ap.ProjectId), observation);
+            Assert.True(result?.ExitCode == 403 || result?.Stdout.Contains(canary) != true, observation);
+        }
+        finally { RunnerIsolationPolicy.ForgetWorkspace(ap.RepoPath); }
+    }
+
+    // ADR-0035/0061 review: cmd registration probes do not establish configured tool access.
+    [Fact]
+    public async Task Review_ConfiguredPrivateProfileToolMustBeExecutableByNewRunner()
+    {
+        using var scope = await Scope.CreateAsync();
+        var created = await scope.Service.CreateProjectAsync(scope.AccountId, Request());
+        Assert.True(created.Succeeded);
+        var project = (await scope.Store.GetProjectSnapshotAsync(created.ProjectId!))!;
+        Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.RepoPath, out var descriptor));
+        scope.Registrations.Add(descriptor);
+        var tools = Path.Combine(scope.Root, "private-profile", "AppData", "Roaming", "npm");
+        Directory.CreateDirectory(tools);
+        var tool = Path.Combine(tools, "codex.cmd");
+        await File.WriteAllTextAsync(tool, "@echo off\r\necho REVIEW_CONFIGURED_TOOL_STARTED\r\nexit /b 0\r\n");
+        var security = new System.Security.AccessControl.DirectorySecurity();
+        var administrator = new System.Security.Principal.SecurityIdentifier("S-1-5-32-544");
+        security.SetAccessRuleProtection(true, false); security.SetOwner(administrator);
+        security.AddAccessRule(new System.Security.AccessControl.FileSystemAccessRule(administrator,
+            System.Security.AccessControl.FileSystemRights.FullControl,
+            System.Security.AccessControl.InheritanceFlags.ContainerInherit | System.Security.AccessControl.InheritanceFlags.ObjectInherit,
+            System.Security.AccessControl.PropagationFlags.None, System.Security.AccessControl.AccessControlType.Allow));
+        System.IO.FileSystemAclExtensions.SetAccessControl(new DirectoryInfo(tools), security);
+        var prior = Environment.GetEnvironmentVariable("PHASEA_CODEX_COMMAND");
+        try
+        {
+            Environment.SetEnvironmentVariable("PHASEA_CODEX_COMMAND", tool);
+            var command = CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
+                project.RepoPath, Path.Combine(project.RepoPath, "unused.txt"), "review only", "test-model", "low"));
+            var result = await new HostedProcessRunner().RunAsync(command with { TotalTimeout = TimeSpan.FromSeconds(30) });
+            var observation = System.Text.Json.JsonSerializer.Serialize(new
+            { projectCreated = created.Succeeded, actualTool = command.FileName, exitCode = result.ExitCode, result.Stdout, result.Stderr });
+            Console.WriteLine("REVIEW_PRIVATE_TOOL=" + observation);
+            Assert.True(result.ExitCode == 0 && result.Stdout.Contains("REVIEW_CONFIGURED_TOOL_STARTED"), observation);
+        }
+        finally { Environment.SetEnvironmentVariable("PHASEA_CODEX_COMMAND", prior); }
+    }
+
     private static ProjectCreationRequest Request() => new(null, "native-runner", "manual", null, null, null, null);
 
     private sealed class RejectingProvisioner : IProjectRunnerProvisioner

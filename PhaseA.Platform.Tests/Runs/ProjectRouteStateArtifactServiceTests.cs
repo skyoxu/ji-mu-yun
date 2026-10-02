@@ -1584,6 +1584,62 @@ public sealed class ProjectRouteStateArtifactServiceTests
             action.DisabledDomainCode == "route_contract_not_active");
     }
 
+
+    // ADR-0036/0038: source read failures and malformed validation evidence must block final UI.
+    [Fact]
+    public void Review_InvalidValidationSidecarMustBlockFinalSourceGate()
+    {
+        using var fixture = RouteStateFixture.Create();
+        var hash = new string('a', 64);
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", "{}");
+        var requirementHash = GddToModuleAuthorityHashes.Sha256("{}");
+        fixture.WriteJson("routes/prototype-contract/latest.json", JsonSerializer.Serialize(new
+        { contract_hash = hash, source_godot_ui_contract_hash = hash, source_ui_style_contract_hash = hash, ui_style_snapshot_hash = hash }));
+        fixture.WriteJson("meta/routes/iteration-plan/latest.json", JsonSerializer.Serialize(new
+        { plan_hash = hash, status = "stale", freshness = new { status = "stale" } }));
+        fixture.WriteJson("meta/routes/validation/latest.json", JsonSerializer.Serialize(new
+        { validation_input_hash = hash, status = "succeeded" }));
+        using var ui = JsonDocument.Parse(JsonSerializer.Serialize(new
+        {
+            source_iteration_session_hash = hash, source_validation_input_hash = hash,
+            source_contract_hash = hash, source_requirement_map_hash = requirementHash,
+            source_godot_ui_contract_hash = hash, source_ui_style_contract_hash = hash, ui_style_snapshot_hash = hash
+        }));
+        var contextType = typeof(ProjectRouteStateArtifactService).GetNestedType("ProjectRouteStateContext",
+            System.Reflection.BindingFlags.NonPublic)!;
+        var context = contextType.GetMethod("Load")!.Invoke(null,
+            [fixture.Project, new Dictionary<string, PhaseA.Platform.Data.ProjectRoutePromptEvidenceBinding>(), new HashSet<string>()])!;
+        var validation = contextType.GetMethod("Read")!.Invoke(context, ["meta/routes/validation/latest.json", null])!;
+        var inputIssues = (IReadOnlyList<string>)validation.GetType().GetProperty("Issues")!.GetValue(validation)!;
+        Assert.Contains("meta/routes/validation/latest.json:schema_version_missing", inputIssues);
+        var finalIssues = (IReadOnlyList<ProjectWorkflowBlockingIssue>)contextType.GetMethod("ValidateFinalUiBindings",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(context, [ui.RootElement])!;
+        var observation = JsonSerializer.Serialize(new { validationIssues = inputIssues, finalSourceIssues = finalIssues });
+        Console.WriteLine("REVIEW_INVALID_VALIDATION=" + observation);
+        Assert.True(finalIssues.Count > 0, observation);
+    }
+
+    // ADR-0036/0038: closure metadata must refer to real current machine evidence.
+    [Fact]
+    public void Review_NonexistentLedgerEvidenceMustBlockFinalClosure()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "ui-wiring-closure.v1", status = "succeeded", ui_surface_matrix = Array.Empty<object>(),
+            full_target_closure_ledger = GddToModuleFirstSlice.CapabilityIds.Select(id => new
+            {
+                capability_id = id, closure_status = "covered", currentCoverageStatus = "covered",
+                affected_routes = new[] { "ui-wiring" }, owner = "Phase service", expiry_or_recheck_trigger = "source-change",
+                validation_evidence_refs = new[] { "meta/routes/validation/does-not-exist.json" },
+                phase_exit_review_ref = "meta/reviews/does-not-exist.json"
+            })
+        }));
+        var issues = fixture.Read().BlockingIssues.Where(issue => issue.IssueId.StartsWith("ui-wiring:full-target:")).ToArray();
+        Console.WriteLine("REVIEW_NONEXISTENT_LEDGER=" + JsonSerializer.Serialize(new { ledgerIssues = issues }));
+        Assert.True(issues.Length > 0, "All ledger references are nonexistent, but the final ledger gate accepted them.");
+    }
+
     private sealed class RouteStateFixture : IDisposable
     {
         private readonly string _root;
