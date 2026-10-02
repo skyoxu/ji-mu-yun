@@ -6,6 +6,20 @@ namespace PhaseA.Platform.Tests.Runs;
 
 public sealed class HostedProcessRunnerTests
 {
+    // ADR-0035/0061: a tool failure does not imply cleanup failure.
+    [Fact]
+    public async Task RunAsync_AllowsNextDispatchAfterNormalNonzeroExit()
+    {
+        using var temp = TempDirectory.Create("phase-a-nonzero-retry");
+        var runner = new HostedProcessRunner();
+        var command = new HostedProcessCommand("cmd.exe", ["/d", "/c", "exit 7"], temp.Path, new Dictionary<string, string>());
+        var failed = await runner.RunAsync(command);
+        var next = await runner.RunAsync(command with { Arguments = ["/d", "/c", "echo RETRY_STARTED"] });
+        failed.ExitCode.Should().Be(7);
+        next.ExitCode.Should().Be(0, next.Stderr);
+        next.Stdout.Should().Contain("RETRY_STARTED");
+    }
+
     [Fact]
     public async Task RunAsync_WritesStandardInputAsUtf8()
     {
@@ -60,6 +74,8 @@ time.sleep(30)
         var act = async () => await runTask;
         await act.Should().ThrowAsync<OperationCanceledException>();
         File.Exists(marker).Should().BeTrue();
+        var retry = await runner.RunAsync(command with { Arguments = ["-3", "-c", "print('retry-after-cancel')"] });
+        retry.ExitCode.Should().Be(0, retry.Stderr);
     }
 
     [Fact]
@@ -83,6 +99,8 @@ time.sleep(30)
 
         result.ExitCode.Should().Be(408);
         result.Stderr.Should().Contain("no stdout, stderr, or watched file activity");
+        var retry = await runner.RunAsync(command with { FileName = "cmd.exe", Arguments = ["/d", "/c", "exit 0"], InactivityTimeout = null });
+        retry.ExitCode.Should().Be(0, retry.Stderr);
     }
 
     [Fact]
@@ -158,6 +176,8 @@ goto repeat
         result.ExitCode.Should().Be(408);
         result.Stdout.Should().Contain("tick");
         result.Stderr.Should().Contain("total timeout");
+        var retry = await runner.RunAsync(command with { Arguments = ["/d", "/c", "exit 0"], TotalTimeout = null });
+        retry.ExitCode.Should().Be(0, retry.Stderr);
     }
 
     private static async Task WaitForFileAsync(string path)

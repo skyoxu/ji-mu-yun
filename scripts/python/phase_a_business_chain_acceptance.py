@@ -116,7 +116,8 @@ def main(argv: list[str] | None = None) -> int:
     repository = Path(__file__).resolve().parents[2]
     now = datetime.now(timezone.utc)
     output = args.output or repository / "logs" / "phase-a-business-chain-acceptance" / now.strftime("%Y-%m-%d") / now.strftime("%H%M%S-%f") / "acceptance.json"
-    if not output.resolve().is_relative_to((repository / "logs").resolve()):
+    output = output.resolve()
+    if not output.is_relative_to((repository / "logs").resolve()):
         parser.error("acceptance evidence must be written under repository logs")
     token = os.environ.get(args.token_env, "")
     failures: list[str] = []

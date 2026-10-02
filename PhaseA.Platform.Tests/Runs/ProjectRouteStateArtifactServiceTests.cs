@@ -1,5 +1,6 @@
 using FluentAssertions;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workflow;
@@ -68,28 +69,107 @@ public sealed class ProjectRouteStateArtifactServiceTests
     public void Read_WhenFinalUiLedgerAndSourceBindingsMatch_HasNoLedgerOrFinalSourceBlockers()
     {
         using var fixture = RouteStateFixture.Create();
-        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", "{}");
-        var requirementHash = GddToModuleAuthorityHashes.Sha256("{}");
-        var hash = new string('a', 64);
-        fixture.WriteJson("routes/prototype-contract/latest.json", JsonSerializer.Serialize(new
-        { contract_hash = hash, source_godot_ui_contract_hash = hash, source_ui_style_contract_hash = hash, ui_style_snapshot_hash = hash }));
-        fixture.WriteJson("meta/routes/iteration-plan/latest.json", JsonSerializer.Serialize(new { plan_hash = hash, status = "ready" }));
-        fixture.WriteJson("meta/routes/validation/latest.json", JsonSerializer.Serialize(new { validation_input_hash = hash, status = "succeeded" }));
-        fixture.WriteJson("meta/routes/ui-wiring/latest.json", JsonSerializer.Serialize(new
-        {
-            schema_version = "ui-wiring-closure.v1", status = "succeeded", ui_surface_matrix = Array.Empty<object>(),
-            source_iteration_session_hash = hash, source_validation_input_hash = hash, source_contract_hash = hash,
-            source_requirement_map_hash = requirementHash, source_godot_ui_contract_hash = hash,
-            source_ui_style_contract_hash = hash, ui_style_snapshot_hash = hash,
-            full_target_closure_ledger = GddToModuleFirstSlice.CapabilityIds.Select(id => new
-            {
-                capability_id = id, closure_status = "covered", currentCoverageStatus = "covered",
-                affected_routes = new[] { "ui-wiring" }, owner = "Phase service", expiry_or_recheck_trigger = "source-change",
-                validation_evidence_refs = new[] { "meta/routes/validation/latest.json" }, phase_exit_review_ref = "meta/reviews/final.json"
-            })
-        }));
+        fixture.WriteFinalUiSourcesAndLedger();
         fixture.Read().BlockingIssues.Should().NotContain(issue =>
             issue.IssueId.StartsWith("ui-wiring:full-target:") || issue.IssueId.StartsWith("ui-wiring:final-sources:"));
+    }
+
+    // ADR-0036/0038: matching hashes do not erase source-validator errors.
+    [Theory]
+    [InlineData("schema_version")]
+    [InlineData("status_dimension")]
+    [InlineData("source_boundary_enforced")]
+    public void Read_WhenValidationSourceOmitsRequiredMetadata_BlocksFinalSources(string field)
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteFinalUiSourcesAndLedger();
+        fixture.UpdateJson("meta/routes/validation/latest.json", node => node.Remove(field));
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.Severity == "P1" && issue.IssueId.StartsWith("ui-wiring:final-sources:meta/routes/validation/latest.json:"));
+    }
+
+    [Theory]
+    [InlineData("stale", "fresh")]
+    [InlineData("ready", "stale")]
+    [InlineData("blocked", "fresh")]
+    public void Read_WhenIterationStatusOrFreshnessIsInvalid_BlocksDespiteMatchingHash(string status, string freshness)
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteFinalUiSourcesAndLedger();
+        fixture.UpdateJson("meta/routes/iteration-plan/latest.json", node =>
+        {
+            node["status"] = status;
+            node["freshness"] = new JsonObject { ["status"] = freshness };
+        });
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "ui-wiring:final-sources:iteration_not_ready_or_fresh");
+    }
+
+    [Fact]
+    public void Read_WhenIterationPayloadChangesWithoutChangingDeclaredHash_BlocksFinalSources()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteFinalUiSourcesAndLedger();
+        fixture.UpdateJson("meta/routes/iteration-plan/latest.json", node =>
+            node["goals"] = new JsonArray(new JsonObject { ["goal"] = "changed" }));
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "ui-wiring:final-sources:iteration_plan_integrity_invalid");
+    }
+
+    [Fact]
+    public void Read_WhenIterationPromptEvidenceLosesProjectBinding_BlocksFinalSources()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteFinalUiSourcesAndLedger();
+        fixture.RemovePromptBinding("iteration-plan");
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "ui-wiring:final-sources:meta/routes/iteration-plan/latest.json:prompt_evidence_invalid");
+    }
+
+    [Theory]
+    [InlineData("covered")]
+    [InlineData("reviewed_not_applicable")]
+    [InlineData("explicitly_deferred")]
+    public void Read_WhenLedgerReferencesMissingEvidence_BlocksEveryFinalClosureStatus(string status)
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteFinalUiSourcesAndLedger(status);
+        fixture.UpdateJson("meta/routes/ui-wiring/latest.json", node =>
+        {
+            foreach (var row in node["full_target_closure_ledger"]!.AsArray())
+            {
+                row!["validation_evidence_refs"] = new JsonArray("meta/routes/validation/missing.json");
+                row["phase_exit_review_ref"] = "meta/reviews/missing.json";
+            }
+        });
+        var issues = fixture.Read().BlockingIssues;
+        issues.Should().Contain(issue => issue.IssueId.EndsWith(":validation_evidence_unavailable"));
+        issues.Should().Contain(issue => issue.IssueId.EndsWith(":phase_exit_review_unavailable"));
+    }
+
+    [Fact]
+    public void Read_WhenLedgerReferenceLeavesProjectBoundary_BlocksExistingForeignFile()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteFinalUiSourcesAndLedger();
+        fixture.WriteText("../foreign-evidence.json", "{}");
+        fixture.UpdateJson("meta/routes/ui-wiring/latest.json", node =>
+            node["full_target_closure_ledger"]![0]!["validation_evidence_refs"] = new JsonArray("../foreign-evidence.json"));
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId.EndsWith(":validation_evidence_unavailable"));
+    }
+
+    [Fact]
+    public void Read_WhenLedgerReferencesReparseEvidence_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteFinalUiSourcesAndLedger();
+        var link = Path.Combine(fixture.Project.RepoPath, "meta", "reviews", "linked.json");
+        File.CreateSymbolicLink(link, Path.Combine(fixture.Project.RepoPath, "meta", "reviews", "final.json"));
+        fixture.UpdateJson("meta/routes/ui-wiring/latest.json", node =>
+            node["full_target_closure_ledger"]![0]!["phase_exit_review_ref"] = "meta/reviews/linked.json");
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId.EndsWith(":phase_exit_review_unavailable"));
     }
 
     [Theory]
@@ -1634,6 +1714,86 @@ public sealed class ProjectRouteStateArtifactServiceTests
 
         public void AddArtifactId(string artifactId) => _artifactIds.Add(artifactId);
 
+        public void RemovePromptBinding(string route) => _promptBindings.Remove(route);
+
+        public void UpdateJson(string relativePath, Action<JsonObject> update)
+        {
+            var path = Path.Combine(Project.RepoPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            var node = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+            update(node);
+            WriteJson(relativePath, node.ToJsonString());
+        }
+
+        public void WriteFinalUiSourcesAndLedger(string closureStatus = "covered")
+        {
+            var hash = new string('a', 64);
+            WriteJson("meta/routes/gdd-requirements/latest.json", "{}");
+            WriteJson("routes/prototype-contract/latest.json", JsonSerializer.Serialize(new
+            { contract_hash = hash, source_godot_ui_contract_hash = hash, source_ui_style_contract_hash = hash, ui_style_snapshot_hash = hash }));
+            const string gdd = "# Current fixture GDD";
+            WriteText("docs/gdd/GDD.md", gdd);
+            var sourceHashes = new Dictionary<string, string>
+            {
+                ["docs/gdd/GDD.md"] = Hash(gdd),
+                [HostedRouteRecoveryContract.ParsedRouteProfileHashKey] = HostedRouteForbiddenSourceGuard.PromptHash(JsonSerializer.Serialize(PrototypeRouteSkillPolicy.ResolveProfile(Project))),
+                [HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey] = HostedRouteForbiddenSourceGuard.PromptHash(PrototypeRouteSkillPolicy.BuildPromptBlock(Project))
+            };
+            const string promptRef = "meta/routes/iteration-plan/prompt-evidence.json";
+            WritePromptEvidence(promptRef, "Build from current structured fixture sources.", sourceHashes,
+                ["assistant summary as acceptance authority"], routeOverride: "iteration-plan");
+            var goals = Array.Empty<object>();
+            var modules = Array.Empty<object>();
+            var blockers = Array.Empty<object>();
+            var coverage = new { uncovered_requirement_ids = Array.Empty<string>() };
+            var planHash = IterationPlanIntegrity.Compute("fixture-current-sources", goals, modules, blockers, coverage);
+            WriteJson("meta/routes/iteration-plan/latest.json", JsonSerializer.Serialize(new
+            {
+                schema_version = "iteration-plan.v1", route = "iteration-plan", status = "ready",
+                status_dimension = RouteStatusVocabulary.RouteReadback,
+                status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback),
+                freshness = new { status = "fresh" }, source_boundary_enforced = true,
+                source_boundary = new
+                {
+                    recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                    recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                    authority_sources = new[] { "docs/gdd/GDD.md", HostedRouteRecoveryContract.ParsedRouteProfileSource, HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockSource },
+                    source_hashes = sourceHashes,
+                    forbidden_source_patterns = new[] { "assistant summary as acceptance authority" },
+                    prompt_evidence_refs = new[] { promptRef }
+                },
+                source_hash_ref = "fixture-current-sources", plan_hash = planHash,
+                goals, required_modules = modules, blockers, coverage
+            }));
+            WriteJson("meta/routes/validation/result.json", "{}");
+            WriteJson("meta/routes/validation/latest.json", JsonSerializer.Serialize(new
+            {
+                schema_version = "validation.v1", route = "validation", validation_input_hash = hash, status = "succeeded",
+                status_dimension = RouteStatusVocabulary.RouteReadback,
+                status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback),
+                freshness = new { status = "fresh" }, source_boundary_enforced = false,
+                source_boundary_not_applicable = new
+                {
+                    reason = "deterministic_state_transition", checked_utc = DateTimeOffset.UtcNow.ToString("O"), decision_by = "system",
+                    evidence_refs = new[] { new { kind = "sidecar", path = "meta/routes/validation/result.json" } }
+                }
+            }));
+            WriteJson("meta/reviews/final.json", "{}");
+            WriteJson("meta/routes/ui-wiring/latest.json", JsonSerializer.Serialize(new
+            {
+                schema_version = "ui-wiring-closure.v1", status = "succeeded", ui_surface_matrix = Array.Empty<object>(),
+                source_iteration_session_hash = planHash, source_validation_input_hash = hash, source_contract_hash = hash,
+                source_requirement_map_hash = GddToModuleAuthorityHashes.Sha256("{}"), source_godot_ui_contract_hash = hash,
+                source_ui_style_contract_hash = hash, ui_style_snapshot_hash = hash,
+                full_target_closure_ledger = GddToModuleFirstSlice.CapabilityIds.Select(id => new
+                {
+                    capability_id = id, closure_status = closureStatus, currentCoverageStatus = "covered",
+                    affected_routes = new[] { "ui-wiring" }, owner = "Phase service", expiry_or_recheck_trigger = "source-change",
+                    validation_evidence_refs = new[] { "meta/routes/validation/latest.json" }, phase_exit_review_ref = "meta/reviews/final.json",
+                    defer_reason = closureStatus == "explicitly_deferred" ? "fixture deferral" : ""
+                })
+            }));
+        }
+
         public static RouteStateFixture Create()
         {
             var root = Path.Combine(Path.GetTempPath(), "phasea-route-state-artifacts-" + Guid.NewGuid().ToString("N"));
@@ -1663,7 +1823,8 @@ public sealed class ProjectRouteStateArtifactServiceTests
             string prompt,
             IReadOnlyDictionary<string, string> sourceHashes,
             IReadOnlyList<string> forbiddenPatterns,
-            IReadOnlyList<string>? allowedSourceReferences = null)
+            IReadOnlyList<string>? allowedSourceReferences = null,
+            string? routeOverride = null)
         {
             var promptRelativePath = evidenceRelativePath.Replace(".json", ".prompt.txt", StringComparison.Ordinal);
             WriteText(promptRelativePath, prompt);
@@ -1672,9 +1833,9 @@ public sealed class ProjectRouteStateArtifactServiceTests
                 forbiddenPatterns,
                 allowedSourceReferences: allowedSourceReferences);
             var persistedPromptHash = HostedRouteForbiddenSourceGuard.PromptHash(prompt);
-            var route = evidenceRelativePath.Contains("gdd-document", StringComparison.Ordinal)
+            var route = routeOverride ?? (evidenceRelativePath.Contains("gdd-document", StringComparison.Ordinal)
                 ? "gdd-document-generation"
-                : "gdd-requirements";
+                : "gdd-requirements");
             WriteJson(evidenceRelativePath, JsonSerializer.Serialize(new
             {
                 route,

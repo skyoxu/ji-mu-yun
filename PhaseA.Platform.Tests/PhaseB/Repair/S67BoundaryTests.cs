@@ -46,12 +46,14 @@ public sealed class S67BoundaryTests
     public async Task O_62BC40D98DBD()
     {
         const string cleanupSecretName = "S67_FAILED_CLEANUP_SECRET";
-        var runner = new HostedProcessRunner();
-        var cleanupFailure = await runner.RunAsync(new HostedProcessCommand(
+        // ADR-0035/0061: inject an actual cleanup-stage fault, not a tool exit.
+        var runner = new HostedProcessRunner(null, _ => throw new IOException("controlled process cleanup failure"));
+        var failedDispatch = runner.RunAsync(new HostedProcessCommand(
             "cmd.exe",
-            ["/d", "/c", "echo S67_CLEANUP_FAILURE_REPORTED & exit /b 23"],
+            ["/d", "/c", "exit /b 0"],
             Path.GetTempPath(),
             new Dictionary<string, string> { [cleanupSecretName] = "s67-failed-cleanup-fixture" }));
+        await Assert.ThrowsAsync<IOException>(() => failedDispatch);
         var reuseAttempt = await runner.RunAsync(new HostedProcessCommand(
             "cmd.exe",
             ["/d", "/c", "echo S67_REUSE_DISPATCH_STARTED"],
@@ -59,9 +61,7 @@ public sealed class S67BoundaryTests
             new Dictionary<string, string>()));
 
         Require(
-            cleanupFailure.ExitCode == 23 &&
-            cleanupFailure.Stdout.Contains("S67_CLEANUP_FAILURE_REPORTED", StringComparison.Ordinal) &&
-            reuseAttempt.ExitCode != 0 &&
+            reuseAttempt.ExitCode == 409 &&
             !reuseAttempt.Stdout.Contains("S67_REUSE_DISPATCH_STARTED", StringComparison.Ordinal),
             "FAILURE-O-62BC40D98DBD",
             "The production Runner accepted a new dispatch after the Run cleanup failure was reported.");

@@ -8,7 +8,7 @@
 
 逻辑账号/项目 UUID 保留在隔离 descriptor 中；本机用户名采用不超过 20 字符的随机名称。密码不写入命令参数、环境、工作区或日志。凭据使用 LOCAL_MACHINE 持久化，属于写入它的平台 Windows 用户；服务重启须保持相同宿主身份。迁移到另一台机器或另一宿主 Windows 用户不自动迁移凭据。
 
-宿主需具备创建本地账号、管理凭据和设置 NTFS ACL 的权限。账号父目录只向平台管理员开放；Runner 在自己的项目根与 repo/runtime/meta 目录内获得 Modify 权限，不获得账号目录枚举权限。隔离 marker 由管理员保护，Runner 不能重写该注册文件。执行仍通过现有低权限进程、Job Object、超时与取消机制，不扩大 route 工具权限。
+宿主需具备创建本地账号、管理凭据和设置 NTFS ACL 的权限。账号父目录只向平台管理员开放；Runner 在自己的项目根与 repo/runtime/meta 目录内获得 Modify 权限，不获得账号目录枚举权限。隔离 marker 由管理员保护，Runner 不能重写该注册文件。执行仍通过现有低权限进程、Job Object、超时与取消机制，不扩大 route 工具权限。Windows 的 `.cmd` / `.bat` 入口通过 `cmd.exe` 执行时保留实际脚本路径，并传递参数与 UTF-8 标准输入。普通非零退出是业务执行失败；完成清理后允许再次调度。超时与取消完成清理后同样可重试；检测到进程清理失败时仍阻断该 Runner 实例的复用。
 
 注册失败时删除本次创建的凭据和本机用户；创建服务撤销项目元数据，并清理本次新建工作区。失败处理不使用已取消的请求 token。既有目录不进入创建失败清理范围。软删除保留期中的成功注册不在此处删除，避免破坏既有恢复契约。维护者仍须按保留期与保护规则处理最终清理；此修复不引入账号物理清除产品。
 
@@ -31,7 +31,7 @@ py -3 scripts/python/phase_a_business_chain_acceptance.py `
   --project-id YOUR_PROJECT_ID
 ```
 
-退出码：`0` 为通过，`2` 为阻断或不可验证。证据追加在 `logs/phase-a-business-chain-acceptance/<date>/<run>/acceptance.json`，指定 `--output` 时也必须位于仓库 `logs/` 下。
+退出码：`0` 为通过，`2` 为阻断或不可验证。证据追加在 `logs/phase-a-business-chain-acceptance/<date>/<run>/acceptance.json`，指定 `--output` 时也必须位于仓库 `logs/` 下，相对路径与绝对路径使用相同的判定、报告和退出码约定。
 
 | 判定 | 条件 |
 | --- | --- |
@@ -39,7 +39,7 @@ py -3 scripts/python/phase_a_business_chain_acceptance.py `
 | `blocked` | API 可读，但任一证据缺失、重复、过期、hash 不符、执行未完成、修复未闭合或 final-readiness 未通过。 |
 | `unavailable` | 缺少凭据、无权限、项目不可见、API 不可达、发生重定向或读回不是可解析的结构化对象。 |
 
-UI 读回保留原有字段，新增 `freshness` 并返回实际来源 hash，设置 no-store。最终成功声明须使用既有全目标能力清单校验器，检测缺行、重复行、孤立行、临时状态、owner/重查条件/验收引用缺失，以及延期理由缺失。最终来源以当前原型契约、需求映射、iteration plan 的 `plan_hash`、validation sidecar 的 `validation_input_hash` 为准；validation 必须 succeeded 且 fresh。缺少这些来源时阻断，不生成替代证据。
+UI 读回保留原有字段，新增 `freshness` 并返回实际来源 hash，设置 no-store。最终成功声明须使用既有全目标能力清单校验器，检测缺行、重复行、孤立行、临时状态、owner/重查条件/验收引用缺失，以及延期理由缺失。最终来源以当前原型契约、需求映射、iteration plan 的 `plan_hash`、validation sidecar 的 `validation_input_hash` 为准；iteration 必须 ready 或 succeeded 且 fresh，既有 plan 完整性校验、来源边界与项目证据绑定必须通过；validation 必须 succeeded 且 fresh，既有结构与来源边界校验错误会直接阻断最终成功声明。ledger 内的验收和阶段评审引用必须指向当前项目边界内实际存在且可读的文件，拒绝路径越界与 reparse point；已评审不适用和明确延期的行也不豁免证据检查。缺少这些来源时阻断，不生成替代证据。
 
 验收命令不是 UI 闭环产物生成器。当前 route 若尚未生成规范的 UI/validation sidecar，就会真实地报告 blocked。HTTP 夹具和 Windows 原生测试通过，只证明接入与验收实现可用，不等于任意实际项目已经通过真实模型/Godot 全链路验收。此命令消费现有服务权威，不成为新的状态权威。
 
