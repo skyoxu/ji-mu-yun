@@ -143,22 +143,34 @@ public sealed class S43BoundaryTests
         }
     }
 
-    [Fact]
-    public async Task O_FE73E295BC86()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1000)]
+    public async Task O_FE73E295BC86(int startupDelayMilliseconds)
     {
         var root = Directory.CreateTempSubdirectory("s43-timeout-");
         var started = Path.Combine(root.FullName, "started.txt");
+        var totalTimeout = TimeSpan.FromMilliseconds(200);
+        var watchdogTimeout = TimeSpan.FromSeconds(10);
+        using var watchdog = new CancellationTokenSource(watchdogTimeout);
+        var elapsed = Stopwatch.StartNew();
         try
         {
+            // ADR-0035: bound the real Runner, including interpreter initialization.
+            // The script marker is diagnostic; a valid total timeout may precede it.
             var result = await new HostedProcessRunner().RunAsync(new HostedProcessCommand(
                 "powershell.exe",
-                ["-NoProfile", "-NonInteractive", "-Command", $"[IO.File]::WriteAllText('{started}', 'started'); Start-Sleep -Seconds 30"],
+                ["-NoProfile", "-NonInteractive", "-Command", $"Start-Sleep -Milliseconds {startupDelayMilliseconds}; [IO.File]::WriteAllText('{started}', 'started'); Start-Sleep -Seconds 30"],
                 root.FullName,
                 new Dictionary<string, string>(),
-                TotalTimeout: TimeSpan.FromMilliseconds(200),
-                ActivityWatchPollInterval: TimeSpan.FromMilliseconds(25)));
+                TotalTimeout: totalTimeout,
+                ActivityWatchPollInterval: TimeSpan.FromMilliseconds(25)), watchdog.Token);
+            elapsed.Stop();
+            Observe($"O-FE73E295BC86 startup-delay-ms={startupDelayMilliseconds} script-started={File.Exists(started)} exit-code={result.ExitCode} elapsed-ms={elapsed.ElapsedMilliseconds} stderr={result.Stderr}");
             Require(
-                File.Exists(started) && result.ExitCode == 408 && result.Stderr.Contains("Process exceeded total timeout", StringComparison.Ordinal),
+                result.ExitCode == 408 &&
+                result.Stderr.Contains("Process exceeded total timeout", StringComparison.Ordinal) &&
+                elapsed.Elapsed >= totalTimeout && elapsed.Elapsed < watchdogTimeout,
                 "FAILURE-O-FE73E295BC86",
                 "The production heavy-write Runner did not stop with an observable bounded timeout outcome.");
             Observe("O-FE73E295BC86 process-stopped-with-timeout-outcome");
