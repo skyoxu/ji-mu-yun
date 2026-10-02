@@ -53,3 +53,7 @@ Acceptance must be derived from validators, markers, scripts, logs, database row
 - The fake Runner deliberately completes after the former two-second window;
   the fixture still validates the full GDD, milestone, asset, and package chain.
   Temporary database cleanup yields while final background writes close.
+- Terminal metadata and progress are not a background-completion fence. Before
+  reading route files, queued prototype fixtures acquire and release a lease
+  on the same project in the production queue. That lease becomes available
+  only after prior queued work, including route and audit writes, exits.

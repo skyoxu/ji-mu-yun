@@ -33,6 +33,7 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
         Write(project!.RepoPath, "docs/gdd/GDD.md", DiablolikeGdd);
 
         var runner = new DiablolikePrototypeRunner();
+        var completionQueue = new HeavyRunnerQueueService();
         var routeStateWriter = new PrototypeRouteStateWriter();
         var workflow = new PrototypeWorkflowService(
             store,
@@ -45,10 +46,11 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
             new LlmStopLossService(store, options),
             new ProjectWorkspaceSeeder(options),
             new GameTypeTemplateCatalog(options),
-            routeStateWriter);
+            routeStateWriter,
+            heavyRunnerQueue: completionQueue);
 
         var skeleton = await workflow.QueueFromGddAsync(accountId, projectId, new PrototypeFromGddRequest(Model: "gpt-5.5"));
-        await WaitForRunStatusAsync(store, skeleton.RunId, "succeeded");
+        await WaitForRunStatusAsync(store, skeleton.RunId, "succeeded", completionQueue);
 
         skeleton.Status.Should().Be("queued");
         runner.Commands.Should().Contain(command => command.Arguments.Contains("run-prototype-workflow"));
@@ -172,7 +174,8 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
         });
     }
 
-    private static async Task<RunSnapshot> WaitForRunStatusAsync(PhaseAMetadataStore store, string runId, string status)
+    private static async Task<RunSnapshot> WaitForRunStatusAsync(
+        PhaseAMetadataStore store, string runId, string status, HeavyRunnerQueueService completionQueue)
     {
         // ADR-0036: await machine-confirmed completion, including route closure.
         // A bounded readiness wait is independent of production execution timeouts.
@@ -185,6 +188,15 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
                 string.Equals(run.Status, status, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(run.ProgressStep, status, StringComparison.OrdinalIgnoreCase))
             {
+                var project = await store.GetProjectSnapshotAsync(run.ProjectId)
+                    ?? throw new InvalidOperationException("Fixture project was not found.");
+                using var readiness = new CancellationTokenSource(
+                    elapsed.Elapsed < TimeSpan.FromSeconds(30)
+                        ? TimeSpan.FromSeconds(30) - elapsed.Elapsed : TimeSpan.FromMilliseconds(1));
+                // ADR-0036/0061: observe queue completion after metadata publication.
+                await using var completed = await completionQueue.EnterAsync(
+                    $"fixture-readback-{Guid.NewGuid():N}", project.AccountId, run.ProjectId,
+                    "fixture-readback", readiness.Token);
                 return run;
             }
 
