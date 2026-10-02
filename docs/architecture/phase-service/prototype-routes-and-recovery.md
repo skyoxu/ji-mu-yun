@@ -125,3 +125,13 @@ model/Godot project acceptance and from production host deployment verification.
 See `docs/workflows/phase-service-runner-and-business-acceptance.md` for behavior
 and `docs/workflows/phase-service-deferred-requirements-2026-10-02.md` for deferred
 service extensions under the single-maintainer operating model.
+
+## Completion-artifact recovery during final validation
+
+Prototype completion files may precede final Godot acceptance. Progress readback
+must not recover success while the creation queue still owns that project.
+Recovery is limited to started inactive creation runs, obtains a nonblocking
+same-project queue lease, and re-reads metadata under that lease. Current terminal
+results and execution evidence take precedence. A busy project, exhausted queue
+capacity, or waiting execution defers recovery without delaying the readback.
+Queued runs remain queued. See ADR-0036 and the controlled final-smoke regression.

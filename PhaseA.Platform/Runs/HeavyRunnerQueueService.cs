@@ -163,6 +163,37 @@ public sealed class HeavyRunnerQueueService
         });
     }
 
+    // ADR-0036: recovery may take project ownership only without waiting or bypassing queued work.
+    public HeavyRunnerLease? TryEnter(string runId, string accountId, string projectId, string runType)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(runType);
+
+        lock (_gate)
+        {
+            if (_waiting.Count > 0 || _running.Count >= _maxConcurrentRuns ||
+                _running.Any(item => string.Equals(item.ProjectId, projectId, StringComparison.Ordinal)))
+            {
+                return null;
+            }
+
+            var cancellation = new CancellationTokenSource();
+            var item = new HeavyRunnerQueueItem(
+                runId, accountId, projectId, runType, DateTimeOffset.UtcNow, cancellation)
+            {
+                QueuePositionAtStart = _running.Count + 1
+            };
+            _running.Add(item);
+            return new HeavyRunnerLease(item.QueuePositionAtStart, () =>
+            {
+                Complete(item);
+                cancellation.Dispose();
+            });
+        }
+    }
+
     public HeavyRunnerQueueReadback GetReadback(string accountId, bool includeAll)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);

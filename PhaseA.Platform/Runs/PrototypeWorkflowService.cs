@@ -1014,7 +1014,23 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
 
     private async Task<RunSnapshot> RecoverCompletedPrototypeRunIfNeededAsync(ProjectSnapshot project, RunSnapshot run, CancellationToken cancellationToken)
     {
-        if (!IsUnfinishedRunStatus(run.Status) ||
+        if (!string.Equals(run.Status, "running", StringComparison.OrdinalIgnoreCase) ||
+            !string.IsNullOrWhiteSpace(run.EvidenceJson) ||
+            IsNonCreationPrototypeProgress(run))
+        {
+            return run;
+        }
+
+        // ADR-0036: completion files cannot override an active final acceptance or a newer failure.
+        await using var recoveryLease = _prototypeCreationQueue.TryEnter(
+            $"prototype-recovery-{Guid.NewGuid():N}", project.AccountId, project.ProjectId, "prototype-recovery");
+        if (recoveryLease is null)
+        {
+            return run;
+        }
+
+        run = await _metadataStore.GetRunSnapshotAsync(run.RunId, cancellationToken) ?? run;
+        if (!string.Equals(run.Status, "running", StringComparison.OrdinalIgnoreCase) ||
             !string.IsNullOrWhiteSpace(run.EvidenceJson) ||
             IsNonCreationPrototypeProgress(run))
         {
