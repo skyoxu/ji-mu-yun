@@ -44,8 +44,11 @@ public sealed class S33BoundaryTests
             }
 
             cancellationRequested = queue.CancelRun("s33-cancel-run");
-            await Task.Delay(300);
-            stoppedAfterCancellation = operation.IsCompleted;
+            // ADR-0035/0061: observe the actual cancellation/cleanup boundary,
+            // rather than sampling a loaded Windows host after a fixed sleep.
+            // A lost cancellation still fails: the real process sleeps 30s.
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => operation.WaitAsync(TimeSpan.FromSeconds(5)));
+            stoppedAfterCancellation = operation.IsCanceled;
             var readback = queue.GetReadback("s33-account", includeAll: true);
             queueClearedAfterCancellation = !readback.Running &&
                                             readback.Current is null &&
