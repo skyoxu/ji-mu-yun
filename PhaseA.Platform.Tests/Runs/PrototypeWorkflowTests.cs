@@ -795,6 +795,43 @@ public sealed class PrototypeWorkflowTests : IDisposable
     }
 
     [Fact]
+    public async Task GetProgressAsync_DoesNotRecoverSuccess_WhileFinalSmokeIsRunning()
+    {
+        await using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new DeferredSmokeHostedProcessRunner();
+        var service = Service(store, options, runner);
+        var dispatch = service.QueueAsync(accountId, projectId, ValidRequest(confirm: true));
+        try
+        {
+            var result = await dispatch;
+            result.Status.Should().Be("queued");
+            await runner.SmokeStarted.Task.WaitAsync(TimeSpan.FromSeconds(30));
+            var progress = await service.GetProgressAsync(accountId, projectId);
+            var current = await store.GetRunSnapshotAsync(result.RunId);
+
+            // ADR-0036: generated completion files do not close a still-running final smoke.
+            progress.Status.Should().Be("running");
+            current!.Status.Should().Be("running");
+            current.EvidenceJson.Should().BeNullOrWhiteSpace();
+        }
+        finally
+        {
+            runner.ReleaseSmoke.TrySetResult();
+        }
+
+        var completed = await WaitForRunStatusAsync(store, (await dispatch).RunId, "failed", "failed");
+        completed.ExitCode.Should().Be(1);
+        completed.EvidenceJson.Should().Contain("strict_headless_prototype_scene");
+        completed.EvidenceJson.Should().NotContain("recovered_from_completion_artifacts");
+        (await service.GetProgressAsync(accountId, projectId)).Status.Should().Be("failed");
+    }
+
+    [Fact]
     public void PrototypeContractPromptBlock_RequiresInputTraceabilityForAllTopLevelRoutes()
     {
         var contract = new PrototypeContractSnapshot(
@@ -1193,8 +1230,12 @@ public sealed class PrototypeWorkflowTests : IDisposable
         progress.Failure.Should().BeNull();
     }
 
-    [Fact]
-    public async Task GetProgressAsync_RecoversRunningRun_WhenCompletionArtifactsExist()
+    [Theory]
+    [InlineData("orphan", "succeeded")]
+    [InlineData("queued", "queued")]
+    [InlineData("active", "running")]
+    public async Task GetProgressAsync_RecoversOnlyInactiveStartedRun_WhenCompletionArtifactsExist(
+        string executionState, string expectedStatus)
     {
         await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -1203,9 +1244,16 @@ public sealed class PrototypeWorkflowTests : IDisposable
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var service = Service(store, options, new FakeHostedProcessRunner());
+        var creationQueue = new HeavyRunnerQueueService();
+        var service = Service(store, options, new FakeHostedProcessRunner(), prototypeCreationQueue: creationQueue);
         var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
-        await store.MarkRunStartedAsync(runId);
+        if (executionState != "queued")
+        {
+            await store.MarkRunStartedAsync(runId);
+        }
+        await using var activeLease = executionState == "active"
+            ? await creationQueue.EnterAsync(runId, accountId, projectId, "prototype-7day-playable")
+            : null;
         await store.UpdateRunProgressAsync(runId, "running_step07_review", "", "任务 07：正在生成最终摘要。");
         var prototypeFile = "docs/prototypes/2026-06-03-demo-prototype.md";
         WriteFile(Path.Combine(project.RepoPath, prototypeFile.Replace('/', Path.DirectorySeparatorChar)), "# Demo prototype\n");
@@ -1255,7 +1303,13 @@ public sealed class PrototypeWorkflowTests : IDisposable
         var progress = await service.GetProgressAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(runId);
 
-        progress.Status.Should().Be("succeeded");
+        progress.Status.Should().Be(expectedStatus);
+        run!.Status.Should().Be(expectedStatus);
+        if (executionState != "orphan")
+        {
+            run.EvidenceJson.Should().BeNullOrWhiteSpace();
+            return;
+        }
         progress.Step.Should().Be("succeeded");
         progress.Label.Should().Be("游戏场景创建已完成。");
         progress.CompletionSummary.Should().Contain("下一步建议");
@@ -2475,6 +2529,27 @@ public sealed class PrototypeWorkflowTests : IDisposable
             Envelope = envelope;
             OperationKey = operationKey;
             return Task.FromResult(true);
+        }
+    }
+
+    private sealed class DeferredSmokeHostedProcessRunner : IHostedProcessRunner
+    {
+        private readonly FakeHostedProcessRunner _inner = new(
+            smokeExitCode: 1,
+            smokeStderrOverride: "ERROR: Cannot instantiate C# script because the associated class could not be found.");
+
+        public TaskCompletionSource SmokeStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource ReleaseSmoke { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            {
+                SmokeStarted.TrySetResult();
+                await ReleaseSmoke.Task.WaitAsync(cancellationToken);
+            }
+
+            return await _inner.RunAsync(command, cancellationToken);
         }
     }
 
