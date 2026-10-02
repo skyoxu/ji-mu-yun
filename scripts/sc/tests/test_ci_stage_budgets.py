@@ -78,6 +78,34 @@ class CiStageBudgetTests(unittest.TestCase):
             'Namespace.Fixture.PlainFailure',
         ], ci_pipeline.extract_failed_tests(output))
 
+    def test_failure_details_remain_visible_before_later_successes_fill_the_tail(self):
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'current-test-output.txt'
+            path.write_text(
+                'Failed Namespace.Fixture.EarlyFailure [4 s]\n'
+                '  Error Message: worker exited before staging\n'
+                '  Stack Trace: interruption fixture\n' +
+                '\n'.join('Passed Namespace.Fixture.LaterSuccess [1 ms]' for _ in range(150)),
+                encoding='utf-8')
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                ci_pipeline.print_failure_diagnostics({'dotnet': {
+                    'status': 'tests_failed', 'rc': 1, 'dotnet_test_output_log': str(path)},
+                    'selfcheck': {'status': 'ok'}})
+            self.assertIn('FAILED_TEST_CONTEXT', output.getvalue())
+            self.assertIn('worker exited before staging', output.getvalue())
+            self.assertIn('interruption fixture', output.getvalue())
+
+    def test_failure_context_is_bounded_and_excludes_success_only_output(self):
+        self.assertEqual([], ci_pipeline.extract_failed_test_contexts(
+            'Passed Namespace.Fixture.Success [1 ms]\nError Message: unrelated console text'))
+        contexts = ci_pipeline.extract_failed_test_contexts(
+            'Failed Namespace.Fixture.Failure [4 s]\nError Message: ' + 'x' * 10000)
+        self.assertEqual('Namespace.Fixture.Failure', contexts[0]['test'])
+        self.assertLessEqual(len(contexts[0]['details']), 4000)
+
     def test_pipeline_honors_configured_stage_and_all_selfcheck_attempts(self):
         calls = []
         def fake(args, cwd=None, timeout=900000):

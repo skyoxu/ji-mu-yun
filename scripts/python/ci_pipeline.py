@@ -68,6 +68,11 @@ def print_failure_diagnostics(summary: dict) -> None:
 
     dotnet = summary.get('dotnet') or {}
     if dotnet.get('status') == 'tests_failed' or dotnet.get('rc') not in (0, 2, None):
+        output_path = dotnet.get('dotnet_test_output_log')
+        if output_path and os.path.exists(output_path):
+            with io.open(output_path, 'r', encoding='utf-8', errors='replace') as failure_output:
+                for context in extract_failed_test_contexts(failure_output.read()):
+                    print('FAILED_TEST_CONTEXT ' + json.dumps(context, ensure_ascii=False))
         for label, path in (
             ('run-dotnet-console', dotnet.get('run_dotnet_console_log')),
             ('dotnet-test-output', dotnet.get('dotnet_test_output_log')),
@@ -140,6 +145,29 @@ def extract_failed_tests(dotnet_test_output: str):
         deduped.append(item)
     return deduped
 
+
+
+def extract_failed_test_contexts(output: str) -> list[dict[str, str]]:
+    """ADR-0005: bounded failure details remain visible when the final tail contains later successes."""
+    lines = output.splitlines()
+    contexts = []
+    seen = set()
+    for index, line in enumerate(lines):
+        if not re.match(r'^\s*Failed\s+', line):
+            continue
+        names = extract_failed_tests(line)
+        if not names or names[0] in seen:
+            continue
+        seen.add(names[0])
+        block = [line]
+        for following in lines[index + 1:index + 41]:
+            if re.match(r'^\s*(?:Passed|Failed)\s+', following):
+                break
+            block.append(following)
+        contexts.append({'test': names[0], 'details': '\n'.join(block)[:4000]})
+        if len(contexts) == 5:
+            break
+    return contexts
 
 
 def run_runtime_preflight(godot_bin: str, project: str) -> int:
