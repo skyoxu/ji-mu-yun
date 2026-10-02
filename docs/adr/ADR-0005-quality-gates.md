@@ -113,3 +113,11 @@ CI 侧应能在 `logs/**` 中找到对应摘要与日志文件；失败时可直
 - Superseded pull-request quality runs share a concurrency group and are
   cancelled when a newer commit arrives. Main and manual runs are not actively
   cancelled; cancelled runs retain their GitHub history.
+
+## Addendum (2026-10 failure details in CI console)
+
+On a .NET hard failure, the CI driver prints up to five failed-test context blocks
+from the current invocation output, each bounded to 40 following lines and 4,000
+characters. It preserves the original log artifacts, summary, tails and exit code.
+Later successful tests cannot hide an earlier failure message behind the final
+console tail. This changes diagnostics only; it does not rerun or skip tests.

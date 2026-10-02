@@ -82,3 +82,13 @@ A Windows regression first reproduced the old behavior while an active publisher
   cancellation fixtures. The queue lifecycle obligation is independent of
   PowerShell initialization; the process writes readiness, remains active for
   30 seconds, and must be stopped by production queue cancellation.
+
+## Addendum (2026-10 owned restore interruption fixture)
+
+The S25 fixture dispatches its current built assembly through VSTest. A dedicated
+monitor thread observes real staged files and immediately kills only its owned
+worker process tree. The original 30-second observation bound remains. There is
+no dependency on a delayed filesystem-event continuation and no fabricated
+restore/history row. Restart recovery and the independent reader still validate
+the actual partial staging and nonterminal-operation quarantine. Early worker
+exit reports bounded child stdout/stderr rather than an unqualified staging error.

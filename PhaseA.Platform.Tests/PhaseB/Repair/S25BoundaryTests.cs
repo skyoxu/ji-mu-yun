@@ -301,41 +301,58 @@ public sealed class S25BoundaryTests
         {
             connectionString, context, lease, manifest, source, destination
         }));
-        using var watcher = new FileSystemWatcher(destination)
-        {
-            IncludeSubdirectories = true, NotifyFilter = NotifyFilters.FileName, EnableRaisingEvents = true
-        };
-        var staged = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        watcher.Created += (_, args) =>
-        {
-            if (args.FullPath.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)) staged.TrySetResult();
-        };
         var start = new ProcessStartInfo("dotnet")
         {
             WorkingDirectory = repository, UseShellExecute = false, CreateNoWindow = true,
             RedirectStandardOutput = true, RedirectStandardError = true
         };
-        foreach (var argument in new[] { "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-build", "--no-restore",
-                     "--filter", "FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S25BoundaryTests.O_4367428FF3D3",
-                     "--logger", "trx", "--results-directory", Path.Combine(root, "interrupted-worker-trx") })
+        // ADR-0061: dispatch this exact built assembly, without a nested MSBuild invocation.
+        foreach (var argument in new[] { "vstest", typeof(S25BoundaryTests).Assembly.Location,
+                     "/TestCaseFilter:FullyQualifiedName=PhaseA.Platform.Tests.PhaseB.Repair.S25BoundaryTests.O_4367428FF3D3",
+                     "/Logger:trx", "/ResultsDirectory:" + Path.Combine(root, "interrupted-worker-trx") })
             start.ArgumentList.Add(argument);
         start.Environment["S25_INTERRUPTION_ROOT"] = root;
         using var worker = Process.Start(start) ?? throw new Exception("S25 interruption worker did not start.");
         var stdout = worker.StandardOutput.ReadToEndAsync();
         var stderr = worker.StandardError.ReadToEndAsync();
+        var interruptionObserved = false;
+        string output;
+        string errorOutput;
         try
         {
-            var winner = await Task.WhenAny(staged.Task, worker.WaitForExitAsync(), Task.Delay(TimeSpan.FromSeconds(30)));
-            if (winner != staged.Task || worker.HasExited)
-                throw new Exception("S25 interruption was not observed during real file staging.");
-            worker.Kill(entireProcessTree: true);
-            await worker.WaitForExitAsync();
+            // Use an owned dedicated thread: thread-pool callbacks/continuations can arrive after publication.
+            interruptionObserved = await Task.Factory.StartNew(() =>
+            {
+                var elapsed = Stopwatch.StartNew();
+                while (elapsed.Elapsed < TimeSpan.FromSeconds(30))
+                {
+                    if (worker.HasExited) return false;
+                    if (Directory.EnumerateFiles(destination, "*.txt", SearchOption.AllDirectories).Any())
+                    {
+                        try { worker.Kill(entireProcessTree: true); }
+                        catch (InvalidOperationException) { return false; }
+                        return true;
+                    }
+                    Thread.Sleep(5);
+                }
+                return false;
+            }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            if (interruptionObserved) await worker.WaitForExitAsync();
         }
         finally
         {
             if (!worker.HasExited) { worker.Kill(entireProcessTree: true); await worker.WaitForExitAsync(); }
-            File.WriteAllText(Path.Combine(root, "interrupted-worker.stdout.txt"), await stdout);
-            File.WriteAllText(Path.Combine(root, "interrupted-worker.stderr.txt"), await stderr);
+            output = await stdout;
+            errorOutput = await stderr;
+            File.WriteAllText(Path.Combine(root, "interrupted-worker.stdout.txt"), output);
+            File.WriteAllText(Path.Combine(root, "interrupted-worker.stderr.txt"), errorOutput);
+        }
+        if (!interruptionObserved)
+        {
+            var outputTail = output.Length <= 4000 ? output : output[^4000..];
+            var errorTail = errorOutput.Length <= 4000 ? errorOutput : errorOutput[^4000..];
+            // Infrastructure failures are not caught as product failure evidence.
+            throw new Exception($"S25 interruption was not observed during real file staging. Worker exit={worker.ExitCode}; stdout={outputTail}; stderr={errorTail}");
         }
         // Restart the real producer. Do not synthesize verification/history rows.
         _ = new RestoreService(connectionString);
