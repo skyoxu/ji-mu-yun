@@ -290,7 +290,8 @@ public sealed class S25BoundaryTests
     {
         var source = Path.Combine(root, "interrupt-source");
         Directory.CreateDirectory(source);
-        for (var index = 0; index < 5000; index++)
+        // The existing staging checkpoint holds publication; a large timing buffer is unnecessary.
+        for (var index = 0; index < 32; index++)
             File.WriteAllText(Path.Combine(source, $"file-{index:D5}.txt"), "S25 interrupted restore content");
         var storage = new WorkspaceStorageService(connectionString);
         var manifest = storage.CreateSnapshot(context, source, "snapshot-interrupted", "workspace-control", lease.ProjectId,
@@ -312,6 +313,7 @@ public sealed class S25BoundaryTests
                      "/Logger:trx", "/ResultsDirectory:" + Path.Combine(root, "interrupted-worker-trx") })
             start.ArgumentList.Add(argument);
         start.Environment["S25_INTERRUPTION_ROOT"] = root;
+        start.Environment["PHASEA_RESTORE_FAULT_POINT"] = "staging-written";
         using var worker = Process.Start(start) ?? throw new Exception("S25 interruption worker did not start.");
         var stdout = worker.StandardOutput.ReadToEndAsync();
         var stderr = worker.StandardError.ReadToEndAsync();
@@ -327,7 +329,11 @@ public sealed class S25BoundaryTests
                 while (elapsed.Elapsed < TimeSpan.FromSeconds(30))
                 {
                     if (worker.HasExited) return false;
-                    if (Directory.EnumerateFiles(destination, "*.txt", SearchOption.AllDirectories).Any())
+                    var checkpoints = Path.Combine(destination, ".restore-checkpoints");
+                    var staging = Path.Combine(destination, ".restore-staging");
+                    if (Directory.Exists(checkpoints) && Directory.Exists(staging) &&
+                        Directory.EnumerateFiles(checkpoints, "staging-written.json", SearchOption.AllDirectories).Any() &&
+                        Directory.EnumerateFiles(staging, "*.txt", SearchOption.AllDirectories).Any())
                     {
                         try { worker.Kill(entireProcessTree: true); }
                         catch (InvalidOperationException) { return false; }
