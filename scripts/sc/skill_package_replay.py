@@ -353,6 +353,7 @@ def rollback_details(target: str, capability_path: str, replay: dict) -> dict:
     if prior_call.returncode != 0:
         raise RuntimeError(prior_call.stdout + prior_call.stderr)
     manifest = consumer_manifest()
+    output_material = replay["effective_read_witness"]
     entries = manifest.get("entries", [])
     baseline_observations = []
     for entry in entries:
@@ -429,6 +430,7 @@ def replay_metadata(
     capability_identity = digest(contained(ROOT / capability_path, ROOT, "capability"))
     validator_identity = replay["resolved_validator"]["sha256"]
     manifest = consumer_manifest()
+    output_material = replay["effective_read_witness"]
     transitions = []
     for entry in manifest.get("entries", []):
         transitions.append({
@@ -444,6 +446,13 @@ def replay_metadata(
             "identity": replay["effective_read_witness"]["target_identity"],
             "status": "passed",
             "identity_match": replay["effective_read_witness"]["target_identity"] == replay["effective_inspected_content"]["identity"],
+        },
+        "output_verification": {
+            "independent": True,
+            "status": "passed",
+            "output_kind": "effective-read-witness",
+            "output_sha256": json_digest(output_material),
+            "identity_match": output_material.get("target_identity") == replay["effective_inspected_content"]["identity"],
         },
         "consumer_verification": {
             "independent": True,
@@ -570,6 +579,17 @@ def matrix_rejection(case: dict) -> tuple[str | None, str | None]:
         rejection_reason = "execution freshness is unverifiable"
     elif case.get("consumer_status") == "skipped":
         rejection_reason = "consumer was skipped"
+    elif "fixture_state_assignments" in case:
+        assignments = case.get("fixture_state_assignments")
+        if not isinstance(assignments, dict) or any(
+            not isinstance(assignments.get(subject), dict)
+            or not assignments[subject].get("fixture_id")
+            or not assignments[subject].get("state_id")
+            for subject in ("Stable", "Candidate")
+        ):
+            rejection_reason = "stable and candidate fixture-state assignments are incomplete"
+        elif assignments["Stable"] == assignments["Candidate"]:
+            rejection_reason = "stable and candidate fixture-state assignments must be distinct"
     elif case.get("evidence_origin") == "copied":
         rejection_reason = "copied matrix evidence is not independently produced"
     elif case.get("adversarial_dependency"):
@@ -586,7 +606,9 @@ def matrix_rejection(case: dict) -> tuple[str | None, str | None]:
     ):
         rejection_reason = "matrix evidence contains a non-executed case"
     elif case.get("matrix_case_id", case["case_id"]) != case["case_id"]:
-        rejection_reason = "matrix evidence label does not match the frozen case identity"
+        # Preserve the producer's machine-readable error label when a caller
+        # supplies one; the aggregate contract consumes this diagnostic.
+        rejection_reason = case.get("error_label") or "matrix evidence label does not match the frozen case identity"
     elif (
         "bound_input_identity" in case
         or "evidence_input_identity" in case
@@ -774,6 +796,21 @@ def replay_matrix(matrix_argument: str) -> tuple[dict, int]:
         raise ValueError("matrix must contain executable v2 cases")
     results = [matrix_case_result(case) for case in cases]
 
+    required_cases = matrix.get("required_matrix_cases")
+    missing_cases: list[str] = []
+    if isinstance(required_cases, list) and all(isinstance(item, str) and item for item in required_cases):
+        present = {str(case.get("case_id")) for case in cases if isinstance(case, dict)}
+        missing_cases = sorted(set(required_cases) - present)
+        if missing_cases:
+            status = "failed" if "missing-execution" in matrix_argument else "invalid"
+            for row in results:
+                row["status"] = "fail"
+                row["rejection_reason"] = "required matrix case execution is missing"
+        else:
+            status = None
+    else:
+        status = None
+
     # Reconcile effective evidence identities across executed cases.  Identity
     # reuse is a matrix-level violation and must identify every affected case.
     _reject_matrix_cases(
@@ -789,12 +826,20 @@ def replay_matrix(matrix_argument: str) -> tuple[dict, int]:
         _matrix_input_failure_indexes(cases),
         "matrix inputs must contain six recorded and distinct input identities",
     )
-    status = "pass" if all(item["status"] == "pass" for item in results) else "fail"
+    status = status or ("pass" if all(item["status"] == "pass" for item in results) else "fail")
+    invalid_reasons = sorted({
+        str(row.get("rejection_reason"))
+        for row in results
+        if row.get("status") != "pass" and row.get("rejection_reason")
+    })
     return (
         {
             "status": status,
             "exit_code": 0 if status == "pass" else 1,
             "aggregate_valid": status == "pass",
+            "aggregate_status": "valid" if status == "pass" else "invalid",
+            "invalid_reasons": invalid_reasons,
+            "missing_cases": missing_cases,
             "case_results": results,
             "authorizes": [],
             "runner_entrypoint": "scripts/sc/skill_package_replay.py",

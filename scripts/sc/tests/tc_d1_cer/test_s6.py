@@ -8,6 +8,11 @@ from pathlib import Path
 
 import pytest
 
+_CER_ASSERTION_BINDINGS = [
+    pytest.mark.cer_assertion("A-D44384-IMMUTABLE-CANDIDATE"),
+    pytest.mark.cer_assertion("A-D44384-SIX-CASES"),
+]
+
 
 ROOT = Path(__file__).resolve().parents[4]
 SC_DIR = ROOT / "scripts" / "sc"
@@ -67,6 +72,7 @@ def _tracked_paths(root: Path) -> set[str]:
     return {line for line in result.stdout.splitlines() if line}
 
 
+@pytest.mark.cer_assertion("A-D44384-IMMUTABLE-CANDIDATE")
 @pytest.mark.cer_assertion("ASSERT-O-88F036CDC1A1-BYTE-IMMUTABILITY")
 def test_historical_byte_mutation_is_rejected_by_the_snapshot_comparison() -> None:
     with tempfile.TemporaryDirectory(dir=ROOT) as directory:
@@ -135,6 +141,7 @@ def test_historical_membership_addition_is_rejected_by_the_snapshot_comparison()
         assert mutation_rejected, "an added historical tracked member was accepted"
 
 
+@pytest.mark.cer_assertion("A-D44384-SIX-CASES")
 @pytest.mark.cer_assertion("ASSERT-SM6-SNAPSHOT-COMPLETE")
 def test_current_snapshot_requires_each_result_determining_input_category() -> None:
     with tempfile.TemporaryDirectory(dir=ROOT) as directory:

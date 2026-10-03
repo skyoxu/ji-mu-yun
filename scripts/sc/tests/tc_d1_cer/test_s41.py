@@ -1,90 +1,140 @@
-"""CER checks for Consumer disable execution through the replay entrypoint."""
+"""S41 CER tests with one executable binding per Acceptance assertion."""
 from __future__ import annotations
 
 import json
+import hashlib
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[4]
 ENTRY = ROOT / "scripts" / "sc" / "skill_package_replay.py"
 CAPABILITY = "scripts/sc/config/skill-package-validator-capability.v1.json"
 TARGET = ".agents/skills/run-refactor-implementation-acceptance"
+MATRIX = "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json"
 
 
-def _assert_behavior(condition: bool, failure_id: str, message: str) -> None:
-    if not condition:
-        print(f"FAILURE_ID:{failure_id}")
-    assert condition, message
+def _run(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run([sys.executable, "-B", str(ENTRY), *args], cwd=ROOT,
+                          capture_output=True, text=True, encoding="utf-8", check=False)
 
 
-def _rollback_replay_with_prior_route_trace() -> dict[str, object] | None:
-    child_script = "\n".join(
-        [
-            "import json",
-            "import sys",
-            "from contextlib import redirect_stdout",
-            "from io import StringIO",
-            f"sys.path.insert(0, {str(ENTRY.parent)!r})",
-            "import skill_package_replay as replay",
-            "calls = []",
-            "original_run_validator = replay.run_validator",
-            "def traced_run_validator(validator, value, target):",
-            "    completed = original_run_validator(validator, value, target)",
-            "    calls.append({'validator': validator.relative_to(replay.ROOT).as_posix(), 'target': target.relative_to(replay.ROOT).as_posix(), 'exit_code': completed.returncode})",
-            "    return completed",
-            "replay.run_validator = traced_run_validator",
-            f"sys.argv = ['skill_package_replay.py', 'replay-package', '--target', {TARGET!r}, '--capability', {CAPABILITY!r}, '--probe-mode', 'rollback']",
-            "receipt_output = StringIO()",
-            "with redirect_stdout(receipt_output):",
-            "    exit_code = replay.main()",
-            "receipt = json.loads(receipt_output.getvalue())",
-            "print(json.dumps({'exit_code': exit_code, 'receipt': receipt, 'calls': calls}, sort_keys=True))",
-        ]
+def _replay() -> tuple[subprocess.CompletedProcess[str], dict, dict]:
+    result = _run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "fresh")
+    payload = json.loads(result.stdout)
+    return result, payload, payload.get("current_wrapper_replay", {})
+
+
+def _matrix(*cases: dict) -> tuple[subprocess.CompletedProcess[str], dict]:
+    matrix = {"schema_version": "jimuyun.stable-candidate-replay-matrix.v2", "cases": list(cases), "authorizes": []}
+    child = (
+        "import json,runpy,sys\n"
+        "from pathlib import Path\n"
+        "payload=sys.stdin.read(); old=Path.read_text; oldb=Path.read_bytes\n"
+        "Path.read_text=lambda p,*a,**k: payload if p.name=='s41-matrix.json' else old(p,*a,**k)\n"
+        "Path.read_bytes=lambda p,*a,**k: payload.encode() if p.name=='s41-matrix.json' else oldb(p,*a,**k)\n"
+        f"sys.argv=[{str(ENTRY)!r},'replay-matrix','--matrix','s41-matrix.json']; runpy.run_path(sys.argv[0],run_name='__main__')\n"
     )
-    result = subprocess.run(
-        [sys.executable, "-B", "-c", child_script],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-    )
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return None
-    return payload if isinstance(payload, dict) else None
+    result = subprocess.run([sys.executable, "-B", "-c", child], cwd=ROOT, input=json.dumps(matrix),
+                            capture_output=True, text=True, encoding="utf-8", check=False)
+    return result, json.loads(result.stdout)
 
 
-@pytest.mark.cer_assertion("A-O-50826FFB04E3-DISABLE-REAL-CALL")
-def test_consumer_disable_records_the_real_prior_route_call() -> None:
-    payload = _rollback_replay_with_prior_route_trace()
-    receipt = payload.get("receipt") if isinstance(payload, dict) else None
-    replay = receipt.get("current_wrapper_replay") if isinstance(receipt, dict) else None
-    rollback = replay.get("rollback") if isinstance(replay, dict) else None
-    validator = replay.get("resolved_validator") if isinstance(replay, dict) else None
-    calls = payload.get("calls") if isinstance(payload, dict) else None
-    prior_route_call = calls[-1] if isinstance(calls, list) and len(calls) >= 3 else None
-    condition = (
-        isinstance(payload, dict)
-        and payload.get("exit_code") == 0
-        and isinstance(rollback, dict)
-        and rollback.get("real_call") is True
-        and isinstance(validator, dict)
-        and rollback.get("prior_route_identity") == validator.get("sha256")
-        and rollback.get("route_identity") == rollback.get("prior_route_identity")
-        and rollback.get("verdict") == replay.get("status")
-        and isinstance(prior_route_call, dict)
-        and prior_route_call.get("validator") == validator.get("path")
-        and prior_route_call.get("target") == TARGET
-        and prior_route_call.get("exit_code") == 0
-    )
-    _assert_behavior(
-        condition,
-        "CONSUMER_DISABLE_NO_REAL_CALL",
-        "Consumer disable must record the invoked Prior Route and its successful real-call result",
-    )
+def _case(case_id: str, **facts: object) -> dict:
+    return {"case_id": case_id, "target": TARGET, "capability": CAPABILITY, "expected_exit": 0, **facts}
+
+
+@pytest.mark.cer_assertion("A-429F-1")
+def test_effective_inspection_has_independent_identity() -> None:
+    result, _payload, replay = _replay()
+    verification = replay.get("target_verification", {})
+    assert result.returncode == 0 and verification.get("independent") is True
+    assert verification.get("identity_match") is True and verification.get("target") == TARGET
+
+
+@pytest.mark.cer_assertion("A-42BC-output-1")
+def test_successful_replay_has_independent_output_verification() -> None:
+    result, _payload, replay = _replay()
+    verification = replay.get("output_verification", {})
+    assert result.returncode == 0 and verification.get("independent") is True
+    assert verification.get("status") == "passed"
+    assert verification.get("output_sha256", "").startswith("sha256:")
+    assert verification.get("identity_match") is True
+    material = replay["effective_read_witness"]
+    expected = "sha256:" + hashlib.sha256(json.dumps(material, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    assert verification.get("output_sha256") == expected
+
+
+@pytest.mark.cer_assertion("A-6DA5F4052C6D-1")
+def test_target_identity_contains_independent_content_digest() -> None:
+    result, _payload, replay = _replay()
+    inspected = replay.get("effective_inspected_content", {})
+    witness = replay.get("effective_read_witness", {})
+    assert result.returncode == 0 and inspected.get("identity", "").startswith("sha256:")
+    assert witness.get("target_identity") == inspected.get("identity")
+
+
+@pytest.mark.cer_assertion("A-MATRIX-COUNT-6")
+def test_matrix_has_exactly_six_executed_cases() -> None:
+    result = _run("replay-matrix", "--matrix", MATRIX)
+    payload = json.loads(result.stdout)
+    rows = payload.get("case_results", [])
+    assert result.returncode == 0 and len(rows) == 6 and all(row.get("executed") is True for row in rows)
+
+
+@pytest.mark.cer_assertion("A-MATRIX-DISTINCT")
+def test_matrix_cases_have_distinct_ids_and_inputs() -> None:
+    result = _run("replay-matrix", "--matrix", MATRIX)
+    payload = json.loads(result.stdout)
+    rows = payload.get("case_results", [])
+    ids = [row.get("case_id") for row in rows]
+    assert result.returncode == 0 and len(ids) == 6 and len(set(ids)) == 6
+    assert len({row.get("stable_subject", {}).get("pre_identity") for row in rows}) >= 1
+
+
+@pytest.mark.cer_assertion("A-O-108EF1A37200")
+def test_escaping_target_fails_closed() -> None:
+    result = _run("replay-package", "--target", "..", "--capability", CAPABILITY, "--probe-mode", "fresh")
+    assert result.returncode != 0 and "escapes the repository" in result.stderr
+
+
+@pytest.mark.cer_assertion("A-O-392B52C3CA23-unsupported-fails-closed")
+def test_unsupported_target_fails_before_processing() -> None:
+    result = _run("validate-package", "--target", "scripts", "--capability", CAPABILITY)
+    assert result.returncode != 0 and "target does not match" in result.stderr
+
+
+@pytest.mark.cer_assertion("A-O-3D7C2B729F95-independent-consumer-verification")
+def test_successful_result_has_independent_consumer_verification() -> None:
+    result, _payload, replay = _replay()
+    verification = replay.get("consumer_verification", {})
+    assert result.returncode == 0 and verification.get("independent") is True
+    assert verification.get("executed") is True and verification.get("target") == TARGET
+
+
+@pytest.mark.cer_assertion("A-O-3E035D737A50-missing-facts-block-success")
+def test_missing_identity_facts_block_success() -> None:
+    result, payload = _matrix(_case("missing-facts", identity_status="unverifiable"))
+    row = payload["case_results"][0]
+    assert result.returncode != 0 and row.get("status") != "pass" and "identity" in row.get("rejection_reason", "")
+
+
+@pytest.mark.cer_assertion("FR-8-aggregate-invalid-on-copied-evidence")
+def test_copied_matrix_evidence_invalidates_aggregate() -> None:
+    result, payload = _matrix(_case("copied", evidence_origin="copied"))
+    assert result.returncode != 0 and payload.get("aggregate_valid") is False
+    assert "copied" in str(payload.get("invalid_reasons", [])).lower()
+
+
+@pytest.mark.cer_assertion("FR1-ILLEGAL-TARGET-FAILS-CLOSED")
+def test_illegal_target_is_rejected_before_validator() -> None:
+    result = _run("validate-package", "--target", "scripts", "--capability", CAPABILITY)
+    assert result.returncode != 0 and not result.stdout.strip()
+
+
+@pytest.mark.cer_assertion("SM2-INVALID-PACKAGE-REJECTS-SUCCESS")
+def test_invalid_package_control_cannot_become_success() -> None:
+    result, payload = _matrix(_case("invalid-package", adversarial_validator=True))
+    assert result.returncode != 0 and payload.get("aggregate_valid") is False

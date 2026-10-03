@@ -139,6 +139,53 @@ class SkillPackageReplayTests(unittest.TestCase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("capability is not active", result.stderr)
 
+    def test_route_lifecycle_enable_rollback_reenable_uses_real_entry(self):
+        valid = self._package("route-valid")
+
+        enable = self._run(
+            "replay-package",
+            "--target", self._relative(valid),
+            "--capability", self._relative(self.capability),
+            "--probe-mode", "enable",
+        )
+        rollback = self._run(
+            "replay-package",
+            "--target", self._relative(valid),
+            "--capability", self._relative(self.capability),
+            "--probe-mode", "rollback",
+        )
+        reenable = self._run(
+            "replay-package",
+            "--target", self._relative(valid),
+            "--capability", self._relative(self.capability),
+            "--probe-mode", "re-enable",
+        )
+
+        self.assertEqual(enable.returncode, 0, enable.stderr)
+        self.assertEqual(rollback.returncode, 0, rollback.stderr)
+        self.assertEqual(reenable.returncode, 0, reenable.stderr)
+
+        enable_replay = json.loads(enable.stdout)["current_wrapper_replay"]
+        rollback_replay = json.loads(rollback.stdout)["current_wrapper_replay"]
+        reenable_replay = json.loads(reenable.stdout)["current_wrapper_replay"]
+        invocation = enable_replay["consumer_invocation"]
+        rollback_info = rollback_replay["rollback"]
+        reenable_info = reenable_replay["consumer_invocation"]
+
+        self.assertEqual(invocation["transition"], "enable")
+        self.assertTrue(invocation["real_call"])
+        self.assertEqual(invocation["route"], "Candidate Route")
+        self.assertEqual(reenable_info["transition"], "re-enable")
+        self.assertTrue(reenable_info["real_call"])
+        self.assertEqual(reenable_info["route"], "Candidate Route")
+        self.assertTrue(rollback_info["real_call"])
+        self.assertEqual(rollback_info["route_identity"], rollback_info["prior_route_identity"])
+        self.assertEqual(rollback_info["verdict"], rollback_info["prior_verdict"])
+        self.assertEqual(
+            rollback_info["diagnostic_category"],
+            rollback_info["prior_diagnostic_category"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

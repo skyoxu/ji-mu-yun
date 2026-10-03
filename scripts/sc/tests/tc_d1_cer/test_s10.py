@@ -9,6 +9,12 @@ from pathlib import Path
 import pytest
 
 
+_CER_ASSERTION_BINDINGS = [
+    pytest.mark.cer_assertion("assert-fr4-positive-probe-must-pass"),
+    pytest.mark.cer_assertion("assert-fr4-negative-probe-declared-defect-category"),
+]
+
+
 ROOT = Path(__file__).resolve().parents[4]
 ENTRY = ROOT / "scripts" / "sc" / "skill_package_replay.py"
 CAPABILITY = "scripts/sc/config/skill-package-validator-capability.v1.json"

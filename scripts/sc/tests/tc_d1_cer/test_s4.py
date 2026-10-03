@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+_CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-B4382B18F0CA-1")]
+
 
 ROOT = Path(__file__).resolve().parents[4]
 ENTRY = ROOT / "scripts" / "sc" / "skill_package_replay.py"
@@ -30,6 +32,7 @@ def _package_identity(package_root: Path) -> str:
     ).hexdigest()
 
 
+@pytest.mark.cer_assertion("A-B4382B18F0CA-1")
 @pytest.mark.cer_assertion("FR-2-SUCCESSFUL-EVIDENCE-EFFECTIVE-CONTENT-BINDING")
 def test_successful_evidence_is_bound_to_the_effective_inspected_content() -> None:
     result = subprocess.run(

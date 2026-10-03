@@ -6,6 +6,8 @@
     "schema_version": {"const": "jimuyun.toolchain-evaluation-seed-manifest.v1"},
     "seeds": {
       "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
       "items": {
         "type": "object",
         "required": ["occurrence", "failure_family", "candidate_class", "provenance", "applicability", "missing_labels"],
@@ -14,7 +16,7 @@
           "failure_family": {"type": "string", "minLength": 1},
           "candidate_class": {"type": "string", "minLength": 1},
           "provenance": {"type": "object"},
-          "applicability": {"type": "object"},
+          "applicability": {"type": "object", "minProperties": 1},
           "missing_labels": {"type": "array"},
           "counterexample": {"type": "object"},
           "explicit_absence": {"type": "object"}
@@ -24,7 +26,12 @@
           {"required": ["explicit_absence"]}
         ],
         "additionalProperties": true
-      }
+      },
+      "allOf": [
+        {"contains": {"type": "object", "properties": {"occurrence": {"const": "candidate-baseline-contamination"}}, "required": ["occurrence"]}},
+        {"contains": {"type": "object", "properties": {"occurrence": {"const": "self-hosted-knowledge-read-set-collision"}}, "required": ["occurrence"]}},
+        {"contains": {"type": "object", "properties": {"occurrence": {"const": "toolchain-policy-architecture-index-gap"}}, "required": ["occurrence"]}}
+      ]
     },
     "baseline_status": {"const": "non-authorizing-candidates"},
     "authorizes": {"const": []}

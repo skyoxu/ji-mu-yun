@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+_CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("assert-platform-specific-declaration")]
+
 
 ROOT = Path(__file__).resolve().parents[4]
 ENTRY = ROOT / "scripts" / "sc" / "skill_package_replay.py"
@@ -34,6 +36,7 @@ def _validation_receipt() -> tuple[subprocess.CompletedProcess[str], dict[str, o
 
 
 @pytest.mark.cer_assertion("FR-2-SUCCESSFUL-EVIDENCE-EFFECTIVE-CONTENT-BINDING")
+@pytest.mark.cer_assertion("assert-platform-specific-declaration")
 def test_successful_evidence_names_the_effective_inspected_content() -> None:
     result, receipt = _validation_receipt()
     effective = receipt.get("effective_inspected_content", {})

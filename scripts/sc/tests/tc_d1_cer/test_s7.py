@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+_CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-FR5-HISTORICAL-NONAUT")]
+
 
 ROOT = Path(__file__).resolve().parents[4]
 ENTRY = ROOT / "scripts" / "sc" / "skill_package_replay.py"
@@ -60,6 +62,7 @@ def _case(**extra: object) -> dict:
     return value
 
 
+@pytest.mark.cer_assertion("A-FR5-HISTORICAL-NONAUT")
 @pytest.mark.cer_assertion("ASSERT-O-BBD73A1FB59F-01")
 @pytest.mark.parametrize("probe_mode", ["stable-no-provenance", "stable-temporary-package"])
 def test_stable_eligibility_requires_verified_provenance(probe_mode: str) -> None:

@@ -461,12 +461,23 @@ def current_snapshot(workspace: Path, roots: Sequence[Mapping[str, str]], *, sou
     if len(roots) != len(ROOT_KINDS): raise ValueError("current snapshot requires exactly eight roots")
     resolved: list[dict[str, str]] = []; kinds: list[str] = []; prefixes: list[str] = []
     for item in roots:
-        kind, raw, reason = item.get("root_kind"), item.get("repository_relative_posix_path"), item.get("inclusion_reason")
+        kind, raw, raws, reason = item.get("root_kind"), item.get("repository_relative_posix_path"), item.get("repository_relative_posix_paths"), item.get("inclusion_reason")
         if kind not in ROOT_KINDS or kind in GOVERNANCE_ROOTS: raise ValueError(f"invalid runtime root kind: {kind}")
-        if not isinstance(raw, str) or not isinstance(reason, str) or not reason: raise ValueError("snapshot root fields invalid")
-        relative = safe_relative(raw); target = (root / relative).resolve(); target.relative_to(root)
-        resolved.append({"root_kind": kind, "repository_relative_posix_path": relative, "content_sha256": hash_path(target), "source_commit": source_commit, "inclusion_reason": reason})
-        kinds.append(kind); prefixes.append(relative.rstrip("/"))
+        if not isinstance(reason, str) or not reason: raise ValueError("snapshot root fields invalid")
+        if isinstance(raw, str) and raws is None:
+            relatives = [safe_relative(raw)]
+        elif isinstance(raws, list) and raws and all(isinstance(value, str) for value in raws) and raw is None:
+            relatives = sorted({safe_relative(value) for value in raws})
+        else:
+            raise ValueError("snapshot root paths invalid")
+        targets = [(root / relative).resolve() for relative in relatives]
+        for target in targets: target.relative_to(root)
+        digest = hash_path(targets[0]) if len(targets) == 1 else sha256_value([(relative, hash_path(target)) for relative, target in zip(relatives, targets)])
+        resolved_item = {"root_kind": kind, "content_sha256": digest, "source_commit": source_commit, "inclusion_reason": reason}
+        if len(relatives) == 1: resolved_item["repository_relative_posix_path"] = relatives[0]
+        else: resolved_item["repository_relative_posix_paths"] = relatives
+        resolved.append(resolved_item)
+        kinds.append(kind); prefixes.extend(relative.rstrip("/") for relative in relatives)
     if set(kinds) != set(ROOT_KINDS) or len(kinds) != len(set(kinds)): raise ValueError("snapshot root kinds must be exact unique set")
     base = base_commit or source_commit
     delta: dict[str, Any] = {"base_commit": base, "additions": [], "deletions": [], "renames": []}
