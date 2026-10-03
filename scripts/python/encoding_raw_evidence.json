@@ -1,0 +1,19 @@
+{
+  "schema": "encoding-raw-evidence.v1",
+  "entries": [
+    {
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/terminal-results.raw.txt",
+      "source_sha256": "1461e1d4f66eb77e98700ed29f810d57050d04ba3ffefc11893c67d987d96904",
+      "source_encoding": "utf-16",
+      "normalized_path": "logs/ci/2026-10-03/soft-ci-repair/raw-text/terminal-results.utf8.txt",
+      "reason": "Immutable Windows terminal capture; UTF-8 readback is appended separately."
+    },
+    {
+      "source_path": "logs/quick-dev/20260930-plan-q8-r8-replay.txt",
+      "source_sha256": "3758b56936e4258c335bd70a28b12f3a95c5b7c971e70c627829fcd99faefe79",
+      "source_encoding": "utf-16",
+      "normalized_path": "logs/ci/2026-10-03/soft-ci-repair/raw-text/replay-result.utf8.txt",
+      "reason": "Immutable Windows terminal capture; UTF-8 readback is appended separately."
+    }
+  ]
+}

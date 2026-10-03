@@ -24,15 +24,15 @@ func test_buttons_emit_pressed_and_panel_hides_on_close() -> void:
     var save_btn = panel.get_node("VBox/Buttons/SaveBtn")
     var load_btn = panel.get_node("VBox/Buttons/LoadBtn")
     var close_btn = panel.get_node("VBox/Buttons/CloseBtn")
-    var save_called := false
-    var load_called := false
-    save_btn.pressed.connect(func(): save_called = true)
-    load_btn.pressed.connect(func(): load_called = true)
+    # ADR-0025: shared observations prove each real button emitted once.
+    var observed := {"save": 0, "load": 0}
+    save_btn.pressed.connect(func(): observed["save"] += 1)
+    load_btn.pressed.connect(func(): observed["load"] += 1)
     save_btn.emit_signal("pressed")
     load_btn.emit_signal("pressed")
     await get_tree().process_frame
-    assert_bool(save_called).is_true()
-    assert_bool(load_called).is_true()
+    assert_int(observed["save"]).is_equal(1)
+    assert_int(observed["load"]).is_equal(1)
     close_btn.emit_signal("pressed")
     await get_tree().process_frame
     assert_bool(panel.visible).is_false()

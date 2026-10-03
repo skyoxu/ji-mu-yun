@@ -1,0 +1,1 @@
+{"predecessors": 73, "runtime_closure_sha256": "sha256:becfd406c19be7e72309a1a70c2e139dbc047d848a4ab88ef6350cb9fe09e065", "schema": "quick-dev.implementation-complete-result.v2", "status": "pass", "terminal_input_sha256": "sha256:5e875ffd5da8174937f55d61edf324288bd11be11c9b3dd5f15b73a1512b4266"}
