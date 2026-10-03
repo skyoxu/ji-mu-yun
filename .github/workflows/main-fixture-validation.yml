@@ -1,0 +1,79 @@
+name: Main Fixture Focused Validation
+
+on:
+  push:
+    branches: [diagnose/main-fixture-readiness-20261003]
+
+permissions:
+  contents: read
+
+jobs:
+  fixture-validation:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    env:
+      PHASEA_CI_FIXTURES: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - name: Enable Windows long paths
+        shell: pwsh
+        run: git config --system core.longpaths true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reproduce undrained S42 pipe with real request logging
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          p = Path("PhaseA.Platform.Tests/PhaseB/Repair/S42BoundaryTests.cs")
+          s = p.read_text(encoding="utf-8")
+          for line in (
+              "        process.OutputDataReceived += (_, _) => { };\n",
+              "        process.ErrorDataReceived += (_, _) => { };\n",
+              "        process.BeginOutputReadLine();\n",
+              "        process.BeginErrorReadLine();\n",
+          ):
+              assert s.count(line) == 1, line
+              s = s.replace(line, "")
+          p.write_text(s, encoding="utf-8", newline="\n")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore --filter 'FullyQualifiedName~S42BoundaryTests' --logger 'trx;LogFileName=undrained-control.trx' --results-directory logs/unit/main-fixture-validation/control --blame-hang-timeout 2m --blame-hang-dump-type none
+          $controlExit = $LASTEXITCODE
+          if ($controlExit -eq 0) { throw "Undrained control did not reproduce the blocked host." }
+          @'
+          from pathlib import Path
+          import xml.etree.ElementTree as E
+          root = E.parse(Path("logs/unit/main-fixture-validation/control/undrained-control.trx")).getroot()
+          ns = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
+          failed = [x for x in root.findall(".//t:UnitTestResult", ns) if x.get("outcome") == "Failed"]
+          assert len(failed) == 1, "Expected one S42 timeout failure."
+          message = "".join(failed[0].itertext())
+          assert "S42BoundaryTests.O_605D7CAE42F3" == failed[0].get("testName", "").split("Repair.")[-1]
+          assert "HttpClient.Timeout of 15 seconds" in message, message[:1000]
+          print("EXPECTED_RED: undrained real host pipe blocked an HTTP response.")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git restore -- PhaseA.Platform.Tests/PhaseB/Repair/S42BoundaryTests.cs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build corrected fixtures
+        run: dotnet build PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug
+      - name: Repeat corrected Windows fixtures with coverage
+        shell: pwsh
+        run: |
+          1..3 | ForEach-Object {
+            dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore --collect:'XPlat Code Coverage' --filter 'FullyQualifiedName~S28BoundaryTests|FullyQualifiedName~S31BoundaryTests|FullyQualifiedName~S42BoundaryTests' --logger "trx;LogFileName=repeat-$_.trx" --results-directory "logs/unit/main-fixture-validation/repeat-$_" --blame-hang-timeout 2m --blame-hang-dump-type none
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: main-fixture-validation-evidence
+          path: logs/unit/main-fixture-validation/**
