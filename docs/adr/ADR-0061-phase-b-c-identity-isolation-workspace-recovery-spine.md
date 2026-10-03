@@ -94,3 +94,25 @@ dependency on a delayed filesystem-event continuation and no fabricated
 restore/history row. Restart recovery and the independent reader still validate
 the actual staged content and nonterminal-operation quarantine. Early worker exit
 reports bounded child stdout/stderr rather than an unqualified staging error.
+
+
+## Addendum (2026-10 main CI fixture publication and HTTP startup)
+
+- The owned S28 PowerShell child closes a complete PID staging file before a
+  same-volume rename publishes its readiness path. The existing 30-second
+  wait and real pre/post-restore process authority assertions remain intact.
+- The S31 HTTP fixture uses one 30-second startup deadline for health and the
+  first authenticated project inventory control. Only read-only startup probes
+  retry transport failures or per-request timeouts; a non-success status or
+  wrong owned inventory fails immediately. The three failure observations keep
+  their five-second request timeout, status, redaction and correlation checks
+  without retry. Immediate startup and a delayed first real inventory response
+  both exercise the full observations. This is a fixture startup budget, not a
+  production API latency policy.
+- The S42 owned host drains both redirected pipes for its entire lifetime. A
+  bounded health burst with real request logging and a one-entry console queue
+  exercises Windows pipe backpressure before the same three durable operation/
+  readback checks. This queue setting applies to this owned test host only.
+  Operation requests retain the original 15-second timeout and are not retried.
+- No production listener, service timeout, account authority, execution policy,
+  quality gate, coverage threshold or historical failure evidence changes.

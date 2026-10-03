@@ -1,0 +1,43 @@
+{
+  "schema_version": "ci-fixture-repair-diagnosis.v1",
+  "status": "windows_validation_pending",
+  "repository": "skyoxu/ji-mu-yun",
+  "failing_run_id": 37099629481,
+  "failing_job_id": 111136462474,
+  "main_sha": "2328ed7ed39b0623c6692a3dbce34ee84460ef70",
+  "passing_pr_sha": "8e13fd327a817c4e04c2cc474e133c98f6bfb672",
+  "same_source_tree": "7739a64713de303450dfb4ce628cc9ae58f2ccf7",
+  "passing_pr_quality_run_id": 37095624258,
+  "passing_pr_quality_attempt": 2,
+  "current_platform_trx": {
+    "total": 1877,
+    "passed": 1874,
+    "failed": 3
+  },
+  "failures": [
+    {
+      "test": "S28BoundaryTests.O_5277C4B77BBF",
+      "observed": "PID file sharing violation at current PID read",
+      "confirmed_fixture_defect": "file existence was observed before WriteAllText completed",
+      "correction": "close staging PID file before atomic same-volume publication"
+    },
+    {
+      "test": "S31BoundaryTests.O_AB4321DB8007",
+      "observed": "first authenticated GET /api/projects exceeded five seconds after health succeeded",
+      "limitation": "host output was discarded; internal cause of response latency is not established",
+      "correction": "bounded health and inventory startup controls with timing diagnostics and a delayed real-response regression; business observations retain five-second deadlines without retry"
+    },
+    {
+      "test": "S42BoundaryTests.O_605D7CAE42F3",
+      "observed": "durable operation POST exceeded fifteen seconds",
+      "confirmed_fixture_defect": "redirected stdout and stderr were not drained; pipe backpressure can stall host logging",
+      "correction": "drain both pipes and exercise a bounded real logging burst before operation assertions"
+    }
+  ],
+  "local_validation": {
+    "diff_check": "passed",
+    "dotnet": "unavailable",
+    "windows_execution": "required"
+  },
+  "preserved": "original dirty worktrees and historical failure artifacts are unchanged"
+}

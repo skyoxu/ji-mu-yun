@@ -1,0 +1,12 @@
+{
+  "schema_version": "ci-fixture-control-attempt.v1",
+  "run_id": 37127620469,
+  "job_id": 111216054761,
+  "conclusion": "failure",
+  "build": "passed",
+  "undrained_control": "unexpected_pass",
+  "corrected_repeats": "not_run",
+  "interpretation": "The 16-request burst did not exhaust the default asynchronous console queue. This run does not prove the original S42 timeout cause or fixture recovery.",
+  "next_control": "Use a one-entry console queue on the owned test host to bound and expose pipe backpressure. Production logging remains unchanged.",
+  "original_s42_timeout_internal_cause": "not_established_from_original_discarded_output"
+}
