@@ -110,8 +110,9 @@ reports bounded child stdout/stderr rather than an unqualified staging error.
   both exercise the full observations. This is a fixture startup budget, not a
   production API latency policy.
 - The S42 owned host drains both redirected pipes for its entire lifetime. A
-  bounded health burst with real request logging exercises output beyond the
-  Windows pipe capacity before the same three durable operation/readback checks.
+  bounded health burst with real request logging and a one-entry console queue
+  exercises Windows pipe backpressure before the same three durable operation/
+  readback checks. This queue setting applies to this owned test host only.
   Operation requests retain the original 15-second timeout and are not retried.
 - No production listener, service timeout, account authority, execution policy,
   quality gate, coverage threshold or historical failure evidence changes.

@@ -126,6 +126,10 @@ public sealed class S42BoundaryTests
         start.Environment["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot;
         start.Environment["ASPNETCORE_CONTENTROOT"] = Path.Combine(RepositoryRoot, "PhaseA.Platform");
         start.Environment["Logging__LogLevel__Microsoft.AspNetCore"] = "Information";
+        // A small test-only console queue exposes backpressure with a bounded
+        // request burst instead of thousands of requests filling the default.
+        start.Environment["Logging__Console__MaxQueueLength"] = "1";
+        start.Environment["Logging__Console__QueueFullMode"] = "Wait";
         var process = Process.Start(start) ?? throw new InvalidOperationException("Failed to start PhaseA.Platform.");
         // ADR-0061: drain both redirected pipes throughout host lifetime.
         // Ignoring them can block console logging and stall an HTTP request.
