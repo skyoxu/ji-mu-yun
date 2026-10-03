@@ -54,6 +54,14 @@ public sealed class S42BoundaryTests
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", user.Token);
             await WaitForHealthAsync(client, process);
 
+            // ADR-0061: force more real host logging than an anonymous Windows
+            // pipe can hold before testing the durable operation responses.
+            for (var probe = 0; probe < 16; probe++)
+            {
+                using var health = await client.GetAsync("/healthz");
+                Require(health.IsSuccessStatusCode, "FAILURE-O-605D7CAE42F3", "Host stopped responding during the output-drain regression.");
+            }
+
             var operationPaths = new[]
             {
                 $"/api/projects/{project.ProjectId}/snapshots",
@@ -117,7 +125,15 @@ public sealed class S42BoundaryTests
         start.Environment["HOSTED_WORKSPACE_ROOT"] = workspaceRoot;
         start.Environment["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot;
         start.Environment["ASPNETCORE_CONTENTROOT"] = Path.Combine(RepositoryRoot, "PhaseA.Platform");
-        return Process.Start(start) ?? throw new InvalidOperationException("Failed to start PhaseA.Platform.");
+        start.Environment["Logging__LogLevel__Microsoft.AspNetCore"] = "Information";
+        var process = Process.Start(start) ?? throw new InvalidOperationException("Failed to start PhaseA.Platform.");
+        // ADR-0061: drain both redirected pipes throughout host lifetime.
+        // Ignoring them can block console logging and stall an HTTP request.
+        process.OutputDataReceived += (_, _) => { };
+        process.ErrorDataReceived += (_, _) => { };
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+        return process;
     }
 
     private static async Task WaitForHealthAsync(HttpClient client, Process process)
@@ -131,7 +147,8 @@ public sealed class S42BoundaryTests
             }
             try
             {
-                if ((await client.GetAsync("/healthz")).IsSuccessStatusCode)
+                using var response = await client.GetAsync("/healthz");
+                if (response.IsSuccessStatusCode)
                 {
                     return;
                 }

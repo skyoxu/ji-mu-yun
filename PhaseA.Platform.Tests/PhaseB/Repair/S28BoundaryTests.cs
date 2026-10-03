@@ -265,7 +265,11 @@ public sealed class S28BoundaryTests
         public Task<HostedProcessResult> RunAsync(string workingDirectory, string pidPath, CancellationToken cancellationToken, string? releasePath = null)
         {
             var escapedPid = EscapePowerShell(pidPath);
-            var script = $"[IO.File]::WriteAllText('{escapedPid}', [string]$PID);" +
+            // ADR-0061: existence is readiness only after the writer has closed
+            // the complete PID file and atomically published it on this volume.
+            var pendingPid = EscapePowerShell(pidPath + ".pending");
+            var script = $"[IO.File]::WriteAllText('{pendingPid}', [string]$PID);" +
+                         $"[IO.File]::Move('{pendingPid}', '{escapedPid}');" +
                          (releasePath is null
                              ? "while ($true) { [Threading.Thread]::Sleep(100) }"
                              : $"while (-not [IO.File]::Exists('{EscapePowerShell(releasePath)}')) {{ [Threading.Thread]::Sleep(100) }}");

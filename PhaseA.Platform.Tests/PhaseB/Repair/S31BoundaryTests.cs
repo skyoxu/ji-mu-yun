@@ -9,14 +9,21 @@ using PhaseA.Platform.Data;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace PhaseA.Platform.Tests.PhaseB.Repair;
 
 [Collection("PhaseA process HTTP")]
 public sealed class S31BoundaryTests
 {
-    [Fact]
-    public async Task O_AB4321DB8007()
+    private readonly ITestOutputHelper _output;
+
+    public S31BoundaryTests(ITestOutputHelper output) => _output = output;
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(6000)]
+    public async Task O_AB4321DB8007(int firstInventoryDelayMs)
     {
         // ADR-0061: observe actual restore failures independently of caller-supplied keys.
         var repository = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
@@ -84,12 +91,12 @@ public sealed class S31BoundaryTests
             }
             observations.Add(new { family, result.AttemptId, result.Status, category = row.Category, envelope = row.Envelope });
         }
-        issues.AddRange(await ObserveHttpFailuresAsync(repository, Path.Combine(root, "http")));
+        issues.AddRange(await ObserveHttpFailuresAsync(repository, Path.Combine(root, "http"), firstInventoryDelayMs));
         File.WriteAllText(Path.Combine(root, "observations.json"), JsonSerializer.Serialize(new { observations, issues }));
         if (issues.Count > 0) throw new Xunit.Sdk.XunitException("FAILURE-O-AB4321DB8007: " + string.Join("; ", issues));
     }
 
-    private static async Task<List<string>> ObserveHttpFailuresAsync(string repository, string root)
+    private async Task<List<string>> ObserveHttpFailuresAsync(string repository, string root, int firstInventoryDelayMs)
     {
         // ADR-0061/0038: request-aware producer evidence, never test-written diagnostic rows.
         var data = Path.Combine(root, "data");
@@ -144,20 +151,11 @@ public sealed class S31BoundaryTests
         var requests = new List<(string Family, string? RequestId, int Status)>();
         try
         {
-            using var client = new HttpClient { BaseAddress = new Uri(address), Timeout = TimeSpan.FromSeconds(5) };
-            var healthy = false;
-            for (var attempt = 0; attempt < 40 && !host.HasExited; attempt++)
-            {
-                try { using var response = await client.GetAsync("/healthz"); if (response.IsSuccessStatusCode) { healthy = true; break; } }
-                catch (Exception error) when (error is HttpRequestException or TaskCanceledException) { }
-                await Task.Delay(250);
-            }
-            if (!healthy) throw new InvalidOperationException("S31 HTTP host health precondition failed.");
-            using var controlRequest = new HttpRequestMessage(HttpMethod.Get, "/api/projects");
-            controlRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", owner.Token);
-            using var control = await client.SendAsync(controlRequest);
-            if (!control.IsSuccessStatusCode || !(await control.Content.ReadAsStringAsync()).Contains(project.ProjectId, StringComparison.Ordinal))
-                throw new InvalidOperationException("S31 owned project inventory HTTP control failed.");
+            using var delayHandler = new FirstInventoryDelayHandler(firstInventoryDelayMs);
+            using var client = new HttpClient(delayHandler) { BaseAddress = new Uri(address), Timeout = TimeSpan.FromSeconds(5) };
+            var readinessAttempts = await WaitForHttpReadyAsync(client, host, owner.Token, project.ProjectId);
+            if (firstInventoryDelayMs > 5000 && (!delayHandler.CancellationObserved || readinessAttempts < 3))
+                throw new InvalidOperationException("S31 delayed inventory control did not exercise startup timeout recovery.");
 
             async Task Observe(string family, string path, string? token, int expectedStatus, string expectedError)
             {
@@ -216,6 +214,75 @@ public sealed class S31BoundaryTests
             if (!host.HasExited) { host.Kill(entireProcessTree: true); await host.WaitForExitAsync(); }
         }
         return issues;
+    }
+
+    private async Task<int> WaitForHttpReadyAsync(HttpClient client, Process host, string ownerToken, string projectId)
+    {
+        // ADR-0061: health does not warm the first authenticated metadata API.
+        // Share one bounded startup deadline; business observations below still
+        // have the original five-second request timeout and are never retried.
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var elapsed = Stopwatch.StartNew();
+        var stage = "health";
+        var attempts = 0;
+        Exception? last = null;
+        try
+        {
+            while (true)
+            {
+                deadline.Token.ThrowIfCancellationRequested();
+                if (host.HasExited)
+                    throw new InvalidOperationException($"S31 HTTP host exited during {stage} readiness. exit={host.ExitCode}.");
+                attempts++;
+                try
+                {
+                    using var request = new HttpRequestMessage(HttpMethod.Get, stage == "health" ? "/healthz" : "/api/projects");
+                    if (stage == "inventory")
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", ownerToken);
+                    using var response = await client.SendAsync(request, deadline.Token);
+                    if (!response.IsSuccessStatusCode)
+                        throw new InvalidOperationException($"S31 {stage} readiness returned HTTP {(int)response.StatusCode}.");
+                    if (stage == "inventory")
+                    {
+                        if (!(await response.Content.ReadAsStringAsync(deadline.Token)).Contains(projectId, StringComparison.Ordinal))
+                            throw new InvalidOperationException("S31 owned project inventory HTTP control failed.");
+                        _output.WriteLine($"S31-HTTP-READY elapsedMs={elapsed.ElapsedMilliseconds} attempts={attempts}");
+                        return attempts;
+                    }
+                    stage = "inventory";
+                    continue;
+                }
+                catch (Exception error) when (error is HttpRequestException || error is TaskCanceledException && !deadline.IsCancellationRequested)
+                {
+                    last = error;
+                    _output.WriteLine($"S31-HTTP-STARTUP stage={stage} elapsedMs={elapsed.ElapsedMilliseconds} error={error.GetType().Name}");
+                }
+                await Task.Delay(250, deadline.Token);
+            }
+        }
+        catch (OperationCanceledException) when (deadline.IsCancellationRequested)
+        {
+            throw new InvalidOperationException($"S31 HTTP {stage} readiness exceeded the 30-second startup deadline. attempts={attempts}.", last);
+        }
+    }
+
+    private sealed class FirstInventoryDelayHandler(int delayMs) : DelegatingHandler(new HttpClientHandler())
+    {
+        private int _delayed;
+        public bool CancellationObserved { get; private set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var response = await base.SendAsync(request, cancellationToken);
+            if (delayMs > 0 && request.RequestUri?.AbsolutePath == "/api/projects" && Interlocked.Exchange(ref _delayed, 1) == 0)
+            {
+                // ADR-0061: delay only the first real, read-only inventory
+                // response. Error observations still use the unmodified host.
+                try { await Task.Delay(delayMs, cancellationToken); }
+                catch (OperationCanceledException) { CancellationObserved = true; response.Dispose(); throw; }
+            }
+            return response;
+        }
     }
 
     private static (string? Category, string? Envelope) ReadFailure(string connectionString, string attemptId)
