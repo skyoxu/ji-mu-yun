@@ -121,3 +121,29 @@ from the current invocation output, each bounded to 40 following lines and 4,000
 characters. It preserves the original log artifacts, summary, tails and exit code.
 Later successful tests cannot hide an earlier failure message behind the final
 console tail. This changes diagnostics only; it does not rerun or skip tests.
+
+## Addendum (2026-10 tracked source and raw evidence encoding)
+
+The CI encoding report scans all Git-tracked text rather than selecting files
+by today's commit date. Shallow checkouts and commits from an earlier day must
+not yield an empty scan. Binary .bin probes are binary evidence.
+
+Historical UTF-16 terminal captures retain their original bytes. A capture can
+be classified separately from UTF-8 source only through
+scripts/python/encoding_raw_evidence.json: the original SHA-256, UTF-16 BOM,
+and exact LF-normalized UTF-8 sidecar bytes under logs/ must all validate. Modified raw
+bytes, stale sidecars, invalid manifests, and active-source declarations fail
+validation. Explicit file scans still report the original capture's encoding.
+Current source is not exempted, and the encoding gate's severity is unchanged.
+
+GdUnit prewarm and report-copy commands use the shared file-backed CI process
+runner. They preserve the supplied runtime environment, actual exit code,
+timeout and process-tree cancellation. Process working directory and evidence
+root can differ so test-project commands still archive under repository
+logs/. A completed parent must not wait for compiler descendants to close
+inherited stdout pipes.
+
+The unused ADR-0005 command-whitelist exception is retired after verifying no
+forbidden executable command examples remain in this document. Other live
+legacy-document exceptions retain their dates and warning horizon; this
+repair does not renew them.

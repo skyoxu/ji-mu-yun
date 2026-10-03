@@ -86,6 +86,17 @@ jobs:
             Write-Error 'GDUNIT_PLUGIN_MISSING after ensure'; exit 1
           }
 
+      - name: Verify Python regressions and tracked source encoding
+        shell: pwsh
+        run: |
+          py -3 -m unittest discover -s scripts/sc/tests -p 'test_ci_*.py' -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          py -3 -m unittest discover -s scripts/python/tests -p 'test_run_gdunit.py' -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          py -3 scripts/python/check_encoding.py --tracked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          py -3 -c "import json, pathlib, datetime as d; p=pathlib.Path('logs/ci')/d.date.today().isoformat()/'encoding/session-summary.json'; s=json.loads(p.read_text(encoding='utf-8')); assert s['scanned']>20000 and s['bad']==0 and s['raw_evidence_count']==2 and not s['raw_evidence_errors'], s; print('TRACKED_ENCODING_PASS', s['scanned'], s['raw_evidence_count'])"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run all current engine regression cases
         shell: pwsh
         run: |
@@ -99,5 +110,5 @@ jobs:
         with:
           name: godot-repair-validation
           path: |
-            logs/ci/godot-repair-validation/**
+            logs/ci/**
             logs/e2e/**

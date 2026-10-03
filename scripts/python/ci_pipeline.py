@@ -373,9 +373,9 @@ def main():
         hard_fail = True
 
     # 3) Encoding scan (soft gate)
-    rc3, out3 = run_cmd(['py', '-3', 'scripts/python/check_encoding.py', '--since-today'], cwd=root)
+    rc3, out3 = run_cmd(['py', '-3', 'scripts/python/check_encoding.py', '--tracked'], cwd=root)
     enc_sum = read_json(os.path.join('logs', 'ci', date, 'encoding', 'session-summary.json')) or {}
-    summary['encoding'] = enc_sum
+    summary['encoding'] = {**enc_sum, 'rc': rc3, 'status': 'ok' if rc3 == 0 and enc_sum else 'warn'}
 
     summary['status'] = 'ok' if not hard_fail else 'fail'
     with io.open(os.path.join(ci_dir, 'ci-pipeline-summary.json'), 'w', encoding='utf-8') as f:
