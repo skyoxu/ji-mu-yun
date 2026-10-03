@@ -1,0 +1,103 @@
+name: Godot CI repair validation
+on:
+  push:
+    branches: [fix/godot-ci-validation-20261003]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    env:
+      GODOT_VERSION: "4.5.1"
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: utf-8
+      GDUNIT_STRICT_EXIT_CODE: "1"
+    steps:
+      - name: Enable Windows long paths
+        shell: pwsh
+        run: git config --system core.longpaths true
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Logs seed (ensure artifacts paths)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path logs/ci | Out-Null
+          New-Item -ItemType Directory -Force -Path logs/e2e | Out-Null
+          Set-Content -Path logs/ci/.seed -Value 'seed' -Encoding utf8
+          Set-Content -Path logs/e2e/.seed -Value 'seed' -Encoding utf8
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Pin .NET SDK/Runtime and set DOTNET_ROOT
+        shell: pwsh
+        run: |
+          $installer = "$HOME/dotnet-install.ps1"
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://dot.net/v1/dotnet-install.ps1' -OutFile $installer
+          & powershell -NoProfile -ExecutionPolicy Bypass -File $installer -Version 8.0.401 -InstallDir "$HOME/.dotnet"
+          & powershell -NoProfile -ExecutionPolicy Bypass -File $installer -Runtime dotnet -Version 8.0.21 -InstallDir "$HOME/.dotnet"
+          "DOTNET_ROOT=$HOME/.dotnet" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "$HOME/.dotnet" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          dotnet --info
+
+      - name: Download Godot .NET (GitHub Releases)
+        shell: pwsh
+        run: |
+          ./scripts/ci/download_godot_release.ps1 -Version "$env:GODOT_VERSION" -PreferConsole
+
+      - name: Setup Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Ensure GdUnit4 plugin
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $date = Get-Date -Format 'yyyy-MM-dd'
+          $ciDir = "logs/ci/$date"
+          New-Item -ItemType Directory -Force -Path $ciDir | Out-Null
+          $diag = Join-Path $ciDir 'ensure-gdunit4-diag.txt'
+          "CWD=$(Get-Location)" | Out-File -FilePath $diag -Encoding utf8
+          $pyv = (& py -3 -V 2>&1)
+          "PY3=$pyv" | Out-File -FilePath $diag -Append -Encoding utf8
+          $pyinfo = (& py -3 -c "import sys,os; print(sys.executable); print(os.getcwd())" 2>&1)
+          "PYINFO=$pyinfo" | Out-File -FilePath $diag -Append -Encoding utf8
+          if (-not (Test-Path 'scripts/python/ensure_gdunit_plugin.py')) {
+            'MISSING scripts/python/ensure_gdunit_plugin.py' | Out-File -FilePath $diag -Append -Encoding utf8
+            Get-ChildItem -Recurse scripts/python -ErrorAction SilentlyContinue | Select-Object -First 100 FullName | Out-File -FilePath $diag -Append -Encoding utf8
+            Write-Error 'ensure_gdunit_plugin.py missing'; exit 1
+          }
+          & py -3 scripts/python/ensure_gdunit_plugin.py --project Tests.Godot --version v6.0.0 *>&1 | Tee-Object -FilePath (Join-Path $ciDir 'ensure-gdunit4-stdout.txt') | Out-Null
+          if (Test-Path 'Tests.Godot/addons/gdUnit4/bin/GdUnitCmdTool.gd') {
+            'GDUNIT_PLUGIN_READY' | Out-File -FilePath $diag -Append -Encoding utf8
+          }
+          else {
+            'GDUNIT_PLUGIN_MISSING after ensure' | Out-File -FilePath $diag -Append -Encoding utf8
+            'Tree addons/gdUnit4:' | Out-File -FilePath $diag -Append -Encoding utf8
+            Get-ChildItem -Recurse 'Tests.Godot/addons/gdUnit4' -ErrorAction SilentlyContinue | Select-Object -First 200 FullName | Out-File -FilePath $diag -Append -Encoding utf8
+            'Tree Tests.Godot (first 200):' | Out-File -FilePath $diag -Append -Encoding utf8
+            Get-ChildItem -Recurse 'Tests.Godot' -ErrorAction SilentlyContinue | Select-Object -First 200 FullName, Length | Out-File -FilePath $diag -Append -Encoding utf8
+            Write-Error 'GDUNIT_PLUGIN_MISSING after ensure'; exit 1
+          }
+
+      - name: Run all current engine regression cases
+        shell: pwsh
+        run: |
+          py -3 scripts/python/run_gdunit.py --prewarm --godot-bin "$env:GODOT_BIN" --project Tests.Godot --add tests/Adapters --add tests/Security/Hard --add tests/Integration --add tests/UI --timeout-sec 480 --rd logs/ci/godot-repair-validation
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          py -3 -c "import json, pathlib, xml.etree.ElementTree as E; p=pathlib.Path('logs/ci/godot-repair-validation'); s=json.loads((p/'run-summary.json').read_text(encoding='utf-8')); r=s['results']; assert s['rc']==0 and r['tests']==74 and r['failures']==0 and r['errors']==0, s; x=E.parse(next(p.glob('report_*/results.xml'))).getroot(); assert int(x.get('skipped','0'))==0, x.attrib; print('ENGINE_REGRESSION_PASS', r)"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload engine repair evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-repair-validation
+          path: |
+            logs/ci/godot-repair-validation/**
+            logs/e2e/**
