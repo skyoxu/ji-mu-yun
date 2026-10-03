@@ -40,6 +40,7 @@ func _copy_abs(from_path: String, to_path: String) -> void:
     rf.close(); wf.close()
 
 func test_wal_backup_copy_and_reopen_has_same_data() -> void:
+    var previous_journal = OS.get_environment("GD_DB_JOURNAL")
     var helper = _force_managed()
     if helper == null:
         push_warning("SKIP: missing helper, skip test")
@@ -56,8 +57,10 @@ func test_wal_backup_copy_and_reopen_has_same_data() -> void:
     await get_tree().process_frame
     var src_abs = _abs(src_user)
     var wal_abs = src_abs + "-wal"
-    # wal may not exist immediately on some providers; this test is best-effort
-    var dst_abs = src_abs.get_base_dir().path_join("backup_copy.db")
+    # ADR-0025: copy real WAL data and read it back from the backup connection.
+    assert_bool(FileAccess.file_exists(wal_abs)).is_true()
+    var dst_user = src_user.get_base_dir().path_join("backup_copy.db")
+    var dst_abs = _abs(dst_user)
     _copy_abs(src_abs, dst_abs)
     if FileAccess.file_exists(wal_abs):
         _copy_abs(wal_abs, dst_abs + "-wal")
@@ -66,7 +69,10 @@ func test_wal_backup_copy_and_reopen_has_same_data() -> void:
     if db2 == null:
         push_warning("SKIP: missing C# instantiate, skip test")
         return
-    assert_bool(db2.TryOpen(ProjectSettings.localize_path(dst_abs))).is_true()
-    var rows = helper.QueryScalarInt("SELECT COUNT(1) FROM t WHERE k='alpha' AND v=99;")
+    assert_bool(db2.TryOpen(dst_user)).is_true()
+    var rows = helper.QueryOnNode2("SqlDb2", "SELECT COUNT(1) FROM t WHERE k=@0 AND v=99;", "alpha")
     assert_int(rows).is_equal(1)
+    db2.Close()
+    db.Close()
+    helper.SetEnv("GD_DB_JOURNAL", previous_journal)
 

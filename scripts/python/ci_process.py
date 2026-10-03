@@ -66,10 +66,10 @@ def stop_process_tree(process: subprocess.Popen) -> None:
     process.wait(timeout=15)
 
 
-def run_logged_command(args, cwd=None, timeout=900_000, *, separate_stderr=False, heartbeat_seconds=30):
+def run_logged_command(args, cwd=None, timeout=900_000, *, separate_stderr=False, heartbeat_seconds=30, env=None, log_root=None):
     if timeout <= 0 or heartbeat_seconds <= 0:
         raise ValueError('CI process timeout and heartbeat must be positive')
-    root = Path(cwd or os.getcwd())
+    root = Path(log_root or cwd or os.getcwd())
     directory = root / 'logs' / 'ci' / dt.date.today().isoformat() / 'process-output'
     directory.mkdir(parents=True, exist_ok=True)
     stem = uuid.uuid4().hex
@@ -81,7 +81,7 @@ def run_logged_command(args, cwd=None, timeout=900_000, *, separate_stderr=False
     with stdout_path.open('wb') as stdout_file, stderr_path.open('wb') as stderr_file:
         kwargs = {'start_new_session': True} if os.name != 'nt' else {}
         process = subprocess.Popen(
-            args, cwd=cwd, stdout=stdout_file,
+            args, cwd=cwd, env=env, stdout=stdout_file,
             stderr=stderr_file if separate_stderr else subprocess.STDOUT,
             **kwargs,
         )
