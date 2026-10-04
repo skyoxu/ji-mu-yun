@@ -116,3 +116,43 @@ reports bounded child stdout/stderr rather than an unqualified staging error.
   Operation requests retain the original 15-second timeout and are not retried.
 - No production listener, service timeout, account authority, execution policy,
   quality gate, coverage threshold or historical failure evidence changes.
+
+## Addendum (2026-10-04 package-version snapshots and activation)
+
+The owner approved automatic package snapshots and user-initiated version recovery.
+Each successful new package binds one persisted immutable snapshot and a ZIP hash.
+ZIP input comes from the captured bytes, after asset replacement smoke, under the
+existing project lock. A snapshot failure cannot publish a successful package.
+Export files remain in the registered stable workspace's original `repo/exports`;
+active source generations are independent of this historical download catalog.
+
+The authenticated package restore route accepts a server-selected package version,
+not a caller-selected snapshot or destination. It obtains a durable run, project
+lock and fenced lease, reauthorizes the current credential at execution/publication,
+checks the package binding/integrity and snapshot content, and validates native ACLs.
+The files are moved to a unique generation inside the protected registration root.
+One SQLite transaction switches root/repo/runtime/meta pointers, appends activation
+history, invalidates UI cache, pauses the latest iteration session for review, and
+records the succeeded run. Failure before that transaction preserves the previous
+active paths. Interrupted nonterminal runs retain the existing restart reconciliation.
+
+This file-restoration entry may recover a broken current project: unlike the
+existing generic route-authorized restore API, it does not require the broken
+current business chain to be ready. It does not authorize route execution or
+mark a project ready. Existing ownership, credential revocation, immutable package
+binding, lease fencing, snapshot verification, quota and ACL boundaries remain
+mandatory. Historical acceptance is ineligible after activation until a new final
+prototype validation succeeds; a subsequent failed validation blocks it again.
+Current-source, contract and UI-closure validators remain required independently.
+
+Snapshots exclude execution registration, previous generations, staged restore
+files, exports and build caches. Platform accounts, credentials, Windows identities,
+process memory and database history are not rolled back. The latest saved module
+plan is paused for explicit review against the restored files; ordinary source
+freshness gates decide whether it may continue or needs regeneration.
+
+The existing workflow readback adds a read-only business-chain summary to the
+existing status display. It consumes validated route evidence and adds no second
+executable acceptance workflow or additional user acceptance button. Real Windows
+activation/ACL tests and browser/consumer regressions provide implementation evidence;
+CI evidence is not a claim that a production host was deployed or a live game passed.

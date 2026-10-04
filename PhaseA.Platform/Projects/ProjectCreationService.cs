@@ -81,7 +81,7 @@ public sealed class ProjectCreationService
             return ProjectCreationResult.Failure("unknown_project_rule");
         }
 
-        var concurrency = await _creationConcurrencyLimiter.TryAcquireAsync(accountId, cancellationToken);
+        var concurrency = await _creationConcurrencyLimiter.AcquireAsync(accountId, cancellationToken);
         if (concurrency.Lease is null)
         {
             return ProjectCreationResult.Failure(concurrency.FailureCode ?? "project_creation_concurrency_limit_exceeded");

@@ -304,7 +304,7 @@ public sealed class ProjectWebPreviewService
             return Failure(projectId, "", fileName, "project_not_found");
         }
 
-        var projectRoot = Path.GetFullPath(project.RepoPath);
+        var projectRoot = ProjectPackageService.GetPackageRepositoryRoot(project);
         if (!WorkspacePathPolicy.IsUnderRoot(_options.HostedWorkspaceRoot, projectRoot))
         {
             throw new InvalidOperationException("Project repository path escaped the hosted workspace root.");
@@ -760,7 +760,7 @@ public sealed class ProjectWebPreviewService
             return "project_not_found";
         }
 
-        var projectRoot = Path.GetFullPath(project.RepoPath);
+        var projectRoot = ProjectPackageService.GetPackageRepositoryRoot(project);
         if (!WorkspacePathPolicy.IsUnderRoot(_options.HostedWorkspaceRoot, projectRoot))
         {
             throw new InvalidOperationException("Project repository path escaped the hosted workspace root.");
@@ -900,14 +900,14 @@ public sealed class ProjectWebPreviewService
             return new ProjectWebPreviewPackageStatus("missing", null, null, null, null);
         }
 
-        var packagePath = ResolveUnderProject(project.RepoPath, $"exports/{fileName}");
+        var packagePath = ResolveUnderProject(ProjectPackageService.GetPackageRepositoryRoot(project), $"exports/{fileName}");
         if (!File.Exists(packagePath))
         {
             return new ProjectWebPreviewPackageStatus("missing", null, null, null, null);
         }
 
         var previewId = ComputePreviewId(project.ProjectId, packagePath);
-        var previewRoot = ResolveUnderProject(project.RepoPath, $"{PreviewRootDirectory}/{previewId}");
+        var previewRoot = ResolveUnderProject(ProjectPackageService.GetPackageRepositoryRoot(project), $"{PreviewRootDirectory}/{previewId}");
         var indexPath = Path.Combine(previewRoot, "web", "index.html");
         var dataPath = Path.Combine(previewRoot, "preview-data.json");
         if (!File.Exists(indexPath) ||
@@ -1000,7 +1000,7 @@ public sealed class ProjectWebPreviewService
             return null;
         }
 
-        var previewContainer = ResolveUnderProject(project.RepoPath, $"{PreviewRootDirectory}/{previewId}");
+        var previewContainer = ResolveUnderProject(ProjectPackageService.GetPackageRepositoryRoot(project), $"{PreviewRootDirectory}/{previewId}");
         if (!TryReadReadyPreviewData(Path.Combine(previewContainer, "preview-data.json"), project.ProjectId, previewId, out _))
         {
             return null;

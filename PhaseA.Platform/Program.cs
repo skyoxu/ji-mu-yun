@@ -149,6 +149,7 @@ builder.Services.AddSingleton<SkillActionCatalog>();
 builder.Services.AddSingleton<SkillActionService>();
 builder.Services.AddSingleton<ArtifactReadbackService>();
 builder.Services.AddSingleton(new ExtensionPolicyState());
+builder.Services.AddSingleton<ProjectPackageRestoreService>();
 builder.Services.AddSingleton<ProjectWebPreviewService>();
 builder.Services.AddSingleton<ProjectPackageService>();
 builder.Services.AddSingleton<ProjectAssetInventoryService>();
@@ -1083,7 +1084,10 @@ app.MapPost("/api/projects/{projectId}/packages", async (
     }
     try
     {
-        var result = await packages.CreatePackageAsync(CurrentAccountId(context), projectId, cancellationToken);
+        var identity = CurrentIdentity(context);
+        var credentialHash = PhaseAAuth.HashTokenForStorage(PhaseAAuth.ReadBearerOrHeaderToken(context.Request)!);
+        var requestContext = RequestContext.FromIdentity(identity, identity.Username, credentialHash, context.TraceIdentifier);
+        var result = await packages.CreatePackageAsync(CurrentAccountId(context), projectId, cancellationToken, requestContext);
         return result.Status == "succeeded"
             ? Results.Ok(result)
             : IterationPlanRejected(context, "preview_package_rejected", result.FailureCode ?? "Package creation was rejected.", result.FailureCode ?? result.Status, StatusCodes.Status400BadRequest, result);
@@ -1838,6 +1842,31 @@ app.MapGet("/projects/{projectId}/packages/{fileName}", async (
     return result is null
         ? Results.NotFound(new { error = "project_package_not_found" })
         : Results.File(result.Content, result.ContentType, result.FileName);
+});
+
+app.MapPost("/api/projects/{projectId}/packages/{fileName}/restore", async (
+    string projectId, string fileName, ProjectPackageRestoreRequest request, HttpContext context,
+    [FromServices] ProjectPackageRestoreService restores, CancellationToken cancellationToken) =>
+{
+    ApplyNoStore(context);
+    var identity = CurrentIdentity(context);
+    var credentialHash = PhaseAAuth.HashTokenForStorage(PhaseAAuth.ReadBearerOrHeaderToken(context.Request)!);
+    var requestContext = RequestContext.FromIdentity(identity, identity.Username, credentialHash, context.TraceIdentifier);
+    var result = await restores.AdmitAsync(requestContext, projectId, fileName, request.OperationKey, cancellationToken);
+    if (result.OperationId is not null)
+        return Results.Accepted($"/api/runs/{result.OperationId}", new
+        {
+            operationId = result.OperationId, evidencePointer = $"/api/runs/{result.OperationId}"
+        });
+    var status = result.FailureCode switch
+    {
+        "project_not_found" or "package_not_found" => 404,
+        "project_busy" => 423,
+        "package_snapshot_unavailable" or "workspace_isolation_unavailable" => 409,
+        _ => 400
+    };
+    return Results.Json(new { code = result.FailureCode, message = "Project version restore was not admitted.",
+        requestId = context.TraceIdentifier }, statusCode: status);
 });
 
 app.MapPost("/api/projects/{projectId}/packages/{fileName}/download-ticket", async (
@@ -3534,6 +3563,11 @@ app.MapGet("/api/projects/{projectId}/ui-wiring-closure/latest", async (
         .ToHashSet(StringComparer.Ordinal);
     var readback = routeArtifacts.Read(project, promptBindings, projectArtifactIds);
     var ui = readback.Artifacts.FirstOrDefault(item => item.Route == "ui-wiring");
+    var restoreValidationRequired = await store.RequiresRestoreValidationAsync(project.AccountId, projectId, cancellationToken);
+    var blockers = readback.BlockingIssues.Where(issue => issue.IssueId.Contains("ui-wiring", StringComparison.OrdinalIgnoreCase)).ToList();
+    if (restoreValidationRequired)
+        blockers.Add(new ProjectWorkflowBlockingIssue("ui-wiring:restore_revalidation_required", "diagnostic_blocked", "P1",
+            "Restored files require a new prototype acceptance run.", []));
     return ui is null
         ? Results.NotFound(new { error = "ui_wiring_closure_not_found" })
         : Results.Ok(new
@@ -3550,8 +3584,8 @@ app.MapGet("/api/projects/{projectId}/ui-wiring-closure/latest", async (
             uiStyleSnapshotHash = ui.UiStyleSnapshotHash ?? "",
             uiSurfaceMatrixSummary = new { status = ui.Status },
             styleGapSummary = new { unresolved = readback.BlockingIssues.Count(issue => issue.DomainCode == "diagnostic_blocked") },
-            finalReadinessEligible = ui.Status == "succeeded" && ui.Freshness == "fresh" && readback.BlockingIssues.Count == 0,
-            blockingIssues = readback.BlockingIssues.Where(issue => issue.IssueId.Contains("ui-wiring", StringComparison.OrdinalIgnoreCase)).ToArray(),
+            finalReadinessEligible = ui.Status == "succeeded" && ui.Freshness == "fresh" && readback.BlockingIssues.Count == 0 && !restoreValidationRequired,
+            blockingIssues = blockers.ToArray(),
             evidenceRefs = new[] { new ProjectRouteStateEvidenceRef("sidecar", ui.CanonicalPath) }
         });
 });

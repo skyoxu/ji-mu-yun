@@ -202,6 +202,8 @@ public sealed class WorkspaceStorageService
                 while (reader.Read())
                 {
                     var path = reader.GetString(0);
+                    if (RunnerIsolationPolicy.TryGetWorkspaceDescriptor(path, out var descriptor))
+                        path = descriptor.WorkspaceRoot;
                     if (Directory.Exists(path)) roots.Add(Path.GetFullPath(path));
                 }
             }
@@ -242,7 +244,7 @@ public sealed class WorkspaceStorageService
                 if (!counted.Add(fullPath) || IsWithin(fullPath, excluded)) continue;
                 if (snapshotSourceRoots.Any(snapshotRoot => IsWithin(fullPath, snapshotRoot))) continue;
                 var relative = Path.GetRelativePath(root, fullPath);
-                if (IsSnapshotExcluded(relative, new HashSet<string>(StringComparer.OrdinalIgnoreCase))) continue;
+                if (IsSnapshotExcluded(relative, new HashSet<string>(StringComparer.OrdinalIgnoreCase), includeGeneratedStorage: true)) continue;
                 total = checked(total + new FileInfo(fullPath).Length);
             }
         }
@@ -259,11 +261,14 @@ public sealed class WorkspaceStorageService
             .ToArray();
     }
 
-    private static bool IsSnapshotExcluded(string relativePath, ISet<string> blacklist)
+    private static bool IsSnapshotExcluded(string relativePath, ISet<string> blacklist, bool includeGeneratedStorage = false)
     {
         var normalized = relativePath.Replace('\\', '/');
         var segments = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Any(segment => segment.Equals(".git", StringComparison.OrdinalIgnoreCase) ||
+                                    (!includeGeneratedStorage && segment.StartsWith(".restore-", StringComparison.OrdinalIgnoreCase)) ||
+                                    (!includeGeneratedStorage && segment.Equals("exports", StringComparison.OrdinalIgnoreCase)) ||
+                                    segment.Equals(".godot", StringComparison.OrdinalIgnoreCase) ||
                                     segment.Equals(".snapshots", StringComparison.OrdinalIgnoreCase) ||
                                     segment.Equals("bin", StringComparison.OrdinalIgnoreCase) ||
                                     segment.Equals("obj", StringComparison.OrdinalIgnoreCase) ||
@@ -273,6 +278,7 @@ public sealed class WorkspaceStorageService
             return true;
         var name = segments[^1];
         if (name.StartsWith(".snapshots-", StringComparison.OrdinalIgnoreCase) ||
+            name.Equals(".runner-isolation.json", StringComparison.OrdinalIgnoreCase) ||
             name.EndsWith(".protected", StringComparison.OrdinalIgnoreCase) ||
             name.EndsWith(".ticket", StringComparison.OrdinalIgnoreCase) ||
             name.EndsWith(".secret", StringComparison.OrdinalIgnoreCase))

@@ -1501,6 +1501,8 @@ public sealed class PrototypeWorkflowTests : IDisposable
         var setupService = Service(store, options, setupRunner);
         _ = await setupService.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         await CreateCompletedIterationPlanAsync(store, accountId, projectId);
+        // ADR-0036/0061: an exceptional validation must supersede a prior pass.
+        (await setupService.ValidateAsync(accountId, projectId)).Status.Should().Be("succeeded");
         var service = Service(store, options, new ThrowingHostedProcessRunner());
 
         var result = await service.ValidateAsync(accountId, projectId);
@@ -1509,6 +1511,9 @@ public sealed class PrototypeWorkflowTests : IDisposable
         result.Status.Should().Be("failed");
         result.ExitCode.Should().Be(500);
         run!.Status.Should().Be("failed");
+        run.EvidenceJson.Should().Contain("\"validation_only\":true");
+        run.EvidenceJson.Should().Contain("\"skeleton_validation_only\":false");
+        (await service.GetProgressAsync(accountId, projectId)).AcceptanceStatus.Should().Be("failed");
         (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
         (await store.HasActiveRunAsync(projectId)).Should().BeFalse();
     }

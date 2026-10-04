@@ -35,13 +35,13 @@ jobs:
         shell: pwsh
         run: |
           dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj -c Debug --no-build --no-restore `
-            --filter 'FullyQualifiedName~ProjectRunnerProvisioningTests|FullyQualifiedName~ProjectCreationServiceTests|FullyQualifiedName~ProjectRouteStateArtifactServiceTests|FullyQualifiedName~GddToModuleFirstSliceTests|FullyQualifiedName~HostedProcessRunnerTests|FullyQualifiedName~CodexHostedProcessCommandFactoryTests|FullyQualifiedName~ProjectWorkflowRouteServiceTests|FullyQualifiedName~AdminReviewQueueHttpIntegrationTests|FullyQualifiedName~S67BoundaryTests|FullyQualifiedName~S33BoundaryTests|FullyQualifiedName~S4BoundaryTests|FullyQualifiedName~S22BoundaryTests|FullyQualifiedName~S14BoundaryTests|FullyQualifiedName~DiablolikeGddWorkflowIntegrationTests|FullyQualifiedName~PrototypeWorkflowTests|FullyQualifiedName~HeavyRunnerQueueServiceTests|FullyQualifiedName~S25BoundaryTests' `
+            --filter 'FullyQualifiedName~PackageVersionRecoveryTests|FullyQualifiedName~ProjectCreationHostQueueTests|FullyQualifiedName~ProjectBusinessChainStatusTests|FullyQualifiedName~ProjectRunnerProvisioningTests|FullyQualifiedName~ProjectCreationServiceTests|FullyQualifiedName~ProjectRouteStateArtifactServiceTests|FullyQualifiedName~GddToModuleFirstSliceTests|FullyQualifiedName~HostedProcessRunnerTests|FullyQualifiedName~CodexHostedProcessCommandFactoryTests|FullyQualifiedName~ProjectWorkflowRouteServiceTests|FullyQualifiedName~AdminReviewQueueHttpIntegrationTests|FullyQualifiedName~S67BoundaryTests|FullyQualifiedName~S33BoundaryTests|FullyQualifiedName~S4BoundaryTests|FullyQualifiedName~S22BoundaryTests|FullyQualifiedName~S14BoundaryTests|FullyQualifiedName~DiablolikeGddWorkflowIntegrationTests|FullyQualifiedName~PrototypeWorkflowTests|FullyQualifiedName~HeavyRunnerQueueServiceTests|FullyQualifiedName~S25BoundaryTests' `
             --logger 'trx;LogFileName=phase-entry.trx' --results-directory logs/unit/phase-service-entry
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Business acceptance consumer regressions
         shell: pwsh
         run: |
-          python -m unittest scripts.python.tests.test_phase_a_business_chain_acceptance scripts.python.tests.test_phase_a_gdd_to_module_hardening_smoke -v
+          python -m unittest scripts.python.tests.test_phase_a_business_chain_acceptance scripts.python.tests.test_phase_a_package_restore_browser scripts.python.tests.test_phase_a_gdd_to_module_hardening_smoke -v
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         if: always()

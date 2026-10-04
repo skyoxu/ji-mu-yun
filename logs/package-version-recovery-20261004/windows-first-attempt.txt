@@ -1,0 +1,25 @@
+First CI attempt: https://github.com/skyoxu/ji-mu-yun/actions/runs/37179357974
+Fix: the recovery fixture omitted completing project bootstrap.
+2026-10-04T05:20:08.4943670Z [xUnit.net 00:03:21.03]     PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.FailedRestoreKeepsCurrentFiles_AndReleasesTheProject(fault: "credential-revoked") [FAIL]
+2026-10-04T05:20:09.0326850Z [xUnit.net 00:03:21.57]     PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.FailedRestoreKeepsCurrentFiles_AndReleasesTheProject(fault: "package-corruption") [FAIL]
+2026-10-04T05:20:09.4085525Z Expected: "succeeded"
+2026-10-04T05:20:09.4085759Z Actual:   "project_busy"
+2026-10-04T05:20:09.4087221Z      at PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.FailedRestoreKeepsCurrentFiles_AndReleasesTheProject(String fault) in D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\Readback\PackageVersionRecoveryTests.cs:line 81
+2026-10-04T05:20:09.4092925Z Expected: "succeeded"
+2026-10-04T05:20:09.4093152Z Actual:   "project_busy"
+2026-10-04T05:20:09.4094548Z      at PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.FailedRestoreKeepsCurrentFiles_AndReleasesTheProject(String fault) in D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\Readback\PackageVersionRecoveryTests.cs:line 81
+2026-10-04T05:20:09.5788149Z [xUnit.net 00:03:22.12]     PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.FailedRestoreKeepsCurrentFiles_AndReleasesTheProject(fault: "snapshot-corruption") [FAIL]
+2026-10-04T05:20:10.1465270Z [xUnit.net 00:03:22.68]     PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.OtherAccountAndMissingSnapshotCannotAdmitRestoration [FAIL]
+2026-10-04T05:20:10.7056490Z [xUnit.net 00:03:23.24]     PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.SnapshotFailureCannotPublishAPackageWithoutRecovery [FAIL]
+2026-10-04T05:20:10.9235867Z Expected: "succeeded"
+2026-10-04T05:20:10.9236163Z Actual:   "project_busy"
+2026-10-04T05:20:10.9237976Z      at PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.FailedRestoreKeepsCurrentFiles_AndReleasesTheProject(String fault) in D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\Readback\PackageVersionRecoveryTests.cs:line 81
+2026-10-04T05:20:10.9245146Z    at PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.OtherAccountAndMissingSnapshotCannotAdmitRestoration() in D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\Readback\PackageVersionRecoveryTests.cs:line 109
+2026-10-04T05:20:10.9248355Z Expected: "failed"
+2026-10-04T05:20:10.9248567Z Actual:   "project_busy"
+2026-10-04T05:20:10.9249985Z      at PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.SnapshotFailureCannotPublishAPackageWithoutRecovery() in D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\Readback\PackageVersionRecoveryTests.cs:line 119
+2026-10-04T05:20:11.2495988Z [xUnit.net 00:03:23.79]     PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.SelectedVersionBecomesActive_AndHistoricalDownloadsSurviveRestart [FAIL]
+2026-10-04T05:20:11.4563881Z Expected: "succeeded"
+2026-10-04T05:20:11.4564217Z Actual:   "project_busy"
+2026-10-04T05:20:11.4566610Z      at PhaseA.Platform.Tests.Readback.PackageVersionRecoveryTests.SelectedVersionBecomesActive_AndHistoricalDownloadsSurviveRestart() in D:\a\ji-mu-yun\ji-mu-yun\PhaseA.Platform.Tests\Readback\PackageVersionRecoveryTests.cs:line 26
+2026-10-04T05:20:11.5215076Z Failed!  - Failed:     6, Passed:   271, Skipped:     0, Total:   277, Duration: 3 m 23 s - PhaseA.Platform.Tests.dll (net8.0)
