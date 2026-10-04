@@ -39,6 +39,13 @@ class BusinessChainAcceptanceTests(unittest.TestCase):
     def test_current_complete_chain_is_accepted(self):
         self.assertEqual([], acceptance.evaluate("project-a", *evidence()))
 
+    def test_restore_requires_new_acceptance_even_with_historical_green_evidence(self):
+        workflow, contract, ui = evidence()
+        workflow["businessChain"] = {"status": "blocked", "blockingReasons": ["workspace:restore_revalidation_required"]}
+        self.assertIn("workflow:business_chain_blocked", acceptance.evaluate("project-a", workflow, contract, ui))
+        workflow["businessChain"]["status"] = "passed"
+        self.assertEqual([], acceptance.evaluate("project-a", workflow, contract, ui))
+
     def test_each_missing_route_is_blocked(self):
         for route in acceptance.ROUTES:
             workflow, contract, ui = evidence()

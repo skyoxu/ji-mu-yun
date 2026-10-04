@@ -12,7 +12,8 @@ public sealed record ProjectWorkflowRouteResult(
     IReadOnlyList<ProjectWorkflowStageDefinition>? StageDefinitions = null,
     ProjectWorkflowSeverityReview? AcceptanceReview = null,
     ProjectWorkflowRecommendation? WorkflowRecommendation = null,
-    ProjectRouteStateArtifactReadback? RouteStateArtifacts = null);
+    ProjectRouteStateArtifactReadback? RouteStateArtifacts = null,
+    ProjectBusinessChainStatus? BusinessChain = null);
 
 public sealed record ProjectWorkflowRouteStep(
     string Id,

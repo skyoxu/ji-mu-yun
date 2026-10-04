@@ -36,6 +36,26 @@ public sealed class ProjectCreationConcurrencyLimiter
 
     public int MaxConcurrentCreationsPerAccount { get; }
 
+    // ADR-0035: this is a host execution budget, not a platform admission cap.
+    // Keep the account admission rule, but wait for the existing host slot.
+    public async ValueTask<ProjectCreationConcurrencyAcquireResult> AcquireAsync(string accountId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        var accountSemaphore = _accountSemaphores.GetOrAdd(accountId, _ => new SemaphoreSlim(MaxConcurrentCreationsPerAccount, MaxConcurrentCreationsPerAccount));
+        if (!await accountSemaphore.WaitAsync(0, cancellationToken))
+            return ProjectCreationConcurrencyAcquireResult.AccountLimitExceeded();
+        try
+        {
+            await _globalSemaphore.WaitAsync(cancellationToken);
+            return ProjectCreationConcurrencyAcquireResult.Acquired(new ProjectCreationConcurrencyLease(_globalSemaphore, accountSemaphore));
+        }
+        catch
+        {
+            accountSemaphore.Release();
+            throw;
+        }
+    }
+
     public async ValueTask<ProjectCreationConcurrencyAcquireResult> TryAcquireAsync(string accountId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);

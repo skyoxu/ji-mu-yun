@@ -1563,6 +1563,11 @@ public sealed class BrowserUiRenderer
                     status: goal.status || ""
                   }));
                 }
+                window.addEventListener("message", event => {
+                  if (event.origin === location.origin && event.source === $("v2DownloadsFrame")?.contentWindow &&
+                      event.data?.type === "phase-project-restored" && event.data.projectId === state.projectId)
+                    location.reload();
+                });
                 function workflowRenderRouteReadback(route) {
                   if (!route) return "";
                   const stages = workflowStageTimelineModel(route);
@@ -1574,6 +1579,12 @@ public sealed class BrowserUiRenderer
                   const contract = workflowArtifactByRoute(route, "prototype-contract");
                   return `
                     <section class="v2-workflow-readback" data-workflow-route-readback="true">
+                      ${route.businessChain ? `<div class="v2-workflow-business-chain" data-business-chain-status="${escapeHtml(route.businessChain.status)}">
+                        <strong>整体交付检查：${route.businessChain.status === "passed" ? "通过" : "尚未完成"}</strong>
+                        <p>${(route.businessChain.blockingReasons || []).includes("workspace:restore_revalidation_required")
+                          ? "项目已恢复，请检查当前模块计划并重新进行原型项目验收。"
+                          : route.businessChain.status === "passed" ? "当前各阶段成果与验收证据完整且有效。" : "请根据下方阶段状态完成剩余工作；已有验收按钮继续使用。"}</p>
+                      </div>` : ""}
                       <div class="v2-workflow-stage-timeline" data-workflow-stage-timeline="true">
                         ${stages.map(stage => `
                           <div class="v2-workflow-stage ${escapeHtml(stage.status)}" data-workflow-stage="${escapeHtml(stage.id)}" data-stage-status="${escapeHtml(stage.status)}">
@@ -6833,7 +6844,7 @@ public sealed class BrowserUiRenderer
                 async function createProject() {
                   if (!validateCreateProjectForm(true)) return;
                   if (!guardGlobalAction()) return;
-                  setLocalBusy(true, "创建项目中，请等待当前任务执行完毕。");
+                  setLocalBusy(true, "正在创建项目；服务器繁忙时会等待执行资源。");
                   $("createProject").disabled = true;
                   $("createProject").textContent = "创建中...";
                   const creationAttemptStartedAt = Date.now();
@@ -10661,6 +10672,7 @@ public sealed class BrowserUiRenderer
                   <p>按版本号/时间戳从近到远列出所有已打包的项目文件。压缩包只包含项目相关文件，不包含平台工程代码。</p>
                 </header>
                 <section id="status" class="card muted">正在读取项目文件包列表...</section>
+                <section id="restoreStatus" class="card muted" hidden></section>
                 <section class="card toolbar">
                   <button id="createPackage" disabled>打包项目文件</button>
                   <span id="createPackageHint" class="muted">正在检查是否可以打包。</span>
@@ -10704,6 +10716,8 @@ public sealed class BrowserUiRenderer
                       <span class="muted">${escapeHtml(item.createdUtc || "未知时间")} · ${escapeHtml(item.fileName)} · ${item.sizeBytes} bytes</span>
                       <div class="package-actions">
                         <button data-download-url="${escapeHtml(item.downloadUrl)}" data-file-name="${escapeHtml(item.fileName)}">下载此版本</button>
+                        <button data-restore-file="${escapeHtml(item.fileName)}" data-restore-version="${escapeHtml(item.version)}" ${item.canRestore ? "" : "disabled"}>恢复此版本</button>
+                        ${item.canRestore ? "" : `<span class="muted">${escapeHtml(disabledText(item.restoreDisabledReason || "package_snapshot_unavailable"))}</span>`}
                       </div>
                       ${renderWebPreviewAction(item)}
                     </article>
@@ -10714,7 +10728,84 @@ public sealed class BrowserUiRenderer
                   document.querySelectorAll("[data-web-preview-file]").forEach(button => {
                     button.onclick = () => handleWebPreviewBackground(button, button.dataset.webPreviewFile, button.dataset.webPreviewUrl);
                   });
+                  document.querySelectorAll("[data-restore-file]").forEach(button => {
+                    button.onclick = () => restorePackage(button.dataset.restoreFile, button.dataset.restoreVersion);
+                    if (restoreInProgress) button.disabled = true;
+                  });
                   await loadGddDownload();
+                }
+                const restoreStorageKey = `phasePackageRestore:${projectId}`;
+                let restoreInProgress = false;
+                async function restorePackage(fileName, version) {
+                  if (restoreInProgress || !confirm(`恢复 ${version} 会替换当前项目文件。恢复后需要检查模块计划并重新验收。是否继续？`)) return;
+                  restoreInProgress = true;
+                  $("restoreStatus").hidden = false;
+                  document.querySelectorAll("[data-restore-file], #createPackage").forEach(button => button.disabled = true);
+                  const auth = token();
+                  const pending = { operationKey: crypto.randomUUID(), fileName, version };
+                  sessionStorage.setItem(restoreStorageKey, JSON.stringify(pending));
+                  try {
+                    await admitPackageRestore(pending, auth);
+                  } catch (error) {
+                    $("restoreStatus").textContent = error.message || "恢复请求失败，请刷新查看后台任务状态。";
+                  } finally {
+                    restoreInProgress = false;
+                    await loadPackages();
+                  }
+                }
+                async function admitPackageRestore(pending, auth) {
+                  const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/packages/${encodeURIComponent(pending.fileName)}/restore`, {
+                    method: "POST", headers: { "Authorization": `Bearer ${auth}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ operationKey: pending.operationKey }), cache: "no-store"
+                  });
+                  const payload = await response.json();
+                  if (!response.ok || !payload.operationId) {
+                    sessionStorage.removeItem(restoreStorageKey);
+                    throw new Error(disabledText(payload.code || "package_restore_failed"));
+                  }
+                  pending.operationId = payload.operationId;
+                  sessionStorage.setItem(restoreStorageKey, JSON.stringify(pending));
+                  await waitForPackageRestore(pending, auth);
+                }
+                async function waitForPackageRestore(pending, auth) {
+                  for (let attempt = 0; attempt < 600; attempt += 1) {
+                    if (token() !== auth) throw new Error("登录状态已变化，请重新登录后刷新查看恢复结果。");
+                    const response = await fetch(`/api/runs/${encodeURIComponent(pending.operationId)}`, {
+                      headers: { "Authorization": `Bearer ${auth}` }, cache: "no-store"
+                    });
+                    if (!response.ok) throw new Error("无法读取恢复任务，请刷新后继续查看。");
+                    const payload = await response.json();
+                    const run = payload.run || {};
+                    if (run.status === "succeeded") {
+                      let evidence = {};
+                      try { evidence = JSON.parse(run.evidenceJson || "{}"); } catch {}
+                      if (evidence.activated !== true) throw new Error("恢复任务没有活动版本确认，请查看运行记录。");
+                      sessionStorage.removeItem(restoreStorageKey);
+                      $("restoreStatus").textContent = `已恢复 ${pending.version}。请返回项目，检查模块计划并重新验收。`;
+                      if (window.parent !== window) window.parent.postMessage({ type: "phase-project-restored", projectId }, location.origin);
+                      return;
+                    }
+                    if (["failed", "blocked", "cancel", "cancelled"].includes(run.status)) {
+                      sessionStorage.removeItem(restoreStorageKey);
+                      throw new Error("恢复未完成，原活动项目未切换。请查看运行记录后重试。");
+                    }
+                    $("restoreStatus").textContent = run.status === "queued" ? `恢复 ${pending.version} 正在等待服务器执行资源。` : `正在恢复 ${pending.version}…`;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                  }
+                  throw new Error("恢复仍在后台执行；刷新页面后可继续查看结果。");
+                }
+                async function resumePackageRestore() {
+                  let pending;
+                  try { pending = JSON.parse(sessionStorage.getItem(restoreStorageKey) || "null"); } catch {}
+                  if ((!pending?.operationId && !pending?.operationKey) || !token()) return;
+                  restoreInProgress = true;
+                  $("restoreStatus").hidden = false;
+                  try {
+                    if (pending.operationId) await waitForPackageRestore(pending, token());
+                    else await admitPackageRestore(pending, token());
+                  }
+                  catch (error) { $("restoreStatus").textContent = error.message; }
+                  finally { restoreInProgress = false; await loadPackages(); }
                 }
                 function renderWebPreviewAction(item) {
                   const preview = item.webPreview || {};
@@ -10823,6 +10914,9 @@ public sealed class BrowserUiRenderer
                   $("downloadGddDocument").onclick = () => downloadGddDocument($("downloadGddDocument"));
                 }
                 function disabledText(reason) {
+                  if (reason === "package_snapshot_unavailable") return "此版本没有可用快照或快照已过期。";
+                  if (reason === "workspace_isolation_unavailable") return "项目执行身份尚未就绪，暂不能恢复。";
+                  if (reason === "package_restore_failed") return "版本恢复失败，请查看运行记录。";
                   if (reason === "prototype_not_created") return "尚未成功运行原型创建，或没有创建有效的godot场景文件，暂不能打包项目文件。";
                   if (reason === "m1_not_completed") return "M1 游戏场景完成后才可以打包项目文件。";
                   if (reason === "project_busy") return "项目有后台任务正在执行。";
@@ -11000,7 +11094,7 @@ public sealed class BrowserUiRenderer
                   }
                 }
                 $("createPackage").onclick = createPackage;
-                loadPackages();
+                loadPackages().then(resumePackageRestore);
               </script>
             </body>
             </html>

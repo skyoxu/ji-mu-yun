@@ -73,3 +73,20 @@ Out of scope:
 
 - `docs/adr/ADR-0035-phase-controlled-runner-workspace-execution.md`
 - `docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md`
+
+## Package version recovery (2026-10-04)
+
+The protected Runner registration owns a stable physical storage root. A package
+restore creates an active generation under `.restore-generations/<attempt-id>/`.
+`workspaces.root_path/repo_path/runtime_path/meta_path` switch together with an
+append-only `project_workspace_activations` record and succeeded run receipt.
+Read-only consumers may finish using the previous generation; mutating dispatch
+continues to use the project lock and current DB paths. Export/preview readback
+uses the stable root's original `repo/exports` so historical downloads survive.
+The activation table is project/account-scoped control-plane metadata, not a user
+sidecar authority. Schema installation is additive for existing databases.
+
+Workspace recovery restores files and invalidates current readiness. It does not
+roll back platform identities, chat/run/audit history or process state. Current
+module plans require review, and final validation must be newer than activation.
+See ADR-0061 and `docs/workflows/phase-service-runner-and-business-acceptance.md`.

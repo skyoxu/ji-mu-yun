@@ -13,7 +13,7 @@ using SQLitePCL;
 
 namespace PhaseA.Platform.Data;
 
-public sealed class PhaseAMetadataStore
+public sealed partial class PhaseAMetadataStore
 {
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> AdminReviewSidecarLocks = new(StringComparer.Ordinal);
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> AdminReviewUpsertLocks = new(StringComparer.Ordinal);

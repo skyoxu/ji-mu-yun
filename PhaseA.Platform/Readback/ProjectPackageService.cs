@@ -9,6 +9,7 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Security;
 
 namespace PhaseA.Platform.Readback;
 
@@ -81,6 +82,8 @@ public sealed class ProjectPackageService
     private readonly RunCancellationService _runCancellation;
     private readonly IHostedProcessRunner _processRunner;
     private readonly ProjectWebPreviewService? _webPreviews;
+    private readonly WorkspaceStorageService _storage;
+    private readonly ExtensionPolicyState _snapshotPolicy;
 
     public ProjectPackageService(
         PhaseAMetadataStore metadataStore,
@@ -88,7 +91,9 @@ public sealed class ProjectPackageService
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         RunCancellationService? runCancellation = null,
         IHostedProcessRunner? processRunner = null,
-        ProjectWebPreviewService? webPreviews = null)
+        ProjectWebPreviewService? webPreviews = null,
+        WorkspaceStorageService? storage = null,
+        ExtensionPolicyState? snapshotPolicy = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -96,12 +101,15 @@ public sealed class ProjectPackageService
         _runCancellation = runCancellation ?? new RunCancellationService();
         _processRunner = processRunner ?? new HostedProcessRunner();
         _webPreviews = webPreviews;
+        _storage = storage ?? new WorkspaceStorageService();
+        _snapshotPolicy = snapshotPolicy ?? new ExtensionPolicyState();
     }
 
     public async Task<ProjectPackageResult> CreatePackageAsync(
         string accountId,
         string projectId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        RequestContext? requestContext = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
@@ -126,6 +134,7 @@ public sealed class ProjectPackageService
         }
 
         var projectRoot = Path.GetFullPath(project.RepoPath);
+        RunnerIsolationPolicy.RequireNoReparsePoint(_options.HostedWorkspaceRoot, projectRoot);
         if (!WorkspacePathPolicy.IsUnderRoot(_options.HostedWorkspaceRoot, projectRoot))
         {
             throw new InvalidOperationException("Project repository path escaped the hosted workspace root.");
@@ -139,18 +148,24 @@ public sealed class ProjectPackageService
             return Failure(projectId, "project_busy", runId);
         }
 
+        WorkspaceSnapshotRecord? capturedSnapshot = null;
+        RequestContext? captureContext = null;
+        var packagePublished = false;
         try
         {
             await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
             await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
             using var runCancellation = _runCancellation.CreateLinkedTokenSource(runId, cancellationToken);
             var runToken = runCancellation.Token;
+            if (requestContext is not null &&
+                (await _metadataStore.ResolveAccountByTokenHashAsync(requestContext.CredentialId, runToken))?.AccountId != accountId)
+                throw new UnauthorizedAccessException("Package credential is no longer authorized.");
             var packageOrdinal = await NextPackageOrdinalAsync(project.ProjectId, runToken);
             var version = CreateVersion(packageOrdinal);
             var safeName = SafeFileName(project.Name);
             var fileName = $"{safeName}-{version}.zip";
             var relativePath = $"{PackageRootDirectory}/{fileName}";
-            var packagePath = ResolveUnderProject(projectRoot, relativePath);
+            var packagePath = ResolveUnderProject(GetPackageRepositoryRoot(project), relativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(packagePath)!);
             if (File.Exists(packagePath))
             {
@@ -174,7 +189,34 @@ public sealed class ProjectPackageService
                 await _metadataStore.CompleteRunAsync(runId, "failed", assetSmoke.ExitCode, assetSmoke.Stdout, assetSmoke.Stderr, failureEvidenceJson, runToken);
                 return new ProjectPackageResult(projectId, runId, "failed", "", "", "", "", 0, 0, [], "asset_replacement_smoke_failed");
             }
-            var includedFileCount = CreateZip(projectRoot, packagePath, project, version, runToken);
+            // ADR-0061: ZIP bytes come from this immutable capture, not a second
+            // read of files that another request could change after the snapshot.
+            var policy = _snapshotPolicy.ReadSnapshotPolicy();
+            var context = requestContext ?? new RequestContext("package-service", accountId,
+                new HashSet<string> { PhaseAAuth.UserRole }, $"package:{runId}", runId);
+            context.DemandAccount(accountId);
+            var snapshot = _storage.CreateSnapshot(context, Path.GetDirectoryName(projectRoot)!,
+                $"package-{runId}", project.WorkspaceId, project.ProjectId, policy.Version, policy.Blacklist);
+            capturedSnapshot = snapshot;
+            captureContext = context;
+            var staging = Path.Combine(project.RuntimePath, "tmp", $"package-{runId}");
+            int includedFileCount;
+            try
+            {
+                foreach (var (path, content) in snapshot.Manifest.ReadProtectedContent())
+                {
+                    runToken.ThrowIfCancellationRequested();
+                    if (!path.StartsWith("repo/", StringComparison.Ordinal)) continue;
+                    var target = RunnerIsolationPolicy.RequireContainedPath(staging, path[5..]);
+                    Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                    File.WriteAllBytes(target, content);
+                }
+                includedFileCount = CreateZip(staging, packagePath, project, version, runToken);
+            }
+            finally
+            {
+                if (Directory.Exists(staging)) Directory.Delete(staging, true);
+            }
             var sizeBytes = new FileInfo(packagePath).Length;
             var packageSha256 = ComputeFileSha256(packagePath);
             var generatedUtc = DateTimeOffset.UtcNow.ToString("O");
@@ -195,6 +237,7 @@ public sealed class ProjectPackageService
                 file_name = fileName,
                 relative_path = relativePath,
                 package_sha256 = packageSha256,
+                snapshot_id = snapshot.Manifest.SnapshotId,
                 size_bytes = sizeBytes,
                 included_file_count = includedFileCount,
                 applied_asset_selection_count = assetSelectionResult.AppliedCount,
@@ -202,8 +245,12 @@ public sealed class ProjectPackageService
                 included_roots = IncludedRoots,
                 included_root_files = IncludedRootFiles
             });
-            await _metadataStore.CompleteRunAsync(runId, "succeeded", 0, $"Created {fileName}", "", evidenceJson, runToken);
-            var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, runToken);
+            runToken.ThrowIfCancellationRequested();
+            await _metadataStore.CompleteRunAsync(runId, "succeeded", 0, $"Created {fileName}", "", evidenceJson, CancellationToken.None);
+            packagePublished = (await _metadataStore.GetRunSnapshotAsync(runId, CancellationToken.None))?.Status == "succeeded";
+            if (!packagePublished)
+                return new ProjectPackageResult(projectId, runId, "cancel", "", "", "", "", 0, 0, [], "cancel");
+            var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, CancellationToken.None);
 
             return new ProjectPackageResult(
                 project.ProjectId,
@@ -215,16 +262,13 @@ public sealed class ProjectPackageService
                 $"/projects/{project.ProjectId}/packages/{Uri.EscapeDataString(fileName)}",
                 sizeBytes,
                 includedFileCount,
-                artifacts);
+                artifacts,
+                SnapshotId: snapshot.Manifest.SnapshotId);
         }
         catch (OperationCanceledException)
         {
-            if (await IsRunCancelledAsync(runId, CancellationToken.None))
-            {
-                return new ProjectPackageResult(projectId, runId, "cancel", "", "", "", "", 0, 0, [], "cancel");
-            }
-
-            throw;
+            await _metadataStore.CompleteRunAsync(runId, "cancel", 499, "", "Packaging was cancelled.", "{}", CancellationToken.None);
+            return new ProjectPackageResult(projectId, runId, "cancel", "", "", "", "", 0, 0, [], "cancel");
         }
         catch (Exception ex)
         {
@@ -233,6 +277,8 @@ public sealed class ProjectPackageService
         }
         finally
         {
+            if (!packagePublished && capturedSnapshot is not null && captureContext is not null)
+                _storage.SoftDeleteSnapshot(captureContext, capturedSnapshot.Manifest.SnapshotId);
             _runCancellation.Unregister(runId);
             await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
         }
@@ -252,7 +298,7 @@ public sealed class ProjectPackageService
             return null;
         }
 
-        var projectRoot = Path.GetFullPath(project.RepoPath);
+        var projectRoot = GetPackageRepositoryRoot(project);
         if (!WorkspacePathPolicy.IsUnderRoot(_options.HostedWorkspaceRoot, projectRoot))
         {
             throw new InvalidOperationException("Project repository path escaped the hosted workspace root.");
@@ -298,7 +344,8 @@ public sealed class ProjectPackageService
                     artifact.RelativePath,
                     new FileInfo(packagePath).Length,
                     ReadPackageSha256(run.EvidenceJson) ?? ComputeFileSha256(packagePath),
-                    ReadGeneratedUtc(run.EvidenceJson)));
+                    ReadGeneratedUtc(run.EvidenceJson),
+                    ReadSnapshotId(run.EvidenceJson)));
             }
         }
 
@@ -306,6 +353,10 @@ public sealed class ProjectPackageService
             project,
             packageRecords.Select(package => package.FileName),
             runs);
+        var snapshotIds = _storage.ListSnapshots(accountId, projectId)
+            .Select(snapshot => snapshot.Manifest.SnapshotId).ToHashSet(StringComparer.Ordinal);
+        var registered = RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.WorkspaceRootPath, out var descriptor)
+            && descriptor.AccountId == accountId && descriptor.ProjectId == projectId;
         var packages = packageRecords.Select(package =>
         {
             var webPreviewStatus = webPreviewStatuses is not null &&
@@ -320,7 +371,11 @@ public sealed class ProjectPackageService
                 package.SizeBytes,
                 package.PackageSha256,
                 package.CreatedUtc,
-                webPreviewStatus);
+                webPreviewStatus,
+                package.SnapshotId,
+                !isBusy && registered && package.SnapshotId is not null && snapshotIds.Contains(package.SnapshotId),
+                isBusy ? "project_busy" : !registered ? "workspace_isolation_unavailable" :
+                    package.SnapshotId is null || !snapshotIds.Contains(package.SnapshotId) ? "package_snapshot_unavailable" : null);
         });
 
         return new ProjectPackageListResult(
@@ -354,7 +409,7 @@ public sealed class ProjectPackageService
             return null;
         }
 
-        var packagePath = ResolveUnderProject(project.RepoPath, $"{PackageRootDirectory}/{fileName}");
+        var packagePath = ResolveUnderProject(GetPackageRepositoryRoot(project), $"{PackageRootDirectory}/{fileName}");
         if (!File.Exists(packagePath))
         {
             return null;
@@ -1425,6 +1480,7 @@ public sealed class ProjectPackageService
             throw new InvalidOperationException("Package path escaped project repository root.");
         }
 
+        RunnerIsolationPolicy.RequireNoReparsePoint(projectRoot, fullPath);
         return fullPath;
     }
 
@@ -1485,6 +1541,21 @@ public sealed class ProjectPackageService
         }
     }
 
+    // The export catalog belongs to the stable workspace, not its active source generation.
+    public static string GetPackageRepositoryRoot(ProjectSnapshot project) =>
+        Path.GetFullPath(Path.Combine(WorkspaceGenerationPaths.StorageRoot(project), "repo"));
+
+    private static string? ReadSnapshotId(string? evidenceJson)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(evidenceJson ?? "{}");
+            return doc.RootElement.TryGetProperty("snapshot_id", out var value) && value.ValueKind == JsonValueKind.String
+                ? value.GetString() : null;
+        }
+        catch (JsonException) { return null; }
+    }
+
     private static bool IsSha256(string? value)
     {
         return value is { Length: 64 } &&
@@ -1518,7 +1589,8 @@ public sealed class ProjectPackageService
         string RelativePath,
         long SizeBytes,
         string PackageSha256,
-        string CreatedUtc);
+        string CreatedUtc,
+        string? SnapshotId);
 
     private sealed record AssetReplacementSmokeResult(
         bool Ran,

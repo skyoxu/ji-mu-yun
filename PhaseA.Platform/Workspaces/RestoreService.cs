@@ -58,7 +58,18 @@ public sealed class RestoreService
         }
     }
 
-    private RestoreAttempt RestoreCore(RequestContext context, SnapshotManifest manifest, string sourceRoot, string destinationRoot, RunnerLease lease, string idempotencyKey)
+    // ADR-0061 package-version recovery is a file restoration, not permission
+    // to resume a route. The owning service verifies the immutable package binding
+    // and reauthorizes its credential at each publication boundary. Business
+    // readiness is invalidated separately when the active generation is switched.
+    internal RestoreAttempt RestoreProjectVersion(RequestContext context, SnapshotManifest manifest,
+        string sourceRoot, string destinationRoot, RunnerLease lease, string idempotencyKey, Func<bool> reauthorize)
+    {
+        lock (_restoreGate)
+            return RestoreCore(context, manifest, sourceRoot, destinationRoot, lease, idempotencyKey, reauthorize);
+    }
+
+    private RestoreAttempt RestoreCore(RequestContext context, SnapshotManifest manifest, string sourceRoot, string destinationRoot, RunnerLease lease, string idempotencyKey, Func<bool>? reauthorize = null)
     {
         using var coordination = AcquireCrossProcessCoordination(destinationRoot, idempotencyKey);
         try
@@ -74,7 +85,8 @@ public sealed class RestoreService
         if (manifest.ProjectId != lease.ProjectId || manifest.AccountId != lease.AccountId)
             throw new UnauthorizedAccessException("restore lease ownership does not match snapshot");
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
-        DemandCurrentRuntimeCredential(context, manifest.WorkspaceId);
+        if (reauthorize is null) DemandCurrentRuntimeCredential(context, manifest.WorkspaceId);
+        else if (!reauthorize()) throw new UnauthorizedAccessException("Project restore credential is no longer authorized.");
         var existing = LoadAttempt(idempotencyKey) ?? (_inMemoryAttempts.TryGetValue(idempotencyKey, out var remembered) ? remembered : null);
         if (existing is not null)
         {
@@ -94,7 +106,7 @@ public sealed class RestoreService
             PersistQuarantinedAttempt(rejected, idempotencyKey, lease, context, manifest, destinationRoot, new RestoreBoundaryFailure("stale_lease"));
             throw;
         }
-        if (!HasCurrentRouteAuthority(manifest.AccountId, manifest.ProjectId))
+        if (reauthorize is null && !HasCurrentRouteAuthority(manifest.AccountId, manifest.ProjectId))
         {
             RecordRouteRecoveryEvidence(0, hasCurrentBlocker: true, isBlocked: true, canContinue: false);
             var blocked = CreateStagingAttempt(manifest).Advance(RestoreAttemptStatus.Quarantined);
@@ -132,8 +144,9 @@ public sealed class RestoreService
             // runtime capability revoked while content was being staged must
             // not be able to publish a new ready directory.
             DemandAuthoritativeLease(lease);
-            DemandCurrentRuntimeCredential(context, manifest.WorkspaceId);
-            if (!HasCurrentRouteAuthority(manifest.AccountId, manifest.ProjectId))
+            if (reauthorize is null) DemandCurrentRuntimeCredential(context, manifest.WorkspaceId);
+            else if (!reauthorize()) throw new UnauthorizedAccessException("Project restore credential is no longer authorized.");
+            if (reauthorize is null && !HasCurrentRouteAuthority(manifest.AccountId, manifest.ProjectId))
                 throw new RestoreBoundaryFailure("route_authority_missing");
             WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "post-verification");
             WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "post-verification");
@@ -150,7 +163,7 @@ public sealed class RestoreService
             if (!RunnerIsolationPolicy.HasExpectedRestoreTreeSecurity(destinationDescriptor, published))
                 throw new RestoreBoundaryFailure("acl_invalid");
             var result = attempt.Advance(RestoreAttemptStatus.Published);
-            PersistCurrentRuntimeCredential(context, manifest.WorkspaceId);
+            if (reauthorize is null) PersistCurrentRuntimeCredential(context, manifest.WorkspaceId);
             ProjectAssetPreviewTicketService.InvalidateTickets(manifest.AccountId, manifest.ProjectId);
             _inMemoryAttempts[idempotencyKey] = result;
             PersistAttempt(result, idempotencyKey, lease, context, manifest, destinationRoot);

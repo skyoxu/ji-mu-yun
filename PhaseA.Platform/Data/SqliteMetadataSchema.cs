@@ -1218,6 +1218,21 @@ public static class SqliteMetadataSchema
             fence INTEGER NOT NULL
         );
         """,
+        // ADR-0061: append-only activation history; workspaces remains the active pointer.
+        """
+        CREATE TABLE IF NOT EXISTS project_workspace_activations (
+            run_id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            snapshot_id TEXT NOT NULL,
+            attempt_id TEXT NOT NULL,
+            generation_root TEXT NOT NULL,
+            activated_utc TEXT NOT NULL,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS ix_project_workspace_activations_project_time
+            ON project_workspace_activations (account_id, project_id, activated_utc);
+        """,
         """
         CREATE TABLE IF NOT EXISTS account_llm_bindings (
             account_id TEXT PRIMARY KEY,

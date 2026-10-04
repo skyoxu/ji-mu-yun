@@ -836,7 +836,10 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             throw new InvalidOperationException("Project not found.");
         }
 
-        return await GetProgressForProjectAsync(project, cancellationToken);
+        var progress = await GetProgressForProjectAsync(project, cancellationToken);
+        return await _metadataStore.RequiresRestoreValidationAsync(accountId, projectId, cancellationToken)
+            ? progress with { AcceptanceStatus = "stale", AcceptanceFailure = "restore_revalidation_required", AcceptanceRunId = null }
+            : progress;
     }
 
     private async Task<PrototypeWorkflowProgress> GetProgressForProjectAsync(ProjectSnapshot project, CancellationToken cancellationToken)

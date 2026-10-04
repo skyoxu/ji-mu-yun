@@ -37,3 +37,16 @@ Use controlled hosted process execution with project-scoped workspace boundaries
 - `PhaseA.Platform/Runs/HeavyRunnerQueueService.cs`
 - `PhaseA.Platform/Workspaces/WorkspacePathPolicy.cs`
 - `runtime/phase-a/start-phasea.ps1`
+
+## Creation admission clarification (2026-10-04)
+
+`PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS` remains the existing per-service host
+execution budget, also used by the initialization queue. Project creation now waits
+for an available host slot instead of returning a global-limit rejection. The
+per-account admission limit remains configured and cancellation releases a waiting
+account slot. The HTTP success shape remains compatible; while waiting, the browser
+shows that server execution resources may be busy. An HTTP disconnect can cancel
+creation before admission completes; this is not a new durable creation API.
+These variables are not a distributed platform quota or a shared budget across
+multiple processes on one server. Future multi-server scheduling must coordinate
+host execution capacity without introducing a fixed platform-wide creation cap.

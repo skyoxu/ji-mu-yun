@@ -35,6 +35,9 @@ HASH_FIELDS = (*HASH_BINDINGS, "sourceIterationSessionHash", "sourceValidationIn
 def evaluate(project_id: str, workflow: dict, contract: dict, ui: dict) -> list[str]:
     """The host validates ownership, source boundaries, ledger completeness and freshness."""
     failures: list[str] = []
+    business = workflow.get("businessChain")
+    if business is not None and (not isinstance(business, dict) or business.get("status") != "passed"):
+        failures.append("workflow:business_chain_blocked")
     for name, payload in (("workflow", workflow), ("contract", contract), ("ui", ui)):
         if payload.get("projectId") != project_id:
             failures.append(f"{name}:project_binding_invalid")
