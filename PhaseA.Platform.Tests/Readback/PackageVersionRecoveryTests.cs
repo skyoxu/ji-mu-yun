@@ -49,6 +49,19 @@ public sealed class PackageVersionRecoveryTests
         Assert.True(await scope.Store.RequiresRestoreValidationAsync(scope.Owner.AccountId, active.ProjectId));
         Assert.True(RunnerIsolationPolicy.HasExpectedRestoreTreeSecurity(scope.Descriptor, active.RepoPath));
         Assert.NotNull(await scope.Packages.ReadPackageAsync(scope.Owner.AccountId, active.ProjectId, second.FileName));
+        Assert.Equal("restore_revalidation_required",
+            (await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, active.ProjectId)).FailureCode);
+        var revalidation = await scope.Store.CreateRunAsync(active.ProjectId, active.WorkspaceId, "prototype-7day-playable");
+        await scope.Store.CompleteRunAsync(revalidation, "succeeded", 0, "", "", "{\"validation_only\":true}");
+        var repackaged = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, active.ProjectId);
+        Assert.Equal("succeeded", repackaged.Status);
+        var activeZip = await scope.Packages.ReadPackageAsync(scope.Owner.AccountId, active.ProjectId, repackaged.FileName);
+        using (var archive = new ZipArchive(new MemoryStream(activeZip!.Content)))
+        using (var reader = new StreamReader(archive.GetEntry("Game.Core/Version.cs")!.Open()))
+            Assert.Equal("version-one", await reader.ReadToEndAsync());
+        scope.Storage.SoftDeleteSnapshot(scope.Context, first.SnapshotId!);
+        Assert.Equal(scope.PendingRun, (await scope.Restorer.AdmitAsync(scope.Context,
+            active.ProjectId, first.FileName, "restore-one")).OperationId);
         // Reload the persisted snapshot catalog and active metadata as a fresh consumer.
         var storage = new WorkspaceStorageService(scope.Database.ConnectionString);
         var packages = new ProjectPackageService(scope.Store, scope.Options, storage: storage);
@@ -154,6 +167,9 @@ public sealed class PackageVersionRecoveryTests
                 runnerProvisioner: new WindowsProjectRunnerProvisioner(scope.Options));
             var created = await creator.CreateProjectAsync(scope.Owner.AccountId, new(null, "Version Game", "default", null, null, null, null));
             Assert.True(created.Succeeded, created.FailureCode);
+            // This fixture tests recovery after bootstrap; no bootstrap worker
+            // runs in the test process. Production marks this after Chapter 2.
+            await scope.Store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
             scope.Project = (await scope.Store.GetProjectSnapshotAsync(created.ProjectId!))!;
             Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(scope.Project.WorkspaceRootPath, out scope.Descriptor));
             var run = await scope.Store.CreateRunAsync(created.ProjectId!, scope.Project.WorkspaceId, "prototype-7day-playable");

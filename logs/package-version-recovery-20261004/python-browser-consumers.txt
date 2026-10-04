@@ -19,6 +19,6 @@ test_project_route_state_hash_chain_fails_when_contract_uses_stale_scene_hash (s
 test_project_route_state_hash_chain_passes (scripts.python.tests.test_phase_a_gdd_to_module_hardening_smoke.PhaseAGddToModuleHardeningSmokeTests.test_project_route_state_hash_chain_passes) ... ok
 
 ----------------------------------------------------------------------
-Ran 19 tests in 2.597s
+Ran 19 tests in 2.606s
 
 OK

@@ -10914,6 +10914,7 @@ public sealed class BrowserUiRenderer
                   $("downloadGddDocument").onclick = () => downloadGddDocument($("downloadGddDocument"));
                 }
                 function disabledText(reason) {
+                  if (reason === "restore_revalidation_required") return "恢复后需要重新通过原型项目验收，才能生成新包。";
                   if (reason === "package_snapshot_unavailable") return "此版本没有可用快照或快照已过期。";
                   if (reason === "workspace_isolation_unavailable") return "项目执行身份尚未就绪，暂不能恢复。";
                   if (reason === "package_restore_failed") return "版本恢复失败，请查看运行记录。";

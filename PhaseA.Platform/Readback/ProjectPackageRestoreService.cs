@@ -33,16 +33,18 @@ public sealed class ProjectPackageRestoreService(
         {
             var project = await store.GetProjectSnapshotAsync(projectId, token);
             if (project is null || project.AccountId != context.AccountId) return new(null, "project_not_found");
+            var binding = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fileName))).ToLowerInvariant();
+            var runType = $"project-package-restore:{binding}:{operationKey.Trim()}";
+            // ADR-0061: a replay reads the durable operation even if its version
+            // was later removed from the snapshot catalog.
+            var existing = (await store.ListRunsForProjectAsync(projectId, token)).FirstOrDefault(run => run.RunType == runType);
+            if (existing is not null) return new(existing.RunId);
             var catalog = await packages.ListPackagesAsync(context.AccountId, projectId, token);
             var package = catalog?.Packages.FirstOrDefault(item => item.FileName == fileName);
             if (package is null) return new(null, "package_not_found");
             if (package.SnapshotId is null || !storage.ListSnapshots(context.AccountId, projectId)
                 .Any(item => item.Manifest.SnapshotId == package.SnapshotId && item.Manifest.WorkspaceId == project.WorkspaceId))
                 return new(null, "package_snapshot_unavailable");
-            var binding = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fileName))).ToLowerInvariant();
-            var runType = $"project-package-restore:{binding}:{operationKey.Trim()}";
-            var existing = (await store.ListRunsForProjectAsync(projectId, token)).FirstOrDefault(run => run.RunType == runType);
-            if (existing is not null) return new(existing.RunId);
             if (project.BootstrapStatus == "running" || await store.HasActiveRunAsync(projectId, token))
                 return new(null, "project_busy");
             if (!RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.WorkspaceRootPath, out var descriptor) ||

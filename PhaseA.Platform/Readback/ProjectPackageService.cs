@@ -277,10 +277,16 @@ public sealed class ProjectPackageService
         }
         finally
         {
-            if (!packagePublished && capturedSnapshot is not null && captureContext is not null)
-                _storage.SoftDeleteSnapshot(captureContext, capturedSnapshot.Manifest.SnapshotId);
-            _runCancellation.Unregister(runId);
-            await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+            try
+            {
+                if (!packagePublished && capturedSnapshot is not null && captureContext is not null)
+                    _storage.SoftDeleteSnapshot(captureContext, capturedSnapshot.Manifest.SnapshotId);
+            }
+            finally
+            {
+                _runCancellation.Unregister(runId);
+                await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+            }
         }
     }
 
@@ -429,6 +435,8 @@ public sealed class ProjectPackageService
 
     private async Task<PackageGate> ResolvePackageGateAsync(ProjectSnapshot project, CancellationToken cancellationToken)
     {
+        if (await _metadataStore.RequiresRestoreValidationAsync(project.AccountId, project.ProjectId, cancellationToken))
+            return new PackageGate(false, "restore_revalidation_required");
         var m1Gate = await TryResolveM1PackageGateAsync(project, cancellationToken);
         if (m1Gate is not null)
         {
