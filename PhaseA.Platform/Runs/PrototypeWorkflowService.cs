@@ -723,7 +723,8 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         }
         catch (Exception ex)
         {
-            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), FailureEvidenceJson(prototypeRecordPath), CancellationToken.None);
+            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(),
+                FailureEvidenceJson(prototypeRecordPath, validationOnly: true, skeletonValidationOnly: SkeletonValidationOnly), CancellationToken.None);
             await SetProgressAsync(
                 runId,
                 "failed",
@@ -2198,12 +2199,15 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             ?? PrototypeRecordWriter.SanitizeSlug(fallbackSlug);
     }
 
-    private static string FailureEvidenceJson(string prototypeRecordPath, bool repair = false)
+    private static string FailureEvidenceJson(string prototypeRecordPath, bool repair = false,
+        bool validationOnly = false, bool skeletonValidationOnly = false)
     {
         return JsonSerializer.Serialize(new
         {
             run_type = RunType,
             repair,
+            validation_only = validationOnly,
+            skeleton_validation_only = skeletonValidationOnly,
             prototype_record = prototypeRecordPath,
             slug = ExtractSlugFromPrototypeRecordPath(prototypeRecordPath)
         });
