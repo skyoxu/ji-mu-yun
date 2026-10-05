@@ -1,0 +1,37 @@
+{
+  "schema": "vdd.v3-candidate-repair.v1",
+  "requirements_sha256": "sha256:d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+  "authorizes": [],
+  "obligation_contracts": {
+    "O-48EFE4CFB48E": {
+      "acceptance": {
+        "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#NFR-7"],
+        "given": "An external process attempts to emit beyond its declared finite output bound.",
+        "when": "The Quick Dev external-process executor captures and records the process result.",
+        "then": "Output-budget exhaustion is unsuccessful and produces bounded receipt facts.",
+        "oracle": {"observable": "The process receipt exposes the output bound and the run cannot be successful after exceeding it.", "expected": "A genuine failing assertion is classified as expected-red before implementation.", "forbidden": ["Unbounded output capture", "Successful terminal result after output-budget exhaustion"]},
+        "assertion_ids": ["NFR7-EXTERNAL-PROCESS-OUTPUT-BOUND"]
+      },
+      "failure_intents": [{
+        "failure_intent_id": "FI-46D437546E21",
+        "failure_family": "expected-red",
+        "selector_intent": "Execute the runtime-stage selector with a process that attempts to emit beyond its declared finite output bound and require a bounded unsuccessful receipt rather than unbounded capture or success.",
+        "expected_outcome": "fail",
+        "failure_id": "NFR7-OUTPUT-BOUND-NOT-ENFORCED"
+      }],
+      "slice_hint": {
+        "production_owners": [".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py", ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py"],
+        "verification_lane": "runtime",
+        "behavior_change": "Under ADR-0058, add finite output-bound enforcement and receipt facts to the Toolchain external-process executor; output-budget exhaustion must terminate deterministically as unsuccessful.",
+        "affected_subjects": ["Each external process"],
+        "allowed_write_paths": [".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py", ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py", "scripts/sc/tests/tc_d1_cer/test_s40.py"],
+        "execution_snapshot_paths": [".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py", "scripts/sc/tests/tc_d1_cer/test_s40.py"],
+        "planned_new_files": ["scripts/sc/tests/tc_d1_cer/test_s40.py"],
+        "terminal_predicate": "The selected runtime test proves that a process attempting excess output cannot produce unbounded artifacts or a successful terminal result.",
+        "rollback_scope": {"production_paths": [".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py", ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py"], "state_or_schema_compatibility": "Receipt changes are additive and preserve existing fields."},
+        "forbidden_paths": ["PhaseA.Platform", "runtime/phase-a", "logs"],
+        "validation_commands": [["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s40.py", "-q"], ["python", "-m", "pytest", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py", "-q"]]
+      }
+    }
+  }
+}

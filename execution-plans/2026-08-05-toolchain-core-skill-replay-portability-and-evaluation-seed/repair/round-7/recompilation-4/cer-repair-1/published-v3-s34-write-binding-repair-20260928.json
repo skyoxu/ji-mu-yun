@@ -1,0 +1,155 @@
+{
+  "schema": "vdd.v3-candidate-repair.v1",
+  "requirements_sha256": "sha256:d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+  "authorizes": [],
+  "obligation_contracts": {
+    "O-8E718A411378": {
+      "acceptance": {
+        "acceptance_id": "A-D5EA06D7CBC4",
+        "assertion_ids": [
+          "A-8E718A411378-1"
+        ],
+        "complexity_class": "simple",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "given": "The three named evaluation seeds are recorded in the toolchain evaluation-seed manifest.",
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "obligation_ids": [
+          "O-8E718A411378"
+        ],
+        "oracle": {
+          "expected": "Each named seed occurrence has an explicit non-empty applicability object; all three occurrences are present and individually inspectable.",
+          "forbidden": [
+            "Any named evaluation-seed occurrence lacks applicability information.",
+            "A fourth occurrence is introduced or one occurrence is silently merged.",
+            "An applicability object is present but empty."
+          ],
+          "observable": "Manifest validation reports exactly three seed occurrences, each with a non-empty applicability object and provenance."
+        },
+        "red_intent_ids": [
+          "FI-49F808B56D35",
+          "FI-EEAF8329B8CE"
+        ],
+        "source_refs": [
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-6"
+        ],
+        "then": "The evaluation-seed manifest is parsed and checked for per-occurrence applicability.",
+        "upgrade_conditions": [
+          "selector spans multiple test roots",
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory"
+        ],
+        "verification_lane": "unit",
+        "when": "Each evaluation-seed occurrence is recorded or checked."
+      },
+      "failure_intents": [
+        {
+          "acceptance_ids": [
+            "A-D5EA06D7CBC4"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "F-8E718A411378-2",
+          "failure_intent_id": "FI-49F808B56D35",
+          "selector_intent": "Duplicate or merge named seed occurrences; exact-once occurrence validation fails."
+        },
+        {
+          "acceptance_ids": [
+            "A-D5EA06D7CBC4"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "F-8E718A411378-1",
+          "failure_intent_id": "FI-EEAF8329B8CE",
+          "selector_intent": "Remove applicability from one named seed occurrence or replace it with an empty object; manifest validation fails that occurrence."
+        }
+      ],
+      "slice_hint": {
+        "acceptance_ids": [
+          "A-D5EA06D7CBC4"
+        ],
+        "affected_subjects": [
+          "Three named evaluation-seed manifest occurrences and applicability metadata"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/tests/tc_d1_cer/test_s34.py",
+          "scripts/sc/scenarios/evaluation-seed-manifest.v1.json"
+        ],
+        "behavior_change": "Require and validate explicit applicability for each of the three named evaluation-seed occurrences.",
+        "complexity_class": "simple",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/tc_d1_cer/test_s34.py",
+          "scripts/sc/scenarios/evaluation-seed-manifest.v1.json"
+        ],
+        "failure_intent_ids": [
+          "FI-49F808B56D35",
+          "FI-EEAF8329B8CE"
+        ],
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "obligation_ids": [
+          "O-8E718A411378"
+        ],
+        "planned_new_files": [
+          "scripts/sc/tests/tc_d1_cer/test_s34.py"
+        ],
+        "production_owners": [
+          "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+          "scripts/sc/skill_package_replay.py"
+        ],
+        "proof": {
+          "acceptance_ids": [
+            "A-D5EA06D7CBC4"
+          ],
+          "assertion_ids": [
+            "A-8E718A411378-1"
+          ],
+          "selector_intents": [
+            "Duplicate or merge named seed occurrences; exact-once occurrence validation fails.",
+            "Remove applicability from one named seed occurrence; manifest validation fails that occurrence."
+          ]
+        },
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+            "scripts/sc/skill_package_replay.py"
+          ],
+          "state_or_schema_compatibility": "Schema tightening is additive for applicability; rollback removes FR-6 enforcement but preserves prior manifest compatibility."
+        },
+        "slice_id": "S34",
+        "slice_input_hash": "sha256:3b559e0a8c432cf8eb52ba1c93abc32c0849fb2ff00c450d67a989e7b9585b79",
+        "state_transition": "Seed manifest without per-occurrence applicability -> schema/replay validation -> all three occurrences carry applicability.",
+        "terminal_predicate": "Validation succeeds only if exactly three named occurrences each include non-empty applicability.",
+        "upgrade_conditions": [
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory",
+          "selector spans multiple test roots"
+        ],
+        "verification_lane": "unit",
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/tc_d1_cer/test_s34.py",
+            "-q"
+          ],
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc"
+          ]
+        ],
+        "forbidden_paths": [
+          "PhaseA.Platform",
+          "logs/phase-a-innernet",
+          "runtime/phase-a"
+        ]
+      }
+    }
+  }
+}

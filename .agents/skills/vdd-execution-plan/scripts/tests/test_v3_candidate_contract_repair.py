@@ -142,6 +142,15 @@ class CandidateRepairTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn('cannot combine fixtures', result.stderr)
 
+    def test_public_cli_requires_explicit_correction_for_published_reuse(self):
+        cli = Path(__file__).resolve().parents[5] / 'scripts/vdd/compile_plan.py'
+        result = subprocess.run([sys.executable, str(cli), '--requirements', str(self.requirements),
+                                 '--out-dir', str(self.root / 'successor'),
+                                 '--repair-published-v3-from', str(self.root / 'plan')],
+                                capture_output=True, encoding='utf-8')
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('requires --v3-contract-repair', result.stderr)
+
     def test_real_compiler_rebuilds_acceptance_and_red_links(self):
         self.install_fixture()
         acceptances, failures, hints = repair.group.sc.compile_acceptances(
@@ -153,6 +162,110 @@ class CandidateRepairTests(unittest.TestCase):
         self.assertEqual(failure['failure_id'], 'CURRENT_RED')
         self.assertEqual(target['red_intent_ids'], [failure['failure_intent_id']])
         self.assertEqual(len(hints), 2)
+
+    def test_published_predecessor_requires_bound_bundle_and_empty_successor(self):
+        predecessor = self.root / 'plan'
+        predecessor.mkdir()
+        successor = self.root / 'successor'
+        bundle = {'schema_version': 'vdd.semantic-plan.v1', 'obligations': []}
+        (predecessor / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+        (predecessor / 'compiler-state.v1.json').write_text(json.dumps({
+            'state': 'plan-ready', 'semantic_plan_sha256': repair.group.sc.sha256_value(bundle),
+        }), encoding='utf-8')
+        entries = [{'repository_relative_source_path': 'req.md',
+                    'source_sha256': repair.group.sc.sha256_bytes(self.requirements.read_bytes())}]
+        (predecessor / 'source-index.v1.json').write_text(json.dumps({
+            'entries': entries, 'sha256': repair.group.sc.sha256_value(entries),
+        }), encoding='utf-8')
+        (predecessor / 'semantic-alignment.v1.json').write_text('{"valid": true}', encoding='utf-8')
+        (predecessor / 'atomic-recall-alignment.v1.json').write_text(json.dumps({
+            'valid': True, 'worker': {'supported_obligation_ids': []},
+        }), encoding='utf-8')
+        with mock.patch('semantic_plan_contract.validate_semantic_bundle', return_value=(True, [])), \
+             mock.patch('semantic_chain_audit.audit_bundle', return_value={'valid': True}):
+            self.assertEqual(repair.load_published_predecessor(
+                predecessor, successor, self.requirements, self.root)['bundle'], bundle)
+            successor.mkdir()
+            (successor / 'prior.txt').write_text('keep', encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'empty successor'):
+                repair.load_published_predecessor(predecessor, successor, self.requirements, self.root)
+            (successor / 'prior.txt').unlink()
+            successor.rmdir()
+            (predecessor / 'compiler-state.v1.json').write_text(json.dumps({
+                'state': 'plan-ready', 'semantic_plan_sha256': 'sha256:stale',
+            }), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'hash-bound'):
+                repair.load_published_predecessor(predecessor, successor, self.requirements, self.root)
+
+    def test_published_predecessor_rejects_hash_bound_but_invalid_semantics(self):
+        predecessor = self.root / 'plan'
+        predecessor.mkdir()
+        bundle = {'schema_version': 'invalid', 'obligations': []}
+        (predecessor / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+        (predecessor / 'compiler-state.v1.json').write_text(json.dumps({
+            'state': 'plan-ready', 'semantic_plan_sha256': repair.group.sc.sha256_value(bundle),
+        }), encoding='utf-8')
+        entries = [{'repository_relative_source_path': 'req.md',
+                    'source_sha256': repair.group.sc.sha256_bytes(self.requirements.read_bytes())}]
+        (predecessor / 'source-index.v1.json').write_text(json.dumps({
+            'entries': entries, 'sha256': repair.group.sc.sha256_value(entries),
+        }), encoding='utf-8')
+        with self.assertRaisesRegex(ValueError, 'semantic contract'):
+            repair.load_published_predecessor(
+                predecessor, self.root / 'successor', self.requirements, self.root)
+
+    def test_published_v3_projection_preserves_unselected_oracle_and_failure(self):
+        acceptance = deepcopy(self.projected['acceptances'][0])
+        acceptance['acceptance_id'] = 'A-1'
+        acceptance['red_intent_ids'] = ['FI-1']
+        failure = deepcopy(self.projected['failure_intents'][0])
+        failure['acceptance_ids'] = ['A-1']
+        failure['failure_intent_id'] = 'FI-1'
+        bundle = {'obligations': [self.payload['input']['obligations'][0]],
+                  'acceptances': [acceptance], 'failure_intents': [failure],
+                  'slices': [{'slice_id': 'S1', 'obligation_ids': ['O-1'],
+                              'production_owners': ['src/owner.py'], 'verification_lane': 'unit',
+                              'behavior_change': 'reject invalid input', 'affected_subjects': ['input'],
+                              'state_transition': 'valid to rejected', 'rollback_scope': {
+                                  'production_paths': ['src/owner.py'], 'state_or_schema_compatibility': 'none'},
+                              'allowed_write_paths': ['src/owner.py'],
+                              'execution_snapshot_paths': ['tests/test_real.py'],
+                              'planned_new_files': [], 'terminal_predicate': 'pytest passes'}],
+                  'agent_contexts': [{'slice_id': 'S1', 'forbidden_paths': [],
+                                      'validation_commands': [['python', '-m', 'pytest', 'tests/test_real.py']]}]}
+        raw = repair.project_published_v3(bundle)
+        self.assertEqual(raw['acceptances'][0]['oracle'], acceptance['oracle'])
+        self.assertEqual(raw['failure_intents'][0]['failure_id'], failure['failure_id'])
+        self.assertEqual(raw['slice_hints'][0]['obligation_ids'], ['O-1'])
+        self.assertEqual(raw['slice_hints'][0]['production_owners'], ['src/owner.py'])
+
+    def test_published_v3_reuse_bypasses_only_v3_worker(self):
+        raw = {'acceptances': [], 'failure_intents': [], 'slice_hints': []}
+        with mock.patch.object(repair.group.sc, 'invoke_worker', return_value={'v4': 'fresh'}) as worker:
+            repair.install_published_v3_reuse(raw)
+            self.assertEqual(repair.group.sc.invoke_worker(
+                root=self.root, out_dir=self.root, stage='v3', payload={}, prompt=''), raw)
+            self.assertEqual(repair.group.sc.invoke_worker(
+                root=self.root, out_dir=self.root, stage='v4', payload={}, prompt=''), {'v4': 'fresh'})
+            worker.assert_called_once()
+
+    def test_published_projection_must_pass_worker_schema_before_reuse(self):
+        with self.assertRaisesRegex(ValueError, 'published V3 projection'):
+            repair.validate_published_v3_projection(
+                {'acceptances': [], 'failure_intents': [], 'slice_hints': []},
+                self.payload['input']['obligations'], self.root)
+
+    def test_published_successor_rejects_unselected_acceptance_drift(self):
+        original = {'obligations': [{'obligation_id': 'O-1'}, {'obligation_id': 'O-2'}],
+                    'acceptances': [
+                        {'acceptance_id': 'A-1', 'obligation_ids': ['O-1'], 'oracle': {'expected': 'old'}},
+                        {'acceptance_id': 'A-2', 'obligation_ids': ['O-2'], 'oracle': {'expected': 'old'}}],
+                    'failure_intents': [], 'slices': []}
+        current = deepcopy(original)
+        current['acceptances'][1]['oracle']['expected'] = 'new'
+        repair.check_unaffected_published_semantics(original, original, {'O-2'})
+        with self.assertRaisesRegex(ValueError, 'unselected Acceptance drift'):
+            repair.check_unaffected_published_semantics(original, current, {'O-1'})
 
 
 if __name__ == '__main__':

@@ -1,0 +1,299 @@
+{
+  "schema": "vdd.v3-candidate-repair.v1",
+  "requirements_sha256": "sha256:d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+  "authorizes": [],
+  "obligation_contracts": {
+    "O-BDE93E01BA76": {
+      "acceptance": {
+        "acceptance_id": "A-032DBFFFBBB8",
+        "assertion_ids": [
+          "A-BDE93E01BA76-1"
+        ],
+        "complexity_class": "simple",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "given": "A candidate validator source is selected for FR-3 verification.",
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "obligation_ids": [
+          "O-BDE93E01BA76"
+        ],
+        "oracle": {
+          "expected": "Independent verification records the validator source path, content integrity, and verification outcome as passed.",
+          "forbidden": [
+            "Validator source accepted solely by declaration",
+            "Verification result omits the source identity"
+          ],
+          "observable": "A machine-readable verification result binds the validator source path and digest to an independent pass."
+        },
+        "red_intent_ids": [
+          "FI-5B8CDB8661EA",
+          "FI-796891D281B9"
+        ],
+        "source_refs": [
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-3"
+        ],
+        "then": "The validator source is independently verified before it can authorize FR-3 evaluation.",
+        "upgrade_conditions": [
+          "selector spans multiple test roots",
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory"
+        ],
+        "verification_lane": "unit",
+        "when": "Validating the candidate validator for FR-3."
+      },
+      "failure_intents": [
+        {
+          "acceptance_ids": [
+            "A-032DBFFFBBB8"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "F-BDE93E01BA76-1",
+          "failure_intent_id": "FI-796891D281B9",
+          "selector_intent": "Provide a validator-source record whose independent verification field is absent or non-passing; the contract must fail closed."
+        }
+      ],
+        "slice_hint": {
+        "acceptance_ids": [
+          "A-032DBFFFBBB8"
+        ],
+        "affected_subjects": [
+          "Consumer Manifest entries and repository callers",
+          "Current-authority path selection",
+          "Each named evaluation-seed occurrence",
+          "Repository-relative paths",
+          "Success determination",
+          "Validator source",
+          "three named evaluation-seed occurrences and their manifest validation"
+        ],
+        "allowed_write_paths": [
+          ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+          "scripts/sc/_semantic_gate_all_runtime.py",
+          "scripts/sc/scenarios/evaluation-seed-manifest.v1.json",
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/tests/tc_d1_cer/test_s19.py"
+        ],
+        "behavior_change": "(Add or enforce an independent, digest-bound verification record for the validator source before FR-3 results are accepted.) AND (Add or enforce bidirectional Consumer Manifest reconciliation against the real repository call surface, explicitly covering VDD, Acceptance, and workflow-model-routing consumers.) AND (Enforce authority resolution to accept only approved repository-relative authority paths; explicitly reject user-profile paths and report the rejected candidate in deterministic validation evidence.) AND (Validate the seed manifest bidirectionally for exactly three named occurrences and require provenance plus applicability, missing labels, counterexample or explicit absence, and approved non-baseline classification on each.) AND (seed manifest 校验固定的三个命名 occurrence，要求每条记录显式提供 missing_labels，并将缺失字段作为结构性错误拒绝；不以 aggregate runtime 结果替代字段完整性检查。) AND (增加历史 repository-relative path 的 before/after 双向 manifest 校验，禁止重命名、迁移及路径字符串重写。) AND (成功判定验证 authority 属于当前授权集合；foreign-authority 输入一律拒绝 success。)",
+        "complexity_class": "simple",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "depends_on": [],
+        "execution_snapshot_paths": [
+          ".agents/skills/quick-dev-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+          ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json",
+          ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+          ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+          "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+          "scripts/sc/scenarios/evaluation-seed-manifest.v1.json",
+          "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+          "scripts/sc/tests/tc_d1_cer/test_s19.py"
+        ],
+        "failure_intent_ids": [
+          "FI-796891D281B9"
+        ],
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "obligation_ids": [
+          "O-BDE93E01BA76"
+        ],
+          "planned_new_files": [],
+          "validation_commands": [
+            ["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s19.py", "-q"]
+          ],
+        "production_owners": [
+          "scripts/sc/_semantic_gate_all_runtime.py",
+          "scripts/sc/skill_package_replay.py"
+        ],
+        "proof": {
+          "acceptance_ids": [
+            "A-032DBFFFBBB8"
+          ],
+          "assertion_ids": [
+            "A-BDE93E01BA76-1"
+          ],
+          "selector_intents": [
+            "Provide a reconciliation artifact omitting VDD, Acceptance, or workflow-model-routing scope; validation must reject the incomplete scope coverage.",
+            "Provide a validator-source record whose independent verification field is absent or non-passing; the contract must fail closed.",
+            "Provide a validator-source record whose independent verification field is absent or non-passing; the contract must fail closed. Runtime test role: emit the existing failure ID only when a real assertion of this Acceptance oracle fails after invoking the production entry. A required subject rejection is a passing test. Human approval, Trust Approval, Consumer exceptions, setup/import errors, timeouts and harness binding errors cannot satisfy this role.",
+            "Remove one repository caller or manifest entry from the reconciliation fixture; validation must report the unmatched side.",
+            "Run manifest validation against a fixture with one named evaluation seed missing provenance; validation must fail and identify that occurrence.",
+            "Run manifest validation against a fixture with one named evaluation seed missing provenance; validation must fail and identify that occurrence. Runtime test role: emit the existing failure ID only when a real assertion of this Acceptance oracle fails after invoking the production entry. A required subject rejection is a passing test. Human approval, Trust Approval, Consumer exceptions, setup/import errors, timeouts and harness binding errors cannot satisfy this role.",
+            "Run the authority-resolution validator with a user-profile candidate bound as the proposed current authority; it must fail and identify the profile path as prohibited.",
+            "使用 foreign-authority fixture 运行语义门禁；若 success_accepted 仍为 true 则失败。",
+            "删除任一 named seed record 的 missing_labels 字段并运行 seed manifest validator，验证该 occurrence 被拒绝。",
+            "将路径 manifest 中任一路径改名或移除，运行完整性比较器并断言检测到差异。",
+            "用重复或未命名 seed 记录替代缺失 occurrence，验证 cardinality/identity reconciliation 失败。"
+          ]
+        },
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/_semantic_gate_all_runtime.py",
+            "scripts/sc/skill_package_replay.py"
+          ],
+          "state_or_schema_compatibility": "(Preserve existing authority result schema and fail closed for newly detected profile-path candidates; rollback only these validator changes.) AND (Preserve existing manifest and caller schemas; rollback only the reconciliation enforcement.) AND (Preserve existing validator result fields; add only the independent source-verification evidence.) AND (Preserve manifest schema compatibility; additive validation diagnostics only, with rollback scoped to seed-manifest checks.) AND (保持现有 success 判定输出结构，非法 authority 仅新增拒绝原因。) AND (复用 baseline-file-manifest schema；新增校验字段保持向后兼容。) AND (沿用 toolchain-evaluation-seed-manifest.v1 字段语义；新增完整性拒绝不重写既有 seed evidence。)"
+        },
+        "slice_id": "S19",
+        "slice_input_hash": "sha256:a2a75441cec7f3f2c8ef59b9aad07d33d32ddacfa3841c4d739750c2da279a56",
+        "state_transition": "(captured historical path manifest -> repair -> compared manifest; mismatch is terminal failure.) AND (evaluation-input -> authority-validated -> success-rejected) AND (manifest parsed -> named occurrences counted -> provenance/classification fields checked -> verification report emitted.) AND (pending -> authority validator executes -> profile candidate rejected -> approved repository authority recorded.) AND (seed records loaded -> named identities reconciled -> missing_labels checked -> complete manifest or validation failure.) AND (unreconciled manifest/call surface -> bidirectionally reconciled manifest with all required scopes) AND (unverified validator source -> independently verified validator source)",
+        "terminal_predicate": "(The validator source path and content digest have an independently produced pass record; otherwise evaluation remains blocked.) AND (Validator exits success only when both mapping directions contain no unmatched entries and all three named consumer scopes are present.) AND (Validator output contains an approved repository-relative current authority, a deterministic rejection for every user-profile candidate, and no profile path in the selected authority field.) AND (Verification report confirms exactly three required seed occurrences, each unique and complete; any duplicate or missing provenance causes deterministic failure.) AND (added_paths=[] 且 removed_paths=[]，并且每条历史路径按 repository-relative 规范精确相等。) AND (foreign-authority 输入 success_accepted 必须为 false，failure_reason == foreign-authority。) AND (仅当三个 named occurrences 各自唯一、命名正确且显式包含 missing_labels 字段时通过；任一缺失、重复或未命名记录终止为失败。)",
+        "upgrade_conditions": [
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory",
+          "selector spans multiple test roots"
+        ],
+        "verification_lane": "unit"
+      }
+    },
+    "O-F173FDB51488": {
+      "acceptance": {
+        "acceptance_id": "A-359B35DD05A3",
+        "assertion_ids": [
+          "A-F173-seed-provenance"
+        ],
+        "complexity_class": "simple",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "given": "The evaluation-seed manifest contains the three named seed occurrences required by FR-6.",
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "obligation_ids": [
+          "O-F173FDB51488"
+        ],
+        "oracle": {
+          "expected": "Each occurrence appears exactly once and has provenance, applicability, missing-label status, counterexample or explicit absence, and approved non-baseline classification.",
+          "forbidden": [
+            "Any named seed occurrence is duplicated.",
+            "Any occurrence lacks provenance or required classification fields."
+          ],
+          "observable": "A parsed manifest verification report lists all three seed identifiers once with complete provenance and classification fields."
+        },
+        "red_intent_ids": [
+          "FI-977ABD91B630",
+          "FI-BB158CF1CBBF"
+        ],
+        "source_refs": [
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-6"
+        ],
+        "then": "Every named evaluation-seed occurrence has provenance recorded.",
+        "upgrade_conditions": [
+          "selector spans multiple test roots",
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory"
+        ],
+        "verification_lane": "unit",
+        "when": "When each evaluation-seed occurrence is recorded or checked."
+      },
+      "failure_intents": [
+        {
+          "acceptance_ids": [
+            "A-359B35DD05A3"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "artifact-integrity",
+          "failure_id": "F-F173-MISSING-PROVENANCE",
+          "failure_intent_id": "FI-BB158CF1CBBF",
+          "selector_intent": "Run manifest validation against a fixture with one named evaluation seed missing provenance; validation must fail and identify that occurrence."
+        },
+        {
+          "acceptance_ids": [
+            "A-359B35DD05A3"
+          ],
+          "expected_outcome": "fail",
+          "failure_family": "expected-red",
+          "failure_id": "F-F173-MISSING-PROVENANCE",
+          "failure_intent_id": "FI-977ABD91B630",
+          "selector_intent": "Run manifest validation against a fixture with one named evaluation seed missing provenance; validation must fail and identify that occurrence. Runtime test role: emit the existing failure ID only when a real assertion of this Acceptance oracle fails after invoking the production entry. A required subject rejection is a passing test. Human approval, Trust Approval, Consumer exceptions, setup/import errors, timeouts and harness binding errors cannot satisfy this role."
+        }
+      ],
+        "slice_hint": {
+        "acceptance_ids": [
+          "A-359B35DD05A3"
+        ],
+        "affected_subjects": [
+          "Consumer Manifest entries and repository callers",
+          "Current-authority path selection",
+          "Each named evaluation-seed occurrence",
+          "Repository-relative paths",
+          "Success determination",
+          "Validator source",
+          "three named evaluation-seed occurrences and their manifest validation"
+        ],
+        "allowed_write_paths": [
+          ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+          "scripts/sc/_semantic_gate_all_runtime.py",
+          "scripts/sc/scenarios/evaluation-seed-manifest.v1.json",
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/tests/tc_d1_cer/test_s19.py"
+        ],
+        "behavior_change": "(Add or enforce an independent, digest-bound verification record for the validator source before FR-3 results are accepted.) AND (Add or enforce bidirectional Consumer Manifest reconciliation against the real repository call surface, explicitly covering VDD, Acceptance, and workflow-model-routing consumers.) AND (Enforce authority resolution to accept only approved repository-relative authority paths; explicitly reject user-profile paths and report the rejected candidate in deterministic validation evidence.) AND (Validate the seed manifest bidirectionally for exactly three named occurrences and require provenance plus applicability, missing labels, counterexample or explicit absence, and approved non-baseline classification on each.) AND (seed manifest 校验固定的三个命名 occurrence，要求每条记录显式提供 missing_labels，并将缺失字段作为结构性错误拒绝；不以 aggregate runtime 结果替代字段完整性检查。) AND (增加历史 repository-relative path 的 before/after 双向 manifest 校验，禁止重命名、迁移及路径字符串重写。) AND (成功判定验证 authority 属于当前授权集合；foreign-authority 输入一律拒绝 success。)",
+        "complexity_class": "simple",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "depends_on": [],
+        "execution_snapshot_paths": [
+          ".agents/skills/quick-dev-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+          ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json",
+          ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+          ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+          "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+          "scripts/sc/scenarios/evaluation-seed-manifest.v1.json",
+          "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+          "scripts/sc/tests/tc_d1_cer/test_s19.py"
+        ],
+        "failure_intent_ids": [
+          "FI-BB158CF1CBBF",
+          "FI-977ABD91B630"
+        ],
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "obligation_ids": [
+          "O-F173FDB51488"
+        ],
+          "planned_new_files": [],
+          "validation_commands": [
+            ["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s19.py", "-q"]
+          ],
+        "production_owners": [
+          "scripts/sc/_semantic_gate_all_runtime.py",
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/scenarios/evaluation-seed-manifest.v1.json"
+        ],
+        "proof": {
+          "acceptance_ids": [
+            "A-359B35DD05A3"
+          ],
+          "assertion_ids": [
+            "A-F173-seed-provenance"
+          ],
+          "selector_intents": [
+            "Provide a reconciliation artifact omitting VDD, Acceptance, or workflow-model-routing scope; validation must reject the incomplete scope coverage.",
+            "Provide a validator-source record whose independent verification field is absent or non-passing; the contract must fail closed.",
+            "Provide a validator-source record whose independent verification field is absent or non-passing; the contract must fail closed. Runtime test role: emit the existing failure ID only when a real assertion of this Acceptance oracle fails after invoking the production entry. A required subject rejection is a passing test. Human approval, Trust Approval, Consumer exceptions, setup/import errors, timeouts and harness binding errors cannot satisfy this role.",
+            "Remove one repository caller or manifest entry from the reconciliation fixture; validation must report the unmatched side.",
+            "Run manifest validation against a fixture with one named evaluation seed missing provenance; validation must fail and identify that occurrence.",
+            "Run manifest validation against a fixture with one named evaluation seed missing provenance; validation must fail and identify that occurrence. Runtime test role: emit the existing failure ID only when a real assertion of this Acceptance oracle fails after invoking the production entry. A required subject rejection is a passing test. Human approval, Trust Approval, Consumer exceptions, setup/import errors, timeouts and harness binding errors cannot satisfy this role.",
+            "Run the authority-resolution validator with a user-profile candidate bound as the proposed current authority; it must fail and identify the profile path as prohibited.",
+            "使用 foreign-authority fixture 运行语义门禁；若 success_accepted 仍为 true 则失败。",
+            "删除任一 named seed record 的 missing_labels 字段并运行 seed manifest validator，验证该 occurrence 被拒绝。",
+            "将路径 manifest 中任一路径改名或移除，运行完整性比较器并断言检测到差异。",
+            "用重复或未命名 seed 记录替代缺失 occurrence，验证 cardinality/identity reconciliation 失败。"
+          ]
+        },
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/_semantic_gate_all_runtime.py",
+            "scripts/sc/skill_package_replay.py"
+          ],
+          "state_or_schema_compatibility": "(Preserve existing authority result schema and fail closed for newly detected profile-path candidates; rollback only these validator changes.) AND (Preserve existing manifest and caller schemas; rollback only the reconciliation enforcement.) AND (Preserve existing validator result fields; add only the independent source-verification evidence.) AND (Preserve manifest schema compatibility; additive validation diagnostics only, with rollback scoped to seed-manifest checks.) AND (保持现有 success 判定输出结构，非法 authority 仅新增拒绝原因。) AND (复用 baseline-file-manifest schema；新增校验字段保持向后兼容。) AND (沿用 toolchain-evaluation-seed-manifest.v1 字段语义；新增完整性拒绝不重写既有 seed evidence。)"
+        },
+        "slice_id": "S19",
+        "slice_input_hash": "sha256:a2a75441cec7f3f2c8ef59b9aad07d33d32ddacfa3841c4d739750c2da279a56",
+        "state_transition": "(captured historical path manifest -> repair -> compared manifest; mismatch is terminal failure.) AND (evaluation-input -> authority-validated -> success-rejected) AND (manifest parsed -> named occurrences counted -> provenance/classification fields checked -> verification report emitted.) AND (pending -> authority validator executes -> profile candidate rejected -> approved repository authority recorded.) AND (seed records loaded -> named identities reconciled -> missing_labels checked -> complete manifest or validation failure.) AND (unreconciled manifest/call surface -> bidirectionally reconciled manifest with all required scopes) AND (unverified validator source -> independently verified validator source)",
+        "terminal_predicate": "(The validator source path and content digest have an independently produced pass record; otherwise evaluation remains blocked.) AND (Validator exits success only when both mapping directions contain no unmatched entries and all three named consumer scopes are present.) AND (Validator output contains an approved repository-relative current authority, a deterministic rejection for every user-profile candidate, and no profile path in the selected authority field.) AND (Verification report confirms exactly three required seed occurrences, each unique and complete; any duplicate or missing provenance causes deterministic failure.) AND (added_paths=[] 且 removed_paths=[]，并且每条历史路径按 repository-relative 规范精确相等。) AND (foreign-authority 输入 success_accepted 必须为 false，failure_reason == foreign-authority。) AND (仅当三个 named occurrences 各自唯一、命名正确且显式包含 missing_labels 字段时通过；任一缺失、重复或未命名记录终止为失败。)",
+        "upgrade_conditions": [
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory",
+          "selector spans multiple test roots"
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

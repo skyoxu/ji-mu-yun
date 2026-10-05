@@ -3,7 +3,8 @@
 The canonical compiler and its one-shot semantic repair lane remain authoritative.
 This compatibility layer only makes the Codex transport reliable for machine-
 readable V1/V3 output: it requests native structured output when supported,
-uses a larger but bounded timeout for schema repair, lowers repair reasoning cost,
+uses a larger but bounded timeout for schema and independent V4 repair/recheck,
+lowers repair reasoning cost,
 removes stale output before each invocation, and retries transient worker exits
 at most three times. It never guesses or rewrites malformed JSON locally.
 """
@@ -305,9 +306,14 @@ def transport_invoke_worker(
         + json.dumps(payload, ensure_ascii=False, sort_keys=True)
     )
     backend = resolve_llm_backend(None)
-    is_repair = stage.endswith("-schema-repair")
-    timeout_sec = _REPAIR_TIMEOUT_SECONDS if is_repair else _NORMAL_TIMEOUT_SECONDS
-    reasoning = "medium" if is_repair else "high"
+    # V4 and its independent repair/recheck lanes operate on the full
+    # semantic bundle and can be larger than the normal 180-second worker
+    # budget. An explicit repair timeout must cover them as well; otherwise a
+    # valid bounded repair is lost to an unconfigurable transport timeout.
+    is_schema_repair = stage.endswith("-schema-repair")
+    is_v4_repair = stage in {"v4", "v4-atomic-recall", "v4-recheck"}
+    timeout_sec = _REPAIR_TIMEOUT_SECONDS if (is_schema_repair or is_v4_repair) else _NORMAL_TIMEOUT_SECONDS
+    reasoning = "medium" if is_schema_repair else "high"
     schema = _worker_output_schema(stage)
     extra_args: list[str] = []
     if backend == "codex-cli" and schema is not None:

@@ -1,0 +1,66 @@
+{
+  "covered_obligation_ids": [
+    "O-220C33B86BBC",
+    "O-675D3619538A"
+  ],
+  "missing_obligation_ids": [],
+  "invented_obligation_ids": [],
+  "misaligned_acceptance_ids": [],
+  "oracle_alignment": {
+    "source_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-9",
+    "source_support": {
+      "bidirectional_reconciliation": true,
+      "consumer_manifest_to_callers": true,
+      "callers_to_consumer_manifest": true,
+      "required_scopes": [
+        "VDD",
+        "Acceptance",
+        "workflow-model-routing"
+      ]
+    },
+    "obligations": {
+      "O-220C33B86BBC": {
+        "acceptance_ids": [
+          "A-6321B6185886"
+        ],
+        "red_intent_ids": [
+          "FI-70ADCD06677C",
+          "FI-B77963E060CC"
+        ],
+        "aligned": true,
+        "direction": "Consumer Manifest entries to repository callers"
+      },
+      "O-675D3619538A": {
+        "acceptance_ids": [
+          "A-60FC436EC6E3"
+        ],
+        "red_intent_ids": [
+          "FI-B4E9D2068022",
+          "FI-F43F7AF77869"
+        ],
+        "aligned": true,
+        "direction": "Repository callers to Consumer Manifest entries"
+      }
+    },
+    "acceptances": {
+      "A-6321B6185886": {
+        "aligned": true,
+        "checks": [
+          "bidirectional reconciliation",
+          "all named scopes",
+          "unmatched manifest or caller detection"
+        ]
+      },
+      "A-60FC436EC6E3": {
+        "aligned": true,
+        "checks": [
+          "bidirectional reconciliation",
+          "all named scopes",
+          "missing caller or orphan manifest entry detection"
+        ]
+      }
+    },
+    "red_intents_aligned": true
+  },
+  "repairs": []
+}

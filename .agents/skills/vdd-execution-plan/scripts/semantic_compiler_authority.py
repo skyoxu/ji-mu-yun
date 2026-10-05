@@ -250,7 +250,17 @@ def compile_plan(
     worker_cache: Mapping[str, Any] | None = None,
     recommendation_only: bool = False,
     resume_from: str | None = None,
+    published_v3_repair: bool = False,
 ) -> dict[str, Any]:
+    if not published_v3_repair:
+        import semantic_v3_contract_repair as published_repair
+        published_repair.reset_published_overlays()
+    published_marker = Path(out_dir) / ".compiler-work" / "published-v3-repair-active.json"
+    if published_v3_repair:
+        published_marker.parent.mkdir(parents=True, exist_ok=True)
+        published_marker.write_text("{\"active\":true}\n", encoding="utf-8")
+    elif published_marker.exists():
+        published_marker.unlink()
     if resume_from not in {None, "first-failed-stage"}:
         raise ValueError("unsupported VDD resume mode")
     if recommendation_only and resume_from is not None:
@@ -316,6 +326,8 @@ def compile_plan(
     )
     if not recall["valid"]:
         if (
+            not published_v3_repair
+            and
             isinstance(recall.get("findings"), list)
             and recall["findings"]
             and all(str(item).startswith("atomic-recall:source-gap-count:") for item in recall["findings"])
@@ -328,6 +340,7 @@ def compile_plan(
                 requirements=requirements, out_dir=out_dir, companions=companions,
                 profile=profile, worker_cache=worker_cache,
                 recommendation_only=False, resume_from=None,
+                published_v3_repair=published_v3_repair,
             )
         result = {
             "status": "repair-vdd",
@@ -380,6 +393,8 @@ def compile_plan(
         # current V3 contracts.  One bounded feedback pass keeps a malformed or
         # oscillating worker result fail-closed for the caller to inspect.
         if (
+            not published_v3_repair
+            and
             result.get("stage") == "V4"
             and isinstance(findings, list)
             and findings
@@ -393,6 +408,7 @@ def compile_plan(
                 requirements=requirements, out_dir=out_dir, companions=companions,
                 profile=profile, worker_cache=worker_cache,
                 recommendation_only=False, resume_from=None,
+                published_v3_repair=published_v3_repair,
             )
         _attempt(out_dir, str(result.get("stage") or "compile"), result)
         return result

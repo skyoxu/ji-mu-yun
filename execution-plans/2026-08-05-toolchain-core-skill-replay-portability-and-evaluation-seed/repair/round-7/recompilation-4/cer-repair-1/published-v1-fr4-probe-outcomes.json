@@ -1,0 +1,108 @@
+{
+  "schema": "vdd.published-v1-gap-extension.v1",
+  "requirements_sha256": "sha256:d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+  "authorizes": [],
+  "source_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-4",
+  "obligations": [
+    {
+      "subject": "Detached positive Probe success outcome",
+      "trigger": "The bound detached positive Probe completes its independent process execution.",
+      "state_before": "The positive Probe execution has no validated outcome.",
+      "state_after": "The positive Probe is accepted only after a successful result.",
+      "expected_behavior": "The detached positive Probe must pass on its valid target.",
+      "observable_result": "The positive Probe process exits successfully and its bound result records pass.",
+      "forbidden_result": ["A failed positive Probe is accepted as successful.", "Positive Probe execution is skipped."],
+      "requirement_type": "Platform",
+      "obligation_kind": "behavior",
+      "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-4"],
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "subject": "Detached negative Probe declared-defect discrimination",
+      "trigger": "The bound detached negative Probe completes on its declared invalid target.",
+      "state_before": "The negative Probe has no validated defect result.",
+      "state_after": "The negative Probe is accepted only for the declared defect and diagnostic category.",
+      "expected_behavior": "The detached negative Probe must fail for its declared defect and report the expected diagnostic category.",
+      "observable_result": "The negative Probe process exits unsuccessfully with the expected defect diagnostic category bound to its result.",
+      "forbidden_result": ["A passing negative Probe is accepted.", "An unrelated or missing diagnostic category is accepted as the expected defect."],
+      "requirement_type": "Platform",
+      "obligation_kind": "behavior",
+      "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-4"],
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    }
+  ],
+  "obligation_contracts": {
+    "O-C9F5F48B33A1": {
+      "acceptance": {
+        "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-4"],
+        "given": "A valid target and a candidate validator are bound for the detached positive Probe.",
+        "when": "The real skill_package_replay.py validation path launches the positive Probe as an independent process and evaluates its result.",
+        "then": "The positive Probe passes; failure, non-start, or skipped execution prevents a successful replay verdict.",
+        "oracle": {
+          "observable": "The detached-positive probe receipt and replay process exit from scripts/sc/skill_package_replay.py",
+          "expected": "The valid positive Probe has a real successful process exit and bound pass result; a failing positive control rejects replay success.",
+          "forbidden": ["A failed positive Probe permits a successful replay.", "No positive process executes but replay succeeds."]
+        },
+        "assertion_ids": ["assert-fr4-positive-probe-must-pass"]
+      },
+      "failure_intents": [{
+        "failure_family": "expected-red",
+        "selector_intent": "Run the real replay validation with a passing positive control and a candidate whose detached positive Probe fails; assert only the passing control permits success.",
+        "expected_outcome": "fail",
+        "failure_id": "POSITIVE-PROBE-FAILURE-ACCEPTED"
+      }],
+      "slice_hint": {
+        "production_owners": ["scripts/sc/skill_package_replay.py"],
+        "verification_lane": "runtime",
+        "behavior_change": "Require a real successful detached positive Probe outcome before replay success.",
+        "affected_subjects": ["Detached positive Probe outcome"],
+        "state_transition": "Bound positive Probe launch -> process completion -> successful outcome or replay rejection",
+        "rollback_scope": {"production_paths": ["scripts/sc/skill_package_replay.py"], "state_or_schema_compatibility": "Retain existing replay and probe receipt fields."},
+        "allowed_write_paths": ["scripts/sc/skill_package_replay.py", "scripts/sc/tests/tc_d1_cer/test_s10.py"],
+        "execution_snapshot_paths": ["scripts/sc/tests/tc_d1_cer/test_s10.py"],
+        "planned_new_files": [],
+        "terminal_predicate": "The valid detached positive Probe passes in a real process; a failed or skipped positive Probe cannot yield replay success.",
+        "forbidden_paths": ["PhaseA.Platform", "runtime/phase-a", "logs"],
+        "validation_commands": [["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s10.py", "-q"]]
+      }
+    },
+    "O-F2260E1F7067": {
+      "acceptance": {
+        "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-4"],
+        "given": "A detached negative Probe has an invalid target with a declared defect and expected diagnostic category, alongside a valid positive control.",
+        "when": "The real skill_package_replay.py validation path launches and evaluates the detached negative Probe.",
+        "then": "The negative Probe fails for that declared defect and reports the expected category; unrelated failure or missing category cannot pass discrimination.",
+        "oracle": {
+          "observable": "The detached-negative probe process exit, diagnostic category and replay verdict from scripts/sc/skill_package_replay.py",
+          "expected": "A real nonzero exit with the declared defect category validates the negative Probe while the valid positive control passes.",
+          "forbidden": ["A successful negative Probe is accepted.", "A timeout, import error, non-start, or wrong diagnostic category is accepted as the declared defect."]
+        },
+        "assertion_ids": ["assert-fr4-negative-probe-declared-defect-category"]
+      },
+      "failure_intents": [{
+        "failure_family": "expected-red",
+        "selector_intent": "Run the real detached negative Probe with its declared invalid target; compare expected and actual diagnostic category, plus passing and infrastructure-failure controls.",
+        "expected_outcome": "fail",
+        "failure_id": "NEGATIVE-PROBE-WRONG-DEFECT-ACCEPTED"
+      }],
+      "slice_hint": {
+        "production_owners": ["scripts/sc/skill_package_replay.py"],
+        "verification_lane": "runtime",
+        "behavior_change": "Accept detached negative discrimination only for the declared defect and expected diagnostic category.",
+        "affected_subjects": ["Detached negative Probe outcome"],
+        "state_transition": "Bound negative Probe launch -> process completion -> declared defect and category match or replay rejection",
+        "rollback_scope": {"production_paths": ["scripts/sc/skill_package_replay.py"], "state_or_schema_compatibility": "Retain existing replay and probe receipt fields."},
+        "allowed_write_paths": ["scripts/sc/skill_package_replay.py", "scripts/sc/tests/tc_d1_cer/test_s10.py"],
+        "execution_snapshot_paths": ["scripts/sc/tests/tc_d1_cer/test_s10.py"],
+        "planned_new_files": [],
+        "terminal_predicate": "The detached negative Probe fails in a real process for the declared defect and expected diagnostic category; wrong or absent categories and infrastructure failures reject success.",
+        "forbidden_paths": ["PhaseA.Platform", "runtime/phase-a", "logs"],
+        "validation_commands": [["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s10.py", "-q"]]
+      }
+    }
+  }
+}

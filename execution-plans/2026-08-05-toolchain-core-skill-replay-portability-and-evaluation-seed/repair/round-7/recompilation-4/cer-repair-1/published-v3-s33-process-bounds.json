@@ -1,0 +1,120 @@
+{
+  "schema": "vdd.v3-candidate-repair.v1",
+  "requirements_sha256": "sha256:d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+  "authorizes": [],
+  "obligation_contracts": {
+    "O-A2EB2B214D66": {
+      "acceptance": {
+        "acceptance_id": "A-4A962ABEBD9B",
+        "assertion_ids": [
+          "A-NFR7-EXTERNAL-PROCESS-BOUNDED"
+        ],
+        "complexity_class": "architectural",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "given": "An external process is launched with an applicable timeout and bounded output budget.",
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "oracle": {
+          "expected": "The process reaches a deterministic terminal state within its timeout and recorded elapsed time is at or below the applicable bound.",
+          "forbidden": [
+            "An external process exceeds its time bound.",
+            "An external process remains running without a bounded terminal outcome."
+          ],
+          "observable": "Process execution receipt contains terminal status, elapsed duration, timeout/output-limit fields, and bounded captured output."
+        },
+        "red_intent_ids": [
+          "FI-96B7C538E88C"
+        ],
+        "source_refs": [
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#NFR-7"
+        ],
+        "then": "The bounded receipt is accepted only for a completed process; timeout or budget exhaustion is unsuccessful and does not reduce required coverage.",
+        "upgrade_conditions": [
+          "selector spans multiple test roots",
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory"
+        ],
+        "verification_lane": "runtime",
+        "when": "The external process execution begins under its configured bound."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "timeout-no-observation",
+          "failure_id": "F-EXTERNAL-PROCESS-TIMEOUT",
+          "failure_intent_id": "FI-96B7C538E88C",
+          "selector_intent": "Run a deterministic sleeping worker through the bounded executor with a shorter timeout and require timed-out terminal evidence."
+        }
+      ],
+      "slice_hint": {
+        "production_owners": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/current_router.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+          "scripts/vdd/probe_real_worker.py"
+        ],
+        "verification_lane": "runtime",
+        "behavior_change": "Apply explicit timeout and output bounds at descriptor creation, external-process capture, and receipt validation; terminate deterministically on exhaustion and record elapsed/terminal facts without claiming success.",
+        "affected_subjects": [
+          "Each external process execution",
+          "Quick Dev process descriptor and receipt"
+        ],
+        "state_transition": "descriptor with timeout/output limit -> bounded process capture -> completed or timeout/output-limit terminal state -> receipt validation",
+        "rollback_scope": {
+          "production_paths": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py",
+            ".agents/skills/quick-dev-tdd-adapter/tools/current_router.py",
+            ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py",
+            ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+            "scripts/vdd/probe_real_worker.py"
+          ],
+          "state_or_schema_compatibility": "Retain existing process receipt fields and deterministic failure categories while adding explicit output-limit facts and rejecting missing or exceeded bounds."
+        },
+        "allowed_write_paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/current_router.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+          "scripts/vdd/probe_real_worker.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py",
+          "scripts/sc/tests/tc_d1_cer/test_s33_cer.py"
+        ],
+        "execution_snapshot_paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py",
+          "scripts/sc/tests/tc_d1_cer/test_s33_cer.py"
+        ],
+        "planned_new_files": [
+          "scripts/sc/tests/tc_d1_cer/test_s33_cer.py"
+        ],
+        "terminal_predicate": "A normal bounded control completes with bounded receipt facts; timeout and output-limit overrun each terminate deterministically, record the applicable limit and terminal status, and cannot satisfy success or coverage.",
+        "forbidden_paths": [
+          "PhaseA.Platform",
+          "runtime/phase-a",
+          "logs"
+        ],
+        "validation_commands": [
+          [
+            "py",
+            "-3",
+            "-m",
+            "pytest",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_runtime_contracts.py",
+            "-q"
+          ],
+          [
+            "py",
+            "-3",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/tc_d1_cer/test_s33_cer.py",
+            "-q"
+          ]
+        ]
+      }
+    }
+  }
+}

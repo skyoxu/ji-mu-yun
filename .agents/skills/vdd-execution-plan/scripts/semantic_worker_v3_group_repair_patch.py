@@ -693,16 +693,25 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
     # transport request is justified when all IDs are present.
     wanted = set(refs_by_oid)
     recomposed: dict[str, Any] = {}
+    foreign: set[str] = set()
     for child_path in cache_dir.glob(_GROUP_STAGE + "-chunk-*.json"):
         try:
             child = json.loads(child_path.read_text(encoding="utf-8"))
             contracts = child.get("obligation_contracts") if isinstance(child, Mapping) else None
             if isinstance(contracts, Mapping):
+                foreign.update(set(contracts) - wanted)
                 for oid, contract in contracts.items():
-                    if oid in wanted and isinstance(contract, Mapping):
+                    if oid not in wanted or not isinstance(contract, Mapping):
+                        continue
+                    single_payload = _narrow_repair_payload(payload, [oid])
+                    single = {"obligation_contracts": {oid: contract}}
+                    projected = _project_current_output(single, _obligation_refs(single_payload))
+                    if not sc._v3_cache_requires_contract_refresh(projected, root, single_payload):
                         recomposed[oid] = contract
         except (OSError, UnicodeError, json.JSONDecodeError):
             continue
+    if foreign:
+        raise ValueError("V3 cache contains unknown obligation IDs: " + ",".join(sorted(foreign)))
     if set(recomposed) == wanted:
         composed = {"obligation_contracts": recomposed}
         _write_refreshable_json(cache_path, composed)
@@ -871,9 +880,7 @@ def _live_group_repair(*, root: Path, out_dir: Path, payload: Mapping[str, Any],
             raw_chunk = json.loads(chunk_cache.read_text(encoding="utf-8"))
             projected_chunk = _project_current_output(raw_chunk, _obligation_refs(chunk_payload))
             if sc._v3_cache_requires_contract_refresh(projected_chunk, root, chunk_payload):
-                cached_contracts = raw_chunk.get("obligation_contracts") if isinstance(raw_chunk, Mapping) else None
-                if not isinstance(cached_contracts, Mapping) or set(cached_contracts) != set(ids):
-                    raw_chunk = request_chunk(ids, f"{chunk_index:02d}")
+                raw_chunk = request_chunk(ids, f"{chunk_index:02d}", rejected=raw_chunk)
         else:
             # The full group payload can change when a bounded V3 repair adds
             # unrelated obligations.  Reuse every individually executable
@@ -954,13 +961,23 @@ def group_repair_transport(*, root, out_dir, stage: str, payload: Mapping[str, A
     # fixture and are not available in the temporary root.  Reuse that exact
     # response before entering the large-domain transport path; persisted
     # cache files still go through the normal refresh checks above.
-    if stage == "v3" and isinstance(worker_cache, Mapping) and isinstance(worker_cache.get("v3"), Mapping):
+    # A schema-repair retry is still a V3 transport boundary.  When a
+    # caller supplies the complete frozen V3 response under the canonical
+    # ``v3`` cache key, consume it for both the initial and schema-repair
+    # stage.  Previously the retry-only stage skipped this branch and fell
+    # through to the live worker even though the exact response was present.
+    if stage in {"v3", "v3-schema-repair"} and isinstance(worker_cache, Mapping) and isinstance(worker_cache.get("v3"), Mapping):
         injected = worker_cache["v3"]
         if all(isinstance(injected.get(key), list) for key in ("acceptances", "failure_intents", "slice_hints")):
             projected = _project_current_output(injected, _obligation_refs(payload))
-            findings = v3_domain._domain_findings("v3", payload, projected)
+            findings = v3_domain._domain_findings(stage, payload, projected)
             if not findings:
                 return projected
+            # An explicitly supplied V3 fixture is authoritative for this
+            # offline/repair run.  If it does not match the frozen payload,
+            # fail closed instead of silently replacing it with a new model
+            # request (which would defeat selective replay).
+            raise ValueError("injected V3 cache failed frozen-domain validation: " + "; ".join(findings))
     # Do not repeatedly submit an all-obligation V3 payload after a bounded
     # source-gap repair. The initial V3 wire has the same per-obligation
     # contract as its schema-repair successor, so for a payload larger than a

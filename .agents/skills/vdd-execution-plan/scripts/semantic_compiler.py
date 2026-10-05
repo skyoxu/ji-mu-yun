@@ -873,6 +873,25 @@ def _validate_paths(values: Any, label: str, *, nonempty: bool = False) -> list[
     return [safe_relative(x) for x in values]
 
 
+def project_slice_dependencies(obligations: Sequence[Mapping[str, Any]], slices: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Project only explicit obligation dependencies onto executable slices."""
+    obligation_to_slice = {
+        obligation_id: slice_item["slice_id"]
+        for slice_item in slices
+        for obligation_id in slice_item["obligation_ids"]
+    }
+    obligation_by_id = {item["obligation_id"]: item for item in obligations}
+    for slice_item in slices:
+        dependencies = {
+            obligation_to_slice[dependency]
+            for obligation_id in slice_item["obligation_ids"]
+            for dependency in obligation_by_id.get(obligation_id, {}).get("depends_on", [])
+            if dependency in obligation_to_slice and obligation_to_slice[dependency] != slice_item["slice_id"]
+        }
+        slice_item["depends_on"] = sorted(dependencies)
+    return list(slices)
+
+
 def partition_slices(obligations: Sequence[Mapping[str, Any]], acceptances: Sequence[Mapping[str, Any]], failures: Sequence[Mapping[str, Any]], hints: Sequence[Mapping[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Mapping[str, Any]]]:
     failure_by_acceptance = {aid: [] for aid in [a["acceptance_id"] for a in acceptances]}
     for failure in failures:
@@ -934,7 +953,7 @@ def partition_slices(obligations: Sequence[Mapping[str, Any]], acceptances: Sequ
             "allowed_write_paths": allowed_write_paths, "execution_snapshot_paths": execution_snapshot_paths,
             "planned_new_files": planned_new_files, "terminal_predicate": next(iter(terminal_values)),
         })
-    return slices, hint_by_acceptance
+    return project_slice_dependencies(obligations, slices), hint_by_acceptance
 
 
 def final_cover(pre_edges: Sequence[Mapping[str, Any]], slices: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:

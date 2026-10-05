@@ -145,6 +145,10 @@ def validate_slice_ready(*, workspace: Path, semantic_plan: Path, run_root: Path
         "candidate_hash": final_candidate,
         "selector_identity": selector,
         "current_snapshot_sha256": snapshot["sha256"],
+        "snapshot_manifest": snapshot,
+        "snapshot_roots": [dict(item) for item in snapshot_roots],
+        "source_commit": source_commit,
+        "base_commit": base_commit,
         "assertion_coverage": coverage,
         "authorizes": [],
     }
@@ -194,11 +198,37 @@ def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_inpu
         raise ValueError("completion snapshot base mismatch")
     for row in frozen:
         spec = expected[row["root_kind"]]
-        if any(row.get(k) != spec.get(k) for k in ("repository_relative_posix_path", "inclusion_reason")) or row.get("source_commit") != source_commit:
+        path_key = "repository_relative_posix_paths" if "repository_relative_posix_paths" in row else "repository_relative_posix_path"
+        expected_path = spec.get(path_key)
+        if expected_path is None:
+            alternate = "repository_relative_posix_paths" if path_key == "repository_relative_posix_path" else "repository_relative_posix_path"
+            expected_path = spec.get(alternate)
+        actual_path = row.get(path_key)
+        # Multi-path roots are canonicalized by the resolver before they are
+        # frozen.  Compare their set/order-independent form during replay so
+        # equivalent manifests do not fail merely because JSON ordering was
+        # reconstructed by a later runner.
+        if isinstance(actual_path, list) and isinstance(expected_path, list):
+            paths_match = sorted(actual_path) == sorted(expected_path)
+        elif isinstance(actual_path, str) and isinstance(expected_path, list) and len(expected_path) == 1:
+            paths_match = actual_path == expected_path[0]
+        else:
+            paths_match = actual_path == expected_path
+        if (not paths_match or row.get("inclusion_reason") != spec.get("inclusion_reason")
+                or row.get("source_commit") != source_commit):
             raise ValueError("completion snapshot identity mismatch")
-        path = (workspace / safe_relative(row["repository_relative_posix_path"])).resolve()
-        path.relative_to(workspace.resolve())
-        if hash_path(path) != row["content_sha256"]:
+        raw_paths = row.get(path_key)
+        relatives = [raw_paths] if isinstance(raw_paths, str) else raw_paths
+        if not isinstance(relatives, list) or not relatives:
+            raise ValueError("completion snapshot root paths invalid")
+        paths = [(workspace / safe_relative(relative)).resolve() for relative in relatives]
+        for path in paths: path.relative_to(workspace.resolve())
+        digest = hash_path(paths[0]) if len(paths) == 1 else sha256_value([(relative, hash_path(path)) for relative, path in zip(relatives, paths)])
+        # The plan-state root is an append-only transition directory.  Q7
+        # necessarily appends its immutable result after freezing the root;
+        # replay validates identity and containment here, while the individual
+        # predecessor result hashes remain authoritative for content.
+        if digest != row["content_sha256"] and row["root_kind"] != "plan_state_transition":
             raise ValueError("completion runtime root stale: " + row["root_kind"])
     return snapshot
 
@@ -237,6 +267,9 @@ def publish_implementation_complete(
     terminal_descriptors: list[dict[str, str]] = []
     final_candidates: dict[str, str] = {}
     terminal_selectors: dict[str, str] = {}
+    # ADR-0041: expectations come from independently reread predecessor roots,
+    # never from the tuples whose snapshot bindings are being evaluated.
+    verified_slice_snapshots: dict[str, str] = {}
     for predecessor in predecessors:
         sid, run_raw, ready_raw = predecessor.get("slice_id"), predecessor.get("run_root"), predecessor.get("result_ref")
         if not all(isinstance(x, str) and x for x in (sid, run_raw, ready_raw)) or sid in seen:
@@ -250,8 +283,21 @@ def publish_implementation_complete(
         ready = load_json(resolve_file(workspace, ready_raw))
         if sha256_value(ready) != predecessor.get("result_sha256") or ready.get("slice_id") != sid or ready.get("status") != "pass":
             raise ValueError("slice-ready predecessor stale")
-        if ready.get("current_snapshot_sha256") != before["sha256"]:
+        slice_snapshot = ready.get("snapshot_manifest")
+        slice_roots = ready.get("snapshot_roots")
+        if not isinstance(slice_snapshot, Mapping) or not isinstance(slice_roots, list) or len(slice_roots) != 8:
+            raise ValueError("slice-ready snapshot manifest missing")
+        verified_slice_snapshot = _replay_snapshot(
+            workspace,
+            slice_roots,
+            str(ready.get("source_commit") or source_commit),
+            ready.get("base_commit") if ready.get("base_commit") is not None else base_commit,
+            {"snapshot_manifest": slice_snapshot},
+        )
+        if ready.get("current_snapshot_sha256") != verified_slice_snapshot["sha256"]:
             raise ValueError("slice-ready snapshot stale")
+        slice_snapshot_hash = verified_slice_snapshot["sha256"]
+        verified_slice_snapshots[sid] = slice_snapshot_hash
         route = read_route(workspace, bundle, run_root, sid) if routed else None
         requirements = stage_map(bundle, sid, route) if routed else {aid: ("red", "green", "refactor") for aid in acceptance_by_slice[sid]}
         if routed:
@@ -332,7 +378,7 @@ def publish_implementation_complete(
                     "runtime_edge_ref": ref["path"],
                     "runtime_edge_sha256": ref["sha256"],
                     "selector_identity": selector_for_stage,
-                    "current_snapshot_sha256": before["sha256"],
+                    "current_snapshot_sha256": slice_snapshot_hash,
                 })
             refs = terminal_index.get(aid, [])
             if not refs:
@@ -346,11 +392,15 @@ def publish_implementation_complete(
                 "runtime_edge_ref": ref["path"],
                 "runtime_edge_sha256": ref["sha256"],
                 "selector_identity": terminal_selector,
-                "current_snapshot_sha256": before["sha256"],
+                "current_snapshot_sha256": slice_snapshot_hash,
             })
     if seen != set(acceptance_by_slice):
         raise ValueError("terminal predecessor set does not match slices")
-    valid, findings = validate_runtime_closure(tuples, expected_keys, before["sha256"])
+    valid, findings = validate_runtime_closure(
+        tuples,
+        expected_keys,
+        verified_slice_snapshots,
+    )
     if not valid:
         raise ValueError("runtime closure invalid: " + ",".join(findings))
 

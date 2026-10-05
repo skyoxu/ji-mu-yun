@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 from pathlib import Path
 import sys
@@ -136,7 +137,45 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str)
         len(normalized) > 1
         and all(offset is not None for offset in pytest_offsets)
     )
+    primary_covers_assertions = False
     if pytest_commands:
+        required = {
+            assertion_id
+            for acceptance in bundle.get("acceptances", [])
+            if acceptance.get("acceptance_id") in selected.get("acceptance_ids", [])
+            for assertion_id in acceptance.get("assertion_ids", [])
+        }
+        declared: set[str] = set()
+        primary_offset = pytest_offsets[0]
+        for item in normalized[0][primary_offset + 2:]:
+            if item == "-q":
+                continue
+            ref = safe_relative(item.split("::", 1)[0])
+            path = ROOT / ref
+            if path.suffix != ".py" or not path.is_file() or path.is_symlink():
+                continue
+            try:
+                tree = ast.parse(path.read_text(encoding="utf-8"))
+            except (OSError, SyntaxError, UnicodeError):
+                continue
+            constants = {
+                node.targets[0].id: node.value.value
+                for node in tree.body
+                if isinstance(node, ast.Assign)
+                and len(node.targets) == 1
+                and isinstance(node.targets[0], ast.Name)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            }
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "cer_assertion":
+                    for arg in node.args:
+                        if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                            declared.add(arg.value)
+                        elif isinstance(arg, ast.Name) and arg.id in constants:
+                            declared.add(constants[arg.id])
+        primary_covers_assertions = bool(required) and required <= declared
+    if pytest_commands and not primary_covers_assertions:
         prefixes = {tuple(command[:offset]) for command, offset in zip(normalized, pytest_offsets)}
         if len(prefixes) == 1:
             prefix = list(prefixes.pop())
@@ -239,6 +278,35 @@ def q1_preflight(*, semantic: Path, slice_id: str, profile: str) -> dict[str, An
     return {**result, "candidate_identity": identity, "plan_sha256": sha256_bytes(semantic.read_bytes()), "slice_id": slice_id, "profile": profile, "authorizes": []}
 
 
+def _declared_cer_assertions(path: Path) -> set[str]:
+    """Read literal or module-constant CER markers without invoking a worker."""
+    try:
+        # Pytest accepts UTF-8 BOM input, so the marker scanner must do the
+        # same or a valid CER selector is misclassified as unmapped.
+        tree = ast.parse(path.read_text(encoding="utf-8").lstrip("\ufeff"))
+    except (OSError, SyntaxError, UnicodeError):
+        return set()
+    constants = {
+        node.targets[0].id: node.value.value
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        and len(node.targets) == 1
+        and isinstance(node.targets[0], ast.Name)
+        and isinstance(node.value, ast.Constant)
+        and isinstance(node.value.value, str)
+    }
+    declared: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute) or node.func.attr != "cer_assertion":
+            continue
+        for arg in node.args:
+            if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                declared.add(arg.value)
+            elif isinstance(arg, ast.Name) and arg.id in constants:
+                declared.add(constants[arg.id])
+    return declared
+
+
 def q2_author_red(
     *,
     semantic: Path,
@@ -263,20 +331,13 @@ def q2_author_red(
     if "behavior_routing" in bundle:
         # A new plan may bind existing tests with new assertion IDs. This only
         # decides whether authoring is needed; the probe alone proves behavior.
-        import ast
         required = {sid for a in bundle["acceptances"] if a["acceptance_id"] in selected["acceptance_ids"] for sid in a["assertion_ids"]}
         declared = set()
         # Assertions may be deliberately split between the primary selector
         # and frozen fixture tests.  Both are executed by the descriptor, so
         # authoring is necessary only when their combined mapping is incomplete.
         for ref in sorted(set(target_refs + fixture_refs)):
-            try:
-                tree = ast.parse((ROOT / ref).read_text(encoding="utf-8"))
-            except (OSError, SyntaxError):
-                continue
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "cer_assertion":
-                    declared.update(arg.value for arg in node.args if isinstance(arg, ast.Constant) and isinstance(arg.value, str))
+            declared.update(_declared_cer_assertions(ROOT / ref))
         worker_required = worker_required or not required <= declared
     if worker_required:
         worker = run_red_author(

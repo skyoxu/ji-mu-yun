@@ -96,6 +96,75 @@ def test_schema_repair_transport_uses_bounded_longer_timeout_and_medium_reasonin
     assert schema_path.is_file()
 
 
+def test_v4_recheck_uses_explicit_repair_timeout_and_high_reasoning(tmp_path: Path, monkeypatch) -> None:
+    calls: list[dict] = []
+
+    def run_llm_exec(**kwargs):
+        calls.append(kwargs)
+        output = kwargs["output_last_message"]
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps({
+            "covered_obligation_ids": ["O-1"],
+            "missing_obligation_ids": [],
+            "invented_obligation_ids": [],
+            "misaligned_acceptance_ids": [],
+            "oracle_alignment": {"status": "aligned"},
+            "repairs": [],
+            "valid": True,
+        }) + "\n", encoding="utf-8")
+        return 0, "ok", ["codex", "exec"]
+
+    fake = types.SimpleNamespace(
+        resolve_llm_backend=lambda _raw: "codex-cli",
+        run_llm_exec=run_llm_exec,
+    )
+    monkeypatch.setitem(sys.modules, "_llm_backend", fake)
+
+    result = transport.transport_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v4-recheck",
+        payload={"acceptances": [], "failure_intents": [], "slice_hints": []},
+        prompt="Recheck the repaired V4 alignment.",
+    )
+    assert result["valid"] is True
+    assert calls[0]["timeout_sec"] == 300
+    assert 'model_reasoning_effort="high"' in calls[0]["codex_configs"]
+
+
+def test_v4_atomic_recall_uses_explicit_repair_timeout(tmp_path: Path, monkeypatch) -> None:
+    calls: list[dict] = []
+
+    def run_llm_exec(**kwargs):
+        calls.append(kwargs)
+        output = kwargs["output_last_message"]
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps({
+            "covered_obligation_ids": ["O-1"],
+            "missing_obligation_ids": [],
+            "invented_obligation_ids": [],
+            "source_gap_claims": [],
+        }) + "\n", encoding="utf-8")
+        return 0, "ok", ["codex", "exec"]
+
+    fake = types.SimpleNamespace(
+        resolve_llm_backend=lambda _raw: "codex-cli",
+        run_llm_exec=run_llm_exec,
+    )
+    monkeypatch.setitem(sys.modules, "_llm_backend", fake)
+
+    result = transport.transport_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v4-atomic-recall",
+        payload={"obligations": []},
+        prompt="Recheck atomic coverage.",
+    )
+    assert result["covered_obligation_ids"] == ["O-1"]
+    assert calls[0]["timeout_sec"] == 300
+    assert 'model_reasoning_effort="high"' in calls[0]["codex_configs"]
+
+
 def test_old_codex_without_output_schema_falls_back_only_at_transport_layer(tmp_path: Path, monkeypatch) -> None:
     calls: list[list[str]] = []
 

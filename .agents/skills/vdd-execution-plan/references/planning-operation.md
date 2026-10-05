@@ -76,6 +76,39 @@ input without rewriting old worker output. Do not combine this option with
 worker fixtures, companions, recommendation-only or execution-only handoff
 repair. It does not extend repair budgets or permit skipping a failed V4.
 
+For a published plan-ready predecessor, add `--repair-published-v3-from` and
+use a distinct empty sibling successor with the predecessor profile. The
+predecessor source bytes, bundle identity, semantic chain, V4 alignment and
+atomic recall must validate before reuse. The compiler reconstructs the
+published per-obligation V3 contracts and verifies unchanged identities; it
+never copies an old worker cache into the successor. Only the named corrected
+contracts change. Unselected Acceptance, failure intents and execution hints
+must remain identical or the successor is rejected. V1 is revalidated against
+the published source and recall, while V4 and all downstream gates run anew.
+If fresh atomic recall reports a source gap, this mode returns `repair-vdd`
+with the claims; it does not silently expand V1 or request unrelated V3
+contracts. A genuine gap requires a separately scoped source/V1 decision.
+The prior plan, prior caches and Quick Dev runs remain immutable. This mode
+cannot combine fixtures, companions, resume, recommendation-only, V1 override,
+V4 approval override or handoff-only repair.
+
+For a reviewed published-predecessor source-gap decision, add
+`--published-v1-gap-extension <json>` to that mode. Its exact source bytes,
+`authorizes=[]`, two new active FR-4 V1 obligations, and matching complete V3
+inline contracts are validated before compilation. It cannot import a model
+failure log as authority. The compiler reuses all predecessor V1/V3 peers,
+applies only the named V3 corrections and the two additions, and runs V4 and
+downstream gates independently in a new empty sibling. Any further source gap
+returns `repair-vdd`; do not widen the extension or repeat all V3 chunks
+without a separate reviewed source decision.
+
+For a normative contradiction in frozen V1 semantics, the separate
+`--published-v1-replacement` input is required. It is source-bound,
+non-authorizing, and must provide complete V3 inline contracts for each new
+obligation ID. Replacement is limited to explicitly named obligations;
+unselected V1/V3 peers remain semantically stable. An input without complete
+contracts fails closed, and no historical worker output is promoted.
+
 ## Execution-only handoff repair
 
 Use the public compiler's `--repair-quick-dev-handoff-from` only for a

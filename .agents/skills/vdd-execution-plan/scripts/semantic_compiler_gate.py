@@ -151,7 +151,7 @@ def normative_invoke_worker(
     raw: Mapping[str, Any] | None = None
     findings: list[str] = []
     try:
-        if stage.startswith("v3-schema-repair") and isinstance(effective_worker_cache, Mapping):
+        if stage in {"v3", "v3-schema-repair"} and isinstance(effective_worker_cache, Mapping):
             candidates = [effective_worker_cache.get(stage), effective_worker_cache.get("v3-schema-repair")]
             for candidate in candidates:
                 if not isinstance(candidate, Mapping) or not isinstance(candidate.get("obligation_contracts"), Mapping):
@@ -182,10 +182,18 @@ def normative_invoke_worker(
                         repair_attempted=True, injected=True, exit_status="cache-reused",
                     )
                     return raw
-            elif isinstance(successor, Mapping) and isinstance(successor.get("obligation_contracts"), Mapping):
+            elif (isinstance(successor, Mapping)
+                  and (isinstance(successor.get("obligation_contracts"), Mapping)
+                       or isinstance(successor.get("groups"), list))):
                 import semantic_worker_v3_group_repair_patch as grouped
                 refs = grouped._obligation_refs({"input": payload})
-                raw = grouped._project_current_output(successor, refs)
+                if "groups" in successor:
+                    raw = grouped._project(successor, refs_by_oid=refs)
+                else:
+                    raw = grouped._project_current_output(successor, refs)
+                domain_findings = grouped.v3_domain._domain_findings("v3", payload, raw)
+                if domain_findings:
+                    raise ValueError("V3 frozen-domain validation failed: " + "; ".join(domain_findings))
                 findings = _worker_schema_findings(stage, raw)
                 if not findings:
                     elapsed = int((time.perf_counter() - started) * 1000)

@@ -130,6 +130,74 @@ def test_injected_v3_schema_repair_projects_group_before_domain_validation(tmp_p
     assert result["acceptances"][0]["source_refs"] == ["req.md#FR-1"]
 
 
+def test_injected_initial_v3_fixture_is_reused_by_schema_repair(monkeypatch, tmp_path: Path) -> None:
+    """A V3 retry must not launch a worker when the complete V3 fixture is cached."""
+    payload = {
+        "original_stage": "v3",
+        "input": {
+            "obligations": [
+                {
+                    "obligation_id": "O-1",
+                    "source_refs": ["req.md#FR-1"],
+                    "requirement_type": "Product",
+                    "obligation_kind": "constraint",
+                }
+            ]
+        },
+        "validator_findings": ["v3-schema-repair:retry"],
+    }
+    fixture = {
+        "acceptances": [{
+            "obligation_ids": ["O-1"],
+            "source_refs": ["req.md#FR-1"],
+            "given": "a frozen obligation",
+            "when": "the V3 retry runs",
+            "then": "the cached contract is reused",
+            "oracle": {"observable": "reuse", "expected": "cached", "forbidden": []},
+            "assertion_ids": ["ASSERT-REUSE"],
+        }],
+        "failure_intents": [{
+            "obligation_ids": ["O-1"],
+            "failure_family": "artifact-integrity",
+            "selector_intent": "tests/test_owner_boundary.py",
+            "expected_outcome": "fail",
+            "failure_id": "OWNER-BOUNDARY-GUARD",
+        }],
+        "slice_hints": [{
+            "obligation_ids": ["O-1"],
+            "production_owners": ["src/owner.py"],
+            "verification_lane": "unit",
+            "behavior_change": "reuse the cached contract",
+            "affected_subjects": ["the contract"],
+            "state_transition": "cached->reused",
+            "rollback_scope": {
+                "production_paths": ["src/owner.py"],
+                "state_or_schema_compatibility": "backward-compatible",
+            },
+            "allowed_write_paths": ["src/owner.py"],
+            "execution_snapshot_paths": ["tests/test_owner_boundary.py"],
+            "planned_new_files": [],
+            "terminal_predicate": "cached contract returned",
+            "forbidden_paths": [],
+            "validation_commands": [[sys.executable, "-m", "pytest", "tests/test_owner_boundary.py", "-q"]],
+        }],
+    }
+    monkeypatch.setattr(
+        group_patch,
+        "_live_group_repair",
+        lambda **_kwargs: (_ for _ in ()).throw(AssertionError("V3 worker must not start")),
+    )
+    result = group_patch.group_repair_transport(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v3-schema-repair",
+        payload=payload,
+        prompt="Repair V3.",
+        worker_cache={"v3": fixture},
+    )
+    assert result == fixture
+
+
 def test_large_initial_v3_uses_exact_key_chunk_composer(monkeypatch, tmp_path: Path) -> None:
     payload = {
         "obligations": [

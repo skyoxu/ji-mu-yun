@@ -478,6 +478,19 @@ def compile_obligations_with_gap_repair(
     if recall.get("valid") or not _only_source_gaps(recall):
         return obligations
 
+    # Published V3 repairs are scoped to their declared target obligations.
+    # Preserve the independent source-gap witness, but do not expand this
+    # successor into a new global V1 repair round.
+    if (Path(out_dir) / ".compiler-work" / "published-v3-repair-active.json").is_file():
+        return obligations
+
+    # An explicit worker-cache replay is offline and fail-closed.  If the
+    # source-gap repair response is not part of that frozen cache, do not
+    # silently open a new worker round; preserve the source-gap witness for
+    # the caller to report as repair-vdd.
+    if isinstance(worker_cache, Mapping) and "v1-source-gap-repair" not in worker_cache:
+        return obligations
+
     gaps = [item for item in recall.get("source_gap_claims", []) if isinstance(item, Mapping)]
     additions = _additional_obligations(
         root=root,

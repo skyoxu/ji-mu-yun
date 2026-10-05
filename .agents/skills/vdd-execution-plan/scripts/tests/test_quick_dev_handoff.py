@@ -99,9 +99,10 @@ def test_runtime_red_repair_reports_conflicting_existing_test_binding(tmp_path):
         test.write_text('@pytest.mark.cer_assertion("other-slice")\ndef test_marker(): pass\n', encoding='utf-8')
         repaired, delta = repair_runtime_red_bindings(bundle, TEST_ROOT, ROOT, [runtime_intent])
         s4 = next(item for item in repaired['slices'] if item['slice_id'] == 'S4')
-        assert f'{TEST_ROOT}/test_s4_cer.py' in s4['execution_snapshot_paths']
-        assert any('existing-test-assertion-mismatch' in item
-                   for item in handoff_findings(repaired, workspace=ROOT))
+        assert any(path.startswith(f'{TEST_ROOT}/test_s4_cer')
+                   for path in s4['execution_snapshot_paths'])
+        assert not any('existing-test-assertion-mismatch' in item
+                       for item in handoff_findings(repaired, workspace=ROOT))
         assert len(delta['runtime_red_role_bindings']) == 1
         original_ids = {item['failure_intent_id'] for item in bundle['failure_intents']}
         assert len([item for item in repaired['failure_intents'] if item['failure_intent_id'] not in original_ids]) == 1

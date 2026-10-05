@@ -163,6 +163,54 @@ def test_descriptor_inputs_deduplicates_equivalent_pytest_targets(tmp_path: Path
     assert fixtures == ["tests/fixture.txt"]
 
 
+def test_descriptor_inputs_keeps_complete_primary_selector_separate_from_regressions(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(stable_runner, "ROOT", tmp_path)
+    plan = tmp_path / "plan"
+    (plan / "agent-context" / "S1").mkdir(parents=True)
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "other").mkdir()
+    (tmp_path / "tests" / "test_value.py").write_text(
+        '@pytest.mark.cer_assertion("ASSERT-CLI")\ndef test_value():\n    assert True\n', encoding="utf-8"
+    )
+    (tmp_path / "other" / "test_value.py").write_text("def test_other():\n    assert True\n", encoding="utf-8")
+    context = {"slice_id": "S1", "validation_commands": [
+        [sys.executable, "-m", "pytest", "tests/test_value.py", "-q"],
+        [sys.executable, "-m", "pytest", "other/test_value.py", "-q"],
+    ]}
+    (plan / "agent-context" / "S1" / "agent-context.json").write_text(json.dumps(context), encoding="utf-8")
+    bundle = _bundle()
+    bundle["slices"][0]["execution_snapshot_paths"] = ["tests/test_value.py", "other/test_value.py"]
+
+    argv, targets, fixtures = stable_runner._descriptor_inputs(bundle, plan, "S1")
+
+    assert argv == context["validation_commands"][0]
+    assert targets == ["tests/test_value.py"]
+    assert fixtures == ["other/test_value.py"]
+
+
+def test_descriptor_inputs_resolves_constant_cer_marker_before_regression_split(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(stable_runner, "ROOT", tmp_path)
+    plan = tmp_path / "plan"
+    (plan / "agent-context" / "S1").mkdir(parents=True)
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "test_value.py").write_text(
+        'import pytest\nASSERTION = "ASSERT-CLI"\n'
+        '@pytest.mark.cer_assertion(ASSERTION)\ndef test_value():\n    assert True\n',
+        encoding="utf-8",
+    )
+    context = {"slice_id": "S1", "validation_commands": [
+        [sys.executable, "-m", "pytest", "tests/test_value.py", "-q"],
+        [sys.executable, "-m", "pytest", "scripts/sc", "-q"],
+    ]}
+    (plan / "agent-context" / "S1" / "agent-context.json").write_text(json.dumps(context), encoding="utf-8")
+    bundle = _bundle()
+    bundle["slices"][0]["execution_snapshot_paths"] = ["tests/test_value.py"]
+    argv, targets, fixtures = stable_runner._descriptor_inputs(bundle, plan, "S1")
+    assert argv == context["validation_commands"][0]
+    assert targets == ["tests/test_value.py"]
+    assert fixtures == ["tests/test_value.py"]
+
+
 def test_recommendation_fails_closed_without_snapshot_inputs(tmp_path: Path, monkeypatch) -> None:
     root, semantic, _roots = _repo(tmp_path)
     monkeypatch.setattr(stable_runner, "ROOT", root)

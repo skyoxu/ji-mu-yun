@@ -138,3 +138,70 @@ def test_fast_ship_skips_extra_declared_regressions_but_keeps_primary_truth_floo
     assert result["declared_command_count"] == 2
     assert len(result["commands"]) == 1
     assert result["commands"][0]["status"] == "covered-by-primary-refactor-selector"
+
+
+def test_standard_q6_defers_terminal_whole_tree_pytest_command(tmp_path: Path) -> None:
+    primary = [sys.executable, "-m", "pytest", "tests/test_behavior.py", "-q"]
+    terminal = [sys.executable, "-m", "pytest", "scripts/sc"]
+    bundle = _bundle([primary, terminal])
+    result = run_regression_gate(
+        workspace=tmp_path,
+        bundle=bundle,
+        slice_id="S1",
+        profile="standard",
+        primary_argv=primary,
+        primary_receipt={
+            "exit_code": 0,
+            "timed_out": False,
+            "test_executions": 1,
+            "cases": 1,
+            "stdout_sha256": "sha256:" + "a" * 64,
+            "stderr_sha256": "sha256:" + "b" * 64,
+        },
+        timeout_seconds=30,
+        out=tmp_path / "q6.json",
+    )
+    assert result["status"] == "pass"
+    assert result["deferred_terminal_command_count"] == 1
+    assert result["commands"][0]["status"] == "covered-by-primary-refactor-selector"
+
+
+def test_standard_q6_defers_shared_consumer_regression_file(tmp_path: Path) -> None:
+    primary = [sys.executable, "-m", "pytest", "tests/test_behavior.py", "-q"]
+    shared = [sys.executable, "-m", "pytest", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py"]
+    bundle = _bundle([primary, shared])
+    result = run_regression_gate(
+        workspace=tmp_path,
+        bundle=bundle,
+        slice_id="S1",
+        profile="standard",
+        primary_argv=primary,
+        primary_receipt={
+            "exit_code": 0,
+            "timed_out": False,
+            "test_executions": 1,
+            "cases": 1,
+            "stdout_sha256": "sha256:" + "a" * 64,
+            "stderr_sha256": "sha256:" + "b" * 64,
+        },
+        timeout_seconds=30,
+        out=tmp_path / "q6.json",
+    )
+    assert result["status"] == "pass"
+    assert result["deferred_terminal_commands"] == [shared]
+
+
+def test_standard_q6_runs_explicit_single_file_consumer_fixture(tmp_path: Path) -> None:
+    primary = [sys.executable, "-m", "pytest", "tests/test_behavior.py", "-q"]
+    fixture = [sys.executable, "-m", "pytest", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py", "-q"]
+    bundle = _bundle([primary, fixture])
+    result = run_regression_gate(
+        workspace=Path(__file__).resolve().parents[5], bundle=bundle, slice_id="S1",
+        profile="standard", primary_argv=primary,
+        primary_receipt={"exit_code": 0, "timed_out": False, "test_executions": 1, "cases": 1,
+                         "stdout_sha256": "sha256:" + "a" * 64, "stderr_sha256": "sha256:" + "b" * 64},
+        timeout_seconds=60, out=tmp_path / "q6.json",
+    )
+    assert result["deferred_terminal_command_count"] == 0
+    assert result["commands"][-1]["exit_code"] == 0
+    assert result["commands"][-1]["cases"] >= 1

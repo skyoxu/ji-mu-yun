@@ -1,0 +1,1 @@
+{"completed_stages":["V0","V0A","V2","V3A","V5","V6A","V7","final-validation","quick-dev-handoff"],"execution_repair":"handoff-repair.v1.json","plan_id":"PLAN-7B2637C400E8","reused_stages":["V1","V4"],"schema":"vdd.compiler-state.v1","semantic_plan_sha256":"sha256:cd09dc1b9d4920fb9ff7c7090ec0c176498f3e3aca8f09f51ab6fd80d04f4986","state":"plan-ready"}

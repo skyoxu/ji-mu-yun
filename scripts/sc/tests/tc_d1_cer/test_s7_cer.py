@@ -11,7 +11,7 @@ from test_s10 import (
 from test_s10 import (
     test_detached_positive_probe_records_a_distinct_child_process as _process_probe,
 )
-from test_s41 import test_consumer_disable_records_the_real_prior_route_call as _disable_probe
+from test_s4_cer import test_rollback_restores_prior_route_through_real_call as _disable_probe
 
 import json
 import subprocess

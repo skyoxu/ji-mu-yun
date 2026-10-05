@@ -23,7 +23,13 @@ def _repo(tmp_path: Path) -> tuple[Path, Path, str, str]:
     owner = "src/compiler.py"
     selector = "tests/test_compile.py"
     (root / owner).write_text("VALUE = 1\n", encoding="utf-8")
-    (root / selector).write_text("def test_compile():\n    assert True\n", encoding="utf-8")
+    (root / selector).write_text(
+        "import pytest\n\n"
+        "@pytest.mark.cer_assertion(\"ASSERT-COMPILE\")\n"
+        "def test_compile():\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
     req = root / "requirements.md"
     req.write_text("# FR-1\nThe compiler must emit a deterministic plan.\n", encoding="utf-8")
     return root, req, owner, selector

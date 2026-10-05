@@ -1,0 +1,34 @@
+.........F                                                               [100%]
+================================== FAILURES ===================================
+_____ test_replay_matrix_receipt_proves_both_subjects_and_identity_bounds _____
+
+    @pytest.mark.cer_assertion("A-FR7-MATRIX-STABLE-CANDIDATE")
+    def test_replay_matrix_receipt_proves_both_subjects_and_identity_bounds() -> None:
+        matrix = ROOT / "execution-plans" / "2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed" / "stable-candidate-replay-matrix.v1.json"
+        replay = ROOT / "scripts" / "sc" / "skill_package_replay.py"
+        result = subprocess.run(
+            ["py", "-3", "-B", str(replay), "replay-matrix", "--matrix", str(matrix)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+            timeout=120,
+        )
+        assert result.returncode == 0, result.stderr
+        receipt = json.loads(result.stdout)
+        assert receipt.get("authorizes") == []
+        rows = receipt.get("case_results", [])
+        assert len(rows) == 6
+        for row in rows:
+            if "subjects" not in row:
+                print("FAILURE_ID:F-FR7-MISSING-SUBJECT-RUN")
+>           assert "subjects" in row
+E           AssertionError: assert 'subjects' in {'case_id': 'case-positive', 'category': 'positive', 'elapsed_ms': 424.095, 'executed': True, ...}
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_candidate_review_binding.py:244: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:F-FR7-MISSING-SUBJECT-RUN
+=========================== short test summary info ===========================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py::test_replay_matrix_receipt_proves_both_subjects_and_identity_bounds
+1 failed, 9 passed in 3.17s

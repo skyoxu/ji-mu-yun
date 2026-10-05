@@ -1,0 +1,117 @@
+{
+  "schema": "vdd.published-v1-split.v1",
+  "requirements_sha256": "sha256:d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+  "authorizes": [],
+  "source_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-6",
+  "replaced_obligation_id": "O-8E718A411378",
+  "obligations": [
+    {
+      "obligation_id": "O-3D3F8AAEE0F9",
+      "requirement_id": "FR-6",
+      "requirement_type": "Governance",
+      "obligation_kind": "behavior",
+      "subject": "The three named evaluation-seed occurrences",
+      "trigger": "When the evaluation-seed manifest is parsed.",
+      "state_before": "The manifest may omit, merge, duplicate, or add named seed occurrences.",
+      "state_after": "Exactly the three named occurrences are present once each.",
+      "expected_behavior": "The manifest contains exactly three named evaluation-seed occurrences, each occurring once.",
+      "observable_result": "Validation reports the exact three occurrence identities and count.",
+      "forbidden_result": ["A named occurrence is missing.", "A named occurrence is duplicated or merged.", "A fourth occurrence is accepted."],
+      "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-6"],
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "obligation_id": "O-C1E735568CEC",
+      "requirement_id": "FR-6",
+      "requirement_type": "Governance",
+      "obligation_kind": "behavior",
+      "subject": "The metadata attached to each named evaluation-seed occurrence",
+      "trigger": "When each named occurrence is recorded or checked.",
+      "state_before": "Occurrence metadata may lack provenance, applicability, missing labels, counterexample or explicit absence, or classification.",
+      "state_after": "Every occurrence carries the complete required provenance and classification metadata.",
+      "expected_behavior": "Each named occurrence has non-empty provenance and applicability, missing labels, a counterexample or explicit absence, and approved non-baseline classification.",
+      "observable_result": "Validation exposes each required metadata field for every occurrence and rejects incomplete metadata.",
+      "forbidden_result": ["Provenance or applicability is missing or empty.", "Missing labels or counterexample/explicit absence is omitted.", "An unapproved baseline classification is accepted."],
+      "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-6"],
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    }
+  ],
+  "v3_contracts": {
+    "O-3D3F8AAEE0F9": {
+      "acceptance": {
+        "acceptance_id": "A-3D3F8AAEE0F9",
+        "assertion_ids": ["A-3D3F8AAEE0F9-1"],
+        "obligation_ids": ["O-3D3F8AAEE0F9"],
+        "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-6"],
+        "given": "The evaluation-seed manifest is available for validation.",
+        "when": "The named occurrences are parsed and counted.",
+        "then": "Exactly three named occurrences are present once each.",
+        "oracle": {"observable": "The manifest validator reports the exact occurrence identity set and count.", "expected": "Three named occurrences, each exactly once.", "forbidden": ["Missing, duplicate, merged, or fourth occurrence."]},
+        "verification_lane": "unit"
+      },
+      "failure_intents": [{"failure_intent_id": "FI-3D3F8AAEE0F9", "failure_id": "F-3D3F8AAEE0F9-1", "acceptance_ids": ["A-3D3F8AAEE0F9"], "expected_outcome": "fail", "failure_family": "semantic-contract-gap", "selector_intent": "Remove, duplicate, merge, or add a named occurrence and require exact-once rejection."}],
+      "slice_hint": {
+        "slice_id": "S34",
+        "obligation_ids": ["O-3D3F8AAEE0F9"],
+        "acceptance_ids": ["A-3D3F8AAEE0F9"],
+        "failure_intent_ids": ["FI-3D3F8AAEE0F9"],
+        "production_owners": ["scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json", "scripts/sc/skill_package_replay.py"],
+        "allowed_write_paths": ["scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json", "scripts/sc/skill_package_replay.py"],
+        "execution_snapshot_paths": ["scripts/sc/tests/tc_d1_cer/test_s34.py"],
+        "planned_new_files": ["scripts/sc/tests/tc_d1_cer/test_s34.py"],
+        "validation_commands": [["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s34.py", "-q"]],
+        "verification_lane": "unit",
+        "behavior_change": "Reject non-exact named evaluation-seed occurrence sets.",
+        "affected_subjects": ["Named evaluation-seed occurrence identity and count"],
+        "state_transition": "Unconstrained occurrence set -> exact-once validation",
+        "rollback_scope": {"production_paths": ["scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json", "scripts/sc/skill_package_replay.py"], "state_or_schema_compatibility": "Preserve manifest field names while tightening occurrence validation."},
+        "terminal_predicate": "Validation succeeds only for the exact three named occurrences.",
+        "context_lookup_reason": "S34 manifest validation requires implementation context.",
+        "context_lookup_required": true,
+        "complexity_class": "simple",
+        "minimum_red_scope": "one bound Acceptance group and its failure family",
+        "forbidden_paths": ["PhaseA.Platform", "runtime/phase-a", "logs/phase-a-innernet"]
+      }
+    },
+    "O-C1E735568CEC": {
+      "acceptance": {
+        "acceptance_id": "A-C1E735568CEC",
+        "assertion_ids": ["A-C1E735568CEC-1"],
+        "obligation_ids": ["O-C1E735568CEC"],
+        "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-6"],
+        "given": "The exact three named occurrences have been identified.",
+        "when": "Each occurrence's metadata is inspected.",
+        "then": "All required provenance, applicability, missing-label, counterexample/explicit-absence, and non-baseline classification fields are present and approved.",
+        "oracle": {"observable": "The manifest validator exposes complete metadata for each occurrence.", "expected": "Every required metadata field is non-empty or explicitly absent where permitted, with approved non-baseline classification.", "forbidden": ["Missing or empty provenance/applicability.", "Missing labels or counterexample/explicit absence.", "Unapproved baseline classification."]},
+        "verification_lane": "unit"
+      },
+      "failure_intents": [{"failure_intent_id": "FI-C1E735568CEC", "failure_id": "F-C1E735568CEC-1", "acceptance_ids": ["A-C1E735568CEC"], "expected_outcome": "fail", "failure_family": "semantic-contract-gap", "selector_intent": "Remove or empty a required per-occurrence metadata field and require rejection."}],
+      "slice_hint": {
+        "slice_id": "S34",
+        "obligation_ids": ["O-C1E735568CEC"],
+        "acceptance_ids": ["A-C1E735568CEC"],
+        "failure_intent_ids": ["FI-C1E735568CEC"],
+        "production_owners": ["scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json", "scripts/sc/skill_package_replay.py"],
+        "allowed_write_paths": ["scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json", "scripts/sc/skill_package_replay.py"],
+        "execution_snapshot_paths": ["scripts/sc/tests/tc_d1_cer/test_s34.py"],
+        "planned_new_files": ["scripts/sc/tests/tc_d1_cer/test_s34.py"],
+        "validation_commands": [["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s34.py", "-q"]],
+        "verification_lane": "unit",
+        "behavior_change": "Require complete source-bound metadata and approved non-baseline classification for each seed occurrence.",
+        "affected_subjects": ["Evaluation-seed provenance, applicability, missing labels, counterexample, and classification"],
+        "state_transition": "Partial occurrence metadata -> complete metadata validation",
+        "rollback_scope": {"production_paths": ["scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json", "scripts/sc/skill_package_replay.py"], "state_or_schema_compatibility": "Preserve manifest field names while requiring complete metadata."},
+        "terminal_predicate": "Validation succeeds only when every occurrence has complete required metadata.",
+        "context_lookup_reason": "S34 manifest validation requires implementation context.",
+        "context_lookup_required": true,
+        "complexity_class": "simple",
+        "minimum_red_scope": "one bound Acceptance group and its failure family",
+        "forbidden_paths": ["PhaseA.Platform", "runtime/phase-a", "logs/phase-a-innernet"]
+      }
+    }
+  }
+}

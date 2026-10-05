@@ -300,6 +300,39 @@ def test_fixture_assertion_mapping_does_not_reinvoke_author(tmp_path,monkeypatch
     assert result["worker"]["status"]=="worker-not-required"
 
 
+def test_non_pytest_fixture_does_not_reinvoke_author_when_selector_is_complete(tmp_path,monkeypatch):
+    import stable_runner
+    semantic,_=fixture(tmp_path)
+    bundle=json.loads(semantic.read_text(encoding="utf-8"))
+    bundle["slices"][0]["execution_snapshot_paths"]=["tests/test_one.py","fixtures/preflight_negative.py"]
+    semantic.write_text(json.dumps(bundle),encoding="utf-8")
+    monkeypatch.setattr(stable_runner,"ROOT",tmp_path)
+    (tmp_path/"fixtures").mkdir()
+    (tmp_path/"fixtures/preflight_negative.py").write_text("def main(): return 0\n",encoding="utf-8")
+    calls=[]
+    monkeypatch.setattr(stable_runner,"run_red_author",lambda **kwargs: calls.append(kwargs) or {"status":"worker-changes-valid"})
+    result=stable_runner.q2_author_red(semantic=semantic,slice_id="S1",run_dir=tmp_path/"RUN-1",
+        profile="standard",timeout_seconds=10,backend="offline-disabled")
+    assert calls==[]
+    assert result["worker"]["status"]=="worker-not-required"
+
+
+def test_bom_encoded_cer_selector_is_scanned_without_worker(tmp_path,monkeypatch):
+    import stable_runner
+    semantic,_=fixture(tmp_path)
+    bundle=json.loads(semantic.read_text(encoding="utf-8"))
+    semantic.write_text(json.dumps(bundle),encoding="utf-8")
+    monkeypatch.setattr(stable_runner,"ROOT",tmp_path)
+    test=tmp_path/"tests/test_one.py"
+    test.write_text("\ufeff" + test.read_text(encoding="utf-8"),encoding="utf-8")
+    calls=[]
+    monkeypatch.setattr(stable_runner,"run_red_author",lambda **kwargs: calls.append(kwargs) or {"status":"worker-changes-valid"})
+    result=stable_runner.q2_author_red(semantic=semantic,slice_id="S1",run_dir=tmp_path/"RUN-1",
+        profile="standard",timeout_seconds=10,backend="offline-disabled")
+    assert calls==[]
+    assert result["worker"]["status"]=="worker-not-required"
+
+
 def test_change_impact_invalidates_regression_observations(tmp_path):
     from current_router import recommendation
     semantic,_=fixture(tmp_path)

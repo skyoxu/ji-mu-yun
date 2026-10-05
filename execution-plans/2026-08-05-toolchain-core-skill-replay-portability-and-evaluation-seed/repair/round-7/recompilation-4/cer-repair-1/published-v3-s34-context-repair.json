@@ -1,0 +1,53 @@
+{
+  "schema": "vdd.v3-candidate-repair.v1",
+  "requirements_sha256": "sha256:d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+  "authorizes": [],
+  "obligation_contracts": {
+    "O-A6BBB1F6283D": {
+      "acceptance": {
+        "acceptance_id": "A-A1427250EE74",
+        "assertion_ids": ["A-FR5-REPAIR-EVIDENCE-APPEND"],
+        "complexity_class": "simple",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "given": "The repair evidence store contains existing entries before a repair records new evidence.",
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "oracle": {
+          "expected": "The resulting store preserves every prior entry byte-for-byte and order-preserved, followed only by newly appended entries.",
+          "forbidden": ["Existing repair evidence is edited, deleted, reordered, or overwritten."],
+          "observable": "Before/after content-addressed evidence manifests demonstrate unchanged prefix membership/bytes and a suffix containing only new entries."
+        },
+        "red_intent_ids": ["FI-9754CAC4DABC"],
+        "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-5"],
+        "then": "Repair evidence is durably append-only and historical entries remain available for audit without authority promotion.",
+        "upgrade_conditions": ["selector spans multiple test roots", "independent failure mechanisms require separate observations", "runtime or detached judge evidence becomes mandatory"],
+        "verification_lane": "unit",
+        "when": "A repair operation records its evidence receipt."
+      },
+      "failure_intents": [{
+        "expected_outcome": "fail",
+        "failure_family": "artifact-integrity",
+        "failure_id": "F-REPAIR-EVIDENCE-NONAPPEND",
+        "failure_intent_id": "FI-9754CAC4DABC",
+        "selector_intent": "Present a repair write that rewrites, reorders, deletes, or overwrites an existing evidence entry and require integrity rejection."
+      }],
+      "slice_hint": {
+        "production_owners": [".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py", "scripts/sc/skill_package_replay.py"],
+        "verification_lane": "unit",
+        "behavior_change": "Write repair evidence by append-only operation with immutable prior-entry manifest comparison and reject any mutation of the historical prefix.",
+        "affected_subjects": ["Repair evidence append-only store"],
+        "state_transition": "existing evidence prefix -> append new receipt(s) -> integrity-checked combined store",
+        "rollback_scope": {
+          "production_paths": [".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py", "scripts/sc/skill_package_replay.py"],
+          "state_or_schema_compatibility": "Preserve existing evidence serialization and historical entries; append new records without destructive migration."
+        },
+        "allowed_write_paths": [".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py", "scripts/sc/skill_package_replay.py", "scripts/sc/tests/tc_d1_cer/test_s33.py"],
+        "execution_snapshot_paths": [".agents/skills/quick-dev-tdd-adapter/tools/adapter-lifecycle-probe.txt", "scripts/sc/tests/tc_d1_cer/test_s33.py"],
+        "planned_new_files": ["scripts/sc/tests/tc_d1_cer/test_s33.py"],
+        "terminal_predicate": "Pass only when old entries' bytes, order, and membership are unchanged and new entries form a suffix; any prefix mutation fails.",
+        "forbidden_paths": [".agents/skills/bmad-*/**", ".agents/skills/gds-*/**", "PhaseA.Platform", "_bmad/**", "logs/phase-a-innernet", "runtime/phase-a"],
+        "validation_commands": [["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s33.py", "-q"]]
+      }
+    }
+  }
+}

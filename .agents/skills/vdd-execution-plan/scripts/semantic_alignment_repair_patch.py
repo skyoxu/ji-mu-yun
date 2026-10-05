@@ -55,6 +55,21 @@ def _v4_source_chunk_result_matches_scope(
         isinstance(value, str) and value in acceptance_ids for value in values
     ):
         return False
+    # A non-empty misalignment is an actionable semantic finding, not a
+    # reusable successful partition. Force the bounded Acceptance repair path
+    # to receive a fresh independent worker result for this source chunk.
+    if values:
+        return False
+    # A source partition receives exactly its own active obligations.  An ID
+    # from that partition is therefore never "invented"; if its Acceptance or
+    # RED binding is absent, V4 must report it as missing.  Reject the worker
+    # result so the bounded retry can correct the classification instead of
+    # allowing a valid current obligation to poison the aggregate as invented.
+    invented = raw.get("invented_obligation_ids")
+    if not isinstance(invented, list) or any(
+        not isinstance(value, str) or value in obligation_ids for value in invented
+    ):
+        return False
     missing = {value for value in raw["missing_obligation_ids"] if isinstance(value, str)}
     if not missing:
         return True
@@ -133,6 +148,7 @@ def _chunked_alignment(
                 "Return covered_obligation_ids[], missing_obligation_ids[], invented_obligation_ids[], "
                 "misaligned_acceptance_ids[], oracle_alignment object, repairs[]. A boolean valid is not authoritative."
                 + sc.ALIGNMENT_SCOPE_PROMPT
+                + " For this source partition, every supplied active obligation ID is a real current obligation, never an invented one. If its Acceptance or RED binding is absent or semantically unusable, place that ID in missing_obligation_ids. Keep invented_obligation_ids empty; do not use it for a supplied ID."
             ),
         )
         for key in merged:
@@ -148,7 +164,13 @@ def _chunked_alignment(
 
 def _alignment_worker_result(*, root, out_dir, source_index, obligations, acceptances, failures, worker_cache, stage: str, prompt: str) -> Mapping[str, Any]:
     payload = sc.alignment_payload(source_index, obligations, acceptances, failures)
-    if len(json.dumps(payload, ensure_ascii=False, sort_keys=True)) > _MAX_V4_ALIGNMENT_INPUT_CHARS:
+    serialized_size = len(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+    # Recheck carries repaired Acceptance prose and is materially larger than
+    # the first V4 alignment. Keep its transport bounded even when it remains
+    # below the historical global threshold; this is a transport decision, not
+    # a semantic scope reduction.
+    threshold = 300_000 if stage == "v4-recheck" else _MAX_V4_ALIGNMENT_INPUT_CHARS
+    if serialized_size > threshold:
         return _chunked_alignment(root=root, out_dir=out_dir, source_index=source_index,
                                   obligations=obligations, acceptances=acceptances,
                                   failures=failures, worker_cache=worker_cache)

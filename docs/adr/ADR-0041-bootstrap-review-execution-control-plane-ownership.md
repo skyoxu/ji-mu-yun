@@ -330,3 +330,19 @@ independent V4, coverage, slicing and final publication gates remain required.
 The correction cannot reuse a completed plan or increase the repair budget.
 Runtime expected-RED is limited to an executable assertion; C3 approvals are
 not supplied or inferred by a candidate correction.
+
+### Published V3 Contract Repair Successor (2026-09-25)
+
+The earlier prohibition on applying candidate correction to a completed
+output directory remains: published bytes are never repaired in place. A
+canonical CLI successor mode may instead use one explicit plan-ready
+predecessor and a distinct empty sibling directory. It validates current
+source bytes, bundle identity, semantic chain, independent V4 alignment and
+atomic recall before deriving the unchanged per-obligation V3 contracts from
+the published bundle. It does not copy an old worker cache or reuse V4 as a
+current verdict. Only explicitly named contracts can change; drift in other
+Acceptance, failure-intent or execution-hint semantics fails closed. The
+successor still requires fresh V4 and every downstream gate. Historical plan,
+cache, Quick Dev evidence, authorization and C3 status remain unchanged. If
+fresh atomic recall discovers a source gap, this successor stops at V4; it
+does not silently expand V1 under an Acceptance-only correction.

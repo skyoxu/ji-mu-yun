@@ -12,7 +12,7 @@ if str(SCRIPTS) not in sys.path:
 from semantic_compiler import (
     _normalize_obligation, _reusable_prior_v1_cache, _worker_cache_key,
     _reusable_predecessor_obligations, build_source_index,
-    configure_v1_reuse_predecessor_plan,
+    configure_v1_reuse_predecessor_plan, project_slice_dependencies,
 )
 from semantic_compiler_gate import compile_plan
 import semantic_compiler_gate as gate
@@ -48,7 +48,14 @@ def _repo(tmp_path: Path) -> tuple[Path, Path, str, str]:
     (root / "src").mkdir(); (root / "tests").mkdir()
     owner = "src/compiler.py"; selector = "tests/test_compile.py"
     (root / owner).write_text("VALUE = 1\n", encoding="utf-8")
-    (root / selector).write_text("from src.compiler import VALUE\ndef test_compile():\n    assert VALUE == 1\n", encoding="utf-8")
+    (root / selector).write_text(
+        "import pytest\n"
+        "from src.compiler import VALUE\n\n"
+        "@pytest.mark.cer_assertion(\"ASSERT-COMPILE\")\n"
+        "def test_compile():\n"
+        "    assert VALUE == 1\n",
+        encoding="utf-8",
+    )
     req = root / "req.md"; req.write_text("# FR-1\nThe compiler must emit a deterministic plan.\n", encoding="utf-8")
     return root, req, owner, selector
 
@@ -99,6 +106,50 @@ def test_full_v0_to_v7_compilation_with_injected_readonly_workers(tmp_path: Path
     assert (root / "plan" / "atomic-recall-alignment.v1.json").is_file()
     assert (root / "plan" / "semantic-plan-bundle.v1.json").is_file()
     assert (root / "plan" / "agent-context" / "S1" / "agent-context.json").is_file()
+
+
+def _partition_fixture(*, second_depends_on_first: bool):
+    obligations = [
+        {"obligation_id": "O-1", "requirement_id": "FR-1", "source_refs": ["req.md#FR-1"], "status": "active", "depends_on": []},
+        {"obligation_id": "O-2", "requirement_id": "FR-2", "source_refs": ["req.md#FR-2"], "status": "active", "depends_on": ["O-1"] if second_depends_on_first else []},
+    ]
+    acceptances = [
+        {"acceptance_id": "A-1", "obligation_ids": ["O-1"], "source_refs": ["req.md#FR-1"], "assertion_ids": ["ASSERT-1"], "red_intent_ids": ["R-1"]},
+        {"acceptance_id": "A-2", "obligation_ids": ["O-2"], "source_refs": ["req.md#FR-2"], "assertion_ids": ["ASSERT-2"], "red_intent_ids": ["R-2"]},
+    ]
+    failures = [
+        {"failure_intent_id": "R-1", "acceptance_ids": ["A-1"], "failure_family": "expected-red", "selector_intent": "tests/test_one.py"},
+        {"failure_intent_id": "R-2", "acceptance_ids": ["A-2"], "failure_family": "expected-red", "selector_intent": "tests/test_two.py"},
+    ]
+    common = {
+        "verification_lane": "unit", "state_transition": "before->after", "execution_snapshot_paths": ["tests/test.py"],
+        "planned_new_files": [], "affected_subjects": ["compiler"], "rollback_scope": {"production_paths": [], "state_or_schema_compatibility": "backward-compatible"},
+        "terminal_predicate": "all active Acceptance assertions pass", "forbidden_paths": [], "validation_commands": [["py", "-3", "-m", "pytest", "tests/test.py"]],
+    }
+    hints = [
+        {**common, "obligation_ids": ["O-1"], "production_owners": ["src/one.py"], "allowed_write_paths": ["src/one.py"], "behavior_change": "one"},
+        {**common, "obligation_ids": ["O-2"], "production_owners": ["src/two.py"], "allowed_write_paths": ["src/two.py"], "behavior_change": "two"},
+    ]
+    return obligations, acceptances, failures, hints
+
+
+def test_partition_slices_projects_cross_slice_obligation_dependencies() -> None:
+    obligations, acceptances, failures, hints = _partition_fixture(second_depends_on_first=True)
+    slices = project_slice_dependencies(obligations, [
+        {"slice_id": "S1", "obligation_ids": ["O-1"]},
+        {"slice_id": "S2", "obligation_ids": ["O-2"]},
+    ])
+    by_obligation = {slice_item["obligation_ids"][0]: slice_item for slice_item in slices}
+    assert by_obligation["O-2"]["depends_on"] == [by_obligation["O-1"]["slice_id"]]
+
+
+def test_partition_slices_emits_empty_dependencies_when_none_exist() -> None:
+    obligations, acceptances, failures, hints = _partition_fixture(second_depends_on_first=False)
+    slices = project_slice_dependencies(obligations, [
+        {"slice_id": "S1", "obligation_ids": ["O-1"]},
+        {"slice_id": "S2", "obligation_ids": ["O-2"]},
+    ])
+    assert all(slice_item["depends_on"] == [] for slice_item in slices)
 
 
 def test_atomic_source_gap_blocks_plan_ready_and_reduces_recall(tmp_path: Path) -> None:
