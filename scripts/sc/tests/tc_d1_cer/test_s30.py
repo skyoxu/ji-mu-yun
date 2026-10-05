@@ -141,3 +141,15 @@ def test_rollback_route_satisfies_complete_baseline_coverage_behavior() -> None:
         "CER-A-72299F00808C-BEHAVIOR",
         "rollback verification must observe the prior baseline for every manifest entry",
     )
+
+
+def test_consumer_calls_and_prior_route_capture_are_observed() -> None:
+    _, receipt = _rollback_payload()
+    replay = receipt["current_wrapper_replay"]
+    calls = replay["consumer_verification"]["calls"]
+    assert {item["consumer"] for item in calls} == {
+        "vdd-execution-plan", "run-refactor-implementation-acceptance", "workflow-model-routing",
+    }
+    assert all(item["executed"] and item["exit_code"] == 0 for item in calls)
+    rollback = replay["rollback"]
+    assert rollback["prior_route_captured_before_transition"] is True

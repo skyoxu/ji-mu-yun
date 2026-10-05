@@ -131,6 +131,16 @@ def test_aggregate_missing_matrix_case_is_invalid_and_lists_missing_case() -> No
     _assert_behavior(ok, "FI-E9FF07C7AD8D-1", "missing Matrix Case did not invalidate aggregate with a missing-case list")
 
 
+def test_canonical_matrix_executes_distinct_stable_and_candidate_fixture_states() -> None:
+    matrix = json.loads((ROOT / "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json").read_text(encoding="utf-8"))
+    result, payload = _run_inline_matrix(matrix, "stable-candidate-replay-matrix.v1.json")
+    assert result.returncode == 0
+    assert payload["aggregate_valid"] is True
+    for row in payload["case_results"]:
+        assert row["stable_subject"]["target"] != row["candidate_subject"]["target"]
+        assert row["stable_subject"]["fixture_identity"] != row["candidate_subject"]["fixture_identity"]
+        assert row["stable_subject"]["invocation"]["executed"] is True
+        assert row["candidate_subject"]["invocation"]["executed"] is True
 @pytest.mark.cer_assertion("SM-3-A1")
 def test_six_case_aggregate_missing_execution_is_failed_with_missing_cases() -> None:
     matrix = {

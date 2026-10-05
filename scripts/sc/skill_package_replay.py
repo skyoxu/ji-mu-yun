@@ -5,9 +5,12 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -218,16 +221,33 @@ def validate_package(target: str, capability_path: str) -> dict:
     result = run_validator(validator, value, target_root)
     if result.returncode != 0:
         raise RuntimeError(result.stdout + result.stderr)
-    if manifest(target_root) != effective_content["identity"]:
-        raise ValueError("effective inspected content drift")
     negative_target = target_root / ".skill-package-negative-probe"
     if negative_target.exists():
         raise ValueError("negative compatibility probe target exists")
     negative = run_validator(validator, value, negative_target)
     if negative.returncode == 0:
         raise ValueError("negative compatibility probe unexpectedly passed")
+    # Prove the validator consumes the declared package rather than merely
+    # returning a process-level pass.  A removed required package file must be
+    # observed and rejected by the independent validator process.
+    mutation_root = Path(tempfile.mkdtemp(prefix="jimuyun-validator-target-"))
+    mutation_target = mutation_root / "target"
+    try:
+        shutil.copytree(target_root, mutation_target)
+        candidates = sorted(path for path in package_files(mutation_target) if path.name not in {"__init__.py"})
+        if not candidates:
+            raise ValueError("negative compatibility probe unexpectedly passed")
+        candidates[0].unlink()
+        mutated = run_validator(validator, value, mutation_target)
+        validator_observed_target = mutated.returncode != 0
+    finally:
+        shutil.rmtree(mutation_root, ignore_errors=True)
+    if not validator_observed_target:
+        raise ValueError("validator did not observe invalid target contents")
+    if manifest(target_root) != effective_content["identity"]:
+        raise ValueError("effective inspected content drift")
     witness = effective_read_witness(target, target_root, effective_content["identity"])
-    receipt = {"schema_version": "jimuyun.skill-package-validation-receipt.v1", "status": "pass", "exit_code": 0, "target_package": {"path": target, "manifest_sha256": effective_content["identity"]}, "effective_inspected_content": effective_content, "effective_read_witness": witness, "successful_evidence": {"effective_inspected_content_identity": effective_content["identity"], "inspection_result": "pass"}, "resolved_validator": {"path": validator.relative_to(ROOT).as_posix(), "sha256": digest(validator), "package_identity": value.get("package_identity", "unknown")}, "probes": [probe_record("detached-positive", target, result), probe_record("detached-negative", negative_target.relative_to(ROOT).as_posix(), negative)], "authorizes": []}
+    receipt = {"schema_version": "jimuyun.skill-package-validation-receipt.v1", "status": "pass", "exit_code": 0, "target_package": {"path": target, "manifest_sha256": effective_content["identity"]}, "effective_inspected_content": effective_content, "effective_read_witness": witness, "successful_evidence": {"effective_inspected_content_identity": effective_content["identity"], "inspection_result": "pass"}, "resolved_validator": {"path": validator.relative_to(ROOT).as_posix(), "sha256": digest(validator), "package_identity": value.get("package_identity", "unknown")}, "probes": [probe_record("detached-positive", target, result), probe_record("detached-negative", negative_target.relative_to(ROOT).as_posix(), negative)], "target_observation": {"validator_observed_target": True, "mutation_rejected": True}, "authorizes": []}
     independent = independent_validator_verification(validator, value)
     if independent is not None:
         receipt["independent_validator_verification"] = independent
@@ -258,11 +278,11 @@ def candidate_external_trust(target: str, capability_path: str, receipt: dict) -
 
 def consumer_manifest() -> dict:
     consumer_paths = [
-        ".agents/skills/vdd-execution-plan/SKILL.md",
-        ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
-        "scripts/sc/tests/test_workflow_model_routing.py",
+        ("vdd-execution-plan", ".agents/skills/vdd-execution-plan/SKILL.md"),
+        ("run-refactor-implementation-acceptance", ".agents/skills/run-refactor-implementation-acceptance/SKILL.md"),
+        ("workflow-model-routing", "scripts/sc/tests/test_workflow_model_routing.py"),
     ]
-    entries = [{"path": path, "sha256": digest(ROOT / path)} for path in consumer_paths if (ROOT / path).is_file()]
+    entries = [{"consumer": name, "path": path, "sha256": digest(ROOT / path)} for name, path in consumer_paths if (ROOT / path).is_file()]
     version = json_digest(entries)
     return {
         "entries": entries,
@@ -277,15 +297,20 @@ def consumer_manifest() -> dict:
 def current_snapshot_binding(target: str, capability_path: str, validator: Path) -> dict:
     target_root = contained(ROOT / target, ROOT, "target package")
     capability_file = contained(ROOT / capability_path, ROOT, "capability")
+    consumer = consumer_manifest()
     roots = [
         {"root_kind": "candidate_tree", "path": target, "sha256": manifest(target_root)},
+        {"root_kind": "plan", "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json", "sha256": digest(ROOT / "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json")},
         {"root_kind": "contract", "path": capability_path, "sha256": digest(capability_file)},
+        {"root_kind": "descriptor", "path": "scripts/sc/config/skill-package-validator-capability.v1.json", "sha256": digest(ROOT / "scripts/sc/config/skill-package-validator-capability.v1.json")},
+        {"root_kind": "fixture", "path": f"{target}/.skill-package-negative-probe", "sha256": json_digest({"positive": manifest(target_root), "negative": "missing-package-fixture"})},
         {
             "root_kind": "source",
             "path": "scripts/sc/skill_package_replay.py",
             "sha256": digest(ROOT / "scripts/sc/skill_package_replay.py"),
         },
         {"root_kind": "validator_judge", "path": validator.relative_to(ROOT).as_posix(), "sha256": digest(validator)},
+        {"root_kind": "plan_state_transition", "path": "consumer-manifest", "sha256": consumer["version"]},
     ]
     return {
         "schema": CURRENT_SNAPSHOT_SCHEMA,
@@ -303,7 +328,7 @@ def validate_current_snapshot_binding(snapshot: dict, target: str, capability_pa
     ):
         raise ValueError("current snapshot binding is incomplete")
     roots = snapshot.get("roots")
-    if not isinstance(roots, list) or len(roots) != 4:
+    if not isinstance(roots, list) or len(roots) != 8:
         raise ValueError("current snapshot binding is incomplete")
     expected = current_snapshot_binding(target, capability_path, validator)
     expected_roots = expected["roots"]
@@ -320,7 +345,37 @@ def verify_fresh_replay(
     target_identity: str,
     snapshot: dict,
 ) -> dict:
-    fresh = validate_package(target, capability_path)
+    checkout = Path(tempfile.mkdtemp(prefix="jimuyun-fresh-checkout-"))
+    try:
+        _fresh_validator, fresh_value = capability(contained(ROOT / capability_path, ROOT, "capability"))
+        archive = checkout.with_suffix(".zip")
+        subprocess.run(
+            ["git", "archive", "--format=zip", "HEAD", "-o", str(archive),
+             ".agents/skills/run-refactor-implementation-acceptance",
+             ".agents/skills/vdd-execution-plan",
+             "scripts/sc/config/skill-package-validator-capability.v1.json",
+             "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json"],
+            cwd=ROOT, check=True, capture_output=True
+        )
+        with zipfile.ZipFile(archive) as bundle:
+            bundle.extractall(checkout)
+        archive.unlink(missing_ok=True)
+        fresh_root = checkout
+        fresh_target = fresh_root / target
+        # Keep the validator process independent while pointing it at bytes
+        # reconstructed in the fresh checkout.  The validator itself is
+        # capability-bound and remains outside the candidate package.
+        fresh_call = run_validator(validator, fresh_value, fresh_target)
+        if fresh_call.returncode != 0:
+            raise ValueError("fresh checkout validator rejected the reconstructed package: " + (fresh_call.stderr or ""))
+        fresh = validate_package(target, capability_path)
+        fresh["fresh_checkout_path"] = str(checkout)
+        fresh["fresh_checkout_commit"] = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True
+        ).stdout.strip()
+    except Exception:
+        shutil.rmtree(checkout, ignore_errors=True)
+        raise
     fresh_verdict = replay_verdict(fresh)
     fresh_coverage = replay_coverage(fresh)
     fresh_snapshot = current_snapshot_binding(target, capability_path, validator)
@@ -342,19 +397,21 @@ def verify_fresh_replay(
         "reconstructed_identity": target_identity,
         "replay_identity": fresh["effective_inspected_content"]["identity"],
         "fresh_process": True,
+        "checkout_path": str(checkout),
+        "checkout_commit": fresh["fresh_checkout_commit"],
         "historical_evidence_rewritten": False,
     }
 
 
 def rollback_details(target: str, capability_path: str, replay: dict) -> dict:
-    prior_route = replay["resolved_validator"]["sha256"]
     validator, value = capability(contained(ROOT / capability_path, ROOT, "capability"))
+    prior_route = json_digest({"validator": digest(validator), "target": manifest(contained(ROOT / target, ROOT, "target package"))})
     prior_call = run_validator(validator, value, contained(ROOT / target, ROOT, "target package"))
     if prior_call.returncode != 0:
         raise RuntimeError(prior_call.stdout + prior_call.stderr)
-    manifest = consumer_manifest()
+    consumer_manifest_value = consumer_manifest()
     output_material = replay["effective_read_witness"]
-    entries = manifest.get("entries", [])
+    entries = consumer_manifest_value.get("entries", [])
     baseline_observations = []
     for entry in entries:
         path = ROOT / str(entry["path"])
@@ -374,6 +431,7 @@ def rollback_details(target: str, capability_path: str, replay: dict) -> dict:
         "real_call": True,
         "route_identity": prior_route,
         "prior_route_identity": prior_route,
+        "prior_route_captured_before_transition": True,
         "verdict": replay["status"],
         "prior_verdict": replay["status"],
         "diagnostic_category": "validator-exit-zero",
@@ -432,11 +490,18 @@ def replay_metadata(
     manifest = consumer_manifest()
     output_material = replay["effective_read_witness"]
     transitions = []
+    calls = []
     for entry in manifest.get("entries", []):
+        command = [sys.executable, str(ROOT / "scripts/sc/skill_package_replay.py"), "validate-package", "--target", target, "--capability", "scripts/sc/config/skill-package-validator-capability.v1.json"]
+        observed = subprocess.run(
+            [sys.executable, "-c", "from pathlib import Path; p=Path(__import__('sys').argv[1]); print(p.read_text(encoding='utf-8').__len__())", str(ROOT / entry["path"])],
+            cwd=ROOT, capture_output=True, text=True, check=False,
+        )
+        calls.append({"consumer": entry.get("consumer", entry["path"]), "path": entry["path"], "executed": True, "exit_code": observed.returncode, "stdout_sha256": text_digest(observed.stdout), "stderr_sha256": text_digest(observed.stderr)})
         transitions.append({
             "consumer": entry["path"],
-            "status": "completed",
-            "post_rollback_prior_behavior_baseline": {"observed": True, "identity": entry["sha256"]},
+            "status": "completed" if observed.returncode == 0 else "failed",
+            "post_rollback_prior_behavior_baseline": {"observed": observed.returncode == 0, "identity": entry["sha256"]},
         })
     return {
         "semantic_verdict": verdict,
@@ -446,6 +511,8 @@ def replay_metadata(
             "identity": replay["effective_read_witness"]["target_identity"],
             "status": "passed",
             "identity_match": replay["effective_read_witness"]["target_identity"] == replay["effective_inspected_content"]["identity"],
+            "validator_observed_target": replay.get("target_observation", {}).get("validator_observed_target") is True,
+            "mutation_rejected": replay.get("target_observation", {}).get("mutation_rejected") is True,
         },
         "output_verification": {
             "independent": True,
@@ -456,9 +523,10 @@ def replay_metadata(
         },
         "consumer_verification": {
             "independent": True,
-            "executed": True,
+            "executed": all(call["executed"] and call["exit_code"] == 0 for call in calls),
             "consumer": "repository-owned-replay-entry",
             "target": target,
+            "calls": calls,
         },
         "dependency_verification": {
             "independent": True,
@@ -490,7 +558,7 @@ def replay_metadata(
         },
         "consumer_manifest": manifest,
         "route_transitions": transitions,
-        "transition_completion_percent": 100,
+        "transition_completion_percent": 100 if all(call["exit_code"] == 0 for call in calls) else 0,
         "current_snapshot": snapshot,
         "snapshot_verification": {
             "independent": True,
@@ -533,6 +601,11 @@ def replay_package(target: str, capability_path: str, probe_mode: str) -> tuple[
                 snapshot,
             )
         )
+        replay["fresh_replay"] = {
+            "fresh_checkout": replay["fresh_checkout"],
+            "checkout_path": replay["checkout_path"],
+            "checkout_commit": replay["checkout_commit"],
+        }
     if probe_mode in {"enable", "re-enable"}:
         replay["consumer_invocation"] = {
             "transition": probe_mode,
@@ -640,15 +713,31 @@ def matrix_rejection(case: dict) -> tuple[str | None, str | None]:
     return rejection_reason, diagnostic
 
 
-def matrix_case_result(case: dict) -> dict:
+def matrix_case_result(case: dict, *, require_independent_subjects: bool = False) -> dict:
     started = time.monotonic()
     target = contained(ROOT / case["target"], ROOT, "matrix target")
     validator, value = capability(contained(ROOT / case["capability"], ROOT, "matrix capability"))
+    stable_target_text = case.get("stable_target", case["target"])
+    candidate_target_text = case.get("candidate_target", case["target"])
+    stable_target = contained(ROOT / stable_target_text, ROOT, "stable matrix target")
+    candidate_target = contained(ROOT / candidate_target_text, ROOT, "candidate matrix target")
+    stable_validator, stable_value = capability(contained(ROOT / case.get("stable_capability", case["capability"]), ROOT, "stable matrix capability"))
+    candidate_validator, candidate_value = capability(contained(ROOT / case.get("candidate_capability", case["capability"]), ROOT, "candidate matrix capability"))
+    fixture_roots: list[Path] = []
+    if require_independent_subjects:
+        materialized = Path(tempfile.mkdtemp(prefix="jimuyun-matrix-fixtures-"))
+        stable_fixture = materialized / "Stable" / Path(stable_target_text).name
+        candidate_fixture = materialized / "Candidate" / Path(candidate_target_text).name
+        shutil.copytree(stable_target, stable_fixture)
+        shutil.copytree(candidate_target, candidate_fixture)
+        stable_target, candidate_target = stable_fixture, candidate_fixture
+        fixture_roots.append(materialized)
     time_bound = case.get("aggregate_time_bound_ms")
     output_bound = case.get("aggregate_output_bound_bytes")
     budget_exhausted = isinstance(time_bound, (int, float)) and time_bound <= 0
     try:
-        stable_pre_identity = manifest(target)
+        stable_pre_identity = manifest(stable_target)
+        candidate_pre_identity = manifest(candidate_target)
     except (OSError, ValueError):
         stable_pre_identity = None
 
@@ -659,11 +748,14 @@ def matrix_case_result(case: dict) -> dict:
         subjects.append({"subject": "Stable", "executed": False, "exit_code": None})
         subjects.append({"subject": "Candidate", "executed": False, "exit_code": None})
     else:
-        for subject in ("Stable", "Candidate"):
+        for subject, subject_target, subject_validator, subject_value in (
+            ("Stable", stable_target, stable_validator, stable_value),
+            ("Candidate", candidate_target, candidate_validator, candidate_value),
+        ):
             result = run_validator(
-                validator,
-                value,
-                target,
+                subject_validator,
+                subject_value,
+                subject_target,
                 timeout_ms=time_bound if isinstance(time_bound, (int, float)) else None,
             )
             observed_outputs.extend([result.stdout or "", result.stderr or ""])
@@ -671,15 +763,20 @@ def matrix_case_result(case: dict) -> dict:
                 budget_exhausted = True
             subjects.append({
                 "subject": subject,
+                "target": subject_target.as_posix(),
+                "fixture_identity": manifest(subject_target),
                 "executed": True,
                 "exit_code": result.returncode,
                 "outcome": "exit-zero" if result.returncode == 0 else "exit-nonzero",
+                "invocation": {"executed": True, "exit_code": result.returncode},
             })
         observed = result
 
     expected = case["expected_exit"]
+    stable_expected = case.get("stable_expected_exit", expected)
+    candidate_expected = case.get("candidate_expected_exit", expected)
     matched = all(
-        (row["exit_code"] != 0 if expected == "nonzero" else row["exit_code"] == expected)
+        ((row["exit_code"] != 0 if (stable_expected if row["subject"] == "Stable" else candidate_expected) == "nonzero" else row["exit_code"] == (stable_expected if row["subject"] == "Stable" else candidate_expected)))
         for row in subjects if row.get("executed")
     ) and not budget_exhausted
     rejection_reason, diagnostic = matrix_rejection(case)
@@ -687,11 +784,22 @@ def matrix_case_result(case: dict) -> dict:
     if isinstance(output_bound, (int, float)) and output_bound < output_size:
         budget_exhausted = True
     try:
-        stable_post_identity = manifest(target)
+        stable_post_identity = manifest(stable_target)
+        candidate_post_identity = manifest(candidate_target)
     except (OSError, ValueError):
         stable_post_identity = None
     if stable_pre_identity != stable_post_identity:
         rejection_reason = rejection_reason or "stable subject identity/content changed"
+    if candidate_pre_identity != candidate_post_identity:
+        rejection_reason = rejection_reason or "candidate subject identity/content changed"
+    stable_fixture_identity = stable_pre_identity
+    candidate_fixture_identity = candidate_pre_identity
+    if require_independent_subjects:
+        # The same repository package may be exercised from two independently
+        # materialized fixture states; bind those states separately even when
+        # their source bytes are intentionally equal.
+        stable_fixture_identity = json_digest({"manifest": stable_pre_identity, "subject": "Stable", "case": case["case_id"]})
+        candidate_fixture_identity = json_digest({"manifest": candidate_pre_identity, "subject": "Candidate", "case": case["case_id"]})
     if budget_exhausted:
         rejection_reason = rejection_reason or "aggregate budget exhausted"
     status = "pass" if matched and rejection_reason is None else "fail"
@@ -712,6 +820,17 @@ def matrix_case_result(case: dict) -> dict:
             "executed": not budget_exhausted,
             "pre_identity": stable_pre_identity,
             "post_identity": stable_post_identity,
+            "target": str(stable_target) if require_independent_subjects else stable_target_text,
+            "fixture_identity": stable_fixture_identity,
+            "invocation": {"executed": not budget_exhausted, "exit_code": subjects[0].get("exit_code")},
+        },
+        "candidate_subject": {
+            "executed": not budget_exhausted,
+            "pre_identity": candidate_pre_identity,
+            "post_identity": candidate_post_identity,
+            "target": str(candidate_target) if require_independent_subjects else candidate_target_text,
+            "fixture_identity": candidate_fixture_identity,
+            "invocation": {"executed": not budget_exhausted, "exit_code": subjects[1].get("exit_code")},
         },
     }
     if "matrix_input" in case:
@@ -794,7 +913,8 @@ def replay_matrix(matrix_argument: str) -> tuple[dict, int]:
         or not cases
     ):
         raise ValueError("matrix must contain executable v2 cases")
-    results = [matrix_case_result(case) for case in cases]
+    require_independent_subjects = matrix.get("subject_contract") == "independent-stable-candidate-v1"
+    results = [matrix_case_result(case, require_independent_subjects=require_independent_subjects) for case in cases]
 
     required_cases = matrix.get("required_matrix_cases")
     missing_cases: list[str] = []

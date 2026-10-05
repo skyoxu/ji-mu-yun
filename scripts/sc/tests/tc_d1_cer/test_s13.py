@@ -215,7 +215,7 @@ def test_fresh_replay_reconstructs_pinned_verdict_and_bindings(replay: dict) -> 
         record.get("fresh_process") is True and record.get("fresh_checkout") is True
         and record.get("pinned_semantic_verdict") == record.get("fresh_semantic_verdict")
         and record.get("reconstructed_identity") == record.get("replay_identity")
-        and len(roots) == 4 and all(row.get("sha256", "").startswith("sha256:") for row in roots),
+        and len(roots) == 8 and all(row.get("sha256", "").startswith("sha256:") for row in roots),
         "CER-A-78FD23DDD4A1-BEHAVIOR", record,
     )
 

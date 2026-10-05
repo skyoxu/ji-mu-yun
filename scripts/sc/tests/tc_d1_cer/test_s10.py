@@ -173,6 +173,16 @@ def test_replay_result_contains_complete_current_snapshot_binding() -> None:
     )
 
 
+def test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real() -> None:
+    _, returncode, receipt = _positive_replay()
+    replay = receipt["current_wrapper_replay"]
+    verification = replay["target_verification"]
+    assert returncode == 0
+    assert verification["validator_observed_target"] is True
+    assert verification["mutation_rejected"] is True
+    assert Path(replay["fresh_replay"]["checkout_path"]).resolve() != ROOT.resolve()
+
+
 @pytest.mark.cer_assertion("A-FCD3611EEC73-1")
 def test_supported_replay_route_binds_effective_inspected_content() -> None:
     _, returncode, receipt = _positive_replay()
