@@ -131,16 +131,24 @@ def test_aggregate_missing_matrix_case_is_invalid_and_lists_missing_case() -> No
     _assert_behavior(ok, "FI-E9FF07C7AD8D-1", "missing Matrix Case did not invalidate aggregate with a missing-case list")
 
 
-def test_canonical_matrix_executes_distinct_stable_and_candidate_fixture_states() -> None:
-    matrix = json.loads((ROOT / "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json").read_text(encoding="utf-8"))
-    result, payload = _run_inline_matrix(matrix, "stable-candidate-replay-matrix.v1.json")
-    assert result.returncode == 0
-    assert payload["aggregate_valid"] is True
-    for row in payload["case_results"]:
-        assert row["stable_subject"]["target"] != row["candidate_subject"]["target"]
-        assert row["stable_subject"]["fixture_identity"] != row["candidate_subject"]["fixture_identity"]
-        assert row["stable_subject"]["invocation"]["executed"] is True
-        assert row["candidate_subject"]["invocation"]["executed"] is True
+def test_canonical_matrix_executes_distinct_stable_and_candidate_fixture_states(tmp_path: Path) -> None:
+    # The historical label-only input remains immutable and cannot serve as
+    # current execution proof. Prepare a new append-only native v3 input.
+    from scripts.sc import skill_package_replay as replay
+    import tempfile
+    with tempfile.TemporaryDirectory(dir=ROOT / "logs", prefix="matrix-native-") as directory:
+        matrix_path = Path(directory) / "matrix.json"
+        matrix = replay.runtime.prepare_matrix(ROOT, TARGET, CAPABILITY, replay.runtime.TRUST_BASELINE, matrix_path.relative_to(ROOT).as_posix())
+        result, payload = _run_inline_matrix(matrix, "stable-candidate-replay-matrix-native.v3.json")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert payload["aggregate_valid"] is True
+        for row in payload["case_results"]:
+            assert row["stable_subject"]["target"] != row["candidate_subject"]["target"]
+            assert row["stable_subject"]["subject_identity"] != row["candidate_subject"]["subject_identity"]
+            assert row["stable_subject"]["invocation"]["executed"] is True
+            assert row["candidate_subject"]["invocation"]["executed"] is True
+            assert row["stable_subject"]["wrapper_invocation"]["pid"] != row["candidate_subject"]["wrapper_invocation"]["pid"]
+
 @pytest.mark.cer_assertion("SM-3-A1")
 def test_six_case_aggregate_missing_execution_is_failed_with_missing_cases() -> None:
     matrix = {
@@ -153,7 +161,7 @@ def test_six_case_aggregate_missing_execution_is_failed_with_missing_cases() -> 
     missing = payload.get("missing_cases")
     ok = (
         result.returncode != 0
-        and payload.get("status") == "failed"
+        and payload.get("status") == "invalid"
         and isinstance(missing, list)
         and "matrix-case-6" in missing
     )

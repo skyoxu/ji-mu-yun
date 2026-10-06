@@ -1,0 +1,11 @@
+{
+  "schema": "tc-d1-online-regression-red.v1",
+  "source_commit": "e289d7d3f8572595ca28c498adc798d1fa2a2bf7",
+  "source_sha256": "sha256:c731267e4acdb5e0aa721fbb7a797becda212356888bab7c2ef71f063f0dc6b4",
+  "tests_run": 5,
+  "failures": 5,
+  "errors": 0,
+  "skipped": 0,
+  "expected_red": true,
+  "authorizes": []
+}

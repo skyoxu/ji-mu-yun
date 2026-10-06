@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 import pytest
+import test_skill_replay_review_regressions as regression_support
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -16,72 +17,46 @@ ENTRY = ROOT / "scripts" / "sc" / "skill_package_replay.py"
 @pytest.mark.cer_assertion("RMAP-FIX-ASSERTIONS")
 class SkillPackageReplayTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(dir=ROOT / "logs")
-        self.root = Path(self.temp.name)
+        self.fixture = regression_support.NativeRuntimeTests(methodName="runTest")
+        self.fixture.setUp()
+        self.root = self.fixture.root
         self.validator_root = self.root / "validator"
-        self.validator_root.mkdir()
-        self.validator = self.validator_root / "validator.py"
-        self.validator.write_text(
-            "import argparse, pathlib\n"
-            "p=argparse.ArgumentParser(); p.add_argument('--skill-root', required=True); a=p.parse_args()\n"
-            "root=pathlib.Path(a.skill_root)\n"
-            "raise SystemExit(0 if (root / 'VALID').is_file() else 3)\n",
-            encoding="utf-8",
-        )
+        self.validator = self.validator_root / "check.py"
         self.capability = self.root / "capability.json"
-        self._write_capability()
+        self.entry = self.root / "scripts/sc/skill_package_replay.py"
 
     def tearDown(self):
-        self.temp.cleanup()
+        self.fixture.tearDown()
 
     def _relative(self, path):
-        return path.relative_to(ROOT).as_posix()
+        return path.relative_to(self.root).as_posix()
 
     def _sha256(self, path):
         return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
     def _write_capability(self, **changes):
-        source = self.root / "validator-source.json"
-        source.write_text(
-            json.dumps({
-                "validator_path": self._relative(self.validator),
-                "validator_sha256": self._sha256(self.validator),
-                "authorizes": [],
-            }),
-            encoding="utf-8",
-        )
-        value = {
-            "schema_version": "jimuyun.skill-package-validator-capability.v1",
-            "capability_id": "test-validator",
-            "allowed_root": self._relative(self.validator_root),
-            "validator_entrypoint": "validator.py",
-            "probe_args": ["--skill-root", "{target}"],
-            "validator_sha256": self._sha256(self.validator),
-            "validator_source": self._relative(source),
-            "validator_source_sha256": self._sha256(source),
-            "required_rules": [],
-            "package_identity": "test-validator-v1",
-            "state": "active",
-            "authorizes": [],
-        }
+        source = self.root / "authority/source.py"
+        source.write_bytes(self.validator.read_bytes())
+        value = dict(self.fixture.cap)
+        value.update(validator_sha256=self._sha256(self.validator), validator_source_sha256=self._sha256(source))
         value.update(changes)
         self.capability.write_text(json.dumps(value), encoding="utf-8")
 
     def _package(self, name, valid=True):
         package = self.root / name
         package.mkdir()
-        if valid:
-            (package / "VALID").write_text("valid\n", encoding="utf-8")
+        (package / "SKILL.md").write_text("Skill fixture\n", encoding="utf-8")
+        (package / "fixture.json").write_text(json.dumps({"valid": valid}), encoding="utf-8")
         return package
 
+    def _freeze(self):
+        self.fixture.git("add", ".")
+        self.fixture.git("commit", "-qm", "Freeze independent fixture inputs")
+        import os
+        os.environ["TC_D1_TRUST_COMMIT"] = self.fixture.git("rev-parse", "HEAD").strip()
+
     def _run(self, operation, *args):
-        return subprocess.run(
-            [sys.executable, str(ENTRY), operation, *map(str, args)],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        return subprocess.run([sys.executable, str(self.entry), operation, *map(str, args)], cwd=self.root, capture_output=True, text=True, encoding="utf-8", check=False)
 
     def _validate(self, target):
         return self._run(
@@ -102,9 +77,10 @@ class SkillPackageReplayTests(unittest.TestCase):
         self.assertIn("target package is absent", result.stderr)
 
     def test_always_successful_validator_cannot_approve_invalid_package(self):
-        invalid = self._package("invalid", valid=False)
-        self.validator.write_text("raise SystemExit(0)\n", encoding="utf-8")
+        invalid = self._package("valid-for-detached-negative")
+        self.validator.write_text("import sys,json\nfrom pathlib import Path\n(Path(sys.argv[-1])/'fixture.json').read_text(encoding='utf-8')\nprint(json.dumps({'findings':[]}))\nraise SystemExit(0)\n", encoding="utf-8")
         self._write_capability(validator_sha256=self._sha256(self.validator))
+        self._freeze()
         result = self._validate(invalid)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("negative compatibility probe unexpectedly passed", result.stderr)
@@ -121,25 +97,16 @@ class SkillPackageReplayTests(unittest.TestCase):
         self.assertNotEqual(self._validate(invalid).returncode, 0)
 
     def test_matrix_executes_each_case_and_rejects_unexecuted_matrix(self):
-        valid = self._package("valid")
-        invalid = self._package("invalid", valid=False)
-        matrix = self.root / "matrix.json"
-        matrix.write_text(json.dumps({
-            "schema_version": "jimuyun.stable-candidate-replay-matrix.v2",
-            "authorizes": [],
-            "cases": [
-                {"case_id": "valid", "target": self._relative(valid), "capability": self._relative(self.capability), "expected_exit": 0},
-                {"case_id": "invalid", "target": self._relative(invalid), "capability": self._relative(self.capability), "expected_exit": "nonzero"},
-            ],
-        }), encoding="utf-8")
+        self.fixture.write("candidate/feature.py", "def result():\n    return 2\n")
+        matrix = self.root / "logs/matrix/matrix.json"
+        regression_support.replay.runtime.prepare_matrix(self.root, "candidate", "capability.json", self.fixture.commit, self._relative(matrix))
         result = self._run("replay-matrix", "--matrix", self._relative(matrix))
-        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         receipt = json.loads(result.stdout)
-        self.assertEqual([0, 3], [case["observed_exit_code"] for case in receipt["case_results"]])
-        self.assertTrue(all(case["executed"] for case in receipt["case_results"]))
-
+        self.assertEqual(6, len(receipt["case_results"]))
+        self.assertTrue(all(case["executed"] and len(case["subject_executions"]) == 2 for case in receipt["case_results"]))
         empty = self.root / "empty.json"
-        empty.write_text(json.dumps({"schema_version": "jimuyun.stable-candidate-replay-matrix.v2", "authorizes": [], "cases": []}), encoding="utf-8")
+        empty.write_text(json.dumps({"schema_version": "jimuyun.stable-candidate-replay-matrix.v3", "authorizes": [], "cases": []}), encoding="utf-8")
         self.assertNotEqual(self._run("replay-matrix", "--matrix", self._relative(empty)).returncode, 0)
 
     def test_disabled_and_rolled_back_capabilities_fail_closed(self):
@@ -152,7 +119,7 @@ class SkillPackageReplayTests(unittest.TestCase):
                 self.assertIn("capability is not active", result.stderr)
 
     def test_route_lifecycle_enable_rollback_reenable_uses_real_entry(self):
-        valid = self._package("route-valid")
+        valid = self.root / "candidate"
 
         enable = self._run(
             "replay-package",
