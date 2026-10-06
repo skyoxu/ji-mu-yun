@@ -150,10 +150,15 @@ def _run_cases_bounded(descriptor: Mapping[str, Any], cwd: Path, *, timeout_seco
 
 
 def _is_run_evidence_path(path: str, run_dir: Path, root: Path) -> bool:
-    """Evidence produced by this runner is append-only run state, not SUT noise."""
+    """Evidence produced by this runner's batch is append-only run state.
+
+    A current run contains one child directory per slice.  Treating only the
+    active slice directory as owned makes sibling slice receipts look like SUT
+    mutations when the batch is resumed incrementally.
+    """
     try:
         candidate = (root / path).resolve()
-        candidate.relative_to(run_dir.resolve())
+        candidate.relative_to(run_dir.resolve().parent)
         return True
     except (OSError, ValueError):
         return False

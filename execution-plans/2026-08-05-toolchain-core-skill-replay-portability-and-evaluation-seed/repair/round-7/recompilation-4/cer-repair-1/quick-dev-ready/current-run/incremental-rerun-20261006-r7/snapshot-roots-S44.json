@@ -1,0 +1,42 @@
+[
+  {
+    "inclusion_reason": "P1 replay production owner",
+    "repository_relative_posix_path": "scripts/sc/skill_package_replay.py",
+    "root_kind": "candidate_tree"
+  },
+  {
+    "inclusion_reason": "current semantic execution plan",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+    "root_kind": "plan"
+  },
+  {
+    "inclusion_reason": "Quick Dev execution contract",
+    "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter",
+    "root_kind": "contract"
+  },
+  {
+    "inclusion_reason": "P1 replay behavior selector",
+    "repository_relative_posix_path": "scripts/sc/tests/tc_d1_cer/test_s44.py",
+    "root_kind": "descriptor"
+  },
+  {
+    "inclusion_reason": "canonical stable-candidate matrix",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+    "root_kind": "fixture"
+  },
+  {
+    "inclusion_reason": "canonical requirement authority",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+    "root_kind": "source"
+  },
+  {
+    "inclusion_reason": "independent current stage judge",
+    "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+    "root_kind": "validator_judge"
+  },
+  {
+    "inclusion_reason": "append-only P1 current run state",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/p1-repair-20261006-r3",
+    "root_kind": "plan_state_transition"
+  }
+]

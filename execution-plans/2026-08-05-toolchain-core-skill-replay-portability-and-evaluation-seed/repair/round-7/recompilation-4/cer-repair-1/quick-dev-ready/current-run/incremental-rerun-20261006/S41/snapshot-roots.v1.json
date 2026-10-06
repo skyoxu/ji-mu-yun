@@ -1,0 +1,70 @@
+[
+  {
+    "inclusion_reason": "S41 current production candidate",
+    "repository_relative_posix_paths": [
+      "scripts/sc/skill_package_replay.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/fixtures/candidate-identity.v1.json",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+      ".agents/skills/vdd-execution-plan/scripts/fixtures/profile-cases.json",
+      "scripts/sc/config/skill-package-validator-capability.v1.json",
+      "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+      "scripts/sc/tests/tc_d1_cer/test_s41.py",
+      "scripts/sc/tests/test_skill_package_replay.py"
+    ],
+    "root_kind": "candidate_tree",
+    "source_commit": "78667e5b1aad70ab0df76c9fab861e707c59d9df"
+  },
+  {
+    "inclusion_reason": "current canonical plan",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+    "root_kind": "plan",
+    "source_commit": "78667e5b1aad70ab0df76c9fab861e707c59d9df"
+  },
+  {
+    "inclusion_reason": "current semantic contract",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+    "root_kind": "contract",
+    "source_commit": "78667e5b1aad70ab0df76c9fab861e707c59d9df"
+  },
+  {
+    "inclusion_reason": "current descriptors",
+    "repository_relative_posix_path": "logs/quick-dev-current-run-20261005/s41-repair-1/descriptors",
+    "root_kind": "descriptor",
+    "source_commit": "78667e5b1aad70ab0df76c9fab861e707c59d9df"
+  },
+  {
+    "inclusion_reason": "S41 current inputs",
+    "repository_relative_posix_paths": [
+      "scripts/sc/skill_package_replay.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/fixtures/candidate-identity.v1.json",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+      ".agents/skills/vdd-execution-plan/scripts/fixtures/profile-cases.json",
+      "scripts/sc/config/skill-package-validator-capability.v1.json",
+      "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+      "scripts/sc/tests/tc_d1_cer/test_s41.py",
+      "scripts/sc/tests/test_skill_package_replay.py"
+    ],
+    "root_kind": "fixture",
+    "source_commit": "78667e5b1aad70ab0df76c9fab861e707c59d9df"
+  },
+  {
+    "inclusion_reason": "canonical source",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md",
+    "root_kind": "source",
+    "source_commit": "78667e5b1aad70ab0df76c9fab861e707c59d9df"
+  },
+  {
+    "inclusion_reason": "current judge",
+    "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+    "root_kind": "validator_judge",
+    "source_commit": "78667e5b1aad70ab0df76c9fab861e707c59d9df"
+  },
+  {
+    "inclusion_reason": "current run state",
+    "repository_relative_posix_path": "logs/quick-dev-current-run-20261005/s41-repair-1",
+    "root_kind": "plan_state_transition",
+    "source_commit": "78667e5b1aad70ab0df76c9fab861e707c59d9df"
+  }
+]
