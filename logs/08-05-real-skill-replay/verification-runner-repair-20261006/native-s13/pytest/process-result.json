@@ -1,0 +1,1130 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-u",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "scripts.sc.verify_skill_replay",
+    "-p",
+    "no:cacheprovider",
+    "-vv",
+    "--tb=short",
+    "--tc-d1-progress",
+    "/workspace/scratch/9aa4df529c3a/repo-r2/logs/08-05-real-skill-replay/verification-runner-repair-20261006/native-s13/pytest-events.jsonl",
+    "--junitxml=/workspace/scratch/9aa4df529c3a/repo-r2/logs/08-05-real-skill-replay/verification-runner-repair-20261006/native-s13/junit.xml",
+    "scripts/sc/tests/tc_d1_cer/test_s13.py"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "active_nodeid": null,
+  "active_phase": "between-tests",
+  "cleanup": null,
+  "records": [
+    {
+      "kind": "collection",
+      "pid": 9,
+      "utc": "2026-10-06T15:41:41.572382+00:00",
+      "nodeids": [
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully"
+      ]
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:41:41.572915+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:41:41.573080+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.733143+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 19.15996536199964,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.733265+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.850590+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.1139639970006101,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.850722+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.850949+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0001829369994084118,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.851072+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.851333+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.851482+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.851598+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00012955599959241226,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.851647+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.907653+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.055735893998644315,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.907755+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.907903+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00011727799937943928,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.908004+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.908229+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.908342+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.908662+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00032165700031328015,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.908710+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.963692+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.05461775199910335,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.963789+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.963950+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00014101299893809482,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.964071+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.964279+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.964382+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.964691+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0003069239992328221,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:00.964735+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.031814+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.06684777100053907,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.031909+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.032056+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0001264709990209667,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.032156+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.032365+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.032483+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.032580+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00011262000043643638,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.032618+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.091856+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.058971658001610194,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.091955+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.092081+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0001048279991664458,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.092182+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.092400+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.092523+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.092618+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 9.455300096306019e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.092656+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.152361+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.059481399999640416,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.152485+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.152800+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00014939600077923387,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.152917+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.153142+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.153355+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.153528+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00012263600001460873,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.153581+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.221336+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.06752912199954153,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.221437+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.221609+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00014889500016579404,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.221718+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.221945+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:42:01.222079+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.099352+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 90.87720126200111,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.099543+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.099805+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.00020872599998256192,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.099845+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.099947+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 7.043700134090614e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.100072+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.100274+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.100393+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.100568+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001800720001483569,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.100609+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.100746+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 7.04160011082422e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.100777+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.100858+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 5.607499952020589e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.100928+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101046+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101125+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101219+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 8.913499914342538e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101255+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101386+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 7.915999958640896e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101414+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101547+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 5.0537000788608566e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101609+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101707+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101782+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101869+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 8.16529991425341e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.101898+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102013+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 6.178300100145862e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102040+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102191+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00011777799954870716,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102254+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102355+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102426+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102555+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00012138400052208453,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102589+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102705+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 6.46780008537462e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102731+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102802+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 4.86230001115473e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102882+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.102989+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.103062+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.103138+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 7.202900087577291e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.103173+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.161907+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.058485043000473524,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.162005+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.162160+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.000132139999550418,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.162351+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.162694+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.162824+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163028+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0002113190003001364,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163070+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163231+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.00010069200106954668,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163263+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163346+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 5.6535998737672344e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163429+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163583+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163664+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163759+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 9.140799920714926e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163792+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163936+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 8.885399984137621e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.163964+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.164044+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 5.617500028165523e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.164105+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.164202+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.164274+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.164352+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 7.352099964919034e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.164382+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.283195+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.11854259299980185,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.283308+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.283519+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00012874499952886254,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.283694+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state"
+    },
+    {
+      "kind": "start",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.283939+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully"
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.284058+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.284207+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00014775400086364243,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.284249+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.341137+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.05665055499957816,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.341257+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.343273+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.001984820000870968,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.343652+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully"
+    },
+    {
+      "kind": "session-finish",
+      "pid": 9,
+      "utc": "2026-10-06T15:43:32.344026+00:00",
+      "exit_code": 0
+    }
+  ],
+  "diagnostic": null,
+  "elapsed_seconds": 111.012,
+  "authorizes": []
+}

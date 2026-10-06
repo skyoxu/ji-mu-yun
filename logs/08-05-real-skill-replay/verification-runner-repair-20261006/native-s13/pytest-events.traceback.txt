@@ -1,0 +1,46 @@
+Timeout (0:01:00)!
+Thread 0x00007f4715f7c740 (most recent call first):
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/selectors.py", line 415 in select
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 2115 in _communicate
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 1209 in communicate
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 550 in run
+  File "/workspace/scratch/9aa4df529c3a/repo-r2/scripts/sc/tests/tc_d1_cer/test_s13.py", line 22 in _run
+  File "/workspace/scratch/9aa4df529c3a/repo-r2/scripts/sc/tests/tc_d1_cer/test_s13.py", line 40 in replay
+  File "/root/.local/lib/python3.12/site-packages/_pytest/fixtures.py", line 1005 in call_fixture_func
+  File "/root/.local/lib/python3.12/site-packages/_pytest/fixtures.py", line 1328 in pytest_fixture_setup
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/root/.local/lib/python3.12/site-packages/_pytest/fixtures.py", line 1232 in execute
+  File "/root/.local/lib/python3.12/site-packages/_pytest/fixtures.py", line 726 in _get_active_fixturedef
+  File "/root/.local/lib/python3.12/site-packages/_pytest/fixtures.py", line 630 in getfixturevalue
+  File "/root/.local/lib/python3.12/site-packages/_pytest/fixtures.py", line 806 in _fillfixtures
+  File "/root/.local/lib/python3.12/site-packages/_pytest/python.py", line 1710 in setup
+  File "/root/.local/lib/python3.12/site-packages/_pytest/runner.py", line 536 in setup
+  File "/root/.local/lib/python3.12/site-packages/_pytest/runner.py", line 170 in pytest_runtest_setup
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/root/.local/lib/python3.12/site-packages/_pytest/runner.py", line 250 in <lambda>
+  File "/root/.local/lib/python3.12/site-packages/_pytest/runner.py", line 361 in from_call
+  File "/root/.local/lib/python3.12/site-packages/_pytest/runner.py", line 249 in call_and_report
+  File "/root/.local/lib/python3.12/site-packages/_pytest/runner.py", line 132 in runtestprotocol
+  File "/root/.local/lib/python3.12/site-packages/_pytest/runner.py", line 118 in pytest_runtest_protocol
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/root/.local/lib/python3.12/site-packages/_pytest/main.py", line 408 in pytest_runtestloop
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/root/.local/lib/python3.12/site-packages/_pytest/main.py", line 384 in _main
+  File "/root/.local/lib/python3.12/site-packages/_pytest/main.py", line 330 in wrap_session
+  File "/root/.local/lib/python3.12/site-packages/_pytest/main.py", line 377 in pytest_cmdline_main
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_callers.py", line 121 in _multicall
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+  File "/root/.local/lib/python3.12/site-packages/pluggy/_hooks.py", line 512 in __call__
+  File "/root/.local/lib/python3.12/site-packages/_pytest/config/__init__.py", line 229 in _main
+  File "/root/.local/lib/python3.12/site-packages/_pytest/config/__init__.py", line 253 in _console_main
+  File "/root/.local/lib/python3.12/site-packages/pytest/__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main

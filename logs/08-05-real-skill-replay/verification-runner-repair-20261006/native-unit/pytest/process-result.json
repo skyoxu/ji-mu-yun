@@ -1,0 +1,574 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-u",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "scripts.sc.verify_skill_replay",
+    "-p",
+    "no:cacheprovider",
+    "-vv",
+    "--tb=short",
+    "--tc-d1-progress",
+    "/workspace/scratch/9aa4df529c3a/repo-r2/logs/08-05-real-skill-replay/verification-runner-repair-20261006/native-unit/pytest-events.jsonl",
+    "--junitxml=/workspace/scratch/9aa4df529c3a/repo-r2/logs/08-05-real-skill-replay/verification-runner-repair-20261006/native-unit/junit.xml",
+    "scripts/sc/tests/test_skill_package_replay.py"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "active_nodeid": null,
+  "active_phase": "between-tests",
+  "cleanup": null,
+  "records": [
+    {
+      "kind": "collection",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.159584+00:00",
+      "nodeids": [
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected"
+      ]
+    },
+    {
+      "kind": "start",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.160052+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package"
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.160218+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.160678+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00043224299952271394,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.160739+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.375439+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.2109768720001739,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.375614+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.375858+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00020571999993990175,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.375970+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package"
+    },
+    {
+      "kind": "start",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.376237+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed"
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.376362+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.376622+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0002500970003893599,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.376694+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.464120+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.524351+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.526914+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.150061125999855,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.526995+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.527148+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00012371699995128438,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.527253+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed"
+    },
+    {
+      "kind": "start",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.527498+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected"
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.527615+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.527814+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001996709997911239,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.527857+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.656956+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.1287830870005564,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.657082+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.657229+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00013906999993196223,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.657359+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected"
+    },
+    {
+      "kind": "start",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.657631+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix"
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.657740+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.657928+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001834760005294811,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:44.657977+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.815506+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 5.15728077499989,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.815658+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.815801+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00012503899961302523,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.815933+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix"
+    },
+    {
+      "kind": "start",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.816223+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs"
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.816326+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.816549+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00021702699996239971,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.816596+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.916124+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.0992429699999775,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.916222+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.916425+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0001775979999365518,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.916577+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs"
+    },
+    {
+      "kind": "start",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.916793+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry"
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.916901+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.917088+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00018142300177714787,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:49.917131+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.154373+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 5.23703052700148,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.154488+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.154618+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00013543400018534157,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.154723+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry"
+    },
+    {
+      "kind": "start",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.154923+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target"
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.155021+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.155202+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00017710700012685265,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.155243+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.503012+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.34749740999905043,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.503116+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.503296+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0001494349999120459,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.503399+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target"
+    },
+    {
+      "kind": "start",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.503684+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected"
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.503828+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.504292+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00046621300134574994,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.504345+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.594814+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.09023736599920085,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.594910+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.595081+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00014952499986975454,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.595183+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected"
+    },
+    {
+      "kind": "session-finish",
+      "pid": 973,
+      "utc": "2026-10-06T15:48:55.595558+00:00",
+      "exit_code": 0
+    }
+  ],
+  "diagnostic": null,
+  "elapsed_seconds": 11.767,
+  "authorizes": []
+}

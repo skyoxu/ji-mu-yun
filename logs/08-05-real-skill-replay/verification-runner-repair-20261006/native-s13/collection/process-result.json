@@ -1,0 +1,58 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-u",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "scripts.sc.verify_skill_replay",
+    "-p",
+    "no:cacheprovider",
+    "--collect-only",
+    "-q",
+    "--tc-d1-progress",
+    "/workspace/scratch/9aa4df529c3a/repo-r2/logs/08-05-real-skill-replay/verification-runner-repair-20261006/native-s13/collection-events.jsonl",
+    "scripts/sc/tests/tc_d1_cer/test_s13.py"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "active_nodeid": null,
+  "active_phase": "startup",
+  "cleanup": null,
+  "records": [
+    {
+      "kind": "collection",
+      "pid": 8,
+      "utc": "2026-10-06T15:41:41.270460+00:00",
+      "nodeids": [
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully"
+      ]
+    },
+    {
+      "kind": "session-finish",
+      "pid": 8,
+      "utc": "2026-10-06T15:41:41.270888+00:00",
+      "exit_code": 0
+    }
+  ],
+  "diagnostic": null,
+  "elapsed_seconds": 0.302,
+  "authorizes": []
+}

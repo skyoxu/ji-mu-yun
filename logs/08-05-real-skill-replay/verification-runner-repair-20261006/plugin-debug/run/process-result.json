@@ -1,0 +1,39 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "-p",
+    "scripts.sc.verify_skill_replay",
+    "--tc-d1-progress",
+    "/workspace/scratch/9aa4df529c3a/repo-r2/logs/08-05-real-skill-replay/verification-runner-repair-20261006/plugin-debug/events.jsonl",
+    "logs/08-05-real-skill-replay/verification-runner-repair-20261006/plugin-debug/test_control.py"
+  ],
+  "exit_code": 3,
+  "reason": null,
+  "active_nodeid": null,
+  "active_phase": "startup",
+  "cleanup": null,
+  "records": [
+    {
+      "kind": "collection",
+      "pid": 6,
+      "utc": "2026-10-06T15:35:26.550833+00:00",
+      "nodeids": [
+        "logs/08-05-real-skill-replay/verification-runner-repair-20261006/plugin-debug/test_control.py::test_control"
+      ]
+    },
+    {
+      "kind": "session-finish",
+      "pid": 6,
+      "utc": "2026-10-06T15:35:26.552824+00:00",
+      "exit_code": 3
+    }
+  ],
+  "elapsed_seconds": 0.302,
+  "authorizes": []
+}

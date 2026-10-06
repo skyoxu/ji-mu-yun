@@ -1,0 +1,24 @@
+{"event": "verification-start", "output": "logs/08-05-real-skill-replay/verification-runner-repair-20261006/native-unit", "scope": ["scripts/sc/tests/test_skill_package_replay.py"]}
+{"elapsed_seconds": 0.0, "event": "heartbeat", "nodeid": null, "phase": "startup", "pid": 8, "stage": "unittest"}
+{"elapsed_seconds": 10.0, "event": "heartbeat", "nodeid": null, "phase": "startup", "pid": 8, "stage": "unittest"}
+{"elapsed_seconds": 20.1, "event": "heartbeat", "nodeid": null, "phase": "startup", "pid": 8, "stage": "unittest"}
+{"elapsed_seconds": 0.0, "event": "heartbeat", "nodeid": null, "phase": "startup", "pid": 972, "stage": "collection"}
+{"elapsed_seconds": 0.0, "event": "heartbeat", "nodeid": null, "phase": "startup", "pid": 973, "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry", "stage": "pytest"}
+{"elapsed_seconds": 4.0, "event": "heartbeat", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry", "phase": "call", "pid": 973, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected", "stage": "pytest"}
+{"event": "verification-finish", "status": "direct-validation-passed", "summary": "/workspace/scratch/9aa4df529c3a/repo-r2/logs/08-05-real-skill-replay/verification-runner-repair-20261006/native-unit/summary.json"}

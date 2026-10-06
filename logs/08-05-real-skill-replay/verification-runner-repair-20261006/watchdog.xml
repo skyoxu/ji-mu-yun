@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="5" time="0.980" timestamp="2026-10-07T00:32:00.569091+09:00" hostname="dfb8520eb0c5"><testcase classname="scripts.sc.tests.test_skill_replay_verification.ClosureFreshnessTests" name="test_new_module_and_changed_import_bytes_are_seen_in_later_closures" time="0.004" /><testcase classname="scripts.sc.tests.test_skill_replay_verification.VerificationProcessTests" name="test_all_real_phase_reports_and_exact_collection_are_required" time="0.203"><failure message="AssertionError: False is not true">self = &lt;test_skill_replay_verification.VerificationProcessTests testMethod=test_all_real_phase_reports_and_exact_collection_are_required&gt;
+
+    def test_all_real_phase_reports_and_exact_collection_are_required(self):
+        result, expected = self.pytest("def test_first():\n    assert 1 + 1 == 2\ndef test_second():\n    assert 'ok'.upper() == 'OK'\n")
+&gt;       self.assertTrue(runner.pytest_result(result, expected)["pass"])
+E       AssertionError: False is not true
+
+scripts/sc/tests/test_skill_replay_verification.py:61: AssertionError</failure></testcase><testcase classname="scripts.sc.tests.test_skill_replay_verification.VerificationProcessTests" name="test_real_failure_does_not_become_a_successful_verification" time="0.303" /><testcase classname="scripts.sc.tests.test_skill_replay_verification.VerificationProcessTests" name="test_real_skip_is_non_promotable" time="0.203"><failure message="AssertionError: 0 not greater than 0">self = &lt;test_skill_replay_verification.VerificationProcessTests testMethod=test_real_skip_is_non_promotable&gt;
+
+    def test_real_skip_is_non_promotable(self):
+        result, expected = self.pytest("import pytest\ndef test_skipped():\n    pytest.skip('intentional skip control')\n")
+        status = runner.pytest_result(result, expected)
+        self.assertFalse(status["pass"])
+&gt;       self.assertGreater(status["skipped_reports"], 0)
+E       AssertionError: 0 not greater than 0
+
+scripts/sc/tests/test_skill_replay_verification.py:74: AssertionError</failure></testcase><testcase classname="scripts.sc.tests.test_skill_replay_verification.VerificationProcessTests" name="test_timeout_identifies_node_and_stops_its_actual_descendant" time="0.202"><failure message="AssertionError: False is not true : the actual descendant must have started">self = &lt;test_skill_replay_verification.VerificationProcessTests testMethod=test_timeout_identifies_node_and_stops_its_actual_descendant&gt;
+
+    def test_timeout_identifies_node_and_stops_its_actual_descendant(self):
+        ready = self.root / "child-ready.txt"
+        leaked = self.root / "child-survived.txt"
+        child = "import time; from pathlib import Path; Path(" + repr(str(ready)) + ").write_text('ready'); time.sleep(5); Path(" + repr(str(leaked)) + ").write_text('leaked')"
+        body = "import subprocess,sys,time\ndef test_hang():\n    subprocess.Popen([sys.executable, '-c', " + repr(child) + "])\n    time.sleep(100)\n"
+        result, expected = self.pytest(body, timeout=2)
+&gt;       self.assertTrue(ready.exists(), "the actual descendant must have started")
+E       AssertionError: False is not true : the actual descendant must have started
+
+scripts/sc/tests/test_skill_replay_verification.py:82: AssertionError</failure></testcase></testsuite></testsuites>

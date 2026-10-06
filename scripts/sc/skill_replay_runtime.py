@@ -21,6 +21,7 @@ import sys
 import sysconfig
 import tempfile
 import time
+from functools import lru_cache
 from pathlib import Path
 
 TRUST_BASELINE = "e289d7d3f8572595ca28c498adc798d1fa2a2bf7"
@@ -163,6 +164,21 @@ def git_blob_identities(root: Path, commit: str, paths: list[str]) -> dict[str, 
     return identities
 
 
+@lru_cache(maxsize=1024)
+def _import_names(raw: bytes, filename: str) -> frozenset[str]:
+    """Cache syntax only, keyed by exact bytes; never cache a trust verdict."""
+    tree = ast.parse(raw.decode("utf-8-sig"), filename=filename)
+    names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            names.add(module)
+            names.update(".".join(filter(None, (module, alias.name))) for alias in node.names)
+    return frozenset(names)
+
+
 def dependency_closure(root: Path, seeds) -> list[dict]:
     """Conservative owning resources plus local import closure to a fixed point.
 
@@ -173,29 +189,34 @@ def dependency_closure(root: Path, seeds) -> list[dict]:
     """
     selected = set(files(root, seeds))
     search = [root, root / "scripts/python", root / "scripts/sc", root / "scripts/toolchain", *(root / owner / "scripts" for owner in PACKAGE_ROOTS)]
+    # Resolve each identical filesystem query once in this traversal. The
+    # index is rebuilt for the next closure, so new/deleted modules are visible.
+    file_index, package_index = {}, {}
+
+    def is_file(path):
+        key = path.as_posix()
+        if key not in file_index:
+            file_index[key] = path.is_file()
+        return file_index[key]
+
     pending = list(selected)
     while pending:
         path = pending.pop()
         if path.suffix != ".py":
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8-sig"), filename=str(path))
-        names = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                names.update(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom):
-                module = node.module or ""
-                names.add(module)
-                names.update(".".join(filter(None, (module, alias.name))) for alias in node.names)
+        names = _import_names(path.read_bytes(), str(path))
         found = set()
         for name in names:
             parts = name.split(".")
             for base in [path.parent, *search]:
                 candidate = base.joinpath(*parts)
-                if candidate.with_suffix(".py").is_file():
+                if is_file(candidate.with_suffix(".py")):
                     found.add(candidate.with_suffix(".py"))
-                if (candidate / "__init__.py").is_file():
-                    found.update(files(root, [candidate.relative_to(root).as_posix()]))
+                if is_file(candidate / "__init__.py"):
+                    key = candidate.as_posix()
+                    if key not in package_index:
+                        package_index[key] = files(root, [candidate.relative_to(root).as_posix()])
+                    found.update(package_index[key])
         for item in found:
             item.resolve().relative_to(root.resolve())
             if item not in selected:

@@ -1,0 +1,3 @@
+{"event": "verification-start", "output": "logs/08-05-real-skill-replay/verification-runner-repair-20261006/scope-mismatch", "scope": ["scripts/sc/tests/test_skill_package_replay.py", "scripts/sc/tests/test_skill_package_replay_source_identity.py", "scripts/sc/tests/tc_d1_cer"]}
+{"elapsed_seconds": 0.0, "event": "heartbeat", "nodeid": null, "phase": "startup", "pid": 7, "stage": "collection"}
+{"event": "verification-finish", "status": "blocked", "summary": "/workspace/scratch/9aa4df529c3a/repo-r2/logs/08-05-real-skill-replay/verification-runner-repair-20261006/scope-mismatch/summary.json"}

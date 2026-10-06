@@ -145,3 +145,38 @@ The raw local Windows failure evidence at commit
 `080005d24ebae015425a0e61e9f9e89f1366d80f` and earlier Q7/Q8 records stay
 unchanged. Direct Linux regression evidence is append-only and does not grant
 Acceptance authority or replace local Windows verification.
+
+### 2026-10-06 Direct verification observability
+
+An interrupted pytest process without JUnit is not a pass. Direct verification
+uses `scripts/sc/verify_skill_replay.py` to preserve the requested scope and
+collect its exact node manifest before execution. Its explicit progress plugin
+only observes collection and setup/call/teardown reports. It must not deselect,
+skip, rewrite outcomes or bypass fixtures. Successful direct validation needs
+every collected node and all three actual phase reports, a zero session exit,
+no skips or xfail outcomes, and unchanged source bytes and HEAD. It grants no
+Acceptance, Q8, scope, Trust Approval or Consumer exception authority.
+
+The supervisor keeps native stdout/stderr, an append-only event stream, periodic
+console heartbeats and timed pytest-parent stack dumps. A 300-second default
+per-test/startup/idle supervisor deadline stops its own launched process tree
+and writes an unsuccessful result with the active node and phase. Operator
+interruptions also remain unsuccessful. It never fabricates native pytest
+JUnit after a forced stop. Windows cleanup targets only that root PID with
+`taskkill /T /F`; POSIX cleanup targets only its newly created process group.
+Native child and aggregate Matrix budgets remain 60 seconds and 8 MiB.
+
+Default scope is the two replay test files plus `tc_d1_cer`, currently 340
+collected tests. Broader scopes must be explicit repository toolchain selectors
+in a scope JSON file; an optional expected count rejects scope mismatches before
+execution. The reported r2 count of 587 cannot be silently replaced with 340.
+Third-party pytest auto-loading and environment selector/plugin injection are
+disabled for this deterministic entry; missing required fixtures/plugins fail
+visibly. Source and failures stay separate from formal workflow state.
+
+Closure performance memoization caches only exact-byte syntax and repeated
+filesystem queries within one traversal. A subsequent traversal rebuilds its
+file index and rehashes actual resources. New, deleted and changed imports must
+remain visible. Whole-owner resources, ambiguous local imports, fixed-point
+closure and immutable Git trust verification remain unchanged; neither a
+Probe result nor a prior trust verdict is cached.
