@@ -84,6 +84,8 @@ def contained(path: Path, root: Path, label: str) -> Path:
 
 def capability(path: Path) -> tuple[Path, dict]:
     value = json.loads(path.read_text(encoding="utf-8"))
+    if value.get("authorizes") != []:
+        raise ValueError("capability authorizes must be an empty array")
     if value.get("state", "active") != "active":
         raise ValueError("validator capability is not active")
     allowed = (ROOT / value["allowed_root"]).resolve()
@@ -144,18 +146,9 @@ def independent_validator_verification(validator: Path, value: dict) -> dict | N
     """Verify declared validator source/content independently (ADR-0058)."""
     source_ref = value.get("validator_source")
     required_rules = value.get("required_rules")
-    # Older capability records omit both declaration fields. Preserve that
-    # compatibility path, but reject a partially declared record instead of
-    # silently manufacturing the missing verification evidence.
-    if source_ref is None and required_rules is None:
-        source_ref = validator.relative_to(ROOT).as_posix()
-        required_rules = []
-        value = {
-            **value,
-            "validator_source": source_ref,
-            "validator_source_sha256": digest(validator),
-        }
-    elif not isinstance(source_ref, str) or not isinstance(required_rules, list):
+    # A validator cannot be its own independent authority.  Current capability
+    # records must declare a separate source path and identity explicitly.
+    if not isinstance(source_ref, str) or not isinstance(required_rules, list):
         raise ValueError("independent validator verification declaration is incomplete")
     source = contained(ROOT / source_ref, ROOT, "validator source")
     source_text = source.read_text(encoding="utf-8")
@@ -168,7 +161,15 @@ def independent_validator_verification(validator: Path, value: dict) -> dict | N
         if isinstance(rule, str) and rule
     }
     source_matches = source_identity == value.get("validator_source_sha256")
-    content_matches_source = source_text == validator_text
+    if source.suffix == ".json":
+        declaration = json.loads(source_text)
+        content_matches_source = (
+            declaration.get("validator_path") == validator.relative_to(ROOT).as_posix()
+            and declaration.get("validator_sha256") == content_identity
+            and declaration.get("authorizes") == []
+        )
+    else:
+        content_matches_source = source_text == validator_text
     report = {
         "schema": "jimuyun.independent-validator-verification.v1",
         "independent": True,
@@ -268,13 +269,45 @@ def candidate_external_trust(target: str, capability_path: str, receipt: dict) -
     capability_file = contained(ROOT / capability_path, ROOT, "capability")
     target_root = contained(ROOT / target, ROOT, "target package")
     validator = ROOT / receipt["resolved_validator"]["path"]
+    independent = receipt.get("independent_validator_verification", {})
     return {
-        "independent": not is_within(capability_file, target_root),
-        "complete": capability_file.is_file() and validator.is_file() and digest(validator) == receipt["resolved_validator"]["sha256"],
+        "independent": not is_within(capability_file, target_root) and independent.get("independent") is True,
+        "complete": bool(
+            capability_file.is_file()
+            and validator.is_file()
+            and digest(validator) == receipt["resolved_validator"]["sha256"]
+            and independent.get("status") == "pass"
+            and isinstance(independent.get("source_sha256"), str)
+            and bool(independent.get("source_sha256"))
+        ),
         "candidate_controlled": is_within(capability_file, target_root),
         "inherited": False,
         "capability_identity": digest(capability_file),
     }
+
+
+def consumer_command(consumer: str, target: str) -> list[str]:
+    """Return the repository-owned command for a real Consumer call surface."""
+    if consumer == "vdd-execution-plan":
+        return [
+            sys.executable,
+            "-B",
+            ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
+            "--skill-root",
+            ".agents/skills/vdd-execution-plan",
+        ]
+    if consumer == "run-refactor-implementation-acceptance":
+        return [
+            sys.executable,
+            "-B",
+            ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+            "validate-package",
+            "--skill-root",
+            target,
+        ]
+    if consumer == "workflow-model-routing":
+        return [sys.executable, "-B", "scripts/sc/tests/test_workflow_model_routing.py", "-q"]
+    raise ValueError(f"unknown consumer: {consumer}")
 
 def consumer_manifest() -> dict:
     consumer_paths = [
@@ -354,21 +387,54 @@ def verify_fresh_replay(
              ".agents/skills/run-refactor-implementation-acceptance",
              ".agents/skills/vdd-execution-plan",
              "scripts/sc/config/skill-package-validator-capability.v1.json",
-             "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json"],
+             "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+             "scripts/sc",
+             "scripts/python",
+             "scripts/toolchain",
+             "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+             "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md"],
             cwd=ROOT, check=True, capture_output=True
         )
         with zipfile.ZipFile(archive) as bundle:
             bundle.extractall(checkout)
         archive.unlink(missing_ok=True)
         fresh_root = checkout
+        # The candidate may contain uncommitted implementation bytes.  Overlay
+        # the explicitly bound replay entry from the current candidate onto the
+        # clean checkout so the replay compares the candidate, not stale HEAD.
+        candidate_entry = ROOT / "scripts" / "sc" / "skill_package_replay.py"
+        fresh_entry = fresh_root / "scripts" / "sc" / "skill_package_replay.py"
+        fresh_entry.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(candidate_entry, fresh_entry)
+        # Bind the candidate capability and its independent source declaration
+        # into the reconstructed checkout as one input set.  They may be
+        # uncommitted while the current run is in progress, so git archive
+        # alone is intentionally not treated as the candidate.
+        for relative in (
+            "scripts/sc/config/skill-package-validator-capability.v1.json",
+            "scripts/sc/config/skill-package-validator-source.v1.json",
+            "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+        ):
+            source_path = ROOT / relative
+            destination = fresh_root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_path, destination)
         fresh_target = fresh_root / target
-        # Keep the validator process independent while pointing it at bytes
-        # reconstructed in the fresh checkout.  The validator itself is
-        # capability-bound and remains outside the candidate package.
-        fresh_call = run_validator(validator, fresh_value, fresh_target)
+        # Execute the replay entry from the reconstructed checkout.  Calling
+        # the process-global validator here would only recheck the original
+        # worktree while claiming fresh-checkout provenance.
+        fresh_entry = fresh_root / "scripts" / "sc" / "skill_package_replay.py"
+        fresh_call = subprocess.run(
+            [sys.executable, str(fresh_entry), "replay-package", "--target", target,
+             "--capability", capability_path, "--probe-mode", "fresh-child"],
+            cwd=fresh_root, capture_output=True, text=True, check=False,
+        )
         if fresh_call.returncode != 0:
-            raise ValueError("fresh checkout validator rejected the reconstructed package: " + (fresh_call.stderr or ""))
-        fresh = validate_package(target, capability_path)
+            raise ValueError("fresh checkout replay rejected the reconstructed package: " + (fresh_call.stderr or fresh_call.stdout or ""))
+        fresh_receipt = json.loads(fresh_call.stdout)
+        fresh = fresh_receipt.get("current_wrapper_replay")
+        if not isinstance(fresh, dict):
+            raise ValueError("fresh checkout replay did not return a current wrapper replay")
         fresh["fresh_checkout_path"] = str(checkout)
         fresh["fresh_checkout_commit"] = subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True
@@ -378,15 +444,24 @@ def verify_fresh_replay(
         raise
     fresh_verdict = replay_verdict(fresh)
     fresh_coverage = replay_coverage(fresh)
-    fresh_snapshot = current_snapshot_binding(target, capability_path, validator)
-    validate_current_snapshot_binding(fresh_snapshot, target, capability_path, validator)
-    if (
-        fresh_verdict != verdict
-        or fresh_coverage != coverage
-        or fresh["effective_inspected_content"]["identity"] != target_identity
-        or fresh_snapshot != snapshot
-    ):
-        raise ValueError("fresh replay does not match pinned inputs")
+    fresh_snapshot = fresh.get("current_snapshot")
+    if not isinstance(fresh_snapshot, dict):
+        raise ValueError("fresh replay did not emit a current snapshot binding")
+    mismatches = []
+    if fresh_verdict != verdict:
+        mismatches.append("verdict")
+    if fresh_coverage != coverage:
+        mismatches.append("coverage")
+    if fresh["effective_inspected_content"]["identity"] != target_identity:
+        mismatches.append("target_identity")
+    if fresh_snapshot != snapshot:
+        mismatches.append("snapshot")
+    if mismatches:
+        detail = {"fields": mismatches}
+        if "snapshot" in mismatches:
+            detail["pinned_snapshot"] = snapshot
+            detail["fresh_snapshot"] = fresh_snapshot
+        raise ValueError("fresh replay does not match pinned inputs: " + json.dumps(detail, sort_keys=True))
     return {
         "fresh_checkout": True,
         "pinned_semantic_verdict": verdict,
@@ -492,12 +567,18 @@ def replay_metadata(
     transitions = []
     calls = []
     for entry in manifest.get("entries", []):
-        command = [sys.executable, str(ROOT / "scripts/sc/skill_package_replay.py"), "validate-package", "--target", target, "--capability", "scripts/sc/config/skill-package-validator-capability.v1.json"]
-        observed = subprocess.run(
-            [sys.executable, "-c", "from pathlib import Path; p=Path(__import__('sys').argv[1]); print(p.read_text(encoding='utf-8').__len__())", str(ROOT / entry["path"])],
-            cwd=ROOT, capture_output=True, text=True, check=False,
-        )
-        calls.append({"consumer": entry.get("consumer", entry["path"]), "path": entry["path"], "executed": True, "exit_code": observed.returncode, "stdout_sha256": text_digest(observed.stdout), "stderr_sha256": text_digest(observed.stderr)})
+        consumer = entry.get("consumer", entry["path"])
+        command = consumer_command(consumer, target)
+        observed = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, check=False)
+        calls.append({
+            "consumer": consumer,
+            "path": entry["path"],
+            "command": command,
+            "executed": True,
+            "exit_code": observed.returncode,
+            "stdout_sha256": text_digest(observed.stdout),
+            "stderr_sha256": text_digest(observed.stderr),
+        })
         transitions.append({
             "consumer": entry["path"],
             "status": "completed" if observed.returncode == 0 else "failed",
@@ -690,6 +771,36 @@ def matrix_rejection(case: dict) -> tuple[str | None, str | None]:
     elif "bound_target" in case or "evidence_target" in case:
         if case.get("bound_target") != case.get("evidence_target"):
             rejection_reason = "matrix evidence target does not match the bound target"
+    if rejection_reason is None and case.get("_require_real_matrix_input") is True:
+        assignments = case.get("fixture_state_assignments")
+        if not isinstance(assignments, dict) or any(
+            not isinstance(assignments.get(subject), dict)
+            or not assignments[subject].get("fixture_id")
+            or not assignments[subject].get("state_id")
+            for subject in ("Stable", "Candidate")
+        ):
+            rejection_reason = "matrix input fixture-state assignment is incomplete"
+        elif assignments["Stable"] == assignments["Candidate"]:
+            rejection_reason = "matrix input fixture-state assignments must be distinct"
+    if rejection_reason is None and case.get("_require_real_matrix_input") is True:
+        matrix_input = case.get("matrix_input")
+        if not isinstance(matrix_input, dict):
+            rejection_reason = "matrix input binding is missing"
+        else:
+            source_path = matrix_input.get("source_path")
+            source_sha256 = matrix_input.get("source_sha256")
+            input_id = matrix_input.get("input_id")
+            if not isinstance(input_id, str) or not input_id:
+                rejection_reason = "matrix input identity is missing"
+            elif not isinstance(source_path, str) or not isinstance(source_sha256, str):
+                rejection_reason = "matrix input source binding is incomplete"
+            else:
+                try:
+                    source = contained(ROOT / source_path, ROOT, "matrix input source")
+                    if not source.is_file() or digest(source) != source_sha256:
+                        rejection_reason = "matrix input source identity is stale"
+                except (OSError, ValueError):
+                    rejection_reason = "matrix input source identity is invalid"
     if rejection_reason is None and (
         "source_identity" in case or "execution_evidence" in case
     ):
@@ -714,6 +825,8 @@ def matrix_rejection(case: dict) -> tuple[str | None, str | None]:
 
 
 def matrix_case_result(case: dict, *, require_independent_subjects: bool = False) -> dict:
+    if require_independent_subjects:
+        case = {**case, "_require_real_matrix_input": True}
     started = time.monotonic()
     target = contained(ROOT / case["target"], ROOT, "matrix target")
     validator, value = capability(contained(ROOT / case["capability"], ROOT, "matrix capability"))
@@ -730,6 +843,15 @@ def matrix_case_result(case: dict, *, require_independent_subjects: bool = False
         candidate_fixture = materialized / "Candidate" / Path(candidate_target_text).name
         shutil.copytree(stable_target, stable_fixture)
         shutil.copytree(candidate_target, candidate_fixture)
+        matrix_input = case.get("matrix_input")
+        if isinstance(matrix_input, dict):
+            marker = json.dumps(matrix_input, sort_keys=True, separators=(",", ":")) + "\n"
+            (stable_fixture / ".matrix-input.json").write_text(
+                marker.replace('"input_id":', '"subject":"Stable","input_id":', 1), encoding="utf-8"
+            )
+            (candidate_fixture / ".matrix-input.json").write_text(
+                marker.replace('"input_id":', '"subject":"Candidate","input_id":', 1), encoding="utf-8"
+            )
         stable_target, candidate_target = stable_fixture, candidate_fixture
         fixture_roots.append(materialized)
     time_bound = case.get("aggregate_time_bound_ms")
@@ -913,6 +1035,23 @@ def replay_matrix(matrix_argument: str) -> tuple[dict, int]:
         or not cases
     ):
         raise ValueError("matrix must contain executable v2 cases")
+    if matrix.get("authorizes") != []:
+        return (
+            {
+                "status": "invalid",
+                "exit_code": 1,
+                "aggregate_valid": False,
+                "aggregate_status": "invalid",
+                "invalid_reasons": ["matrix authorizes must be an empty array"],
+                "missing_cases": [],
+                "case_results": [],
+                "authorizes": [],
+                "runner_entrypoint": "scripts/sc/skill_package_replay.py",
+                "matrix_path": matrix_argument,
+                "matrix_sha256": digest(matrix_path),
+            },
+            1,
+        )
     require_independent_subjects = matrix.get("subject_contract") == "independent-stable-candidate-v1"
     results = [matrix_case_result(case, require_independent_subjects=require_independent_subjects) for case in cases]
 

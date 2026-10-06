@@ -30,6 +30,8 @@ def _fixture(root: Path, *, include_rule: bool) -> tuple[str, str, str]:
         "import sys",
         "from pathlib import Path",
         "target = Path(sys.argv[1])",
+        "if not (target / 'SKILL.md').is_file():",
+        "    raise SystemExit(2)",
     ]
     if include_rule:
         lines.extend(("def reject_missing_target(path):", "    return not path.exists()"))
@@ -39,6 +41,8 @@ def _fixture(root: Path, *, include_rule: bool) -> tuple[str, str, str]:
         "import sys",
         "from pathlib import Path",
         "target = Path(sys.argv[1])",
+        "if not (target / 'SKILL.md').is_file():",
+        "    raise SystemExit(2)",
         "def reject_missing_target(path):",
         "    return not path.exists()",
         "raise SystemExit(2 if not target.is_dir() else 0)",

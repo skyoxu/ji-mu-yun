@@ -41,6 +41,15 @@ class SkillPackageReplayTests(unittest.TestCase):
         return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
     def _write_capability(self, **changes):
+        source = self.root / "validator-source.json"
+        source.write_text(
+            json.dumps({
+                "validator_path": self._relative(self.validator),
+                "validator_sha256": self._sha256(self.validator),
+                "authorizes": [],
+            }),
+            encoding="utf-8",
+        )
         value = {
             "schema_version": "jimuyun.skill-package-validator-capability.v1",
             "capability_id": "test-validator",
@@ -48,6 +57,9 @@ class SkillPackageReplayTests(unittest.TestCase):
             "validator_entrypoint": "validator.py",
             "probe_args": ["--skill-root", "{target}"],
             "validator_sha256": self._sha256(self.validator),
+            "validator_source": self._relative(source),
+            "validator_source_sha256": self._sha256(source),
+            "required_rules": [],
             "package_identity": "test-validator-v1",
             "state": "active",
             "authorizes": [],

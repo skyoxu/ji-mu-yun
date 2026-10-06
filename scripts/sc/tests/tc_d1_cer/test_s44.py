@@ -195,3 +195,70 @@ def test_fresh_checkout_contains_coverage_and_identity() -> None:
     code, receipt = _run_replay("fresh")
     replay = receipt.get("current_wrapper_replay") or {}
     _assert_behavior(code == 0 and isinstance(replay.get("coverage_result"), dict) and replay.get("fresh_checkout") is True and replay.get("coverage_result") == replay.get("pinned_coverage"), "F-S44-COVERAGE-REPRO", receipt)
+
+
+@pytest.mark.cer_assertion("fresh-checkout-coverage-reproducibility")
+def test_fresh_checkout_contains_the_replay_entry_used_for_execution() -> None:
+    code, receipt = _run_replay("fresh")
+    replay = receipt.get("current_wrapper_replay") or {}
+    checkout = replay.get("checkout_path")
+    entry = Path(checkout) / "scripts" / "sc" / "skill_package_replay.py" if isinstance(checkout, str) else None
+    _assert_behavior(
+        code == 0
+        and replay.get("fresh_checkout") is True
+        and entry is not None
+        and entry.is_file(),
+        "F-S44-FRESH-ENTRY-MISSING",
+        {"checkout": checkout, "entry": str(entry) if entry else None},
+    )
+
+
+@pytest.mark.cer_assertion("consumer-call-surface-is-real")
+def test_consumer_verification_records_real_commands_not_file_reads() -> None:
+    code, receipt = _run_replay("source-identity")
+    replay = receipt.get("current_wrapper_replay") or {}
+    verification = replay.get("consumer_verification") or {}
+    calls = verification.get("calls") or []
+    required = {
+        "vdd-execution-plan",
+        "run-refactor-implementation-acceptance",
+        "workflow-model-routing",
+    }
+    _assert_behavior(
+        code == 0
+        and {call.get("consumer") for call in calls} == required
+        and all(
+            call.get("executed") is True
+            and call.get("exit_code") == 0
+            and isinstance(call.get("command"), list)
+            and call.get("command")
+            and not ("read_text" in " ".join(map(str, call.get("command"))))
+            for call in calls
+        ),
+        "F-CONSUMER-FILE-READ-NOT-CALL",
+        verification,
+    )
+
+
+@pytest.mark.cer_assertion("matrix-case-binds-real-input")
+def test_independent_matrix_requires_real_distinct_input_bindings() -> None:
+    case = {
+        "case_id": "same-package-different-label",
+        "target": TARGET,
+        "stable_target": TARGET,
+        "candidate_target": TARGET,
+        "capability": CAPABILITY,
+        "expected_exit": 0,
+    }
+    code, receipt = _run_matrix(
+        case,
+        matrix_fields={"subject_contract": "independent-stable-candidate-v1"},
+    )
+    row = receipt["case_results"][0]
+    _assert_behavior(
+        code != 0
+        and row.get("status") == "fail"
+        and "input" in str(row.get("rejection_reason", "")).lower(),
+        "F-MATRIX-LABEL-ONLY",
+        receipt,
+    )
