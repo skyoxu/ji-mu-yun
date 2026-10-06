@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "scripts/sc/tests",
+    "-p",
+    "test_skill_replay_integration_regressions.py",
+    "-v"
+  ],
+  "exit_code": 1,
+  "runtime_sha256": "sha256:c40a0909367202276d530084f4ba70d1d306388f5c6422f0af5a22aa6e91efa0",
+  "scope": "Budget regression after correcting isolated fixture setup",
+  "authorizes": []
+}

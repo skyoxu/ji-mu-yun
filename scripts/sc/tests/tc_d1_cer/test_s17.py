@@ -75,7 +75,8 @@ def test_detached_replay_binds_input_and_output_to_same_probe_identity() -> None
         result.returncode == 0
         and receipt.get("status") == "pass"
         and positive.get("input", {}).get("target") == TARGET
-        and positive.get("actual_target") == TARGET
+        and Path(str(positive.get("actual_target"))).is_absolute()
+        and positive.get("actual_target") == positive.get("read_witness", {}).get("target")
         and isinstance(process.get("pid"), int)
         and isinstance(process.get("parent_pid"), int)
         and process.get("pid") != process.get("parent_pid")

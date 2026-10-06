@@ -101,7 +101,8 @@ def test_detached_positive_probe_binds_input_target_outcome_and_output() -> None
         and isinstance(input_value, dict)
         and input_value.get("target") == TARGET
         and isinstance(probe, dict)
-        and probe.get("actual_target") == TARGET
+        and Path(str(probe.get("actual_target"))).is_absolute()
+        and probe.get("actual_target") == probe.get("read_witness", {}).get("target")
         and isinstance(command_outcome, dict)
         and command_outcome.get("exit_code") == 0
         and isinstance(output, dict)
@@ -116,24 +117,24 @@ def test_detached_positive_probe_binds_input_target_outcome_and_output() -> None
 
 @pytest.mark.cer_assertion("ASSERT-O-833C8FA8A239-ALWAYS-SUCCESS-FALSE-NEGATIVE")
 def test_always_success_validator_is_reported_as_a_failed_probe_outcome() -> None:
-    child_script = "\n".join(
-        [
-            "import sys",
-            f"sys.path.insert(0, {str(ENTRY.parent)!r})",
-            "import skill_package_replay as replay",
-            "replay.validator_command = lambda validator, value, target: [sys.executable, '-c', 'raise SystemExit(0)']",
-            f"sys.argv = ['skill_package_replay.py', 'replay-package', '--target', {TARGET!r}, '--capability', {CAPABILITY!r}, '--probe-mode', 'fresh']",
-            "raise SystemExit(replay.main())",
-        ]
-    )
-    result = subprocess.run(
-        [sys.executable, "-B", "-c", child_script],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-    )
+    sys.path.insert(0, str(ROOT / "scripts/sc/tests"))
+    import test_skill_replay_review_regressions as support
+    fixture = support.NativeRuntimeTests(methodName="runTest")
+    fixture.setUp()
+    try:
+        code = "import json,sys\nfrom pathlib import Path\n(Path(sys.argv[-1])/'fixture.json').read_text(encoding='utf-8')\nprint(json.dumps({'findings':[]}))\nraise SystemExit(0)\n"
+        fixture.write("validator/check.py", code)
+        fixture.write("authority/source.py", code)
+        fixture.cap.update(validator_sha256=support.replay.digest(fixture.root / "validator/check.py"), validator_source_sha256=support.replay.digest(fixture.root / "authority/source.py"))
+        fixture.write("capability.json", json.dumps(fixture.cap))
+        fixture.git("add", ".")
+        fixture.git("commit", "-qm", "Freeze always-success fault fixture")
+        fixture.pin_fixture_authority(fixture.git("rev-parse", "HEAD").strip())
+        result = subprocess.run([sys.executable, "-B", str(fixture.root / "scripts/sc/skill_package_replay.py"),
+                                 "validate-package", "--target", "candidate", "--capability", "capability.json"],
+                                cwd=fixture.root, capture_output=True, text=True, encoding="utf-8", check=False)
+    finally:
+        fixture.tearDown()
     _assert_behavior(
         result.returncode != 0 and "negative compatibility probe unexpectedly passed" in result.stderr,
         "ALWAYS_SUCCESS_FALSE_NEGATIVE_PASSED",

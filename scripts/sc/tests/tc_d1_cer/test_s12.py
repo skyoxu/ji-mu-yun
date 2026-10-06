@@ -90,7 +90,7 @@ def test_independent_report_binds_source_content_and_required_rule(
     for arguments in (["init", "-q"], ["config", "user.name", "TC-D1 fixture"], ["config", "user.email", "tc-d1-fixture@example.invalid"], ["config", "core.autocrlf", "false"], ["add", "."], ["commit", "-qm", "Freeze independent source"]):
         subprocess.run(["git", *arguments], cwd=tmp_path, check=True, capture_output=True)
     commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tmp_path, check=True, capture_output=True, text=True, encoding="utf-8").stdout.strip()
-    monkeypatch.setenv("TC_D1_TRUST_COMMIT", commit)
+    monkeypatch.setattr(replay.runtime, "TRUST_BASELINE", commit)
     receipt = replay.validate_package(target, capability)
     report = receipt.get("independent_validator_verification")
     checks = report.get("required_rule_checks") if isinstance(report, dict) else None
@@ -116,7 +116,7 @@ def test_missing_required_rule_is_rejected_independently(
     for arguments in (["init", "-q"], ["config", "user.name", "TC-D1 fixture"], ["config", "user.email", "tc-d1-fixture@example.invalid"], ["config", "core.autocrlf", "false"], ["add", "."], ["commit", "-qm", "Freeze independent source"]):
         subprocess.run(["git", *arguments], cwd=tmp_path, check=True, capture_output=True)
     commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tmp_path, check=True, capture_output=True, text=True, encoding="utf-8").stdout.strip()
-    monkeypatch.setenv("TC_D1_TRUST_COMMIT", commit)
+    monkeypatch.setattr(replay.runtime, "TRUST_BASELINE", commit)
     try:
         receipt = replay.validate_package(target, capability)
     except (ValueError, RuntimeError) as exc:

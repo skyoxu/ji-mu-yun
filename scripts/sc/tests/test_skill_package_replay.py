@@ -52,8 +52,7 @@ class SkillPackageReplayTests(unittest.TestCase):
     def _freeze(self):
         self.fixture.git("add", ".")
         self.fixture.git("commit", "-qm", "Freeze independent fixture inputs")
-        import os
-        os.environ["TC_D1_TRUST_COMMIT"] = self.fixture.git("rev-parse", "HEAD").strip()
+        self.fixture.pin_fixture_authority(self.fixture.git("rev-parse", "HEAD").strip())
 
     def _run(self, operation, *args):
         return subprocess.run([sys.executable, str(self.entry), operation, *map(str, args)], cwd=self.root, capture_output=True, text=True, encoding="utf-8", check=False)

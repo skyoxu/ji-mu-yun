@@ -223,13 +223,16 @@ def test_consumer_verification_records_real_commands_not_file_reads() -> None:
         "vdd-execution-plan",
         "run-refactor-implementation-acceptance",
         "workflow-model-routing",
+        "knowledge-workflow-vdd-package",
+        "knowledge-workflow-acceptance-package",
     }
     _assert_behavior(
         code == 0
         and {call.get("consumer") for call in calls} == required
         and all(
             call.get("executed") is True
-            and call.get("exit_code") == 0
+            and call.get("matched_expected") is True
+            and (call.get("exit_code") in {1, 2} if call.get("fixture") == "invalid-package" else call.get("exit_code") == 0)
             and isinstance(call.get("command"), list)
             and call.get("command")
             and not ("read_text" in " ".join(map(str, call.get("command"))))

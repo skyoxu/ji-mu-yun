@@ -43,8 +43,8 @@ def replay() -> dict:
     return receipt
 
 
-def _matrix(*cases: dict) -> tuple[int, dict]:
-    matrix = {"schema_version": "jimuyun.stable-candidate-replay-matrix.v2", "cases": cases, "authorizes": []}
+def _matrix(*cases: dict, native_matrix=None) -> tuple[int, dict]:
+    matrix = native_matrix if native_matrix is not None else {"schema_version": "jimuyun.stable-candidate-replay-matrix.v2", "cases": cases, "authorizes": []}
     child = (
         "import json, runpy, sys\n"
         "from pathlib import Path\n"
@@ -233,7 +233,7 @@ def test_manifest_transitions_cover_every_consumer(replay: dict) -> None:
     entries = record.get("consumer_manifest", {}).get("entries", [])
     transitions = record.get("route_transitions", [])
     _assert_behavior(
-        bool(entries) and all(any(t.get("consumer") == entry.get("path") and t.get("status") == "completed"
+        bool(entries) and all(any(t.get("consumer") == entry.get("consumer") and t.get("status") == "completed"
                                   for t in transitions) for entry in entries)
         and record.get("transition_completion_percent") == 100,
         "CER-A-CA2FDAF6C599-BEHAVIOR", record.get("route_transitions"),
@@ -246,7 +246,7 @@ def test_manifest_transitions_have_post_rollback_baselines(replay: dict) -> None
     entries = record.get("consumer_manifest", {}).get("entries", [])
     transitions = record.get("route_transitions", [])
     _assert_behavior(
-        bool(entries) and all(any(t.get("consumer") == entry.get("path")
+        bool(entries) and all(any(t.get("consumer") == entry.get("consumer")
                                   and t.get("post_rollback_prior_behavior_baseline", {}).get("observed") is True
                                   for t in transitions) for entry in entries),
         "O-D4C0A15CD173-F2", transitions,
@@ -269,9 +269,11 @@ def test_aggregate_records_deterministic_terminal_state() -> None:
 
 
 @pytest.mark.cer_assertion("NFR-7.aggregate-completes-within-bound")
-def test_over_budget_aggregate_terminates_unsuccessfully() -> None:
-    code, receipt = _matrix(_case("over-budget", aggregate_time_bound_ms=0,
-                                  aggregate_output_bound_bytes=1))
+def test_over_budget_aggregate_terminates_unsuccessfully(native_skill_replay_matrix) -> None:
+    matrix, _ = native_skill_replay_matrix
+    bounded = json.loads(json.dumps(matrix))
+    bounded["cases"][0].update(aggregate_time_bound_ms=0, aggregate_output_bound_bytes=1)
+    code, receipt = _matrix(native_matrix=bounded)
     row = (receipt.get("case_results") or [{}])[0]
     _assert_behavior(
         code != 0 and row.get("terminal_state") in {"timeout", "budget-exhausted"}

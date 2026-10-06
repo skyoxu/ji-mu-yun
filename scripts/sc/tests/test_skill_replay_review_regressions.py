@@ -101,7 +101,14 @@ class NativeRuntimeTests(unittest.TestCase):
         self.cap = {"allowed_root": "validator", "validator_entrypoint": "check.py", "validator_sha256": replay.digest(validator), "probe_args": ["{target}"], "state": "active", "authorizes": [], "validator_source": "authority/source.py", "validator_source_sha256": replay.digest(source), "required_rules": [], "negative_probe": {"path": "fixture.json", "replacement": {"valid": False}, "diagnostic": "invalid-fixture"}}
         self.write("capability.json", json.dumps(self.cap))
         for entry in ("skill_package_replay.py", "skill_replay_runtime.py", "skill_replay_observer.py"):
-            self.write("scripts/sc/" + entry, ENTRY.with_name(entry).read_text(encoding="utf-8"))
+            entry_source = ENTRY.with_name(entry).read_text(encoding="utf-8")
+            if entry == "skill_package_replay.py":
+                # This injection exists only in the isolated fixture. The
+                # unchanged production entry has no mutable authority tag.
+                marker = 'if __name__ == "__main__":\n'
+                assert entry_source.count(marker) == 1
+                entry_source = entry_source.replace(marker, marker + '    runtime.TRUST_BASELINE = runtime.git(ROOT, "rev-parse", "refs/tags/tc-d1-isolated-test-authority").decode().strip()\n')
+            self.write("scripts/sc/" + entry, entry_source)
         for name, entry in replay.runtime.CONSUMERS[:2]:
             self.write(entry, code)
             target = replay.runtime.PACKAGE_ROOTS[1] if name == "vdd-execution-plan" else replay.runtime.PACKAGE_ROOTS[0]
@@ -122,10 +129,15 @@ class NativeRuntimeTests(unittest.TestCase):
         self.git("add", ".")
         self.git("commit", "-qm", "Immutable existing validator and subject")
         self.commit = self.git("rev-parse", "HEAD").strip()
-        self.environment = mock.patch.dict(os.environ, {"TC_D1_TRUST_COMMIT": self.commit})
+        self.environment = mock.patch.dict(os.environ, {})
         self.environment.start()
+        os.environ.pop("TC_D1_TRUST_COMMIT", None)
+        self.authority_patch = mock.patch.object(replay.runtime, "TRUST_BASELINE", self.commit)
+        self.authority_patch.start()
+        self.pin_fixture_authority(self.commit)
 
     def tearDown(self):
+        self.authority_patch.stop()
         self.environment.stop()
         self.patch.stop()
         self.temp.cleanup()
@@ -138,6 +150,11 @@ class NativeRuntimeTests(unittest.TestCase):
 
     def git(self, *args):
         return subprocess.run(["git", *args], cwd=self.root, capture_output=True, text=True, encoding="utf-8", check=True).stdout
+
+    def pin_fixture_authority(self, commit):
+        """Pin only this isolated test repository; never repin production trust."""
+        replay.runtime.TRUST_BASELINE = commit
+        self.git("tag", "-f", "tc-d1-isolated-test-authority", commit)
 
     def test_real_target_reads_and_same_location_probe_oracle(self):
         receipt = replay.validate_package("candidate", "capability.json")
@@ -155,7 +172,7 @@ class NativeRuntimeTests(unittest.TestCase):
         self.write("capability.json", json.dumps(self.cap))
         self.git("add", ".")
         self.git("commit", "-qm", "Independent test authority pins path-only validator")
-        with mock.patch.dict(os.environ, {"TC_D1_TRUST_COMMIT": self.git("rev-parse", "HEAD").strip()}):
+        with mock.patch.object(replay.runtime, "TRUST_BASELINE", self.git("rev-parse", "HEAD").strip()):
             with self.assertRaisesRegex(ValueError, "no execution-time target reads"):
                 replay.validate_package("candidate", "capability.json")
 
@@ -174,7 +191,7 @@ class NativeRuntimeTests(unittest.TestCase):
         self.git("commit", "-qm", "Freeze unreached policy dependency")
         commit = self.git("rev-parse", "HEAD").strip()
         self.write("validator/unreached-policy.json", '{"allow":false}')
-        with mock.patch.dict(os.environ, {"TC_D1_TRUST_COMMIT": commit}):
+        with mock.patch.object(replay.runtime, "TRUST_BASELINE", commit):
             with self.assertRaisesRegex(ValueError, "Trust Approval"):
                 replay.validate_package("candidate", "capability.json")
 
@@ -211,6 +228,9 @@ class NativeRuntimeTests(unittest.TestCase):
         for row in result["case_results"]:
             self.assertEqual(2, len(row["subject_executions"]))
             self.assertNotEqual(row["stable_subject"]["subject_identity"], row["candidate_subject"]["subject_identity"])
+            for subject in row["subject_executions"]:
+                self.assertEqual(subject["subject_identity"], subject["pre_identity"])
+                self.assertEqual(subject["pre_identity"], subject["post_identity"])
             if row["category"] in {"dirty_baseline", "knowledge_read_set", "closed_policy"}:
                 for subject in row["subject_executions"]:
                     state = subject["observation"]["state_observations"][0]

@@ -121,6 +121,13 @@ def _rollback_coverage(receipt: dict) -> bool:
         and len(observations) == len(entries)
         and all(isinstance(item, dict) and item.get("baseline_match") is True for item in observations)
         and observed_count == manifest_count == len(entries)
+        and {item["consumer"] for item in observations} == {entry["consumer"] for entry in entries}
+        and all({row["fixture"] for row in item["fixture_observations"]} ==
+                ({"terminal-policy-observation"} if item["consumer"] == "workflow-model-routing" else {"valid-package", "invalid-package"})
+                for item in observations)
+        and all(row["executed"] and row["matched_expected"] and row["baseline_match"]
+                and all(row[field] == row["baseline"][field] for field in ("exit_code", "verdict", "diagnostic_category"))
+                for item in observations for row in item["fixture_observations"])
     )
     return isinstance(rollback, dict) and coverage_ok
 
@@ -149,7 +156,16 @@ def test_consumer_calls_and_prior_route_capture_are_observed() -> None:
     calls = replay["consumer_verification"]["calls"]
     assert {item["consumer"] for item in calls} == {
         "vdd-execution-plan", "run-refactor-implementation-acceptance", "workflow-model-routing",
+        "knowledge-workflow-vdd-package", "knowledge-workflow-acceptance-package",
     }
-    assert all(item["executed"] and item["exit_code"] == 0 for item in calls)
+    assert all(item["executed"] and item["matched_expected"] for item in calls)
+    assert all(item["exit_code"] in {1, 2} if item["fixture"] == "invalid-package" else item["exit_code"] == 0 for item in calls)
     rollback = replay["rollback"]
     assert rollback["prior_route_captured_before_transition"] is True
+    assert rollback["fixture_observed_count"] == 9
+    for observation in rollback["baseline_observations"]:
+        fixtures = observation["fixture_observations"]
+        expected = {"terminal-policy-observation"} if observation["consumer"] == "workflow-model-routing" else {"valid-package", "invalid-package"}
+        assert {row["fixture"] for row in fixtures} == expected
+        assert all(row["baseline_match"] and row["executed"] for row in fixtures)
+        assert all(all(row[field] == row["baseline"][field] for field in ("exit_code", "verdict", "diagnostic_category")) for row in fixtures)

@@ -49,8 +49,8 @@ def _assert_behavior(condition: bool, failure_id: str, message: str) -> None:
     assert condition, message
 
 
-def _matrix(*cases: dict) -> tuple[subprocess.CompletedProcess[str], dict]:
-    matrix = {"schema_version": "jimuyun.stable-candidate-replay-matrix.v2", "authorizes": [], "cases": list(cases)}
+def _matrix(*cases: dict, native_matrix=None) -> tuple[subprocess.CompletedProcess[str], dict]:
+    matrix = native_matrix if native_matrix is not None else {"schema_version": "jimuyun.stable-candidate-replay-matrix.v2", "authorizes": [], "cases": list(cases)}
     child = (
         "import json,runpy,sys\n"
         "from pathlib import Path\n"
@@ -165,43 +165,38 @@ def test_stale_input_rejects_success() -> None:
 
 
 @pytest.mark.cer_assertion("A-O-36747B1BB805-six-cases-two-subjects-complete-coverage")
-def test_six_cases_record_both_subjects() -> None:
-    result = _run("replay-matrix", "--matrix", MATRIX.relative_to(ROOT).as_posix())
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        payload = {}
+def test_six_cases_record_both_subjects(native_skill_replay_matrix) -> None:
+    _, payload = native_skill_replay_matrix
     rows = payload.get("case_results", [])
     ok = len(rows) == 6 and all(isinstance(row.get("subject_executions"), list)
                                  and len(row["subject_executions"]) == 2 for row in rows)
-    _assert_behavior(result.returncode == 0 and ok, "F-O-36747B1BB805-MISSING-SUBJECT-EXECUTION",
+    _assert_behavior(payload.get("aggregate_valid") is True and ok, "F-O-36747B1BB805-MISSING-SUBJECT-EXECUTION",
                      "matrix does not record both subject executions")
 
 
 @pytest.mark.cer_assertion("A-O-31D7DE0B840F-stable-subject-immutable-six-cases")
-def test_six_cases_attest_stable_immutability() -> None:
-    result = _run("replay-matrix", "--matrix", MATRIX.relative_to(ROOT).as_posix())
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        payload = {}
+def test_six_cases_attest_stable_immutability(native_skill_replay_matrix) -> None:
+    matrix, payload = native_skill_replay_matrix
+    from scripts.sc import skill_package_replay as replay
+    expected_stable = replay.runtime.canonical(matrix["stable"]["bindings"])
     rows = payload.get("case_results", [])
     ok = len(rows) == 6 and all(isinstance(row.get("stable_subject"), dict)
                                  and row["stable_subject"].get("executed") is True
-                                 and row["stable_subject"].get("pre_identity") == row["stable_subject"].get("post_identity")
+                                 and row["stable_subject"].get("pre_identity") == row["stable_subject"].get("post_identity") == expected_stable
                                  for row in rows)
-    _assert_behavior(result.returncode == 0 and ok, "F-O-31D7DE0B840F-STABLE-SUBJECT-MUTATION-OR-OMISSION",
+    _assert_behavior(payload.get("aggregate_valid") is True and ok, "F-O-31D7DE0B840F-STABLE-SUBJECT-MUTATION-OR-OMISSION",
                      "stable subject immutability evidence is missing")
 
 
 @pytest.mark.cer_assertion("A-O-370AAFBB0DAC-budget-exhaustion-unsuccessful")
-def test_budget_exhaustion_is_terminally_unsuccessful() -> None:
-    time_result, time_payload = _matrix({"case_id": "over-time-budget", "target": TARGET,
-                                         "capability": CAPABILITY, "expected_exit": 0,
-                                         "aggregate_time_bound_ms": 0})
-    output_result, output_payload = _matrix({"case_id": "over-output-budget", "target": TARGET,
-                                             "capability": CAPABILITY, "expected_exit": 0,
-                                             "aggregate_output_bound_bytes": 1})
+def test_budget_exhaustion_is_terminally_unsuccessful(native_skill_replay_matrix) -> None:
+    matrix, _ = native_skill_replay_matrix
+    time_matrix = json.loads(json.dumps(matrix))
+    time_matrix["cases"][0]["aggregate_time_bound_ms"] = 0
+    output_matrix = json.loads(json.dumps(matrix))
+    output_matrix["cases"][0]["aggregate_output_bound_bytes"] = 1
+    time_result, time_payload = _matrix(native_matrix=time_matrix)
+    output_result, output_payload = _matrix(native_matrix=output_matrix)
     time_row = (time_payload.get("case_results") or [{}])[0]
     output_row = (output_payload.get("case_results") or [{}])[0]
     time_ok = (time_result.returncode != 0 and time_row.get("terminal_state") in {"timeout", "budget-exhausted"}

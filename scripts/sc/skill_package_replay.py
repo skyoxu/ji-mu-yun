@@ -104,12 +104,16 @@ def independent_validator_verification(validator: Path, value: dict) -> dict:
 def probe_record(probe_id: str, target: str, result: subprocess.CompletedProcess[str]) -> dict:
     stdout = result.stdout or ""
     stderr = result.stderr or ""
+    witness = getattr(result, "read_witness", None)
+    if not isinstance(witness, dict) or not isinstance(witness.get("target"), str):
+        raise ValueError("Probe has no native target observation")
     return {
         "probe_id": probe_id,
         "status": "pass" if result.returncode == 0 else "expected-failure",
         "exit_code": result.returncode,
         "input": {"target": target},
-        "actual_target": target,
+        "actual_target": witness["target"],
+        "read_witness": witness,
         "process": {"pid": getattr(result, "pid", None), "parent_pid": os.getpid()},
         "command_outcome": {
             "exit_code": result.returncode,
@@ -164,7 +168,7 @@ def validate_package(target: str, capability_path: str) -> dict:
     if manifest(target_root) != identity:
         raise ValueError("effective inspected content drift")
     witness = {"observed": True, "requested_target": target, "target_identity": identity, "observed_paths": sorted({row["path"] for row in reads}), "reads": reads, "process": {"pid": result.pid, "nonce": result.read_witness["nonce"]}, "observer": "validator-child-read-interface-v1"}
-    receipt = {"schema_version": "jimuyun.skill-package-validation-receipt.v1", "status": "pass", "exit_code": 0, "target_package": {"path": target, "manifest_sha256": identity}, "effective_inspected_content": {"path": target, "identity": identity}, "effective_read_witness": witness, "successful_evidence": {"effective_inspected_content_identity": identity, "inspection_result": "pass"}, "resolved_validator": {"path": validator.relative_to(ROOT).as_posix(), "sha256": digest(validator), "package_identity": value.get("package_identity", "unknown")}, "probes": [probe_record("requested-target", target, result), probe_record("detached-positive", "detached/target", detached_positive), probe_record("detached-negative", "detached/target", negative)], "target_observation": {"validator_observed_target": True, "mutation_rejected": True, "detached_positive_identity": detached_identity, "detached_negative_identity": invalid_identity, "negative_diagnostic": oracle["diagnostic"], "negative_reads": negative_reads}, "independent_validator_verification": independent, "authorizes": []}
+    receipt = {"schema_version": "jimuyun.skill-package-validation-receipt.v1", "status": "pass", "exit_code": 0, "replay_identity": identity, "target_package": {"path": target, "manifest_sha256": identity}, "effective_inspected_content": {"path": target, "identity": identity}, "effective_read_witness": witness, "successful_evidence": {"effective_inspected_content_identity": identity, "inspection_result": "pass"}, "resolved_validator": {"path": validator.relative_to(ROOT).as_posix(), "sha256": digest(validator), "package_identity": value.get("package_identity", "unknown")}, "probes": [probe_record("requested-target", target, result), probe_record("detached-positive", target, detached_positive), probe_record("detached-negative", target, negative)], "target_observation": {"validator_observed_target": True, "mutation_rejected": True, "detached_positive_identity": detached_identity, "detached_negative_identity": invalid_identity, "negative_diagnostic": oracle["diagnostic"], "negative_reads": negative_reads}, "independent_validator_verification": independent, "authorizes": []}
     # Detect drift after native execution, including additions to the owner.
     if independent_validator_verification(validator, value) != independent:
         raise ValueError("validator trust closure changed during execution")
@@ -250,9 +254,30 @@ def verify_fresh_replay(target: str, capability_path: str, validator: Path, verd
 
 def rollback_details(target: str, capability_path: str, replay: dict) -> dict:
     stages = [row for row in replay["route_transitions"] if row["transition"] == "rollback"]
-    if not stages or any(row["route"] != "Prior Route" for row in stages):
-        raise ValueError("rollback did not invoke Prior Route through every Consumer")
-    return {"real_call": True, "route_identity": stages[0]["route_identity"], "prior_route_identity": stages[0]["baseline"]["route_identity"], "prior_route_captured_before_transition": True, "verdict": "pass", "prior_verdict": "pass", "diagnostic_category": "exit-zero", "prior_diagnostic_category": "exit-zero", "observed_count": len(stages), "manifest_count": len(replay["consumer_manifest"]["entries"]), "baseline_observations": stages, "command_outcome": {"exit_code": 0}}
+    entries = replay["consumer_manifest"]["entries"]
+    expected = {(entry["consumer"], fixture) for entry in entries for fixture in
+                (("terminal-policy-observation",) if entry["consumer"] == "workflow-model-routing" else ("valid-package", "invalid-package"))}
+    observed = [(row["consumer"], row["fixture"]) for row in stages]
+    if not expected or len(observed) != len(set(observed)) or set(observed) != expected:
+        raise ValueError("rollback fixture coverage does not match the frozen Consumer Manifest")
+    prior_identities = {row["baseline"]["route_identity"] for row in stages}
+    if len(prior_identities) != 1 or any(
+        row["route"] != "Prior Route" or row["route_identity"] != row["baseline"]["route_identity"]
+        or row.get("executed") is not True or row.get("matched_expected") is not True
+        or row.get("baseline_match") is not True
+        or any(row[field] != row["baseline"][field] for field in ("exit_code", "verdict", "diagnostic_category"))
+        for row in stages
+    ):
+        raise ValueError("rollback did not reproduce every captured Prior Route fixture")
+    observations = [{"consumer": entry["consumer"], "path": entry["path"], "baseline_match": True,
+                     "fixture_observations": [row for row in stages if row["consumer"] == entry["consumer"]]}
+                    for entry in entries]
+    prior_identity = next(iter(prior_identities))
+    return {"real_call": True, "route_identity": prior_identity, "prior_route_identity": prior_identity,
+            "prior_route_captured_before_transition": True, "verdict": "pass", "prior_verdict": "pass",
+            "diagnostic_category": "all-fixture-postconditions-matched", "prior_diagnostic_category": "all-fixture-postconditions-matched",
+            "observed_count": len(observations), "manifest_count": len(entries), "fixture_observed_count": len(stages),
+            "baseline_observations": observations, "command_outcome": {"kind": "aggregate-postconditions", "exit_code": 0}}
 
 def historical_receipt(replay: dict) -> dict:
     return {

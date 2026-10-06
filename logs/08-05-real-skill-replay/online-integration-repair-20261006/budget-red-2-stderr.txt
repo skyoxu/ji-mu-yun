@@ -1,0 +1,28 @@
+test_environment_cannot_approve_joint_committed_validator_drift (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_environment_cannot_approve_joint_committed_validator_drift) ... ok
+test_probe_actual_target_comes_from_the_native_child_witness (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_probe_actual_target_comes_from_the_native_child_witness) ... ok
+test_replay_identity_is_the_actual_inspected_package (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_replay_identity_is_the_actual_inspected_package) ... ok
+test_rollback_counts_consumers_and_retains_each_fixture_observation (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_rollback_counts_consumers_and_retains_each_fixture_observation) ... ok
+test_rollback_refuses_a_missing_negative_fixture (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_rollback_refuses_a_missing_negative_fixture) ... ok
+test_tiny_native_matrix_output_budget_is_not_ignored (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_tiny_native_matrix_output_budget_is_not_ignored) ... FAIL
+test_zero_native_matrix_time_budget_is_not_ignored (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_zero_native_matrix_time_budget_is_not_ignored) ... FAIL
+
+======================================================================
+FAIL: test_tiny_native_matrix_output_budget_is_not_ignored (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_tiny_native_matrix_output_budget_is_not_ignored)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 94, in test_tiny_native_matrix_output_budget_is_not_ignored
+    self.assertNotEqual(0, code)
+AssertionError: 0 == 0
+
+======================================================================
+FAIL: test_zero_native_matrix_time_budget_is_not_ignored (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_zero_native_matrix_time_budget_is_not_ignored)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 89, in test_zero_native_matrix_time_budget_is_not_ignored
+    self.assertNotEqual(0, code)
+AssertionError: 0 == 0
+
+----------------------------------------------------------------------
+Ran 7 tests in 13.230s
+
+FAILED (failures=2)

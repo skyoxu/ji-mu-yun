@@ -145,7 +145,7 @@ def test_verdict_binds_current_source_identity_to_real_execution_command() -> No
         and command[3:5] == [SOURCE_PATH, "replay-package"]
         and replay.get("command_verification", {}).get("command") == command
         and replay.get("fresh_process") is True
-        and len(probes) == 2
+        and [row.get("probe_id") for row in probes] == ["requested-target", "detached-positive", "detached-negative"]
         and all(isinstance(row.get("process", {}).get("pid"), int) for row in probes),
         "A-VERDICT-REAL-EXECUTION",
         "verdict must bind current source identity to a real command execution",

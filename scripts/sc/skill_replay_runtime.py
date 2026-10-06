@@ -10,6 +10,7 @@ import ast
 import hashlib
 import importlib.util
 import json
+import math
 import os
 import platform
 import re
@@ -79,15 +80,17 @@ def bindings(root: Path, names) -> list[dict]:
 
 def child_environment() -> dict:
     # Do not inherit candidate Python injection or arbitrary model credentials.
-    permitted = ("PATH", "SystemRoot", "WINDIR", "TEMP", "TMP", "HOME", "USERPROFILE", "LANG", "LC_ALL", "TC_D1_TRUST_COMMIT")
+    permitted = ("PATH", "SystemRoot", "WINDIR", "TEMP", "TMP", "HOME", "USERPROFILE", "LANG", "LC_ALL")
     value = {name: os.environ[name] for name in permitted if name in os.environ}
     value.update(PYTHONUTF8="1", PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1")
     return value
 
 
-def execute(command: list[str], root: Path, timeout: float = TIMEOUT_SECONDS) -> subprocess.CompletedProcess:
+def execute(command: list[str], root: Path, timeout: float = TIMEOUT_SECONDS, output_limit: int = OUTPUT_LIMIT) -> subprocess.CompletedProcess:
     if timeout <= 0 or timeout > TIMEOUT_SECONDS:
         raise ValueError("execution time budget is outside the bounded adapter")
+    if not isinstance(output_limit, int) or isinstance(output_limit, bool) or not 0 < output_limit <= OUTPUT_LIMIT:
+        raise ValueError("execution output budget is outside the bounded adapter")
     # File-backed output avoids unbounded communicate() buffers on either OS.
     with tempfile.TemporaryDirectory(prefix="tc-d1-output-") as directory:
         out, err = Path(directory) / "stdout", Path(directory) / "stderr"
@@ -99,7 +102,7 @@ def execute(command: list[str], root: Path, timeout: float = TIMEOUT_SECONDS) ->
                 process.kill()
                 process.wait()
                 code = 124
-        if out.stat().st_size + err.stat().st_size > OUTPUT_LIMIT:
+        if out.stat().st_size + err.stat().st_size > output_limit:
             raise ValueError("aggregate output budget exhausted")
         result = subprocess.CompletedProcess(command, code, out.read_bytes().decode("utf-8"), err.read_bytes().decode("utf-8"))
         result.pid = process.pid
@@ -118,7 +121,10 @@ def git(root: Path, *arguments: str) -> bytes:
 
 
 def trust_commit(root: Path) -> str:
-    requested = os.environ.get("TC_D1_TRUST_COMMIT", TRUST_BASELINE)
+    requested = TRUST_BASELINE
+    override = os.environ.get("TC_D1_TRUST_COMMIT")
+    if override is not None and override != requested:
+        raise ValueError("an environment override cannot grant independent Trust Approval (C3)")
     if not re.fullmatch(r"[0-9a-f]{40}", requested):
         raise ValueError("trust source must be an externally supplied full commit identity")
     actual = git(root, "rev-parse", "--verify", requested + "^{commit}").decode().strip()
@@ -511,7 +517,8 @@ def route_transitions(root: Path, requested_target: str, frozen: dict, capabilit
                     if route == "Prior Route" and any(observed[field] != baseline[field] for field in ("exit_code", "verdict", "diagnostic_category")):
                         raise ValueError("Prior Route did not reproduce its captured behavior")
                     calls.append({**observed, "route": route, "route_identity": route_ids[route]})
-                    transitions.append({"consumer": entry["consumer"], "fixture": fixture, "transition": stage, "status": "completed", "route": route, "route_identity": route_ids[route], "baseline": baseline, "post_rollback_prior_behavior_baseline": {"observed": route == "Prior Route", "identity": route_ids["Prior Route"]}})
+                    baseline_match = route == "Prior Route" and all(observed[field] == baseline[field] for field in ("exit_code", "verdict", "diagnostic_category"))
+                    transitions.append({**observed, "transition": stage, "status": "completed", "route": route, "route_identity": route_ids[route], "baseline": baseline, "baseline_match": baseline_match, "post_rollback_prior_behavior_baseline": {"observed": baseline_match, "identity": route_ids["Prior Route"]}})
         if consumer_manifest(root) != frozen or consumer_manifest(prior) != prior_manifest:
             raise ValueError("frozen Consumer Manifest changed during execution")
         return {"calls": calls, "transitions": transitions, "prior_baselines": baselines, "route_identities": route_ids}
@@ -611,12 +618,12 @@ def evaluate_scenario(root: Path, target: str, validator: Path, value: dict, fix
     return {"scenario": scenario, "source_package_identity": source_identity, "final_fixture_identity": canonical(bindings(root, (target,))), "status": "pass", "calls": calls, "state_observations": state_observations, "executed": True, "authorizes": []}
 
 
-def invalid_matrix(matrix: dict, reason: str) -> tuple[dict, int]:
+def invalid_matrix(matrix: dict, reason: str, terminal_state="contract-rejected", elapsed_ms=0.0) -> tuple[dict, int]:
     cases = matrix.get("cases", [])
     required = matrix.get("required_matrix_cases", [])
     present = {case.get("case_id") for case in cases if isinstance(case, dict)}
     missing = sorted(set(required) - present) if isinstance(required, list) else []
-    return {"status": "invalid", "exit_code": 1, "aggregate_valid": False, "aggregate_status": "invalid", "invalid_reasons": [reason], "missing_cases": missing, "case_results": [{"case_id": case.get("case_id"), "category": case.get("category"), "status": "fail", "executed": False, "rejection_reason": reason} for case in cases if isinstance(case, dict)], "authorizes": []}, 1
+    return {"status": "invalid", "exit_code": 1, "aggregate_valid": False, "aggregate_status": "invalid", "invalid_reasons": [reason], "missing_cases": missing, "case_results": [{"case_id": case.get("case_id"), "category": case.get("category"), "status": "fail", "executed": False, "terminal_state": terminal_state, "elapsed_ms": elapsed_ms, "rejection_reason": reason} for case in cases if isinstance(case, dict)], "authorizes": []}, 1
 
 
 def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
@@ -633,6 +640,32 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
         return invalid_matrix(matrix, "Matrix case identities must be unique")
     if not isinstance(stable, dict) or not re.fullmatch(r"[0-9a-f]{40}", str(stable.get("commit", ""))) or not isinstance(candidate, dict):
         return invalid_matrix(matrix, "source-supported Stable commit and Candidate bindings are required")
+    time_limit, output_limit, output_used = TIMEOUT_SECONDS, OUTPUT_LIMIT, 0
+    for case in cases:
+        milliseconds = case.get("aggregate_time_bound_ms", TIMEOUT_SECONDS * 1000)
+        byte_limit = case.get("aggregate_output_bound_bytes", OUTPUT_LIMIT)
+        if (isinstance(milliseconds, bool) or not isinstance(milliseconds, (int, float)) or not math.isfinite(milliseconds)
+                or isinstance(byte_limit, bool) or not isinstance(byte_limit, int)):
+            return invalid_matrix(matrix, "Matrix budget declaration is invalid")
+        if milliseconds <= 0 or byte_limit <= 0:
+            return invalid_matrix(matrix, "aggregate Matrix budget exhausted before execution", "budget-exhausted", (time.monotonic() - started) * 1000)
+        time_limit = min(time_limit, milliseconds / 1000)
+        output_limit = min(output_limit, byte_limit)
+
+    def remaining():
+        duration = time_limit - (time.monotonic() - started)
+        if duration <= 0 or output_used >= output_limit:
+            raise ValueError("aggregate Matrix budget exhausted")
+        return duration, output_limit - output_used
+
+    def bounded_execute(command, location):
+        nonlocal output_used
+        duration, capacity = remaining()
+        result = execute(command, location, duration, capacity)
+        output_used += len(result.stdout.encode("utf-8")) + len(result.stderr.encode("utf-8"))
+        remaining()
+        return result
+
     results = []
     try:
         target, cap_path = candidate["target"], matrix["capability"]
@@ -668,8 +701,7 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
                 raise ValueError("Candidate contains no relevant executable change")
             seen_inputs = set()
             for case in cases:
-                if time.monotonic() - started >= TIMEOUT_SECONDS:
-                    raise ValueError("aggregate Matrix time budget exhausted")
+                remaining()
                 source = relative(root, case["fixture"]["path"])
                 raw = source.read_bytes()
                 if sha(raw) != case["fixture"]["sha256"] or sha(raw) in seen_inputs:
@@ -685,7 +717,7 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
                     # made exclusively through Candidate code is insufficient.
                     entry = relative(origin, "scripts/sc/skill_package_replay.py")
                     wrapper_command = [sys.executable, "-X", "utf8", "-I", "-S", "-B", str(entry), "validate-package", "--target", target, "--capability", cap_path]
-                    wrapper_call = execute(wrapper_command, origin, max(0.001, TIMEOUT_SECONDS - (time.monotonic() - started)))
+                    wrapper_call = bounded_execute(wrapper_command, origin)
                     if wrapper_call.returncode:
                         raise ValueError("subject's own package replay rejected its positive fixture: " + wrapper_call.stdout + wrapper_call.stderr)
                     destination = Path(directory) / case["case_id"] / subject
@@ -700,23 +732,29 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
                     spec = {"root": str(destination), "target": target, "validator": str(validator), "capability": value, "fixture": fixture}
                     request = destination / "scenario-request.json"
                     request.write_text(json.dumps(spec), encoding="utf-8", newline="\n")
-                    native = execute([sys.executable, "-X", "utf8", "-I", "-S", "-B", str(Path(__file__).resolve()), "scenario", str(request)], root)
+                    native = bounded_execute([sys.executable, "-X", "utf8", "-I", "-S", "-B", str(Path(__file__).resolve()), "scenario", str(request)], root)
                     if native.returncode:
                         raise ValueError("native Matrix scenario failed: " + native.stdout + native.stderr)
                     observation = json.loads(native.stdout)
                     if observation.get("scenario") != case["category"] or observation.get("status") != "pass" or not observation.get("calls"):
                         raise ValueError("Matrix scenario emitted incomplete execution evidence")
-                    subjects.append({"subject": subject, "executed": True, "target": str(relative(destination, target)), "fixture_identity": observation["source_package_identity"], "provenance": stable["commit"] if subject == "Stable" else "current-bound-candidate", "subject_identity": canonical(prior if subject == "Stable" else current), "pid": native.pid, "invocation": {"executed": True, "exit_code": native.returncode}, "wrapper_invocation": {"command": wrapper_command, "pid": wrapper_call.pid, "entry_sha256": sha(entry.read_bytes()), **outcome(wrapper_call), "stdout": wrapper_call.stdout, "stderr": wrapper_call.stderr}, "observation": observation, "stdout_sha256": sha(native.stdout.encode()), "stderr_sha256": sha(native.stderr.encode())})
+                    before = prior if subject == "Stable" else current
+                    after = subject_bindings(origin, target)
+                    if after != before:
+                        raise ValueError(subject + " source changed during native Matrix execution")
+                    subjects.append({"subject": subject, "executed": True, "target": str(relative(destination, target)), "fixture_identity": observation["source_package_identity"], "provenance": stable["commit"] if subject == "Stable" else "current-bound-candidate", "subject_identity": canonical(before), "pre_identity": canonical(before), "post_identity": canonical(after), "pid": native.pid, "invocation": {"executed": True, "exit_code": native.returncode}, "wrapper_invocation": {"command": wrapper_command, "pid": wrapper_call.pid, "entry_sha256": sha(entry.read_bytes()), **outcome(wrapper_call), "stdout": wrapper_call.stdout, "stderr": wrapper_call.stderr}, "observation": observation, "stdout_sha256": sha(native.stdout.encode()), "stderr_sha256": sha(native.stderr.encode())})
                 if subjects[0]["pid"] == subjects[1]["pid"]:
                     raise ValueError("Matrix subject process evidence was reused")
-                results.append({"case_id": case["case_id"], "category": case["category"], "status": "pass", "executed": True, "stable_subject": subjects[0], "candidate_subject": subjects[1], "subject_executions": subjects, "fixture": case["fixture"], "expected_result": "declared-scenario-postconditions", "observed_result": "declared-scenario-postconditions", "authorizes": []})
-                if len(json.dumps(results).encode("utf-8")) > OUTPUT_LIMIT:
+                results.append({"case_id": case["case_id"], "category": case["category"], "status": "pass", "executed": True, "terminal_state": "pass", "elapsed_ms": (time.monotonic() - started) * 1000, "stable_subject": subjects[0], "candidate_subject": subjects[1], "subject_executions": subjects, "fixture": case["fixture"], "expected_result": "declared-scenario-postconditions", "observed_result": "declared-scenario-postconditions", "authorizes": []})
+                if len(json.dumps(results).encode("utf-8")) > output_limit:
                     raise ValueError("aggregate Matrix output budget exhausted")
         if subject_bindings(root, target) != current:
             raise ValueError("Candidate changed during Matrix execution")
         verify_trust(root, validator, value, cap_path)
+        remaining()
     except (KeyError, ValueError, OSError, TypeError) as exc:
-        invalid, code = invalid_matrix(matrix, str(exc))
+        terminal_state = "timeout" if "timed out" in str(exc) else ("budget-exhausted" if "budget exhausted" in str(exc) else "contract-rejected")
+        invalid, code = invalid_matrix(matrix, str(exc), terminal_state, (time.monotonic() - started) * 1000)
         invalid["completed_case_results"] = results
         return invalid, code
     return {"status": "pass", "exit_code": 0, "aggregate_valid": True, "aggregate_status": "valid", "case_results": results, "missing_cases": [], "invalid_reasons": [], "stable_provenance": stable, "candidate": candidate, "relevant_changed_executables": changes, "authorizes": []}, 0

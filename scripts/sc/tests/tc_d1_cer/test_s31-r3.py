@@ -99,7 +99,7 @@ def test_verdict_links_current_source_to_validator_processes() -> None:
         and command[3:5] == [SOURCE_PATH, "replay-package"]
         and replay.get("command_verification", {}).get("command") == command
         and replay.get("fresh_process") is True
-        and len(probes) == 2
+        and [row.get("probe_id") for row in probes] == ["requested-target", "detached-positive", "detached-negative"]
         and all(isinstance(row.get("process", {}).get("pid"), int) for row in probes),
         receipt,
     )

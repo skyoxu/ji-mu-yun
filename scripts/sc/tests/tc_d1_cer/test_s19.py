@@ -206,17 +206,23 @@ def test_seed_manifest_rejects_missing_label_or_identity_mutation(mutation: str)
 def test_consumer_manifest_reconciles_both_directions_and_named_scopes() -> None:
     result, payload = _replay()
     manifest = payload.get("current_wrapper_replay", {}).get("consumer_manifest", {})
-    paths = {entry.get("path") for entry in manifest.get("entries", []) if isinstance(entry, dict)}
+    entries = manifest.get("entries", [])
+    paths = {entry.get("path") for entry in entries if isinstance(entry, dict)}
     scope_paths = {
-        "VDD": ".agents/skills/vdd-execution-plan/SKILL.md",
-        "Acceptance": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+        "VDD": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
+        "Acceptance": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
         "workflow-model-routing": "scripts/sc/tests/test_workflow_model_routing.py",
+        "Knowledge": "scripts/python/validate_knowledge_workflow_integration.py",
     }
     _assert_behavior(
         result.returncode == 0
         and manifest.get("bidirectional_reconciled") is True
         and manifest.get("missing_callers") == []
         and manifest.get("orphan_manifest_entries") == []
+        and {entry.get("consumer") for entry in entries} == {
+            "vdd-execution-plan", "run-refactor-implementation-acceptance", "workflow-model-routing",
+            "knowledge-workflow-vdd-package", "knowledge-workflow-acceptance-package",
+        }
         and all(path in paths for path in scope_paths.values()),
         "F-220-SCOPE-OMISSION",
         manifest,

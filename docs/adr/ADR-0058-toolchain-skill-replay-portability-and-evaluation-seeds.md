@@ -71,3 +71,38 @@ Python validators, finite time/output budgets and append-only new evidence.
 Neither replay nor archival preflight publishes Acceptance or authorizes any
 later state. Old Q7/Q8 and failed evidence are preserved. A repaired candidate
 requires new current evidence before formal Acceptance can consume it.
+
+## 2026-10-06 Native Contract Integration Repair
+
+This section supersedes the earlier environment-based test-input mechanism.
+Production trust stays pinned to the existing-validator commit above. A different
+`TC_D1_TRUST_COMMIT` value is rejected; setting an environment variable is not
+independent Trust Approval. This variable is not forwarded to child processes.
+Isolated tests patch their fixture authority in test code and copied test
+entrypoints only. Their private Git tag is not a production configuration API.
+C3 remains OPEN and no alternate approval route is introduced.
+
+A Probe's `input.target` is the requested logical package. Its `actual_target`
+and `read_witness` come from the native child observation, including the actual
+detached location. Requested and detached targets must not be conflated.
+`replay_identity` is the observed package identity, preserving the existing
+Consumer contract without inventing an independent inspection result.
+
+Rollback reports one baseline-observation group per frozen Consumer and retains
+each applicable fixture's command, process, reads, exit, verdict and diagnostic.
+Consumer counts and fixture counts are separate. Every expected fixture must be
+present exactly once and reproduce its captured Prior Route behavior; missing
+negative fixtures cannot pass through a positive Consumer count. Aggregate
+success means matched postconditions, not that negative commands returned zero.
+
+Native v3 Matrix execution honors declared aggregate time/output bounds, capped
+by the adapter's 60-second and 8-MiB ceilings. Both wrapper and scenario processes
+consume the remaining aggregate budget. Budget exhaustion and infrastructure
+timeouts remain unsuccessful terminal states. Contract refusals never claim
+execution. Stable and Candidate source identities are recomputed after native
+execution and must match their independently frozen pre-execution bindings.
+
+Current CER selectors retain their assertion identities but consume the native
+v3 input and real Consumer/Probe contracts. Historical Matrix documents, Q7/Q8,
+PRD, Spec and execution-plan contracts remain unchanged. Targeted unit validation
+does not establish Windows support or current Acceptance eligibility.
