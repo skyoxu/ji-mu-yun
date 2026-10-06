@@ -1604,6 +1604,116 @@ public sealed partial class PhaseAMetadataStore
         return projects;
     }
 
+    public async Task<IReadOnlyList<AdminProjectSummary>> ListAdminProjectSummariesAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT p.id, p.account_id, a.username, p.name, p.game_name, p.bootstrap_status,
+                   p.created_utc, CASE WHEN t.project_id IS NULL THEN 0 ELSE 1 END
+            FROM projects p
+            LEFT JOIN accounts a ON a.id = p.account_id
+            LEFT JOIN project_delete_tombstones t ON t.project_id = p.id
+            ORDER BY p.created_utc, p.id;
+            """;
+        var result = new List<AdminProjectSummary>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new AdminProjectSummary(
+                reader.GetString(0), reader.GetString(1), reader.IsDBNull(2) ? null : reader.GetString(2),
+                reader.GetString(3), reader.GetString(4), reader.GetString(5), reader.GetString(6),
+                reader.GetInt64(7) == 1));
+        }
+        return result;
+    }
+
+    public async Task<IReadOnlyList<ProjectPurgeTarget>> PurgeProjectRecordsAsync(
+        IReadOnlyList<string> projectIds,
+        Func<ProjectPurgeTarget, bool>? purgeWorkspace = null,
+        CancellationToken cancellationToken = default)
+    {
+        var ids = projectIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal).ToArray();
+        if (ids.Length == 0 || ids.Length > 100) throw new ArgumentOutOfRangeException(nameof(projectIds));
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var placeholders = string.Join(",", ids.Select((_, i) => "$id" + i));
+        var targets = new List<ProjectPurgeTarget>();
+        await using (var select = connection.CreateCommand())
+        {
+            select.Transaction = transaction;
+            select.CommandText = $"SELECT p.id, p.account_id, COALESCE(w.root_path, '') FROM projects p LEFT JOIN workspaces w ON w.project_id = p.id WHERE p.id IN ({placeholders});";
+            for (var i = 0; i < ids.Length; i++) select.Parameters.AddWithValue("$id" + i, ids[i]);
+            await using var reader = await select.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+                targets.Add(new ProjectPurgeTarget(reader.GetString(0), reader.GetString(1), reader.GetString(2)));
+        }
+        if (targets.Count != ids.Length) throw new InvalidOperationException("project_not_found");
+        await EnsureProjectsNotBusyInsideTransactionAsync(connection, transaction, ids, cancellationToken);
+        if (purgeWorkspace is not null)
+        {
+            foreach (var target in targets)
+            {
+                if (!purgeWorkspace(target))
+                    throw new InvalidOperationException("workspace_delete_failed");
+            }
+        }
+
+        var tableNames = new List<string>();
+        var allTables = new List<string>();
+        await using (var tables = connection.CreateCommand())
+        {
+            tables.Transaction = transaction;
+            tables.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';";
+            await using var reader = await tables.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken)) allTables.Add(reader.GetString(0));
+        }
+        foreach (var table in allTables)
+        {
+            await using var columns = connection.CreateCommand();
+            columns.Transaction = transaction;
+            columns.CommandText = $"PRAGMA table_info([{table.Replace("]", "]]")}]);";
+            await using var columnReader = await columns.ExecuteReaderAsync(cancellationToken);
+            while (await columnReader.ReadAsync(cancellationToken))
+            {
+                if (string.Equals(columnReader.GetString(1), "project_id", StringComparison.Ordinal)) { tableNames.Add(table); break; }
+            }
+        }
+        foreach (var table in tableNames)
+        {
+            await using var delete = connection.CreateCommand();
+            delete.Transaction = transaction;
+            delete.CommandText = $"DELETE FROM [{table.Replace("]", "]]")}] WHERE project_id IN ({placeholders});";
+            for (var i = 0; i < ids.Length; i++) delete.Parameters.AddWithValue("$id" + i, ids[i]);
+            await delete.ExecuteNonQueryAsync(cancellationToken);
+        }
+        await using (var deleteProjects = connection.CreateCommand())
+        {
+            deleteProjects.Transaction = transaction;
+            deleteProjects.CommandText = $"DELETE FROM projects WHERE id IN ({placeholders});";
+            for (var i = 0; i < ids.Length; i++) deleteProjects.Parameters.AddWithValue("$id" + i, ids[i]);
+            await deleteProjects.ExecuteNonQueryAsync(cancellationToken);
+        }
+        await transaction.CommitAsync(cancellationToken);
+        return targets;
+    }
+
+    private static async Task EnsureProjectsNotBusyInsideTransactionAsync(SqliteConnection connection, SqliteTransaction transaction, IReadOnlyList<string> ids, CancellationToken cancellationToken)
+    {
+        var placeholders = string.Join(",", ids.Select((_, i) => "$busy" + i));
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = $"SELECT COUNT(*) FROM runs WHERE project_id IN ({placeholders}) AND status IN ('queued','running');";
+        for (var i = 0; i < ids.Count; i++) command.Parameters.AddWithValue("$busy" + i, ids[i]);
+        if (Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken)) > 0) throw new InvalidOperationException("project_busy");
+        await using var locks = connection.CreateCommand();
+        locks.Transaction = transaction;
+        locks.CommandText = $"SELECT COUNT(*) FROM runner_locks WHERE project_id IN ({placeholders});";
+        for (var i = 0; i < ids.Count; i++) locks.Parameters.AddWithValue("$busy" + i, ids[i]);
+        if (Convert.ToInt64(await locks.ExecuteScalarAsync(cancellationToken)) > 0) throw new InvalidOperationException("project_busy");
+    }
+
     public async Task SetProjectBootstrapStatusAsync(
         string projectId,
         string status,

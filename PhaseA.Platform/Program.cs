@@ -282,6 +282,7 @@ app.Use(async (context, next) =>
         context.Request.Path == "/admin/llm-usage" ||
         context.Request.Path == "/admin/run-duration-metrics" ||
         context.Request.Path == "/admin/chat-average-metrics" ||
+        context.Request.Path == "/admin/project-purge" ||
         context.Request.Path == "/admin/game-type-match-records" ||
         context.Request.Path == "/admin/game-type-match-failures" ||
         (context.Request.Path.StartsWithSegments("/projects") &&
@@ -2023,6 +2024,12 @@ app.MapGet("/admin/chat-average-metrics", (
     return Results.Content(ui.RenderAdminChatAverageMetrics(), "text/html; charset=utf-8");
 });
 
+app.MapGet("/admin/project-purge", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderAdminProjectPurge(), "text/html; charset=utf-8");
+});
+
 app.MapGet("/admin/game-type-match-failures", (
     [FromServices] BrowserUiRenderer ui) =>
 {
@@ -2361,6 +2368,42 @@ app.MapGet("/api/admin/users", async (
     }
 
     return Results.Ok(new { users = await store.ListAccountsAsync(cancellationToken) });
+});
+
+app.MapGet("/api/admin/projects", async (
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
+{
+    ApplyNoStore(context);
+    if (RejectNonAdministrator(context) is { } rejection) return rejection;
+    return Results.Ok(new { projects = await store.ListAdminProjectSummariesAsync(cancellationToken) });
+});
+
+app.MapPost("/api/admin/projects/purge", async (
+    AdminProjectPurgeRequest request,
+    HttpContext context,
+    [FromServices] ProjectCreationService projects,
+    CancellationToken cancellationToken) =>
+{
+    ApplyNoStore(context);
+    var identity = CurrentIdentity(context);
+    if (!identity.IsAdmin) return AdminForbidden();
+    if (request.ProjectIds is null || request.ProjectIds.Count == 0)
+        return Results.BadRequest(new { error = "project_ids_required" });
+    try
+    {
+        var result = await projects.PurgeProjectsAsync(identity.AccountId, request.ProjectIds, request.Confirm, cancellationToken);
+        return result.Status == "rejected" ? Results.BadRequest(result) : Results.Ok(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
 });
 
 app.MapPost("/api/admin/users/{accountId}/status", async (

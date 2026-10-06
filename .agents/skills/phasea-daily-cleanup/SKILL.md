@@ -74,6 +74,8 @@ During confirmed `--workspace-delete --apply`, read-only file attributes inside 
 
 ## Safety Rules
 
+- Every destructive CLI route is protected by a code-level deletion gate. It rejects drive roots, the allowed root itself, paths outside the declared allowed root, and cross-volume targets. Prompt wording or confirmation tokens cannot bypass this gate.
+
 - Do not delete `logs/phase-a-innernet/data/phase-a-platform.sqlite3`.
 - Do not delete `logs/phase-a-innernet/data/aicodemirror-codex-homes`.
 - Do not delete `logs/phase-a-innernet/runtime`, pid files, or watchdog files.

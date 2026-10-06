@@ -3324,6 +3324,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("loadAdminRunMetrics");
         html.Should().Contain("openAdminRunDurationMetrics");
         html.Should().Contain("openAdminChatAverageMetrics");
+        html.Should().Contain("openAdminProjectPurge");
+        html.Should().Contain("location.href = \"/admin/project-purge\"");
+        html.Should().NotContain("id=\"refreshAdminProjects\"");
+        html.Should().NotContain("id=\"purgeAdminProjects\"");
         html.Should().Contain("admin-only-action");
         html.Should().Contain("location.href = \"/admin/run-duration-metrics\"");
         html.Should().Contain("location.href = \"/admin/chat-average-metrics\"");
@@ -3719,6 +3723,19 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("averageRuntimeSeconds");
         html.Should().Contain("runTypeLabel");
         html.Should().Contain("style.display = \"none\"");
+    }
+
+    [Fact]
+    public void RenderAdminProjectPurge_IncludesStandaloneProjectDeletionPage()
+    {
+        var html = new BrowserUiRenderer().RenderAdminProjectPurge();
+
+        html.Should().Contain("管理员项目删除");
+        html.Should().Contain("/api/admin/projects");
+        html.Should().Contain("/api/admin/projects/purge");
+        html.Should().Contain("PURGE-PROJECTS");
+        html.Should().Contain("data-project-id");
+        html.Should().Contain("返回控制台");
     }
 
     [Fact]
