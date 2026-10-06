@@ -1,0 +1,45 @@
+{
+  "results": [
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/conftest.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s13.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s19.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s22.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s27.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s28.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s28_cer.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s30.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s41.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s42.py",
+      "cer_assertion_identity_multiset_preserved": true
+    }
+  ],
+  "authorizes": []
+}

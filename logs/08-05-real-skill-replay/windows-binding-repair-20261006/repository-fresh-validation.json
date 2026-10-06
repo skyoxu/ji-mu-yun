@@ -1,0 +1,24 @@
+{
+  "status": "pass",
+  "source_stage": "intermediate core fix before final Matrix/test/ADR edits",
+  "raw_stdout_sha256": "sha256:b00c49bbb2405987f29956547da7a92e121b76fddee072e7e02a2e779dd0e52f",
+  "raw_stdout_bytes": 2099673,
+  "fresh_checkout": true,
+  "semantic_verdict_equal": true,
+  "coverage_equal": true,
+  "consumer_count": 5,
+  "snapshot": "sha256:fe7adf8ca849e1031d34aeffc77f9218f6ab9e51ef39182af34fe714c430fc26",
+  "native_source_bindings": [
+    {
+      "kind": "executable",
+      "path": "scripts/sc/skill_package_replay.py",
+      "sha256": "sha256:da2dfb7c8181aec562bc45dbbf596cf19e3effb176d53ccbe65d738a5e0ffa8b"
+    },
+    {
+      "kind": "executable",
+      "path": "scripts/sc/skill_replay_runtime.py",
+      "sha256": "sha256:95648c43aab68aa874d662af1945925501cec3b073effd000c93179053e10faf"
+    }
+  ],
+  "authorizes": []
+}

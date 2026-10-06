@@ -1,0 +1,10 @@
+{
+  "schema": "jimuyun.direct-repair-validation.v1",
+  "base_commit": "080005d24ebae015425a0e61e9f9e89f1366d80f",
+  "status": "interrupted-diagnostic",
+  "exit_code": 130,
+  "reason": "Stopped baseline diagnostic after preserving supplied complete Windows failure evidence and reproducing transport faults in six bounded regression tests. This is not a completed suite result.",
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "authorizes": []
+}

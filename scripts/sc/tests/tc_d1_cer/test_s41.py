@@ -77,21 +77,20 @@ def test_target_identity_contains_independent_content_digest() -> None:
 
 
 @pytest.mark.cer_assertion("A-MATRIX-COUNT-6")
-def test_matrix_has_exactly_six_executed_cases() -> None:
-    result = _run("replay-matrix", "--matrix", MATRIX)
-    payload = json.loads(result.stdout)
+def test_matrix_has_exactly_six_executed_cases(native_skill_replay_matrix) -> None:
+    _matrix, payload = native_skill_replay_matrix
     rows = payload.get("case_results", [])
-    assert result.returncode == 0 and len(rows) == 6 and all(row.get("executed") is True for row in rows)
+    assert payload.get("status") == "pass" and len(rows) == 6 and all(row.get("executed") is True for row in rows)
 
 
 @pytest.mark.cer_assertion("A-MATRIX-DISTINCT")
-def test_matrix_cases_have_distinct_ids_and_inputs() -> None:
-    result = _run("replay-matrix", "--matrix", MATRIX)
-    payload = json.loads(result.stdout)
+def test_matrix_cases_have_distinct_ids_and_inputs(native_skill_replay_matrix) -> None:
+    matrix, payload = native_skill_replay_matrix
     rows = payload.get("case_results", [])
     ids = [row.get("case_id") for row in rows]
-    assert result.returncode == 0 and len(ids) == 6 and len(set(ids)) == 6
-    assert len({row.get("stable_subject", {}).get("pre_identity") for row in rows}) >= 1
+    assert payload.get("status") == "pass" and len(ids) == 6 and len(set(ids)) == 6
+    assert len({case["fixture"]["sha256"] for case in matrix["cases"]}) == 6
+    assert all([entry["subject"] for entry in row["subject_executions"]] == ["Stable", "Candidate"] for row in rows)
 
 
 @pytest.mark.cer_assertion("A-O-108EF1A37200")
@@ -131,7 +130,10 @@ def test_copied_matrix_evidence_invalidates_aggregate() -> None:
 @pytest.mark.cer_assertion("FR1-ILLEGAL-TARGET-FAILS-CLOSED")
 def test_illegal_target_is_rejected_before_validator() -> None:
     result = _run("validate-package", "--target", "scripts", "--capability", CAPABILITY)
-    assert result.returncode != 0 and not result.stdout.strip()
+    refusal = json.loads(result.stdout)
+    assert result.returncode != 0 and refusal.get("status") == "execution-failed"
+    assert "target does not match" in refusal.get("diagnostic", "")
+    assert refusal.get("authorizes") == [] and "successful_evidence" not in refusal
 
 
 @pytest.mark.cer_assertion("SM2-INVALID-PACKAGE-REJECTS-SUCCESS")

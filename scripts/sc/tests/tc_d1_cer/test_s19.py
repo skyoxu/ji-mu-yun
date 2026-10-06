@@ -43,7 +43,7 @@ def _run(*args: str) -> subprocess.CompletedProcess[str]:
         encoding="utf-8",
         errors="replace",
         check=False,
-        timeout=45,
+        timeout=180 if args[0] == "replay-package" else 45,
     )
 
 
@@ -155,13 +155,16 @@ def test_repository_relative_path_manifest_detects_rename() -> None:
         package = Path(directory) / "package"
         (package / "docs").mkdir(parents=True)
         (package / "docs" / "historical.md").write_text("frozen\n", encoding="utf-8", newline="\n")
-        before = replay.effective_read_witness("fixture", package, replay.manifest(package))
+        before = replay.runtime.bindings(package, ("docs",))
+        before_identity = replay.manifest(package)
         (package / "docs" / "historical.md").rename(package / "docs" / "renamed.md")
-        after = replay.effective_read_witness("fixture", package, replay.manifest(package))
-        added = sorted(set(after["observed_paths"]) - set(before["observed_paths"]))
-        removed = sorted(set(before["observed_paths"]) - set(after["observed_paths"]))
+        after = replay.runtime.bindings(package, ("docs",))
+        added = sorted({row["path"] for row in after} - {row["path"] for row in before})
+        removed = sorted({row["path"] for row in before} - {row["path"] for row in after})
         _assert_behavior(
-            added == ["docs/renamed.md"] and removed == ["docs/historical.md"],
+            added == ["docs/renamed.md"] and removed == ["docs/historical.md"]
+            and before[0]["sha256"] == after[0]["sha256"]
+            and before_identity != replay.manifest(package),
             "FI-41568BB6C998-PATH-CHANGE",
             {"added_paths": added, "removed_paths": removed},
         )

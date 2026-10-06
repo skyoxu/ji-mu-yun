@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def native_skill_replay_matrix():
     from scripts.sc import skill_package_replay as replay
     root = Path(__file__).resolve().parents[4]
@@ -25,3 +25,22 @@ def native_skill_replay_matrix():
                                 cwd=root, capture_output=True, text=True, encoding="utf-8", check=False, timeout=90)
         assert result.returncode == 0, result.stdout + result.stderr
         yield matrix, json.loads(result.stdout)
+
+
+@pytest.fixture
+def native_matrix_rejection():
+    """Execute a current v3 fault input through the real CLI, without mocks."""
+    root = Path(__file__).resolve().parents[4]
+
+    def run(matrix):
+        with tempfile.TemporaryDirectory(dir=root / "logs", prefix="cer-matrix-fault-") as directory:
+            path = Path(directory) / "matrix.json"
+            path.write_text(json.dumps(matrix), encoding="utf-8", newline="\n")
+            result = subprocess.run([sys.executable, "-X", "utf8", "-B", str(root / "scripts/sc/skill_package_replay.py"),
+                                     "replay-matrix", "--matrix", path.relative_to(root).as_posix()],
+                                    cwd=root, capture_output=True, text=True, encoding="utf-8", check=False, timeout=90)
+            receipt = json.loads(result.stdout)
+            assert receipt.get("authorizes") == []
+            return result.returncode, receipt
+
+    return run

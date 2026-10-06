@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import copy
 import subprocess
 import sys
 from pathlib import Path
@@ -60,39 +61,47 @@ def _assert_behavior(condition: bool, failure_id: str, detail: object) -> None:
 
 @pytest.mark.cer_assertion("A-7817-distinct-inputs")
 @pytest.mark.cer_assertion("A-7051147536AB-1")
-def test_duplicate_effective_evidence_identity_rejects_aggregate_with_both_cases() -> None:
-    duplicate = "sha256:duplicate-effective-evidence"
-    code, receipt = _run_matrix([_case("duplicate-one", duplicate), _case("duplicate-two", duplicate),
-                                 _case("unique-control", "sha256:unique-control-evidence")])
+def test_duplicate_effective_evidence_identity_rejects_aggregate_with_both_cases(native_skill_replay_matrix, native_matrix_rejection) -> None:
+    matrix, control = native_skill_replay_matrix
+    fault = copy.deepcopy(matrix)
+    first, second = fault["cases"][:2]
+    second["fixture"] = copy.deepcopy(first["fixture"])
+    code, receipt = native_matrix_rejection(fault)
     rows = {row.get("case_id"): row for row in receipt.get("case_results", []) if isinstance(row, dict)}
-    duplicate_rows = [rows.get("duplicate-one", {}), rows.get("duplicate-two", {})]
+    duplicate_rows = [rows.get(first["case_id"], {}), rows.get(second["case_id"], {})]
     reasons = " ".join(str(row.get("rejection_reason", "")) for row in duplicate_rows).lower()
     named = all(
         row.get("case_id") == case_id
         and ("duplic" in str(row.get("rejection_reason", "")).lower()
              or "reus" in str(row.get("rejection_reason", "")).lower())
-        for case_id, row in zip(("duplicate-one", "duplicate-two"), duplicate_rows)
+        for case_id, row in zip((first["case_id"], second["case_id"]), duplicate_rows)
     )
     _assert_behavior(
         code != 0 and receipt.get("status") != "pass" and receipt.get("aggregate_valid") is False
         and all(row.get("status") != "pass" for row in duplicate_rows) and named
-        and rows.get("unique-control", {}).get("status") == "pass",
+        and all(case_id in reasons for case_id in (first["case_id"], second["case_id"]))
+        and all(row.get("executed") is False for row in receipt["case_results"])
+        and control.get("status") == "pass" and all(row.get("executed") is True for row in control["case_results"]),
         "F-7051147536AB-DUPLICATE-EVIDENCE-ACCEPTED", receipt,
     )
 
 
 @pytest.mark.cer_assertion("SM2-EFFECTIVE-IDENTITY-REUSE")
-def test_reused_effective_identity_is_not_silently_deduplicated() -> None:
-    shared = "sha256:shared-effective-evidence"
-    code, receipt = _run_matrix([_case("case-a", shared), _case("case-b", shared),
-                                 _case("independent-control", "sha256:independent-effective-evidence")])
+def test_reused_effective_identity_is_not_silently_deduplicated(native_skill_replay_matrix, native_matrix_rejection) -> None:
+    matrix, control = native_skill_replay_matrix
+    fault = copy.deepcopy(matrix)
+    first, second = fault["cases"][2:4]
+    second["fixture"] = copy.deepcopy(first["fixture"])
+    code, receipt = native_matrix_rejection(fault)
     rows = receipt.get("case_results") or []
     rejected_ids = {row.get("case_id") for row in rows if row.get("status") != "pass"}
     reasons = " ".join(str(row.get("rejection_reason", "")) for row in rows).lower()
     _assert_behavior(
         code != 0 and receipt.get("aggregate_valid") is False
-        and {"case-a", "case-b"}.issubset(rejected_ids)
+        and {first["case_id"], second["case_id"]}.issubset(rejected_ids)
         and ("reus" in reasons or "duplic" in reasons or "copied" in reasons)
-        and any(row.get("case_id") == "independent-control" and row.get("status") == "pass" for row in rows),
+        and all(row.get("executed") is False for row in rows)
+        and control.get("status") == "pass" and len(control["case_results"]) == 6
+        and all(row.get("executed") is True for row in control["case_results"]),
         "SM2-REUSED-EVIDENCE-ACCEPTED", receipt,
     )

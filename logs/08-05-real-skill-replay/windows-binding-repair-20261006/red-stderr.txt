@@ -1,0 +1,77 @@
+test_case_only_owner_rename_still_requires_trust_approval (test_skill_replay_windows_regressions.WindowsBindingTests.test_case_only_owner_rename_still_requires_trust_approval) ... ok
+test_fresh_replay_reproduces_identity_when_clone_uses_windows_eol_default (test_skill_replay_windows_regressions.WindowsBindingTests.test_fresh_replay_reproduces_identity_when_clone_uses_windows_eol_default) ... ERROR
+test_materialization_reads_raw_git_bytes_without_eol_conversion (test_skill_replay_windows_regressions.WindowsBindingTests.test_materialization_reads_raw_git_bytes_without_eol_conversion) ... FAIL
+test_non_ascii_git_owner_names_are_not_misread_as_quoted_paths (test_skill_replay_windows_regressions.WindowsBindingTests.test_non_ascii_git_owner_names_are_not_misread_as_quoted_paths) ... ERROR
+test_package_and_dependency_identities_are_platform_order_independent (test_skill_replay_windows_regressions.WindowsBindingTests.test_package_and_dependency_identities_are_platform_order_independent) ... FAIL
+test_windows_path_order_cannot_create_false_trust_membership_drift (test_skill_replay_windows_regressions.WindowsBindingTests.test_windows_path_order_cannot_create_false_trust_membership_drift) ... ERROR
+
+======================================================================
+ERROR: test_fresh_replay_reproduces_identity_when_clone_uses_windows_eol_default (test_skill_replay_windows_regressions.WindowsBindingTests.test_fresh_replay_reproduces_identity_when_clone_uses_windows_eol_default)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/test_skill_replay_windows_regressions.py", line 85, in test_fresh_replay_reproduces_identity_when_clone_uses_windows_eol_default
+    result, code = replay.replay_package("candidate", "capability.json", "fresh")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/skill_package_replay.py", line 420, in replay_package
+    verify_fresh_replay(
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/skill_package_replay.py", line 249, in verify_fresh_replay
+    raise ValueError("fresh replay does not match pinned inputs: " + ",".join(mismatches))
+ValueError: fresh replay does not match pinned inputs: semantic-verdict
+
+======================================================================
+ERROR: test_non_ascii_git_owner_names_are_not_misread_as_quoted_paths (test_skill_replay_windows_regressions.WindowsBindingTests.test_non_ascii_git_owner_names_are_not_misread_as_quoted_paths)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/test_skill_replay_windows_regressions.py", line 54, in test_non_ascii_git_owner_names_are_not_misread_as_quoted_paths
+    self.assertEqual("pass", replay.validate_package("candidate", "capability.json")["status"])
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/skill_package_replay.py", line 136, in validate_package
+    independent = independent_validator_verification(validator, value)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/skill_package_replay.py", line 102, in independent_validator_verification
+    return runtime.verify_trust(ROOT, validator, value, value.get("_capability_path"))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/skill_replay_runtime.py", line 232, in verify_trust
+    raise ValueError("validator dependency membership drift requires independent Trust Approval (C3)")
+ValueError: validator dependency membership drift requires independent Trust Approval (C3)
+
+======================================================================
+ERROR: test_windows_path_order_cannot_create_false_trust_membership_drift (test_skill_replay_windows_regressions.WindowsBindingTests.test_windows_path_order_cannot_create_false_trust_membership_drift)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/test_skill_replay_windows_regressions.py", line 39, in test_windows_path_order_cannot_create_false_trust_membership_drift
+    receipt = replay.validate_package("candidate", "capability.json")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/skill_package_replay.py", line 136, in validate_package
+    independent = independent_validator_verification(validator, value)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/skill_package_replay.py", line 102, in independent_validator_verification
+    return runtime.verify_trust(ROOT, validator, value, value.get("_capability_path"))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/skill_replay_runtime.py", line 232, in verify_trust
+    raise ValueError("validator dependency membership drift requires independent Trust Approval (C3)")
+ValueError: validator dependency membership drift requires independent Trust Approval (C3)
+
+======================================================================
+FAIL: test_materialization_reads_raw_git_bytes_without_eol_conversion (test_skill_replay_windows_regressions.WindowsBindingTests.test_materialization_reads_raw_git_bytes_without_eol_conversion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/test_skill_replay_windows_regressions.py", line 73, in test_materialization_reads_raw_git_bytes_without_eol_conversion
+    self.assertEqual(expected, (destination / "candidate/SKILL.md").read_bytes())
+AssertionError: b'A supported fixture Skill package.\n' != b'A supported fixture Skill package.\r\n'
+
+======================================================================
+FAIL: test_package_and_dependency_identities_are_platform_order_independent (test_skill_replay_windows_regressions.WindowsBindingTests.test_package_and_dependency_identities_are_platform_order_independent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/test_skill_replay_windows_regressions.py", line 48, in test_package_and_dependency_identities_are_platform_order_independent
+    self.assertEqual(expected_manifest, replay.manifest(root / "candidate"))
+AssertionError: 'sha256:22850195bf75683c897c225c99032b0dfceea001761211a2676aa36ea89a496e' != 'sha256:6eedd9b64c43f70131e915a3a4518d9d2b18fffb1fc39b5cdaa320a7c55b0a89'
+- sha256:22850195bf75683c897c225c99032b0dfceea001761211a2676aa36ea89a496e
++ sha256:6eedd9b64c43f70131e915a3a4518d9d2b18fffb1fc39b5cdaa320a7c55b0a89
+
+
+----------------------------------------------------------------------
+Ran 6 tests in 4.710s
+
+FAILED (failures=2, errors=3)

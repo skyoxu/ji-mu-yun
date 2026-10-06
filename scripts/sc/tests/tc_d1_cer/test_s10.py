@@ -47,7 +47,14 @@ def _positive_replay() -> tuple[int, int, dict[str, object] | None]:
         text=True,
         encoding="utf-8",
     )
-    stdout, _ = process.communicate(timeout=60)
+    # Parent lifecycle checks plus fresh-child replay span separate native
+    # budgets. A harness timeout must also reap its spawned process.
+    try:
+        stdout, _ = process.communicate(timeout=180)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.communicate()
+        raise
     try:
         receipt = json.loads(stdout)
     except json.JSONDecodeError:

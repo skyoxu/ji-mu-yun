@@ -39,7 +39,7 @@ def text_digest(value: str) -> str:
 def package_files(root: Path):
     return (
         path
-        for path in sorted(root.rglob("*"))
+        for path in sorted(root.rglob("*"), key=lambda item: item.relative_to(root).as_posix().encode("utf-8"))
         if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
     )
 

@@ -43,7 +43,7 @@ def _sha256(path: Path) -> str:
 def _manifest(root: Path) -> str:
     entries = [
         {"path": path.relative_to(root).as_posix(), "sha256": _sha256(path)}
-        for path in sorted(root.rglob("*"))
+        for path in sorted(root.rglob("*"), key=lambda item: item.relative_to(root).as_posix().encode("utf-8"))
         if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
     ]
     encoded = json.dumps(entries, sort_keys=True, separators=(",", ":")).encode()

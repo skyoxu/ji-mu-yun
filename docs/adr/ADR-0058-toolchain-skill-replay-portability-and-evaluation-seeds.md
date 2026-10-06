@@ -106,3 +106,42 @@ Current CER selectors retain their assertion identities but consume the native
 v3 input and real Consumer/Probe contracts. Historical Matrix documents, Q7/Q8,
 PRD, Spec and execution-plan contracts remain unchanged. Targeted unit validation
 does not establish Windows support or current Acceptance eligibility.
+
+### 2026-10-06 Windows transport and binding repair
+
+The existing validator's immutable owner membership is a set of exact,
+case-sensitive repository-relative POSIX paths. Enumeration order is not a
+membership change. Directory, package, dependency and standard-library identity
+manifests use literal UTF-8 path ordering, independently of Windows Path
+case-folded ordering. Git owner paths are read as NUL-delimited raw names so
+quoted non-ASCII output cannot become a false dependency change. Real path
+additions, removals, case-only renames and byte changes still require the
+existing independent Trust Approval gate. C3 remains OPEN; this correction does
+not approve any changed validator, capability or Consumer exception.
+
+Prior Route materialization reads regular immutable Git blobs in bounded
+object batches. Working-tree and archive EOL conversion, export attributes and
+global checkout settings cannot rewrite those bytes. Symlinks and submodules
+are refused; executable blob modes are preserved where supported. Fresh replay
+still reconstructs the frozen candidate inputs, executes the real child and
+requires exact semantic verdict, coverage, inspected identity and snapshot
+agreement. No output normalization or relaxed comparison is introduced.
+
+Native v3 Matrix input bindings are checked before subject execution. Copied
+actual input bytes invalidate the aggregate even under different paths or
+case labels; refusal names all conflicting case IDs and does not claim an
+unexecuted control passed. Current CER positive controls execute the native
+v3 Stable and Candidate scenarios; legacy v2 inputs remain non-promotable.
+Structured target refusals remain unsuccessful, non-authorizing receipts.
+
+CER test harnesses integrating parent lifecycle checks and a fresh child allow
+180 seconds for that multi-process integration. The adapter's native child
+execution and aggregate Matrix time/output budgets remain unchanged at 60
+seconds and 8 MiB; a harness deadline cannot turn a timed-out execution into a
+success. The original 60-second outer-fixture timeout is preserved as direct
+failure evidence.
+
+The raw local Windows failure evidence at commit
+`080005d24ebae015425a0e61e9f9e89f1366d80f` and earlier Q7/Q8 records stay
+unchanged. Direct Linux regression evidence is append-only and does not grant
+Acceptance authority or replace local Windows verification.

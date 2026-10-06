@@ -1,0 +1,14 @@
+test_duplicate_raw_matrix_inputs_name_both_cases_before_execution (test_skill_replay_windows_regressions.WindowsBindingTests.test_duplicate_raw_matrix_inputs_name_both_cases_before_execution) ... FAIL
+
+======================================================================
+FAIL: test_duplicate_raw_matrix_inputs_name_both_cases_before_execution (test_skill_replay_windows_regressions.WindowsBindingTests.test_duplicate_raw_matrix_inputs_name_both_cases_before_execution)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/test_skill_replay_windows_regressions.py", line 107, in test_duplicate_raw_matrix_inputs_name_both_cases_before_execution
+    self.assertIn("duplicate", reason)
+AssertionError: 'duplicate' not found in 'case fixture is stale or reused'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.729s
+
+FAILED (failures=1)

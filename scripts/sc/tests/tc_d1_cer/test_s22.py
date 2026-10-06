@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import subprocess
+import json
 import sys
 from pathlib import Path
 
@@ -34,10 +35,13 @@ def test_substituted_target_is_rejected_before_processing() -> None:
         check=False,
     )
 
+    receipt = json.loads(result.stdout)
     rejected = (
         result.returncode != 0
         and "target does not match the capability-bound package" in result.stderr
-        and not result.stdout.strip()
+        and receipt.get("status") == "execution-failed"
+        and receipt.get("authorizes") == []
+        and "successful_evidence" not in receipt
     )
     if not rejected:
         print("FAILURE_ID:FI-EA5137E46B75-1")

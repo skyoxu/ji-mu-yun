@@ -1,0 +1,72 @@
+.................                                                        [100%]
+=============================== warnings summary ===============================
+scripts/sc/tests/tc_d1_cer/test_s13.py:12
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("SM2-EFFECTIVE-IDENTITY-REUSE")]
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:99
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:99: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-identity-execution-facts-gate")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:121
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:121: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("NFR-1.identity-execution-ambiguity-blocks-success")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:128
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:128: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-96518A7BEA24-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:138
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:138: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-2.skipped-consumer-rejects-success")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:145
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:145: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-reused-evidence-rejects-success")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:151
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:151: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-CCC2E767570E-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:164
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:164: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-5-A1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:176
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:176: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-25E-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:188
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:188: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-6C67-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:201
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:201: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-C4A5591E2D9E-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:212
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:212: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-SM6-FRESH-SEMANTIC-REPLAY")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:226
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:226: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-236-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:233
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:233: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-D4C0A15CD173-A1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:246
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:246: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-D4C0A15CD173-A2")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:259
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:259: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-D4C8E08364E2-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:274
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:274: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("NFR-7.aggregate-completes-within-bound")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+17 passed, 17 warnings in 120.54s (0:02:00)

@@ -1,0 +1,23 @@
+{
+  "head": "080005d24ebae015425a0e61e9f9e89f1366d80f",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "scripts/sc/tests",
+    "-p",
+    "test_skill_replay_windows_regressions.py",
+    "-v"
+  ],
+  "exit_code": 1,
+  "source_sha256": {
+    "scripts/sc/skill_package_replay.py": "sha256:7c8de6b44ccdd6d151a72dede568b3c75024aae923a1aeab33a86d1f0c896c4a",
+    "scripts/sc/skill_replay_runtime.py": "sha256:bbae8791d82d83a0bfecf19c7c5774222d5e80e7ba112c9527f98af2a6e21fa5"
+  },
+  "live_backend_called": false,
+  "formal_workflow_called": false,
+  "authorizes": []
+}

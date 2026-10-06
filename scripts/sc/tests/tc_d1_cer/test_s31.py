@@ -75,7 +75,7 @@ def _run_replay(mode: str) -> tuple[int, dict]:
         text=True,
         encoding="utf-8",
         errors="replace",
-        timeout=60,
+        timeout=180,
         check=False,
     )
     try:

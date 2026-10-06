@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import copy
 import subprocess
 import sys
 from pathlib import Path
@@ -86,30 +87,36 @@ def _six_cases(input_ids: list[str]) -> list[dict]:
 
 
 @pytest.mark.cer_assertion("A-7817-distinct-inputs")
-def test_six_matrix_cases_require_distinct_recorded_inputs_and_both_subjects() -> None:
-    code, receipt = _run_matrix(_six_cases(["input-a", "input-b", "input-c", "input-d", "input-e", "input-f"]))
+def test_six_matrix_cases_require_distinct_recorded_inputs_and_both_subjects(native_skill_replay_matrix) -> None:
+    matrix, receipt = native_skill_replay_matrix
     rows = receipt.get("case_results") or []
-    recorded = [row.get("matrix_input") for row in rows if isinstance(row, dict)]
+    recorded = [row.get("fixture") for row in matrix["cases"]]
     subjects_complete = all(
         {entry.get("subject") for entry in row.get("subject_executions", [])} == {"Stable", "Candidate"}
         and all(entry.get("executed") is True for entry in row.get("subject_executions", [])) for row in rows
     )
     _assert_behavior(
-        code == 0 and receipt.get("status") == "pass" and len(rows) == 6
-        and all(isinstance(item, dict) and item.get("input_id") for item in recorded)
-        and len({item["input_id"] for item in recorded}) == 6 and subjects_complete,
+        receipt.get("status") == "pass" and len(rows) == 6
+        and all(isinstance(item, dict) and item.get("sha256") for item in recorded)
+        and len({item["sha256"] for item in recorded}) == 6 and subjects_complete,
         "F-7817-MISSING-OR-DUPLICATE-INPUT", receipt,
     )
 
 
 @pytest.mark.cer_assertion("A-7817-distinct-inputs")
 @pytest.mark.cer_assertion("A-7051147536AB-1")
-def test_duplicate_matrix_input_rejects_six_case_aggregate() -> None:
-    code, receipt = _run_matrix(_six_cases(["input-a", "input-b", "input-c", "input-c", "input-e", "input-f"]))
+def test_duplicate_matrix_input_rejects_six_case_aggregate(native_skill_replay_matrix, native_matrix_rejection) -> None:
+    matrix, control = native_skill_replay_matrix
+    fault = copy.deepcopy(matrix)
+    first, second = fault["cases"][2:4]
+    second["fixture"] = copy.deepcopy(first["fixture"])
+    code, receipt = native_matrix_rejection(fault)
     rows = receipt.get("case_results") or []
     reasons = " ".join(str(row.get("rejection_reason", "")) for row in rows).lower()
     _assert_behavior(
         code != 0 and receipt.get("status") != "pass" and receipt.get("aggregate_valid") is False
-        and ("input" in reasons or "distinct" in reasons or "duplicate" in reasons),
+        and "duplicate" in reasons and first["case_id"] in reasons and second["case_id"] in reasons
+        and all(row.get("executed") is False for row in rows)
+        and control.get("status") == "pass" and all(row.get("executed") is True for row in control["case_results"]),
         "F-7817-MISSING-OR-DUPLICATE-INPUT", receipt,
     )

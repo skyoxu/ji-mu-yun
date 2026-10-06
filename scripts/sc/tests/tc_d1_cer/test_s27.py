@@ -57,16 +57,12 @@ def _assert_behavior(condition: bool, failure_id: str, message: str) -> None:
 
 
 @pytest.mark.cer_assertion("A-8A9DD7306479-1")
-def test_repair_evidence_keeps_frozen_target_identity_unchanged() -> None:
-    matrix = {
-        "schema_version": "jimuyun.stable-candidate-replay-matrix.v2",
-        "authorizes": [],
-        "cases": [{"case_id": "s27-integrity", "target": TARGET, "capability": CAPABILITY, "expected_exit": 0}],
-    }
-    result, payload = _run_inline_matrix(matrix, "s27-integrity.json")
-    row = (payload.get("case_results") or [{}])[0]
-    stable = row.get("stable_subject") or {}
-    ok = result.returncode == 0 and payload.get("aggregate_valid") is True and stable.get("pre_identity") == stable.get("post_identity")
+def test_repair_evidence_keeps_frozen_target_identity_unchanged(native_skill_replay_matrix) -> None:
+    _matrix, payload = native_skill_replay_matrix
+    rows = payload["case_results"]
+    ok = payload.get("aggregate_valid") is True and len(rows) == 6 and all(
+        row["stable_subject"]["pre_identity"] == row["stable_subject"]["post_identity"]
+        and row["executed"] is True for row in rows)
     _assert_behavior(ok, "F-8A9DD7306479-1", "frozen target identity changed during repair evidence capture")
 
 
@@ -82,11 +78,11 @@ def test_repair_evidence_rejects_target_outside_declared_boundary() -> None:
 
 
 @pytest.mark.cer_assertion("A-FR7-ATTR-1")
-def test_all_matrix_cases_record_stable_and_candidate_attribution() -> None:
-    result, payload = _run_matrix(MATRIX.relative_to(ROOT).as_posix())
+def test_all_matrix_cases_record_stable_and_candidate_attribution(native_skill_replay_matrix) -> None:
+    _matrix, payload = native_skill_replay_matrix
     rows = payload.get("case_results") or []
     ok = (
-        result.returncode == 0
+        payload.get("status") == "pass"
         and len(rows) == 6
         and all(
             [entry.get("subject") for entry in (row.get("subject_executions") or [])] == ["Stable", "Candidate"]

@@ -16,20 +16,20 @@ from test_s13 import (
 
 
 @pytest.mark.cer_assertion("A-7051147536AB-1")
-def test_s28_cer_duplicate_identity_rejection() -> None:
-    _duplicate_identity()
+def test_s28_cer_duplicate_identity_rejection(native_skill_replay_matrix, native_matrix_rejection) -> None:
+    _duplicate_identity(native_skill_replay_matrix, native_matrix_rejection)
 
 
 @pytest.mark.cer_assertion("SM2-EFFECTIVE-IDENTITY-REUSE")
-def test_s28_cer_reused_identity_rejection() -> None:
-    _reused_identity()
+def test_s28_cer_reused_identity_rejection(native_skill_replay_matrix, native_matrix_rejection) -> None:
+    _reused_identity(native_skill_replay_matrix, native_matrix_rejection)
 
 
 @pytest.mark.cer_assertion("A-7817-distinct-inputs")
-def test_s28_cer_duplicate_matrix_input_rejection() -> None:
-    _duplicate_matrix_input()
+def test_s28_cer_duplicate_matrix_input_rejection(native_skill_replay_matrix, native_matrix_rejection) -> None:
+    _duplicate_matrix_input(native_skill_replay_matrix, native_matrix_rejection)
 
 
 @pytest.mark.cer_assertion("assert-identity-execution-facts-gate")
-def test_s28_cer_identity_execution_facts_control() -> None:
-    _identity_execution_facts()
+def test_s28_cer_identity_execution_facts_control(native_skill_replay_matrix, native_matrix_rejection) -> None:
+    _identity_execution_facts(native_skill_replay_matrix, native_matrix_rejection)

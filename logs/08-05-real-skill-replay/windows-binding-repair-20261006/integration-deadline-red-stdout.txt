@@ -1,0 +1,116 @@
+E                                                                        [100%]
+==================================== ERRORS ====================================
+___ ERROR at setup of test_successful_replay_has_independent_target_outcome ____
+
+    @pytest.fixture(scope="module")
+    def replay() -> dict:
+>       code, receipt = _run(
+            "replay-package", "--target", TARGET, "--capability", CAPABILITY,
+            "--probe-mode", "fresh",
+        )
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/tests/tc_d1_cer/test_s13.py:22: in _run
+    process = subprocess.run(
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py:550: in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py:1209: in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py:2116: in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Popen: returncode: -9 args: ['/opt/codex/runtimes/codex-primary-runtime/dep...>
+endtime = 4933.534708848, orig_timeout = 60, stdout_seq = []
+stderr_seq = [b'/workspace/scratch/9aa4df529c3a/repo080/scripts/python/db_schema_dump.py:8: SyntaxWarning: invalid escape sequence ...chema_dump.py --glob "%APPDATA%\\Godot\\app_userdata\\GodotGame\\*.db" --out logs/ci/<run_id>/schema-dump.json\n', ...]
+skip_check_and_raise = False
+
+    def _check_timeout(self, endtime, orig_timeout, stdout_seq, stderr_seq,
+                       skip_check_and_raise=False):
+        """Convenience for checking if a timeout has expired."""
+        if endtime is None:
+            return
+        if skip_check_and_raise or _time() > endtime:
+>           raise TimeoutExpired(
+                    self.args, orig_timeout,
+                    output=b''.join(stdout_seq) if stdout_seq else None,
+                    stderr=b''.join(stderr_seq) if stderr_seq else None)
+E           subprocess.TimeoutExpired: Command '['/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python', '-B', '/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/skill_package_replay.py', 'replay-package', '--target', '.agents/skills/run-refactor-implementation-acceptance', '--capability', 'scripts/sc/config/skill-package-validator-capability.v1.json', '--probe-mode', 'fresh']' timed out after 60 seconds
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py:1253: TimeoutExpired
+=============================== warnings summary ===============================
+scripts/sc/tests/tc_d1_cer/test_s13.py:12
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("SM2-EFFECTIVE-IDENTITY-REUSE")]
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:97
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:97: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-identity-execution-facts-gate")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:119
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:119: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("NFR-1.identity-execution-ambiguity-blocks-success")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:126
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:126: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-96518A7BEA24-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:136
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:136: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-2.skipped-consumer-rejects-success")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:143
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:143: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-reused-evidence-rejects-success")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:149
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:149: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-CCC2E767570E-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:162
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:162: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-5-A1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:174
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:174: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-25E-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:186
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:186: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-6C67-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:199
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:199: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-C4A5591E2D9E-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:210
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:210: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-SM6-FRESH-SEMANTIC-REPLAY")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:224
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:224: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-236-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:231
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:231: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-D4C0A15CD173-A1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:244
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:244: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-D4C0A15CD173-A2")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:257
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:257: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-D4C8E08364E2-1")
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:272
+  /workspace/scratch/9aa4df529c3a/repo080/scripts/sc/tests/tc_d1_cer/test_s13.py:272: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("NFR-7.aggregate-completes-within-bound")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome
+17 warnings, 1 error in 60.11s (0:01:00)

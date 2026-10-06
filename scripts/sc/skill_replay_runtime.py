@@ -21,7 +21,6 @@ import sys
 import sysconfig
 import tempfile
 import time
-import zipfile
 from pathlib import Path
 
 TRUST_BASELINE = "e289d7d3f8572595ca28c498adc798d1fa2a2bf7"
@@ -71,7 +70,9 @@ def files(root: Path, names) -> list[Path]:
             if item.is_file() and "__pycache__" not in item.parts and item.suffix != ".pyc":
                 item.resolve().relative_to(root.resolve())
                 result.add(item)
-    return sorted(result)
+    # Git identities are case-sensitive POSIX paths. Path ordering on Windows
+    # case-folds names and must not determine membership or content identity.
+    return sorted(result, key=lambda path: path.relative_to(root).as_posix().encode("utf-8"))
 
 
 def bindings(root: Path, names) -> list[dict]:
@@ -201,7 +202,7 @@ def dependency_closure(root: Path, seeds) -> list[dict]:
                 selected.add(item)
                 pending.append(item)
     result = []
-    for path in sorted(selected):
+    for path in sorted(selected, key=lambda item: item.relative_to(root).as_posix().encode("utf-8")):
         kind = "executable" if path.suffix in {".py", ".ps1", ".sh"} else ("policy" if "policies" in path.parts else ("configuration" if path.suffix in {".json", ".yaml", ".toml"} else "data"))
         result.append({"kind": kind, "path": path.relative_to(root).as_posix(), "sha256": sha(path.read_bytes())})
     return result
@@ -226,9 +227,9 @@ def verify_trust(root: Path, validator: Path, value: dict, capability_path: str 
         seeds.append(capability_path)
     closure = dependency_closure(root, seeds)
     paths = [row["path"] for row in closure]
-    frozen_owner = git(root, "ls-tree", "-r", "--name-only", commit, "--", allowed).decode("utf-8").splitlines()
+    frozen_owner = git(root, "ls-tree", "-r", "-z", "--name-only", commit, "--", allowed).decode("utf-8").split("\0")[:-1]
     current_owner = [row["path"] for row in bindings(root, [allowed])]
-    if frozen_owner != current_owner:
+    if set(frozen_owner) != set(current_owner):
         raise ValueError("validator dependency membership drift requires independent Trust Approval (C3)")
     frozen_identities = git_blob_identities(root, commit, paths)
     for row in closure:
@@ -321,7 +322,7 @@ def environment_binding() -> dict:
     for directory, subdirs, names in os.walk(stdlib):
         subdirs[:] = [name for name in subdirs if name not in {"site-packages", "__pycache__"}]
         library_files.extend(Path(directory) / name for name in names if Path(name).suffix in {".py", ".so", ".pyd", ".dll", ".zip"})
-    library_files.sort()
+    library_files.sort(key=lambda path: path.relative_to(stdlib).as_posix().encode("utf-8"))
     library_identity = canonical([{"path": path.relative_to(stdlib).as_posix(), "sha256": sha(path.read_bytes())} for path in library_files])
     return {"kind": "environment", "python": {"implementation": platform.python_implementation(), "version": list(sys.version_info[:3]), "executable_sha256": sha(Path(sys.executable).read_bytes()), "stdlib_sha256": library_identity, "isolated": True, "site_disabled": True, "utf8": True}, "platform": sys.platform, "os_version": platform.version(), "machine": platform.machine(), "child_environment_sha256": canonical(values), "time_budget_seconds": TIMEOUT_SECONDS, "output_budget_bytes": OUTPUT_LIMIT}
 
@@ -402,16 +403,58 @@ def snapshot(root: Path, target: str, capability_path: str, validator: Path, sch
 
 
 def materialize_git(root: Path, commit: str, destination: Path, paths) -> None:
+    """Reconstruct immutable bytes, independently of checkout/archive filters.
+
+    Accepted ADR-0058: Prior Route and fresh replay identities bind Git objects,
+    not autocrlf, export-subst, or a caller's working-tree conversion settings.
+    Read bounded object batches so larger source trees do not need one buffer.
+    """
+    for name in paths:
+        relative(root, name)
+    tree = git(root, "ls-tree", "-r", "-l", "-z", commit, "--", *paths)
+    entries = []
+    for record in tree.split(b"\0"):
+        if not record:
+            continue
+        metadata, separator, raw_name = record.partition(b"\t")
+        fields = metadata.split()
+        if not separator or len(fields) != 4 or fields[0] not in (b"100644", b"100755") or fields[1] != b"blob":
+            raise ValueError("immutable replay input must be a regular Git blob")
+        name, size = raw_name.decode("utf-8"), int(fields[3])
+        relative(destination, name)
+        if size < 0 or size > 64 * 1024 * 1024 - 1024:
+            raise ValueError("immutable Git blob exceeds the bounded adapter")
+        entries.append((name, fields[2], size, fields[0]))
     destination.mkdir(parents=True, exist_ok=False)
-    archive = destination.with_suffix(".zip")
-    try:
-        git(root, "archive", "--format=zip", commit, "-o", str(archive), "--", *paths)
-        with zipfile.ZipFile(archive) as bundle:
-            for name in bundle.namelist():
-                relative(destination, name.rstrip("/"))
-            bundle.extractall(destination)
-    finally:
-        archive.unlink(missing_ok=True)
+    while entries:
+        batch, total = [], 0
+        while entries and len(batch) < 256:
+            if batch and total + entries[0][2] > 32 * 1024 * 1024:
+                break
+            entry = entries.pop(0)
+            batch.append(entry)
+            total += entry[2]
+        request = b"".join(entry[1] + b"\n" for entry in batch)
+        result = subprocess.run(["git", "cat-file", "--batch"], cwd=root, input=request, capture_output=True, timeout=30, check=False)
+        if result.returncode or len(result.stdout) > 64 * 1024 * 1024:
+            raise ValueError("immutable Git object batch is unavailable or exceeds its budget")
+        data, offset = result.stdout, 0
+        for name, oid, size, mode in batch:
+            end = data.find(b"\n", offset)
+            if end < 0 or data[offset:end].split() != [oid, b"blob", str(size).encode("ascii")]:
+                raise ValueError("immutable Git object batch identity mismatch")
+            content_end = end + 1 + size
+            raw = data[end + 1:content_end]
+            if len(raw) != size or data[content_end:content_end + 1] != b"\n":
+                raise ValueError("immutable Git object batch is truncated")
+            path = relative(destination, name)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+            if mode == b"100755" and os.name != "nt":
+                path.chmod(path.stat().st_mode | 0o111)
+            offset = content_end + 1
+        if offset != len(data):
+            raise ValueError("immutable Git object batch contains unbound data")
 
 
 def command(consumer: str, target: str) -> list[str]:
@@ -631,7 +674,7 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
     # Every matrix uses this gate. The previous opt-in subject_contract cannot
     # leave a successful legacy route around the provenance requirement.
     if matrix.get("schema_version") != "jimuyun.stable-candidate-replay-matrix.v3" or matrix.get("authorizes") != []:
-        return invalid_matrix(matrix, "native v3 fixtures and immutable Stable provenance are required")
+        return invalid_matrix(matrix, "native v3 Matrix input fixtures and immutable Stable provenance are required")
     cases, stable, candidate = matrix.get("cases"), matrix.get("stable"), matrix.get("candidate")
     if not isinstance(cases, list) or len(cases) != 6 or {case.get("category") for case in cases if isinstance(case, dict)} != set(SCENARIOS):
         return invalid_matrix(matrix, "exactly the six distinct semantic scenarios are required")
@@ -668,6 +711,26 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
 
     results = []
     try:
+        # Freeze and check every actual input before either subject executes.
+        # A different path or case label cannot make copied bytes independent.
+        fixtures, input_cases = {}, {}
+        for case in cases:
+            binding = case.get("fixture")
+            if not isinstance(binding, dict) or not isinstance(binding.get("path"), str) or not isinstance(binding.get("sha256"), str):
+                raise ValueError("case input fixture binding is missing or malformed: " + case["case_id"])
+            raw = relative(root, binding["path"]).read_bytes()
+            identity = sha(raw)
+            if identity != binding["sha256"]:
+                raise ValueError("case input fixture is stale: " + case["case_id"])
+            fixtures[case["case_id"]] = json.loads(raw)
+            input_cases.setdefault(identity, []).append(case["case_id"])
+        duplicates = [names for names in input_cases.values() if len(names) > 1]
+        if duplicates:
+            raise ValueError("duplicate actual Matrix input bytes: " + "; ".join(",".join(names) for names in duplicates))
+        for case in cases:
+            fixture = fixtures[case["case_id"]]
+            if not isinstance(fixture, dict) or fixture.get("scenario") != case["category"]:
+                raise ValueError("fixture scenario does not match its frozen case: " + case["case_id"])
         target, cap_path = candidate["target"], matrix["capability"]
         if stable.get("target") != target:
             raise ValueError("Stable and Candidate logical targets must match")
@@ -699,17 +762,13 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
                     changes.append(name)
             if not changes:
                 raise ValueError("Candidate contains no relevant executable change")
-            seen_inputs = set()
             for case in cases:
                 remaining()
                 source = relative(root, case["fixture"]["path"])
                 raw = source.read_bytes()
-                if sha(raw) != case["fixture"]["sha256"] or sha(raw) in seen_inputs:
-                    raise ValueError("case fixture is stale or reused")
-                seen_inputs.add(sha(raw))
-                fixture = json.loads(raw)
-                if fixture.get("scenario") != case["category"]:
-                    raise ValueError("fixture scenario does not match its frozen case")
+                if sha(raw) != case["fixture"]["sha256"]:
+                    raise ValueError("case input fixture became stale before execution: " + case["case_id"])
+                fixture = fixtures[case["case_id"]]
                 subjects = []
                 for subject, origin in (("Stable", frozen), ("Candidate", root)):
                     # Exercise the subject's own replay entry as well as the

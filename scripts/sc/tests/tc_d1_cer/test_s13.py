@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import copy
 import subprocess
 import sys
 from pathlib import Path
@@ -21,7 +22,9 @@ def _run(*arguments: str) -> tuple[int, dict]:
     process = subprocess.run(
         [sys.executable, "-B", str(ENTRY), *arguments],
         cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
-        errors="replace", timeout=60, check=False,
+        # This integrates parent routes and a fresh child; native child and
+        # Matrix budgets remain 60 seconds in the production adapter.
+        errors="replace", timeout=180 if arguments[0] == "replay-package" else 60, check=False,
     )
     try:
         receipt = json.loads(process.stdout)
@@ -94,26 +97,24 @@ def _rejected(code: int, receipt: dict, fragment: str) -> bool:
 
 
 @pytest.mark.cer_assertion("assert-identity-execution-facts-gate")
-def test_unverifiable_identity_and_execution_facts_reject_success() -> None:
-    code, receipt = _matrix(
-        _case("valid-control"),
-        _case("missing-evidence", matrix_evidence=[]),
-        _case("wrong-target", bound_target=TARGET, evidence_target="scripts"),
-    )
-    rows = {row.get("case_id"): row for row in receipt.get("case_results", []) if isinstance(row, dict)}
-    control = rows.get("valid-control", {})
-    missing = rows.get("missing-evidence", {})
-    wrong_target = rows.get("wrong-target", {})
+def test_unverifiable_identity_and_execution_facts_reject_success(native_skill_replay_matrix, native_matrix_rejection) -> None:
+    matrix, control = native_skill_replay_matrix
+    missing = copy.deepcopy(matrix)
+    missing["cases"][0].pop("fixture")
+    missing_code, missing_receipt = native_matrix_rejection(missing)
+    wrong = copy.deepcopy(matrix)
+    wrong["candidate"]["target"] = "scripts"
+    wrong_code, wrong_receipt = native_matrix_rejection(wrong)
     _assert_behavior(
-        code != 0
-        and receipt.get("status") != "pass"
-        and control.get("status") == "pass"
-        and missing.get("status") != "pass"
-        and "evidence" in str(missing.get("rejection_reason", "")).lower()
-        and wrong_target.get("status") != "pass"
-        and "target" in str(wrong_target.get("rejection_reason", "")).lower(),
+        control.get("status") == "pass"
+        and all(row.get("executed") is True for row in control["case_results"])
+        and missing_code != 0 and missing_receipt.get("aggregate_valid") is False
+        and "fixture binding" in str(missing_receipt.get("invalid_reasons", []))
+        and wrong_code != 0 and wrong_receipt.get("aggregate_valid") is False
+        and "targets must match" in str(wrong_receipt.get("invalid_reasons", []))
+        and all(row.get("executed") is False for row in missing_receipt["case_results"] + wrong_receipt["case_results"]),
         "IDENTITY-FACTS-UNVERIFIABLE",
-        receipt,
+        {"missing": missing_receipt, "wrong_target": wrong_receipt},
     )
 
 
@@ -154,8 +155,10 @@ def test_substituted_target_is_denied_before_processing() -> None:
          "--capability", CAPABILITY], cwd=ROOT, capture_output=True, text=True,
         encoding="utf-8", timeout=30, check=False,
     )
+    refusal = json.loads(process.stdout)
     _assert_behavior(process.returncode != 0 and "target does not match" in process.stderr
-                     and not process.stdout.strip(), "F-CCC2E767570E-1", process.stderr)
+                     and refusal.get("status") == "execution-failed" and refusal.get("authorizes") == []
+                     and "successful_evidence" not in refusal, "F-CCC2E767570E-1", refusal)
 
 
 @pytest.mark.cer_assertion("SM-5-A1")
