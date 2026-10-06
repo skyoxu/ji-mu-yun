@@ -1,0 +1,26 @@
+[
+  {
+    "slice_id": "S12",
+    "run_root": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/p1-repair-20261006-r3/S12",
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/p1-repair-20261006-r3/S12/slice-ready.json",
+    "result_sha256": "sha256:5a4cffbd12d5fdf0b4abaf5be6e1be584bcdf62cdf14b031eaf4a0da30c10f1b"
+  },
+  {
+    "slice_id": "S19",
+    "run_root": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/p1-repair-20261006-r3/S19",
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/p1-repair-20261006-r3/S19/slice-ready.json",
+    "result_sha256": "sha256:e633391a10bffe44bca4ddadb6557f1dbcffafa6f6733c95f04a2d67f541cf87"
+  },
+  {
+    "slice_id": "S35",
+    "run_root": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/p1-repair-20261006-r3/S35",
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/p1-repair-20261006-r3/S35/slice-ready.json",
+    "result_sha256": "sha256:4ae1ef6bd3e4ae11128e595f14508731c079a9fac017c88a17c4654795e3f36d"
+  },
+  {
+    "slice_id": "S44",
+    "run_root": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/p1-repair-20261006-r3/S44",
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/p1-repair-20261006-r3/S44/slice-ready.json",
+    "result_sha256": "sha256:22adb105322689d0ed957d64acd23c8235054a69fe084c69dbadb1aff0efbae2"
+  }
+]

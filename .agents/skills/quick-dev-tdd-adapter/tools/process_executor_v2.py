@@ -149,6 +149,16 @@ def _run_cases_bounded(descriptor: Mapping[str, Any], cwd: Path, *, timeout_seco
         return completed, report, error, actual_argv, overflow.is_set(), timed_out
 
 
+def _is_run_evidence_path(path: str, run_dir: Path, root: Path) -> bool:
+    """Evidence produced by this runner is append-only run state, not SUT noise."""
+    try:
+        candidate = (root / path).resolve()
+        candidate.relative_to(run_dir.resolve())
+        return True
+    except (OSError, ValueError):
+        return False
+
+
 def execute_process(workspace: Path, run_dir: Path, stage: str, descriptor: Mapping[str, Any], *, profile_identity: str) -> dict[str, Any]:
     evidence = run_dir.resolve() / "canonical-evidence" / stage
     try:
@@ -197,7 +207,14 @@ def execute_process(workspace: Path, run_dir: Path, stage: str, descriptor: Mapp
         if isinstance(stdout,str): stdout=stdout.encode("utf-8",errors="replace")
         if isinstance(stderr,str): stderr=stderr.encode("utf-8",errors="replace")
     ended = datetime.now(timezone.utc); elapsed_seconds = time.monotonic() - started_monotonic
-    after_status = _status_paths(root); repo_noise_paths = sorted(after_status - before_status)
+    after_status = _status_paths(root)
+    # The current run is deliberately an untracked append-only tree.  Its
+    # receipts, observations and outputs are expected writes by this process;
+    # only changes outside that tree can be repository noise.
+    repo_noise_paths = sorted(
+        path for path in (after_status - before_status)
+        if not _is_run_evidence_path(path, run_dir, root)
+    )
     create_immutable(evidence/"stdout.bin",stdout); create_immutable(evidence/"stderr.bin",stderr)
     output = (stdout+b"\n"+stderr).decode("utf-8",errors="replace")
     if case_report is not None:

@@ -111,6 +111,19 @@ def test_repo_noise_and_unexpected_green_never_satisfy_red(tmp_path: Path) -> No
     assert obs2["failure_family"] == "unexpected-green" and obs2["predicate_result"] is False
 
 
+def test_current_run_evidence_is_not_classified_as_repo_noise(tmp_path: Path) -> None:
+    _prepare(
+        tmp_path,
+        "from pathlib import Path\ndef test_behavior():\n    run_dir = Path(__file__).resolve().parents[1] / 'runs' / 'R1'\n    (run_dir / 'worker-output.txt').write_text('owned', encoding='utf-8')\n    print('FAILURE_ID:EXPECTED')\n    assert False\n",
+    )
+    _git_init(tmp_path)
+    descriptor = _descriptor()
+    receipt = execute_process(tmp_path, tmp_path / "runs" / "R1", "red", descriptor, profile_identity="standard")
+    observation = judge_receipt(tmp_path / "runs" / "R1", "red", descriptor, receipt, expected_failure_ids=["EXPECTED"])
+    assert all(not path.startswith("runs/R1/") for path in receipt["repo_noise_paths"])
+    assert "runs/R1/worker-output.txt" not in receipt["repo_noise_paths"]
+
+
 def test_artifact_integrity_detects_mutated_output(tmp_path: Path) -> None:
     _prepare(tmp_path,"def test_behavior():\n    print('FAILURE_ID:EXPECTED')\n    assert False\n")
     descriptor = _descriptor()
