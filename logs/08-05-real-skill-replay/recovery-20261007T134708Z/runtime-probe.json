@@ -1,0 +1,26 @@
+{
+  "schema": "jimuyun.direct-runtime-probe.v1",
+  "utc": "2026-10-07T14:15:46.593993+00:00",
+  "platform": "linux",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "python_executable": "/workspace/scratch/60fb44ef18f2/continuation-prerequisites/replay-python/bin/python",
+  "versions": {
+    "pytest": "8.4.2",
+    "jsonschema": "4.26.0"
+  },
+  "powershell": {
+    "command": [
+      "/workspace/scratch/60fb44ef18f2/continuation-prerequisites/powershell-7.6.6/pwsh",
+      "-NoLogo",
+      "-NoProfile",
+      "-NonInteractive",
+      "-Command",
+      "$PSVersionTable.PSVersion.ToString()"
+    ],
+    "exit_code": 0,
+    "stdout": "7.6.6\n",
+    "stderr": ""
+  },
+  "C3": "OPEN",
+  "authorizes": []
+}

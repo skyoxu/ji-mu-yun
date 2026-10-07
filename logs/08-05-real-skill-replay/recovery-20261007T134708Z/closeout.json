@@ -1,0 +1,103 @@
+{
+  "schema": "jimuyun.direct-repair-closeout.v1",
+  "source_commit": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+  "full": {
+    "schema": "jimuyun.direct-evidence-consistency.v1",
+    "source_commit": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+    "status": "direct-validation-passed",
+    "finished_nodes": 340,
+    "phase_reports": 1020,
+    "junit": {
+      "tests": 340,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "junit_ordered_identity_matches_manifest": true,
+    "source_before_after_raw_bytes_equal": true,
+    "bound_source_files": 1538,
+    "native_pytest_elapsed_seconds": 1872.07,
+    "timeout_regression_nodes": [
+      {
+        "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+        "native_event_duration_seconds": 38.566388
+      },
+      {
+        "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+        "native_event_duration_seconds": 0.067224
+      },
+      {
+        "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+        "native_event_duration_seconds": 0.067157
+      },
+      {
+        "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+        "native_event_duration_seconds": 0.203707
+      },
+      {
+        "nodeid": "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity",
+        "native_event_duration_seconds": 43.494591
+      }
+    ],
+    "independently_inspected_native_files": true,
+    "native_windows_verified": false,
+    "C3": "OPEN",
+    "Acceptance": "blocked",
+    "authorizes": [],
+    "unittest_passed": 36,
+    "ordered_manifest_raw_sha256": "6a6f4ac8c8825522c83c44410b9de8cfdf7fd50e1ea5b5a52b7f91169eac7232",
+    "original_340_node_manifest_byte_identical": true
+  },
+  "targeted": {
+    "schema": "jimuyun.direct-evidence-consistency.v1",
+    "source_commit": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+    "status": "direct-validation-passed",
+    "finished_nodes": 5,
+    "phase_reports": 15,
+    "junit": {
+      "tests": 5,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "junit_ordered_identity_matches_manifest": true,
+    "source_before_after_raw_bytes_equal": true,
+    "bound_source_files": 1538,
+    "native_pytest_elapsed_seconds": 80.758,
+    "timeout_regression_nodes": [
+      {
+        "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+        "native_event_duration_seconds": 39.58847
+      },
+      {
+        "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+        "native_event_duration_seconds": 0.051798
+      },
+      {
+        "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+        "native_event_duration_seconds": 0.067158
+      },
+      {
+        "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+        "native_event_duration_seconds": 0.203417
+      },
+      {
+        "nodeid": "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity",
+        "native_event_duration_seconds": 40.562514
+      }
+    ],
+    "independently_inspected_native_files": true,
+    "native_windows_verified": false,
+    "C3": "OPEN",
+    "Acceptance": "blocked",
+    "authorizes": []
+  },
+  "recovered_interrupted_run_finished_nodes": 292,
+  "historical_evidence_rewritten": false,
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "native_windows_verified": false,
+  "C3": "OPEN",
+  "Acceptance": "blocked",
+  "authorizes": []
+}
