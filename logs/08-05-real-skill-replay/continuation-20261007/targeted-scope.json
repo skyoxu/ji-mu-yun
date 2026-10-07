@@ -1,0 +1,6 @@
+[
+  "scripts/sc/tests/tc_d1_cer/test_s14.py",
+  "scripts/sc/tests/tc_d1_cer/test_s15.py",
+  "scripts/sc/tests/tc_d1_cer/test_s18.py",
+  "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit"
+]

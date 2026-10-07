@@ -1,0 +1,493 @@
+{
+  "command": [
+    "/workspace/scratch/60fb44ef18f2/continuation-prerequisites/replay-python/bin/python",
+    "-u",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "scripts.sc.verify_skill_replay",
+    "-p",
+    "no:cacheprovider",
+    "-vv",
+    "--tb=short",
+    "--tc-d1-progress",
+    "/workspace/scratch/60fb44ef18f2/ji-mu-yun/logs/08-05-real-skill-replay/continuation-20261007/native-targeted-2/pytest-events.jsonl",
+    "--junitxml=/workspace/scratch/60fb44ef18f2/ji-mu-yun/logs/08-05-real-skill-replay/continuation-20261007/native-targeted-2/junit.xml",
+    "scripts/sc/tests/tc_d1_cer/test_s14.py",
+    "scripts/sc/tests/tc_d1_cer/test_s15.py",
+    "scripts/sc/tests/tc_d1_cer/test_s18.py",
+    "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "active_nodeid": null,
+  "active_phase": "between-tests",
+  "cleanup": null,
+  "records": [
+    {
+      "kind": "collection",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.251767+00:00",
+      "nodeids": [
+        "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+        "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+        "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+        "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]",
+        "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]",
+        "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit"
+      ]
+    },
+    {
+      "kind": "start",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.252354+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations"
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.252508+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.252758+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00021815700006300176,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.252807+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.701210+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.444846077999955,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.701307+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.701457+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00011215800009267696,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.701548+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations"
+    },
+    {
+      "kind": "start",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.701719+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison"
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.701806+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.701920+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001081020000128774,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:09.701962+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.076352+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.37422792699999263,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.076432+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.076561+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00010025000005953189,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.076648+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison"
+    },
+    {
+      "kind": "start",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.076909+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution"
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.076992+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.077082+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 8.353499993063451e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.077118+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.082334+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.005131754000103683,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.082379+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.082475+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 6.767099989701819e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.082551+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution"
+    },
+    {
+      "kind": "start",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.082736+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]"
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.082806+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.082990+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001743120001265197,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.083028+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.900674+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.8174436479998803,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.900766+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.900966+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00015796699995007657,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.901050+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]"
+    },
+    {
+      "kind": "start",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.901247+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]"
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.901338+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.901505+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00016274400013571722,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:10.901546+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:11.787400+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.8856592679999267,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:11.787490+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:11.787625+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00011316999984956055,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:11.787748+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]"
+    },
+    {
+      "kind": "start",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:11.787954+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]"
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:11.788042+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:11.788183+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00013579400001617614,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:11.788220+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:12.617397+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.8289524959998289,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:12.617486+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:12.617622+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00011148700014018686,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:12.617738+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]"
+    },
+    {
+      "kind": "start",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:12.618041+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit"
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:12.618140+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:12.618235+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 8.964500011643395e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:12.618273+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:51.371265+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 38.75279612600002,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:51.371352+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:51.371471+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 9.309999995821272e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:51.371612+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit"
+    },
+    {
+      "kind": "session-finish",
+      "pid": 976,
+      "utc": "2026-10-07T09:31:51.372033+00:00",
+      "exit_code": 0
+    }
+  ],
+  "diagnostic": null,
+  "elapsed_seconds": 42.428,
+  "authorizes": []
+}

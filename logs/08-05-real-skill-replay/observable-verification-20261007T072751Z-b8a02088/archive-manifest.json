@@ -1,0 +1,42 @@
+{
+  "schema": "jimuyun.lossless-evidence-archive.v1",
+  "entries": [
+    {
+      "original_path": "collection/stdout.txt",
+      "archive_path": "collection/stdout.txt.gz",
+      "raw_bytes": 135235,
+      "raw_sha256": "4bc26ef8daff66163ea7a23228f1c4ac8b8febe24ff583e750540955e8e75a4f",
+      "archive_bytes": 10896,
+      "archive_sha256": "3b604e161be3f5c6caf2a4fe1d8c7d401ff17afb2837bd9cc2a2f072d5479e95",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "source-before.json",
+      "archive_path": "source-before.json.gz",
+      "raw_bytes": 306059,
+      "raw_sha256": "7060510b3a7600765161db397bc2a3739202129fa1b88b4b21d31c87eae74656",
+      "archive_bytes": 72411,
+      "archive_sha256": "d9e12a2d9acf0089bdd5b6d36bc824a47e55259c3eaa2a3d3e5e7b6f0efa53af",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "diagnostic-replay-stderr.txt",
+      "archive_path": "diagnostic-replay-stderr.txt.gz",
+      "raw_bytes": 609,
+      "raw_sha256": "7f6d24591d925925ce33eb648332161ca45cf4a81534a56475db4f1d010cf559",
+      "archive_bytes": 300,
+      "archive_sha256": "87584aa28e3b51e137343b9394202dd31b99e3571abfa68a1f21954c4a9a1ada",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "pytest/stdout.txt",
+      "archive_path": "pytest/stdout.txt.gz",
+      "raw_bytes": 2513,
+      "raw_sha256": "5483ff13b6e36945bab36baad3d49b478c36603903e7c02cb59830aceeb89419",
+      "archive_bytes": 798,
+      "archive_sha256": "e2765220d3d94a040c6f570715cf83514593c6b83ad822204113663a3843cd8e",
+      "compression": "gzip-lossless"
+    }
+  ],
+  "authorizes": []
+}

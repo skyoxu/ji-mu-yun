@@ -1,0 +1,15 @@
+{
+  "schema": "jimuyun.lossless-evidence-archive.v1",
+  "entries": [
+    {
+      "original_path": "stdout.json",
+      "archive_path": "stdout.json.gz",
+      "raw_bytes": 2102333,
+      "raw_sha256": "a6ac0bd8477cb737e7ebec87c8c4cf2bc0f875bdc2009f81e04af5af4384e4dd",
+      "archive_bytes": 416417,
+      "archive_sha256": "d4a83aaf5f9dba1eb4f07c62839e0775dcc1bd1b4802c2e94be353a8954ac325",
+      "compression": "gzip-lossless"
+    }
+  ],
+  "authorizes": []
+}

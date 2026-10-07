@@ -1,0 +1,13 @@
+{
+  "schema": "jimuyun.direct-verification-session-control.v1",
+  "status": "operator-interrupted",
+  "session_exit_code": 130,
+  "reason": "CLI Git push had no write credentials. The connected GitHub API commit operation supplies its own commit identity. Final full verification must run on the actual published source commit, rather than claim the unpushed local commit is the remote HEAD.",
+  "source_head": "7a2859a19a8aaf6ccdcdadf5af9cae7bb8db9964",
+  "finished_nodes": 46,
+  "failed_reports": 0,
+  "native_terminal_summary_present": false,
+  "native_junit_present": false,
+  "C3": "OPEN",
+  "authorizes": []
+}

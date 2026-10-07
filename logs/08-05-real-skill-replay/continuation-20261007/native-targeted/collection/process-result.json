@@ -1,0 +1,30 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-u",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "scripts.sc.verify_skill_replay",
+    "-p",
+    "no:cacheprovider",
+    "--collect-only",
+    "-q",
+    "--tc-d1-progress",
+    "/workspace/scratch/60fb44ef18f2/ji-mu-yun/logs/08-05-real-skill-replay/continuation-20261007/native-targeted/collection-events.jsonl",
+    "scripts/sc/tests/tc_d1_cer/test_s14.py",
+    "scripts/sc/tests/tc_d1_cer/test_s15.py",
+    "scripts/sc/tests/tc_d1_cer/test_s18.py",
+    "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit"
+  ],
+  "exit_code": 1,
+  "reason": null,
+  "active_nodeid": null,
+  "active_phase": "startup",
+  "cleanup": null,
+  "records": [],
+  "diagnostic": null,
+  "elapsed_seconds": 0.104,
+  "authorizes": []
+}

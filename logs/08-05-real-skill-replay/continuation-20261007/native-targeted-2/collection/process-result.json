@@ -1,0 +1,51 @@
+{
+  "command": [
+    "/workspace/scratch/60fb44ef18f2/continuation-prerequisites/replay-python/bin/python",
+    "-u",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "scripts.sc.verify_skill_replay",
+    "-p",
+    "no:cacheprovider",
+    "--collect-only",
+    "-q",
+    "--tc-d1-progress",
+    "/workspace/scratch/60fb44ef18f2/ji-mu-yun/logs/08-05-real-skill-replay/continuation-20261007/native-targeted-2/collection-events.jsonl",
+    "scripts/sc/tests/tc_d1_cer/test_s14.py",
+    "scripts/sc/tests/tc_d1_cer/test_s15.py",
+    "scripts/sc/tests/tc_d1_cer/test_s18.py",
+    "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "active_nodeid": null,
+  "active_phase": "startup",
+  "cleanup": null,
+  "records": [
+    {
+      "kind": "collection",
+      "pid": 975,
+      "utc": "2026-10-07T09:31:08.947898+00:00",
+      "nodeids": [
+        "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+        "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+        "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+        "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]",
+        "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]",
+        "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit"
+      ]
+    },
+    {
+      "kind": "session-finish",
+      "pid": 975,
+      "utc": "2026-10-07T09:31:08.948270+00:00",
+      "exit_code": 0
+    }
+  ],
+  "diagnostic": null,
+  "elapsed_seconds": 0.303,
+  "authorizes": []
+}

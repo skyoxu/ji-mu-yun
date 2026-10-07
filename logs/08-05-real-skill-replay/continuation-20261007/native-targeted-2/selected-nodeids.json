@@ -1,0 +1,9 @@
+[
+  "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+  "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+  "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+  "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]",
+  "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]",
+  "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]",
+  "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit"
+]
