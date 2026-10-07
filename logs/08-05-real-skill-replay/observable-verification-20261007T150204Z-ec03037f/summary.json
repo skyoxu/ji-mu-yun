@@ -1,0 +1,39 @@
+{
+  "schema": "jimuyun.direct-replay-verification.v1",
+  "status": "direct-validation-failed",
+  "scope": [
+    "scripts/sc/tests/test_skill_package_replay.py",
+    "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+    "scripts/sc/tests/tc_d1_cer"
+  ],
+  "expected_count_requested": 340,
+  "unittest_selected": true,
+  "platform": "win32",
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "C3": "OPEN",
+  "authorizes": [],
+  "unittest": {
+    "exit_code": 0,
+    "reason": null,
+    "tests": 36
+  },
+  "collected_count": 340,
+  "pytest": {
+    "pass": false,
+    "expected_count": 340,
+    "finished_count": 318,
+    "exact_node_coverage": false,
+    "all_phases_passed": false,
+    "skipped_reports": 0,
+    "authorizes": []
+  },
+  "process": {
+    "exit_code": 3221225477,
+    "reason": null,
+    "active_nodeid": "scripts/sc/tests/tc_d1_cer/test_s7_cer.py::test_s7_detached_probe_binds_input_target_outcome_and_output",
+    "active_phase": "call",
+    "cleanup": null
+  },
+  "source_stable": true
+}
