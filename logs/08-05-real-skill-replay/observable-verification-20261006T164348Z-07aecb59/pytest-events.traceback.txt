@@ -1,0 +1,881 @@
+Timeout (0:01:00)!
+Thread 0x0000e224 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x00007180 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 556 in run
+  File "C:\buildgame\jimuyun\scripts\sc\tests\test_skill_package_replay_source_identity.py", line 20 in test_replay_reconstructs_bound_identity_and_launches_fresh_process
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000e224 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x00007180 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 556 in run
+  File "C:\buildgame\jimuyun\scripts\sc\tests\test_skill_package_replay_source_identity.py", line 20 in test_replay_reconstructs_bound_identity_and_launches_fresh_process
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000e224 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x00007180 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 556 in run
+  File "C:\buildgame\jimuyun\scripts\sc\tests\test_skill_package_replay_source_identity.py", line 20 in test_replay_reconstructs_bound_identity_and_launches_fresh_process
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000d7d4 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x00001be0 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 82 in test_detached_positive_probe_records_a_distinct_child_process
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000d7d4 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x00001be0 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 82 in test_detached_positive_probe_records_a_distinct_child_process
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000c98c (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x000034dc (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 101 in test_detached_positive_probe_binds_input_target_outcome_and_output
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000c98c (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x000034dc (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 101 in test_detached_positive_probe_binds_input_target_outcome_and_output
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000ce60 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ca3c (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 154 in test_fresh_replay_reproduces_recorded_verdict_and_coverage
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000ce60 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ca3c (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 154 in test_fresh_replay_reproduces_recorded_verdict_and_coverage
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x000031bc (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000c170 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 173 in test_replay_result_contains_complete_current_snapshot_binding
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x000031bc (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000c170 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 173 in test_replay_result_contains_complete_current_snapshot_binding
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000b428 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000106c (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 185 in test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000b428 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000106c (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 185 in test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000bacc (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x00004a2c (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 196 in test_supported_replay_route_binds_effective_inspected_content
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000bacc (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x00004a2c (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 53 in _positive_replay
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py", line 196 in test_supported_replay_route_binds_effective_inspected_content
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 157 in pytest_pyfunc_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1671 in runtest
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 178 in pytest_runtest_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 136 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000b4c4 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000e22c (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 556 in run
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py", line 22 in _run
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py", line 40 in replay
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 930 in call_fixture_func
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 1196 in pytest_fixture_setup
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 1128 in execute
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 640 in _get_active_fixturedef
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 549 in getfixturevalue
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 720 in _fillfixtures
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1674 in setup
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 514 in setup
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 164 in pytest_runtest_setup
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 130 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
+Timeout (0:01:00)!
+Thread 0x0000b4c4 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000e22c (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1609 in _readerthread
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 992 in run
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1041 in _bootstrap_inner
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1012 in _bootstrap
+
+Thread 0x0000ecf8 (most recent call first):
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1092 in join
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1638 in _communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219 in communicate
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 556 in run
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py", line 22 in _run
+  File "C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py", line 40 in replay
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 930 in call_fixture_func
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 1196 in pytest_fixture_setup
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 1128 in execute
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 640 in _get_active_fixturedef
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 549 in getfixturevalue
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\fixtures.py", line 720 in _fillfixtures
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\python.py", line 1674 in setup
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 514 in setup
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 164 in pytest_runtest_setup
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 246 in <lambda>
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 344 in from_call
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 245 in call_and_report
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 130 in runtestprotocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\runner.py", line 117 in pytest_runtest_protocol
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 367 in pytest_runtestloop
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 343 in _main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 289 in wrap_session
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\main.py", line 336 in pytest_cmdline_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_callers.py", line 121 in _multicall
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_manager.py", line 120 in _hookexec
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pluggy\_hooks.py", line 512 in __call__
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 175 in main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 201 in console_main
+  File "C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest\__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main
