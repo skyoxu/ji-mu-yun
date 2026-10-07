@@ -1,0 +1,15 @@
+{
+  "schema": "jimuyun.direct-repair-checkpoint.v1",
+  "utc": "2026-10-07T13:56:42.481866+00:00",
+  "source_commit": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+  "targeted_result": "direct-validation-passed",
+  "targeted_nodes": 5,
+  "current_full_status": "running-no-terminal-verdict",
+  "current_full_finished_nodes": 53,
+  "current_full_failed_reports": 0,
+  "recovered_previous_finished_nodes": 292,
+  "native_windows_verified": false,
+  "C3": "OPEN",
+  "Acceptance": "blocked",
+  "authorizes": []
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "jimuyun.direct-replay-verification.v1",
+  "status": "direct-validation-passed",
+  "scope": [
+    "scripts/sc/tests/tc_d1_cer/test_s17.py",
+    "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity"
+  ],
+  "expected_count_requested": 5,
+  "unittest_selected": false,
+  "platform": "linux",
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "C3": "OPEN",
+  "authorizes": [],
+  "collected_count": 5,
+  "pytest": {
+    "pass": true,
+    "expected_count": 5,
+    "finished_count": 5,
+    "exact_node_coverage": true,
+    "all_phases_passed": true,
+    "skipped_reports": 0,
+    "authorizes": []
+  },
+  "process": {
+    "exit_code": 0,
+    "reason": null,
+    "active_nodeid": null,
+    "active_phase": "between-tests",
+    "cleanup": null
+  },
+  "source_stable": true
+}

@@ -1,0 +1,363 @@
+{
+  "command": [
+    "/workspace/scratch/60fb44ef18f2/continuation-prerequisites/replay-python/bin/python",
+    "-u",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "scripts.sc.verify_skill_replay",
+    "-p",
+    "no:cacheprovider",
+    "-vv",
+    "--tb=short",
+    "--tc-d1-progress",
+    "/workspace/scratch/60fb44ef18f2/ji-mu-yun-fixed/logs/08-05-real-skill-replay/recovery-20261007T134708Z/targeted/pytest-events.jsonl",
+    "--junitxml=/workspace/scratch/60fb44ef18f2/ji-mu-yun-fixed/logs/08-05-real-skill-replay/recovery-20261007T134708Z/targeted/junit.xml",
+    "scripts/sc/tests/tc_d1_cer/test_s17.py",
+    "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "active_nodeid": null,
+  "active_phase": "between-tests",
+  "cleanup": null,
+  "records": [
+    {
+      "kind": "collection",
+      "pid": 8,
+      "utc": "2026-10-07T13:47:22.931037+00:00",
+      "nodeids": [
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity"
+      ]
+    },
+    {
+      "kind": "start",
+      "pid": 8,
+      "utc": "2026-10-07T13:47:22.931506+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity"
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:47:22.932024+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:47:22.932290+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.000583628999947905,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:47:22.932340+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.519571+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 39.58370414399997,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.519693+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.519853+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00012062199994034017,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.519976+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity"
+    },
+    {
+      "kind": "start",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.520190+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding"
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.520285+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.520378+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 8.771299985710357e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.520418+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.571679+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.051042438999957085,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.571767+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.571896+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.000103446000139229,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.571988+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding"
+    },
+    {
+      "kind": "start",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.572166+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure"
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.572258+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.572345+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 8.028100000956329e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.572382+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.639024+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.06643022499997642,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.639112+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.639225+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 9.054599991031864e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.639324+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure"
+    },
+    {
+      "kind": "start",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.639503+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state"
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.639614+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.639708+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001056590001553559,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.639746+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.842482+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.20256201799998053,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.842647+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.842781+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00018345600005886809,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.842920+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state"
+    },
+    {
+      "kind": "start",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.843176+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity"
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.843299+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.843390+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 8.585999989918491e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:02.843428+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:43.405369+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 40.561746402999916,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:43.405455+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:43.405572+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 9.148799995273293e-05,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:43.405690+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity"
+    },
+    {
+      "kind": "session-finish",
+      "pid": 8,
+      "utc": "2026-10-07T13:48:43.406007+00:00",
+      "exit_code": 0
+    }
+  ],
+  "diagnostic": null,
+  "elapsed_seconds": 80.758,
+  "authorizes": []
+}

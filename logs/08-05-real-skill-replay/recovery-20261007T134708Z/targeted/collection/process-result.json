@@ -1,0 +1,47 @@
+{
+  "command": [
+    "/workspace/scratch/60fb44ef18f2/continuation-prerequisites/replay-python/bin/python",
+    "-u",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "scripts.sc.verify_skill_replay",
+    "-p",
+    "no:cacheprovider",
+    "--collect-only",
+    "-q",
+    "--tc-d1-progress",
+    "/workspace/scratch/60fb44ef18f2/ji-mu-yun-fixed/logs/08-05-real-skill-replay/recovery-20261007T134708Z/targeted/collection-events.jsonl",
+    "scripts/sc/tests/tc_d1_cer/test_s17.py",
+    "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "active_nodeid": null,
+  "active_phase": "startup",
+  "cleanup": null,
+  "records": [
+    {
+      "kind": "collection",
+      "pid": 7,
+      "utc": "2026-10-07T13:47:22.653212+00:00",
+      "nodeids": [
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity"
+      ]
+    },
+    {
+      "kind": "session-finish",
+      "pid": 7,
+      "utc": "2026-10-07T13:47:22.653516+00:00",
+      "exit_code": 0
+    }
+  ],
+  "diagnostic": null,
+  "elapsed_seconds": 0.302,
+  "authorizes": []
+}

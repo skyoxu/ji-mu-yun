@@ -1,0 +1,11 @@
+{
+  "schema": "jimuyun.direct-verification-scope-equivalence.v1",
+  "original_evidence_commit": "7abdfb25dcc1342d0f2f7b3dc0dbb9268f2bd39f",
+  "published_source_head": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+  "original_count": 340,
+  "current_count": 340,
+  "ordered_nodeids_equal": true,
+  "raw_manifest_bytes_equal": true,
+  "raw_sha256": "6a6f4ac8c8825522c83c44410b9de8cfdf7fd50e1ea5b5a52b7f91169eac7232",
+  "authorizes": []
+}
