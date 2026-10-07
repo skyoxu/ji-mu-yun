@@ -1,0 +1,84 @@
+{
+  "schema": "jimuyun.verification-session-observation.v1",
+  "record_kind": "operator_observation_not_native_terminal_result",
+  "repository": "skyoxu/ji-mu-yun",
+  "branch": "fix/08-05-real-skill-replay",
+  "published_source_commit": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+  "archived_checkpoint_commit": "3769041c7f999a26a4559f6c98453d87b9dc0891",
+  "source_files_changed_by_checkpoint": false,
+  "current_attempt": {
+    "output_directory": "logs/08-05-real-skill-replay/continuation-20261007/native-full-current",
+    "checkout": "/workspace/scratch/60fb44ef18f2/ji-mu-yun-fixed",
+    "native_driver_session_id": 13867,
+    "platform": "linux",
+    "source_head": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+    "expected_count": 340,
+    "unittest_completed": 36,
+    "last_successful_read_utc": "2026-10-07T10:13:22.533080+00:00",
+    "last_observed_finished_nodes": 290,
+    "last_observed_failed_reports": 0,
+    "last_observed_active_nodeid": "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_replay_records_reproducible_result",
+    "last_observed_call_start_utc": "2026-10-07T10:12:50.858476+00:00",
+    "test_timeout_seconds": 300,
+    "ordered_nodeids_match_original": true,
+    "raw_node_manifest_matches_original": true,
+    "raw_node_manifest_sha256": "6a6f4ac8c8825522c83c44410b9de8cfdf7fd50e1ea5b5a52b7f91169eac7232",
+    "terminal_status": "unconfirmed_due_to_execution_environment_offline",
+    "native_process_exit_code": null,
+    "native_terminal_summary_observed": false,
+    "native_junit_observed": false,
+    "source_after_snapshot_observed": false,
+    "current_attempt_native_files_published": false,
+    "current_attempt_native_files_note": "Only the local paths and last successful observations are retained here. The running attempt's native files had not been uploaded before the execution environment disconnected.",
+    "direct_validation_pass_claimed": false,
+    "source_after_stability_claimed": false
+  },
+  "native_s17_event_measurements": [
+    {
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+      "native_event_duration_seconds": 41.702775,
+      "phase_outcomes": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      }
+    },
+    {
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+      "native_event_duration_seconds": 0.06065,
+      "phase_outcomes": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      }
+    },
+    {
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+      "native_event_duration_seconds": 0.059154,
+      "phase_outcomes": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      }
+    },
+    {
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+      "native_event_duration_seconds": 0.203598,
+      "phase_outcomes": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      }
+    }
+  ],
+  "transport_errors": [
+    "exec-server transport disconnected; failed to resume exec-server session: recovery timed out after 25s",
+    "environment registry request failed (409 Conflict, environment_offline): Environment is not connected."
+  ],
+  "native_windows_verified": false,
+  "C3": "OPEN",
+  "acceptance": "blocked",
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "authorizes": []
+}
