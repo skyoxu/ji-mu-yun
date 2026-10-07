@@ -173,7 +173,16 @@ def start_owned(command, **options):
     if __package__:
         from .skill_replay_windows_job import WindowsJob
     else:
-        from skill_replay_windows_job import WindowsJob
+        # Native replay runs with Python isolation (-I -S), so the script
+        # directory is not importable by module name. Load the sibling
+        # implementation from its repository-bound path instead.
+        module_path = Path(__file__).with_name("skill_replay_windows_job.py")
+        specification = importlib.util.spec_from_file_location("tc_d1_windows_job", module_path)
+        if specification is None or specification.loader is None:
+            raise ImportError("cannot load Windows Job implementation")
+        module = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(module)
+        WindowsJob = module.WindowsJob
     job = WindowsJob()
     process = None
     try:
