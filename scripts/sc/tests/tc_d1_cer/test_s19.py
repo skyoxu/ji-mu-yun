@@ -12,6 +12,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -28,23 +29,12 @@ OCCURRENCES = (
 
 
 def _python() -> list[str]:
-    launcher = shutil.which("py")
-    if launcher:
-        return [launcher, "-3"]
+    # Accepted ADR-0058: descendants use the actually bound interpreter.
     return [sys.executable]
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [*_python(), "-B", str(REPLAY), *args],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-        timeout=180 if args[0] == "replay-package" else 45,
-    )
+    return runtime.capture_process([*_python(), '-B', str(REPLAY), *args], ROOT, timeout=180 if args[0] == "replay-package" else 90 if args[0] == "replay-matrix" else 60)
 
 
 def _replay() -> tuple[subprocess.CompletedProcess[str], dict]:

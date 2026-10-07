@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -17,27 +18,7 @@ FAILURE_ID = "FR10-EA625B1D3DFB-DRIFT"
 
 
 def _run_replay(mode: str) -> tuple[int, dict]:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-B",
-            str(ENTRY),
-            "replay-package",
-            "--target",
-            TARGET,
-            "--capability",
-            CAPABILITY,
-            "--probe-mode",
-            mode,
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=180,
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', mode], ROOT, timeout=180)
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError as exc:

@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -37,17 +38,7 @@ def _run_matrix(case: dict) -> tuple[int, dict]:
         f"sys.argv=['{ENTRY.as_posix()}','replay-matrix','--matrix','s31-r3-matrix.json']\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    result = subprocess.run(
-        [sys.executable, "-B", "-c", child],
-        cwd=ROOT,
-        input=json.dumps(matrix),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=60,
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
@@ -65,20 +56,7 @@ def _assert_behavior(condition: bool, detail: object) -> None:
 
 @pytest.mark.cer_assertion("A-VERDICT-REAL-EXECUTION")
 def test_verdict_links_current_source_to_validator_processes() -> None:
-    result = subprocess.run(
-        [
-            sys.executable, "-B", str(ENTRY), "replay-package",
-            "--target", TARGET, "--capability", CAPABILITY,
-            "--probe-mode", "source-identity",
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=60,
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'source-identity'], ROOT, timeout=180)
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError as exc:

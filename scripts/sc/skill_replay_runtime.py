@@ -63,6 +63,7 @@ def relative(root: Path, name: str) -> Path:
 
 def files(root: Path, names) -> list[Path]:
     result = set()
+    resolved_root = root.resolve()
     for name in names:
         path = relative(root, name)
         candidates = path.rglob("*") if path.is_dir() else (path,)
@@ -70,7 +71,7 @@ def files(root: Path, names) -> list[Path]:
             if item.is_symlink():
                 raise ValueError("symlink is not a supported replay input: " + name)
             if item.is_file() and "__pycache__" not in item.parts and item.suffix != ".pyc":
-                item.resolve().relative_to(root.resolve())
+                item.resolve().relative_to(resolved_root)
                 result.add(item)
     # Git identities are case-sensitive POSIX paths. Path ordering on Windows
     # case-folds names and must not determine membership or content identity.
@@ -83,7 +84,7 @@ def bindings(root: Path, names) -> list[dict]:
 
 def child_environment() -> dict:
     # Do not inherit candidate Python injection or arbitrary model credentials.
-    permitted = ("PATH", "SystemRoot", "WINDIR", "TEMP", "TMP", "HOME", "USERPROFILE", "LANG", "LC_ALL")
+    permitted = ("PATH", "SystemRoot", "WINDIR", "TEMP", "TMP", "HOME", "USERPROFILE", "LANG", "LC_ALL", "TC_D1_NATIVE_TRACE_DIR")
     value = {name: os.environ[name] for name in permitted if name in os.environ}
     value.update(PYTHONUTF8="1", PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1")
     return value
@@ -92,6 +93,11 @@ def child_environment() -> dict:
 def _terminate_owned(process: subprocess.Popen) -> None:
     """Reap only this launched tree, including descendants with new sessions."""
     if os.name == "nt":
+        job = getattr(process, "_tc_d1_job", None)
+        if job is not None:
+            job.terminate()
+            process.wait(timeout=5)
+            return
         stopped = subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
                                  capture_output=True, timeout=10, check=False)
         if stopped.returncode and process.poll() is None:
@@ -160,6 +166,71 @@ def _terminate_owned(process: subprocess.Popen) -> None:
     process.wait(timeout=5)
 
 
+def start_owned(command, **options):
+    """Contain the native tree before it can execute, including nested jobs."""
+    if os.name != "nt":
+        return subprocess.Popen(command, start_new_session=True, **options)
+    if __package__:
+        from .skill_replay_windows_job import WindowsJob
+    else:
+        from skill_replay_windows_job import WindowsJob
+    job = WindowsJob()
+    process = None
+    try:
+        process = subprocess.Popen(command, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | 0x4, **options)
+        process._tc_d1_job = job
+        job.assign_and_resume(process)
+        return process
+    except BaseException:
+        try:
+            if process is not None:
+                process.kill()
+                process.wait(timeout=5)
+        finally:
+            job.close()
+        raise
+
+
+def close_owned(process):
+    job = getattr(process, "_tc_d1_job", None)
+    if job is not None:
+        try:
+            job.terminate()
+        finally:
+            job.close()
+    elif os.name != "nt":
+        # A normal exit must also release inherited file descriptors held by
+        # descendants in this transport's own session/process group.
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+
+
+def process_trace(process, command, root, timeout, phase, **fields):
+    """Append diagnostic lifecycle events; they never grant result authority."""
+    destination = os.environ.get("TC_D1_NATIVE_TRACE_DIR")
+    if not destination:
+        return
+    directory = Path(destination)
+    if not directory.is_absolute() or not directory.is_dir():
+        raise ValueError("native trace destination must be an existing absolute directory")
+    path = getattr(process, "_tc_d1_trace_path", None)
+    if path is None:
+        path = directory / (str(os.getpid()) + "-" + secrets.token_hex(12) + ".jsonl")
+        process._tc_d1_trace_path = path
+        mode = "x"
+    else:
+        mode = "a"
+    command_text = json.dumps(command)
+    record = {"schema": "jimuyun.native-process-diagnostic.v1", "parent_pid": os.getpid(),
+              "pid": process.pid, "phase": phase, "monotonic_seconds": time.monotonic(),
+              "command": command_text[:8192], "command_truncated": len(command_text) > 8192,
+              "cwd": str(root), "timeout_seconds": timeout, "authorizes": [], **fields}
+    with path.open(mode, encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(record, sort_keys=True) + "\n")
+
+
 def capture_process(command: list[str], root: Path, timeout: float, *,
                     output_limit: int = OUTPUT_LIMIT, input_data: bytes | None = None) -> subprocess.CompletedProcess:
     """File-backed owned transport; CER parent integrations allow up to 180s.
@@ -177,12 +248,12 @@ def capture_process(command: list[str], root: Path, timeout: float, *,
         if input_data is not None and (not isinstance(input_data, bytes) or len(input_data) > OUTPUT_LIMIT):
             raise ValueError("process input exceeds its bounded transport")
         source.write_bytes(input_data or b"")
-        options = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True}
         started = time.monotonic()
         with out.open("wb") as stdout, err.open("wb") as stderr, source.open("rb") as stdin:
-            process = subprocess.Popen(command, cwd=root, stdin=stdin, stdout=stdout, stderr=stderr,
-                                       env=child_environment(), **options)
+            process = start_owned(command, cwd=root, stdin=stdin, stdout=stdout, stderr=stderr,
+                                  env=child_environment())
             try:
+                process_trace(process, command, root, timeout, "started")
                 while process.poll() is None:
                     if out.stat().st_size + err.stat().st_size > output_limit:
                         raise ValueError("aggregate output budget exhausted")
@@ -193,9 +264,16 @@ def capture_process(command: list[str], root: Path, timeout: float, *,
                         process.wait(timeout=min(0.05, remaining))
                     except subprocess.TimeoutExpired:
                         pass
-            except BaseException:
+            except BaseException as exc:
                 _terminate_owned(process)
+                process_trace(process, command, root, timeout, "unsuccessful", diagnostic=str(exc)[:8192], exception=type(exc).__name__)
                 raise
+            finally:
+                # Even a successfully exited leader can leave a descendant
+                # holding the inherited files. Drain its job before cleanup.
+                close_owned(process)
+            process_trace(process, command, root, timeout, "exited", exit_code=process.returncode,
+                          elapsed_seconds=time.monotonic() - started)
         if out.stat().st_size + err.stat().st_size > output_limit:
             raise ValueError("aggregate output budget exhausted")
         result = subprocess.CompletedProcess(command, process.returncode, out.read_bytes().decode("utf-8"), err.read_bytes().decode("utf-8"))
@@ -209,7 +287,7 @@ def execute(command: list[str], root: Path, timeout: float = TIMEOUT_SECONDS, ou
     try:
         result = capture_process(command, root, timeout, output_limit=output_limit)
     except subprocess.TimeoutExpired as exc:
-        raise ValueError("validator or Consumer timed out") from exc
+        raise ValueError("validator or Consumer timed out: " + json.dumps(command) + "; budget=" + str(timeout)) from exc
     if result.returncode == 124:
         raise ValueError("validator or Consumer timed out")
     return result
@@ -326,13 +404,52 @@ def dependency_closure(root: Path, seeds) -> list[dict]:
     search = [root, root / "scripts/python", root / "scripts/sc", root / "scripts/toolchain", *(root / owner / "scripts" for owner in PACKAGE_ROOTS)]
     # Resolve each identical filesystem query once in this traversal. The
     # index is rebuilt for the next closure, so new/deleted modules are visible.
-    file_index, package_index = {}, {}
+    directory_index, package_index, import_index = {}, {}, {}
+    resolved_root = root.resolve()
+
+    def directory_members(directory):
+        # Enumerate a directory once in this closure instead of probing every
+        # absent import name through Win32. Rebuild for the next invocation;
+        # membership, content and trust results are never reused.
+        key = os.path.normcase(str(directory))
+        if key not in directory_index:
+            if directory != root and directory.is_relative_to(root):
+                _, parent_directories = directory_members(directory.parent)
+                if os.path.normcase(directory.name) not in parent_directories:
+                    directory_index[key] = (set(), set())
+                    return directory_index[key]
+            try:
+                with os.scandir(directory) as entries:
+                    regular, directories = set(), set()
+                    for entry in entries:
+                        if entry.is_file():
+                            regular.add(os.path.normcase(entry.name))
+                        elif entry.is_dir():
+                            directories.add(os.path.normcase(entry.name))
+                    directory_index[key] = (regular, directories)
+            except (FileNotFoundError, NotADirectoryError):
+                directory_index[key] = (set(), set())
+        return directory_index[key]
 
     def is_file(path):
-        key = path.as_posix()
-        if key not in file_index:
-            file_index[key] = path.is_file()
-        return file_index[key]
+        regular, _ = directory_members(path.parent)
+        return os.path.normcase(path.name) in regular
+
+    def imported(base, name):
+        key = (str(base), name)
+        if key not in import_index:
+            candidate = base.joinpath(*name.split("."))
+            matches = set()
+            module = candidate.with_suffix(".py")
+            if is_file(module):
+                matches.add(module)
+            if is_file(candidate / "__init__.py"):
+                package_key = candidate.as_posix()
+                if package_key not in package_index:
+                    package_index[package_key] = files(root, [candidate.relative_to(root).as_posix()])
+                matches.update(package_index[package_key])
+            import_index[key] = matches
+        return import_index[key]
 
     pending = list(selected)
     while pending:
@@ -342,18 +459,10 @@ def dependency_closure(root: Path, seeds) -> list[dict]:
         names = _import_names(path.read_bytes(), str(path))
         found = set()
         for name in names:
-            parts = name.split(".")
-            for base in [path.parent, *search]:
-                candidate = base.joinpath(*parts)
-                if is_file(candidate.with_suffix(".py")):
-                    found.add(candidate.with_suffix(".py"))
-                if is_file(candidate / "__init__.py"):
-                    key = candidate.as_posix()
-                    if key not in package_index:
-                        package_index[key] = files(root, [candidate.relative_to(root).as_posix()])
-                    found.update(package_index[key])
+            for base in dict.fromkeys((path.parent, *search)):
+                found.update(imported(base, name))
         for item in found:
-            item.resolve().relative_to(root.resolve())
+            item.resolve().relative_to(resolved_root)
             if item not in selected:
                 selected.add(item)
                 pending.append(item)
@@ -721,7 +830,7 @@ SCENARIOS = ("positive", "negative", "historical_compatibility", "dirty_baseline
 def subject_bindings(root: Path, target: str) -> list[dict]:
     # The replay entry and its runtime adapters are part of the evaluated
     # package's semantic execution boundary, not differentiating label files.
-    return bindings(root, (target, "scripts/sc/skill_package_replay.py", "scripts/sc/skill_replay_runtime.py", "scripts/sc/skill_replay_observer.py"))
+    return bindings(root, (target, "scripts/sc/skill_package_replay.py", "scripts/sc/skill_replay_runtime.py", "scripts/sc/skill_replay_observer.py", "scripts/sc/skill_replay_windows_job.py"))
 
 
 def evaluate_scenario(root: Path, target: str, validator: Path, value: dict, fixture: dict) -> dict:

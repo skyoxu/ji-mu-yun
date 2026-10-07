@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-7817-distinct-inputs")]
 
@@ -33,11 +34,7 @@ def _run_matrix(cases: list[dict]) -> tuple[int, dict]:
         "sys.argv = [sys.argv[1], 'replay-matrix', '--matrix', 's28-matrix.json']\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    process = subprocess.run(
-        [sys.executable, "-B", "-c", child, str(ENTRY)], cwd=ROOT,
-        input=json.dumps(matrix), capture_output=True, text=True, encoding="utf-8",
-        errors="replace", timeout=60, check=False,
-    )
+    process = runtime.capture_process([sys.executable, '-B', '-c', child, str(ENTRY)], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
     try:
         receipt = json.loads(process.stdout)
     except json.JSONDecodeError as exc:

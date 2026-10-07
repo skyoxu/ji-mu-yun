@@ -13,6 +13,37 @@ from scripts.sc import skill_replay_runtime as runtime
 
 
 class NativeProcessOwnershipTests(unittest.TestCase):
+    def test_normal_leader_exit_drains_descendants_before_stdio_cleanup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            ready, leaked = root / "ready", root / "leaked"
+            child = "import time;from pathlib import Path;Path(" + repr(str(ready)) + ").write_text('ready');time.sleep(2);Path(" + repr(str(leaked)) + ").write_text('leaked')"
+            flags = subprocess.CREATE_NEW_PROCESS_GROUP if runtime.os.name == "nt" else 0
+            parent = ("import subprocess,sys,time;from pathlib import Path;subprocess.Popen([sys.executable,'-c'," + repr(child)
+                      + "],creationflags=" + str(flags) + ");\nwhile not Path(" + repr(str(ready)) + ").exists(): time.sleep(.01)\n")
+            result = runtime.capture_process([sys.executable, "-c", parent], root, timeout=5)
+            self.assertEqual(0, result.returncode)
+            self.assertTrue(ready.exists(), "the real descendant must hold the inherited stdio files")
+            time.sleep(2.2)
+            self.assertFalse(leaked.exists(), "the dead leader left its descendant alive")
+
+    def test_native_diagnostic_records_real_pid_and_timeout_without_relabeling_it(self):
+        import json
+        import os
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            trace = root / "native"
+            trace.mkdir()
+            with patch.dict(os.environ, {"TC_D1_NATIVE_TRACE_DIR": str(trace)}):
+                with self.assertRaises(subprocess.TimeoutExpired):
+                    runtime.capture_process([sys.executable, "-c", "import time;time.sleep(10)"], root, .2)
+            rows = [json.loads(line) for path in trace.glob("*.jsonl") for line in path.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(["started", "unsuccessful"], [row["phase"] for row in rows])
+            self.assertEqual(rows[0]["pid"], rows[1]["pid"])
+            self.assertNotEqual(os.getpid(), rows[0]["pid"])
+            self.assertEqual("TimeoutExpired", rows[1]["exception"])
+            self.assertTrue(all(row["authorizes"] == [] for row in rows))
+
     def test_native_timeout_reaps_a_descendant_in_a_separate_process_group(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -35,6 +66,37 @@ class NativeProcessOwnershipTests(unittest.TestCase):
 
 
 class SyntaxReuseTests(unittest.TestCase):
+    def test_repeated_missing_imports_do_not_probe_each_module_on_disk(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            owner = root / "owner"
+            owner.mkdir()
+            for index in range(12):
+                (owner / (str(index) + ".py")).write_text("import absent_policy\n", encoding="utf-8")
+            original = Path.is_file
+            probed = []
+            original_scan = runtime.os.scandir
+            scanned = []
+
+            def probe(path):
+                if path.name == "absent_policy.py":
+                    probed.append(path)
+                return original(path)
+
+            def scan(path):
+                if Path(path).name == "absent_policy":
+                    scanned.append(path)
+                return original_scan(path)
+
+            with patch.object(Path, "is_file", probe), patch.object(runtime.os, "scandir", scan):
+                closure = runtime.dependency_closure(root, ("owner",))
+            self.assertEqual(12, len(closure))
+            self.assertEqual([], probed, "absent names caused repeated native filesystem probes")
+            self.assertEqual([], scanned, "known-absent directory names still caused native scans")
+            (root / "absent_policy.py").write_text("ALLOW = False\n", encoding="utf-8")
+            updated = runtime.dependency_closure(root, ("owner",))
+            self.assertIn("absent_policy.py", [row["path"] for row in updated], "a prior absence was reused as current authority")
+
     def test_identical_bytes_in_two_checkouts_reuse_parse_without_hiding_changes(self):
         original = runtime.ast.parse
         runtime._import_names.cache_clear()

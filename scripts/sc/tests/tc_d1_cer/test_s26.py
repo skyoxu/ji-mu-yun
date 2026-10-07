@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-AF55FF781031-1")]
 
@@ -20,8 +21,7 @@ MATRIX = ROOT / "execution-plans/2026-08-05-toolchain-core-skill-replay-portabil
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run([sys.executable, "-B", str(ENTRY), *args], cwd=ROOT,
-                          capture_output=True, text=True, encoding="utf-8", check=False)
+    return runtime.capture_process([sys.executable, '-B', str(ENTRY), *args], ROOT, timeout=180 if args[0] == "replay-package" else 90 if args[0] == "replay-matrix" else 60)
 
 
 def _replay(mode: str = "fresh") -> tuple[subprocess.CompletedProcess[str], dict]:
@@ -60,9 +60,7 @@ def _matrix(*cases: dict, native_matrix=None) -> tuple[subprocess.CompletedProce
         "sys.path.insert(0,str(Path(sys.argv[1]).parent))\n"
         "sys.argv=[sys.argv[1],'replay-matrix','--matrix','s26-matrix.json']; runpy.run_path(sys.argv[0],run_name='__main__')\n"
     )
-    result = subprocess.run([sys.executable, "-B", "-c", child, str(ENTRY)], cwd=ROOT,
-                            input=json.dumps(matrix), capture_output=True, text=True,
-                            encoding="utf-8", check=False)
+    result = runtime.capture_process([sys.executable, '-B', '-c', child, str(ENTRY)], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
     stdout = result.stdout
     try:
         payload = json.loads(stdout)

@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -17,14 +18,7 @@ MATRIX = ROOT / "execution-plans/2026-08-05-toolchain-core-skill-replay-portabil
 
 
 def _run_matrix(matrix_argument: str) -> tuple[subprocess.CompletedProcess[str], dict]:
-    result = subprocess.run(
-        [sys.executable, "-B", str(ENTRY), "replay-matrix", "--matrix", matrix_argument],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-matrix', '--matrix', matrix_argument], ROOT, timeout=90)
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError:
@@ -42,7 +36,7 @@ def _run_inline_matrix(matrix: dict, virtual_name: str) -> tuple[subprocess.Comp
         f"sys.argv=['{ENTRY.as_posix()}','replay-matrix','--matrix',{virtual_name!r}]\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    result = subprocess.run([sys.executable, "-B", "-c", child], cwd=ROOT, input=json.dumps(matrix), capture_output=True, text=True, encoding="utf-8", check=False)
+    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError:

@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 _CER_ASSERTION_BINDINGS = [
     pytest.mark.cer_assertion("A-VERDICT-REAL-EXECUTION"),
@@ -36,17 +37,7 @@ def _run_inline_matrix(matrix: dict) -> tuple[int, dict]:
         f"sys.argv=['{ENTRY.as_posix()}','replay-matrix','--matrix','s31-matrix.json']\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    result = subprocess.run(
-        [sys.executable, "-B", "-c", child],
-        cwd=ROOT,
-        input=json.dumps(matrix),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=60,
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
@@ -57,27 +48,7 @@ def _run_inline_matrix(matrix: dict) -> tuple[int, dict]:
 
 
 def _run_replay(mode: str) -> tuple[int, dict]:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-B",
-            str(ENTRY),
-            "replay-package",
-            "--target",
-            TARGET,
-            "--capability",
-            CAPABILITY,
-            "--probe-mode",
-            mode,
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=180,
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', mode], ROOT, timeout=180)
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
@@ -102,11 +73,7 @@ def _run_identity_matrix(case: dict) -> tuple[int, dict]:
         f"sys.argv=['{ENTRY.as_posix()}','replay-matrix','--matrix','s31-identity-matrix.json']\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    result = subprocess.run(
-        [sys.executable, "-B", "-c", child], cwd=ROOT,
-        input=json.dumps(matrix), capture_output=True, text=True,
-        encoding="utf-8", errors="replace", timeout=60, check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
@@ -122,13 +89,7 @@ def _assert_behavior(condition: bool, failure_id: str, detail: object) -> None:
 
 @pytest.mark.cer_assertion("A-VERDICT-REAL-EXECUTION")
 def test_verdict_binds_current_source_identity_to_real_execution_command() -> None:
-    result = subprocess.run(
-        [sys.executable, "-B", str(ENTRY), "replay-package",
-         "--target", TARGET, "--capability", CAPABILITY,
-         "--probe-mode", "source-identity"],
-        cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
-        errors="replace", timeout=60, check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'source-identity'], ROOT, timeout=180)
     receipt = json.loads(result.stdout)
     replay = receipt.get("current_wrapper_replay") or {}
     snapshot = replay.get("current_snapshot") or {}

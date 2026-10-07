@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -25,15 +26,7 @@ def test_matrix_error_label_invalidates_aggregate_and_is_preserved() -> None:
     matrix_path = Path(__file__).with_name(".s38-matrix.json")
     try:
         matrix_path.write_text(json.dumps(matrix), encoding="utf-8")
-        result = subprocess.run(
-            [sys.executable, "-B", str(ENTRY), "replay-matrix", "--matrix", str(matrix_path.relative_to(ROOT))],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            check=False,
-        )
+        result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-matrix', '--matrix', str(matrix_path.relative_to(ROOT))], ROOT, timeout=90)
     finally:
         matrix_path.unlink(missing_ok=True)
     receipt = json.loads(result.stdout)

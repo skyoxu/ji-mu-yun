@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-FR5-HISTORICAL-NONAUT")]
 
@@ -27,15 +28,7 @@ def _matrix_result(case: dict) -> dict:
     with tempfile.TemporaryDirectory(dir=ROOT) as directory:
         path = Path(directory) / "matrix.json"
         path.write_text(json.dumps(matrix), encoding="utf-8")
-        result = subprocess.run(
-            [sys.executable, "-B", str(ENTRY), "replay-matrix", "--matrix", str(path.relative_to(ROOT))],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            check=False,
-        )
+        result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-matrix', '--matrix', str(path.relative_to(ROOT))], ROOT, timeout=90)
     try:
         value = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
@@ -66,14 +59,7 @@ def _case(**extra: object) -> dict:
 @pytest.mark.cer_assertion("ASSERT-O-BBD73A1FB59F-01")
 @pytest.mark.parametrize("probe_mode", ["stable-no-provenance", "stable-temporary-package"])
 def test_stable_eligibility_requires_verified_provenance(probe_mode: str) -> None:
-    result = subprocess.run(
-        [sys.executable, "-B", str(ENTRY), "replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", probe_mode],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', probe_mode], ROOT, timeout=180)
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError:
@@ -152,14 +138,7 @@ def test_wrong_target_matrix_evidence_invalidates_aggregate() -> None:
 
 @pytest.mark.cer_assertion("FR-1-SUBSTITUTED-TARGET-FAILS-CLOSED")
 def test_substituted_target_is_rejected_before_target_dependent_execution() -> None:
-    result = subprocess.run(
-        [sys.executable, "-B", str(ENTRY), "validate-package", "--target", "scripts", "--capability", CAPABILITY],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'validate-package', '--target', 'scripts', '--capability', CAPABILITY], ROOT, timeout=60)
     _assert_rejected(
         result.returncode != 0,
         "FR1_SUBSTITUTED_TARGET_ACCEPTED",

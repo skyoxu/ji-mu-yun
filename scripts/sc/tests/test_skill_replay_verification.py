@@ -70,6 +70,17 @@ class VerificationProcessTests(unittest.TestCase):
         self.assertIn("independent control failure", failure["failure_detail"])
         self.assertFalse(failure["failure_detail_truncated"])
 
+    def test_periodic_stack_snapshot_stops_before_its_file_is_closed(self):
+        progress = runner.Progress(self.root / "sample.jsonl")
+        progress.start_trace(interval=.01)
+        time.sleep(.04)
+        progress.pytest_unconfigure(None)
+        text = (self.root / "sample.traceback.txt").read_text(encoding="utf-8")
+        self.assertIn("Periodic Python stack snapshot", text)
+        self.assertIn("test_periodic_stack_snapshot_stops_before_its_file_is_closed", text)
+        self.assertTrue(progress.trace.closed)
+        self.assertIsNone(progress.trace_thread)
+
     def test_real_skip_is_non_promotable(self):
         result, expected = self.pytest("import pytest\ndef test_skipped():\n    pytest.skip('intentional skip control')\n")
         status = runner.evaluate_reports(result, expected)

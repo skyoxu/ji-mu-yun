@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT / "scripts" / "sc"))
@@ -35,15 +36,7 @@ def test_aggregate_prompt_budget_is_finite_and_observable() -> None:
 
 
 def _receipt(probe_mode: str) -> dict:
-    result = subprocess.run(
-        [sys.executable, "-B", str(ENTRY), "replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", probe_mode],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', probe_mode], ROOT, timeout=180)
     try:
         value = json.loads(result.stdout)
     except json.JSONDecodeError as exc:

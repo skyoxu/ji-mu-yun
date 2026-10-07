@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -25,17 +26,7 @@ def _run_matrix(matrix: dict) -> tuple[int, dict]:
         f"sys.argv=['{ENTRY.as_posix()}','replay-matrix','--matrix','s31-r1-matrix.json']\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    result = subprocess.run(
-        [sys.executable, "-B", "-c", child],
-        cwd=ROOT,
-        input=json.dumps(matrix),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=60,
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError as exc:

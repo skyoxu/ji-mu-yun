@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("assert-platform-specific-declaration")]
 
@@ -19,15 +20,7 @@ FAILURE_ID = "FR2_EFFECTIVE_CONTENT_BINDING_MISSING"
 
 
 def _validation_receipt() -> tuple[subprocess.CompletedProcess[str], dict[str, object]]:
-    result = subprocess.run(
-        [sys.executable, "-B", str(ENTRY), "validate-package", "--target", TARGET, "--capability", CAPABILITY],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'validate-package', '--target', TARGET, '--capability', CAPABILITY], ROOT, timeout=60)
     try:
         value = json.loads(result.stdout)
     except json.JSONDecodeError:

@@ -4,12 +4,49 @@ from __future__ import annotations
 import tempfile
 import unittest
 import copy
+import ctypes
 from pathlib import Path, PureWindowsPath
 from unittest import mock
 
 import test_skill_replay_review_regressions as support
 
 replay = support.replay
+
+
+class WindowsJobContractTests(unittest.TestCase):
+    def test_win32_kernel_handle_signatures_preserve_pointer_width(self):
+        from scripts.sc import skill_replay_windows_job as jobs
+        api = mock.MagicMock()
+        with mock.patch.object(ctypes, "WinDLL", return_value=api, create=True):
+            self.assertIs(api, jobs.kernel_api())
+        self.assertIs(ctypes.c_void_p, api.CreateJobObjectW.restype)
+        self.assertIs(ctypes.c_void_p, api.CreateToolhelp32Snapshot.restype)
+        self.assertIs(ctypes.c_void_p, api.OpenThread.restype)
+        self.assertEqual([ctypes.c_void_p, ctypes.c_void_p], api.AssignProcessToJobObject.argtypes)
+        self.assertEqual(28, ctypes.sizeof(jobs.ThreadEntry))
+        self.assertEqual(48, ctypes.sizeof(jobs.Accounting))
+        if ctypes.sizeof(ctypes.c_void_p) == 8:
+            self.assertEqual(144, ctypes.sizeof(jobs.ExtendedLimits))
+
+    def test_failed_job_assignment_never_resumes_uncontained_code(self):
+        from scripts.sc import skill_replay_windows_job as jobs
+        api = mock.MagicMock()
+        handle = 0x100000001
+        api.CreateJobObjectW.return_value = handle
+        api.SetInformationJobObject.return_value = 1
+        api.AssignProcessToJobObject.return_value = 0
+        with mock.patch.object(ctypes, "get_last_error", return_value=5, create=True), \
+             mock.patch.object(ctypes, "WinError", side_effect=lambda code: OSError(code, "job denied"), create=True):
+            job = jobs.WindowsJob(api)
+            try:
+                with self.assertRaisesRegex(OSError, "job denied"):
+                    job.assign_and_resume(mock.Mock(pid=123, _handle=handle + 1))
+            finally:
+                job.close()
+        api.OpenThread.assert_not_called()
+        api.ResumeThread.assert_not_called()
+        api.AssignProcessToJobObject.assert_called_once_with(handle, handle + 1)
+        api.CloseHandle.assert_called_once_with(handle)
 
 
 class WindowsBindingTests(unittest.TestCase):

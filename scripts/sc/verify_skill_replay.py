@@ -7,13 +7,14 @@ from __future__ import annotations
 
 import argparse
 import datetime
-import faulthandler
 import json
 import os
 import signal
 import subprocess
 import sys
+import threading
 import time
+import traceback
 import uuid
 from pathlib import Path
 
@@ -42,6 +43,34 @@ class Progress:
     def __init__(self, path):
         self.stream = path.open("x", encoding="utf-8", newline="\n")
         self.trace = path.with_suffix(".traceback.txt").open("x", encoding="utf-8")
+        self.trace_stop, self.trace_thread = None, None
+
+    def start_trace(self, interval=60):
+        # Accepted ADR-0058: snapshot under the GIL instead of using the C
+        # faulthandler watchdog to walk concurrently changing interpreter
+        # frames. Pytest's fatal exception handler remains enabled.
+        self.stop_trace()
+        self.trace_stop = threading.Event()
+        stopped = self.trace_stop
+
+        def sample():
+            while not stopped.wait(interval):
+                self.trace.write("Periodic Python stack snapshot\n")
+                for identity, frame in sys._current_frames().items():
+                    self.trace.write("Thread " + str(identity) + " (most recent call last):\n")
+                    traceback.print_stack(frame, limit=100, file=self.trace)
+                self.trace.flush()
+
+        self.trace_thread = threading.Thread(target=sample, name="tc-d1-stack-sampler", daemon=True)
+        self.trace_thread.start()
+
+    def stop_trace(self):
+        if self.trace_stop is not None:
+            self.trace_stop.set()
+            self.trace_thread.join(timeout=5)
+            if self.trace_thread.is_alive():
+                raise RuntimeError("periodic stack sampler did not stop")
+            self.trace_stop, self.trace_thread = None, None
 
     def event(self, kind, **fields):
         value = {"kind": kind, "pid": os.getpid(), "utc": datetime.datetime.now(datetime.timezone.utc).isoformat(), **fields}
@@ -53,7 +82,7 @@ class Progress:
 
     def pytest_runtest_logstart(self, nodeid, location):
         self.event("start", nodeid=nodeid)
-        faulthandler.dump_traceback_later(60, repeat=True, file=self.trace)
+        self.start_trace()
 
     def pytest_runtest_setup(self, item):
         self.event("phase", nodeid=item.nodeid, phase="setup")
@@ -76,14 +105,14 @@ class Progress:
                    duration=report.duration, wasxfail=bool(getattr(report, "wasxfail", False)), **diagnostic)
 
     def pytest_runtest_logfinish(self, nodeid, location):
-        faulthandler.cancel_dump_traceback_later()
+        self.stop_trace()
         self.event("finish", nodeid=nodeid)
 
     def pytest_sessionfinish(self, session, exitstatus):
         self.event("session-finish", exit_code=int(exitstatus))
 
     def pytest_unconfigure(self, config):
-        faulthandler.cancel_dump_traceback_later()
+        self.stop_trace()
         self.stream.close()
         self.trace.close()
 
@@ -101,11 +130,8 @@ def pytest_configure(config):
 def terminate_owned(process, directory):
     """Terminate this launched process tree, never an unrelated worker."""
     if os.name == "nt":
-        result = subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                                capture_output=True, timeout=30, check=False)
-        (directory / "termination-stdout.bin").write_bytes(result.stdout)
-        (directory / "termination-stderr.bin").write_bytes(result.stderr)
-        details = {"method": "taskkill-owned-tree", "pid": process.pid, "exit_code": result.returncode}
+        runtime._terminate_owned(process)
+        details = {"method": "terminate-owned-windows-job", "pid": process.pid, "exit_code": 0}
     else:
         runtime._terminate_owned(process)
         details = {"method": "kill-owned-process-tree", "pid": process.pid, "exit_code": 0}
@@ -118,7 +144,9 @@ def supervise(command, root, directory, *, events=None, test_timeout=300, startu
     environment = runtime.child_environment()
     # A verification must not inherit selectors or plugin injection from env.
     environment["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
-    options = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True}
+    native_traces = directory / "native-processes"
+    native_traces.mkdir()
+    environment["TC_D1_NATIVE_TRACE_DIR"] = str(native_traces.resolve())
     started, last_print, active_started = time.monotonic(), 0, None
     started_idle = started
     active, phase, offset, pending, records, reason, cleanup = None, "startup", 0, b"", [], None, None
@@ -149,7 +177,7 @@ def supervise(command, root, directory, *, events=None, test_timeout=300, startu
 
     with (directory / "stdout.txt").open("wb") as out, (directory / "stderr.txt").open("wb") as err:
         try:
-            process = subprocess.Popen(command, cwd=root, env=environment, stdout=out, stderr=err, **options)
+            process = runtime.start_owned(command, cwd=root, env=environment, stdout=out, stderr=err)
             while True:
                 now = time.monotonic()
                 read_events(now)
@@ -183,6 +211,12 @@ def supervise(command, root, directory, *, events=None, test_timeout=300, startu
                     cleanup = terminate_owned(process, directory)
                 except Exception as cleanup_error:
                     cleanup = {"error": str(cleanup_error), "pid": process.pid}
+        finally:
+            if process is not None:
+                try:
+                    runtime.close_owned(process)
+                except Exception as cleanup_error:
+                    reason, diagnostic = "supervisor-error", str(cleanup_error)
     result = {"command": command, "exit_code": process.returncode if process else None,
               "reason": reason, "active_nodeid": active, "active_phase": phase, "cleanup": cleanup,
               "records": records, "diagnostic": diagnostic,

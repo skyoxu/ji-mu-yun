@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -23,26 +24,7 @@ SEED_OCCURRENCES = (
 
 
 def _replay_consumer_manifest() -> dict:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-B",
-            str(REPLAY_ENTRY),
-            "replay-package",
-            "--target",
-            TARGET,
-            "--capability",
-            CAPABILITY,
-            "--probe-mode",
-            "consumer-manifest",
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(REPLAY_ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'consumer-manifest'], ROOT, timeout=180)
     assert result.returncode == 0, (
         "skill_package_replay.py failed before producing a Consumer Manifest: "
         f"{result.stdout}{result.stderr}"

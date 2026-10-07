@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -18,26 +19,7 @@ TARGET = ".agents/skills/run-refactor-implementation-acceptance"
 
 @pytest.mark.cer_assertion("assert-platform-specific-declaration")
 def test_replay_receipt_declares_active_platform_behavior() -> None:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-B",
-            str(ENTRY),
-            "replay-package",
-            "--target",
-            TARGET,
-            "--capability",
-            CAPABILITY,
-            "--probe-mode",
-            "fresh",
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'fresh'], ROOT, timeout=180)
     receipt = json.loads(result.stdout)
     replay = receipt.get("current_wrapper_replay")
     declaration = replay.get("platform_behavior") if isinstance(replay, dict) else None
@@ -56,7 +38,8 @@ def _package_identity(package_root: Path) -> str:
             "path": path.relative_to(package_root).as_posix(),
             "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(),
         }
-        for path in sorted(package_root.rglob("*"))
+        # Accepted ADR-0058: the independent oracle uses Git's byte order.
+        for path in sorted(package_root.rglob("*"), key=lambda p: p.relative_to(package_root).as_posix().encode("utf-8"))
         if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
     ]
     return "sha256:" + hashlib.sha256(
@@ -66,24 +49,7 @@ def _package_identity(package_root: Path) -> str:
 
 @pytest.mark.cer_assertion("FR-2-SUCCESSFUL-EVIDENCE-EFFECTIVE-CONTENT-BINDING")
 def test_successful_evidence_names_the_identity_of_the_inspected_package() -> None:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-B",
-            str(ENTRY),
-            "validate-package",
-            "--target",
-            TARGET,
-            "--capability",
-            CAPABILITY,
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'validate-package', '--target', TARGET, '--capability', CAPABILITY], ROOT, timeout=60)
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError:

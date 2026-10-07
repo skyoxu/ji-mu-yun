@@ -1,6 +1,7 @@
 """S7 CER selector for the detached-Probe and disable-transition checks."""
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 from test_s10 import (
     test_always_success_validator_is_reported_as_a_failed_probe_outcome as _always_success_probe,
@@ -26,19 +27,7 @@ TARGET = ".agents/skills/run-refactor-implementation-acceptance"
 
 @pytest.mark.cer_assertion("A-FR5-HISTORICAL-NONAUT")
 def test_reused_historical_evidence_cannot_authorize_current_replay() -> None:
-    result = subprocess.run(
-        [
-            sys.executable, "-B", str(ENTRY), "replay-package",
-            "--target", TARGET, "--capability", CAPABILITY,
-            "--probe-mode", "reused-evidence",
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'reused-evidence'], ROOT, timeout=180)
     receipt = json.loads(result.stdout)
     assert (
         result.returncode != 0

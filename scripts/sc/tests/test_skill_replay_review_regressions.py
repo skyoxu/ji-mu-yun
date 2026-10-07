@@ -100,7 +100,7 @@ class NativeRuntimeTests(unittest.TestCase):
         source = self.write("authority/source.py", code)
         self.cap = {"allowed_root": "validator", "validator_entrypoint": "check.py", "validator_sha256": replay.digest(validator), "probe_args": ["{target}"], "state": "active", "authorizes": [], "validator_source": "authority/source.py", "validator_source_sha256": replay.digest(source), "required_rules": [], "negative_probe": {"path": "fixture.json", "replacement": {"valid": False}, "diagnostic": "invalid-fixture"}}
         self.write("capability.json", json.dumps(self.cap))
-        for entry in ("skill_package_replay.py", "skill_replay_runtime.py", "skill_replay_observer.py"):
+        for entry in ("skill_package_replay.py", "skill_replay_runtime.py", "skill_replay_observer.py", "skill_replay_windows_job.py"):
             entry_source = ENTRY.with_name(entry).read_text(encoding="utf-8")
             if entry == "skill_package_replay.py":
                 # This injection exists only in the isolated fixture. The

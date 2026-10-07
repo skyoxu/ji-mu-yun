@@ -251,3 +251,64 @@ preparation failures are recorded separately. Native execution stays bounded
 at 60 seconds and 8 MiB, and the direct per-node budget stays 300 seconds.
 All original 340 selectors remain selected, with no skip or xfail. C3 stays
 OPEN and direct test results grant no formal Acceptance or Trust Approval.
+
+### 2026-10-07 Windows process lifetime and closure traversal repair
+
+The native Windows replay of source `12e37e9fd2b543ba66e8bebb07bd66756292bf41`
+completed 318 of the original 340 nodes, recorded 54 unique failing nodes and
+exited with `0xC0000005`. Its evidence is preserved in
+`logs/08-05-real-skill-replay/observable-verification-20261007T150204Z-ec03037f`.
+It is unsuccessful; the final active S7 node and 22 unfinished nodes have no
+native JUnit result. Linux success does not supersede this Windows result.
+
+Windows native transports and the direct supervisor now create an unnamed,
+non-inheritable Job Object with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`. The exact
+Popen child starts with `CREATE_SUSPENDED`, joins the job, and only then resumes
+its initial thread. All kernel handles have explicit pointer-width signatures;
+Toolhelp selects only a thread owned by the launched PID. Assignment/resumption
+errors fail closed. No breakaway flag is enabled. Nested jobs require Windows 8
+or later. Job termination waits for active descendants to drain before closing
+inherited transport files, including after a normal leader exit. It contains
+descendants after the leader dies, which PID-based `taskkill /T` cannot ensure.
+The non-Windows transport also drains its owned process group on normal exit.
+These lifetime guarantees do not claim an arbitrary-code security sandbox.
+
+Dependency closure traversal indexes directory membership and repeated import
+lookups only within that invocation. Root containment is resolved once per
+enumeration. The next invocation rebuilds these indexes and rereads/hashes all
+selected bytes; new/deleted modules, owner resources, changed imports and trust
+drift remain observable. No closure, trust result, manifest or execution result
+is cached. The independent S2/S4 package digest oracles retain equality checks
+and order repository-relative names by POSIX UTF-8 bytes, matching Git identity
+instead of Windows case-folded Path ordering.
+
+CER package replay parents use the owned file-backed transport and the existing
+180-second integration ceiling. Matrix parents use a 90-second harness ceiling;
+other validation calls remain finite. The native child and aggregate Matrix
+ceilings stay 60 seconds and 8 MiB, and the direct per-node ceiling stays 300
+seconds. No test body, assertion identity, selector, skip or expected verdict is
+removed. S19 uses the bound interpreter instead of selecting another runtime.
+
+The Windows fatal report shows a wait frame and a periodic trace cut off during
+stack dumping. This does not prove the access violation originated in either
+the wait or CPython's diagnostic thread. Replace the recurring C-level
+`dump_traceback_later` watchdog with periodic Python frame snapshots; join the
+sampler before closing its file. Pytest's fatal exception handler remains
+enabled. This mitigates the known class of concurrent frame-walking faults
+without declaring this crash resolved before another native Windows run.
+Primary references: CPython issues
+[140815](https://github.com/python/cpython/issues/140815) and
+[158200](https://github.com/python/cpython/issues/158200), and Microsoft's
+[Job Objects](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects)
+and [ResumeThread](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-resumethread)
+contracts.
+
+The direct verifier records per-process diagnostic start, native exit or
+unsuccessful termination events with actual PID, parent PID, command, cwd,
+budget and elapsed time. Each process has a fresh append-only file, so nested
+writers cannot overwrite another process's record. Diagnostic command fields
+are bounded and marked if truncated; stdin and credentials are never logged.
+The explicit diagnostic directory is propagated in the sanitized environment
+and included in its binding. These diagnostics grant no execution, trust or
+Acceptance authority. All prior evidence stays unchanged. C3 remains OPEN and
+Acceptance remains blocked until the required native Windows evidence exists.

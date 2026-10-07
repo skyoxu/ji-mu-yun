@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 ROOT = Path(__file__).resolve().parents[4]
 ENTRY = ROOT / "scripts" / "sc" / "skill_package_replay.py"
@@ -27,17 +28,7 @@ def _run_matrix(case: dict, *, matrix_fields: dict | None = None, cases: list[di
         f"sys.argv=['{ENTRY.as_posix()}','replay-matrix','--matrix','s44-matrix.json']\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    result = subprocess.run(
-        [sys.executable, "-B", "-c", child],
-        cwd=ROOT,
-        input=json.dumps(matrix),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=60,
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
@@ -48,27 +39,7 @@ def _run_matrix(case: dict, *, matrix_fields: dict | None = None, cases: list[di
 
 
 def _run_replay(probe_mode: str = "source-identity") -> tuple[int, dict]:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-B",
-            str(ENTRY),
-            "replay-package",
-            "--target",
-            TARGET,
-            "--capability",
-            CAPABILITY,
-            "--probe-mode",
-            probe_mode,
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=60,
-        check=False,
-    )
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', probe_mode], ROOT, timeout=180)
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
