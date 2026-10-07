@@ -1,0 +1,133 @@
+{
+  "schema": "jimuyun.cer-assertion-preservation.v1",
+  "base": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+  "files": [
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s19.py",
+      "test_count": 7,
+      "assertion_count": 2,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s2.py",
+      "test_count": 1,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s24.py",
+      "test_count": 10,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s26.py",
+      "test_count": 14,
+      "assertion_count": 2,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s27.py",
+      "test_count": 4,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s28.py",
+      "test_count": 2,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s2_cer.py",
+      "test_count": 2,
+      "assertion_count": 2,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s30.py",
+      "test_count": 4,
+      "assertion_count": 11,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s31-r1.py",
+      "test_count": 1,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s31-r2.py",
+      "test_count": 1,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s31-r3.py",
+      "test_count": 2,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s31.py",
+      "test_count": 4,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s38.py",
+      "test_count": 1,
+      "assertion_count": 2,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s4.py",
+      "test_count": 1,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s41.py",
+      "test_count": 12,
+      "assertion_count": 24,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s42.py",
+      "test_count": 4,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s44.py",
+      "test_count": 14,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s4_cer.py",
+      "test_count": 5,
+      "assertion_count": 2,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s7.py",
+      "test_count": 8,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s7_cer.py",
+      "test_count": 5,
+      "assertion_count": 1,
+      "identities_and_assertions_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s9.py",
+      "test_count": 3,
+      "assertion_count": 4,
+      "identities_and_assertions_unchanged": true
+    }
+  ],
+  "authorizes": []
+}
