@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 _CER_ASSERTION_BINDINGS = [
@@ -28,7 +29,7 @@ def _assert_behavior(condition: bool, failure_id: str, message: str) -> None:
 
 
 def _positive_replay() -> tuple[int, int, dict[str, object] | None]:
-    process = subprocess.Popen(
+    process = runtime.capture_process(
         [
             sys.executable,
             "-B",
@@ -41,22 +42,11 @@ def _positive_replay() -> tuple[int, int, dict[str, object] | None]:
             "--probe-mode",
             "fresh",
         ],
-        cwd=ROOT,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
+        ROOT,
+        timeout=180,
     )
-    # Parent lifecycle checks plus fresh-child replay span separate native
-    # budgets. A harness timeout must also reap its spawned process.
     try:
-        stdout, _ = process.communicate(timeout=180)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        process.communicate()
-        raise
-    try:
-        receipt = json.loads(stdout)
+        receipt = json.loads(process.stdout)
     except json.JSONDecodeError:
         receipt = None
     return process.pid, process.returncode, receipt if isinstance(receipt, dict) else None
@@ -137,9 +127,9 @@ def test_always_success_validator_is_reported_as_a_failed_probe_outcome() -> Non
         fixture.git("add", ".")
         fixture.git("commit", "-qm", "Freeze always-success fault fixture")
         fixture.pin_fixture_authority(fixture.git("rev-parse", "HEAD").strip())
-        result = subprocess.run([sys.executable, "-B", str(fixture.root / "scripts/sc/skill_package_replay.py"),
+        result = runtime.capture_process([sys.executable, "-B", str(fixture.root / "scripts/sc/skill_package_replay.py"),
                                  "validate-package", "--target", "candidate", "--capability", "capability.json"],
-                                cwd=fixture.root, capture_output=True, text=True, encoding="utf-8", check=False)
+                                fixture.root, timeout=60)
     finally:
         fixture.tearDown()
     _assert_behavior(

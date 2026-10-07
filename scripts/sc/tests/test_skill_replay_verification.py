@@ -66,6 +66,9 @@ class VerificationProcessTests(unittest.TestCase):
         result, expected = self.pytest("def test_rejected():\n    assert False, 'independent control failure'\n")
         self.assertFalse(runner.evaluate_reports(result, expected)["pass"])
         self.assertNotEqual(0, result["exit_code"])
+        failure = next(r for r in result["records"] if r.get("outcome") == "failed")
+        self.assertIn("independent control failure", failure["failure_detail"])
+        self.assertFalse(failure["failure_detail_truncated"])
 
     def test_real_skip_is_non_promotable(self):
         result, expected = self.pytest("import pytest\ndef test_skipped():\n    pytest.skip('intentional skip control')\n")
@@ -77,7 +80,7 @@ class VerificationProcessTests(unittest.TestCase):
         ready = self.root / "child-ready.txt"
         leaked = self.root / "child-survived.txt"
         child = "import time; from pathlib import Path; Path(" + repr(str(ready)) + ").write_text('ready'); time.sleep(5); Path(" + repr(str(leaked)) + ").write_text('leaked')"
-        body = "import subprocess,sys,time\ndef test_hang():\n    subprocess.Popen([sys.executable, '-c', " + repr(child) + "])\n    time.sleep(100)\n"
+        body = "import subprocess,sys,time\ndef test_hang():\n    subprocess.Popen([sys.executable, '-c', " + repr(child) + "], start_new_session=True)\n    time.sleep(100)\n"
         result, expected = self.pytest(body, timeout=2)
         self.assertTrue(ready.exists(), "the actual descendant must have started")
         self.assertEqual("test-timeout", result["reason"])

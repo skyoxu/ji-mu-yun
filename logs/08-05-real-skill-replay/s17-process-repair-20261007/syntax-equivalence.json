@@ -1,0 +1,7 @@
+{
+  "schema": "jimuyun.syntax-selection-equivalence.v1",
+  "python_files": 837,
+  "mismatches": [],
+  "original_import_and_consumer_selector_semantics_preserved": true,
+  "authorizes": []
+}

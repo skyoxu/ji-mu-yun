@@ -2,29 +2,20 @@
 from __future__ import annotations
 
 import json
-import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 ROOT = Path(__file__).resolve().parents[4]
 REPLAY = ROOT / "scripts" / "sc" / "skill_package_replay.py"
 WORKER = ROOT / "scripts" / "vdd" / "probe_real_worker.py"
 CAPABILITY = "scripts/sc/config/skill-package-validator-capability.v1.json"
 TARGET = ".agents/skills/run-refactor-implementation-acceptance"
-PYTHON = shutil.which("py") or sys.executable
-PYTHON_PREFIX = ["-3"] if Path(PYTHON).name.lower() == "py.exe" else []
-
-TOOLS = ROOT / ".agents" / "skills" / "quick-dev-tdd-adapter" / "tools"
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
-
-from current_router import materialize_descriptor  # noqa: E402
-from process_executor_v2 import execute_process  # noqa: E402
-
+PYTHON = sys.executable
+PYTHON_PREFIX = []
 
 def _assert_bound(condition: bool, failure_id: str, detail: object) -> None:
     if not condition:
@@ -33,15 +24,7 @@ def _assert_bound(condition: bool, failure_id: str, detail: object) -> None:
 
 
 def _json_result(command: list[str]) -> tuple[subprocess.CompletedProcess[str], dict]:
-    result = subprocess.run(
-        command,
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
+    result = runtime.capture_process(command, ROOT, timeout=180)
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError:
@@ -131,12 +114,9 @@ def test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failur
 @pytest.mark.cer_assertion("A-C6F923EBD52F-1")
 def test_external_probe_timeout_has_deterministic_terminal_state() -> None:
     try:
-        subprocess.run(
+        runtime.capture_process(
             [PYTHON, *PYTHON_PREFIX, "-c", "import time; time.sleep(2)"],
-            timeout=0.2,
-            check=False,
-            capture_output=True,
-            text=True,
+            ROOT, timeout=0.2,
         )
         timed_out = False
     except subprocess.TimeoutExpired:

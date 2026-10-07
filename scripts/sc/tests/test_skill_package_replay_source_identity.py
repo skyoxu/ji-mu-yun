@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -17,14 +18,9 @@ TARGET = ".agents/skills/run-refactor-implementation-acceptance"
 
 @pytest.mark.cer_assertion("ASSERT-SM6-IDENTITY-RECONSTRUCTION-AND-FRESH-REPLAY")
 def test_replay_reconstructs_bound_identity_and_launches_fresh_process() -> None:
-    result = subprocess.run(
+    result = runtime.capture_process(
         [sys.executable, "-B", str(ENTRY), "replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "source-identity"],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
+        ROOT, timeout=180,
     )
     try:
         receipt = json.loads(result.stdout)

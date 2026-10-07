@@ -65,8 +65,15 @@ class Progress:
         self.event("phase", nodeid=item.nodeid, phase="teardown")
 
     def pytest_runtest_logreport(self, report):
+        diagnostic = {}
+        if report.failed:
+            # Pytest prints its failure summary at session end, which may
+            # never happen after a later timeout. Preserve bounded details
+            # immediately without changing the report or its verdict.
+            full = report.longreprtext
+            diagnostic = {"failure_detail": full[:32768], "failure_detail_truncated": len(full) > 32768}
         self.event("report", nodeid=report.nodeid, phase=report.when, outcome=report.outcome,
-                   duration=report.duration, wasxfail=bool(getattr(report, "wasxfail", False)))
+                   duration=report.duration, wasxfail=bool(getattr(report, "wasxfail", False)), **diagnostic)
 
     def pytest_runtest_logfinish(self, nodeid, location):
         faulthandler.cancel_dump_traceback_later()
@@ -100,11 +107,8 @@ def terminate_owned(process, directory):
         (directory / "termination-stderr.bin").write_bytes(result.stderr)
         details = {"method": "taskkill-owned-tree", "pid": process.pid, "exit_code": result.returncode}
     else:
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-            details = {"method": "kill-owned-process-group", "pid": process.pid, "exit_code": 0}
-        except ProcessLookupError:
-            details = {"method": "owned-process-group-already-exited", "pid": process.pid, "exit_code": 0}
+        runtime._terminate_owned(process)
+        details = {"method": "kill-owned-process-tree", "pid": process.pid, "exit_code": 0}
     process.wait(timeout=10)
     return details
 

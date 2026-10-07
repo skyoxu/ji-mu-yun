@@ -1,0 +1,479 @@
+{
+  "schema": "jimuyun.s17-failure-diagnosis.v1",
+  "base_commit": "7abdfb25dcc1342d0f2f7b3dc0dbb9268f2bd39f",
+  "windows_evidence_candidate": "69bb7f87e28a67ee7a017d805088e2ecff7d5d35",
+  "completed_nodes": 46,
+  "failed_call_nodes": 7,
+  "failed_setup_nodes": 7,
+  "failed_reports": [
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.619412+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 197.1627669003792,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:52:40.589595+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 176.95878499979153,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:22.537072+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 161.93945679999888,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:58:07.688424+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 163.5624882997945,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:00:52.161386+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 164.4647574000992,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:03:34.861035+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 162.69010599981993,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.822925+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 162.9528417000547,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.512047+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 161.53390550008044,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.521726+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.00018490012735128403,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.531490+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.0001938999630510807,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.540949+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.00018749991431832314,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.550684+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.00017909985035657883,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.721835+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.00021430011838674545,
+      "wasxfail": false
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.731041+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.00018330011516809464,
+      "wasxfail": false
+    }
+  ],
+  "timed_out_node": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+  "baseline_linux_profile_seconds": 156.01132804399984,
+  "profile_top": [
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.exec>",
+      "calls": 56,
+      "self_seconds": 0.00023780600000000002,
+      "cumulative_seconds": 156.01193629600002
+    },
+    {
+      "file": "skill_package_replay.py",
+      "line": 1,
+      "function": "<module>",
+      "calls": 1,
+      "self_seconds": 0.000532985,
+      "cumulative_seconds": 156.011925149
+    },
+    {
+      "file": "skill_package_replay.py",
+      "line": 589,
+      "function": "main",
+      "calls": 1,
+      "self_seconds": 2.4989e-05,
+      "cumulative_seconds": 155.982419426
+    },
+    {
+      "file": "skill_package_replay.py",
+      "line": 404,
+      "function": "replay_package",
+      "calls": 1,
+      "self_seconds": 0.000750901,
+      "cumulative_seconds": 155.972325175
+    },
+    {
+      "file": "skill_package_replay.py",
+      "line": 313,
+      "function": "replay_metadata",
+      "calls": 1,
+      "self_seconds": 0.00037595500000000003,
+      "cumulative_seconds": 98.01750201300001
+    },
+    {
+      "file": "skill_replay_runtime.py",
+      "line": 351,
+      "function": "consumer_manifest",
+      "calls": 4,
+      "self_seconds": 4.196886718,
+      "cumulative_seconds": 80.611016539
+    },
+    {
+      "file": "skill_replay_runtime.py",
+      "line": 496,
+      "function": "route_transitions",
+      "calls": 1,
+      "self_seconds": 0.0022262890000000002,
+      "cumulative_seconds": 71.473845544
+    },
+    {
+      "file": "skill_replay_runtime.py",
+      "line": 182,
+      "function": "dependency_closure",
+      "calls": 9,
+      "self_seconds": 1.8357839960000002,
+      "cumulative_seconds": 59.321353107
+    },
+    {
+      "file": "ast.py",
+      "line": 369,
+      "function": "walk",
+      "calls": 22778159,
+      "self_seconds": 8.555109190000001,
+      "cumulative_seconds": 51.323273901
+    },
+    {
+      "file": "skill_replay_runtime.py",
+      "line": 91,
+      "function": "execute",
+      "calls": 49,
+      "self_seconds": 0.001987331,
+      "cumulative_seconds": 45.469168965
+    },
+    {
+      "file": "subprocess.py",
+      "line": 1259,
+      "function": "wait",
+      "calls": 175,
+      "self_seconds": 0.000269818,
+      "cumulative_seconds": 45.426222243000005
+    },
+    {
+      "file": "subprocess.py",
+      "line": 2021,
+      "function": "_wait",
+      "calls": 175,
+      "self_seconds": 0.019932992,
+      "cumulative_seconds": 45.425925326000005
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method time.sleep>",
+      "calls": 1138,
+      "self_seconds": 45.382812767000004,
+      "cumulative_seconds": 45.382812767000004
+    },
+    {
+      "file": "skill_package_replay.py",
+      "line": 220,
+      "function": "verify_fresh_replay",
+      "calls": 1,
+      "self_seconds": 0.008851983,
+      "cumulative_seconds": 41.472279104
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'extend' of 'collections.deque' objects>",
+      "calls": 22766461,
+      "self_seconds": 6.152518273,
+      "cumulative_seconds": 40.766452589000004
+    },
+    {
+      "file": "ast.py",
+      "line": 269,
+      "function": "iter_child_nodes",
+      "calls": 45521224,
+      "self_seconds": 17.033165838000002,
+      "cumulative_seconds": 34.613934316000005
+    },
+    {
+      "file": "skill_replay_runtime.py",
+      "line": 167,
+      "function": "_import_names",
+      "calls": 4162,
+      "self_seconds": 2.3400761620000003,
+      "cumulative_seconds": 26.990166142000003
+    },
+    {
+      "file": "skill_package_replay.py",
+      "line": 211,
+      "function": "current_snapshot_binding",
+      "calls": 3,
+      "self_seconds": 2.7382000000000003e-05,
+      "cumulative_seconds": 24.600861391000002
+    },
+    {
+      "file": "skill_replay_runtime.py",
+      "line": 391,
+      "function": "snapshot",
+      "calls": 3,
+      "self_seconds": 0.006267456,
+      "cumulative_seconds": 24.600834009000003
+    },
+    {
+      "file": "skill_package_replay.py",
+      "line": 208,
+      "function": "consumer_manifest",
+      "calls": 1,
+      "self_seconds": 0.0001134,
+      "cumulative_seconds": 15.988355332000001
+    },
+    {
+      "file": "skill_package_replay.py",
+      "line": 214,
+      "function": "validate_current_snapshot_binding",
+      "calls": 2,
+      "self_seconds": 0.001120633,
+      "cumulative_seconds": 15.123604126000002
+    },
+    {
+      "file": "ast.py",
+      "line": 257,
+      "function": "iter_fields",
+      "calls": 59202402,
+      "self_seconds": 9.340198514,
+      "cumulative_seconds": 12.751080779
+    },
+    {
+      "file": "pathlib.py",
+      "line": 407,
+      "function": "_load_parts",
+      "calls": 1377555,
+      "self_seconds": 1.331629087,
+      "cumulative_seconds": 11.145878054
+    },
+    {
+      "file": "ast.py",
+      "line": 34,
+      "function": "parse",
+      "calls": 6046,
+      "self_seconds": 1.4574288830000002,
+      "cumulative_seconds": 10.686596328
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.compile>",
+      "calls": 6067,
+      "self_seconds": 9.258508681,
+      "cumulative_seconds": 9.259113542
+    },
+    {
+      "file": "pathlib.py",
+      "line": 642,
+      "function": "with_suffix",
+      "calls": 549211,
+      "self_seconds": 0.914685681,
+      "cumulative_seconds": 8.777982255000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<built-in method builtins.isinstance>",
+      "calls": 109231872,
+      "self_seconds": 8.70007911,
+      "cumulative_seconds": 8.700457361
+    },
+    {
+      "file": "skill_replay_runtime.py",
+      "line": 196,
+      "function": "is_file",
+      "calls": 1073954,
+      "self_seconds": 0.6613067570000001,
+      "cumulative_seconds": 8.532282124
+    },
+    {
+      "file": "pathlib.py",
+      "line": 437,
+      "function": "__str__",
+      "calls": 2063207,
+      "self_seconds": 1.097895848,
+      "cumulative_seconds": 8.505886962
+    },
+    {
+      "file": "pathlib.py",
+      "line": 380,
+      "function": "with_segments",
+      "calls": 2730152,
+      "self_seconds": 1.650066594,
+      "cumulative_seconds": 8.147285796
+    },
+    {
+      "file": "pathlib.py",
+      "line": 450,
+      "function": "as_posix",
+      "calls": 1128735,
+      "self_seconds": 0.6032258220000001,
+      "cumulative_seconds": 7.856522045
+    },
+    {
+      "file": "pathlib.py",
+      "line": 663,
+      "function": "relative_to",
+      "calls": 81376,
+      "self_seconds": 0.364564153,
+      "cumulative_seconds": 7.504889189000001
+    },
+    {
+      "file": "pathlib.py",
+      "line": 551,
+      "function": "drive",
+      "calls": 1639516,
+      "self_seconds": 0.6816008440000001,
+      "cumulative_seconds": 7.354911088000001
+    },
+    {
+      "file": "pathlib.py",
+      "line": 387,
+      "function": "_parse_path",
+      "calls": 1377702,
+      "self_seconds": 3.199045717,
+      "cumulative_seconds": 6.041470307
+    },
+    {
+      "file": "skill_replay_runtime.py",
+      "line": 63,
+      "function": "files",
+      "calls": 41,
+      "self_seconds": 0.055423033000000003,
+      "cumulative_seconds": 5.722298423000001
+    },
+    {
+      "file": "skill_replay_runtime.py",
+      "line": 510,
+      "function": "invoke",
+      "calls": 45,
+      "self_seconds": 0.002523819,
+      "cumulative_seconds": 5.673626235
+    },
+    {
+      "file": "skill_replay_runtime.py",
+      "line": 272,
+      "function": "observed_validator",
+      "calls": 48,
+      "self_seconds": 0.0020173640000000002,
+      "cumulative_seconds": 5.651614822
+    },
+    {
+      "file": "pathlib.py",
+      "line": 1157,
+      "function": "__init__",
+      "calls": 2744096,
+      "self_seconds": 1.291681257,
+      "cumulative_seconds": 5.5262809850000005
+    },
+    {
+      "file": "pathlib.py",
+      "line": 583,
+      "function": "name",
+      "calls": 1152246,
+      "self_seconds": 0.304404701,
+      "cumulative_seconds": 5.249443323
+    },
+    {
+      "file": "pathlib.py",
+      "line": 569,
+      "function": "_tail",
+      "calls": 2927680,
+      "self_seconds": 0.6307027310000001,
+      "cumulative_seconds": 5.1032705410000005
+    }
+  ],
+  "inference": "Repeated exact-byte syntax work contributes materially to replay cost; Windows fresh child performance and timeout root cause require targeted post-repair verification. Parent tracebacks show waiting on child output, not the child internal stack.",
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "C3": "OPEN",
+  "authorizes": []
+}

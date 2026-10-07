@@ -1,0 +1,97 @@
+{
+  "schema": "jimuyun.lossless-evidence-archive.v1",
+  "entries": [
+    {
+      "original_path": "baseline-stdout.json",
+      "archive_path": "baseline-stdout.json.gz",
+      "raw_bytes": 2101262,
+      "raw_sha256": "006ad7671787bb471894ec59162b169451cfb2ac774ca4dc5791df6e050b4bae",
+      "archive_bytes": 416231,
+      "archive_sha256": "14f840a5c12b71e115bece2a24461fab8cac2b88538b8f8302bb401f3ecb4f79",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "baseline.prof",
+      "archive_path": "baseline.prof.gz",
+      "raw_bytes": 148544,
+      "raw_sha256": "c5808bc88254913edd17ce77bf297626235032bc3fae2c23bd89789e5e70bed5",
+      "archive_bytes": 61500,
+      "archive_sha256": "0b4c694b593d98fb9020a7d8a38c5f3eb1b1c7f1b3e48a244bc14954c1a06fd2",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "collection-stdout.txt",
+      "archive_path": "collection-stdout.txt.gz",
+      "raw_bytes": 134988,
+      "raw_sha256": "b19d4661105a4840d5b457f3790340556f4d5db593bd6d14be4b377494cf1976",
+      "archive_bytes": 10893,
+      "archive_sha256": "9525145312a839bba3e4a4ee4b8ce0fe602afde3c88c3c0f325fedbfc17f871b",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "native-targeted/pytest/process-result.json",
+      "archive_path": "native-targeted/pytest/process-result.json.gz",
+      "raw_bytes": 67772,
+      "raw_sha256": "8acf9bf65805abf0035f40bc239ba47b9331d5882b98e0ea1ae39571e5d06708",
+      "archive_bytes": 4878,
+      "archive_sha256": "f1ddb35b9c94394a78c5f017f01f202449c5fe1be540da2bddea9039c6b3675a",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "native-targeted/source-after.json",
+      "archive_path": "native-targeted/source-after.json.gz",
+      "raw_bytes": 306059,
+      "raw_sha256": "d624f29087a6ead971ef6171a1e727027e62419290295a63916ab3a747d59f93",
+      "archive_bytes": 72412,
+      "archive_sha256": "07893f8b5b8b7e959cf16ddc26106fc4dc89f1dd439a85912b612df42bc7946c",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "native-targeted/source-before.json",
+      "archive_path": "native-targeted/source-before.json.gz",
+      "raw_bytes": 306059,
+      "raw_sha256": "d624f29087a6ead971ef6171a1e727027e62419290295a63916ab3a747d59f93",
+      "archive_bytes": 72412,
+      "archive_sha256": "07893f8b5b8b7e959cf16ddc26106fc4dc89f1dd439a85912b612df42bc7946c",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "repaired-stdout.json",
+      "archive_path": "repaired-stdout.json.gz",
+      "raw_bytes": 2102128,
+      "raw_sha256": "4274ccdd841faacf5a21b7ef8ca7861a59a9df5dc9f874d7b7e9d992e72b5090",
+      "archive_bytes": 416398,
+      "archive_sha256": "9604cdddec888d85f8978f72760a616df53ac91ca9729aaa8c987dda1d4fc197",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "repaired.prof",
+      "archive_path": "repaired.prof.gz",
+      "raw_bytes": 147538,
+      "raw_sha256": "0f4c1a0a9c68f862f77899395ae25d0afe7f501375a7313187008beba9b5d228",
+      "archive_bytes": 61016,
+      "archive_sha256": "bb9fd061c4db0dfa35930b7bedc247ea937853269d277642c38a27cfb36d79c6",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "windows-process-result.json",
+      "archive_path": "windows-process-result.json.gz",
+      "raw_bytes": 142955,
+      "raw_sha256": "8903ddc3494ff6bb18574241c8b2f16e9c0f847428087a185052524198927fc7",
+      "archive_bytes": 11715,
+      "archive_sha256": "940e7b598ef6ee89eac0ca55172d3eaba59e670b67b270d8e4dc412fa00b61ec",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "windows-traceback.txt",
+      "archive_path": "windows-traceback.txt.gz",
+      "raw_bytes": 95443,
+      "raw_sha256": "a02041e08cc858dfbf1cb7b1f964db64ef65b8ebedf7721facf96766da517445",
+      "archive_bytes": 1809,
+      "archive_sha256": "7b3ab5d539311c8225ba36b1c8200626b38565f8907f5a5d79a6c2c6de88e43c",
+      "compression": "gzip-lossless"
+    }
+  ],
+  "raw_files_unchanged": true,
+  "authorizes": []
+}

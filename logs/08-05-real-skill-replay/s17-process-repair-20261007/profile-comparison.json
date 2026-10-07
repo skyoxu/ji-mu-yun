@@ -1,0 +1,15 @@
+{
+  "baseline_profile_seconds": 156.01132804399984,
+  "repaired_profile_seconds": 67.59635613000002,
+  "prior_dependencies_removed": [],
+  "new_dependency_paths": [
+    "scripts/sc/tests/test_skill_replay_process_regressions.py"
+  ],
+  "baseline_transition_calls": 36,
+  "repaired_transition_calls": 36,
+  "baseline_prior_fixtures": null,
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "C3": "OPEN",
+  "authorizes": []
+}

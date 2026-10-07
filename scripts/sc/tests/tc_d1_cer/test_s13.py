@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("SM2-EFFECTIVE-IDENTITY-REUSE")]
 
@@ -19,12 +20,12 @@ TARGET = ".agents/skills/run-refactor-implementation-acceptance"
 
 
 def _run(*arguments: str) -> tuple[int, dict]:
-    process = subprocess.run(
+    process = runtime.capture_process(
         [sys.executable, "-B", str(ENTRY), *arguments],
-        cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+        ROOT,
         # This integrates parent routes and a fresh child; native child and
         # Matrix budgets remain 60 seconds in the production adapter.
-        errors="replace", timeout=180 if arguments[0] == "replay-package" else 60, check=False,
+        timeout=180 if arguments[0] == "replay-package" else 60,
     )
     try:
         receipt = json.loads(process.stdout)
@@ -62,10 +63,9 @@ def _matrix(*cases: dict, native_matrix=None) -> tuple[int, dict]:
         "sys.argv = [sys.argv[1], 'replay-matrix', '--matrix', 's13-matrix.json']\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    process = subprocess.run(
-        [sys.executable, "-B", "-c", child, str(ENTRY)], cwd=ROOT,
-        input=json.dumps(matrix), capture_output=True, text=True, encoding="utf-8",
-        errors="replace", timeout=60, check=False,
+    process = runtime.capture_process(
+        [sys.executable, "-B", "-c", child, str(ENTRY)], ROOT,
+        input_data=json.dumps(matrix).encode("utf-8"), timeout=60,
     )
     try:
         receipt = json.loads(process.stdout)

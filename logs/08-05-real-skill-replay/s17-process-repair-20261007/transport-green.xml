@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="7" time="9.334" timestamp="2026-10-07T12:06:54.575991+07:00" hostname="5110d0557ada"><testcase classname="scripts.sc.tests.test_skill_replay_process_regressions.NativeProcessOwnershipTests" name="test_native_timeout_reaps_a_descendant_in_a_separate_process_group" time="2.704"><failure message="AssertionError: True is not false : native timeout left its actual descendant alive">self = &lt;test_skill_replay_process_regressions.NativeProcessOwnershipTests testMethod=test_native_timeout_reaps_a_descendant_in_a_separate_process_group&gt;
+
+    def test_native_timeout_reaps_a_descendant_in_a_separate_process_group(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            ready, leaked = root / "ready", root / "leaked"
+            child = "import time;from pathlib import Path;Path(" + repr(str(ready)) + ").write_text('ready');time.sleep(2);Path(" + repr(str(leaked)) + ").write_text('leaked')"
+            parent = "import subprocess,sys,time;subprocess.Popen([sys.executable,'-c'," + repr(child) + "],start_new_session=True);time.sleep(30)"
+            with self.assertRaisesRegex(ValueError, "timed out"):
+                runtime.execute([sys.executable, "-c", parent], root, timeout=0.5)
+            self.assertTrue(ready.exists(), "the real descendant must have started")
+            time.sleep(2.2)
+&gt;           self.assertFalse(leaked.exists(), "native timeout left its actual descendant alive")
+E           AssertionError: True is not false : native timeout left its actual descendant alive
+
+scripts/sc/tests/test_skill_replay_process_regressions.py:26: AssertionError</failure></testcase><testcase classname="scripts.sc.tests.test_skill_replay_process_regressions.SyntaxReuseTests" name="test_identical_bytes_in_two_checkouts_reuse_parse_without_hiding_changes" time="0.001" /><testcase classname="scripts.sc.tests.test_skill_replay_verification.ClosureFreshnessTests" name="test_new_module_and_changed_import_bytes_are_seen_in_later_closures" time="0.003" /><testcase classname="scripts.sc.tests.test_skill_replay_verification.VerificationProcessTests" name="test_all_real_phase_reports_and_exact_collection_are_required" time="0.303" /><testcase classname="scripts.sc.tests.test_skill_replay_verification.VerificationProcessTests" name="test_real_failure_does_not_become_a_successful_verification" time="0.302" /><testcase classname="scripts.sc.tests.test_skill_replay_verification.VerificationProcessTests" name="test_real_skip_is_non_promotable" time="0.202" /><testcase classname="scripts.sc.tests.test_skill_replay_verification.VerificationProcessTests" name="test_timeout_identifies_node_and_stops_its_actual_descendant" time="5.713" /></testsuite></testsuites>

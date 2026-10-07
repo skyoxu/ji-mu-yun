@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 @pytest.fixture(scope="session")
@@ -20,9 +21,9 @@ def native_skill_replay_matrix():
         path = Path(directory) / "matrix.json"
         matrix = replay.runtime.prepare_matrix(root, replay.PRIMARY_TARGET, replay.PRIMARY_CAPABILITY,
                                                replay.runtime.TRUST_BASELINE, path.relative_to(root).as_posix())
-        result = subprocess.run([sys.executable, "-X", "utf8", "-B", str(root / "scripts/sc/skill_package_replay.py"),
+        result = runtime.capture_process([sys.executable, "-X", "utf8", "-B", str(root / "scripts/sc/skill_package_replay.py"),
                                  "replay-matrix", "--matrix", path.relative_to(root).as_posix()],
-                                cwd=root, capture_output=True, text=True, encoding="utf-8", check=False, timeout=90)
+                                root, timeout=90)
         assert result.returncode == 0, result.stdout + result.stderr
         yield matrix, json.loads(result.stdout)
 
@@ -36,9 +37,9 @@ def native_matrix_rejection():
         with tempfile.TemporaryDirectory(dir=root / "logs", prefix="cer-matrix-fault-") as directory:
             path = Path(directory) / "matrix.json"
             path.write_text(json.dumps(matrix), encoding="utf-8", newline="\n")
-            result = subprocess.run([sys.executable, "-X", "utf8", "-B", str(root / "scripts/sc/skill_package_replay.py"),
+            result = runtime.capture_process([sys.executable, "-X", "utf8", "-B", str(root / "scripts/sc/skill_package_replay.py"),
                                      "replay-matrix", "--matrix", path.relative_to(root).as_posix()],
-                                    cwd=root, capture_output=True, text=True, encoding="utf-8", check=False, timeout=90)
+                                    root, timeout=90)
             receipt = json.loads(result.stdout)
             assert receipt.get("authorizes") == []
             return result.returncode, receipt

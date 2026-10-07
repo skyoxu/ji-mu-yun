@@ -180,3 +180,45 @@ file index and rehashes actual resources. New, deleted and changed imports must
 remain visible. Whole-owner resources, ambiguous local imports, fixed-point
 closure and immutable Git trust verification remain unchanged; neither a
 Probe result nor a prior trust verdict is cached.
+
+### 2026-10-07 Replay computation and process ownership repair
+
+The Windows fixed-source verification at candidate
+`69bb7f87e28a67ee7a017d805088e2ecff7d5d35` ended unsuccessfully at S17 after
+46 completed nodes. Seven earlier call failures and seven setup errors are
+also failures, not completed positive coverage. The original stdout, events,
+stacks, process result and missing native JUnit remain unchanged.
+
+Reuse immutable syntax analysis by exact source bytes across Candidate, Prior
+Route and fresh-checkout locations. The bounded cache holds only import names
+and call-site line numbers. Every invocation still reads current bytes,
+enumerates the full owning resources, computes current identities, rejects new
+undeclared call surfaces and performs immutable trust checks. No dependency
+closure, manifest, snapshot, read witness, execution result or trust verdict is
+cached. A one-pass syntax analysis preserves the existing import/alias/native
+call selection semantics.
+
+Native commands use file-backed UTF-8 transport with unchanged raw newline
+bytes, a 60-second execution ceiling and an 8-MiB aggregate output ceiling.
+Output exhaustion is observed while the child runs. Timeout or interruption
+reaps the owned process tree rather than only its leader. Windows uses the
+existing PID-scoped `taskkill /T /F` mechanism. POSIX cleanup includes nested
+process groups in the launched ancestry; Linux PID namespace and start-time
+identities prevent mixing container-local IDs with host `/proc` IDs. This is
+bounded Python transport, not an arbitrary-binary OS sandbox.
+
+CER integrations of parent lifecycle checks plus fresh child execution use the
+same file-backed transport with their existing 180-second outer ceiling;
+Matrix fixtures retain their 90-second harness ceiling. These are harness
+deadlines, not extensions of native or aggregate Matrix execution budgets.
+S17 and source-identity harnesses now have the same finite parent deadline.
+S17 launches the active bound Python executable rather than reselecting a
+runtime through the Windows launcher. All original assertions and selectors
+remain, with no deselection, fake execution or relaxed semantic comparison.
+
+The direct verifier writes each failed report's bounded diagnostic immediately
+to the event stream, marking truncation explicitly. A later interrupted test
+cannot erase all preceding error details by preventing pytest's final summary.
+Its POSIX supervisor also handles nested owned groups. Historical failures,
+Q7/Q8, plans and capability authority remain unchanged. C3 stays OPEN;
+successful direct validation is not formal Acceptance approval.

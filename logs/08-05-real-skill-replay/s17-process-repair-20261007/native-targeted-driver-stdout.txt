@@ -1,0 +1,99 @@
+{"event": "verification-start", "output": "logs/08-05-real-skill-replay/s17-process-repair-20261007/native-targeted", "scope": ["scripts/sc/tests/test_skill_package_replay_source_identity.py", "scripts/sc/tests/tc_d1_cer/test_s10.py", "scripts/sc/tests/tc_d1_cer/test_s13.py", "scripts/sc/tests/tc_d1_cer/test_s17.py"]}
+{"elapsed_seconds": 0.0, "event": "heartbeat", "nodeid": null, "phase": "startup", "pid": 7, "stage": "collection"}
+{"elapsed_seconds": 0.0, "event": "heartbeat", "nodeid": null, "phase": "startup", "pid": 8, "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process", "stage": "pytest"}
+{"elapsed_seconds": 9.7, "event": "heartbeat", "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 19.8, "event": "heartbeat", "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 29.8, "event": "heartbeat", "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 39.8, "event": "heartbeat", "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process", "phase": "call", "pid": 8, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process", "stage": "pytest"}
+{"elapsed_seconds": 9.9, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 20.0, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 30.0, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 40.0, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process", "phase": "call", "pid": 8, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output", "stage": "pytest"}
+{"elapsed_seconds": 9.8, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 19.9, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 29.9, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output", "phase": "call", "pid": 8, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome", "stage": "pytest"}
+{"elapsed_seconds": 0.2, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome", "phase": "call", "pid": 8, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage", "stage": "pytest"}
+{"elapsed_seconds": 9.9, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 20.0, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 30.0, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage", "phase": "call", "pid": 8, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding", "stage": "pytest"}
+{"elapsed_seconds": 0.3, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 10.3, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 20.4, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 30.4, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding", "phase": "call", "pid": 8, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real", "stage": "pytest"}
+{"elapsed_seconds": 0.8, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 10.8, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 20.9, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 30.9, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real", "phase": "call", "pid": 8, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content", "stage": "pytest"}
+{"elapsed_seconds": 1.6, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 11.6, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 21.7, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 31.7, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content", "phase": "call", "pid": 8, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success", "stage": "pytest"}
+{"elapsed_seconds": 1.0, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success", "phase": "setup", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 11.0, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success", "phase": "setup", "pid": 8, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome", "stage": "pytest"}
+{"elapsed_seconds": 2.5, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome", "phase": "setup", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 12.5, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome", "phase": "setup", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 22.6, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome", "phase": "setup", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 32.6, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome", "phase": "setup", "pid": 8, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity", "stage": "pytest"}
+{"elapsed_seconds": 2.0, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 12.0, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 22.1, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity", "phase": "call", "pid": 8, "stage": "pytest"}
+{"elapsed_seconds": 32.1, "event": "heartbeat", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity", "phase": "call", "pid": 8, "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure", "stage": "pytest"}
+{"event": "test-start", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state", "stage": "pytest"}
+{"event": "test-finish", "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state", "stage": "pytest"}
+{"event": "verification-finish", "status": "direct-validation-passed", "summary": "/workspace/scratch/9aa4df529c3a/repo-s17/logs/08-05-real-skill-replay/s17-process-repair-20261007/native-targeted/summary.json"}

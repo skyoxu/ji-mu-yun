@@ -16,6 +16,7 @@ import platform
 import re
 import secrets
 import shutil
+import signal
 import subprocess
 import sys
 import sysconfig
@@ -88,29 +89,130 @@ def child_environment() -> dict:
     return value
 
 
-def execute(command: list[str], root: Path, timeout: float = TIMEOUT_SECONDS, output_limit: int = OUTPUT_LIMIT) -> subprocess.CompletedProcess:
-    if timeout <= 0 or timeout > TIMEOUT_SECONDS:
-        raise ValueError("execution time budget is outside the bounded adapter")
+def _terminate_owned(process: subprocess.Popen) -> None:
+    """Reap only this launched tree, including descendants with new sessions."""
+    if os.name == "nt":
+        stopped = subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                                 capture_output=True, timeout=10, check=False)
+        if stopped.returncode and process.poll() is None:
+            process.kill()
+            process.wait(timeout=5)
+            raise ValueError("owned process tree cleanup failed")
+    else:
+        relations = {}
+        proc = Path("/proc")
+        if proc.is_dir():
+            namespace = os.readlink(proc / "self/ns/pid")
+            entries = []
+            for directory in proc.iterdir():
+                if not directory.name.isdigit():
+                    continue
+                try:
+                    if os.readlink(directory / "ns/pid") != namespace:
+                        continue
+                    fields = (directory / "stat").read_text().rpartition(")")[2].split()
+                    status = dict(line.split(":", 1) for line in (directory / "status").read_text().splitlines())
+                    pid = int(status.get("NSpid", str(directory.name)).split()[-1])
+                    group = int(status.get("NSpgid", fields[2]).split()[-1])
+                    entries.append((int(directory.name), pid, int(fields[1]), group, fields[19], directory))
+                except (OSError, ValueError, IndexError):
+                    continue
+            # A container can expose host /proc while Popen/signal use local
+            # IDs. Never equate IDs from unrelated PID namespaces.
+            local = {host: pid for host, pid, *_ in entries}
+            relations = {pid: (local.get(parent), group, started, directory)
+                         for _, pid, parent, group, started, directory in entries}
+        else:
+            # Non-Linux POSIX fallback contains IDs only, never argv or env.
+            result = subprocess.run(["/bin/ps", "-eo", "pid=,ppid=,pgid="],
+                                    capture_output=True, timeout=5, check=True)
+            for line in result.stdout.splitlines():
+                pid, parent, group = map(int, line.split())
+                relations[pid] = (parent, group, None, None)
+        owned = {process.pid: 0}
+        while True:
+            added = {pid: owned[parent] + 1 for pid, (parent, _, _, _) in relations.items()
+                     if pid not in owned and parent in owned}
+            if not added:
+                break
+            owned.update(added)
+        groups = []
+        for pid in sorted(owned, key=owned.get, reverse=True):
+            if pid not in relations:
+                continue
+            _, group, started, directory = relations[pid]
+            try:
+                if proc.is_dir():
+                    current = (directory / "stat").read_text().rpartition(")")[2].split()
+                    if current[19] != started:
+                        continue
+                if group in owned and group not in groups and group != os.getpgrp():
+                    groups.append(group)
+            except (OSError, IndexError):
+                continue
+        if process.pid not in groups:
+            groups.append(process.pid)
+        for group in groups:
+            try:
+                os.killpg(group, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+    process.wait(timeout=5)
+
+
+def capture_process(command: list[str], root: Path, timeout: float, *,
+                    output_limit: int = OUTPUT_LIMIT, input_data: bytes | None = None) -> subprocess.CompletedProcess:
+    """File-backed owned transport; CER parent integrations allow up to 180s.
+
+    Production native execution calls execute(), which keeps the 60s ceiling.
+    A timeout never becomes a successful CompletedProcess or replay receipt.
+    """
+    if isinstance(timeout, bool) or not math.isfinite(timeout) or not 0 < timeout <= 180:
+        raise ValueError("process transport time budget is outside the bounded adapter")
     if not isinstance(output_limit, int) or isinstance(output_limit, bool) or not 0 < output_limit <= OUTPUT_LIMIT:
         raise ValueError("execution output budget is outside the bounded adapter")
-    # File-backed output avoids unbounded communicate() buffers on either OS.
     with tempfile.TemporaryDirectory(prefix="tc-d1-output-") as directory:
         out, err = Path(directory) / "stdout", Path(directory) / "stderr"
-        with out.open("wb") as stdout, err.open("wb") as stderr:
-            process = subprocess.Popen(command, cwd=root, stdout=stdout, stderr=stderr, env=child_environment())
+        source = Path(directory) / "stdin"
+        if input_data is not None and (not isinstance(input_data, bytes) or len(input_data) > OUTPUT_LIMIT):
+            raise ValueError("process input exceeds its bounded transport")
+        source.write_bytes(input_data or b"")
+        options = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True}
+        started = time.monotonic()
+        with out.open("wb") as stdout, err.open("wb") as stderr, source.open("rb") as stdin:
+            process = subprocess.Popen(command, cwd=root, stdin=stdin, stdout=stdout, stderr=stderr,
+                                       env=child_environment(), **options)
             try:
-                code = process.wait(timeout=timeout)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait()
-                code = 124
+                while process.poll() is None:
+                    if out.stat().st_size + err.stat().st_size > output_limit:
+                        raise ValueError("aggregate output budget exhausted")
+                    remaining = timeout - (time.monotonic() - started)
+                    if remaining <= 0:
+                        raise subprocess.TimeoutExpired(command, timeout)
+                    try:
+                        process.wait(timeout=min(0.05, remaining))
+                    except subprocess.TimeoutExpired:
+                        pass
+            except BaseException:
+                _terminate_owned(process)
+                raise
         if out.stat().st_size + err.stat().st_size > output_limit:
             raise ValueError("aggregate output budget exhausted")
-        result = subprocess.CompletedProcess(command, code, out.read_bytes().decode("utf-8"), err.read_bytes().decode("utf-8"))
+        result = subprocess.CompletedProcess(command, process.returncode, out.read_bytes().decode("utf-8"), err.read_bytes().decode("utf-8"))
         result.pid = process.pid
-        if code == 124:
-            raise ValueError("validator or Consumer timed out")
         return result
+
+
+def execute(command: list[str], root: Path, timeout: float = TIMEOUT_SECONDS, output_limit: int = OUTPUT_LIMIT) -> subprocess.CompletedProcess:
+    if isinstance(timeout, bool) or not math.isfinite(timeout) or not 0 < timeout <= TIMEOUT_SECONDS:
+        raise ValueError("execution time budget is outside the bounded adapter")
+    try:
+        result = capture_process(command, root, timeout, output_limit=output_limit)
+    except subprocess.TimeoutExpired as exc:
+        raise ValueError("validator or Consumer timed out") from exc
+    if result.returncode == 124:
+        raise ValueError("validator or Consumer timed out")
+    return result
 
 
 def git(root: Path, *arguments: str) -> bytes:
@@ -165,10 +267,16 @@ def git_blob_identities(root: Path, commit: str, paths: list[str]) -> dict[str, 
 
 
 @lru_cache(maxsize=1024)
-def _import_names(raw: bytes, filename: str) -> frozenset[str]:
-    """Cache syntax only, keyed by exact bytes; never cache a trust verdict."""
-    tree = ast.parse(raw.decode("utf-8-sig"), filename=filename)
-    names = set()
+def _source_analysis(raw: bytes) -> tuple[frozenset[str], tuple[int, ...]]:
+    """Derive syntax from exact bytes; locations and trust are never cached.
+
+    Identical immutable source in Candidate, Prior Route and fresh checkout
+    has identical syntax. Re-reading each file still decides which bytes and
+    paths participate in every current closure and Consumer Manifest.
+    """
+    tree = ast.parse(raw.decode("utf-8-sig"))
+    names, aliases, named_calls, direct_calls, native_calls = set(), {"validate_package", "validate_skill"}, [], [], []
+    native_selector = False
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             names.update(alias.name for alias in node.names)
@@ -176,7 +284,34 @@ def _import_names(raw: bytes, filename: str) -> frozenset[str]:
             module = node.module or ""
             names.add(module)
             names.update(".".join(filter(None, (module, alias.name))) for alias in node.names)
-    return frozenset(names)
+            aliases.update(alias.asname or alias.name for alias in node.names if alias.name in {"validate_package", "validate_skill"})
+        elif isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name):
+                named_calls.append((node.func.id, node.lineno))
+            elif isinstance(node.func, ast.Attribute):
+                if node.func.attr in {"validate_package", "validate_skill"}:
+                    direct_calls.append(node.lineno)
+                if node.func.attr in {"run", "Popen", "run_path"}:
+                    native_calls.append(node.lineno)
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            native_selector |= node.value == "validate-package" or node.value.endswith("/validate_skill_contract.py")
+    lines = direct_calls + [line for name, line in named_calls if name in aliases]
+    if native_selector:
+        lines.extend(native_calls)
+    return frozenset(names), tuple(sorted(lines))
+
+
+def _source_at(raw: bytes, filename: str):
+    try:
+        return _source_analysis(raw)
+    except SyntaxError as exc:
+        exc.filename = filename
+        raise
+
+
+@lru_cache(maxsize=1024)
+def _import_names(raw: bytes, filename: str) -> frozenset[str]:
+    return _source_at(raw, filename)[0]
 
 
 def dependency_closure(root: Path, seeds) -> list[dict]:
@@ -366,19 +501,11 @@ def consumer_manifest(root: Path) -> dict:
     for path in files(root, SOURCE_ROOTS):
         if path.suffix != ".py" or "tests" in path.parts:
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8-sig"), filename=str(path))
-        aliases = {"validate_package", "validate_skill"}
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom):
-                aliases.update(alias.asname or alias.name for alias in node.names if alias.name in {"validate_package", "validate_skill"})
-        calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and ((isinstance(node.func, ast.Name) and node.func.id in aliases) or (isinstance(node.func, ast.Attribute) and node.func.attr in {"validate_package", "validate_skill"}))]
-        literals = [node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)]
-        native_calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in {"run", "Popen", "run_path"}]
-        if native_calls and any(value == "validate-package" or value.endswith("/validate_skill_contract.py") for value in literals):
-            calls.extend(native_calls)
-        if calls:
+        raw = path.read_bytes()
+        _, lines = _source_at(raw, str(path))
+        if lines:
             name = path.relative_to(root).as_posix()
-            discovered.append({"path": name, "lines": sorted(node.lineno for node in calls), "sha256": sha(path.read_bytes())})
+            discovered.append({"path": name, "lines": list(lines), "sha256": sha(raw)})
             if name not in known:
                 missing.append(name)
     if missing:
