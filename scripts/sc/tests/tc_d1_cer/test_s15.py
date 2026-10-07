@@ -37,7 +37,7 @@ def _fixture(root: Path) -> tuple[Path, Path]:
 
 @pytest.mark.cer_assertion("A-D56F9D0379DE-1")
 def test_historical_byte_mutation_is_detected_after_validator_execution() -> None:
-    with tempfile.TemporaryDirectory(dir=r"C:\tmp") as directory:
+    with tempfile.TemporaryDirectory() as directory:
         frozen, root = _fixture(Path(directory) / "fixture-repository")
         before = sha256(frozen.read_bytes()).hexdigest()
         frozen.write_bytes(b"mutated historical bytes\n")

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -62,8 +63,11 @@ def _fixture_root(tmp_path: Path) -> tuple[Path, Path]:
 
 
 def _run_base_clean(root: Path) -> subprocess.CompletedProcess[str]:
+    powershell = shutil.which("powershell") or shutil.which("pwsh")
+    if powershell is None:
+        raise RuntimeError("PowerShell is required to invoke the production verifier")
     return subprocess.run(
-        ["powershell", "-NoProfile", "-File", str(VERIFY_BASE_CLEAN), "-RepoRoot", str(root)],
+        [powershell, "-NoProfile", "-File", str(VERIFY_BASE_CLEAN), "-RepoRoot", str(root)],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -130,7 +134,7 @@ def _assert_behavior(condition: bool, detail: object) -> None:
 
 @pytest.mark.cer_assertion(ASSERTION)
 def test_frozen_historical_bytes_remain_identical_after_bounded_operations() -> None:
-    with tempfile.TemporaryDirectory(dir=r"C:\tmp") as directory:
+    with tempfile.TemporaryDirectory() as directory:
         tmp_path = Path(directory)
         root, frozen = _fixture_root(tmp_path)
         before = {frozen.relative_to(root).as_posix(): _sha256_bytes(frozen.read_bytes())}
@@ -144,7 +148,7 @@ def test_frozen_historical_bytes_remain_identical_after_bounded_operations() -> 
 
 @pytest.mark.cer_assertion(ASSERTION)
 def test_single_mutated_frozen_artifact_is_reported_by_byte_comparison() -> None:
-    with tempfile.TemporaryDirectory(dir=r"C:\tmp") as directory:
+    with tempfile.TemporaryDirectory() as directory:
         tmp_path = Path(directory)
         root, frozen = _fixture_root(tmp_path)
         before = {frozen.relative_to(root).as_posix(): _sha256_bytes(frozen.read_bytes())}

@@ -105,7 +105,7 @@ def _assert_target(condition: bool, detail: object) -> None:
     ],
 )
 def test_production_verifiers_reject_changed_tracked_membership(mutation: str) -> None:
-    with tempfile.TemporaryDirectory(prefix="s18-membership-", dir=r"C:\tmp") as directory:
+    with tempfile.TemporaryDirectory(prefix="s18-membership-") as directory:
         root, before = _fixture_repository(Path(directory))
         baseline_clean = _run_base_clean(root)
         baseline_mapping = _run_task_mapping(root)

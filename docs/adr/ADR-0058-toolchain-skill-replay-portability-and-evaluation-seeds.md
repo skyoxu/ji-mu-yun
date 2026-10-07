@@ -222,3 +222,32 @@ cannot erase all preceding error details by preventing pytest's final summary.
 Its POSIX supervisor also handles nested owned groups. Historical failures,
 Q7/Q8, plans and capability authority remain unchanged. C3 stays OPEN;
 successful direct validation is not formal Acceptance approval.
+
+### 2026-10-07 Full-scope CER fixture portability
+
+The unchanged 340-node direct scope completed on Linux at candidate
+`de6e6a4b0427bc53a8dd9d03b528be075ce0e3d5` with 333 passes and seven
+failures, a real native JUnit report, and unchanged source bytes and HEAD.
+Six S14/S15/S18 failures were hard-coded temporary-root creation failures;
+S26 required a Windows platform label even when the real child ran on Linux.
+This failed result remains append-only evidence.
+
+S14, S15 and S18 use the standard-library temporary directory selection
+instead of requiring a machine-specific Windows drive. S14 discovers either
+`powershell` or `pwsh` to execute the same production PowerShell verifier;
+an unavailable host still fails visibly. No verifier substitute or test skip
+is introduced. Frozen-byte and membership positive and negative controls stay
+intact, including added, deleted and renamed historical members.
+
+S26 retains its selector, assertion identity and real fresh replay. Its
+platform declaration must match the platform that actually executed the child.
+A Windows execution still requires `win32`; a Linux execution requires
+`linux`. Linux success is not local Windows verification. No child platform
+label is spoofed and no execution output is normalized to claim Windows.
+
+Required Python schema and PowerShell runtimes and immutable Git inputs are
+execution prerequisites, not authority inputs. Their actual versions and
+preparation failures are recorded separately. Native execution stays bounded
+at 60 seconds and 8 MiB, and the direct per-node budget stays 300 seconds.
+All original 340 selectors remain selected, with no skip or xfail. C3 stays
+OPEN and direct test results grant no formal Acceptance or Trust Approval.

@@ -134,8 +134,8 @@ def test_successful_replay_has_distinct_command_verification() -> None:
 def test_windows_support_is_explicit() -> None:
     result, payload = _replay()
     value = _body(payload).get("platform_behavior", {})
-    _assert_behavior(result.returncode == 0 and value.get("platform") == "win32" and bool(value.get("behavior")),
-                     "CER-A-DF30AF5D2EDB-BEHAVIOR", "Windows support branch is not explicit")
+    _assert_behavior(result.returncode == 0 and value.get("platform") == sys.platform and bool(value.get("behavior")),
+                     "CER-A-DF30AF5D2EDB-BEHAVIOR", "Executed platform behavior is not explicit")
 
 
 @pytest.mark.cer_assertion("FR-8-wrong-target-evidence-invalidates-aggregate")
