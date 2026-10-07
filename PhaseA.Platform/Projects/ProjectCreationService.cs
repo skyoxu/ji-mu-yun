@@ -17,6 +17,7 @@ public sealed class ProjectCreationService
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly ProjectCreationConcurrencyLimiter _creationConcurrencyLimiter;
     private readonly IProjectGameTypeMatchService _gameTypeMatchService;
+    private readonly WorkspaceTreeDeletionService _workspaceDeletion;
     private readonly ILogger<ProjectCreationService>? _logger;
     private readonly IProjectRunnerProvisioner? _runnerProvisioner;
 
@@ -37,7 +38,8 @@ public sealed class ProjectCreationService
         ProjectCreationConcurrencyLimiter? creationConcurrencyLimiter = null,
         IProjectGameTypeMatchService? gameTypeMatchService = null,
         ILogger<ProjectCreationService>? logger = null,
-        IProjectRunnerProvisioner? runnerProvisioner = null)
+        IProjectRunnerProvisioner? runnerProvisioner = null,
+        WorkspaceTreeDeletionService? workspaceDeletion = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -48,6 +50,7 @@ public sealed class ProjectCreationService
         _gameTypeMatchService = gameTypeMatchService ?? ProjectGameTypeMatchService.Offline(options);
         _logger = logger;
         _runnerProvisioner = runnerProvisioner;
+        _workspaceDeletion = workspaceDeletion ?? new WorkspaceTreeDeletionService(options.HostedWorkspaceRoot);
     }
 
     public async Task<ProjectCreationResult> CreateProjectAsync(
@@ -281,5 +284,58 @@ public sealed class ProjectCreationService
 
         await _metadataStore.SoftDeleteProjectAsync(projectId, cancellationToken);
         return ProjectDeletionResult.Deleted(projectId);
+    }
+
+    public async Task<AdminProjectPurgeResult> PurgeProjectsAsync(
+        string adminAccountId,
+        IReadOnlyList<string> projectIds,
+        string confirmation,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(adminAccountId);
+        if (!string.Equals(confirmation, "PURGE-PROJECTS", StringComparison.Ordinal))
+            return new("rejected", [], projectIds.Count, 0, projectIds.Count);
+        var ids = projectIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal).ToArray();
+        if (ids.Length == 0 || ids.Length > 100)
+            return new("rejected", [], projectIds.Count, 0, projectIds.Count);
+
+        var items = new List<AdminProjectPurgeItem>(ids.Length);
+        foreach (var id in ids)
+        {
+            try
+            {
+                await _metadataStore.PurgeProjectRecordsAsync(
+                    [id],
+                    target => _workspaceDeletion.Delete(target.AccountId, target.ProjectId, target.WorkspaceRootPath).Succeeded,
+                    cancellationToken);
+                items.Add(new AdminProjectPurgeItem(id, true, null, true, true));
+            }
+            catch (InvalidOperationException ex) when (ex.Message is "project_busy" or "project_not_found" or "workspace_delete_failed" or "workspace_path_mismatch" or "workspace_root_reparse_point" or "workspace_delete_access_denied" or "workspace_delete_io_error")
+            {
+                items.Add(new AdminProjectPurgeItem(id, false, ex.Message, false, false));
+            }
+        }
+        var purged = items.Count(item => item.Succeeded);
+        var failed = items.Count - purged;
+        try
+        {
+            await _metadataStore.RecordAdminAccountAuditEventAsync(
+                adminAccountId,
+                "projects_purged",
+                null,
+                new Dictionary<string, string>
+                {
+                    ["project_count"] = ids.Length.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["purged_count"] = purged.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["failed_count"] = failed.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["workspace_failures"] = failed == 0 ? "none" : "cleanup_required"
+                },
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Failed to record project purge audit event.");
+        }
+        return new(failed == 0 ? "succeeded" : "partial", items, ids.Length, purged, failed);
     }
 }
