@@ -661,6 +661,15 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
 
+        // ADR-0035/0061: the project may have changed between preflight and lock acquisition.
+        if (!await _metadataStore.IsCurrentWorkspaceGenerationAsync(project, runId, cancellationToken))
+        {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "Project version changed. Retry validation.",
+                FailureEvidenceJson(prototypeRecordPath, validationOnly: true, skeletonValidationOnly: SkeletonValidationOnly), CancellationToken.None);
+            return new PrototypeWorkflowResult(runId, "project_busy", 423, prototypeRecordPath, "",
+                "Project version changed. Retry validation.", [], []);
+        }
+
         var dotnetBuild = await RunPrototypeDotnetBuildValidationAsync(project, cancellationToken);
         var validation = dotnetBuild.Passed
             ? ValidateCompletedPrototypeState(project.RepoPath, slug)
@@ -696,6 +705,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             run_type = RunType,
             validation_only = true,
             skeleton_validation_only = SkeletonValidationOnly,
+            workspace_generation_id = WorkspaceGenerationPaths.SourceGenerationId(project),
             prototype_record = prototypeRecordPath,
             prototype_contract = contract.RelativePath,
             slug,

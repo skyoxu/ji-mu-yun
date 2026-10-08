@@ -5,6 +5,30 @@ namespace PhaseA.Platform.Data;
 
 public sealed partial class PhaseAMetadataStore
 {
+    // ADR-0035/0061: a preflight snapshot cannot authorize work after another
+    // request has activated a generation. Check it while owning the run lock.
+    public async Task<bool> IsCurrentWorkspaceGenerationAsync(ProjectSnapshot project, string runId,
+        CancellationToken token = default)
+    {
+        await using var connection = await OpenConnectionAsync(token);
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT COUNT(*) FROM workspaces w JOIN projects p ON p.id=w.project_id
+            WHERE w.id=$workspace AND p.id=$project AND p.account_id=$account
+              AND w.root_path=$root AND w.repo_path=$repo AND w.runtime_path=$runtime AND w.meta_path=$meta
+              AND EXISTS (SELECT 1 FROM runner_locks WHERE project_id=$project AND run_id=$run);
+            """;
+        command.Parameters.AddWithValue("$workspace", project.WorkspaceId);
+        command.Parameters.AddWithValue("$project", project.ProjectId);
+        command.Parameters.AddWithValue("$account", project.AccountId);
+        command.Parameters.AddWithValue("$root", project.WorkspaceRootPath);
+        command.Parameters.AddWithValue("$repo", project.RepoPath);
+        command.Parameters.AddWithValue("$runtime", project.RuntimePath);
+        command.Parameters.AddWithValue("$meta", project.MetaPath);
+        command.Parameters.AddWithValue("$run", runId);
+        return Convert.ToInt64(await command.ExecuteScalarAsync(token)) == 1;
+    }
+
     public async Task<string?> GetRunnerLockOwnerAsync(string projectId, CancellationToken token = default)
     {
         await using var connection = await OpenConnectionAsync(token);
@@ -95,6 +119,9 @@ public sealed partial class PhaseAMetadataStore
     {
         var activation = await GetLastWorkspaceActivationUtcAsync(accountId, projectId, token);
         if (activation is null) return false;
+        var project = await GetProjectSnapshotAsync(projectId, token);
+        if (project is null || project.AccountId != accountId) return true;
+        var generationId = WorkspaceGenerationPaths.SourceGenerationId(project);
         var runs = await ListRunsForProjectAsync(projectId, token);
         foreach (var run in runs.Where(run => run.RunType == "prototype-7day-playable"))
         {
@@ -106,7 +133,9 @@ public sealed partial class PhaseAMetadataStore
                     continue;
                 if (doc.RootElement.TryGetProperty("skeleton_validation_only", out var skeleton) && skeleton.ValueKind == JsonValueKind.True)
                     continue;
-                return run.Status != "succeeded";
+                return run.Status != "succeeded" ||
+                    !doc.RootElement.TryGetProperty("workspace_generation_id", out var generation) ||
+                    generation.ValueKind != JsonValueKind.String || generation.GetString() != generationId;
             }
             catch (JsonException) { }
         }

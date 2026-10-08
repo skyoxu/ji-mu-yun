@@ -157,6 +157,19 @@ public sealed class ProjectPackageService
             await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
             using var runCancellation = _runCancellation.CreateLinkedTokenSource(runId, cancellationToken);
             var runToken = runCancellation.Token;
+            // ADR-0035/0061: preflight readiness and paths may predate a restore.
+            // The project lock now protects both checks through ZIP publication.
+            if (!await _metadataStore.IsCurrentWorkspaceGenerationAsync(project, runId, runToken))
+            {
+                await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "Project version changed. Retry packaging.", "{}", CancellationToken.None);
+                return Failure(projectId, "project_busy", runId);
+            }
+            var lockedGate = await ResolvePackageGateAsync(project, runToken);
+            if (!lockedGate.CanCreate)
+            {
+                await _metadataStore.CompleteRunAsync(runId, "blocked", 409, "", "Package prerequisites changed.", "{}", CancellationToken.None);
+                return Failure(projectId, lockedGate.DisabledReason ?? "package_prerequisites_not_met", runId);
+            }
             if (requestContext is not null &&
                 (await _metadataStore.ResolveAccountByTokenHashAsync(requestContext.CredentialId, runToken))?.AccountId != accountId)
                 throw new UnauthorizedAccessException("Package credential is no longer authorized.");
@@ -238,6 +251,7 @@ public sealed class ProjectPackageService
                 relative_path = relativePath,
                 package_sha256 = packageSha256,
                 snapshot_id = snapshot.Manifest.SnapshotId,
+                workspace_generation_id = WorkspaceGenerationPaths.SourceGenerationId(project),
                 size_bytes = sizeBytes,
                 included_file_count = includedFileCount,
                 applied_asset_selection_count = assetSelectionResult.AppliedCount,
