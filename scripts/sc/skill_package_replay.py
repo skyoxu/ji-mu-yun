@@ -219,17 +219,20 @@ def validate_current_snapshot_binding(snapshot: dict, target: str, capability_pa
         raise ValueError("current snapshot binding does not match result-determining inputs")
 
 
-def prune_expired_fresh_checkouts(*, max_age_seconds: int = 120) -> int:
+def prune_expired_fresh_checkouts(*, max_age_seconds: int = 5) -> int:
     """Reclaim only this adapter's old TEMP checkouts before a fresh replay."""
     temp_root = Path(tempfile.gettempdir()).resolve()
     now = time.time()
     removed = 0
     for candidate in temp_root.glob("jimuyun-fresh-checkout-*"):
         try:
-            if not candidate.is_dir() or now - candidate.stat().st_mtime <= max_age_seconds:
+            if not (candidate.is_dir() or candidate.is_file()) or now - candidate.stat().st_mtime <= max_age_seconds:
                 continue
             candidate.relative_to(temp_root)
-            shutil.rmtree(candidate)
+            if candidate.is_dir():
+                shutil.rmtree(candidate)
+            else:
+                candidate.unlink()
             removed += 1
         except (OSError, ValueError):
             # A concurrent replay may still own the directory; leave it intact.
