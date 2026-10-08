@@ -6,10 +6,10 @@ import hashlib
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
-import time
 import time
 import zipfile
 from pathlib import Path
@@ -230,9 +230,16 @@ def prune_expired_fresh_checkouts(*, max_age_seconds: int = 5) -> int:
                 continue
             candidate.relative_to(temp_root)
             if candidate.is_dir():
-                shutil.rmtree(candidate)
+                def clear_readonly(func, path, _exc):
+                    os.chmod(path, stat.S_IWRITE)
+                    func(path)
+                shutil.rmtree(candidate, onerror=clear_readonly)
             else:
-                candidate.unlink()
+                try:
+                    candidate.unlink()
+                except PermissionError:
+                    os.chmod(candidate, stat.S_IWRITE)
+                    candidate.unlink()
             removed += 1
         except (OSError, ValueError):
             # A concurrent replay may still own the directory; leave it intact.
