@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import time
 import zipfile
 from pathlib import Path
 
@@ -217,7 +218,26 @@ def validate_current_snapshot_binding(snapshot: dict, target: str, capability_pa
     if snapshot != current_snapshot_binding(target, capability_path, validator):
         raise ValueError("current snapshot binding does not match result-determining inputs")
 
+
+def prune_expired_fresh_checkouts(*, max_age_seconds: int = 120) -> int:
+    """Reclaim only this adapter's old TEMP checkouts before a fresh replay."""
+    temp_root = Path(tempfile.gettempdir()).resolve()
+    now = time.time()
+    removed = 0
+    for candidate in temp_root.glob("jimuyun-fresh-checkout-*"):
+        try:
+            if not candidate.is_dir() or now - candidate.stat().st_mtime <= max_age_seconds:
+                continue
+            candidate.relative_to(temp_root)
+            shutil.rmtree(candidate)
+            removed += 1
+        except (OSError, ValueError):
+            # A concurrent replay may still own the directory; leave it intact.
+            continue
+    return removed
+
 def verify_fresh_replay(target: str, capability_path: str, validator: Path, verdict: str, coverage: dict, target_identity: str, snapshot: dict) -> dict:
+    prune_expired_fresh_checkouts()
     checkout = Path(tempfile.mkdtemp(prefix="jimuyun-fresh-checkout-")) / "repo"
     try:
         runtime.git(ROOT, "clone", "--shared", "--no-checkout", str(ROOT), str(checkout))
