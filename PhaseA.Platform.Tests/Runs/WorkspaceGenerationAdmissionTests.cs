@@ -2,6 +2,7 @@ using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Readback;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
