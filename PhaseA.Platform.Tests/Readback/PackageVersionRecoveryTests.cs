@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -52,7 +53,7 @@ public sealed class PackageVersionRecoveryTests
         Assert.Equal("restore_revalidation_required",
             (await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, active.ProjectId)).FailureCode);
         var revalidation = await scope.Store.CreateRunAsync(active.ProjectId, active.WorkspaceId, "prototype-7day-playable");
-        await scope.Store.CompleteRunAsync(revalidation, "succeeded", 0, "", "", "{\"validation_only\":true}");
+        await scope.Store.CompleteRunAsync(revalidation, "succeeded", 0, "", "", ValidationEvidence(active));
         var repackaged = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, active.ProjectId);
         Assert.Equal("succeeded", repackaged.Status);
         var activeZip = await scope.Packages.ReadPackageAsync(scope.Owner.AccountId, active.ProjectId, repackaged.FileName);
@@ -76,10 +77,10 @@ public sealed class PackageVersionRecoveryTests
         Assert.Equal(latest.RepoPath, (await scope.Store.GetProjectSnapshotAsync(latest.ProjectId))!.RepoPath);
         Assert.False(await scope.Store.HasRunnerLockAsync(latest.ProjectId));
         var validation = await scope.Store.CreateRunAsync(latest.ProjectId, latest.WorkspaceId, "prototype-7day-playable");
-        await scope.Store.CompleteRunAsync(validation, "succeeded", 0, "", "", "{\"validation_only\":true}");
+        await scope.Store.CompleteRunAsync(validation, "succeeded", 0, "", "", ValidationEvidence(latest));
         Assert.False(await scope.Store.RequiresRestoreValidationAsync(scope.Owner.AccountId, latest.ProjectId));
         var failedValidation = await scope.Store.CreateRunAsync(latest.ProjectId, latest.WorkspaceId, "prototype-7day-playable");
-        await scope.Store.CompleteRunAsync(failedValidation, "failed", 1, "", "", "{\"validation_only\":true}");
+        await scope.Store.CompleteRunAsync(failedValidation, "failed", 1, "", "", ValidationEvidence(latest));
         Assert.True(await scope.Store.RequiresRestoreValidationAsync(scope.Owner.AccountId, latest.ProjectId));
     }
 
@@ -134,6 +135,9 @@ public sealed class PackageVersionRecoveryTests
         Assert.Empty(scope.Storage.ListSnapshots(scope.Owner.AccountId, scope.Project.ProjectId));
         Assert.False(await scope.Store.HasRunnerLockAsync(scope.Project.ProjectId));
     }
+
+    private static string ValidationEvidence(ProjectSnapshot project) => JsonSerializer.Serialize(new
+        { validation_only = true, workspace_generation_id = WorkspaceGenerationPaths.SourceGenerationId(project) });
 
     private sealed class Scope : IDisposable
     {

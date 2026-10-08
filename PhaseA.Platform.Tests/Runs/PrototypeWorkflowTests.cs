@@ -1541,6 +1541,10 @@ public sealed class PrototypeWorkflowTests : IDisposable
         runner.Commands.Should().HaveCount(6);
         runner.Commands[5].Arguments.Should().Contain(["scripts/python/run_gdunit.py", "--add", "tests/Prototype/DemoPrototype"]);
         runner.Commands[5].Arguments.Should().Contain("--prewarm");
+        using var evidence = JsonDocument.Parse(run!.EvidenceJson!);
+        var current = (await store.GetProjectSnapshotAsync(projectId))!;
+        evidence.RootElement.GetProperty("workspace_generation_id").GetString()
+            .Should().Be(WorkspaceGenerationPaths.SourceGenerationId(current));
         run!.EvidenceJson.Should().Contain("\"rpg_gdunit_validation\"");
         run.EvidenceJson.Should().Contain("\"required\":true");
     }

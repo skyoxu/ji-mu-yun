@@ -1,0 +1,8 @@
+{
+  "commit": "d313a0e2240f038fcba737c6a2ef6b2ea0a0213f",
+  "workflow_run": 37781643256,
+  "job": 113325928373,
+  "status": "failed",
+  "error": "CS0246: GameTypeTemplateCatalog could not be found in WorkspaceGenerationAdmissionTests.cs at line 34.",
+  "correction": "Import PhaseA.Platform.Prototypes in the new test class."
+}

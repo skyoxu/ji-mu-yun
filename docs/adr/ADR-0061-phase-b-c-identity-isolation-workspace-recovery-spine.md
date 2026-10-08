@@ -156,3 +156,18 @@ existing status display. It consumes validated route evidence and adds no second
 executable acceptance workflow or additional user acceptance button. Real Windows
 activation/ACL tests and browser/consumer regressions provide implementation evidence;
 CI evidence is not a claim that a production host was deployed or a live game passed.
+
+## Addendum (2026-10-08 generation-bound acceptance)
+
+A final validation is eligible after restore only when its server-derived
+`workspace_generation_id` matches the active source generation. The opaque ID
+binds account, project, logical workspace and active root/repo/runtime/meta paths;
+it reveals no host path. A restored project with an older unbound receipt requires
+a new final validation. A later failed or mismatched final receipt blocks readiness;
+skeleton-only validation does not discharge this obligation.
+
+Validation and packaging re-read the active paths after acquiring the project
+Runner lock. A changed generation returns the existing project-busy response
+without executing validation or publishing a package. Packaging rechecks readiness
+inside that lock. No schema, authentication, concurrency budget, or public route
+changes; historical runs and package downloads remain additive and readable.

@@ -1,0 +1,14 @@
+{
+  "base_commit": "a4fefe2a27e26593acdd6523a20ed018fcc361ec",
+  "local_consumer_regressions": {
+    "command": "python -m unittest scripts.python.tests.test_phase_a_business_chain_acceptance scripts.python.tests.test_phase_a_package_restore_browser scripts.python.tests.test_phase_a_gdd_to_module_hardening_smoke -v",
+    "passed": 19,
+    "failed": 0,
+    "elapsed_seconds": 2.63
+  },
+  "native_validation": {
+    "local_status": "unavailable",
+    "reason": "No dotnet SDK or native Windows runtime in the editing container.",
+    "required_ci": "Phase Service Entry Acceptance and Windows Quality Gate; include WorkspaceGenerationAdmissionTests and PackageVersionRecoveryTests."
+  }
+}
