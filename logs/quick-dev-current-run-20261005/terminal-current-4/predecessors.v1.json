@@ -1,0 +1,272 @@
+[
+  {
+    "slice_id": "S1",
+    "run_root": "logs/quick-dev-current-run-20261005/s1-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s1-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:80de9808a59cefc624ae3b21bfdcabbdc4c3b1b40cec5c3f1a137c9d5326a607"
+  },
+  {
+    "slice_id": "S2",
+    "run_root": "logs/quick-dev-current-run-20261005/s2-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s2-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:52322d86500636869fd0164c0b4976a7e018ecc7d2ece07496bc0af28d5c7a94"
+  },
+  {
+    "slice_id": "S3",
+    "run_root": "logs/quick-dev-current-run-20261005/s3-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s3-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:09d8397763f484a97c03785fd203f53d65f5c3d35368b8f26c5213f9671f6b78"
+  },
+  {
+    "slice_id": "S4",
+    "run_root": "logs/quick-dev-current-run-20261005/s4-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s4-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:11abb1ad3f2fcbce6d9cc08fcec0325c82916c4a1f000dea194828554cb3f268"
+  },
+  {
+    "slice_id": "S5",
+    "run_root": "logs/quick-dev-current-run-20261005/s5-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s5-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:c717d58119edc0354004ebfee0eb9b6f53cdfe8e8bc9b5db3ae71d2980391400"
+  },
+  {
+    "slice_id": "S6",
+    "run_root": "logs/quick-dev-current-run-20261005/s6-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s6-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:d3fb293a04b94d5c622f71cc8caa2c7f1f79157746da36aafea85ca1335e3d87"
+  },
+  {
+    "slice_id": "S7",
+    "run_root": "logs/quick-dev-current-run-20261005/s7-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s7-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:becf31f9d528a6e092689b4fd5202e4977c4c346246929e9711c478f25ff8d86"
+  },
+  {
+    "slice_id": "S8",
+    "run_root": "logs/quick-dev-current-run-20261005/s8-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s8-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:b054fa24a99543dee7d5c93be47b6f6b5ccf8ab0143dd11b068fbba3a94210a3"
+  },
+  {
+    "slice_id": "S9",
+    "run_root": "logs/quick-dev-current-run-20261005/s9-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s9-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:a1666305e5a357855f868f2c2c7da2ca38ef793948f128a2a386ee00e9c45756"
+  },
+  {
+    "slice_id": "S10",
+    "run_root": "logs/quick-dev-current-run-20261005/s10-repair-3",
+    "result_ref": "logs/quick-dev-current-run-20261005/s10-repair-3/slice-ready-result.v2.json",
+    "result_sha256": "sha256:d094f07d3033297684c48c40e3034f65e317584068c829db0e04af583ce90d49"
+  },
+  {
+    "slice_id": "S11",
+    "run_root": "logs/quick-dev-current-run-20261005/s11-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s11-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:5d2745834cf4b23254258d603211640003caf948618abae7ffc08298808f1681"
+  },
+  {
+    "slice_id": "S12",
+    "run_root": "logs/quick-dev-current-run-20261005/s12-repair-3",
+    "result_ref": "logs/quick-dev-current-run-20261005/s12-repair-3/slice-ready-result.v2.json",
+    "result_sha256": "sha256:af4a51252e2bc983d4d6f2a558cdbce9723fbe5937c52b49b1f95500014e4cd9"
+  },
+  {
+    "slice_id": "S13",
+    "run_root": "logs/quick-dev-current-run-20261005/s13-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s13-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:62e9fe210dfa4219380abe9778cab9815fff8a900196452b39e30d5e86103f89"
+  },
+  {
+    "slice_id": "S14",
+    "run_root": "logs/quick-dev-current-run-20261005/s14-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s14-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:e8c84227d3f3b9f9a2951130d685939779f3858a4e9e90a11855c2844f3d27aa"
+  },
+  {
+    "slice_id": "S15",
+    "run_root": "logs/quick-dev-current-run-20261005/s15-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s15-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:54ec7b1220a41258bd6727256c74ab52846dc8d80d827b7e19d86ce8917efe75"
+  },
+  {
+    "slice_id": "S16",
+    "run_root": "logs/quick-dev-current-run-20261005/s16-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s16-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:eb602946915f7cea1b67fe229e402f0387d003d5ad7b6ae05f04c6daf8e742a7"
+  },
+  {
+    "slice_id": "S17",
+    "run_root": "logs/quick-dev-current-run-20261005/s17-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s17-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:982d93885eccc7dc707964cf656dcaccf563687792f920500eae996cab969b03"
+  },
+  {
+    "slice_id": "S18",
+    "run_root": "logs/quick-dev-current-run-20261005/s18-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s18-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:87558d6b6cc21f678ae95872c25922a5bcf323a5a0f9fffdc5989e40e5609b48"
+  },
+  {
+    "slice_id": "S19",
+    "run_root": "logs/quick-dev-current-run-20261005/s19-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s19-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:10a1ab0b80c537d889cf39e0e3647da55f1f4ba42f75768b2ed63e82ec39baff"
+  },
+  {
+    "slice_id": "S20",
+    "run_root": "logs/quick-dev-current-run-20261005/s20-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s20-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:c1b7a97eec62ddbf3f017d3e2320f60c1980ca59f33ecadbb748e87b319a16db"
+  },
+  {
+    "slice_id": "S21",
+    "run_root": "logs/quick-dev-current-run-20261005/s21-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s21-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:11e613194d078be20ad3af95e21cc562a5be2449e1be26a8a5b0670d2bff803b"
+  },
+  {
+    "slice_id": "S22",
+    "run_root": "logs/quick-dev-current-run-20261005/s22-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s22-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:3c505e40af20447d93d10d4c823cbbc5fc5c1b4768840ee5a63e7186f3a58fcb"
+  },
+  {
+    "slice_id": "S23",
+    "run_root": "logs/quick-dev-current-run-20261005/s23-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s23-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:fb02f5912d733fa3f460195dbeac55eae1473eb78f2ea6a1cf0bfb4cb58ba0a2"
+  },
+  {
+    "slice_id": "S24",
+    "run_root": "logs/quick-dev-current-run-20261005/s24-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s24-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:6c45f0da2502b7b52f788eb3952264c93433e269292fe4d345f8c268ff7d7bbb"
+  },
+  {
+    "slice_id": "S25",
+    "run_root": "logs/quick-dev-current-run-20261005/s25-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s25-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:c7479030e388854586d053a1333d5b464975594a510abed85ab50647cc510ef2"
+  },
+  {
+    "slice_id": "S26",
+    "run_root": "logs/quick-dev-current-run-20261005/s26-repair-4",
+    "result_ref": "logs/quick-dev-current-run-20261005/s26-repair-4/slice-ready-result.v2.json",
+    "result_sha256": "sha256:544ca72848265e39402f292519cfa0e6c46836031ad6a0fe817417eff3ac1a27"
+  },
+  {
+    "slice_id": "S27",
+    "run_root": "logs/quick-dev-current-run-20261005/s27-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s27-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:b91b13c739c111e0573ddc5eb4fe240be394c2f3668c73b895c6ce5b20ac9a3b"
+  },
+  {
+    "slice_id": "S28",
+    "run_root": "logs/quick-dev-current-run-20261005/s28-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s28-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:5dbebae767d18ee73e397b200297aaf07fb8ec0074a6f4ac092415e1704f48af"
+  },
+  {
+    "slice_id": "S29",
+    "run_root": "logs/quick-dev-current-run-20261005/s29-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s29-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:7da7c19c6dce1f527801cb8b4ab32e058b62e669bead7dd8ada367b040c05103"
+  },
+  {
+    "slice_id": "S30",
+    "run_root": "logs/quick-dev-current-run-20261005/s30-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s30-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:9b7edcc50a4b4fe31c33e1b8aaecbcabee945c80739856066ae873f784065255"
+  },
+  {
+    "slice_id": "S31",
+    "run_root": "logs/quick-dev-current-run-20261005/s31-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s31-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:e4c5012fed4005d017b7eb521e7b84dbb13a1f2c43f841ac1071525abece7ed1"
+  },
+  {
+    "slice_id": "S32",
+    "run_root": "logs/quick-dev-current-run-20261005/s32-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s32-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:a6c1dbcceb779d5e8196d5df838bc62a1ba6f6c6790e0dbdc6f5a5dcaad84308"
+  },
+  {
+    "slice_id": "S33",
+    "run_root": "logs/quick-dev-current-run-20261005/s33-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s33-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:f587e3a49dc631f6aae4e0ce31ad3ef03a745df98832d35e5fc094949c84081d"
+  },
+  {
+    "slice_id": "S34",
+    "run_root": "logs/quick-dev-current-run-20261005/s34-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s34-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:0d055531ba8df04ccfaa0935af348499c7dac5ca4f47e66912c21a44a1f2d5fb"
+  },
+  {
+    "slice_id": "S35",
+    "run_root": "logs/quick-dev-current-run-20261005/s35-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s35-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:5e68a61a1c90e55cb456074420f10104d904c86c1d7ad16db256d907b4c53899"
+  },
+  {
+    "slice_id": "S36",
+    "run_root": "logs/quick-dev-current-run-20261005/s36-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s36-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:66585b86b2206af489f5dbb1f3d4e8300019959f33f8e937b7b5e73ce0a108ab"
+  },
+  {
+    "slice_id": "S37",
+    "run_root": "logs/quick-dev-current-run-20261005/s37-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s37-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:f36c54e962e3a4ac0ab5a551adb1fc5ab1b02e75123e5c39958ef0e9ea6c3af2"
+  },
+  {
+    "slice_id": "S38",
+    "run_root": "logs/quick-dev-current-run-20261005/s38-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s38-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:807fe0492c52e0eae137df414e29e3b8f79bc647ce5e40b990562b4d3e48d7e0"
+  },
+  {
+    "slice_id": "S39",
+    "run_root": "logs/quick-dev-current-run-20261005/s39-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s39-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:fb87363e1bf7a1a426d3f2a6368ef1634ccc5a5b6f6ef8e3013eb247feb26c77"
+  },
+  {
+    "slice_id": "S40",
+    "run_root": "logs/quick-dev-current-run-20261005/s40-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s40-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:91f19b91a53618296148ffed6072fc6b341dabf5a415bcaa7fea543203367aa5"
+  },
+  {
+    "slice_id": "S41",
+    "run_root": "logs/quick-dev-current-run-20261005/s41-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s41-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:399623290b707ea30ac7234c74ac1109399d97542f022d4fb4f8635b56fc7009"
+  },
+  {
+    "slice_id": "S42",
+    "run_root": "logs/quick-dev-current-run-20261005/s42-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s42-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:a8056af044bbda6a89dbd6b67f1176dcb49efae18c0cd8fb84e0dfc465857838"
+  },
+  {
+    "slice_id": "S43",
+    "run_root": "logs/quick-dev-current-run-20261005/s43-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s43-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:c0515759c51f311729b3177cabeb1aac211fec1b7de59f0ed3283d155e069051"
+  },
+  {
+    "slice_id": "S44",
+    "run_root": "logs/quick-dev-current-run-20261005/s44-repair-1",
+    "result_ref": "logs/quick-dev-current-run-20261005/s44-repair-1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:4d8e25a7658848683193a830c6dbb4888229770749fea4ce61e44b03bd47ef9b"
+  },
+  {
+    "slice_id": "S45",
+    "run_root": "logs/quick-dev-current-run-20261005/s45-repair-2",
+    "result_ref": "logs/quick-dev-current-run-20261005/s45-repair-2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:50efa9ba68d9eac5115ef0da3e13260a184a66f8ea4e55525280040f93aaa346"
+  }
+]
