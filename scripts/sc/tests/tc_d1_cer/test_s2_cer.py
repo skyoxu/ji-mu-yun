@@ -19,7 +19,7 @@ TARGET = ".agents/skills/run-refactor-implementation-acceptance"
 
 @pytest.mark.cer_assertion("assert-platform-specific-declaration")
 def test_replay_receipt_declares_active_platform_behavior() -> None:
-    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'fresh'], ROOT, timeout=180)
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'fresh'], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS)
     receipt = json.loads(result.stdout)
     replay = receipt.get("current_wrapper_replay")
     declaration = replay.get("platform_behavior") if isinstance(replay, dict) else None

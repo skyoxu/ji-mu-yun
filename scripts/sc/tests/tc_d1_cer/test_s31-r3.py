@@ -38,7 +38,7 @@ def _run_matrix(case: dict) -> tuple[int, dict]:
         f"sys.argv=['{ENTRY.as_posix()}','replay-matrix','--matrix','s31-r3-matrix.json']\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
+    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=150, input_data=(json.dumps(matrix)).encode("utf-8"))
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
@@ -56,7 +56,7 @@ def _assert_behavior(condition: bool, detail: object) -> None:
 
 @pytest.mark.cer_assertion("A-VERDICT-REAL-EXECUTION")
 def test_verdict_links_current_source_to_validator_processes() -> None:
-    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'source-identity'], ROOT, timeout=180)
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'source-identity'], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS)
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError as exc:

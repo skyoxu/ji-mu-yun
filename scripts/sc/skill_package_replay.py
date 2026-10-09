@@ -247,10 +247,32 @@ def prune_expired_fresh_checkouts(*, max_age_seconds: int = 5) -> int:
     return removed
 
 def verify_fresh_replay(target: str, capability_path: str, validator: Path, verdict: str, coverage: dict, target_identity: str, snapshot: dict) -> dict:
+    started = time.monotonic()
+    stages = []
+
+    def mark(stage: str, stage_started: float) -> None:
+        stages.append({"stage": stage, "elapsed_seconds": time.monotonic() - stage_started})
+
+    def enforce_budget(stage: str) -> None:
+        elapsed = time.monotonic() - started
+        if elapsed > runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS:
+            raise ValueError(
+                "fresh replay orchestration timed out at " + stage
+                + "; budget=" + str(runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS)
+            )
+
+    stage_started = time.monotonic()
     prune_expired_fresh_checkouts()
     checkout = Path(tempfile.mkdtemp(prefix="jimuyun-fresh-checkout-")) / "repo"
     try:
-        runtime.git(ROOT, "clone", "--shared", "--no-checkout", str(ROOT), str(checkout))
+        # Accepted ADR-0058: reconstruct an independent candidate tree; Git is
+        # used only for immutable object reads, as in native Matrix replay.
+        checkout.mkdir()
+        git_directory = runtime.git(ROOT, "rev-parse", "--absolute-git-dir").decode().strip()
+        (checkout / ".git").write_text("gitdir: " + git_directory + "\n", encoding="utf-8", newline="\n")
+        mark("reconstruct", stage_started)
+        enforce_budget("reconstruct")
+        stage_started = time.monotonic()
         inputs = snapshot["inputs"]
         pinned = {row["path"]: row["sha256"] for row in inputs["dependencies"] + inputs["data"]}
         for name, expected in pinned.items():
@@ -260,11 +282,20 @@ def verify_fresh_replay(target: str, capability_path: str, validator: Path, verd
             destination = runtime.relative(checkout, name)
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
+        mark("materialize-inputs", stage_started)
+        enforce_budget("materialize-inputs")
+        stage_started = time.monotonic()
         runtime.assert_identity(checkout, [{"path": name, "sha256": identity} for name, identity in pinned.items()])
+        mark("identity-check", stage_started)
+        enforce_budget("identity-check")
+        stage_started = time.monotonic()
         command = [sys.executable, "-B", str(checkout / "scripts/sc/skill_package_replay.py"), "replay-package", "--target", target, "--capability", capability_path, "--probe-mode", "fresh-child"]
-        native = runtime.execute(command, checkout)
+        native = runtime.execute_replay(command, checkout)
+        mark("fresh-child", stage_started)
+        enforce_budget("fresh-child")
         if native.returncode:
             raise ValueError("fresh checkout replay rejected pinned inputs: " + native.stdout + native.stderr)
+        stage_started = time.monotonic()
         fresh = json.loads(native.stdout)["current_wrapper_replay"]
         mismatches = []
         if replay_verdict(fresh) != verdict:
@@ -277,7 +308,9 @@ def verify_fresh_replay(target: str, capability_path: str, validator: Path, verd
             mismatches.append("snapshot")
         if mismatches:
             raise ValueError("fresh replay does not match pinned inputs: " + ",".join(mismatches))
-        return {"fresh_checkout": True, "pinned_semantic_verdict": verdict, "fresh_semantic_verdict": replay_verdict(fresh), "fresh_coverage": replay_coverage(fresh), "coverage_result": replay_coverage(fresh), "pinned_coverage": coverage, "reconstructed_identity": target_identity, "replay_identity": fresh["effective_inspected_content"]["identity"], "fresh_process": True, "checkout_path": str(checkout), "checkout_commit": inputs["git_baseline"], "historical_evidence_rewritten": False, "reconstructed_inputs": pinned}
+        mark("semantic-compare", stage_started)
+        enforce_budget("semantic-compare")
+        return {"fresh_checkout": True, "pinned_semantic_verdict": verdict, "fresh_semantic_verdict": replay_verdict(fresh), "fresh_coverage": replay_coverage(fresh), "coverage_result": replay_coverage(fresh), "pinned_coverage": coverage, "reconstructed_identity": target_identity, "replay_identity": fresh["effective_inspected_content"]["identity"], "fresh_process": True, "checkout_path": str(checkout), "checkout_commit": inputs["git_baseline"], "historical_evidence_rewritten": False, "reconstructed_inputs": pinned, "fresh_orchestration_timing": {"status": "pass", "budget_seconds": runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS, "elapsed_seconds": time.monotonic() - started, "stages": stages}}
     except Exception:
         shutil.rmtree(checkout.parent, ignore_errors=True)
         raise
@@ -432,10 +465,21 @@ def replay_metadata(
 
 
 def replay_package(target: str, capability_path: str, probe_mode: str) -> tuple[dict, int]:
+    orchestration_started = time.monotonic()
+    orchestration_stages = []
+
+    def mark_orchestration(stage: str, started: float) -> None:
+        orchestration_stages.append({"stage": stage, "elapsed_seconds": time.monotonic() - started})
+
+    stage_started = time.monotonic()
     replay = validate_package(target, capability_path)
+    mark_orchestration("validate-package", stage_started)
+    stage_started = time.monotonic()
     validator = ROOT / replay["resolved_validator"]["path"]
     snapshot = current_snapshot_binding(target, capability_path, validator)
     validate_current_snapshot_binding(snapshot, target, capability_path, validator)
+    mark_orchestration("snapshot-and-binding", stage_started)
+    stage_started = time.monotonic()
     verdict = replay_verdict(replay)
     coverage = replay_coverage(replay)
     target_identity = replay["effective_inspected_content"]["identity"]
@@ -445,6 +489,8 @@ def replay_package(target: str, capability_path: str, probe_mode: str) -> tuple[
     verdict = replay_verdict(replay)
     coverage = replay_coverage(replay)
     replay["semantic_verdict"] = verdict
+    mark_orchestration("metadata-and-semantic-verdict", stage_started)
+    stage_started = time.monotonic()
     if probe_mode in {"fresh", "source-identity"}:
         replay.update(
             verify_fresh_replay(
@@ -462,11 +508,18 @@ def replay_package(target: str, capability_path: str, probe_mode: str) -> tuple[
             "checkout_path": replay["checkout_path"],
             "checkout_commit": replay["checkout_commit"],
         }
+        mark_orchestration("fresh-replay", stage_started)
     if probe_mode in {"enable", "disable", "rollback", "re-enable"}:
         calls = [row for row in replay["consumer_verification"]["calls"] if row["stage"] == probe_mode]
         replay["consumer_invocation"] = {"transition": probe_mode, "real_call": bool(calls), "route": calls[0]["route"], "route_identity": calls[0]["route_identity"], "target": target, "execution_result": replay["status"], "calls": calls}
     if probe_mode == "rollback":
         replay["rollback"] = rollback_details(target, capability_path, replay)
+    replay["replay_orchestration_timing"] = {
+        "status": "pass",
+        "budget_seconds": runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS,
+        "elapsed_seconds": time.monotonic() - orchestration_started,
+        "stages": orchestration_stages,
+    }
     receipt = historical_receipt(replay)
     if probe_mode in {"stable-no-provenance", "stable-temporary-package"}:
         receipt["stable_eligibility"] = {"eligible": False, "rejection_reason": "source-supported immutable provenance is required"}

@@ -208,9 +208,9 @@ identities prevent mixing container-local IDs with host `/proc` IDs. This is
 bounded Python transport, not an arbitrary-binary OS sandbox.
 
 CER integrations of parent lifecycle checks plus fresh child execution use the
-same file-backed transport with their existing 180-second outer ceiling;
-Matrix fixtures retain their 90-second harness ceiling. These are harness
-deadlines, not extensions of native or aggregate Matrix execution budgets.
+same file-backed transport with a 360-second outer ceiling. Matrix fixtures
+retain their separately owned harness ceiling. These are harness deadlines,
+not extensions of native or aggregate Matrix execution budgets.
 S17 and source-identity harnesses now have the same finite parent deadline.
 S17 launches the active bound Python executable rather than reselecting a
 runtime through the Windows launcher. All original assertions and selectors
@@ -282,6 +282,19 @@ is cached. The independent S2/S4 package digest oracles retain equality checks
 and order repository-relative names by POSIX UTF-8 bytes, matching Git identity
 instead of Windows case-folded Path ordering.
 
+Within one closure traversal, each analyzed Python file's exact bytes are read
+once and the same bytes supply both import analysis and that traversal's
+content digest. A later closure invocation rebuilds membership and reads the
+current bytes again. This removes duplicate Windows file opens without caching
+a closure, identity, trust result or execution result across invocations.
+
+Fresh replay constructs a new independent candidate file tree and references
+the existing Git object database through a gitdir file, as native Matrix
+materialization does. It runs only read-only Git identity/object operations;
+the original HEAD and index are unchanged. All bound candidate bytes are
+reconstructed and checked before a new process executes the full replay.
+No parent Probe or Consumer execution result is reused in the fresh child.
+
 CER package replay parents use the owned file-backed transport and the existing
 180-second integration ceiling. Matrix parents use a 90-second harness ceiling;
 other validation calls remain finite. The native child and aggregate Matrix
@@ -312,3 +325,60 @@ The explicit diagnostic directory is propagated in the sanitized environment
 and included in its binding. These diagnostics grant no execution, trust or
 Acceptance authority. All prior evidence stays unchanged. C3 remains OPEN and
 Acceptance remains blocked until the required native Windows evidence exists.
+
+### 2026-10-08 Leaf, fresh replay, and Matrix budget separation
+
+The maintainer requested separating whole-replay orchestration from individual
+Consumer/Validator limits and measuring Matrix independently. This section
+supersedes the earlier use of the same 60-second ceiling for all three scopes;
+it does not supersede output limits, timeout failure semantics, trust authority,
+Consumer coverage, Stable provenance, or independent execution requirements.
+
+Windows evidence shows full fresh-child orchestration taking approximately
+72 seconds and repeatedly exhausting its old 60-second deadline. The measured
+full Matrix in `logs/08-05-real-skill-replay/budget-assessment-20261008/measurement`
+ran all six cases and both subjects in 43.95 seconds, with 36.38 seconds of
+top-level native calls and about 7.58 seconds of preparation/inter-call work.
+Separate input generation took 4.39 seconds. Earlier native Windows traces
+exhausted the 60-second aggregate while a scenario had only 0.3945 seconds left.
+These are baseline measurements, not percentile or worst-case guarantees.
+
+Individual Consumer and Validator executions keep the 60-second ceiling.
+Fresh-child execution gets an independent 120-second ceiling through
+`execute_replay`; its nested Consumer and Validator calls retain their own 60s
+limits. The parent full fresh replay orchestration now has a separate
+300-second deadline covering validation, snapshot binding, reconstruction,
+materialization, fresh-child execution, and semantic comparison. The direct
+transport ceiling is 360 seconds so a 300-second orchestration can terminate
+and drain its owned process tree without being cut off by the transport. These
+are distinct from the 60-second leaf limit; a leaf may not spend the parent
+budget.
+
+Matrix replay uses a separate 120-second aggregate ceiling: roughly 2.7 times
+the measured 43.95-second baseline, providing margin for observed Windows
+variation without disabling termination. Its clock begins at replay entry and
+includes fixture checks, trust verification, Stable materialization, startup,
+every Stable/Candidate wrapper and scenario execution, and final identity
+checks. `prepare_matrix` input generation precedes replay and is measured
+separately; it cannot spend the replay budget before replay begins. Individual
+Matrix wrapper/scenario commands get the smaller of 60 seconds and the actual
+remaining aggregate time. A stricter input-declared bound remains binding;
+declarations cannot increase the ceiling. Aggregate exhaustion remains failure.
+
+Matrix CER harnesses use 150 seconds, leaving 30 seconds beyond the aggregate
+limit for transport/failure reporting and cleanup; this is not extra Matrix
+execution time. Matrix receipts expose effective
+aggregate/leaf limits and actual elapsed time on success and execution failure.
+
+Fresh replay receipts additionally expose stage-level orchestration timing for
+validation, snapshot binding, reconstruction, materialization, fresh-child
+execution, and semantic comparison. A successful receipt never turns a timing
+measurement into authority; a timeout remains unsuccessful and retains its
+diagnostic evidence.
+
+No scenarios, Consumers, assertions or selectors are omitted; output remains
+bounded at 8 MiB and all derived records remain `authorizes: []`. No historical
+receipt is rebound, and the diagnostic wider-budget measurement cannot be used
+as a current pass. Current Windows regressions and real positive/negative
+controls must validate this implementation. C3 remains OPEN and this repair
+does not publish implementation-complete, Acceptance, or Trust Approval.

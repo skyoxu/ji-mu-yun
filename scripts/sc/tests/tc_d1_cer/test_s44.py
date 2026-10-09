@@ -28,7 +28,7 @@ def _run_matrix(case: dict, *, matrix_fields: dict | None = None, cases: list[di
         f"sys.argv=['{ENTRY.as_posix()}','replay-matrix','--matrix','s44-matrix.json']\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
+    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=150, input_data=(json.dumps(matrix)).encode("utf-8"))
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
@@ -39,7 +39,7 @@ def _run_matrix(case: dict, *, matrix_fields: dict | None = None, cases: list[di
 
 
 def _run_replay(probe_mode: str = "source-identity") -> tuple[int, dict]:
-    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', probe_mode], ROOT, timeout=180)
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', probe_mode], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS)
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError as exc:

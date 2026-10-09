@@ -24,7 +24,7 @@ def _assert_bound(condition: bool, failure_id: str, detail: object) -> None:
 
 
 def _json_result(command: list[str]) -> tuple[subprocess.CompletedProcess[str], dict]:
-    result = runtime.capture_process(command, ROOT, timeout=180)
+    result = runtime.capture_process(command, ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS)
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError:

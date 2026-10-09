@@ -23,9 +23,9 @@ def _run(*arguments: str) -> tuple[int, dict]:
     process = runtime.capture_process(
         [sys.executable, "-B", str(ENTRY), *arguments],
         ROOT,
-        # This integrates parent routes and a fresh child; native child and
-        # Matrix budgets remain 60 seconds in the production adapter.
-        timeout=180 if arguments[0] == "replay-package" else 60,
+        # This integrates parent routes and fresh replay / the full Matrix.
+        # Individual native Consumer and Validator calls remain capped at 60s.
+        timeout=runtime.PROCESS_TRANSPORT_SECONDS if arguments[0] == "replay-package" else 150,
     )
     try:
         receipt = json.loads(process.stdout)
@@ -65,7 +65,7 @@ def _matrix(*cases: dict, native_matrix=None) -> tuple[int, dict]:
     )
     process = runtime.capture_process(
         [sys.executable, "-B", "-c", child, str(ENTRY)], ROOT,
-        input_data=json.dumps(matrix).encode("utf-8"), timeout=60,
+        input_data=json.dumps(matrix).encode("utf-8"), timeout=150,
     )
     try:
         receipt = json.loads(process.stdout)

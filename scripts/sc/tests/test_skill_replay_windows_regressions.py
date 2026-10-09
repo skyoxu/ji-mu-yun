@@ -111,21 +111,61 @@ class WindowsBindingTests(unittest.TestCase):
             self.assertEqual(expected, (destination / "candidate/SKILL.md").read_bytes())
 
     def test_fresh_replay_reproduces_identity_when_clone_uses_windows_eol_default(self):
-        original_git = replay.runtime.git
-
-        def clone_with_windows_default(root, *arguments):
-            output = original_git(root, *arguments)
-            if arguments and arguments[0] == "clone":
-                original_git(Path(arguments[-1]), "config", "core.autocrlf", "true")
-            return output
-
-        with mock.patch.object(replay.runtime, "git", side_effect=clone_with_windows_default):
-            result, code = replay.replay_package("candidate", "capability.json", "fresh")
+        # Exercise real EOL configuration even when reconstruction avoids clone.
+        self.fixture.git("config", "core.autocrlf", "true")
+        result, code = replay.replay_package("candidate", "capability.json", "fresh")
         self.assertEqual(0, code)
         current = result["current_wrapper_replay"]
         self.assertEqual(current["pinned_semantic_verdict"], current["fresh_semantic_verdict"])
         import shutil
         shutil.rmtree(Path(current["checkout_path"]).parent)
+
+    def test_fresh_replay_uses_an_independent_tree_without_cloning_repository(self):
+        original_git = replay.runtime.git
+        calls = []
+        git_directory = Path(original_git(self.fixture.root, "rev-parse", "--absolute-git-dir").decode().strip())
+        index_before = (git_directory / "index").read_bytes()
+        head_before = original_git(self.fixture.root, "rev-parse", "HEAD")
+        original_capture = replay.runtime.capture_process
+        fresh_timeouts = []
+
+        def capture(command, root, timeout, **options):
+            if "fresh-child" in command:
+                fresh_timeouts.append(timeout)
+            return original_capture(command, root, timeout, **options)
+
+        def record_git(root, *arguments):
+            calls.append(arguments)
+            if arguments and arguments[0] == "clone":
+                raise AssertionError("fresh replay must not clone the repository")
+            return original_git(root, *arguments)
+
+        with mock.patch.object(replay.runtime, "git", side_effect=record_git), \
+             mock.patch.object(replay.runtime, "capture_process", side_effect=capture):
+            result, code = replay.replay_package("candidate", "capability.json", "fresh")
+        self.assertEqual(0, code)
+        current = result["current_wrapper_replay"]
+        checkout = Path(current["checkout_path"])
+        self.assertTrue(current["fresh_checkout"])
+        self.assertTrue((checkout / ".git").is_file())
+        self.assertEqual(index_before, (git_directory / "index").read_bytes())
+        self.assertEqual(head_before, original_git(self.fixture.root, "rev-parse", "HEAD"))
+        self.assertEqual(current["pinned_coverage"], current["fresh_coverage"])
+        self.assertEqual(current["pinned_semantic_verdict"], current["fresh_semantic_verdict"])
+        self.assertFalse(any(arguments and arguments[0] == "clone" for arguments in calls))
+        self.assertEqual([replay.runtime.REPLAY_TIMEOUT_SECONDS], fresh_timeouts,
+                         "fresh-child execution keeps its own replay deadline")
+        timing = current["fresh_orchestration_timing"]
+        self.assertGreaterEqual(timing["budget_seconds"], replay.runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS)
+        self.assertEqual("pass", timing["status"])
+        self.assertTrue({"reconstruct", "fresh-child", "semantic-compare"}.issubset(
+            {row["stage"] for row in timing["stages"]}))
+        overall = current["replay_orchestration_timing"]
+        self.assertGreaterEqual(overall["budget_seconds"], replay.runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS)
+        self.assertTrue({"validate-package", "snapshot-and-binding", "fresh-replay"}.issubset(
+            {row["stage"] for row in overall["stages"]}))
+        import shutil
+        shutil.rmtree(checkout.parent)
 
     def test_duplicate_raw_matrix_inputs_name_both_cases_before_execution(self):
         self.fixture.write("candidate/feature.py", "def result():\n    return 2\n")

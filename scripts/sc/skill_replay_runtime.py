@@ -27,6 +27,10 @@ from pathlib import Path
 
 TRUST_BASELINE = "e289d7d3f8572595ca28c498adc798d1fa2a2bf7"
 TIMEOUT_SECONDS = 60
+REPLAY_TIMEOUT_SECONDS = 120
+FRESH_REPLAY_ORCHESTRATION_SECONDS = 300
+MATRIX_TIMEOUT_SECONDS = 120
+PROCESS_TRANSPORT_SECONDS = 360
 OUTPUT_LIMIT = 8 * 1024 * 1024
 PACKAGE_ROOTS = (".agents/skills/run-refactor-implementation-acceptance", ".agents/skills/vdd-execution-plan")
 SOURCE_ROOTS = (*PACKAGE_ROOTS, ".agents/skills/quick-dev-tdd-adapter", "scripts/sc", "scripts/python", "scripts/toolchain", "scripts/vdd", "scripts/quick_dev", "knowledge", "docs/adr")
@@ -242,12 +246,12 @@ def process_trace(process, command, root, timeout, phase, **fields):
 
 def capture_process(command: list[str], root: Path, timeout: float, *,
                     output_limit: int = OUTPUT_LIMIT, input_data: bytes | None = None) -> subprocess.CompletedProcess:
-    """File-backed owned transport; CER parent integrations allow up to 180s.
+    """File-backed owned transport; outer integrations allow bounded cleanup time.
 
     Production native execution calls execute(), which keeps the 60s ceiling.
     A timeout never becomes a successful CompletedProcess or replay receipt.
     """
-    if isinstance(timeout, bool) or not math.isfinite(timeout) or not 0 < timeout <= 180:
+    if isinstance(timeout, bool) or not math.isfinite(timeout) or not 0 < timeout <= PROCESS_TRANSPORT_SECONDS:
         raise ValueError("process transport time budget is outside the bounded adapter")
     if not isinstance(output_limit, int) or isinstance(output_limit, bool) or not 0 < output_limit <= OUTPUT_LIMIT:
         raise ValueError("execution output budget is outside the bounded adapter")
@@ -299,6 +303,21 @@ def execute(command: list[str], root: Path, timeout: float = TIMEOUT_SECONDS, ou
         raise ValueError("validator or Consumer timed out: " + json.dumps(command) + "; budget=" + str(timeout)) from exc
     if result.returncode == 124:
         raise ValueError("validator or Consumer timed out")
+    return result
+
+
+def execute_replay(command: list[str], root: Path, timeout: float = REPLAY_TIMEOUT_SECONDS,
+                   output_limit: int = OUTPUT_LIMIT) -> subprocess.CompletedProcess:
+    """Bound full replay orchestration independently from native leaf calls."""
+    if (isinstance(timeout, bool) or not isinstance(timeout, (int, float))
+            or not math.isfinite(timeout) or not 0 < timeout <= REPLAY_TIMEOUT_SECONDS):
+        raise ValueError("replay orchestration time budget is outside the bounded adapter")
+    try:
+        result = capture_process(command, root, timeout, output_limit=output_limit)
+    except subprocess.TimeoutExpired as exc:
+        raise ValueError("replay orchestration timed out; budget=" + str(timeout)) from exc
+    if result.returncode == 124:
+        raise ValueError("replay orchestration timed out")
     return result
 
 
@@ -461,11 +480,16 @@ def dependency_closure(root: Path, seeds) -> list[dict]:
         return import_index[key]
 
     pending = list(selected)
+    # Accepted ADR-0058: one traversal binds the exact bytes it analyzes.
+    # These digests are local to this call, never a cached closure or verdict.
+    analyzed_identities = {}
     while pending:
         path = pending.pop()
         if path.suffix != ".py":
             continue
-        names = _import_names(path.read_bytes(), str(path))
+        raw = path.read_bytes()
+        analyzed_identities[path] = sha(raw)
+        names = _import_names(raw, str(path))
         found = set()
         for name in names:
             for base in dict.fromkeys((path.parent, *search)):
@@ -478,7 +502,8 @@ def dependency_closure(root: Path, seeds) -> list[dict]:
     result = []
     for path in sorted(selected, key=lambda item: item.relative_to(root).as_posix().encode("utf-8")):
         kind = "executable" if path.suffix in {".py", ".ps1", ".sh"} else ("policy" if "policies" in path.parts else ("configuration" if path.suffix in {".json", ".yaml", ".toml"} else "data"))
-        result.append({"kind": kind, "path": path.relative_to(root).as_posix(), "sha256": sha(path.read_bytes())})
+        identity = analyzed_identities[path] if path in analyzed_identities else sha(path.read_bytes())
+        result.append({"kind": kind, "path": path.relative_to(root).as_posix(), "sha256": identity})
     return result
 
 
@@ -949,9 +974,9 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
         return invalid_matrix(matrix, "Matrix case identities must be unique")
     if not isinstance(stable, dict) or not re.fullmatch(r"[0-9a-f]{40}", str(stable.get("commit", ""))) or not isinstance(candidate, dict):
         return invalid_matrix(matrix, "source-supported Stable commit and Candidate bindings are required")
-    time_limit, output_limit, output_used = TIMEOUT_SECONDS, OUTPUT_LIMIT, 0
+    time_limit, output_limit, output_used = MATRIX_TIMEOUT_SECONDS, OUTPUT_LIMIT, 0
     for case in cases:
-        milliseconds = case.get("aggregate_time_bound_ms", TIMEOUT_SECONDS * 1000)
+        milliseconds = case.get("aggregate_time_bound_ms", MATRIX_TIMEOUT_SECONDS * 1000)
         byte_limit = case.get("aggregate_output_bound_bytes", OUTPUT_LIMIT)
         if (isinstance(milliseconds, bool) or not isinstance(milliseconds, (int, float)) or not math.isfinite(milliseconds)
                 or isinstance(byte_limit, bool) or not isinstance(byte_limit, int)):
@@ -970,12 +995,21 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
     def bounded_execute(command, location):
         nonlocal output_used
         duration, capacity = remaining()
-        result = execute(command, location, duration, capacity)
+        result = execute(command, location, min(TIMEOUT_SECONDS, duration), capacity)
         output_used += len(result.stdout.encode("utf-8")) + len(result.stderr.encode("utf-8"))
         remaining()
         return result
 
     results = []
+
+    def budget_observation():
+        return {"aggregate_time_limit_seconds": time_limit,
+                "elapsed_seconds": time.monotonic() - started,
+                "includes_preparation": "fixture validation, trust checks, Stable materialization, and native executions",
+                "excludes_input_generation": "prepare_matrix runs before this replay entrypoint",
+                "native_process_ceiling_seconds": TIMEOUT_SECONDS,
+                "output_limit_bytes": output_limit}
+
     try:
         # Freeze and check every actual input before either subject executes.
         # A different path or case label cannot make copied bytes independent.
@@ -1081,8 +1115,9 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
         terminal_state = "timeout" if "timed out" in str(exc) else ("budget-exhausted" if "budget exhausted" in str(exc) else "contract-rejected")
         invalid, code = invalid_matrix(matrix, str(exc), terminal_state, (time.monotonic() - started) * 1000)
         invalid["completed_case_results"] = results
+        invalid["budget_observation"] = budget_observation()
         return invalid, code
-    return {"status": "pass", "exit_code": 0, "aggregate_valid": True, "aggregate_status": "valid", "case_results": results, "missing_cases": [], "invalid_reasons": [], "stable_provenance": stable, "candidate": candidate, "relevant_changed_executables": changes, "authorizes": []}, 0
+    return {"status": "pass", "exit_code": 0, "aggregate_valid": True, "aggregate_status": "valid", "case_results": results, "missing_cases": [], "invalid_reasons": [], "stable_provenance": stable, "candidate": candidate, "relevant_changed_executables": changes, "budget_observation": budget_observation(), "authorizes": []}, 0
 
 
 def prepare_matrix(root: Path, target: str, cap_path: str, stable_commit: str, output: str) -> dict:

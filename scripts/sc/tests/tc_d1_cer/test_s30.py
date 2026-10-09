@@ -18,7 +18,7 @@ TARGET = ".agents/skills/run-refactor-implementation-acceptance"
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
-    return runtime.capture_process([sys.executable, '-B', str(ENTRY), *args], ROOT, timeout=180 if args[0] == "replay-package" else 90 if args[0] == "replay-matrix" else 60)
+    return runtime.capture_process([sys.executable, '-B', str(ENTRY), *args], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS if args[0] == "replay-package" else 150 if args[0] == "replay-matrix" else 60)
 
 
 def _json(result: subprocess.CompletedProcess[str]) -> dict:

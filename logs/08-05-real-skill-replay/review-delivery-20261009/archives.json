@@ -1,0 +1,89 @@
+{
+  "archives": [
+    {
+      "archive": "budget-assessment-20261008.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/budget-assessment-20261008",
+      "files": 2204,
+      "bytes": 4438652,
+      "sha256": "sha256:526c37ac957fb2898709db89df80543765f48892684570b090bfa76ba0f409a2"
+    },
+    {
+      "archive": "observable-verification-20261008T044531Z-e4dcc02d.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/observable-verification-20261008T044531Z-e4dcc02d",
+      "files": 1184,
+      "bytes": 411696,
+      "sha256": "sha256:6f54a1c94b6710828edaf29268fe8be202a22106592df190025d8898d71a78b7"
+    },
+    {
+      "archive": "observable-verification-20261008T052101Z-492dc1ea.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/observable-verification-20261008T052101Z-492dc1ea",
+      "files": 923,
+      "bytes": 328755,
+      "sha256": "sha256:fa4b7a53e3c94a1d2a7dcc05cbf86149aa9b47e9d340c64c0e8a92ecdbbced5e"
+    },
+    {
+      "archive": "observable-verification-20261008T074912Z-3ec508b1.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/observable-verification-20261008T074912Z-3ec508b1",
+      "files": 5160,
+      "bytes": 1027544,
+      "sha256": "sha256:6ef6c9fc414571e1b5391a07cf38bc9f8c4b4f309c7dd30bdaf27275f83a2574"
+    },
+    {
+      "archive": "observable-verification-20261008T092604Z-f011cbf7.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/observable-verification-20261008T092604Z-f011cbf7",
+      "files": 605,
+      "bytes": 243690,
+      "sha256": "sha256:02671ea2688c700d504443d1e589b1aaed5f9c89ec4e86b8b62c20f2a9fb6e42"
+    },
+    {
+      "archive": "observable-verification-20261008T093416Z-a559141a.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/observable-verification-20261008T093416Z-a559141a",
+      "files": 1366,
+      "bytes": 410468,
+      "sha256": "sha256:6f8a0ee53af149212578a21a569c0984dd08a77557ddd7167ab0e419c453ebf8"
+    },
+    {
+      "archive": "observable-verification-20261008T104027Z-3d54f17a.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/observable-verification-20261008T104027Z-3d54f17a",
+      "files": 5198,
+      "bytes": 1035402,
+      "sha256": "sha256:a023115a3fd88e2f2dcce8dadfa893dda2b5a0e577463437d4d330ed82bf5dd9"
+    },
+    {
+      "archive": "observable-verification-budget-resplit-20261008.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/observable-verification-budget-resplit-20261008",
+      "files": 5244,
+      "bytes": 1043214,
+      "sha256": "sha256:6eb625bf8041dee04c5f2a100632eeffc00796b4dbafeff84f77106c9d81a1a4"
+    },
+    {
+      "archive": "observable-verification-budget-resplit-20261009.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/observable-verification-budget-resplit-20261009",
+      "files": 5767,
+      "bytes": 1417144,
+      "sha256": "sha256:2779ffec717fa0515e70a8a5af37ce50fa92422a9489991697c147dd06895838"
+    },
+    {
+      "archive": "windows-debug-trace.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/windows-debug-trace",
+      "files": 98,
+      "bytes": 13934,
+      "sha256": "sha256:360b40d258b333ec5997e58a3452067384e6d9b7dcb886dd84abb5176da26beb"
+    },
+    {
+      "archive": "windows-fresh-child-repair-20261008.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/windows-fresh-child-repair-20261008",
+      "files": 2,
+      "bytes": 1804,
+      "sha256": "sha256:268d525bda210069e18a0edaad455e6a6e07df139fc01a5e2b743b908ddd6da6"
+    },
+    {
+      "archive": "windows-fresh-replay-local-20261008T154416.tar.gz",
+      "directory": "logs/08-05-real-skill-replay/windows-fresh-replay-local-20261008T154416",
+      "files": 101,
+      "bytes": 60278,
+      "sha256": "sha256:a8ff547ee65cb4a67e0d3ae0f26c2dd5d27a8e3e0202a243c8d53b010bdb944b"
+    }
+  ],
+  "authorizes": []
+}

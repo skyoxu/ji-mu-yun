@@ -26,7 +26,7 @@ def _run_matrix(matrix: dict) -> tuple[int, dict]:
         f"sys.argv=['{ENTRY.as_posix()}','replay-matrix','--matrix','s31-r1-matrix.json']\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
+    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=150, input_data=(json.dumps(matrix)).encode("utf-8"))
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError as exc:

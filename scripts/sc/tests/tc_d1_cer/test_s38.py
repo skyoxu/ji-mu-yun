@@ -26,7 +26,7 @@ def test_matrix_error_label_invalidates_aggregate_and_is_preserved() -> None:
     matrix_path = Path(__file__).with_name(".s38-matrix.json")
     try:
         matrix_path.write_text(json.dumps(matrix), encoding="utf-8")
-        result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-matrix', '--matrix', str(matrix_path.relative_to(ROOT))], ROOT, timeout=90)
+        result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-matrix', '--matrix', str(matrix_path.relative_to(ROOT))], ROOT, timeout=150)
     finally:
         matrix_path.unlink(missing_ok=True)
     receipt = json.loads(result.stdout)

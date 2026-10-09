@@ -18,7 +18,7 @@ MATRIX = ROOT / "execution-plans/2026-08-05-toolchain-core-skill-replay-portabil
 
 
 def _run_matrix(matrix_argument: str) -> tuple[subprocess.CompletedProcess[str], dict]:
-    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-matrix', '--matrix', matrix_argument], ROOT, timeout=90)
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-matrix', '--matrix', matrix_argument], ROOT, timeout=150)
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError:
@@ -36,7 +36,7 @@ def _run_inline_matrix(matrix: dict, virtual_name: str) -> tuple[subprocess.Comp
         f"sys.argv=['{ENTRY.as_posix()}','replay-matrix','--matrix',{virtual_name!r}]\n"
         "runpy.run_path(sys.argv[0], run_name='__main__')\n"
     )
-    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
+    result = runtime.capture_process([sys.executable, '-B', '-c', child], ROOT, timeout=150, input_data=(json.dumps(matrix)).encode("utf-8"))
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError:

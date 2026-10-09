@@ -24,7 +24,7 @@ SEED_OCCURRENCES = (
 
 
 def _replay_consumer_manifest() -> dict:
-    result = runtime.capture_process([sys.executable, '-B', str(REPLAY_ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'consumer-manifest'], ROOT, timeout=180)
+    result = runtime.capture_process([sys.executable, '-B', str(REPLAY_ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'consumer-manifest'], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS)
     assert result.returncode == 0, (
         "skill_package_replay.py failed before producing a Consumer Manifest: "
         f"{result.stdout}{result.stderr}"

@@ -23,7 +23,7 @@ def native_skill_replay_matrix():
                                                replay.runtime.TRUST_BASELINE, path.relative_to(root).as_posix())
         result = runtime.capture_process([sys.executable, "-X", "utf8", "-B", str(root / "scripts/sc/skill_package_replay.py"),
                                  "replay-matrix", "--matrix", path.relative_to(root).as_posix()],
-                                root, timeout=90)
+                                root, timeout=150)
         assert result.returncode == 0, result.stdout + result.stderr
         yield matrix, json.loads(result.stdout)
 
@@ -39,7 +39,7 @@ def native_matrix_rejection():
             path.write_text(json.dumps(matrix), encoding="utf-8", newline="\n")
             result = runtime.capture_process([sys.executable, "-X", "utf8", "-B", str(root / "scripts/sc/skill_package_replay.py"),
                                      "replay-matrix", "--matrix", path.relative_to(root).as_posix()],
-                                    root, timeout=90)
+                                    root, timeout=150)
             receipt = json.loads(result.stdout)
             assert receipt.get("authorizes") == []
             return result.returncode, receipt

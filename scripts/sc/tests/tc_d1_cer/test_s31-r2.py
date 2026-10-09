@@ -18,7 +18,7 @@ FAILURE_ID = "FR10-EA625B1D3DFB-DRIFT"
 
 
 def _run_replay(mode: str) -> tuple[int, dict]:
-    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', mode], ROOT, timeout=180)
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', mode], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS)
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError as exc:

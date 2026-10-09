@@ -36,7 +36,7 @@ def test_aggregate_prompt_budget_is_finite_and_observable() -> None:
 
 
 def _receipt(probe_mode: str) -> dict:
-    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', probe_mode], ROOT, timeout=180)
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', probe_mode], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS)
     try:
         value = json.loads(result.stdout)
     except json.JSONDecodeError as exc:

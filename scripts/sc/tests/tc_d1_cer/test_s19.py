@@ -34,7 +34,7 @@ def _python() -> list[str]:
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
-    return runtime.capture_process([*_python(), '-B', str(REPLAY), *args], ROOT, timeout=180 if args[0] == "replay-package" else 90 if args[0] == "replay-matrix" else 60)
+    return runtime.capture_process([*_python(), '-B', str(REPLAY), *args], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS if args[0] == "replay-package" else 150 if args[0] == "replay-matrix" else 60)
 
 
 def _replay() -> tuple[subprocess.CompletedProcess[str], dict]:

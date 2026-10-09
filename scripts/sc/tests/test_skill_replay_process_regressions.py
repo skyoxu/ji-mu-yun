@@ -66,6 +66,27 @@ class NativeProcessOwnershipTests(unittest.TestCase):
 
 
 class SyntaxReuseTests(unittest.TestCase):
+    def test_dependency_closure_hashes_the_exact_bytes_used_for_import_analysis(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "owner" / "entry.py"
+            source.parent.mkdir()
+            source.write_text("VALUE = 1\n", encoding="utf-8")
+            original = Path.read_bytes
+            reads = []
+
+            def read(path):
+                if path == source:
+                    reads.append(path)
+                return original(path)
+
+            with patch.object(Path, "read_bytes", read):
+                first = runtime.dependency_closure(root, ("owner",))
+            self.assertEqual(1, reads.count(source), "one traversal should bind and hash the same observed bytes")
+            source.write_text("VALUE = 2\n", encoding="utf-8")
+            second = runtime.dependency_closure(root, ("owner",))
+            self.assertNotEqual(first[0]["sha256"], second[0]["sha256"], "a later traversal must reread changed bytes")
+
     def test_repeated_missing_imports_do_not_probe_each_module_on_disk(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

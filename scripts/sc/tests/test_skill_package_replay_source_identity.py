@@ -20,7 +20,7 @@ TARGET = ".agents/skills/run-refactor-implementation-acceptance"
 def test_replay_reconstructs_bound_identity_and_launches_fresh_process() -> None:
     result = runtime.capture_process(
         [sys.executable, "-B", str(ENTRY), "replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "source-identity"],
-        ROOT, timeout=180,
+        ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS,
     )
     try:
         receipt = json.loads(result.stdout)

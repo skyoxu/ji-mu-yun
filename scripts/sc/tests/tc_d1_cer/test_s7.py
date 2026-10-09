@@ -28,7 +28,7 @@ def _matrix_result(case: dict) -> dict:
     with tempfile.TemporaryDirectory(dir=ROOT) as directory:
         path = Path(directory) / "matrix.json"
         path.write_text(json.dumps(matrix), encoding="utf-8")
-        result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-matrix', '--matrix', str(path.relative_to(ROOT))], ROOT, timeout=90)
+        result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-matrix', '--matrix', str(path.relative_to(ROOT))], ROOT, timeout=150)
     try:
         value = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
@@ -59,7 +59,7 @@ def _case(**extra: object) -> dict:
 @pytest.mark.cer_assertion("ASSERT-O-BBD73A1FB59F-01")
 @pytest.mark.parametrize("probe_mode", ["stable-no-provenance", "stable-temporary-package"])
 def test_stable_eligibility_requires_verified_provenance(probe_mode: str) -> None:
-    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', probe_mode], ROOT, timeout=180)
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', probe_mode], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS)
     try:
         receipt = json.loads(result.stdout)
     except json.JSONDecodeError:

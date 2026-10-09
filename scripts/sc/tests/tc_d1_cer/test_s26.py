@@ -21,7 +21,7 @@ MATRIX = ROOT / "execution-plans/2026-08-05-toolchain-core-skill-replay-portabil
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
-    return runtime.capture_process([sys.executable, '-B', str(ENTRY), *args], ROOT, timeout=180 if args[0] == "replay-package" else 90 if args[0] == "replay-matrix" else 60)
+    return runtime.capture_process([sys.executable, '-B', str(ENTRY), *args], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS if args[0] == "replay-package" else 150 if args[0] == "replay-matrix" else 60)
 
 
 def _replay(mode: str = "fresh") -> tuple[subprocess.CompletedProcess[str], dict]:
@@ -60,7 +60,7 @@ def _matrix(*cases: dict, native_matrix=None) -> tuple[subprocess.CompletedProce
         "sys.path.insert(0,str(Path(sys.argv[1]).parent))\n"
         "sys.argv=[sys.argv[1],'replay-matrix','--matrix','s26-matrix.json']; runpy.run_path(sys.argv[0],run_name='__main__')\n"
     )
-    result = runtime.capture_process([sys.executable, '-B', '-c', child, str(ENTRY)], ROOT, timeout=90, input_data=(json.dumps(matrix)).encode("utf-8"))
+    result = runtime.capture_process([sys.executable, '-B', '-c', child, str(ENTRY)], ROOT, timeout=150, input_data=(json.dumps(matrix)).encode("utf-8"))
     stdout = result.stdout
     try:
         payload = json.loads(stdout)

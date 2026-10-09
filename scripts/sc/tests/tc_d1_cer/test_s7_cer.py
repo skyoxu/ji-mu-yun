@@ -27,7 +27,7 @@ TARGET = ".agents/skills/run-refactor-implementation-acceptance"
 
 @pytest.mark.cer_assertion("A-FR5-HISTORICAL-NONAUT")
 def test_reused_historical_evidence_cannot_authorize_current_replay() -> None:
-    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'reused-evidence'], ROOT, timeout=180)
+    result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', 'reused-evidence'], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS)
     receipt = json.loads(result.stdout)
     assert (
         result.returncode != 0

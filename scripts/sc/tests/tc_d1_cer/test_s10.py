@@ -43,7 +43,7 @@ def _positive_replay() -> tuple[int, int, dict[str, object] | None]:
             "fresh",
         ],
         ROOT,
-        timeout=180,
+        timeout=runtime.PROCESS_TRANSPORT_SECONDS,
     )
     try:
         receipt = json.loads(process.stdout)
