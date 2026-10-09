@@ -52,6 +52,13 @@ def _positive_replay() -> tuple[int, int, dict[str, object] | None]:
     return process.pid, process.returncode, receipt if isinstance(receipt, dict) else None
 
 
+@pytest.fixture(scope="module")
+def positive_replay() -> tuple[int, int, dict[str, object] | None]:
+    # ADR-0058: share one current native scenario within this pytest process.
+    # Every Quick Dev stage launches a new process and performs a fresh replay.
+    return _positive_replay()
+
+
 def _positive_probe(receipt: dict[str, object] | None) -> dict[str, object] | None:
     if not isinstance(receipt, dict):
         return None
@@ -68,8 +75,8 @@ def _positive_probe(receipt: dict[str, object] | None) -> dict[str, object] | No
 
 
 @pytest.mark.cer_assertion("ASSERT-O-2B7C47734A05-PROBE-PROCESS")
-def test_detached_positive_probe_records_a_distinct_child_process() -> None:
-    replay_pid, returncode, receipt = _positive_replay()
+def test_detached_positive_probe_records_a_distinct_child_process(positive_replay) -> None:
+    replay_pid, returncode, receipt = positive_replay
     probe = _positive_probe(receipt)
     process = probe.get("process") if isinstance(probe, dict) else None
     condition = (
@@ -87,8 +94,8 @@ def test_detached_positive_probe_records_a_distinct_child_process() -> None:
 
 
 @pytest.mark.cer_assertion("ASSERT-O-2B7C47734A05-PROBE-BINDINGS")
-def test_detached_positive_probe_binds_input_target_outcome_and_output() -> None:
-    _, returncode, receipt = _positive_replay()
+def test_detached_positive_probe_binds_input_target_outcome_and_output(positive_replay) -> None:
+    _, returncode, receipt = positive_replay
     probe = _positive_probe(receipt)
     input_value = probe.get("input") if isinstance(probe, dict) else None
     command_outcome = probe.get("command_outcome") if isinstance(probe, dict) else None
@@ -140,8 +147,8 @@ def test_always_success_validator_is_reported_as_a_failed_probe_outcome() -> Non
 
 
 @pytest.mark.cer_assertion("A-431D-fresh-replay-1")
-def test_fresh_replay_reproduces_recorded_verdict_and_coverage() -> None:
-    _, returncode, receipt = _positive_replay()
+def test_fresh_replay_reproduces_recorded_verdict_and_coverage(positive_replay) -> None:
+    _, returncode, receipt = positive_replay
     replay = receipt.get("current_wrapper_replay") if isinstance(receipt, dict) else None
     condition = (
         returncode == 0
@@ -159,8 +166,8 @@ def test_fresh_replay_reproduces_recorded_verdict_and_coverage() -> None:
 
 @pytest.mark.cer_assertion("A-REPLAY-CURRENT-SNAPSHOT-COMPLETE")
 @pytest.mark.cer_assertion("A-REPLAY-SNAPSHOT-BINDING")
-def test_replay_result_contains_complete_current_snapshot_binding() -> None:
-    _, returncode, receipt = _positive_replay()
+def test_replay_result_contains_complete_current_snapshot_binding(positive_replay) -> None:
+    _, returncode, receipt = positive_replay
     replay = receipt.get("current_wrapper_replay") if isinstance(receipt, dict) else None
     snapshot = replay.get("current_snapshot") if isinstance(replay, dict) else None
     condition = returncode == 0 and isinstance(snapshot, dict) and snapshot.get("sha256") and snapshot.get("roots")
@@ -171,8 +178,8 @@ def test_replay_result_contains_complete_current_snapshot_binding() -> None:
     )
 
 
-def test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real() -> None:
-    _, returncode, receipt = _positive_replay()
+def test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real(positive_replay) -> None:
+    _, returncode, receipt = positive_replay
     replay = receipt["current_wrapper_replay"]
     verification = replay["target_verification"]
     assert returncode == 0
@@ -182,8 +189,8 @@ def test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real() -> 
 
 
 @pytest.mark.cer_assertion("A-FCD3611EEC73-1")
-def test_supported_replay_route_binds_effective_inspected_content() -> None:
-    _, returncode, receipt = _positive_replay()
+def test_supported_replay_route_binds_effective_inspected_content(positive_replay) -> None:
+    _, returncode, receipt = positive_replay
     replay = receipt.get("current_wrapper_replay") if isinstance(receipt, dict) else None
     inspected = replay.get("effective_inspected_content") if isinstance(replay, dict) else None
     condition = (

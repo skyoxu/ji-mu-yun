@@ -7,6 +7,8 @@ approval and Consumer exceptions remain C3 decisions outside this adapter.
 from __future__ import annotations
 
 import ast
+from contextlib import contextmanager
+from contextvars import ContextVar
 import hashlib
 import importlib.util
 import json
@@ -45,6 +47,36 @@ KNOWLEDGE_CHECKS = {
     "knowledge-workflow-acceptance-package": "refactor-acceptance-package",
 }
 
+# Accepted ADR-0058: nested stages inherit one entry-owned deadline.
+_REPLAY_DEADLINE = ContextVar("tc_d1_replay_deadline", default=None)
+
+
+def remaining_timeout(limit: float, stage: str) -> float:
+    deadline = _REPLAY_DEADLINE.get()
+    if deadline is None:
+        return limit
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise ValueError("replay orchestration timed out at " + stage)
+    return min(limit, remaining)
+
+
+@contextmanager
+def replay_budget(seconds: float = FRESH_REPLAY_ORCHESTRATION_SECONDS):
+    if isinstance(seconds, bool) or not math.isfinite(seconds) or not 0 < seconds <= FRESH_REPLAY_ORCHESTRATION_SECONDS:
+        raise ValueError("replay orchestration time budget is outside the bounded adapter")
+    inherited = _REPLAY_DEADLINE.get()
+    token = None
+    if inherited is None:
+        token = _REPLAY_DEADLINE.set(time.monotonic() + seconds)
+    try:
+        remaining_timeout(seconds, "entry")
+        yield
+        remaining_timeout(seconds, "completion")
+    finally:
+        if token is not None:
+            _REPLAY_DEADLINE.reset(token)
+
 
 def sha(raw: bytes) -> str:
     return "sha256:" + hashlib.sha256(raw).hexdigest()
@@ -72,6 +104,7 @@ def files(root: Path, names) -> list[Path]:
         path = relative(root, name)
         candidates = path.rglob("*") if path.is_dir() else (path,)
         for item in candidates:
+            remaining_timeout(TIMEOUT_SECONDS, "file-enumeration")
             if item.is_symlink():
                 raise ValueError("symlink is not a supported replay input: " + name)
             if item.is_file() and "__pycache__" not in item.parts and item.suffix != ".pyc":
@@ -255,6 +288,7 @@ def capture_process(command: list[str], root: Path, timeout: float, *,
         raise ValueError("process transport time budget is outside the bounded adapter")
     if not isinstance(output_limit, int) or isinstance(output_limit, bool) or not 0 < output_limit <= OUTPUT_LIMIT:
         raise ValueError("execution output budget is outside the bounded adapter")
+    timeout = remaining_timeout(timeout, "process-start")
     with tempfile.TemporaryDirectory(prefix="tc-d1-output-") as directory:
         out, err = Path(directory) / "stdout", Path(directory) / "stderr"
         source = Path(directory) / "stdin"
@@ -263,6 +297,7 @@ def capture_process(command: list[str], root: Path, timeout: float, *,
         source.write_bytes(input_data or b"")
         started = time.monotonic()
         with out.open("wb") as stdout, err.open("wb") as stderr, source.open("rb") as stdin:
+            timeout = remaining_timeout(timeout, "process-launch")
             process = start_owned(command, cwd=root, stdin=stdin, stdout=stdout, stderr=stderr,
                                   env=child_environment())
             try:
@@ -270,7 +305,7 @@ def capture_process(command: list[str], root: Path, timeout: float, *,
                 while process.poll() is None:
                     if out.stat().st_size + err.stat().st_size > output_limit:
                         raise ValueError("aggregate output budget exhausted")
-                    remaining = timeout - (time.monotonic() - started)
+                    remaining = remaining_timeout(timeout - (time.monotonic() - started), "process-wait")
                     if remaining <= 0:
                         raise subprocess.TimeoutExpired(command, timeout)
                     try:
@@ -291,6 +326,7 @@ def capture_process(command: list[str], root: Path, timeout: float, *,
             raise ValueError("aggregate output budget exhausted")
         result = subprocess.CompletedProcess(command, process.returncode, out.read_bytes().decode("utf-8"), err.read_bytes().decode("utf-8"))
         result.pid = process.pid
+        remaining_timeout(timeout, "process-result")
         return result
 
 
@@ -322,7 +358,9 @@ def execute_replay(command: list[str], root: Path, timeout: float = REPLAY_TIMEO
 
 
 def git(root: Path, *arguments: str) -> bytes:
-    result = subprocess.run(["git", *arguments], cwd=root, capture_output=True, timeout=30, check=False)
+    result = subprocess.run(["git", *arguments], cwd=root, capture_output=True,
+                            timeout=remaining_timeout(30, "git"), check=False)
+    remaining_timeout(30, "git-result")
     if result.returncode:
         raise ValueError("immutable Git input is unavailable: " + " ".join(arguments[:2]))
     if len(result.stdout) > 64 * 1024 * 1024:
@@ -352,7 +390,9 @@ def git_blob_identities(root: Path, commit: str, paths: list[str]) -> dict[str, 
     for name in paths:
         relative(root, name)
     request = "".join(commit + ":" + name + "\n" for name in paths).encode("utf-8")
-    result = subprocess.run(["git", "cat-file", "--batch"], cwd=root, input=request, capture_output=True, timeout=30, check=False)
+    result = subprocess.run(["git", "cat-file", "--batch"], cwd=root, input=request, capture_output=True,
+                            timeout=remaining_timeout(30, "git-object-batch"), check=False)
+    remaining_timeout(30, "git-object-result")
     if result.returncode or len(result.stdout) > 64 * 1024 * 1024:
         raise ValueError("immutable Git dependency batch is unavailable or exceeds its budget")
     data, offset, identities = result.stdout, 0, {}
@@ -619,6 +659,7 @@ def environment_binding() -> dict:
     stdlib = Path(sysconfig.get_path("stdlib"))
     library_files = []
     for directory, subdirs, names in os.walk(stdlib):
+        remaining_timeout(TIMEOUT_SECONDS, "environment-binding")
         subdirs[:] = [name for name in subdirs if name not in {"site-packages", "__pycache__"}]
         library_files.extend(Path(directory) / name for name in names if Path(name).suffix in {".py", ".so", ".pyd", ".dll", ".zip"})
     library_files.sort(key=lambda path: path.relative_to(stdlib).as_posix().encode("utf-8"))
@@ -726,7 +767,9 @@ def materialize_git(root: Path, commit: str, destination: Path, paths) -> None:
             batch.append(entry)
             total += entry[2]
         request = b"".join(entry[1] + b"\n" for entry in batch)
-        result = subprocess.run(["git", "cat-file", "--batch"], cwd=root, input=request, capture_output=True, timeout=30, check=False)
+        result = subprocess.run(["git", "cat-file", "--batch"], cwd=root, input=request, capture_output=True,
+                                timeout=remaining_timeout(30, "materialize-git-objects"), check=False)
+        remaining_timeout(30, "materialize-git-result")
         if result.returncode or len(result.stdout) > 64 * 1024 * 1024:
             raise ValueError("immutable Git object batch is unavailable or exceeds its budget")
         data, offset = result.stdout, 0
@@ -778,6 +821,7 @@ def route_transitions(root: Path, requested_target: str, frozen: dict, capabilit
         baselines, calls, transitions = {}, [], []
 
         def invoke(location, entry, stage, fixture):
+            remaining_timeout(TIMEOUT_SECONDS, "Consumer-" + stage)
             consumer = entry["consumer"]
             acceptance_consumer = consumer in {"run-refactor-implementation-acceptance", "knowledge-workflow-acceptance-package"}
             selected = requested_target if acceptance_consumer else entry["target"]

@@ -49,6 +49,18 @@ def _assert_behavior(condition: bool, failure_id: str, message: str) -> None:
     assert condition, message
 
 
+@pytest.fixture(scope="module")
+def positive_replay() -> tuple[subprocess.CompletedProcess[str], dict]:
+    # ADR-0058: one newly executed positive replay per pytest phase. Assertions
+    # inspect independent fields from that current receipt; no history reuse.
+    return _replay()
+
+
+@pytest.fixture(scope="module")
+def negative_replay() -> tuple[subprocess.CompletedProcess[str], dict]:
+    return _replay("detached-positive-negative")
+
+
 def _matrix(*cases: dict, native_matrix=None) -> tuple[subprocess.CompletedProcess[str], dict]:
     matrix = native_matrix if native_matrix is not None else {"schema_version": "jimuyun.stable-candidate-replay-matrix.v2", "authorizes": [], "cases": list(cases)}
     child = (
@@ -71,16 +83,16 @@ def _matrix(*cases: dict, native_matrix=None) -> tuple[subprocess.CompletedProce
 
 @pytest.mark.cer_assertion("A-AF55FF781031-1")
 @pytest.mark.cer_assertion("assert-fr4-positive-probe-must-pass")
-def test_positive_probe_requires_real_success() -> None:
-    result, payload = _replay()
+def test_positive_probe_requires_real_success(positive_replay) -> None:
+    result, payload = positive_replay
     probe = _probe(payload, "detached-positive")
     _assert_behavior(result.returncode == 0 and probe.get("exit_code") == 0 and probe.get("status") == "pass",
                      "POSITIVE-PROBE-FAILURE-ACCEPTED", "successful replay requires a successful positive Probe")
 
 
 @pytest.mark.cer_assertion("assert-fr4-negative-probe-declared-defect-category")
-def test_negative_probe_is_nonzero_and_independent() -> None:
-    result, payload = _replay("detached-positive-negative")
+def test_negative_probe_is_nonzero_and_independent(negative_replay) -> None:
+    result, payload = negative_replay
     probe = _probe(payload, "detached-negative")
     process = probe.get("process", {})
     _assert_behavior(result.returncode == 0 and probe.get("exit_code", 0) != 0
@@ -89,8 +101,8 @@ def test_negative_probe_is_nonzero_and_independent() -> None:
 
 
 @pytest.mark.cer_assertion("RMAP-R6-S1")
-def test_detached_negative_receipt_has_process_boundary() -> None:
-    result, payload = _replay("detached-positive-negative")
+def test_detached_negative_receipt_has_process_boundary(negative_replay) -> None:
+    result, payload = negative_replay
     probe = _probe(payload, "detached-negative")
     process = probe.get("process", {})
     _assert_behavior(result.returncode == 0 and isinstance(process.get("pid"), int)
@@ -100,8 +112,8 @@ def test_detached_negative_receipt_has_process_boundary() -> None:
 
 
 @pytest.mark.cer_assertion("SM-5-non-authority-binding-independent-verification")
-def test_successful_replay_has_independent_non_authority_binding() -> None:
-    result, payload = _replay()
+def test_successful_replay_has_independent_non_authority_binding(positive_replay) -> None:
+    result, payload = positive_replay
     value = _body(payload).get("candidate_external_trust_verification", {})
     _assert_behavior(result.returncode == 0 and value.get("independent") is True
                      and value.get("complete") is True and value.get("candidate_controlled") is False,
@@ -109,8 +121,8 @@ def test_successful_replay_has_independent_non_authority_binding() -> None:
 
 
 @pytest.mark.cer_assertion("A-E89D613529C4-1")
-def test_successful_replay_has_dependency_verification() -> None:
-    result, payload = _replay()
+def test_successful_replay_has_dependency_verification(positive_replay) -> None:
+    result, payload = positive_replay
     value = _body(payload).get("dependency_verification", {})
     _assert_behavior(result.returncode == 0 and value.get("independent") is True
                      and isinstance(value.get("validator"), str) and isinstance(value.get("capability"), str),
@@ -119,8 +131,8 @@ def test_successful_replay_has_dependency_verification() -> None:
 
 @pytest.mark.cer_assertion("A-D191B8A1BFB4-1")
 @pytest.mark.cer_assertion("A-D191B8A1BFB4-2")
-def test_successful_replay_has_distinct_command_verification() -> None:
-    result, payload = _replay()
+def test_successful_replay_has_distinct_command_verification(positive_replay) -> None:
+    result, payload = positive_replay
     replay = _body(payload)
     command = replay.get("command_verification", {})
     _assert_behavior(result.returncode == 0 and command.get("status") == "pass"
@@ -129,8 +141,8 @@ def test_successful_replay_has_distinct_command_verification() -> None:
 
 
 @pytest.mark.cer_assertion("A-43C7-windows-support-1")
-def test_windows_support_is_explicit() -> None:
-    result, payload = _replay()
+def test_windows_support_is_explicit(positive_replay) -> None:
+    result, payload = positive_replay
     value = _body(payload).get("platform_behavior", {})
     _assert_behavior(result.returncode == 0 and value.get("platform") == sys.platform and bool(value.get("behavior")),
                      "CER-A-DF30AF5D2EDB-BEHAVIOR", "Executed platform behavior is not explicit")

@@ -6,7 +6,6 @@ import hashlib
 import json
 import os
 import shutil
-import stat
 import subprocess
 import sys
 import tempfile
@@ -220,33 +219,20 @@ def validate_current_snapshot_binding(snapshot: dict, target: str, capability_pa
 
 
 def prune_expired_fresh_checkouts(*, max_age_seconds: int = 5) -> int:
-    """Reclaim only this adapter's old TEMP checkouts before a fresh replay."""
-    temp_root = Path(tempfile.gettempdir()).resolve()
-    now = time.time()
-    removed = 0
-    for candidate in temp_root.glob("jimuyun-fresh-checkout-*"):
-        try:
-            if not (candidate.is_dir() or candidate.is_file()) or now - candidate.stat().st_mtime <= max_age_seconds:
-                continue
-            candidate.relative_to(temp_root)
-            if candidate.is_dir():
-                def clear_readonly(func, path, _exc):
-                    os.chmod(path, stat.S_IWRITE)
-                    func(path)
-                shutil.rmtree(candidate, onerror=clear_readonly)
-            else:
-                try:
-                    candidate.unlink()
-                except PermissionError:
-                    os.chmod(candidate, stat.S_IWRITE)
-                    candidate.unlink()
-            removed += 1
-        except (OSError, ValueError):
-            # A concurrent replay may still own the directory; leave it intact.
-            continue
-    return removed
+    """Compatibility no-op: age/prefix never establish TEMP deletion authority.
+
+    Accepted ADR-0058: retain prior successful replay trees for readback; only
+    the invocation that created a failed checkout may remove its own tree.
+    """
+    return 0
+
 
 def verify_fresh_replay(target: str, capability_path: str, validator: Path, verdict: str, coverage: dict, target_identity: str, snapshot: dict) -> dict:
+    with runtime.replay_budget():
+        return _verify_fresh_replay(target, capability_path, validator, verdict, coverage, target_identity, snapshot)
+
+
+def _verify_fresh_replay(target: str, capability_path: str, validator: Path, verdict: str, coverage: dict, target_identity: str, snapshot: dict) -> dict:
     started = time.monotonic()
     stages = []
 
@@ -254,15 +240,10 @@ def verify_fresh_replay(target: str, capability_path: str, validator: Path, verd
         stages.append({"stage": stage, "elapsed_seconds": time.monotonic() - stage_started})
 
     def enforce_budget(stage: str) -> None:
-        elapsed = time.monotonic() - started
-        if elapsed > runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS:
-            raise ValueError(
-                "fresh replay orchestration timed out at " + stage
-                + "; budget=" + str(runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS)
-            )
+        runtime.remaining_timeout(runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS, stage)
 
     stage_started = time.monotonic()
-    prune_expired_fresh_checkouts()
+    enforce_budget("fresh-start")
     checkout = Path(tempfile.mkdtemp(prefix="jimuyun-fresh-checkout-")) / "repo"
     try:
         # Accepted ADR-0058: reconstruct an independent candidate tree; Git is
@@ -276,6 +257,7 @@ def verify_fresh_replay(target: str, capability_path: str, validator: Path, verd
         inputs = snapshot["inputs"]
         pinned = {row["path"]: row["sha256"] for row in inputs["dependencies"] + inputs["data"]}
         for name, expected in pinned.items():
+            enforce_budget("materialize-input")
             source = runtime.relative(ROOT, name)
             if digest(source) != expected:
                 raise ValueError("pinned input became stale before reconstruction: " + name)
@@ -290,7 +272,8 @@ def verify_fresh_replay(target: str, capability_path: str, validator: Path, verd
         enforce_budget("identity-check")
         stage_started = time.monotonic()
         command = [sys.executable, "-B", str(checkout / "scripts/sc/skill_package_replay.py"), "replay-package", "--target", target, "--capability", capability_path, "--probe-mode", "fresh-child"]
-        native = runtime.execute_replay(command, checkout)
+        native = runtime.execute_replay(command, checkout,
+                                        timeout=runtime.remaining_timeout(runtime.REPLAY_TIMEOUT_SECONDS, "fresh-child"))
         mark("fresh-child", stage_started)
         enforce_budget("fresh-child")
         if native.returncode:
@@ -465,11 +448,17 @@ def replay_metadata(
 
 
 def replay_package(target: str, capability_path: str, probe_mode: str) -> tuple[dict, int]:
+    with runtime.replay_budget():
+        return _replay_package(target, capability_path, probe_mode)
+
+
+def _replay_package(target: str, capability_path: str, probe_mode: str) -> tuple[dict, int]:
     orchestration_started = time.monotonic()
     orchestration_stages = []
 
     def mark_orchestration(stage: str, started: float) -> None:
         orchestration_stages.append({"stage": stage, "elapsed_seconds": time.monotonic() - started})
+        runtime.remaining_timeout(runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS, stage)
 
     stage_started = time.monotonic()
     replay = validate_package(target, capability_path)
@@ -521,6 +510,7 @@ def replay_package(target: str, capability_path: str, probe_mode: str) -> tuple[
         "stages": orchestration_stages,
     }
     receipt = historical_receipt(replay)
+    runtime.remaining_timeout(runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS, "receipt-construction")
     if probe_mode in {"stable-no-provenance", "stable-temporary-package"}:
         receipt["stable_eligibility"] = {"eligible": False, "rejection_reason": "source-supported immutable provenance is required"}
     if probe_mode == "reused-evidence":

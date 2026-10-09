@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
@@ -38,15 +39,21 @@ def _run_matrix(case: dict, *, matrix_fields: dict | None = None, cases: list[di
     return result.returncode, payload
 
 
-def _run_replay(probe_mode: str = "source-identity") -> tuple[int, dict]:
+@lru_cache(maxsize=2)
+def _run_replay_cached(probe_mode: str) -> tuple[int, str, str]:
     result = runtime.capture_process([sys.executable, '-B', str(ENTRY), 'replay-package', '--target', TARGET, '--capability', CAPABILITY, '--probe-mode', probe_mode], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS)
+    return result.returncode, result.stdout, result.stderr
+
+
+def _run_replay(probe_mode: str = "source-identity") -> tuple[int, dict]:
+    code, stdout, stderr = _run_replay_cached(probe_mode)
     try:
-        payload = json.loads(result.stdout)
+        payload = json.loads(stdout)
     except json.JSONDecodeError as exc:
-        pytest.fail(f"Replay entry did not return JSON: {exc}; stderr={result.stderr[:500]}")
+        pytest.fail(f"Replay entry did not return JSON: {exc}; stderr={stderr[:500]}")
     if not isinstance(payload, dict):
         pytest.fail("Replay entry did not return an object")
-    return result.returncode, payload
+    return code, payload
 
 
 def _assert_behavior(condition: bool, failure_id: str, detail: object) -> None:

@@ -58,7 +58,10 @@ def test_s1_historical_compatibility_replay() -> None:
     assert result.returncode == 0
     receipt = json.loads(result.stdout)
     assert receipt["status"] == "pass" and receipt["authorizes"] == []
-    assert [row["exit_code"] for row in receipt["current_wrapper_replay"]["probes"]] == [0, 1]
+    # The current replay contract records the detached positive control before
+    # the detached negative control; retain the historical compatibility
+    # assertion while accounting for the explicit positive probe.
+    assert [row["exit_code"] for row in receipt["current_wrapper_replay"]["probes"]] == [0, 0, 1]
 
 
 @pytest.mark.cer_assertion("RMAP-R6-S2")

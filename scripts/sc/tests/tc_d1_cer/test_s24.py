@@ -38,10 +38,29 @@ def _assert_observed(condition: bool, failure_id: str, message: str) -> None:
     assert condition, message
 
 
+@pytest.fixture(scope="module")
+def fresh_replay() -> dict:
+    # ADR-0058: one newly executed full replay supplies independent read-only
+    # assertions for fields produced by the same receipt. Each Quick Dev
+    # phase starts a new pytest process, so this is never historical reuse.
+    return _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "fresh"))
+
+
+@pytest.fixture(scope="module")
+def reused_evidence_replay() -> dict:
+    # This negative control must retain its distinct production route.
+    return _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "reused-evidence"))
+
+
+@pytest.fixture(scope="module")
+def validation_receipt() -> dict:
+    return _json(_run("validate-package", "--target", TARGET, "--capability", CAPABILITY))
+
+
 @pytest.mark.cer_assertion("A-6F1570D39AE8-1")
 @pytest.mark.cer_assertion("ASSERT-PINNED-FRESH-VERDICT-REPRODUCTION")
-def test_pinned_fresh_checkout_reproduces_semantic_verdict() -> None:
-    receipt = _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "fresh"))
+def test_pinned_fresh_checkout_reproduces_semantic_verdict(fresh_replay) -> None:
+    receipt = fresh_replay
     replay = receipt.get("current_wrapper_replay", {})
     _assert_observed(
         replay.get("fresh_checkout") is True
@@ -54,8 +73,8 @@ def test_pinned_fresh_checkout_reproduces_semantic_verdict() -> None:
 
 
 @pytest.mark.cer_assertion("A-O-171D94D47E51-PINNED-INPUT-FRESH-CHECKOUT-REPRODUCTION")
-def test_pinned_input_fresh_checkout_reproduces_verdict_and_coverage() -> None:
-    receipt = _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "fresh"))
+def test_pinned_input_fresh_checkout_reproduces_verdict_and_coverage(fresh_replay) -> None:
+    receipt = fresh_replay
     replay = receipt.get("current_wrapper_replay", {})
     _assert_observed(
         replay.get("fresh_checkout") is True
@@ -69,8 +88,8 @@ def test_pinned_input_fresh_checkout_reproduces_verdict_and_coverage() -> None:
 
 
 @pytest.mark.cer_assertion("A-O-1BF52DFD1858-CANDIDATE-EXTERNAL-TRUST-INDEPENDENCE")
-def test_candidate_external_trust_has_distinct_independent_verification() -> None:
-    receipt = _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "trust"))
+def test_candidate_external_trust_has_distinct_independent_verification(fresh_replay) -> None:
+    receipt = fresh_replay
     trust = receipt.get("current_wrapper_replay", {}).get("candidate_external_trust_verification")
     _assert_observed(
         isinstance(trust, dict)
@@ -84,8 +103,8 @@ def test_candidate_external_trust_has_distinct_independent_verification() -> Non
 
 
 @pytest.mark.cer_assertion("A-O-F53D7DB64BB9-1")
-def test_reused_evidence_is_non_success_with_a_diagnostic() -> None:
-    receipt = _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "reused-evidence"))
+def test_reused_evidence_is_non_success_with_a_diagnostic(reused_evidence_replay) -> None:
+    receipt = reused_evidence_replay
     replay = receipt.get("current_wrapper_replay", {})
     diagnostic = receipt.get("diagnostic") or replay.get("diagnostic") or receipt.get("rejection_reason")
     _assert_observed(
@@ -98,8 +117,8 @@ def test_reused_evidence_is_non_success_with_a_diagnostic() -> None:
 
 
 @pytest.mark.cer_assertion("ASSERT-O-CC96C206074F-EVIDENCE-ISOLATION")
-def test_cross_component_evidence_substitution_cannot_create_success() -> None:
-    receipt = _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "isolation"))
+def test_cross_component_evidence_substitution_cannot_create_success(fresh_replay) -> None:
+    receipt = fresh_replay
     isolation = receipt.get("current_wrapper_replay", {}).get("evidence_isolation")
     required_components = {"Subjects", "Probes", "Matrix Cases", "Consumers", "rollback stages"}
     components = isolation.get("components", []) if isinstance(isolation, dict) else []
@@ -115,8 +134,8 @@ def test_cross_component_evidence_substitution_cannot_create_success() -> None:
 
 
 @pytest.mark.cer_assertion("ASSERT-EFFECTIVE-INSPECTION-WITNESS")
-def test_inspection_receipt_contains_an_independent_effective_read_witness() -> None:
-    receipt = _json(_run("validate-package", "--target", TARGET, "--capability", CAPABILITY))
+def test_inspection_receipt_contains_an_independent_effective_read_witness(validation_receipt) -> None:
+    receipt = validation_receipt
     effective = receipt.get("effective_inspected_content", {})
     witness = receipt.get("effective_read_witness")
     _assert_observed(
@@ -130,8 +149,8 @@ def test_inspection_receipt_contains_an_independent_effective_read_witness() -> 
 
 
 @pytest.mark.cer_assertion("ASSERT-REPLAY-CONSUMER-INDEPENDENT-VERIFICATION")
-def test_successful_replay_has_independent_consumer_verification() -> None:
-    receipt = _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "consumer"))
+def test_successful_replay_has_independent_consumer_verification(fresh_replay) -> None:
+    receipt = fresh_replay
     binding = receipt.get("current_wrapper_replay", {}).get("consumer_verification")
     _assert_observed(
         isinstance(binding, dict)
@@ -143,8 +162,8 @@ def test_successful_replay_has_independent_consumer_verification() -> None:
 
 
 @pytest.mark.cer_assertion("A-O-D0E9D60AA620-1")
-def test_successful_replay_records_independent_dependency_verification() -> None:
-    receipt = _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "dependencies"))
+def test_successful_replay_records_independent_dependency_verification(fresh_replay) -> None:
+    receipt = fresh_replay
     verification = receipt.get("current_wrapper_replay", {}).get("dependency_verification")
     _assert_observed(
         isinstance(verification, dict) and verification.get("independent") is True,
@@ -154,8 +173,8 @@ def test_successful_replay_records_independent_dependency_verification() -> None
 
 
 @pytest.mark.cer_assertion("A-F397-PLATFORM-BEHAVIOR-DECLARED")
-def test_platform_specific_behavior_is_declared_in_the_replay_artifact() -> None:
-    receipt = _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "platform"))
+def test_platform_specific_behavior_is_declared_in_the_replay_artifact(fresh_replay) -> None:
+    receipt = fresh_replay
     declaration = receipt.get("current_wrapper_replay", {}).get("platform_behavior")
     _assert_observed(
         isinstance(declaration, dict)
@@ -167,8 +186,8 @@ def test_platform_specific_behavior_is_declared_in_the_replay_artifact() -> None
 
 
 @pytest.mark.cer_assertion("ASSERT-SM5-INDEPENDENT-TARGET-VERIFICATION")
-def test_successful_replay_records_independent_target_verification() -> None:
-    receipt = _json(_run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "target"))
+def test_successful_replay_records_independent_target_verification(fresh_replay) -> None:
+    receipt = fresh_replay
     verification = receipt.get("current_wrapper_replay", {}).get("target_verification")
     _assert_observed(
         isinstance(verification, dict)

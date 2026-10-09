@@ -382,3 +382,50 @@ receipt is rebound, and the diagnostic wider-budget measurement cannot be used
 as a current pass. Current Windows regressions and real positive/negative
 controls must validate this implementation. C3 remains OPEN and this repair
 does not publish implementation-complete, Acceptance, or Trust Approval.
+
+### 2026-10-09 Whole-entry deadline and TEMP ownership review repair
+
+The existing 300-second orchestration contract is enforced by one monotonic
+deadline owned by the replay entry. Validation, snapshot/trust binding, native
+Consumer calls, reconstruction, fresh execution, semantic comparison, and
+receipt construction inherit that deadline; a nested fresh stage never resets
+it. Native process and immutable Git transports receive the smaller of their
+own ceiling and the parent's remaining time. Execution after exhaustion is
+unsuccessful, including completion that crosses the deadline. The 60-second
+leaf and 120-second fresh-child ceilings and the independent Matrix aggregate
+remain unchanged. Cleanup can drain owned processes after timeout but cannot
+turn an exhausted execution into pass.
+
+Automatic TEMP scavenging is disabled. A prefix and directory age establish
+neither ownership nor inactivity and cannot authorize deletion or readonly
+permission repair. Fresh replay no longer scans other runs' TEMP directories,
+changes their permissions, or follows their symlinks/junctions during cleanup.
+It may remove only the checkout it created in the current failing invocation;
+successful trees remain available for evidence readback. Historical and
+unowned trees require a separately authorized maintenance operation.
+
+Current regression evidence is appended under
+`logs/08-05-real-skill-replay/review-repair-20261009`; the original 340-node
+segmented verification and all failure history retain their original binding.
+No lifecycle result is inferred from direct tests. All derived evidence keeps
+`authorizes: []`, and C3 remains OPEN.
+
+The S10 characterization harness shares one newly executed native positive
+replay across its six read-only positive assertions within one pytest process.
+Its independent negative control and all seven test nodes remain unchanged.
+Every probe, regression and terminal process performs its own new replay;
+historical outputs are never used as a substitute. This removes six identical
+orchestrations per phase without changing the 600-second stage ceiling or any
+product deadline. Recovery selects explicit predecessor/run paths, including
+the completed S12-r2, and never allocates a successor by scanning run names.
+
+S24's current regression also had ten independent replay-package launches and
+exhausted its 600-second stage without a case report. Its module fixtures now
+execute one fresh positive replay, one explicit reused-evidence negative
+control, and one validation receipt per pytest phase; all ten assertions and
+their production entrypoints remain bound, while no prior receipt is imported.
+The S26 historical compatibility selector was also stale: it expected the
+legacy two-probe exit vector `[0, 1]`, while the current real receipt correctly
+contains the explicit positive and negative controls `[0, 0, 1]`. The declared
+compatibility assertion now checks that current vector; no runtime behavior or
+timeout ceiling changed.

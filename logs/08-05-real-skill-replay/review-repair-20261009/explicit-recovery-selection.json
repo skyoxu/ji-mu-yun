@@ -1,0 +1,20 @@
+{
+  "authorizes": [],
+  "reason": "Explicit recovery inputs; S12-r2 is complete, r1/r3 remain historical. S10-r2 follows the changed current-phase fixture after r1 timeout.",
+  "prior_failures": {
+    "S10": ["logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S10-current-r1/canonical-evidence/probe/stage-result.v2.json"],
+    "S26": ["logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S26-current-r1/canonical-evidence/probe/stage-result.v2.json"],
+    "S41": ["logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S41-current-r2/canonical-evidence/probe/stage-result.v2.json"],
+    "S19": ["logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S19-current-r1/canonical-evidence/probe/stage-result.v2.json"],
+    "S44": ["logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S44-current-r1/canonical-evidence/probe/stage-result.v2.json"]
+  },
+  "runs": {
+    "S2": "S2-current-r1", "S4": "S4-current-r2", "S7": "S7-current-r1", "S9": "S9-current-r1",
+    "S10": "S10-current-r2", "S12": "S12-current-r2", "S13": "S13-current-r1", "S14": "S14-current-r1",
+    "S15": "S15-current-r1", "S17": "S17-current-r1", "S18": "S18-current-r1", "S19": "S19-current-r2",
+    "S22": "S22-current-r1", "S24": "S24-current-r2", "S25": "S25-current-r1", "S26": "S26-current-r4",
+    "S27": "S27-current-r1", "S28": "S28-current-r1", "S30": "S30-current-r2", "S31": "S31-current-r1",
+    "S33": "S33-current-r1", "S34": "S34-current-r1", "S35": "S35-current-r1", "S36": "S36-current-r1",
+    "S38": "S38-current-r1", "S41": "S41-current-r3", "S42": "S42-current-r1", "S44": "S44-current-r2"
+  }
+}

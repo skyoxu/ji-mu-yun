@@ -5,6 +5,7 @@ import json
 import hashlib
 import subprocess
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
@@ -21,8 +22,15 @@ def _run(*args: str) -> subprocess.CompletedProcess[str]:
     return runtime.capture_process([sys.executable, '-B', str(ENTRY), *args], ROOT, timeout=runtime.PROCESS_TRANSPORT_SECONDS if args[0] == "replay-package" else 150 if args[0] == "replay-matrix" else 60)
 
 
-def _replay() -> tuple[subprocess.CompletedProcess[str], dict, dict]:
-    result = _run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", "fresh")
+@lru_cache(maxsize=2)
+def _replay_cached(probe_mode: str) -> tuple[int, str, str]:
+    result = _run("replay-package", "--target", TARGET, "--capability", CAPABILITY, "--probe-mode", probe_mode)
+    return result.returncode, result.stdout, result.stderr
+
+
+def _replay(probe_mode: str = "fresh") -> tuple[subprocess.CompletedProcess[str], dict, dict]:
+    code, stdout, stderr = _replay_cached(probe_mode)
+    result = subprocess.CompletedProcess([], code, stdout, stderr)
     payload = json.loads(result.stdout)
     return result, payload, payload.get("current_wrapper_replay", {})
 
