@@ -40,5 +40,5 @@
 
 # Hash-bound Quick Dev run evidence must retain its captured bytes in Git.
 logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/** -text
-logs/quick-dev-current-run-20261005/** -text
+logs/quick-dev-current-run-20261005/** -text -eol
 execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md -text
