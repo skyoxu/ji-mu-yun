@@ -1,0 +1,9 @@
+{
+  "authorizes": [],
+  "q8_input": "logs\\08-05-real-skill-replay\\review-repair-20261009\\current-run-q8-recovery-r4\\terminal-input.v2.json",
+  "revision": "index",
+  "bound_files": 346,
+  "mismatches": [],
+  "unresolved": [],
+  "tests_executed": false
+}
