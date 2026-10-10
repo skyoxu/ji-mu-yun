@@ -1,0 +1,30 @@
+{
+  "schema": "quick-dev.readonly-reuse-audit.v1",
+  "plan": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+  "head": "8aaf15f1350195d299530076a148152db2e9a12d",
+  "operation": "read_route_only",
+  "tests_started": false,
+  "vdd_started": false,
+  "quick_dev_started": false,
+  "acceptance_started": false,
+  "stdout_binding_repair": {
+    "checked": 135,
+    "matched": 135,
+    "stale_probe_output": 0
+  },
+  "slice_reuse": {
+    "planned": 45,
+    "passed": 45,
+    "failed": 0,
+    "replayed": 0,
+    "reused_existing_current_runs": 45
+  },
+  "method": [
+    "Validate target and fixture byte hashes against existing process receipts.",
+    "Validate stdout and stderr bytes against receipt hashes.",
+    "Run behavior_routing.read_route for each slice without starting a child process.",
+    "Select the newest existing current-run repair root when multiple roots exist."
+  ],
+  "result": "all-45-slices-reusable-without-rerun",
+  "authorizes": []
+}
