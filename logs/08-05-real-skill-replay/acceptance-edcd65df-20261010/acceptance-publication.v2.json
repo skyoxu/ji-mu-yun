@@ -1,0 +1,38 @@
+{
+  "schema": "acceptance.publication.v2",
+  "publishedAt": "2026-10-10T00:00:00Z",
+  "targetPlan": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "baselineRevision": "8c47a52fc8f241f76da9ccb5d936b0fafe807f0f",
+  "candidateRevision": "edcd65df716afe36f7ed86e8f33534b827abdffe",
+  "planSha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+  "status": "prerequisite_blocked",
+  "authorizes": [],
+  "q8Readonly": {
+    "status": "pass",
+    "predecessorCount": 45,
+    "runtimeClosureTupleCount": 228,
+    "predicate": "implementation-complete",
+    "authorizes": []
+  },
+  "acceptanceCoordinatorStarted": false,
+  "acceptancePassedPublished": false,
+  "bootstrapExecuted": false,
+  "productionModified": false,
+  "missingCurrentOwnerHandoffFields": [
+    "changedPaths",
+    "affectedConsumerRefs",
+    "commands",
+    "actions"
+  ],
+  "rejectedSubstitutions": [
+    "historical projection bound to another candidate",
+    "deriving Acceptance scope from the Q8 terminal receipt",
+    "inventing commands or action DAG entries",
+    "rerunning unchanged slices solely to manufacture entry artifacts"
+  ],
+  "c3": {
+    "status": "OPEN",
+    "scope": "Independent validator Trust Approval, product-scope decisions, and Consumer exceptions remain outside this publication."
+  },
+  "nextAction": "The Quick Dev owner must publish a complete Acceptance handoff bound to candidate edcd65df. Acceptance can then prepare Skill-input v2 and run the deterministic coordinator without rerunning VDD, Quick Dev slices, or the 340-node verification."
+}
