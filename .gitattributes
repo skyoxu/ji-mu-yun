@@ -45,3 +45,6 @@ logs/08-05-real-skill-replay/review-repair-20260910/** -text -eol
 logs/08-05-real-skill-replay/review-repair-20261009/** -text -eol
 execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/** -text -eol
 execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md -text
+# Existing Q8 receipts bind these exact test bytes (ADR-0058 read-only replay).
+scripts/sc/tests/tc_d1_cer/test_s4.py -text -eol
+scripts/sc/tests/tc_d1_cer/test_s21.py -text -eol
