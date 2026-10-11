@@ -1,0 +1,64 @@
+{
+  "adapter_hash": "sha256:e12c2969570ca431f4f5902e55b64e2ed65ed323aacdbe8dc25815e36b800fde",
+  "adapter_id": "run-refactor-implementation-acceptance",
+  "adapter_version": "compact-vdd-projection.v1",
+  "affected_consumer_refs": [
+    ".agents/skills/run-refactor-implementation-acceptance",
+    ".agents/skills/vdd-execution-plan",
+    "scripts/sc/skill_replay_runtime.py"
+  ],
+  "allowed_write_roots": [],
+  "baseline_content_manifest_hash": "sha256:799197b211f785a15fed235d3b52b9474ad45c7dc27f7f3ddee6bac126885e3f",
+  "baseline_content_manifest_path": "acceptance-inputs/acceptance-08-05-d867db62/baseline-content-manifest.v1.json",
+  "baseline_revision": "8c47a52fc8f241f76da9ccb5d936b0fafe807f0f",
+  "candidate_content_manifest_hash": "sha256:fb114f80c3144888e8f8cb6d9966278f9ed0ab431cb42bb666dc11f19bd162dc",
+  "candidate_content_manifest_path": "acceptance-inputs/acceptance-08-05-d867db62/candidate-content-manifest.v1.json",
+  "candidate_mode": "commit",
+  "candidate_revision": "d867db6256308e19cad8595df1befa5babfcc6f0",
+  "candidate_scope_manifest": {
+    "candidate_source_root": "sha256:a668274c69a75f0c029ccf4c4c36e740983901cd5e1d29cb0e2c962cd2c1d477",
+    "path": "acceptance-inputs/acceptance-08-05-d867db62/candidate-source-manifest.v1.json",
+    "sha256": "sha256:cf8a2b3db04e4aaeaf001003967d347e16779e26a5bae06c3f36c981f759159a"
+  },
+  "change_id": "toolchain-core-skill-replay-portability-and-evaluation-seed-d867db62",
+  "changed_paths": [
+    ".agents/skills/authorization/scripts/conformance_preflight.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/current_router.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/worker_orchestrator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+    ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+    ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
+    ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+    ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+    "scripts/ci/verify_base_clean.ps1",
+    "scripts/quick_dev/run_candidate_bound_metric.py",
+    "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+    "scripts/sc/skill_package_replay.py",
+    "scripts/sc/skill_replay_runtime.py",
+    "scripts/vdd/probe_real_worker.py"
+  ],
+  "code_review_domain": "toolchain",
+  "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+  "code_review_policy_path": "acceptance-inputs/acceptance-08-05-d867db62/toolchain-code-review.v1.json",
+  "created_utc": "2026-08-01T00:00:00Z",
+  "execution_mode": "evidence_only",
+  "forbidden_write_roots": [
+    "logs/phase-a-innernet/",
+    "runtime/phase-a/"
+  ],
+  "run_id": "acceptance-08-05-d867db62",
+  "target": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "target_plan_hash": "sha256:6fd866e67054edaa4bce242242237970f5ae9949a5763e36c7cec701de1ffb82",
+  "target_plan_paths": [
+    "repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/acceptances.v1.json",
+    "repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json"
+  ],
+  "validator_hash": "sha256:5738f983bfbc2d9f7a200b8614cfb942d995171597c46f18b9c16f4df922986f"
+}
