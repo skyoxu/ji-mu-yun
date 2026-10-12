@@ -1315,7 +1315,11 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
         inspection = inspect_persisted_run(run_dir, actions, run_input_hash, contract_hash, knowledge_hash)
         if resumed and resumed.get("receipt", {}).get("exitCode") != 0:
             break
-    if inspection.get("actionStates") and all(state in {"completed", "not-applicable"} for state in inspection["actionStates"].values()):
+    failed_actions = [action_id for action_id, state in inspection.get("actionStates", {}).items() if state == "failed"]
+    if failed_actions:
+        finalization = None
+        route, status = "action_failed", "failed"
+    elif inspection.get("actionStates") and all(state in {"completed", "not-applicable"} for state in inspection["actionStates"].values()):
         finalization = None
         if run_input.get("execution_mode", "evidence_only") == "evidence_only":
             try:

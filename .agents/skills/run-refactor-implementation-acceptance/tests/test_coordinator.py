@@ -38,6 +38,49 @@ def test_coordinator_does_not_accept_caller_route_override(tmp_path: Path) -> No
         acceptance_cli.run_coordinator(str(request), str(tmp_path / "result.json"))
 
 
+def test_coordinator_reports_persisted_action_failure_without_retry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    import acceptance_cli
+
+    target = tmp_path / "execution-plans" / "target"
+    target.mkdir(parents=True)
+    (target / "action-dag.v1.json").write_text(json.dumps({"actions": [
+        {"actionId": "one", "dependsOn": [], "order": 1, "commandId": "one", "activation": True},
+        {"actionId": "two", "dependsOn": ["one"], "order": 2, "commandId": "two", "activation": True},
+    ]}), encoding="utf-8")
+    (target / "command-registry.v1.json").write_text(json.dumps({"schema_version": "ria.command-registry.v1", "commands": []}), encoding="utf-8")
+    run_dir = target / "acceptance-runs" / "run-1"
+    run_dir.mkdir(parents=True)
+    (run_dir / "acceptance-events.jsonl").write_text('{"eventType":"action-failed"}\n', encoding="utf-8")
+    (tmp_path / "request.json").write_text("{}\n", encoding="utf-8")
+    monkeypatch.setattr(acceptance_cli, "REPOSITORY_ROOT", tmp_path)
+    monkeypatch.setattr(acceptance_cli, "_load_current_coordinator_inputs", lambda *_: {
+        "prepared": {"input": {"execution_mode": "evidence_only"}, "inputHash": "sha256:" + "a" * 64,
+                     "knowledgeContext": {"sha256": "sha256:" + "b" * 64}},
+        "prepared_ref": {"path": "prepared.json", "sha256": "sha256:" + "c" * 64},
+        "receipt_ref": {"sha256": "sha256:" + "d" * 64},
+        "contract_ref": {"path": "contract.json", "sha256": "sha256:" + "e" * 64},
+        "target_plan": "execution-plans/target",
+    })
+    monkeypatch.setattr(acceptance_cli, "start_or_resume_target_run", lambda *args, **kwargs: {
+        "runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1"})
+    monkeypatch.setattr(acceptance_cli, "derive_target_run_identity", lambda *args, **kwargs: {
+        "runId": "run-1", "runDirectory": "execution-plans/target/acceptance-runs/run-1",
+        "runDirectoryPath": run_dir})
+    inspection = {"actionStates": {"one": "failed", "two": "blocked"}, "nextAction": None,
+                  "readyActionIds": [], "authorizes": []}
+    monkeypatch.setattr(acceptance_cli, "inspect_persisted_run", lambda *args: inspection)
+    calls = []
+    monkeypatch.setattr(acceptance_cli, "resume_persisted_run", lambda *args: calls.append(args))
+    monkeypatch.setattr(acceptance_cli, "finalize_deterministic_run", lambda *args: pytest.fail("must not finalize"))
+
+    result = acceptance_cli.run_coordinator(str(tmp_path / "request.json"), str(tmp_path / "result.json"))
+    assert result["status"] == "failed"
+    assert result["route"] == "action_failed"
+    assert calls == []
+
+
 def test_coordinator_executes_dag_and_finalizes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -143,4 +186,3 @@ def test_v4_coordinator_replay_is_idempotent_for_same_output(tmp_path: Path, mon
     first = acceptance_cli.run_coordinator(str(tmp_path / "request.json"), str(tmp_path / "result.json"))
     second = acceptance_cli.run_coordinator(str(tmp_path / "request.json"), str(tmp_path / "result.json"))
     assert first == second
-

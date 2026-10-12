@@ -227,6 +227,67 @@ class ExecutionControlTests(unittest.TestCase):
             with self.assertRaisesRegex(execution_control.ControlError, "duplicate terminal"):
                 execution_control.append_action_event(run, {"actionId": "scan", "status": "completed", "commandId": "scan-command"})
 
+    def test_failed_lifecycle_action_is_terminal_and_requires_explicit_recovery(self) -> None:
+        import tempfile
+        import execution_control
+
+        actions = [
+            {"actionId": "first", "dependsOn": [], "order": 1, "commandId": "one", "activation": True},
+            {"actionId": "second", "dependsOn": ["first"], "order": 2, "commandId": "two", "activation": True},
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            run = execution_control.create_persisted_run(Path(directory), "run-failed-action", "sha256:" + "a" * 64, "sha256:" + "b" * 64)
+            event = {
+                "schemaVersion": "acceptance-lifecycle-event.v1", "sequence": 1,
+                "runId": "run-failed-action", "actionId": "first", "attemptId": "attempt-001",
+                "actionType": "run-command", "eventType": "action-failed", "inputHashes": {},
+                "recordedUtc": "2026-10-11T00:00:00Z", "processId": 1, "ownerToken": "owner",
+                "formalWriteSet": [], "commandId": "one", "authorizes": [],
+            }
+            (run / "acceptance-events.jsonl").write_text(json.dumps(event) + "\n", encoding="utf-8")
+
+            inspection = execution_control.inspect_persisted_run(run, actions, "sha256:" + "a" * 64, "sha256:" + "b" * 64)
+            self.assertEqual("failed", inspection["actionStates"]["first"])
+            self.assertEqual("blocked", inspection["actionStates"]["second"])
+            self.assertIsNone(inspection["nextAction"])
+            with self.assertRaisesRegex(execution_control.ControlError, "explicit recovery"):
+                execution_control.resume_persisted_run(Path(directory), run, actions, {}, "sha256:" + "a" * 64, "sha256:" + "b" * 64)
+
+    def test_finalization_lifecycle_event_requires_current_receipts(self) -> None:
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            run = execution_control.create_persisted_run(
+                root, "run-finalized", "sha256:" + "a" * 64, "sha256:" + "b" * 64
+            )
+            finalization = run / "finalization"
+            finalization.mkdir()
+            final = finalization / "acceptance-passed.v1.json"
+            wrapper = finalization / "acceptance-result-final.v1.json"
+            final.write_bytes(b'{"status":"acceptance-passed"}\n')
+            wrapper.write_bytes(b'{"schemaVersion":"acceptance-result-final.v1"}\n')
+            sha = lambda path: "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+            event = {
+                "schemaVersion": "acceptance-lifecycle-event.v1", "sequence": 1,
+                "runId": "run-finalized", "eventType": "acceptance-finalized",
+                "route": "deterministic_only",
+                "finalResult": {"path": "finalization/acceptance-passed.v1.json", "sha256": sha(final)},
+                "wrapperHash": sha(wrapper), "authorizes": [],
+            }
+            (run / "acceptance-events.jsonl").write_text(json.dumps(event) + "\n", encoding="utf-8")
+            actions = [{"actionId": "scan", "dependsOn": [], "order": 1, "commandId": "scan", "activation": True}]
+            inspection = execution_control.inspect_persisted_run(
+                run, actions, "sha256:" + "a" * 64, "sha256:" + "b" * 64
+            )
+            self.assertEqual("ready", inspection["actionStates"]["scan"])
+            final.write_bytes(final.read_bytes() + b"tampered\n")
+            with self.assertRaisesRegex(execution_control.ControlError, "finalization event receipt is stale"):
+                execution_control.inspect_persisted_run(
+                    run, actions, "sha256:" + "a" * 64, "sha256:" + "b" * 64
+                )
+
     def test_persisted_resume_executes_unique_ready_action_and_records_receipt_event(self) -> None:
         import tempfile
         import execution_control
@@ -968,4 +1029,3 @@ class ExecutionControlTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

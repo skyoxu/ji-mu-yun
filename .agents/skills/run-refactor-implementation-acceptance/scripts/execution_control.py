@@ -32,6 +32,10 @@ _TERMINAL_ACTION_STATES = {"completed", "failed", "not_applicable", "stale"}
 _LIFECYCLE_EVENT_TYPES = {
     "action-reserved", "action-started", "action-completed", "action-failed",
     "action-not-applicable", "action-waiting-external", "action-stale", "run-superseded",
+    # Finalization is an append-only run lifecycle marker, not an action
+    # transition.  It is nevertheless part of the persisted stream and must
+    # be validated before action failure projection reads the stream.
+    "acceptance-finalized",
 }
 _PLACEHOLDER = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
 _LEGACY_ENVIRONMENT_ALLOWLIST = [
@@ -534,6 +538,59 @@ def reconstruct_closed_actions(run_dir: Path) -> set[str]:
     return closed
 
 
+def reconstruct_failed_actions(run_dir: Path) -> set[str]:
+    """Return failed actions from the append-only lifecycle event stream."""
+    lifecycle_path = run_dir / "acceptance-events.jsonl"
+    if not lifecycle_path.is_file():
+        return set()
+    failed: set[str] = set()
+    for sequence, line in enumerate(lifecycle_path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ControlError("persisted lifecycle event is malformed") from exc
+        if not isinstance(event, dict) or event.get("schemaVersion") != "acceptance-lifecycle-event.v1" or event.get("sequence") != sequence or event.get("authorizes") != [] or event.get("eventType") not in _LIFECYCLE_EVENT_TYPES:
+            raise ControlError("persisted lifecycle event is invalid")
+        if event.get("eventType") == "acceptance-finalized":
+            # Deterministic finalization owns this marker.  Validate its
+            # complete shape and binding, but do not treat it as an action.
+            if set(event) != {"schemaVersion", "sequence", "runId", "eventType", "route", "finalResult", "wrapperHash", "authorizes"}:
+                raise ControlError("persisted finalization event fields are invalid")
+            state, _ = _load_persisted_run(run_dir)
+            if event.get("runId") != state.get("runId") or event.get("route") != "deterministic_only":
+                raise ControlError("persisted finalization event binding is invalid")
+            final_result = event.get("finalResult")
+            if (not isinstance(final_result, dict) or set(final_result) != {"path", "sha256"}
+                    or not isinstance(final_result["path"], str) or not final_result["path"]
+                    or not isinstance(final_result["sha256"], str)
+                    or not re.fullmatch(r"sha256:[a-f0-9]{64}", final_result["sha256"])
+                    or not isinstance(event.get("wrapperHash"), str)
+                    or not re.fullmatch(r"sha256:[a-f0-9]{64}", event["wrapperHash"])):
+                raise ControlError("persisted finalization event binding is invalid")
+            final_path = run_dir / PurePosixPath(final_result["path"])
+            wrapper_path = run_dir / "finalization" / "acceptance-result-final.v1.json"
+            try:
+                final_path.resolve().relative_to(run_dir.resolve())
+                wrapper_path.resolve().relative_to(run_dir.resolve())
+            except ValueError as exc:
+                raise ControlError("persisted finalization event path escapes run") from exc
+            if ("\\" in final_result["path"] or PurePosixPath(final_result["path"]).is_absolute()
+                    or ".." in PurePosixPath(final_result["path"]).parts
+                    or not final_path.is_file() or not wrapper_path.is_file()
+                    or "sha256:" + hashlib.sha256(final_path.read_bytes()).hexdigest() != final_result["sha256"]
+                    or "sha256:" + hashlib.sha256(wrapper_path.read_bytes()).hexdigest() != event["wrapperHash"]):
+                raise ControlError("persisted finalization event receipt is stale")
+            continue
+        if event["eventType"] == "action-failed":
+            action_id = event.get("actionId")
+            if not isinstance(action_id, str) or not action_id:
+                raise ControlError("persisted failed action identity is invalid")
+            failed.add(action_id)
+    return failed
+
+
 def append_action_event(run_dir: Path, value: Any) -> dict[str, Any]:
     if not isinstance(value, dict) or set(value) != {"actionId", "status", "commandId"}:
         raise ControlError("new action event is invalid")
@@ -806,7 +863,11 @@ def inspect_persisted_run(
     _verify_persisted_binding(
         run_dir, run_input_hash, contract_hash, knowledge_context_hash
     )
-    inspection = inspect_run(actions, reconstruct_closed_actions(run_dir))
+    inspection = inspect_run(
+        actions,
+        reconstruct_closed_actions(run_dir),
+        failed_action_ids=reconstruct_failed_actions(run_dir),
+    )
     return {**inspection, "runId": _load_persisted_run(run_dir)[0]["runId"], "authorizes": []}
 
 
@@ -818,6 +879,8 @@ def resume_persisted_run(
     _verify_persisted_binding(
         run_dir, run_input_hash, contract_hash, knowledge_context_hash
     )
+    if reconstruct_failed_actions(run_dir):
+        raise ControlError("persisted action failed; explicit recovery is required")
     completed = reconstruct_completed_actions(run_dir)
     action = next_action(actions, completed, _command_registry_order(command_registry))
     claim_path = claim_persisted_action(run_dir, action["actionId"], action["commandId"])
@@ -1464,11 +1527,14 @@ def _validated_actions(actions: Any) -> dict[str, dict[str, Any]]:
     return by_id
 
 
-def project_action_states(actions: Any, completed_action_ids: Any) -> dict[str, str]:
+def project_action_states(actions: Any, completed_action_ids: Any, failed_action_ids: Any = None) -> dict[str, str]:
     """Project all declared actions without letting external readiness become local authority."""
     by_id = _validated_actions(actions)
     if not isinstance(completed_action_ids, set) or not completed_action_ids.issubset(set(by_id)):
         raise ControlError("completed action identity is invalid")
+    failed_action_ids = set() if failed_action_ids is None else failed_action_ids
+    if not isinstance(failed_action_ids, set) or not failed_action_ids.issubset(set(by_id)):
+        raise ControlError("failed action identity is invalid")
     states: dict[str, str] = {}
     visiting: set[str] = set()
 
@@ -1486,6 +1552,8 @@ def project_action_states(actions: Any, completed_action_ids: Any) -> dict[str, 
             state = "waiting-external"
         elif action_id in completed_action_ids:
             state = "completed"
+        elif action_id in failed_action_ids:
+            state = "failed"
         elif all(project(dependency) in {"completed", "not-applicable"} for dependency in action["dependsOn"]):
             state = "ready"
         else:
@@ -1499,9 +1567,9 @@ def project_action_states(actions: Any, completed_action_ids: Any) -> dict[str, 
     return states
 
 
-def next_action(actions: Any, completed_action_ids: Any, command_registry_order: dict[str, int] | None = None) -> dict[str, Any]:
+def next_action(actions: Any, completed_action_ids: Any, command_registry_order: dict[str, int] | None = None, failed_action_ids: Any = None) -> dict[str, Any]:
     by_id = _validated_actions(actions)
-    states = project_action_states(actions, completed_action_ids)
+    states = project_action_states(actions, completed_action_ids, failed_action_ids)
     ready = [action for action_id, action in by_id.items() if states[action_id] == "ready"]
     if not ready:
         raise ControlError("no unique ready action")
@@ -1516,9 +1584,9 @@ def next_action(actions: Any, completed_action_ids: Any, command_registry_order:
     return {**ready[0], "state": "ready"}
 
 
-def inspect_run(actions: Any, completed_action_ids: Any, command_registry_order: dict[str, int] | None = None) -> dict[str, Any]:
+def inspect_run(actions: Any, completed_action_ids: Any, command_registry_order: dict[str, int] | None = None, failed_action_ids: Any = None) -> dict[str, Any]:
     by_id = _validated_actions(actions)
-    states = project_action_states(actions, completed_action_ids)
+    states = project_action_states(actions, completed_action_ids, failed_action_ids)
     registry = command_registry_order or {}
     ready_ids = sorted(
         (action_id for action_id, state in states.items() if state == "ready"),
@@ -1533,7 +1601,7 @@ def inspect_run(actions: Any, completed_action_ids: Any, command_registry_order:
         for action_id, action in by_id.items()
     }
     try:
-        next_ready = next_action(actions, completed_action_ids, command_registry_order)
+        next_ready = next_action(actions, completed_action_ids, command_registry_order, failed_action_ids)
     except ControlError as exc:
         if str(exc) != "no unique ready action":
             raise

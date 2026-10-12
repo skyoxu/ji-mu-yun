@@ -55,8 +55,10 @@ Trust Recovery directories. The bounded closeout is described in
   target, candidate manifests and knowledge context. Bundle-bound actions and
   registry are authoritative. Derived identity includes Skill-input custody.
 - A successful replay rechecks persisted inputs, lifecycle-bound command receipts,
-  Q8 proof and finalization. Failed commands stop after one attempt; a stored waiting
-  result never authorizes automatic retry. Incomplete or stale proof remains blocked.
+  Q8 proof and finalization. Failed commands stop after one attempt; the
+  persisted result is `failed` on the action-failed route and never authorizes
+  automatic retry. Recovery requires an explicitly bound successor. Incomplete
+  or stale proof remains blocked.
 - No legacy lifecycle reconstruction, consumer-graph project, performance benchmark,
   Bootstrap live run or CH456 reopening is required by this closeout.
 

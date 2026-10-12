@@ -67,9 +67,12 @@ input into its binding-derived persisted run. It reads actions and commands
 from the bound bundle, not caller route or action overrides.
 
 Identical reentry revalidates Q8, candidate custody, Skill input, action events,
-receipts and finalization. A failed registered action stops after that attempt;
-a waiting result does not authorize an automatic retry. Stale/incomplete proof
-requires explicit recovery or a new bound input; historical artifacts remain.
+receipts and finalization. A failed registered action is terminal for the bound
+run and is reported as `failed`; it cannot be projected back to `ready` or
+retried by identical reentry. Recovery creates an explicitly bound successor
+and preserves the failed run. A waiting result does not authorize an automatic
+retry. Stale/incomplete proof requires explicit recovery or a new bound input;
+historical artifacts remain.
 For an explicit user request for Bootstrap only, set `maintainerIntent=request`.
 That returns a typed handoff without executing the DAG or launching Bootstrap.
 Omission means `default`, which uses deterministic Acceptance.
@@ -81,4 +84,3 @@ Use this repository-owned command for Skill package validation:
 ```text
 py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/run-refactor-implementation-acceptance --capability scripts/sc/config/skill-package-validator-capability.v1.json
 ```
-

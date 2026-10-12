@@ -19,6 +19,7 @@ from scripts.python import skill_input_v2 as v2
 from scripts.python import skill_input_retention as retention
 from scripts.python.skill_input_protocol import digest, read_json, identity
 from scripts.python.skill_input_selection import selection_identity
+from scripts.python.skill_input_candidate import observe_candidate
 
 ROOT = Path(__file__).resolve().parents[3]
 ENTRYPOINTS = {
@@ -104,6 +105,32 @@ def test_missing_trusted_baseline_fails_closed(tmp_path):
     request['bindings']['authority']['sha256'] = digest((tmp_path / 'authority.json').read_bytes())
     with pytest.raises(ValueError, match='baseline'):
         v2.prepare(tmp_path, request)
+
+
+def test_acceptance_owned_artifacts_do_not_change_candidate_but_target_files_do(tmp_path):
+    request = fixture(tmp_path, 'run-refactor-implementation-acceptance')
+    target = 'execution-plans/feature-a'
+    authority_path = tmp_path / 'authority.json'
+    authority = read_json(authority_path)
+    authority['target_plan'] = target
+    authority_path.write_text(json.dumps(authority), encoding='utf-8')
+
+    before = observe_candidate(tmp_path, authority_path, request['storage'])
+    run_output = tmp_path / target / 'acceptance-runs' / 'run-1' / 'result.json'
+    input_output = tmp_path / target / 'acceptance-inputs' / 'bundle.json'
+    run_output.parent.mkdir(parents=True)
+    input_output.parent.mkdir(parents=True)
+    run_output.write_text('{"status":"waiting"}', encoding='utf-8')
+    input_output.write_text('{"generated":true}', encoding='utf-8')
+    after_outputs = observe_candidate(tmp_path, authority_path, request['storage'])
+    assert after_outputs == before
+
+    authoritative = tmp_path / target / 'requirements.md'
+    authoritative.parent.mkdir(parents=True, exist_ok=True)
+    authoritative.write_text('changed candidate requirement', encoding='utf-8')
+    after_source_change = observe_candidate(tmp_path, authority_path, request['storage'])
+    assert after_source_change['candidate_hash'] != before['candidate_hash']
+    assert target + '/requirements.md' in after_source_change['changed_paths']
 
 
 def test_unselected_candidate_change_invalidates_current(tmp_path):

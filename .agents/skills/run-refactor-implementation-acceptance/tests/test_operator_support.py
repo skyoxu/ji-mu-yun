@@ -24,7 +24,7 @@ def test_impact_reports_imports_checks_and_incomplete_inventory(tmp_path):
     assert impact(tmp_path / "absent", [], [])["limitations"][-1] == "Tracked source inventory unavailable."
 
 
-@pytest.mark.parametrize("exit_code, expected", [(0, "completed"), (3, "waiting")])
+@pytest.mark.parametrize("exit_code, expected", [(0, "completed"), (3, "failed")])
 def test_public_cli_publishes_support_without_changing_action_evidence(tmp_path, monkeypatch, exit_code, expected):
     request, output, _ = build(tmp_path, monkeypatch, command_exit=exit_code)
     monkeypatch.setattr(sys, "argv", ["acceptance", "run-coordinator", "--request", str(request), "--out", str(output)])
