@@ -1,0 +1,48 @@
+{
+  "schema_version": "skill-input-request.v2",
+  "plan_id": "acceptance-08-05-421c7188",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "policy_revision": "acceptance-421c7188-v1",
+  "storage": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-inputs/acceptance-08-05-421c7188/skill-input-v2/acceptance",
+  "sources": [
+    {
+      "role": "derived_context",
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+      "module": "implementation",
+      "resource_set": "08-05-round7-recompilation4-cer-repair1",
+      "authority": "maintainer-request",
+      "sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f"
+    },
+    {
+      "role": "normative_source",
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/repair-summary.json",
+      "module": "requirements",
+      "resource_set": "08-05-round7-recompilation4-cer-repair1",
+      "authority": "maintainer-request",
+      "sha256": "sha256:090c76bfb6a1858742e874b93b28685d7d35a37defdb0d39260423f0d681a40d"
+    }
+  ],
+  "inputs": {
+    "implementation_target": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed"],
+    "acceptance_requirements": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/repair-summary.json"]
+  },
+  "bindings": {
+    "contract": {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json",
+      "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"
+    },
+    "registry": {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "sha256": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939"
+    },
+    "authority": {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-inputs/acceptance-08-05-421c7188/skill-input-authority.v1.json",
+      "sha256": "sha256:80db7bfa8df40627d75fed270c05761bc3eb5e168ca9634b393b844d61f5a814"
+    },
+    "knowledge_freeze": {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-inputs/acceptance-08-05-421c7188/skill-input-freeze.v2.json",
+      "sha256": "sha256:faddb7709ecdd0103d72f69c25360b5f5c81b0c1cffce500342f58b135806cb1"
+    }
+  }
+}

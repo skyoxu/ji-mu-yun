@@ -1,0 +1,261 @@
+{
+  "actionDag": {
+    "actions": [
+      {
+        "actionId": "acceptance-plan-validator",
+        "activation": true,
+        "commandId": "plan-validator",
+        "dependsOn": [],
+        "order": 1
+      },
+      {
+        "actionId": "acceptance-plan-validator-tests",
+        "activation": true,
+        "commandId": "plan-validator-tests",
+        "dependsOn": [
+          "acceptance-plan-validator"
+        ],
+        "order": 2
+      },
+      {
+        "actionId": "acceptance-slice-s0-predicate",
+        "activation": true,
+        "commandId": "slice-s0-predicate",
+        "dependsOn": [
+          "acceptance-plan-validator-tests"
+        ],
+        "order": 3
+      },
+      {
+        "actionId": "acceptance-slice-s1-predicate",
+        "activation": true,
+        "commandId": "slice-s1-predicate",
+        "dependsOn": [
+          "acceptance-slice-s0-predicate"
+        ],
+        "order": 4
+      },
+      {
+        "actionId": "acceptance-slice-s2-predicate",
+        "activation": true,
+        "commandId": "slice-s2-predicate",
+        "dependsOn": [
+          "acceptance-slice-s1-predicate"
+        ],
+        "order": 5
+      },
+      {
+        "actionId": "acceptance-slice-s3-predicate",
+        "activation": true,
+        "commandId": "slice-s3-predicate",
+        "dependsOn": [
+          "acceptance-slice-s2-predicate"
+        ],
+        "order": 6
+      },
+      {
+        "actionId": "acceptance-skill-replay-tests",
+        "activation": true,
+        "commandId": "skill-replay-tests",
+        "dependsOn": [
+          "acceptance-slice-s3-predicate"
+        ],
+        "order": 7
+      },
+      {
+        "actionId": "acceptance-historical-skill-package-replay",
+        "activation": true,
+        "commandId": "historical-skill-package-replay",
+        "dependsOn": [
+          "acceptance-skill-replay-tests"
+        ],
+        "order": 8
+      },
+      {
+        "actionId": "acceptance-stable-candidate-matrix-replay",
+        "activation": true,
+        "commandId": "stable-candidate-matrix-replay",
+        "dependsOn": [
+          "acceptance-historical-skill-package-replay"
+        ],
+        "order": 9
+      },
+      {
+        "actionId": "acceptance-vdd-skill-contract",
+        "activation": true,
+        "commandId": "vdd-skill-contract",
+        "dependsOn": [
+          "acceptance-stable-candidate-matrix-replay"
+        ],
+        "order": 10
+      },
+      {
+        "actionId": "acceptance-vdd-skill-tests",
+        "activation": true,
+        "commandId": "vdd-skill-tests",
+        "dependsOn": [
+          "acceptance-vdd-skill-contract"
+        ],
+        "order": 11
+      },
+      {
+        "actionId": "acceptance-acceptance-package-validation",
+        "activation": true,
+        "commandId": "acceptance-package-validation",
+        "dependsOn": [
+          "acceptance-vdd-skill-tests"
+        ],
+        "order": 12
+      },
+      {
+        "actionId": "acceptance-acceptance-targeted-tests",
+        "activation": true,
+        "commandId": "acceptance-targeted-tests",
+        "dependsOn": [
+          "acceptance-acceptance-package-validation"
+        ],
+        "order": 13
+      },
+      {
+        "actionId": "acceptance-downstream-workflow-model-routing-replay",
+        "activation": true,
+        "commandId": "downstream-workflow-model-routing-replay",
+        "dependsOn": [
+          "acceptance-acceptance-targeted-tests"
+        ],
+        "order": 14
+      },
+      {
+        "actionId": "acceptance-terminal-implementation-validation",
+        "activation": true,
+        "commandId": "terminal-implementation-validation",
+        "dependsOn": [
+          "acceptance-downstream-workflow-model-routing-replay"
+        ],
+        "order": 15
+      }
+    ]
+  },
+  "actionDagHash": "sha256:5467617b647563a66f31991fdcea3e2dc8dc020064523b34d99d42fd2b681609",
+  "authorizes": [],
+  "bootstrapInvoked": false,
+  "executedActionCount": 0,
+  "finalization": null,
+  "persistedActionState": {
+    "actionStates": {
+      "acceptance-acceptance-package-validation": "blocked",
+      "acceptance-acceptance-targeted-tests": "blocked",
+      "acceptance-downstream-workflow-model-routing-replay": "blocked",
+      "acceptance-historical-skill-package-replay": "blocked",
+      "acceptance-plan-validator": "ready",
+      "acceptance-plan-validator-tests": "blocked",
+      "acceptance-skill-replay-tests": "blocked",
+      "acceptance-slice-s0-predicate": "blocked",
+      "acceptance-slice-s1-predicate": "blocked",
+      "acceptance-slice-s2-predicate": "blocked",
+      "acceptance-slice-s3-predicate": "blocked",
+      "acceptance-stable-candidate-matrix-replay": "blocked",
+      "acceptance-terminal-implementation-validation": "blocked",
+      "acceptance-vdd-skill-contract": "blocked",
+      "acceptance-vdd-skill-tests": "blocked"
+    },
+    "authorizes": [],
+    "dependencyClosed": {
+      "acceptance-acceptance-package-validation": false,
+      "acceptance-acceptance-targeted-tests": false,
+      "acceptance-downstream-workflow-model-routing-replay": false,
+      "acceptance-historical-skill-package-replay": false,
+      "acceptance-plan-validator": true,
+      "acceptance-plan-validator-tests": false,
+      "acceptance-skill-replay-tests": false,
+      "acceptance-slice-s0-predicate": false,
+      "acceptance-slice-s1-predicate": false,
+      "acceptance-slice-s2-predicate": false,
+      "acceptance-slice-s3-predicate": false,
+      "acceptance-stable-candidate-matrix-replay": false,
+      "acceptance-terminal-implementation-validation": false,
+      "acceptance-vdd-skill-contract": false,
+      "acceptance-vdd-skill-tests": false
+    },
+    "missingDependencies": {
+      "acceptance-acceptance-package-validation": [
+        "acceptance-vdd-skill-tests"
+      ],
+      "acceptance-acceptance-targeted-tests": [
+        "acceptance-acceptance-package-validation"
+      ],
+      "acceptance-downstream-workflow-model-routing-replay": [
+        "acceptance-acceptance-targeted-tests"
+      ],
+      "acceptance-historical-skill-package-replay": [
+        "acceptance-skill-replay-tests"
+      ],
+      "acceptance-plan-validator": [],
+      "acceptance-plan-validator-tests": [
+        "acceptance-plan-validator"
+      ],
+      "acceptance-skill-replay-tests": [
+        "acceptance-slice-s3-predicate"
+      ],
+      "acceptance-slice-s0-predicate": [
+        "acceptance-plan-validator-tests"
+      ],
+      "acceptance-slice-s1-predicate": [
+        "acceptance-slice-s0-predicate"
+      ],
+      "acceptance-slice-s2-predicate": [
+        "acceptance-slice-s1-predicate"
+      ],
+      "acceptance-slice-s3-predicate": [
+        "acceptance-slice-s2-predicate"
+      ],
+      "acceptance-stable-candidate-matrix-replay": [
+        "acceptance-historical-skill-package-replay"
+      ],
+      "acceptance-terminal-implementation-validation": [
+        "acceptance-downstream-workflow-model-routing-replay"
+      ],
+      "acceptance-vdd-skill-contract": [
+        "acceptance-stable-candidate-matrix-replay"
+      ],
+      "acceptance-vdd-skill-tests": [
+        "acceptance-vdd-skill-contract"
+      ]
+    },
+    "nextAction": {
+      "actionId": "acceptance-plan-validator",
+      "activation": true,
+      "commandId": "plan-validator",
+      "dependsOn": [],
+      "order": 1,
+      "state": "ready"
+    },
+    "readyActionIds": [
+      "acceptance-plan-validator"
+    ],
+    "runId": "acceptance-9b0807a7f5dc1f04",
+    "schemaVersion": "acceptance-run-inspection.v1",
+    "sortingBasis": "dependency-topology,action-order,command-registry-order,command-id"
+  },
+  "requestAuthority": "none",
+  "route": "waiting_for_persisted_action",
+  "runBinding": {
+    "actionDagHash": "sha256:5467617b647563a66f31991fdcea3e2dc8dc020064523b34d99d42fd2b681609",
+    "contractHash": "sha256:a533bc2202482d20f296f1945265a9ff688cee5dc7a86b1226d8bcd88cdd4268",
+    "knowledgeContextHash": "sha256:1c2d1c7b00feb75864c14d4a65f4cd102af292401d5bb17ce89e8c3d8fe9254a",
+    "runDirectory": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-9b0807a7f5dc1f04",
+    "runId": "acceptance-9b0807a7f5dc1f04",
+    "runInputHash": "sha256:19c37139f079c03a2df04a2b7ac2d6b9c26d214160b73d8dc14e9823567f4082"
+  },
+  "runBindingHash": "sha256:59a0ccee74841f82164cf809a189b3cd70aaef78f37fdadb6075739afc0c1ee3",
+  "runDirectory": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-9b0807a7f5dc1f04",
+  "runId": "acceptance-9b0807a7f5dc1f04",
+  "runInputHash": "sha256:19c37139f079c03a2df04a2b7ac2d6b9c26d214160b73d8dc14e9823567f4082",
+  "schemaVersion": "acceptance-coordinator-result.v4",
+  "status": "waiting",
+  "telemetry": {
+    "path": "coordinator-telemetry.jsonl",
+    "schemaVersion": "acceptance-coordinator-telemetry.v1"
+  },
+  "typedHandoff": null
+}
