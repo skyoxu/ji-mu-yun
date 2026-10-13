@@ -132,8 +132,11 @@ def validate_package(target: str, capability_path: str) -> dict:
         raise ValueError("target does not match the capability-bound package")
     cap_file = contained(ROOT / capability_path, ROOT, "capability")
     validator, value = capability(cap_file)
-    value = dict(value, _capability_path=capability_path)
-    independent = independent_validator_verification(validator, value)
+    with runtime.trusted_validator(ROOT, capability_path) as (trusted, value, independent):
+        return _validate_package(target, target_root, trusted, value, independent)
+
+
+def _validate_package(target: str, target_root: Path, validator: Path, value: dict, independent: dict) -> dict:
     oracle = runtime.negative_oracle(value)
     expected_files = runtime.bindings(ROOT, (target,))
     identity = manifest(target_root)
@@ -168,10 +171,7 @@ def validate_package(target: str, capability_path: str) -> dict:
     if manifest(target_root) != identity:
         raise ValueError("effective inspected content drift")
     witness = {"observed": True, "requested_target": target, "target_identity": identity, "observed_paths": sorted({row["path"] for row in reads}), "reads": reads, "process": {"pid": result.pid, "nonce": result.read_witness["nonce"]}, "observer": "validator-child-read-interface-v1"}
-    receipt = {"schema_version": "jimuyun.skill-package-validation-receipt.v1", "status": "pass", "exit_code": 0, "replay_identity": identity, "target_package": {"path": target, "manifest_sha256": identity}, "effective_inspected_content": {"path": target, "identity": identity}, "effective_read_witness": witness, "successful_evidence": {"effective_inspected_content_identity": identity, "inspection_result": "pass"}, "resolved_validator": {"path": validator.relative_to(ROOT).as_posix(), "sha256": digest(validator), "package_identity": value.get("package_identity", "unknown")}, "probes": [probe_record("requested-target", target, result), probe_record("detached-positive", target, detached_positive), probe_record("detached-negative", target, negative)], "target_observation": {"validator_observed_target": True, "mutation_rejected": True, "detached_positive_identity": detached_identity, "detached_negative_identity": invalid_identity, "negative_diagnostic": oracle["diagnostic"], "negative_reads": negative_reads}, "independent_validator_verification": independent, "authorizes": []}
-    # Detect drift after native execution, including additions to the owner.
-    if independent_validator_verification(validator, value) != independent:
-        raise ValueError("validator trust closure changed during execution")
+    receipt = {"schema_version": "jimuyun.skill-package-validation-receipt.v1", "status": "pass", "exit_code": 0, "replay_identity": identity, "target_package": {"path": target, "manifest_sha256": identity}, "effective_inspected_content": {"path": target, "identity": identity}, "effective_read_witness": witness, "successful_evidence": {"effective_inspected_content_identity": identity, "inspection_result": "pass"}, "resolved_validator": {"path": value["allowed_root"] + "/" + value["validator_entrypoint"], "sha256": digest(validator), "package_identity": value.get("package_identity", "unknown"), "trust_commit": independent["trust_commit"]}, "probes": [probe_record("requested-target", target, result), probe_record("detached-positive", target, detached_positive), probe_record("detached-negative", target, negative)], "target_observation": {"validator_observed_target": True, "mutation_rejected": True, "detached_positive_identity": detached_identity, "detached_negative_identity": invalid_identity, "negative_diagnostic": oracle["diagnostic"], "negative_reads": negative_reads}, "independent_validator_verification": independent, "authorizes": []}
     return receipt
 
 def replay_verdict(receipt: dict) -> str:
@@ -186,6 +186,12 @@ def candidate_external_trust(target: str, capability_path: str, receipt: dict) -
     target_root = contained(ROOT / target, ROOT, "target package")
     validator = ROOT / receipt["resolved_validator"]["path"]
     independent = receipt.get("independent_validator_verification", {})
+    if independent.get("execution_source") == "immutable-historical-tree":
+        with runtime.trusted_validator(ROOT, capability_path) as (trusted, _value, proof):
+            return {"independent": proof == independent and not is_within(trusted, target_root),
+                    "complete": proof == independent and digest(trusted) == receipt["resolved_validator"]["sha256"],
+                    "candidate_controlled": False, "inherited": False,
+                    "capability_identity": proof["capability_sha256"]}
     return {
         "independent": not is_within(capability_file, target_root) and independent.get("independent") is True,
         "complete": bool(
@@ -211,10 +217,10 @@ def consumer_manifest() -> dict:
 def current_snapshot_binding(target: str, capability_path: str, validator: Path) -> dict:
     return runtime.snapshot(ROOT, target, capability_path, validator, CURRENT_SNAPSHOT_SCHEMA)
 
-def validate_current_snapshot_binding(snapshot: dict, target: str, capability_path: str, validator: Path) -> None:
+def validate_current_snapshot_binding(snapshot: dict, target: str, capability_path: str, validator: Path, current: dict | None = None) -> None:
     if not isinstance(snapshot, dict) or snapshot.get("schema") != CURRENT_SNAPSHOT_SCHEMA or snapshot.get("complete") is not True:
         raise ValueError("current snapshot binding is incomplete")
-    if snapshot != current_snapshot_binding(target, capability_path, validator):
+    if snapshot != (current if current is not None else current_snapshot_binding(target, capability_path, validator)):
         raise ValueError("current snapshot binding does not match result-determining inputs")
 
 
@@ -372,7 +378,7 @@ def replay_metadata(
     calls = execution["calls"]
     if not calls or any(call["matched_expected"] is not True for call in calls):
         raise ValueError("required Consumer did not complete successfully")
-    validate_current_snapshot_binding(snapshot, target, capability_path, ROOT / replay["resolved_validator"]["path"])
+    validate_current_snapshot_binding(snapshot, target, capability_path, ROOT / replay["resolved_validator"]["path"], snapshot)
     return {
         "semantic_verdict": verdict,
         "target_verification": {
@@ -466,7 +472,7 @@ def _replay_package(target: str, capability_path: str, probe_mode: str) -> tuple
     stage_started = time.monotonic()
     validator = ROOT / replay["resolved_validator"]["path"]
     snapshot = current_snapshot_binding(target, capability_path, validator)
-    validate_current_snapshot_binding(snapshot, target, capability_path, validator)
+    validate_current_snapshot_binding(snapshot, target, capability_path, validator, snapshot)
     mark_orchestration("snapshot-and-binding", stage_started)
     stage_started = time.monotonic()
     verdict = replay_verdict(replay)

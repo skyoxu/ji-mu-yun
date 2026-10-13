@@ -7,7 +7,7 @@ approval and Consumer exceptions remain C3 decisions outside this adapter.
 from __future__ import annotations
 
 import ast
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from contextvars import ContextVar
 import hashlib
 import importlib.util
@@ -387,6 +387,10 @@ def git_bytes(root: Path, commit: str, path: str) -> bytes:
 
 
 def git_blob_identities(root: Path, commit: str, paths: list[str]) -> dict[str, str]:
+    return {name: sha(raw) for name, raw in git_blob_contents(root, commit, paths).items()}
+
+
+def git_blob_contents(root: Path, commit: str, paths: list[str]) -> dict[str, bytes]:
     for name in paths:
         relative(root, name)
     request = "".join(commit + ":" + name + "\n" for name in paths).encode("utf-8")
@@ -405,11 +409,35 @@ def git_blob_identities(root: Path, commit: str, paths: list[str]) -> dict[str, 
         raw = data[end + 1:end + 1 + size]
         if len(raw) != size or data[end + 1 + size:end + 2 + size] != b"\n":
             raise ValueError("immutable Git dependency batch is truncated")
-        identities[name] = sha(raw)
+        identities[name] = raw
         offset = end + 2 + size
     if offset != len(data):
         raise ValueError("immutable Git dependency batch contains unbound data")
     return identities
+
+
+def historical_dependency_paths(root: Path, commit: str, seeds) -> list[str]:
+    """Resolve the judge closure from immutable imports, never Candidate imports."""
+    names = set(git(root, "ls-tree", "-r", "-z", "--name-only", commit).decode("utf-8").split("\0")[:-1])
+    selected = {name for name in names if any(name == seed or name.startswith(seed + "/") for seed in seeds)}
+    search = ["", "scripts/python", "scripts/sc", "scripts/toolchain",
+              *(owner + "/scripts" for owner in PACKAGE_ROOTS)]
+    pending = {name for name in selected if name.endswith(".py")}
+    while pending:
+        contents = git_blob_contents(root, commit, sorted(pending))
+        pending = set()
+        for path, raw in contents.items():
+            for name in _import_names(raw, path):
+                module = name.replace(".", "/")
+                for base in dict.fromkeys((str(Path(path).parent).replace("\\", "/"), *search)):
+                    candidate = (base + "/" if base else "") + module
+                    found = {candidate + ".py"} & names
+                    if candidate + "/__init__.py" in names:
+                        found.update(item for item in names if item.startswith(candidate + "/"))
+                    fresh = found - selected
+                    selected.update(fresh)
+                    pending.update(item for item in fresh if item.endswith(".py"))
+    return sorted(selected)
 
 
 @lru_cache(maxsize=1024)
@@ -472,18 +500,21 @@ def dependency_closure(root: Path, seeds) -> list[dict]:
     search = [root, root / "scripts/python", root / "scripts/sc", root / "scripts/toolchain", *(root / owner / "scripts" for owner in PACKAGE_ROOTS)]
     # Resolve each identical filesystem query once in this traversal. The
     # index is rebuilt for the next closure, so new/deleted modules are visible.
+    # Use string keys for absent-module probes.  Repeated pathlib construction
+    # and parent resolution dominated the Windows closure traversal.  Every
+    # index remains local to this invocation and matched paths still receive
+    # the normal containment and byte checks.
     directory_index, package_index, import_index = {}, {}, {}
     resolved_root = root.resolve()
+    root_key = os.path.normcase(str(root))
 
     def directory_members(directory):
-        # Enumerate a directory once in this closure instead of probing every
-        # absent import name through Win32. Rebuild for the next invocation;
-        # membership, content and trust results are never reused.
-        key = os.path.normcase(str(directory))
+        key = os.path.normcase(directory)
         if key not in directory_index:
-            if directory != root and directory.is_relative_to(root):
-                _, parent_directories = directory_members(directory.parent)
-                if os.path.normcase(directory.name) not in parent_directories:
+            parent, leaf = os.path.split(key)
+            if key != root_key and parent.startswith(root_key):
+                _, directories = directory_members(parent)
+                if leaf not in directories:
                     directory_index[key] = (set(), set())
                     return directory_index[key]
             try:
@@ -500,21 +531,21 @@ def dependency_closure(root: Path, seeds) -> list[dict]:
         return directory_index[key]
 
     def is_file(path):
-        regular, _ = directory_members(path.parent)
-        return os.path.normcase(path.name) in regular
+        parent, leaf = os.path.split(path)
+        return os.path.normcase(leaf) in directory_members(parent)[0]
 
     def imported(base, name):
         key = (str(base), name)
         if key not in import_index:
-            candidate = base.joinpath(*name.split("."))
+            candidate = os.path.join(str(base), *name.split("."))
             matches = set()
-            module = candidate.with_suffix(".py")
+            module = candidate + ".py"
             if is_file(module):
-                matches.add(module)
-            if is_file(candidate / "__init__.py"):
-                package_key = candidate.as_posix()
+                matches.add(Path(module))
+            if is_file(os.path.join(candidate, "__init__.py")):
+                package_key = candidate
                 if package_key not in package_index:
-                    package_index[package_key] = files(root, [candidate.relative_to(root).as_posix()])
+                    package_index[package_key] = files(root, [Path(candidate).relative_to(root).as_posix()])
                 matches.update(package_index[package_key])
             import_index[key] = matches
         return import_index[key]
@@ -585,6 +616,56 @@ def verify_trust(root: Path, validator: Path, value: dict, capability_path: str 
         raise ValueError("independent validator source does not bind the validator")
     # Rule strings are diagnostic only; immutable bytes and closure decide trust.
     return {"schema": "jimuyun.independent-validator-verification.v2", "status": "pass", "independent": True, "source_path": value["validator_source"], "source_sha256": sha(source.read_bytes()), "declared_source_sha256": value["validator_source_sha256"], "content_sha256": declared_content, "source_matches_declaration": True, "content_matches_source": True, "required_rule_checks": checks, "trust_commit": commit, "semantic_dependencies": closure, "dependency_closure_sha256": canonical(closure), "authorizes": []}
+
+
+@contextmanager
+def trusted_validator(root: Path, capability_path: str):
+    """Execute the existing validator independently of its candidate package.
+
+    Accepted ADR-0058: only the fixed repository capability can select this
+    historical route. Its scope, arguments and oracle remain immutable; new
+    candidate hashes are not approval of candidate validator code.
+    """
+    current = json.loads(relative(root, capability_path).read_text(encoding="utf-8"))
+    if capability_path != "scripts/sc/config/skill-package-validator-capability.v1.json":
+        validator = relative(root, current["allowed_root"] + "/" + current["validator_entrypoint"])
+        proof = verify_trust(root, validator, current, capability_path)
+        yield validator, current, proof
+        if verify_trust(root, validator, current, capability_path) != proof:
+            raise ValueError("validator trust closure changed during execution")
+        return
+    commit = trust_commit(root)
+    frozen = json.loads(git_bytes(root, commit, capability_path))
+    identity_fields = {"validator_sha256", "validator_source_sha256"}
+    if (not isinstance(current, dict) or not isinstance(frozen, dict)
+            or {k: v for k, v in current.items() if k not in identity_fields}
+            != {k: v for k, v in frozen.items() if k not in identity_fields}
+            or frozen.get("allowed_root") != PACKAGE_ROOTS[0]
+            or frozen.get("authorizes") != []):
+        raise ValueError("historical capability scope changed; independent Trust Approval (C3) is required")
+    with tempfile.TemporaryDirectory(prefix="tc-d1-trusted-validator-") as directory:
+        historical = Path(directory) / "source"
+        # Materialize only the closure that the frozen validator actually
+        # declares.  SOURCE_ROOTS is the repository-wide consumer closure and
+        # re-materializing it for every Matrix subject made independent trust
+        # verification dominate the aggregate budget.  verify_trust below
+        # still checks the complete declared closure against immutable Git
+        # blobs before yielding the validator.
+        seeds = (frozen["allowed_root"], capability_path, frozen["validator_source"])
+        closure_paths = historical_dependency_paths(root, commit, seeds)
+        materialize_git(root, commit, historical, closure_paths)
+        git_directory = git(root, "rev-parse", "--absolute-git-dir").decode().strip()
+        (historical / ".git").write_text("gitdir: " + git_directory + "\n", encoding="utf-8", newline="\n")
+        validator = relative(historical, frozen["allowed_root"] + "/" + frozen["validator_entrypoint"])
+        proof = verify_trust(historical, validator, frozen, capability_path)
+        proof.update(execution_source="immutable-historical-tree", candidate_separated=True,
+                     capability_sha256=sha(git_bytes(root, commit, capability_path)))
+        yield validator, frozen, proof
+        after = verify_trust(historical, validator, frozen, capability_path)
+        after.update(execution_source="immutable-historical-tree", candidate_separated=True,
+                     capability_sha256=sha(git_bytes(root, commit, capability_path)))
+        if after != proof:
+            raise ValueError("validator trust closure changed during execution")
 
 
 def observed_validator(root: Path, validator: Path, value: dict, target: Path, timeout_ms=None):
@@ -721,6 +802,14 @@ def snapshot(root: Path, target: str, capability_path: str, validator: Path, sch
     package = bindings(root, (target,))
     plan_path = relative(root, matrix)
     fixture = {"positive_bindings": package, "negative_oracle": negative_oracle(declaration)}
+    # Bind the judge that actually executes. For the primary package this is
+    # the immutable historical closure; the candidate validator remains a
+    # dependency for drift detection but is never presented as the judge.
+    trusted_proof = None
+    if capability_path == "scripts/sc/config/skill-package-validator-capability.v1.json" and inputs.get("trust_baseline"):
+        with trusted_validator(root, capability_path) as (_trusted, _frozen, trusted_proof):
+            pass
+        inputs["trusted_validator"] = trusted_proof
     roots = [
         {"root_kind": "candidate_tree", "identity_kind": "directory-manifest", "path": target, "sha256": canonical(package)},
         {"root_kind": "plan", "identity_kind": "file-or-absence", "path": matrix, "sha256": sha(plan_path.read_bytes()) if plan_path.is_file() else canonical({"absent": matrix})},
@@ -728,7 +817,9 @@ def snapshot(root: Path, target: str, capability_path: str, validator: Path, sch
         {"root_kind": "descriptor", "identity_kind": "inline-manifest", "name": "runtime-inputs", "sha256": canonical(inputs)},
         {"root_kind": "fixture", "identity_kind": "inline-manifest", "name": "detached-probe-inputs", "value": fixture, "sha256": canonical(fixture)},
         {"root_kind": "source", "identity_kind": "file", "path": "scripts/sc/skill_package_replay.py", "sha256": sha(relative(root, "scripts/sc/skill_package_replay.py").read_bytes()), "dependency_closure_sha256": canonical(closure)},
-        {"root_kind": "validator_judge", "identity_kind": "file", "path": validator.relative_to(root).as_posix(), "sha256": sha(validator.read_bytes())},
+        ({"root_kind": "validator_judge", "identity_kind": "inline-manifest", "name": "historical-validator-closure", "value": trusted_proof, "sha256": canonical(trusted_proof)}
+         if trusted_proof is not None else
+         {"root_kind": "validator_judge", "identity_kind": "file", "path": validator.relative_to(root).as_posix(), "sha256": sha(validator.read_bytes())}),
         {"root_kind": "plan_state_transition", "identity_kind": "inline-manifest", "name": "consumer-call-interfaces", "sha256": canonical(bindings(root, tuple(path for _, path in CONSUMERS)))},
     ]
     return {"schema": schema, "sha256": canonical({"roots": roots, "inputs": inputs}), "roots": roots, "inputs": inputs, "complete": bool(inputs.get("git_baseline") and inputs.get("trust_baseline"))}
@@ -1005,6 +1096,16 @@ def invalid_matrix(matrix: dict, reason: str, terminal_state="contract-rejected"
 
 
 def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
+    # Keep the immutable validator tree alive for all independent subjects.
+    # ADR-0058: a Candidate package change cannot replace the executing judge.
+    try:
+        with ExitStack() as trust_stack:
+            return _replay_matrix(root, matrix, trust_stack)
+    except (ValueError, OSError) as exc:
+        return invalid_matrix(matrix, str(exc))
+
+
+def _replay_matrix(root: Path, matrix: dict, trust_stack: ExitStack) -> tuple[dict, int]:
     started = time.monotonic()
     # Every matrix uses this gate. The previous opt-in subject_contract cannot
     # leave a successful legacy route around the provenance requirement.
@@ -1078,9 +1179,7 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
         target, cap_path = candidate["target"], matrix["capability"]
         if stable.get("target") != target:
             raise ValueError("Stable and Candidate logical targets must match")
-        value = json.loads(relative(root, cap_path).read_text(encoding="utf-8"))
-        validator = relative(root, value["allowed_root"] + "/" + value["validator_entrypoint"])
-        verify_trust(root, validator, value, cap_path)
+        validator, value, validator_proof = trust_stack.enter_context(trusted_validator(root, cap_path))
         current = subject_bindings(root, target)
         if candidate.get("bindings") != current:
             raise ValueError("Candidate identity is stale")
@@ -1153,7 +1252,7 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
                     raise ValueError("aggregate Matrix output budget exhausted")
         if subject_bindings(root, target) != current:
             raise ValueError("Candidate changed during Matrix execution")
-        verify_trust(root, validator, value, cap_path)
+        trust_stack.close()
         remaining()
     except (KeyError, ValueError, OSError, TypeError) as exc:
         terminal_state = "timeout" if "timed out" in str(exc) else ("budget-exhausted" if "budget exhausted" in str(exc) else "contract-rejected")
@@ -1161,7 +1260,7 @@ def replay_matrix(root: Path, matrix: dict) -> tuple[dict, int]:
         invalid["completed_case_results"] = results
         invalid["budget_observation"] = budget_observation()
         return invalid, code
-    return {"status": "pass", "exit_code": 0, "aggregate_valid": True, "aggregate_status": "valid", "case_results": results, "missing_cases": [], "invalid_reasons": [], "stable_provenance": stable, "candidate": candidate, "relevant_changed_executables": changes, "budget_observation": budget_observation(), "authorizes": []}, 0
+    return {"status": "pass", "exit_code": 0, "aggregate_valid": True, "aggregate_status": "valid", "case_results": results, "missing_cases": [], "invalid_reasons": [], "stable_provenance": stable, "candidate": candidate, "independent_validator_verification": validator_proof, "relevant_changed_executables": changes, "budget_observation": budget_observation(), "authorizes": []}, 0
 
 
 def prepare_matrix(root: Path, target: str, cap_path: str, stable_commit: str, output: str) -> dict:

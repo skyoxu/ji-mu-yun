@@ -419,6 +419,21 @@ orchestrations per phase without changing the 600-second stage ceiling or any
 product deadline. Recovery selects explicit predecessor/run paths, including
 the completed S12-r2, and never allocates a successor by scanning run names.
 
+### 2026-10-13 Historical judge execution separation
+
+The primary Acceptance package may evolve while its replay target is being
+checked. The executing judge therefore remains the complete immutable owner
+closure selected by the fixed trust commit, materialized from raw Git blobs in
+an isolated tree. Candidate target bytes, capability identity fields and
+declared scope are still read from the current checkout; changing the
+capability scope, probe arguments, authorizes value or frozen closure fails
+closed and remains a C3 decision. A changed candidate validator is never
+executed merely because its descriptor hashes were updated. Matrix Stable and
+Candidate subjects both execute their own package entrypoints plus independent
+native scenarios while sharing only this immutable judge proof. Snapshots bind
+the historical judge closure explicitly, so fresh replay cannot silently
+present the candidate validator as the validator that actually ran.
+
 S24's current regression also had ten independent replay-package launches and
 exhausted its 600-second stage without a case report. Its module fixtures now
 execute one fresh positive replay, one explicit reused-evidence negative
