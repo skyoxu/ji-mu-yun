@@ -48,3 +48,5 @@ execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluatio
 # Existing Q8 receipts bind these exact test bytes (ADR-0058 read-only replay).
 scripts/sc/tests/tc_d1_cer/test_s4.py -text -eol
 scripts/sc/tests/tc_d1_cer/test_s21.py -text -eol
+# Preserve native byte-bound Acceptance recovery transport and owner receipts.
+logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/** -text -eol

@@ -444,3 +444,22 @@ legacy two-probe exit vector `[0, 1]`, while the current real receipt correctly
 contains the explicit positive and negative controls `[0, 0, 1]`. The declared
 compatibility assertion now checks that current vector; no runtime behavior or
 timeout ceiling changed.
+
+### 2026-10-14 Maintainer-approved threefold execution margin
+
+The maintainer explicitly requests three times the current time budgets before
+any further timeout diagnosis. This supersedes only the numeric time ceilings
+in the earlier budget sections: Consumer/Validator leaf 60 -> 180 seconds,
+fresh child 120 -> 360 seconds, whole replay 300 -> 900 seconds, independent
+Matrix aggregate 120 -> 360 seconds, and process transport 360 -> 1080 seconds.
+CER Matrix transport increases from 150 to 450 seconds. Affected Quick Dev
+successor stage descriptors increase from 600 to 1800 seconds.
+
+The entry-owned monotonic deadline and remaining-budget propagation remain
+mandatory. Stricter input-declared budgets, owned process cleanup, output limits,
+test selectors, assertions, Consumer coverage and failure semantics remain
+unchanged. A timeout under these increased limits is unsuccessful; investigate
+the remaining budget or blocking cause only after that observation. Preserve
+all prior failures and reusable completed evidence without rebinding it.
+This change grants no Trust Approval or Acceptance authority. C3 stays OPEN;
+every derived record retains explicit authorizes=[].

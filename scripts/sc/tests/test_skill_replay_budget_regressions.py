@@ -13,6 +13,13 @@ import test_skill_replay_review_regressions as support
 
 
 class ReplayBudgetTests(unittest.TestCase):
+    def test_maintainer_tripled_deadlines_preserve_distinct_scopes(self):
+        self.assertEqual(180, runtime.TIMEOUT_SECONDS)
+        self.assertEqual(360, runtime.REPLAY_TIMEOUT_SECONDS)
+        self.assertEqual(900, runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS)
+        self.assertEqual(360, runtime.MATRIX_TIMEOUT_SECONDS)
+        self.assertEqual(1080, runtime.PROCESS_TRANSPORT_SECONDS)
+
     def setUp(self):
         self.assertTrue(callable(getattr(runtime, "execute_replay", None)),
                         "full replay has no deadline owner separate from native leaf execution")
@@ -20,15 +27,16 @@ class ReplayBudgetTests(unittest.TestCase):
     def test_orchestration_can_exceed_leaf_ceiling_without_relaxing_leaf(self):
         with tempfile.TemporaryDirectory() as directory:
             command = [sys.executable, "-c", "print('native-positive-control')"]
-            result = runtime.execute_replay(command, Path(directory), timeout=61)
+            timeout = runtime.TIMEOUT_SECONDS + 1
+            result = runtime.execute_replay(command, Path(directory), timeout=timeout)
             self.assertEqual(0, result.returncode)
             self.assertEqual("native-positive-control", result.stdout.strip())
             with self.assertRaisesRegex(ValueError, "time budget"):
-                runtime.execute(command, Path(directory), timeout=61)
+                runtime.execute(command, Path(directory), timeout=timeout)
 
     def test_orchestration_ceiling_remains_finite(self):
         with tempfile.TemporaryDirectory() as directory:
-            for timeout in (121, float("inf"), float("nan"), True, 0):
+            for timeout in (runtime.REPLAY_TIMEOUT_SECONDS + 1, float("inf"), float("nan"), True, 0):
                 with self.subTest(timeout=timeout), self.assertRaisesRegex(ValueError, "time budget"):
                     runtime.execute_replay([sys.executable, "-c", "pass"], Path(directory), timeout=timeout)
 
@@ -74,7 +82,7 @@ class MatrixBudgetTests(unittest.TestCase):
 
     def test_matrix_total_is_independent_and_every_native_call_retains_leaf_limit(self):
         for case in self.matrix["cases"]:
-            case["aggregate_time_bound_ms"] = 180000
+            case["aggregate_time_bound_ms"] = (runtime.MATRIX_TIMEOUT_SECONDS + 60) * 1000
         calls = []
         original = self.replay.runtime.execute
 
@@ -90,7 +98,7 @@ class MatrixBudgetTests(unittest.TestCase):
         self.assertEqual(runtime.MATRIX_TIMEOUT_SECONDS, result["budget_observation"]["aggregate_time_limit_seconds"])
         self.assertIn("Stable materialization", result["budget_observation"]["includes_preparation"])
         self.assertGreaterEqual(len(calls), 24)
-        self.assertTrue(all(0 < timeout <= 60 for timeout in calls), calls)
+        self.assertTrue(all(0 < timeout <= runtime.TIMEOUT_SECONDS for timeout in calls), calls)
 
     def test_stricter_declared_matrix_budget_cannot_be_silently_expanded(self):
         matrix = copy.deepcopy(self.matrix)

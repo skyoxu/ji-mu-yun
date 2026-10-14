@@ -46,7 +46,7 @@ class WholeEntryDeadlineTests(unittest.TestCase):
             self.addCleanup(patcher.stop)
 
     def metadata(self, *args):
-        self.clock = 290.0
+        self.clock = replay.runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS - 10.0
         return {"current_snapshot": self.snapshot}
 
     def native(self, command, root, **kwargs):
@@ -57,7 +57,7 @@ class WholeEntryDeadlineTests(unittest.TestCase):
 
     def test_validation_spends_the_whole_entry_budget_before_fresh_starts(self):
         def validate(*args):
-            self.clock = 301.0
+            self.clock = replay.runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS + 1.0
             return copy.deepcopy(self.receipt)
 
         with mock.patch.object(replay, "validate_package", side_effect=validate), \
@@ -68,8 +68,8 @@ class WholeEntryDeadlineTests(unittest.TestCase):
                 replay.replay_package("target", "capability", "fresh")
             fresh.assert_not_called()
 
-    def test_304_second_whole_replay_cannot_pass_with_a_reset_fresh_clock(self):
-        self.child_end = 304.0
+    def test_over_budget_whole_replay_cannot_pass_with_a_reset_fresh_clock(self):
+        self.child_end = replay.runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS + 4.0
         with mock.patch.object(replay, "validate_package", return_value=copy.deepcopy(self.receipt)), \
              mock.patch.object(replay, "replay_metadata", side_effect=self.metadata), \
              mock.patch.object(replay.runtime, "execute_replay", side_effect=self.native):
@@ -77,7 +77,7 @@ class WholeEntryDeadlineTests(unittest.TestCase):
                 replay.replay_package("target", "capability", "fresh")
 
     def test_fresh_child_gets_only_remaining_time_with_success_positive_control(self):
-        self.child_end = 299.0
+        self.child_end = replay.runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS - 1.0
         with mock.patch.object(replay, "validate_package", return_value=copy.deepcopy(self.receipt)), \
              mock.patch.object(replay, "replay_metadata", side_effect=self.metadata), \
              mock.patch.object(replay.runtime, "execute_replay", side_effect=self.native):
@@ -86,11 +86,11 @@ class WholeEntryDeadlineTests(unittest.TestCase):
         self.assertEqual(0, code)
         self.assertGreater(self.child_timeout, 0)
         self.assertLessEqual(self.child_timeout, 10)
-        self.assertEqual(299, result["replay_orchestration_timing"]["elapsed_seconds"])
+        self.assertEqual(self.child_end, result["replay_orchestration_timing"]["elapsed_seconds"])
 
     def test_receipt_construction_cannot_hide_over_budget_time(self):
         def receipt(value):
-            self.clock = 301.0
+            self.clock = replay.runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS + 1.0
             return value
 
         with mock.patch.object(replay, "validate_package", return_value=copy.deepcopy(self.receipt)), \
@@ -185,10 +185,10 @@ class NativeDeadlineTests(unittest.TestCase):
         with mock.patch.object(replay.runtime, "time", clock):
             with self.assertRaisesRegex(ValueError, "orchestration timed out"):
                 with replay.runtime.replay_budget():
-                    now[0] = 390.0
+                    now[0] = 100.0 + replay.runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS - 10.0
                     with replay.runtime.replay_budget():
                         self.assertEqual(10, replay.runtime.remaining_timeout(60, "leaf"))
-                        now[0] = 400.0
+                        now[0] = 100.0 + replay.runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS
                         with self.assertRaisesRegex(ValueError, "orchestration timed out"):
                             replay.runtime.remaining_timeout(60, "leaf")
             self.assertIsNone(replay.runtime._REPLAY_DEADLINE.get())
@@ -208,12 +208,12 @@ class NativeDeadlineTests(unittest.TestCase):
         now = [0.0]
         def native(*args, **kwargs):
             self.assertEqual(5, kwargs["timeout"])
-            now[0] = 301.0
+            now[0] = replay.runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS + 1.0
             return subprocess.CompletedProcess(args[0], 0, b"result", b"")
         with mock.patch.object(replay.runtime, "time", clock):
             with self.assertRaisesRegex(ValueError, "orchestration timed out"):
                 with replay.runtime.replay_budget():
-                    now[0] = 295.0
+                    now[0] = replay.runtime.FRESH_REPLAY_ORCHESTRATION_SECONDS - 5.0
                     with mock.patch.object(replay.runtime.subprocess, "run", side_effect=native):
                         replay.runtime.git(Path.cwd(), "rev-parse", "HEAD")
 

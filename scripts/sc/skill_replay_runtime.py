@@ -28,11 +28,12 @@ from functools import lru_cache
 from pathlib import Path
 
 TRUST_BASELINE = "e289d7d3f8572595ca28c498adc798d1fa2a2bf7"
-TIMEOUT_SECONDS = 60
-REPLAY_TIMEOUT_SECONDS = 120
-FRESH_REPLAY_ORCHESTRATION_SECONDS = 300
-MATRIX_TIMEOUT_SECONDS = 120
-PROCESS_TRANSPORT_SECONDS = 360
+# Accepted ADR-0058, 2026-10-14: maintainer-approved threefold time margin.
+TIMEOUT_SECONDS = 180
+REPLAY_TIMEOUT_SECONDS = 360
+FRESH_REPLAY_ORCHESTRATION_SECONDS = 900
+MATRIX_TIMEOUT_SECONDS = 360
+PROCESS_TRANSPORT_SECONDS = 1080
 OUTPUT_LIMIT = 8 * 1024 * 1024
 PACKAGE_ROOTS = (".agents/skills/run-refactor-implementation-acceptance", ".agents/skills/vdd-execution-plan")
 SOURCE_ROOTS = (*PACKAGE_ROOTS, ".agents/skills/quick-dev-tdd-adapter", "scripts/sc", "scripts/python", "scripts/toolchain", "scripts/vdd", "scripts/quick_dev", "knowledge", "docs/adr")
@@ -281,7 +282,7 @@ def capture_process(command: list[str], root: Path, timeout: float, *,
                     output_limit: int = OUTPUT_LIMIT, input_data: bytes | None = None) -> subprocess.CompletedProcess:
     """File-backed owned transport; outer integrations allow bounded cleanup time.
 
-    Production native execution calls execute(), which keeps the 60s ceiling.
+    Production native execution calls execute(), which keeps the leaf ceiling.
     A timeout never becomes a successful CompletedProcess or replay receipt.
     """
     if isinstance(timeout, bool) or not math.isfinite(timeout) or not 0 < timeout <= PROCESS_TRANSPORT_SECONDS:
