@@ -1,0 +1,14 @@
+test_matrix_total_is_independent_and_every_native_call_retains_leaf_limit (test_skill_replay_budget_regressions.MatrixBudgetTests.test_matrix_total_is_independent_and_every_native_call_retains_leaf_limit) ... ok
+test_stricter_declared_matrix_budget_cannot_be_silently_expanded (test_skill_replay_budget_regressions.MatrixBudgetTests.test_stricter_declared_matrix_budget_cannot_be_silently_expanded) ... ok
+test_exit_124_is_unsuccessful_for_orchestration (test_skill_replay_budget_regressions.ReplayBudgetTests.test_exit_124_is_unsuccessful_for_orchestration) ... ok
+test_fresh_orchestration_and_transport_have_separate_safe_ceilings (test_skill_replay_budget_regressions.ReplayBudgetTests.test_fresh_orchestration_and_transport_have_separate_safe_ceilings) ... ok
+test_maintainer_tripled_deadlines_preserve_distinct_scopes (test_skill_replay_budget_regressions.ReplayBudgetTests.test_maintainer_tripled_deadlines_preserve_distinct_scopes) ... ok
+test_orchestration_can_exceed_leaf_ceiling_without_relaxing_leaf (test_skill_replay_budget_regressions.ReplayBudgetTests.test_orchestration_can_exceed_leaf_ceiling_without_relaxing_leaf) ... ok
+test_orchestration_ceiling_remains_finite (test_skill_replay_budget_regressions.ReplayBudgetTests.test_orchestration_ceiling_remains_finite) ... ok
+test_orchestration_timeout_is_not_positive_or_defect_evidence (test_skill_replay_budget_regressions.ReplayBudgetTests.test_orchestration_timeout_is_not_positive_or_defect_evidence) ... ok
+test_real_work_can_finish_after_a_leaf_sized_deadline (test_skill_replay_budget_regressions.ReplayBudgetTests.test_real_work_can_finish_after_a_leaf_sized_deadline) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 22.279s
+
+OK

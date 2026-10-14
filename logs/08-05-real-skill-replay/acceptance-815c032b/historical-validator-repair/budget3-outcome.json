@@ -1,0 +1,16 @@
+{
+  "authorizes": [],
+  "candidate_commit": "1b1bf3d8bb694c6f3932039118647a9eb59921ba",
+  "targeted_budget_regressions_passed": 19,
+  "completed_successors": ["S26", "S28", "S30", "S35", "S41", "S44"],
+  "successor_root": "owner-recovery-r9-budget3",
+  "stage_timeout_seconds": 1800,
+  "timeouts": 0,
+  "retries": 0,
+  "historical_evidence_rebound": false,
+  "q8_status": "blocked",
+  "q8_reason": "completion runtime root stale: candidate_tree",
+  "impact_diagnostic": "owner-recovery-r9-budget3/reuse-audit-before-r9.json",
+  "acceptance_status": "not-finalized",
+  "C3": "OPEN"
+}
