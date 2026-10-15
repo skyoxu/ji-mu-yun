@@ -1,0 +1,209 @@
+{
+  "actions": [
+    {
+      "actionId": "acceptance-current-q8-read-only",
+      "commandId": "current-q8-read-only",
+      "dependsOn": [],
+      "order": 1,
+      "activation": true
+    },
+    {
+      "actionId": "acceptance-acceptance-package-validation",
+      "commandId": "acceptance-package-validation",
+      "dependsOn": [
+        "acceptance-current-q8-read-only"
+      ],
+      "order": 2,
+      "activation": true
+    },
+    {
+      "actionId": "acceptance-acceptance-closeout-regressions",
+      "commandId": "acceptance-closeout-regressions",
+      "dependsOn": [
+        "acceptance-acceptance-package-validation"
+      ],
+      "order": 3,
+      "activation": true
+    }
+  ],
+  "affectedConsumerRefs": [
+    ".agents/skills/run-refactor-implementation-acceptance",
+    ".agents/skills/vdd-execution-plan",
+    "scripts/sc/skill_replay_runtime.py"
+  ],
+  "authorizes": [],
+  "baselineRevision": "8c47a52fc8f241f76da9ccb5d936b0fafe807f0f",
+  "candidateRevision": "888ba9cc898915e3f0dbbc1f1309d51956dc1c5b",
+  "changeId": "08-05-current-q8-acceptance-closeout",
+  "changedPaths": [
+    ".agents/skills/authorization/scripts/conformance_preflight.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/current_router.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/worker_orchestrator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_operator_support.py",
+    ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+    ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
+    ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+    ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+    "scripts/ci/verify_base_clean.ps1",
+    "scripts/quick_dev/run_candidate_bound_metric.py",
+    "scripts/sc/config/skill-package-validator-capability.v1.json",
+    "scripts/sc/config/skill-package-validator-source.v1.json",
+    "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+    "scripts/sc/skill_package_replay.py",
+    "scripts/sc/skill_replay_runtime.py",
+    "scripts/vdd/probe_real_worker.py"
+  ],
+  "codeReviewDomain": "toolchain",
+  "codeReviewPolicyPath": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+  "commands": [
+    {
+      "id": "current-q8-read-only",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "-c",
+        "import json,sys; from pathlib import Path; sys.path.insert(0,'.agents/skills/run-refactor-implementation-acceptance/scripts'); from current_quick_dev_handoff import verify_current_handoff; r=json.loads(Path('compact-vdd-projection-request.815c032b.v1.json').read_text(encoding='utf-8')); v=verify_current_handoff(Path('.').resolve(),r['currentQuickDev']); print(json.dumps({'status':v['status'],'predicate':v['predicate'],'slice_count':len(v['predecessors']),'runtime_tuple_count':len(v['runtime_closure_tuples']),'authorizes':v['authorizes']},sort_keys=True))"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "acceptance-package-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "scripts/sc/skill_package_replay.py",
+        "validate-package",
+        "--target",
+        ".agents/skills/run-refactor-implementation-acceptance",
+        "--capability",
+        "scripts/sc/config/skill-package-validator-capability.v1.json"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "acceptance-closeout-regressions",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "shell": false
+    }
+  ],
+  "currentQuickDev": {
+    "baseCommit": "94870bbf087254e5e78fbb7752da42a4c56c3174",
+    "receipt": {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261011/current-run-q8-successor-d867-r2/implementation-complete-result.v2.json",
+      "sha256": "sha256:cc6d5fd3abf2c3513a7751cbce3bd4deae5fe5d216402eb7f96a241480181f9c"
+    },
+    "semanticPlan": {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f"
+    },
+    "snapshotRoots": [
+      {
+        "content_sha256": "sha256:db58e8b0cb9cbdfb96aef031515dc101a09b7d31d76165b24a340e20c4015b05",
+        "inclusion_reason": "P1 replay production owner",
+        "repository_relative_posix_paths": [
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/skill_replay_runtime.py"
+        ],
+        "root_kind": "candidate_tree",
+        "source_commit": "d867db6256308e19cad8595df1befa5babfcc6f0"
+      },
+      {
+        "content_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "inclusion_reason": "current semantic execution plan",
+        "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+        "root_kind": "plan",
+        "source_commit": "d867db6256308e19cad8595df1befa5babfcc6f0"
+      },
+      {
+        "content_sha256": "sha256:4b8720b0560efc49628517ade01a15be2928533c31614f7efaf1f0e50d7684cb",
+        "inclusion_reason": "Quick Dev execution contract",
+        "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter",
+        "root_kind": "contract",
+        "source_commit": "d867db6256308e19cad8595df1befa5babfcc6f0"
+      },
+      {
+        "content_sha256": "sha256:a2ab2b06df906371b38d7e297d49ea9e2b3439cffcb087ab305cce62e5aa50a2",
+        "inclusion_reason": "P1 replay behavior selector",
+        "repository_relative_posix_path": "logs/08-05-real-skill-replay/review-repair-20261011/current-run-s44-successor-d867-r2/descriptors",
+        "root_kind": "descriptor",
+        "source_commit": "d867db6256308e19cad8595df1befa5babfcc6f0"
+      },
+      {
+        "content_sha256": "sha256:52e9897cf234e5ec87cac104baba3edea486f46a92f9db808ae89e6ec78b3285",
+        "inclusion_reason": "canonical stable-candidate matrix",
+        "repository_relative_posix_paths": [
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+          "scripts/sc/tests/tc_d1_cer/conftest.py"
+        ],
+        "root_kind": "fixture",
+        "source_commit": "d867db6256308e19cad8595df1befa5babfcc6f0"
+      },
+      {
+        "content_sha256": "sha256:e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc",
+        "inclusion_reason": "canonical requirement authority",
+        "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+        "root_kind": "source",
+        "source_commit": "d867db6256308e19cad8595df1befa5babfcc6f0"
+      },
+      {
+        "content_sha256": "sha256:7c2f654dede96cb178f8d4c09aabf249d4fdd1d304440aa3573ccf715859e718",
+        "inclusion_reason": "independent current stage judge",
+        "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+        "root_kind": "validator_judge",
+        "source_commit": "d867db6256308e19cad8595df1befa5babfcc6f0"
+      },
+      {
+        "content_sha256": "sha256:037011fe8df56ef6df55fb5e98fb21c602a3a48eb8f406790cedf8f58c186499",
+        "inclusion_reason": "append-only P1 current run state",
+        "repository_relative_posix_path": "logs/08-05-real-skill-replay/review-repair-20261011/current-run-s44-successor-d867-r2",
+        "root_kind": "plan_state_transition",
+        "source_commit": "d867db6256308e19cad8595df1befa5babfcc6f0"
+      }
+    ],
+    "sourceCommit": "d867db6256308e19cad8595df1befa5babfcc6f0"
+  },
+  "implementationReceiptHash": "sha256:cc6d5fd3abf2c3513a7751cbce3bd4deae5fe5d216402eb7f96a241480181f9c",
+  "implementationReceiptPath": "logs/08-05-real-skill-replay/review-repair-20261011/current-run-q8-successor-d867-r2/implementation-complete-result.v2.json",
+  "knowledgeContextPath": "knowledge-context.refactor-acceptance-30fd26ed.v1.json",
+  "runId": "acceptance-08-05-888ba9cc",
+  "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
+  "targetPlan": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "targetPlanPaths": [
+    "repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/acceptances.v1.json",
+    "repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json"
+  ]
+}

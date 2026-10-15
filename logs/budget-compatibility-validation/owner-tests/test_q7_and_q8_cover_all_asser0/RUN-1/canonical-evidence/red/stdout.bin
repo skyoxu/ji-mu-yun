@@ -1,0 +1,21 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+__________________________________ test_one ___________________________________
+
+    @pytest.mark.cer_assertion('AS-1', 'AS-2')
+    def test_one():
+     root=Path(__file__).resolve().parents[1]
+     value=(root/'candidate.txt').read_text(encoding='utf-8').strip()
+     if value!='green': print('FAILURE_ID:EXPECTED-RED')
+>    assert value=='green'
+E    AssertionError: assert 'red' == 'green'
+E      
+E      - green
+E      + red
+
+tests\test_one.py:8: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:EXPECTED-RED
+=========================== short test summary info ===========================
+FAILED tests/test_one.py::test_one - AssertionError: assert 'red' == 'green'
+1 failed in 0.17s

@@ -4,7 +4,9 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
-from runtime_evidence import hash_refs, load_json, sha256_value, sha256_bytes
+from runtime_evidence import load_json, sha256_value, sha256_bytes
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts/quick_dev"))
+from approved_budget_replay import hash_refs
 
 SCHEMA = "quick-dev.behavior-route.v1"
 

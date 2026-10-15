@@ -1,0 +1,30 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+________________________________ test_value_1 _________________________________
+
+    @pytest.mark.cer_assertion('AS-1')
+    def test_value_1():
+     actual=value(1)
+     if actual!=1: print('FAILURE_ID:FAIL-1')
+>    assert actual==1
+E    assert -10001 == 1
+
+tests\test_one.py:7: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAIL-1
+________________________________ test_value_2 _________________________________
+
+    @pytest.mark.cer_assertion('AS-2')
+    def test_value_2():
+     actual=value(2)
+     if actual!=2: print('FAILURE_ID:FAIL-2')
+>    assert actual==2
+E    assert -20002 == 2
+
+tests\test_one.py:12: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAIL-2
+=========================== short test summary info ===========================
+FAILED tests/test_one.py::test_value_1 - assert -10001 == 1
+FAILED tests/test_one.py::test_value_2 - assert -20002 == 2
+2 failed in 0.23s

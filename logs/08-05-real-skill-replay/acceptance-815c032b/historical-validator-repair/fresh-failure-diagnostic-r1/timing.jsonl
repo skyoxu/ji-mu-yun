@@ -1,0 +1,69 @@
+{"authorizes": [], "monotonic_seconds": 545099.5966194, "operation": "validate_package", "phase": "started"}
+{"authorizes": [], "monotonic_seconds": 545099.73678, "operation": "historical_dependency_paths", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 1.4036171999759972, "monotonic_seconds": 545101.1404469, "operation": "historical_dependency_paths", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545101.1410628, "operation": "materialize_git", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.6302781999111176, "monotonic_seconds": 545101.7712857, "operation": "materialize_git", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545101.828499, "operation": "verify_trust", "phase": "started"}
+{"authorizes": [], "monotonic_seconds": 545101.9111779, "operation": "dependency_closure", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 1.2465721000917256, "monotonic_seconds": 545103.1577632, "operation": "dependency_closure", "phase": "completed"}
+{"authorizes": [], "elapsed_seconds": 1.6517522999783978, "monotonic_seconds": 545103.4801456, "operation": "verify_trust", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545103.7394706, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.8125270999735221, "monotonic_seconds": 545104.552007, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545105.490754, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.7741054999642074, "monotonic_seconds": 545106.2647738, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545106.322937, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.6617720000213012, "monotonic_seconds": 545106.9846837, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545107.1716173, "operation": "verify_trust", "phase": "started"}
+{"authorizes": [], "monotonic_seconds": 545107.237999, "operation": "dependency_closure", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.26279469998553395, "monotonic_seconds": 545107.5007725, "operation": "dependency_closure", "phase": "completed"}
+{"authorizes": [], "elapsed_seconds": 0.6517507000826299, "monotonic_seconds": 545107.8233745, "operation": "verify_trust", "phase": "completed"}
+{"authorizes": [], "elapsed_seconds": 8.334740899968892, "monotonic_seconds": 545107.9308796, "operation": "validate_package", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545107.9312964, "operation": "snapshot", "phase": "started"}
+{"authorizes": [], "monotonic_seconds": 545107.9329021, "operation": "dependency_closure", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 8.668633900000714, "monotonic_seconds": 545116.6017454, "operation": "dependency_closure", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545117.6399093, "operation": "historical_dependency_paths", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.5222532000625506, "monotonic_seconds": 545118.1622685, "operation": "historical_dependency_paths", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545118.1629757, "operation": "materialize_git", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.5799045000458136, "monotonic_seconds": 545118.7427765, "operation": "materialize_git", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545118.7959082, "operation": "verify_trust", "phase": "started"}
+{"authorizes": [], "monotonic_seconds": 545118.8837204, "operation": "dependency_closure", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 1.1028384000528604, "monotonic_seconds": 545119.9864128, "operation": "dependency_closure", "phase": "completed"}
+{"authorizes": [], "elapsed_seconds": 1.5195962000871077, "monotonic_seconds": 545120.3156483, "operation": "verify_trust", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545120.3845709, "operation": "verify_trust", "phase": "started"}
+{"authorizes": [], "monotonic_seconds": 545120.4418781, "operation": "dependency_closure", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.27174570003990084, "monotonic_seconds": 545120.713519, "operation": "dependency_closure", "phase": "completed"}
+{"authorizes": [], "elapsed_seconds": 0.6242861000355333, "monotonic_seconds": 545121.008792, "operation": "verify_trust", "phase": "completed"}
+{"authorizes": [], "elapsed_seconds": 13.205220300005749, "monotonic_seconds": 545121.1366842, "operation": "snapshot", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545122.4660872, "operation": "dependency_closure", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 2.8157869999995455, "monotonic_seconds": 545125.2818896, "operation": "dependency_closure", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545125.2874527, "operation": "route_transitions", "phase": "started"}
+{"authorizes": [], "monotonic_seconds": 545125.3530692, "operation": "materialize_git", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 6.441623899969272, "monotonic_seconds": 545131.7947996, "operation": "materialize_git", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545138.8842574, "operation": "dependency_closure", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 13.413942700019106, "monotonic_seconds": 545152.2982984, "operation": "dependency_closure", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545152.3143723, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.40890729997772723, "monotonic_seconds": 545152.7232577, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545152.911826, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.30639120005071163, "monotonic_seconds": 545153.2182079, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545153.2346115, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.6666952999075875, "monotonic_seconds": 545153.9013544, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545154.0156687, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.6896831999765709, "monotonic_seconds": 545154.7053461, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545154.7225926, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.6587208999553695, "monotonic_seconds": 545155.381363, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545155.5100583, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.398907000082545, "monotonic_seconds": 545155.9088602, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545156.1953251, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.32719920005183667, "monotonic_seconds": 545156.5226212, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545156.6165739, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.6521584000438452, "monotonic_seconds": 545157.2686473, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545157.4475911, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.6088033999549225, "monotonic_seconds": 545158.0564542, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545158.0753168, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.3863738999934867, "monotonic_seconds": 545158.4616349, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545158.6599022, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.2978321999544278, "monotonic_seconds": 545158.9577646, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545158.973818, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 0.5169982000952587, "monotonic_seconds": 545159.4908214, "operation": "capture_process", "phase": "completed"}
+{"authorizes": [], "monotonic_seconds": 545159.598036, "operation": "capture_process", "phase": "started"}
+{"authorizes": [], "elapsed_seconds": 12.943997700000182, "monotonic_seconds": 545172.5421312, "operation": "capture_process", "phase": "completed"}

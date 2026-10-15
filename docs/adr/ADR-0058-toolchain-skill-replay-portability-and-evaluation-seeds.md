@@ -463,3 +463,21 @@ the remaining budget or blocking cause only after that observation. Preserve
 all prior failures and reusable completed evidence without rebinding it.
 This change grants no Trust Approval or Acceptance authority. C3 stays OPEN;
 every derived record retains explicit authorizes=[].
+
+### 2026-10-15 Read-only transfer across the approved budget transition
+
+Successful original slice proofs may cross the exact 1b1bf3d8 budget-only
+transition without rerunning tests. Q8 requires an explicit typed per-predecessor
+compatibility binding and preserves its original run root, result hash, selector,
+process output, snapshot and verdict. Before/after budget epochs remain distinct;
+the six newly executed threefold-budget successors keep their current identities.
+
+The owner adapter pins the two budget file pairs, their append-only ADR update,
+and its two read-only adapter blobs. Only those historical bytes may be reconstructed for old proof checks;
+all other contract paths and bytes, outputs, assertions and cases remain exact.
+New Q8 runtime roots bind the actual current checkout. Compatibility is confined
+to the predecessor's read-only Q8 context, resets on exit, and cannot affect stage
+execution or authorize a failed, missing, timed-out or malformed proof. An extra
+semantic change or unapproved adapter change fails closed. Original receipts are
+never rewritten, and historical failures remain failures. The Acceptance-owned
+final predicate still decides Acceptance independently; C3 remains OPEN.
