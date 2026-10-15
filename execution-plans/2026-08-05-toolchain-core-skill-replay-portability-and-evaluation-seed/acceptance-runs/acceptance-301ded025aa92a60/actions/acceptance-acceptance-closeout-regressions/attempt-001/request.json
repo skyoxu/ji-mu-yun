@@ -1,0 +1,22 @@
+{
+  "actionId": "acceptance-acceptance-closeout-regressions",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "acceptance-closeout-regressions",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:5d7da9281452ae34cd926f4ee87c591b42bb5bc128558c62f952b12442f17fdb",
+    "knowledgeContextHash": "sha256:c16bf89788f73a5a70ab3c3ca99882e45a4254c5b1109a51d7b62a467f9db32a",
+    "runInputHash": "sha256:ebf8fc822dabb648792c8aa0e0dffbacb8cfd5d423568516a0dc61bbe3390782",
+    "skillInputBindingHash": "sha256:9b41fa438c3eddd0072d0068ae8487289f05444617102f9570bf3db70a3ff9f9",
+    "skillInputContextHash": "sha256:70e1fd3fe34b775cd20e00846c61590b3844a2c7bc35074a5c37fc7a2660fe19"
+  },
+  "ownerToken": "owner-acceptance-301ded025aa92a60",
+  "processId": 9512,
+  "recordedUtc": "2026-10-15T08:56:26.010442Z",
+  "runId": "acceptance-301ded025aa92a60",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 7
+}

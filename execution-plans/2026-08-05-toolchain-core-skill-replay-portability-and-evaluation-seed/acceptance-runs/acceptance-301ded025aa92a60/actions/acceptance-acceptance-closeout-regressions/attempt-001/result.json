@@ -1,0 +1,87 @@
+{
+  "authorizes": [],
+  "commandId": "acceptance-closeout-regressions",
+  "commandRegistryHash": "sha256:f9c12a036568832c4f12b3af286e9479b93e292c101919c90ced24df3ea5dc6c",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py"
+    ],
+    "commandId": "acceptance-closeout-regressions",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 900
+  },
+  "invocationHash": "sha256:c0d1b6d10bb92dc65e1a1b78ec6faaf9b35b79f69a2f0463f4b6afc5afceffcb",
+  "processResult": {
+    "commandId": "acceptance-closeout-regressions",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": ".....................                                                    [100%]\r\n21 passed in 238.47s (0:03:58)\r\n",
+    "stdoutSha256": "sha256:97df1fe2b24d0dc712efb60fe19eb05ddfe936bcfd05b3c73d7714f3ba47f4c5"
+  },
+  "processResultHash": "sha256:951f4307b86a0faf322345e66a58b3e247b67bba85b43462ffa2fd8fde3cb183",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

@@ -1,0 +1,64 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:33d277763fd0fe6ffb9801bfcfbdf4e9bac2292489c9293c6257d076f134c51b"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:28185c582dd51a1c8779e360e55947b12e98885645ae030c48d1d056fbcaafd1"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:6bbbb1bce60b310eb305a4faf85622e860ecef9987749210e6e76736ab72a3ec"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".gitattributes",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:1429421a280d8206eff8e9c9d4df4ce22a58dcdb80da337f795850dbb82e3fd6"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/ci/verify_base_clean.ps1",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:e6476a537950aafc14dbb0f26099a436e185ab6a96cd24ef58b27d02a9e2ffef"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}
