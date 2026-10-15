@@ -154,11 +154,11 @@ Do not claim completion until the selected profile's required artifacts exist, e
 Use this repository-owned command for Skill package validation:
 
 ```text
-py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/vdd-execution-plan --capability scripts/sc/config/skill-package-validator-capability.v1.json
+py -3 -B .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan
 ```
 
 
-For Skill maintenance also run `py -3 .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan` and its unit tests.
+For Skill maintenance also run `py -3 -B -m unittest discover -s .agents/skills/vdd-execution-plan/scripts/tests -p test_validate_skill_contract.py`.
 
 An explicit `--runtime-red-intent <failure-intent-id>` on handoff repair binds
 a reviewed executable assertion to an expected-red role without changing its
