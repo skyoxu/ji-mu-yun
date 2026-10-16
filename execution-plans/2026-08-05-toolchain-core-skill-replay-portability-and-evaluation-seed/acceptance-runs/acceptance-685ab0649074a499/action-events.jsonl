@@ -1,0 +1,3 @@
+{"actionId": "acceptance-current-q8-read-only", "authorizes": [], "commandId": "current-q8-read-only", "recordedUtc": "2026-10-16T07:35:36.427784Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 1, "status": "completed"}
+{"actionId": "acceptance-acceptance-package-validation", "authorizes": [], "commandId": "acceptance-package-validation", "recordedUtc": "2026-10-16T07:36:06.664461Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 2, "status": "completed"}
+{"actionId": "acceptance-acceptance-closeout-regressions", "authorizes": [], "commandId": "acceptance-closeout-regressions", "recordedUtc": "2026-10-16T07:39:34.017483Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 3, "status": "completed"}
