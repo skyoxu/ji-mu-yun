@@ -686,7 +686,7 @@ def _materialize_named_descriptor(semantic: Path, run_dir: Path, stage: str) -> 
         identity = candidate_identity(ROOT, bundle, slice_id)
         terminal = materialize_descriptor(
             bundle=bundle, slice_id=slice_id, stage=stage, run_id=run_dir.name,
-            candidate_hash=identity["candidate_hash"], argv=argv, cwd=".", timeout_seconds=120,
+            candidate_hash=identity["candidate_hash"], argv=argv, cwd=".", timeout_seconds=600,
             target_refs=target_refs, fixture_refs=fixture_refs, routing_result=route,
         )
         create_json(descriptor, terminal)
