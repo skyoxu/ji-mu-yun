@@ -91,3 +91,47 @@ The pre-freeze GDD lane may use one selected game-type guide whose ID, path, and
 - `docs/workflows/prototype-lane-playbook.md`
 - `docs/workflows/prototype-tdd.md`
 - `docs/workflows/phase-b-agf-godogen-absorption.md`
+
+## Workspace restore recovery checks
+
+`RouteRecoveryAuthorityResolver` rejects empty or malformed route artifacts,
+changed persisted prompts, stale frozen contracts, active sessions without a
+current goal, and needs-fix sessions without current diagnostics. Contract
+validation reuses `PrototypeContractFreezeService` so restore and normal
+contract consumption share source-hash semantics.
+
+Restore requires an account/project-matching isolation descriptor and applies
+ACLs to the restored tree. It verifies all objects before the directory switch
+and again before committing Published; parent-directory SDDL alone is not
+publication evidence. See ADR-0061 and the recovery regression tests.
+
+## Ordinary project Runner registration and current business acceptance
+
+ADR-0035/0036/0038/0061 also govern the ordinary production CreateProject path.
+The host injects WindowsProjectRunnerProvisioner, registers a dedicated standard
+local Windows user with a platform-user vault credential, protects the account
+namespace and registration marker, and verifies the Project root and seeded child
+ACLs before returning creation success. Failure compensates newly created native
+resources and the new Project/workspace; retained soft-deleted Projects keep their
+registration. Restart uses the same platform Windows identity and persisted marker.
+
+The read-only business acceptance command consumes existing authenticated workflow,
+contract and UI readbacks. It does not become another state authority or execute
+routes. Final UI claims require the existing complete capability ledger and current
+seven source bindings, including a successful fresh validation sidecar. Missing
+producers or sources block acceptance. Fixture/native CI is distinct from a live
+model/Godot project acceptance and from production host deployment verification.
+
+See `docs/workflows/phase-service-runner-and-business-acceptance.md` for behavior
+and `docs/workflows/phase-service-deferred-requirements-2026-10-02.md` for deferred
+service extensions under the single-maintainer operating model.
+
+## Completion-artifact recovery during final validation
+
+Prototype completion files may precede final Godot acceptance. Progress readback
+must not recover success while the creation queue still owns that project.
+Recovery is limited to started inactive creation runs, obtains a nonblocking
+same-project queue lease, and re-reads metadata under that lease. Current terminal
+results and execution evidence take precedence. A busy project, exhausted queue
+capacity, or waiting execution defers recovery without delaying the readback.
+Queued runs remain queued. See ADR-0036 and the controlled final-smoke regression.

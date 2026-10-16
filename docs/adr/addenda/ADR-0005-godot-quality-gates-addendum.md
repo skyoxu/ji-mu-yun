@@ -29,3 +29,63 @@ scope: Windows-only CI, Godot 4.5 (.NET)
 
 - CI 中可看到：覆盖率摘要 + GdUnit4 pass/fail + 对应 `logs/**` 工件。
 
+## CI process-budget implementation clarification (2026-09-30)
+
+The existing Windows workflow declares `CI_DOTNET_STAGE_TIMEOUT_MS=4200000`.
+The Python driver and .NET runner must consume that total restore/test budget,
+with a bounded wrapper margin for cleanup and terminal-summary persistence.
+Without an override, the runner retains its original 900-second restore and
+test bounds. Invalid non-positive or non-integer overrides fail closed.
+
+The Godot wrapper budget must cover its existing internal attempt bounds:
+optional build (600 seconds), first run (300 seconds), prewarm (120 seconds),
+retry (300 seconds), and a bounded cleanup/summary margin. This changes neither
+the gate set nor any acceptance or coverage threshold.
+
+`scripts/python/ci_process.py` persists subprocess output under `logs/ci/**`
+while the command runs. On timeout it terminates the process tree before the
+next gate starts and retains exit code 124. Windows CI runs real subprocess
+cleanup regressions and archives `logs/unit/**` with the CI diagnostic package.
+Timeouts and non-zero test exits remain hard failures; incomplete tests cannot
+be reported as passed.
+
+
+## CI build reuse and bounded diagnosis (2026-10-01)
+
+Windows Quality Gate restores and builds Debug once before its regression and
+full-suite stages. Both stages reuse that same validated configuration; standalone
+Python callers still restore/build by default. Coverage and every test remain enabled.
+The Godot runtime self-check and its existing retry remain hard gates on a successful
+.NET stage, but do not repeat the already completed solution build.
+
+The workflow opts into fail-fast after a hard .NET failure. Unexecuted downstream
+gates are recorded as `not_run`, never passed; the whole pipeline remains failed.
+VSTest uses a 10-minute per-test hang diagnostic with dump type `none`: a hanging
+host is terminated, its sequence/TRX is archived, and the run fails. This bound is
+a diagnostic ceiling, not a relaxed product deadline or a replacement for tests.
+
+Subprocess wrappers print bounded heartbeats containing only elapsed time and
+output byte counts. Per-process timing JSON and all project TRX/hang sequences
+remain under `logs/**`; command arguments and raw child output are not streamed
+by the heartbeat. Existing total stage budgets remain unchanged.
+
+
+### 2026-10-01: preserve source fixtures without CI tool payloads
+
+Run 36849950332 completed all 1846 PhaseA and 44 Core tests. Its .NET stage took 2821.756 seconds; the three GDD source-seeding test classes accounted for 2563.1 summed test seconds. Those fixtures repeatedly seeded the CI checkout, including generated Godot downloads and caches. Reuse a source projection per test class, retaining real source/template bytes and custom mutable test repositories while excluding generated root tool/cache payloads. Keep conservative two-collection scheduling and the full covered suite.
+
+Browser fixture subprocesses must drain both pipes while running, use asynchronous waits, and terminate/drain timed-out child trees. A 30-second fixture process budget covers Node startup; it does not change product deadlines. S15 teardown uses bounded asynchronous deletion after child-server exit and does not clear other tests' SQLite pools. Persistent cleanup locks and subprocess timeouts remain failures.
+
+
+### 2026-10-01: build the separate Godot runtime project directly
+
+`Game.sln` contains the pure .NET platform/core projects, while the Godot runtime lives in `GodotGame.csproj`. Reusing the former does not build the latter. Windows Quality Gate explicitly restores/builds the Godot project in Debug before prewarm and self-check, then reuses that output. This preserves the runtime compilation gate without invoking the Godot editor's previously timed-out 600-second `--build-solutions` path. The covered .NET suite and runtime self-check remain required.
+
+
+### 2026-10-01: reject missing critical autoloads before the full suite
+
+Run 36864053647 executed all 1846 PhaseA and 44 Core tests successfully; fixture regression passed 192/192 and the pipeline step fell from 80m22s to 32m40s. Its runtime result nevertheless reported zero of six ports ready while the old parser marked any readable JSON as successful. A runtime result must now report all six expected critical ports as literal `true`, no top-level error, and process exit zero. Optional UI probes remain best-effort. The workflow verifies that same runtime gate after the direct Godot build, before expensive .NET regression, and again at the existing pipeline boundary. This prevents a missing runtime from producing a green gate or consuming a full test run before detection.
+
+Runtime preflight is routed through `ci_pipeline.py runtime`, the existing approved CI driver. Workflow direct-script allowlists and gate-bundle enforcement remain unchanged. This preflight writes a distinct runtime-only receipt and cannot claim complete pipeline success.
+
+Both runtime preflight and the post-test runtime gate require a successful current process exit and an explicit successful receipt. A stale successful preflight receipt cannot override a later producer timeout or failure. The full-suite parser records the wrapper exit code and marks the runtime result failed when either check fails.

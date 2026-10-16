@@ -13,4 +13,5 @@ public sealed record ProjectPackageResult(
     long SizeBytes,
     int IncludedFileCount,
     IReadOnlyList<ArtifactSnapshot> Artifacts,
-    string? FailureCode = null);
+    string? FailureCode = null,
+    string? SnapshotId = null);

@@ -181,3 +181,23 @@ nextAction: use-successor-or-create-fresh-run
 - 新 run 必须使用新 review ID 和新 Artifact View snapshot。旧 `r4c` 只能作为历史证据，不得重启。
 - 本文不授予 plan acceptance、implementation acceptance、handoff、commit、release 或 done authority。
 
+
+## Recovery Metadata Supplement (2026-09-30)
+
+Added for recovery-document schema completeness. The original narrative,
+conclusions, and evidence above remain unchanged. This supplement does not
+create a new acceptance result or a historical candidate binding.
+
+- Branch: n/a - the original narrative did not capture its decision-time branch
+- Git Head: n/a - the original narrative did not capture its decision-time commit; this metadata supplement does not infer a historical binding
+- Why now: Repeated context-window failures exposed conflicting segment prompts, cache identity collision, and lifecycle re-entry confusion.
+- Context: See sections 1 through 3 above.
+- Decision: Use parent-owned completeness, segment-only child prompts, model-bound caches, and append-only lifecycle closure.
+- Consequences: Keep artifactCoverage=all; preserve historical cache and failure evidence; new review requires a new run and snapshot.
+- Recovery impact: See Operational Procedure; seal inactive failed runs and use a fresh session for main-context overflow.
+- Validation: Section 7 records 198 Bootstrap tests and the other checks; this supplement does not rerun or rebind those historical results.
+- Related execution plans: `execution-plans/2026-08-07-bootstrap-review-operability-hardening/`
+- Related task id(s): n/a - no stable task identifier was captured in the original narrative
+- Related run id: broh-acceptance-20260809-r4 (original Related run field)
+- Related latest.json: n/a - no canonical latest.json pointer was captured in the original narrative
+- Related pipeline artifacts: `logs/reviews/broh-acceptance-20260809-r4`

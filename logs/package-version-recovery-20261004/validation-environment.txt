@@ -1,0 +1,3 @@
+Local environment: Linux; Windows and .NET SDK unavailable.
+Native compilation, registration, ACL, activation and platform regressions are validated by the existing Windows CI.
+No live backend/model or production host was used.

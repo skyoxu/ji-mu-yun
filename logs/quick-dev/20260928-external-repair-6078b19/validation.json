@@ -1,0 +1,24 @@
+{
+  "base_commit": "c39ee9067b8079fd232f1d58957ba92d6138a337",
+  "verified_commit": "6078b19b",
+  "branch": "implementation/8-24-identity-isolation-recovery-v2",
+  "build": {
+    "command": "dotnet build PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj --no-restore",
+    "passed": true,
+    "warnings": 0,
+    "errors": 0
+  },
+  "repair_boundaries": {"passed": 22, "failed": 0, "trx": "../20260928-external-repair-windows/repair-boundaries-r7.trx"},
+  "s53": {"passed": 11, "failed": 0, "trx": "../20260928-external-repair-windows/s53-r4.trx"},
+  "s54": {"passed": 13, "failed": 0, "runner_account": "phase-r-a-p", "trx": "../20260928-external-repair-windows/s54-r1.trx"},
+  "affected_restore": {
+    "passed": 106,
+    "failed": 9,
+    "trx": "../20260928-external-repair-windows/restore-regression-r1.trx",
+    "failure_class": "managed runner credential is unavailable",
+    "credential_policy": "no substitution or skip"
+  },
+  "quick_dev_regenerated": false,
+  "q8": false,
+  "implementation_complete": false
+}

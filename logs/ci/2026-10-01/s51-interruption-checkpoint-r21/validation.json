@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "ci-repair-validation",
+  "status": "windows_validation_pending",
+  "source_head": "2cea24911ef5e7ad3d7083f27597a0a034fb0a95",
+  "adr_refs": [
+    "ADR-0061"
+  ],
+  "failure": {
+    "run_id": 36891308240,
+    "job_id": 110467339572,
+    "test": "S51BoundaryTests.O_E9499880E6EF",
+    "targeted_passed": 5,
+    "targeted_failed": 1,
+    "full_suite_run": false,
+    "ci_logs_artifact_id": 11177146860,
+    "ci_logs_sha256": "baa1b19ae1e210a0caa39ca141ff5e0f4f534064fab86bb3d237ccf0e2499d66",
+    "trx_sha256": "d15b72bf7748ac9613828ebf76d034ca06997ea280eca6fca3a955c6697166e0"
+  },
+  "analysis": {
+    "observed": "Worker exited or no staging event won before interruption; child output was not preserved.",
+    "identified_race": "Unpaused staging relies on FileSystemWatcher delivery and process liveness; publication can finish first.",
+    "old_child_exit_reason": "not recoverable from the archived artifacts"
+  },
+  "repair": {
+    "pause": "Existing child-scoped PHASEA_RESTORE_FAULT_POINT=staging-written",
+    "handshake": "Poll and parse the persisted checkpoint; bind its attempt ID to the SQLite Staging row; verify real staged snapshot files before killing the process tree.",
+    "recovery": "Require Quarantined or Failed plus zero remaining staging files.",
+    "diagnostics": "Drain both child pipes; persist exit/status/checkpoint/child TRX under logs/ci; kill and drain descendants on all paths."
+  },
+  "scope": {
+    "test_facts_unchanged": 4,
+    "production_changed": false,
+    "workflow_changed": false,
+    "gate_policy_changed": false,
+    "deadline_seconds": 30,
+    "cleanup_deadline_seconds": 5,
+    "historical_evidence_rebound": false
+  },
+  "validation": {
+    "windows_targeted": "pending",
+    "windows_full": "pending",
+    "main_run": "pending"
+  }
+}

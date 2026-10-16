@@ -17,7 +17,9 @@ public sealed class ProjectCreationService
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly ProjectCreationConcurrencyLimiter _creationConcurrencyLimiter;
     private readonly IProjectGameTypeMatchService _gameTypeMatchService;
+    private readonly WorkspaceTreeDeletionService _workspaceDeletion;
     private readonly ILogger<ProjectCreationService>? _logger;
+    private readonly IProjectRunnerProvisioner? _runnerProvisioner;
 
     public ProjectCreationService(
         PhaseAMetadataStore metadataStore,
@@ -35,7 +37,9 @@ public sealed class ProjectCreationService
         PrototypeRouteStateWriter? routeStateWriter = null,
         ProjectCreationConcurrencyLimiter? creationConcurrencyLimiter = null,
         IProjectGameTypeMatchService? gameTypeMatchService = null,
-        ILogger<ProjectCreationService>? logger = null)
+        ILogger<ProjectCreationService>? logger = null,
+        IProjectRunnerProvisioner? runnerProvisioner = null,
+        WorkspaceTreeDeletionService? workspaceDeletion = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -45,6 +49,8 @@ public sealed class ProjectCreationService
         _creationConcurrencyLimiter = creationConcurrencyLimiter ?? new ProjectCreationConcurrencyLimiter();
         _gameTypeMatchService = gameTypeMatchService ?? ProjectGameTypeMatchService.Offline(options);
         _logger = logger;
+        _runnerProvisioner = runnerProvisioner;
+        _workspaceDeletion = workspaceDeletion ?? new WorkspaceTreeDeletionService(options.HostedWorkspaceRoot);
     }
 
     public async Task<ProjectCreationResult> CreateProjectAsync(
@@ -78,7 +84,7 @@ public sealed class ProjectCreationService
             return ProjectCreationResult.Failure("unknown_project_rule");
         }
 
-        var concurrency = await _creationConcurrencyLimiter.TryAcquireAsync(accountId, cancellationToken);
+        var concurrency = await _creationConcurrencyLimiter.AcquireAsync(accountId, cancellationToken);
         if (concurrency.Lease is null)
         {
             return ProjectCreationResult.Failure(concurrency.FailureCode ?? "project_creation_concurrency_limit_exceeded");
@@ -110,8 +116,11 @@ public sealed class ProjectCreationService
             return result;
         }
 
+        var workspaceAlreadyExisted = Directory.Exists(layout.RootPath);
         try
         {
+            PhaseA.Platform.Security.RunnerIsolationPolicy.RequireNoReparsePoint(
+                Path.GetPathRoot(layout.RootPath)!, layout.RootPath);
             Directory.CreateDirectory(layout.RepoPath);
             Directory.CreateDirectory(layout.RuntimePath);
             Directory.CreateDirectory(layout.MetaPath);
@@ -126,6 +135,9 @@ public sealed class ProjectCreationService
                 command.TemplateRuleId,
                 result.WorkspaceId ?? string.Empty,
                 layout.MetaPath);
+            // ADR-0035/0061: the production host supplies the provisioner. Direct domain
+            // fixtures may omit it, but such workspaces cannot dispatch an isolated Runner.
+            _runnerProvisioner?.Provision(accountId, projectId, layout);
         }
         catch (Exception ex)
         {
@@ -137,8 +149,14 @@ public sealed class ProjectCreationService
                 command.GameTypeSource,
                 command.TemplateRuleId,
                 command.WorkspaceRootPath,
-                $"Project workspace initialization failed before Chapter 2 bootstrap could start. {ex.GetType().Name}: {ex.Message}"), cancellationToken);
-            await _metadataStore.DeleteProjectAsync(projectId, cancellationToken);
+                $"Project workspace initialization failed before Chapter 2 bootstrap could start. {ex.GetType().Name}: {ex.Message}"), CancellationToken.None);
+            await _metadataStore.DeleteProjectAsync(projectId, CancellationToken.None);
+            if (!workspaceAlreadyExisted)
+            {
+                try { Directory.Delete(layout.RootPath, recursive: true); }
+                catch (Exception cleanupError) when (cleanupError is IOException or UnauthorizedAccessException)
+                { _logger?.LogWarning("Project workspace cleanup failed for {ProjectId}: {ErrorType}", projectId, cleanupError.GetType().Name); }
+            }
             return ProjectCreationResult.Failure("project_creation_failed");
         }
 
@@ -237,7 +255,22 @@ public sealed class ProjectCreationService
         }
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null || (!isAdmin && !string.Equals(project.AccountId, accountId, StringComparison.Ordinal)))
+        if (project is null)
+        {
+            // S20/AD-11: a repeated confirmed delete is an idempotent protected-cleanup request.
+            // The tombstone retains owner resolution after the normal project view is withdrawn.
+            var tombstone = (await _metadataStore.ListProjectDeleteTombstonesForAdminAsync(cancellationToken: cancellationToken))
+                .SingleOrDefault(item => item.ProjectId == projectId);
+            if (tombstone is null || (!isAdmin && !string.Equals(tombstone.AccountId, accountId, StringComparison.Ordinal)))
+            {
+                return ProjectDeletionResult.Failure("project_not_found");
+            }
+
+            await _metadataStore.SoftDeleteProjectAsync(projectId, cancellationToken);
+            return ProjectDeletionResult.Deleted(projectId);
+        }
+
+        if (!isAdmin && !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             return ProjectDeletionResult.Failure("project_not_found");
         }
@@ -249,25 +282,60 @@ public sealed class ProjectCreationService
             return ProjectDeletionResult.Failure("project_busy");
         }
 
-        await _metadataStore.DeleteProjectAsync(projectId, cancellationToken);
-        var warningCode = (string?)null;
-        if (Directory.Exists(project.WorkspaceRootPath))
+        await _metadataStore.SoftDeleteProjectAsync(projectId, cancellationToken);
+        return ProjectDeletionResult.Deleted(projectId);
+    }
+
+    public async Task<AdminProjectPurgeResult> PurgeProjectsAsync(
+        string adminAccountId,
+        IReadOnlyList<string> projectIds,
+        string confirmation,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(adminAccountId);
+        if (!string.Equals(confirmation, "PURGE-PROJECTS", StringComparison.Ordinal))
+            return new("rejected", [], projectIds.Count, 0, projectIds.Count);
+        var ids = projectIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal).ToArray();
+        if (ids.Length == 0 || ids.Length > 100)
+            return new("rejected", [], projectIds.Count, 0, projectIds.Count);
+
+        var items = new List<AdminProjectPurgeItem>(ids.Length);
+        foreach (var id in ids)
         {
             try
             {
-                Directory.Delete(project.WorkspaceRootPath, recursive: true);
+                await _metadataStore.PurgeProjectRecordsAsync(
+                    [id],
+                    target => _workspaceDeletion.Delete(target.AccountId, target.ProjectId, target.WorkspaceRootPath).Succeeded,
+                    cancellationToken);
+                items.Add(new AdminProjectPurgeItem(id, true, null, true, true));
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (InvalidOperationException ex) when (ex.Message is "project_busy" or "project_not_found" or "workspace_delete_failed" or "workspace_path_mismatch" or "workspace_root_reparse_point" or "workspace_delete_access_denied" or "workspace_delete_io_error")
             {
-                warningCode = "workspace_delete_failed";
-                _logger?.LogWarning(
-                    ex,
-                    "Project {ProjectId} was deleted from metadata, but workspace deletion failed for {WorkspaceRootPath}.",
-                    projectId,
-                    project.WorkspaceRootPath);
+                items.Add(new AdminProjectPurgeItem(id, false, ex.Message, false, false));
             }
         }
-
-        return ProjectDeletionResult.Deleted(projectId, warningCode);
+        var purged = items.Count(item => item.Succeeded);
+        var failed = items.Count - purged;
+        try
+        {
+            await _metadataStore.RecordAdminAccountAuditEventAsync(
+                adminAccountId,
+                "projects_purged",
+                null,
+                new Dictionary<string, string>
+                {
+                    ["project_count"] = ids.Length.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["purged_count"] = purged.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["failed_count"] = failed.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["workspace_failures"] = failed == 0 ? "none" : "cleanup_required"
+                },
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Failed to record project purge audit event.");
+        }
+        return new(failed == 0 ? "succeeded" : "partial", items, ids.Length, purged, failed);
     }
 }

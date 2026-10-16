@@ -57,6 +57,24 @@ def _worker_schema_findings(stage: str, value: Mapping[str, Any]) -> list[str]:
     return findings
 
 
+def _source_binding_findings(stage: str, value: Mapping[str, Any], payload: Mapping[str, Any]) -> list[str]:
+    if not stage.startswith("v1-"):
+        return []
+    source = payload.get("source")
+    expected = source.get("source_ref") if isinstance(source, Mapping) else None
+    if not isinstance(expected, str) or not expected:
+        return ["worker-input:source_ref"]
+    obligations = value.get("obligations")
+    if not isinstance(obligations, list):
+        return []
+    findings: list[str] = []
+    for index, obligation in enumerate(obligations):
+        refs = obligation.get("source_refs") if isinstance(obligation, Mapping) else None
+        if refs != [expected]:
+            findings.append(f"worker-output:obligations[{index}]:source_refs:must-equal:{expected}")
+    return findings
+
+
 def _backend_metadata(root: Path, *, injected: bool) -> tuple[str, str]:
     if injected:
         return "injected-worker-cache", "fixture"
@@ -212,7 +230,7 @@ def normative_invoke_worker(
                 prompt=prompt,
                 worker_cache=effective_worker_cache,
             )
-            findings = _worker_schema_findings(stage, raw)
+            findings = _worker_schema_findings(stage, raw) + _source_binding_findings(stage, raw, payload)
         except (ValueError, RuntimeError) as first_error:
             raw = None
             findings = [f"worker-call:{type(first_error).__name__}:{first_error}"]
@@ -239,7 +257,7 @@ def normative_invoke_worker(
                 prompt=repair_prompt,
                 worker_cache=effective_worker_cache,
             )
-            second_findings = _worker_schema_findings(stage, repaired)
+            second_findings = _worker_schema_findings(stage, repaired) + _source_binding_findings(stage, repaired, payload)
             second_fingerprint = sc.sha256_value({
                 "stage": stage,
                 "input_sha256": sc.sha256_value(payload),
@@ -470,11 +488,29 @@ def _resolved_atomic_recall_worker(*, root, out_dir, payload, prompt, worker_cac
         raw = receipt.get("result")
         if receipt.get("result_sha256") != sc.sha256_value(raw):
             raise ValueError("resolved atomic recall result hash mismatch")
+        # ADR-0041: an empty transport result is not an all-invented verdict.
+        # Retry once under a distinct identity, retaining both immutable receipts.
+        if (isinstance(raw, Mapping) and raw.get("supported_obligation_ids") == []
+                and raw.get("invented_obligation_ids") == []
+                and raw.get("source_gap_claims") == [] and payload.get("obligations")):
+            identity = {**identity, "retry": 1}
+            path = path.parent / (sc.sha256_value(identity).split(":")[-1] + ".json")
+            selected_path = path
+            repair_path = path.with_name(path.stem + "-schema-repair" + path.suffix)
+            cached = path.is_file()
+            raw = None
+            if cached:
+                receipt = json.loads(path.read_text(encoding="utf-8"))
+                if not isinstance(receipt, Mapping) or any(receipt.get(k) != v for k, v in identity.items()):
+                    raise ValueError("resolved atomic recall retry identity mismatch")
+                raw = receipt.get("result")
+                if receipt.get("result_sha256") != sc.sha256_value(raw):
+                    raise ValueError("resolved atomic recall retry result hash mismatch")
         # Keep the historical receipt, but never reuse a response which a
         # newer deterministic V4 domain rule proves contradictory.  Route it
         # through the normal one-shot schema-repair path below instead.
         from semantic_worker_v4_domain_patch import _domain_findings
-        if not isinstance(raw, Mapping) or _worker_schema_findings(stage, raw) or _domain_findings(stage, payload, raw):
+        if cached and (not isinstance(raw, Mapping) or _worker_schema_findings(stage, raw) or _domain_findings(stage, payload, raw)):
             cached = False
             repair_required = True
             selected_path = repair_path
@@ -542,22 +578,60 @@ def atomic_recall_alignment(
     worker_cache: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
     """Independently compare frozen source claims with the V1 obligation set."""
-    payload = {"source_index": source_index, "obligations": list(obligations)}
-    raw = _resolved_atomic_recall_worker(
-        root=root,
-        out_dir=out_dir,
-        payload=payload,
-        worker_cache=worker_cache,
-        prompt=(
-            "Independently compare each frozen requirement source to the proposed atomic obligations. "
-            "Do not trust the prior extractor and do not read another worker's reasoning. Return JSON with "
-            "supported_obligation_ids[], invented_obligation_ids[], source_gap_claims[]. "
-            "Each source_gap_claim must be an object with source_ref, subject, behavior, reason and must describe "
-            "one independently observable behavior present in source but absent from the obligation set. "
-            "An obligation that merges multiple independent source behaviors is not sufficient coverage: report the "
-            "unrepresented behavior as a source_gap_claim. Never invent runtime evidence."
-        ),
+    all_obligations = list(obligations)
+    payload = {"source_index": source_index, "obligations": all_obligations}
+    prompt = (
+        "Independently compare each frozen requirement source to the proposed atomic obligations. "
+        "Do not trust the prior extractor and do not read another worker's reasoning. Return JSON with "
+        "supported_obligation_ids[], invented_obligation_ids[], source_gap_claims[]. "
+        "Classify EVERY active obligation id listed in INPUT exactly once as supported or invented; never return a "
+        "partial/representative list. Each source_gap_claim must be an object with source_ref, subject, behavior, "
+        "reason and must describe one independently observable behavior present in source but absent from the "
+        "obligation set. An obligation that merges multiple independent source behaviors is not sufficient coverage: "
+        "report the unrepresented behavior as a source_gap_claim. Never invent runtime evidence."
     )
+
+    # Large obligation domains exceed the practical structured-output context of
+    # a single worker.  Compile deterministic batches, then merge the judgments;
+    # this is one classification per obligation, not an independent vote.
+    batch_size = 80
+    if len(all_obligations) > batch_size:
+        compact_context = [
+            {key: item.get(key) for key in
+             ("obligation_id", "subject", "source_refs", "expected_behavior")
+             if key in item}
+            for item in all_obligations if isinstance(item, Mapping)
+        ]
+        merged_supported: list[str] = []
+        merged_invented: list[str] = []
+        merged_gaps: list[Mapping[str, Any]] = []
+        for start in range(0, len(all_obligations), batch_size):
+            batch = all_obligations[start:start + batch_size]
+            batch_payload = {"source_index": source_index, "obligations": batch,
+                             "complete_obligation_context": compact_context,
+                             "review_source_gaps": start == 0}
+            batch_raw = _resolved_atomic_recall_worker(
+                root=root, out_dir=out_dir, payload=batch_payload,
+                worker_cache=worker_cache, prompt=prompt +
+                " This is a bounded output batch; classify every active id in obligations only. "
+                "complete_obligation_context is the entire candidate: an obligation outside this batch "
+                "can cover source behavior and must not be reported missing merely because it is outside the batch. "
+                "When review_source_gaps is true, review ALL frozen sources against the ENTIRE candidate "
+                "and report every source gap. Otherwise only classify this batch and return source_gap_claims=[]."
+            )
+            merged_supported.extend(str(v) for v in batch_raw.get("supported_obligation_ids", []) if isinstance(v, str))
+            merged_invented.extend(str(v) for v in batch_raw.get("invented_obligation_ids", []) if isinstance(v, str))
+            merged_gaps.extend(v for v in batch_raw.get("source_gap_claims", []) if isinstance(v, Mapping))
+        # A frozen obligation may be classified by more than one bounded batch
+        # when the worker sees overlapping context.  Deduplicate only at the
+        # merge boundary; single-batch worker output remains strictly checked.
+        raw = {"supported_obligation_ids": list(dict.fromkeys(merged_supported)),
+               "invented_obligation_ids": list(dict.fromkeys(merged_invented)),
+               "source_gap_claims": merged_gaps}
+    else:
+        raw = _resolved_atomic_recall_worker(
+            root=root, out_dir=out_dir, payload=payload,
+            worker_cache=worker_cache, prompt=prompt)
     for key in ("supported_obligation_ids", "invented_obligation_ids", "source_gap_claims"):
         if not isinstance(raw.get(key), list):
             raise ValueError(f"atomic recall oracle missing {key}")
@@ -637,7 +711,12 @@ def atomic_recall_alignment(
     }
 
 
-def _completed_resume(out_dir: Path) -> dict[str, Any] | None:
+def _completed_resume(
+    out_dir: Path,
+    *,
+    source_index_sha256: str,
+    profile: str,
+) -> dict[str, Any] | None:
     state_path = out_dir / "compiler-state.v1.json"
     bundle_path = out_dir / "semantic-plan-bundle.v1.json"
     if not state_path.is_file() or not bundle_path.is_file():
@@ -648,6 +727,34 @@ def _completed_resume(out_dir: Path) -> dict[str, Any] | None:
     bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
     if not isinstance(bundle, Mapping):
         return None
+    source_index_path = out_dir / "source-index.v1.json"
+    if not source_index_path.is_file():
+        return {
+            "status": "repair-vdd",
+            "stage": "resume-context",
+            "reason": "completed plan is missing its bound source index",
+            "resume_strategy": "context-mismatch",
+        }
+    prior_source_index = json.loads(source_index_path.read_text(encoding="utf-8"))
+    if not isinstance(prior_source_index, Mapping):
+        raise ValueError("resume found malformed source index")
+    if prior_source_index.get("sha256") != source_index_sha256:
+        return {
+            "status": "repair-vdd",
+            "stage": "resume-context",
+            "reason": "current VDD inputs differ from the completed plan",
+            "resume_strategy": "context-mismatch",
+        }
+    if bundle.get("profile") != profile:
+        return {
+            "status": "repair-vdd",
+            "stage": "resume-context",
+            "reason": "current VDD profile differs from the completed plan",
+            "resume_strategy": "context-mismatch",
+        }
+    current_bundle_sha256 = sc.sha256_value(bundle)
+    if state.get("semantic_plan_sha256") != current_bundle_sha256:
+        raise ValueError("resume found semantic bundle hash drift")
     valid, findings = validate_semantic_bundle_with_preflight(bundle)
     if not valid:
         raise ValueError("resume found invalid completed bundle: " + ",".join(findings))
@@ -680,8 +787,14 @@ def compile_plan(
         raise ValueError("unsupported VDD resume mode")
     if recommendation_only and resume_from is not None:
         raise ValueError("recommendation-only cannot be combined with resume")
+    root = sc.repository_root(requirements.parent)
+    source_index = sc.build_source_index(root, requirements, companions)
     if resume_from == "first-failed-stage":
-        completed = _completed_resume(out_dir)
+        completed = _completed_resume(
+            out_dir,
+            source_index_sha256=source_index["sha256"],
+            profile=profile,
+        )
         if completed is not None:
             return completed
 
@@ -695,8 +808,6 @@ def compile_plan(
             recommendation_only=True,
         )
 
-    root = sc.repository_root(requirements.parent)
-    source_index = sc.build_source_index(root, requirements, companions)
     preflight = sc.source_preflight(root, source_index)
     if not preflight["valid"]:
         return {"status": "repair-vdd", "stage": "V0A", "source_index": source_index, "preflight": preflight}

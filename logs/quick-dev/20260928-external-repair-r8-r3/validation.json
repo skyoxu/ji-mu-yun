@@ -1,0 +1,14 @@
+{
+  "code_base": "b23bca57",
+  "selector": "S53BoundaryTests|S28BoundaryTests|S32BoundaryTests|S46BoundaryTests",
+  "passed": 14,
+  "failed": 9,
+  "skipped": 0,
+  "trx": "../20260928-external-repair-windows/r8-probe-s53-s28-s32-s46-r3.trx",
+  "s53_real_runner": "phase-r-a-p",
+  "failure": "managed runner credential is unavailable",
+  "target_binding": "PhaseA.Runner.<accountId>.<projectId>",
+  "cross_scope_substitution": false,
+  "quick_dev_successor_generated": false,
+  "q8": false
+}

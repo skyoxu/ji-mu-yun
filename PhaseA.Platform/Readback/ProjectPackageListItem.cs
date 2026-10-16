@@ -8,4 +8,7 @@ public sealed record ProjectPackageListItem(
     long SizeBytes,
     string PackageSha256,
     string CreatedUtc,
-    ProjectWebPreviewPackageStatus WebPreview);
+    ProjectWebPreviewPackageStatus WebPreview,
+    string? SnapshotId = null,
+    bool CanRestore = false,
+    string? RestoreDisabledReason = null);

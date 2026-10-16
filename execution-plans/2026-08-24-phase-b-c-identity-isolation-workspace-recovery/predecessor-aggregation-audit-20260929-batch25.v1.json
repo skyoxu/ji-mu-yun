@@ -1,0 +1,441 @@
+{
+  "schema": "quick-dev.predecessor-aggregation-audit.v1",
+  "plan_id": "PLAN-E24BDCAA6457",
+  "audited_commit": "HEAD",
+  "candidate_source": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/predecessor-aggregation-20260929-batch24.v1.json",
+  "plan_slice_count": 73,
+  "verified_predecessors": [
+    {
+      "slice_id": "S1",
+      "run_root": "logs/quick-dev/20260929-batch-S1-r2",
+      "result_ref": "logs/quick-dev/20260929-batch-S1-r2/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:037a42ab5ae94482b5c1d65b01c470b6a92310727a883a1b286afcfafe3f2624"
+    },
+    {
+      "slice_id": "S2",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S2-r4",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S2-r4/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:1608a60e04173c56376dab1c8fd0cdfcf3d0fe0fa10a6217e6a0a2f8c96d7b5e"
+    },
+    {
+      "slice_id": "S3",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S3-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S3-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:c8d86897a7237b9535911ebaabcfef932250616b7d0c335ae7aa1b7cecf001ae"
+    },
+    {
+      "slice_id": "S4",
+      "run_root": "logs/quick-dev/20260929-batch-S4",
+      "result_ref": "logs/quick-dev/20260929-batch-S4/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:d2c0f05dfc1414c381095a0b3e824d2dbd7ef81a10817151e0b6bdb9f170add2"
+    },
+    {
+      "slice_id": "S5",
+      "run_root": "logs/quick-dev/20260929-retry-S5-r2",
+      "result_ref": "logs/quick-dev/20260929-retry-S5-r2/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:a88374a541186206ff11addcf5c7d764084add9ceffccf8b9d5d5d3c3a50d24a"
+    },
+    {
+      "slice_id": "S6",
+      "run_root": "logs/quick-dev/20260929-batch-S6",
+      "result_ref": "logs/quick-dev/20260929-batch-S6/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:0dc7337499d641e3856a43540af52bf92ce80cff762967b7dff70a238b26993b"
+    },
+    {
+      "slice_id": "S8",
+      "run_root": "logs/quick-dev/20260929-batch-S8",
+      "result_ref": "logs/quick-dev/20260929-batch-S8/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:22ffb1ece718be2263dcac3000f726926008490b9d31dfebb342a609808f3d7f"
+    },
+    {
+      "slice_id": "S9",
+      "run_root": "logs/quick-dev/20260929-retry-S9-r1",
+      "result_ref": "logs/quick-dev/20260929-retry-S9-r1/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:45027f71049b5b184734bab08f26ec180ebd603d68577528aab5375b3e8aa9ed"
+    },
+    {
+      "slice_id": "S10",
+      "run_root": "logs/quick-dev/20260929-retry-S10-r1",
+      "result_ref": "logs/quick-dev/20260929-retry-S10-r1/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:676ad666f4f164993df6583b550a07499fe5678c32eea511613072d154d1c009"
+    },
+    {
+      "slice_id": "S11",
+      "run_root": "logs/quick-dev/20260929-retry-S11-r1",
+      "result_ref": "logs/quick-dev/20260929-retry-S11-r1/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:86f92bd246a25a7e6fbc03825521845da7a4ce9b62755fab98be4791581bef0d"
+    },
+    {
+      "slice_id": "S12",
+      "run_root": "logs/quick-dev/20260929-retry-S12-r1",
+      "result_ref": "logs/quick-dev/20260929-retry-S12-r1/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:5d6849af0f12b1a9867e34371dd72885d420f34a4396da4cf6b201875c2d40b3"
+    },
+    {
+      "slice_id": "S13",
+      "run_root": "logs/quick-dev/20260929-retry-S13-r2",
+      "result_ref": "logs/quick-dev/20260929-retry-S13-r2/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:0b7d57d5e00615d60a3b964c6c2b587089f58e59dd6b8d0b56129c4af499b313"
+    },
+    {
+      "slice_id": "S15",
+      "run_root": "logs/quick-dev/20260929-recovery2-S15",
+      "result_ref": "logs/quick-dev/20260929-recovery2-S15/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:8d7aa90f6881c832112806cc295d8d6fbe366c225a9ea7008dd7c47f16e5728b"
+    },
+    {
+      "slice_id": "S16",
+      "run_root": "logs/quick-dev/20260929-batch-S16",
+      "result_ref": "logs/quick-dev/20260929-batch-S16/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:f9c0037cecd07e2a6c872b6145a112ec04838e82d5de24c59118083cddce8430"
+    },
+    {
+      "slice_id": "S17",
+      "run_root": "logs/quick-dev/20260929-batch-S17",
+      "result_ref": "logs/quick-dev/20260929-batch-S17/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:b605c011f7d58d0ab74049aff18a0d4bd81337b2fcb34c83da7102817942a705"
+    },
+    {
+      "slice_id": "S18",
+      "run_root": "logs\\quick-dev\\20260929-recovery2-S18",
+      "result_ref": "logs/quick-dev/20260929-recovery2-S18/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:3bab3d0f071932e675c8396496375b764442d9d4fc72c8e17586a076f47f8c6d"
+    },
+    {
+      "slice_id": "S19",
+      "run_root": "logs/quick-dev/20260929-batch-S19",
+      "result_ref": "logs/quick-dev/20260929-batch-S19/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:b11a86581c8e36c562d3118386d17a2cb409d62edf8d5d09501ff3dfe6799ed3"
+    },
+    {
+      "slice_id": "S20",
+      "run_root": "logs/quick-dev/20260929-batch-S20",
+      "result_ref": "logs/quick-dev/20260929-batch-S20/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:fb21e3640f1c91fa2027043ee8eb1bdfba590a3e55620096d67a2a77470bfd74"
+    },
+    {
+      "slice_id": "S21",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S21-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S21-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:f37990d781f5cd6d5b6f0e9f42f31f3fdf8cd3aa4c42f4507c1234f8964d42a0"
+    },
+    {
+      "slice_id": "S22",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S22-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S22-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:993898b835fb6439e93bc4d7945789d67473f8f6bbc75a3585f1bfcdc95568a6"
+    },
+    {
+      "slice_id": "S23",
+      "run_root": "logs/quick-dev/20260929-retry-S23-r3",
+      "result_ref": "logs/quick-dev/20260929-retry-S23-r3/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:67cfddf5544c14efb634f2e382bb6cd0cb09c01d3ff22c5434549924d80219b7"
+    },
+    {
+      "slice_id": "S24",
+      "run_root": "logs/quick-dev/20260929-batch-S24",
+      "result_ref": "logs/quick-dev/20260929-batch-S24/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:748682efe464d51391bd048191fd399c62a0b5bded00cbba6fed6dc9d02053d2"
+    },
+    {
+      "slice_id": "S25",
+      "run_root": "logs/quick-dev/20260929-retry-S25",
+      "result_ref": "logs/quick-dev/20260929-retry-S25/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:7cb64475ecb04a8c7860d2b7a362af4dd18c6e1d2717e26043df501f2baa7ccc"
+    },
+    {
+      "slice_id": "S26",
+      "run_root": "logs/quick-dev/20260929-batch-S26",
+      "result_ref": "logs/quick-dev/20260929-batch-S26/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:395c2570ffbedaffb5c5a2437e1eabe0f838e17487af4b090de8a68e3fd086c8"
+    },
+    {
+      "slice_id": "S27",
+      "run_root": "logs/quick-dev/20260929-retry-S27",
+      "result_ref": "logs/quick-dev/20260929-retry-S27/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:206a099d5aa04ea16a6e2cd71fe05dc1bb1b2f836da0338beac57887ea359ebd"
+    },
+    {
+      "slice_id": "S28",
+      "run_root": "logs/quick-dev/20260929-batch-S28",
+      "result_ref": "logs/quick-dev/20260929-batch-S28/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:8443e703b528138a5688b428df917af66085113a111b7a4aa61e99af19dfffed"
+    },
+    {
+      "slice_id": "S29",
+      "run_root": "logs/quick-dev/20260929-retry-S29-r3",
+      "result_ref": "logs/quick-dev/20260929-retry-S29-r3/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:300244544bd18e099410d4660c1b028a58aa1326890f5b3e33a5133f93c0daa0"
+    },
+    {
+      "slice_id": "S30",
+      "run_root": "logs/quick-dev/20260929-batch-S30",
+      "result_ref": "logs/quick-dev/20260929-batch-S30/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:1be072b5cf85562162886f635a9c2c3dd3f0de6be05cfe431ed473c4396390f9"
+    },
+    {
+      "slice_id": "S31",
+      "run_root": "logs/quick-dev/20260929-batch-S31",
+      "result_ref": "logs/quick-dev/20260929-batch-S31/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:9e3daf68383641d9c09a77fe1cb850ae2895bc70828be87e1d897e582d09efc4"
+    },
+    {
+      "slice_id": "S32",
+      "run_root": "logs/quick-dev/20260929-batch-S32",
+      "result_ref": "logs/quick-dev/20260929-batch-S32/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:015944f3050e9aba1ca80cede9ebca2b4ba5c261acdd1db60a02e36a19657aa4"
+    },
+    {
+      "slice_id": "S33",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S33-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S33-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:98a3c27d4792d643757f6da71511a4fb80464fb16de92c0ab5270a898a5fca4e"
+    },
+    {
+      "slice_id": "S34",
+      "run_root": "logs/quick-dev/20260929-retry-S34-r2",
+      "result_ref": "logs/quick-dev/20260929-retry-S34-r2/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:7d8e98ca6a5401c2a112cf47de1b05285212162e7e4db0fdf4f08495fe03bf22"
+    },
+    {
+      "slice_id": "S35",
+      "run_root": "logs/quick-dev/20260929-batch-S35",
+      "result_ref": "logs/quick-dev/20260929-batch-S35/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:94c0578bd30f86a4ee859673141170d113fdf4c7050c8bd51e2738574941116e"
+    },
+    {
+      "slice_id": "S37",
+      "run_root": "logs/quick-dev/20260929-batch-S37",
+      "result_ref": "logs/quick-dev/20260929-batch-S37/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:6d9b0c833e83ca6db19392ed23623cab9fb93747225f731f20a511a4de8e6b0d"
+    },
+    {
+      "slice_id": "S38",
+      "run_root": "logs/quick-dev/20260929-retry-S38-r3",
+      "result_ref": "logs/quick-dev/20260929-retry-S38-r3/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:9d9bac93bc7851d4df6d02121c73cda3f5b28996c63181d2fd8dc8b64250b36b"
+    },
+    {
+      "slice_id": "S39",
+      "run_root": "logs\\quick-dev\\20260929-recovery2-S39",
+      "result_ref": "logs/quick-dev/20260929-recovery2-S39/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:f3e07323162284c74d674b0a633463c484224da91e4a54d6b35139e1a5345ef6"
+    },
+    {
+      "slice_id": "S40",
+      "run_root": "logs/quick-dev/20260929-retry-S40-r1",
+      "result_ref": "logs/quick-dev/20260929-retry-S40-r1/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:70e85003d5d27b86fc72cfe9acea34de62a5749f6a2f3f4ef8fdcd82686b812a"
+    },
+    {
+      "slice_id": "S42",
+      "run_root": "logs/quick-dev/20260929-retry-S42-r2",
+      "result_ref": "logs/quick-dev/20260929-retry-S42-r2/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:1b1736d4c147d98ade0865e24aff969b39a7cadc14324084e1560feebf779b53"
+    },
+    {
+      "slice_id": "S43",
+      "run_root": "logs\\quick-dev\\20260929-s43-fe73-run",
+      "result_ref": "logs/quick-dev/20260929-s43-fe73-run/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:cbc98d8d4630b5214e4fff81e0c8a71c65a9cf060c1bbe0af1be9df2943f4e87"
+    },
+    {
+      "slice_id": "S44",
+      "run_root": "logs/quick-dev/20260929-batch-S44",
+      "result_ref": "logs/quick-dev/20260929-batch-S44/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:b97e396c8af33ae6e2477ccdccdd94a69b0d620d8c1685ed8432d227b9eff148"
+    },
+    {
+      "slice_id": "S45",
+      "run_root": "logs/quick-dev/20260929-retry-S45-r2",
+      "result_ref": "logs/quick-dev/20260929-retry-S45-r2/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:c64ea692d3ec3554ed284c0a78c80ff517d2cf7bdb94a6879c20a3e976894c5c"
+    },
+    {
+      "slice_id": "S46",
+      "run_root": "logs/quick-dev/20260929-retry-S46-r2",
+      "result_ref": "logs/quick-dev/20260929-retry-S46-r2/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:f9e5dfa6af84f800e593b82862dca7bf2ebfd49e107f3e2cedab01c55f041ea6"
+    },
+    {
+      "slice_id": "S47",
+      "run_root": "logs/quick-dev/20260929-retry-S47-r5",
+      "result_ref": "logs/quick-dev/20260929-retry-S47-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:042aad90496372c79d97e37c4327e238699022500db989ab5a3c6f214991f11a"
+    },
+    {
+      "slice_id": "S48",
+      "run_root": "logs/quick-dev/20260929-batch-S48",
+      "result_ref": "logs/quick-dev/20260929-batch-S48/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:2b1a70f4e1a8c8f6c49eccfbce35cf513c5a8c69e7addc0bda099b01cb5ebdff"
+    },
+    {
+      "slice_id": "S50",
+      "run_root": "logs/quick-dev/20260929-batch-S50",
+      "result_ref": "logs/quick-dev/20260929-batch-S50/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:896549b72ae0198fd9c38799fe28f3b80a76a383e051b2d2045227bf9fafdf69"
+    },
+    {
+      "slice_id": "S51",
+      "run_root": "logs/quick-dev/20260929-batch-S51",
+      "result_ref": "logs/quick-dev/20260929-batch-S51/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:251ea4d547722e7e105f28fcde256d283d2066be34204244f9a5042651cd53ab"
+    },
+    {
+      "slice_id": "S52",
+      "run_root": "logs/quick-dev/20260929-batch-S52",
+      "result_ref": "logs/quick-dev/20260929-batch-S52/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:ae649651d7723e6a3905b4dff6071289f6773161d658b15fe5a81c669cf0dc71"
+    },
+    {
+      "slice_id": "S53",
+      "run_root": "logs/quick-dev/20260929-retry-S53-r3",
+      "result_ref": "logs/quick-dev/20260929-retry-S53-r3/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:e3a588a717d12c330993a22e1bb10410be1c456f2e75756a7357fcc1f83a371e"
+    },
+    {
+      "slice_id": "S54",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S54-r6",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S54-r6/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:398ebe09b3732dc30655d514b4f1c3641c06da704f77ba5d27a132476021cd8d"
+    },
+    {
+      "slice_id": "S55",
+      "run_root": "logs/quick-dev/20260929-retry-S55-r2",
+      "result_ref": "logs/quick-dev/20260929-retry-S55-r2/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:1788440b8b0e578feb4a5e1de271a2a8eb8847f75fce4d0de6a2dc61f5e5ab12"
+    },
+    {
+      "slice_id": "S56",
+      "run_root": "logs/quick-dev/20260929-batch-S56",
+      "result_ref": "logs/quick-dev/20260929-batch-S56/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:4521b6052bae9790a8e81d86a04b1789d67ed4284c23c54ef913afa4dc6ebac8"
+    },
+    {
+      "slice_id": "S57",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S57-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S57-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:26da71bf2ca8a2d1e9532273a791ac2dae3a24607a1f40e0d71f8d4d2194e3e2"
+    },
+    {
+      "slice_id": "S58",
+      "run_root": "logs\\quick-dev\\20260929-recovery-S58",
+      "result_ref": "logs/quick-dev/20260929-recovery-S58/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:94a8221efcde00c9f713f5df72f8f30188392b56e6e264fa0cc4a900510cad4f"
+    },
+    {
+      "slice_id": "S59",
+      "run_root": "logs/quick-dev/20260929-batch-S59",
+      "result_ref": "logs/quick-dev/20260929-batch-S59/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:dd6ce6b373e41f520f24d4c72b8c70430083993c1a21aab9c940d5cebd5213b3"
+    },
+    {
+      "slice_id": "S60",
+      "run_root": "logs/quick-dev/20260929-batch-S60",
+      "result_ref": "logs/quick-dev/20260929-batch-S60/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:9295c04ac911c2bdee598879f64ebdb610fe38b90ee05f6ed6ebdd213a99f3bb"
+    },
+    {
+      "slice_id": "S61",
+      "run_root": "logs/quick-dev/20260929-batch-S61",
+      "result_ref": "logs/quick-dev/20260929-batch-S61/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:99e8e4f82550449e3d57e0c7158b1211f37384f79bcbbf9acc0918296ceb619f"
+    },
+    {
+      "slice_id": "S62",
+      "run_root": "logs/quick-dev/20260929-retry-S62-r3",
+      "result_ref": "logs/quick-dev/20260929-retry-S62-r3/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:3bf8acf62b882bf28640032f7e4f30a8b2b614d4484f2776f4725a8ca4e7e623"
+    },
+    {
+      "slice_id": "S63",
+      "run_root": "logs/quick-dev/20260929-batch-S63",
+      "result_ref": "logs/quick-dev/20260929-batch-S63/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:c19c96d14e4060f130533e4613e3b81a43b5b83b58b09d28a75842765821c6f7"
+    },
+    {
+      "slice_id": "S64",
+      "run_root": "logs/quick-dev/20260929-batch-S64",
+      "result_ref": "logs/quick-dev/20260929-batch-S64/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:ea64bc75984461b0d0809f2df9fbb806be10577108f61c32309eb6fdd27bef73"
+    },
+    {
+      "slice_id": "S65",
+      "run_root": "logs/quick-dev/20260929-batch-S65",
+      "result_ref": "logs/quick-dev/20260929-batch-S65/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:67164546a1016abc957ee2e845a5ba7fb893540b47e5a4cbc9137f083d731be3"
+    },
+    {
+      "slice_id": "S66",
+      "run_root": "logs/quick-dev/20260929-retry-S66-r2",
+      "result_ref": "logs/quick-dev/20260929-retry-S66-r2/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:8430d528c1db9ce82529fa2d5147cf5f30ae4b469631c2d42dc553f729f848ca"
+    },
+    {
+      "slice_id": "S67",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S67-r5",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S67-r5/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:99325e2f01661fc041aba75aeb3938f082678e405fcb28dd1629040454cb5ebd"
+    },
+    {
+      "slice_id": "S68",
+      "run_root": "logs\\quick-dev\\20260928-plan-closeout\\S68-r4",
+      "result_ref": "logs/quick-dev/20260928-plan-closeout/S68-r4/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:c2bed95236832060babd9c0e5d14ef100def98b2d1f44e8b519e28a4775d1210"
+    },
+    {
+      "slice_id": "S69",
+      "run_root": "logs/quick-dev/20260929-retry-S69-r2",
+      "result_ref": "logs/quick-dev/20260929-retry-S69-r2/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:96efff498471ae10e823f6f6cfc93f3b5a2cbe68b7c343f0ffcad78f53985410"
+    },
+    {
+      "slice_id": "S73",
+      "run_root": "logs/quick-dev/20260929-batch-S73",
+      "result_ref": "logs/quick-dev/20260929-batch-S73/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:049c9ab2042b3a094fd4a0dae8f65c44044d26c07513b76a2203262b55a57cf8"
+    },
+    {
+      "slice_id": "S74",
+      "run_root": "logs/quick-dev/20260929-retry-S74-r3",
+      "result_ref": "logs/quick-dev/20260929-retry-S74-r3/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:2c15ee9f3e5a28314cb3d6e55d15f28699b2e7db749c4035d62c466c528c9f5d"
+    },
+    {
+      "slice_id": "S75",
+      "run_root": "logs/quick-dev/20260929-retry-S75-r3",
+      "result_ref": "logs/quick-dev/20260929-retry-S75-r3/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:c30f48e5278be3c1e968f9a48af39b9af8e165a1dd92694bb1a584404120f661"
+    },
+    {
+      "slice_id": "S76",
+      "run_root": "logs/quick-dev/20260929-retry-S76-r2",
+      "result_ref": "logs/quick-dev/20260929-retry-S76-r2/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:96bb4cab62b2884a2a60daa02b9366500130dcb4d66ac062246a832d7ca8f45e"
+    },
+    {
+      "slice_id": "S78",
+      "run_root": "logs/quick-dev/20260929-retry-S78-r3",
+      "result_ref": "logs/quick-dev/20260929-retry-S78-r3/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:861058a1c62fde55636a0a54d4752617579cbba4412c5036674c203a6ab4f936"
+    },
+    {
+      "slice_id": "S79",
+      "run_root": "logs/quick-dev/20260929-retry-S79-r2",
+      "result_ref": "logs/quick-dev/20260929-retry-S79-r2/slice-ready-postcommit.v1.json",
+      "result_sha256": "sha256:8e5e74fcec5c9cd72eaf1a2427928c70d94d5f8c36966782e1d4d73fa4ab8fd8"
+    },
+    {
+      "slice_id": "S80",
+      "run_root": "logs/quick-dev/20260929-retry-S80-r3",
+      "result_ref": "logs/quick-dev/20260929-retry-S80-r3/slice-ready-postcommit.v2.json",
+      "result_sha256": "sha256:aeeb6bcd56fb00d5d7a728935341193953949b3f93abf8d3129d037e0187c5ff"
+    }
+  ],
+  "verified_count": 71,
+  "missing_slices": [
+    "S14",
+    "S49"
+  ],
+  "invalid_entries": []
+}

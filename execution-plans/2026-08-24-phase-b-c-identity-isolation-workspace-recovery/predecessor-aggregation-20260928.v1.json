@@ -1,0 +1,167 @@
+{
+  "schema": "quick-dev.predecessor-aggregation.v1",
+  "commit": "033e43acb43a7297bb24ba4eaf1d98a274c4c927",
+  "available": [
+    {
+      "slice_id": "S53",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S12",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S47",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S66",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S69",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S11",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S29",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S79",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S38",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S55",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S9",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S10",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S23",
+      "status": "current",
+      "q7": "pass"
+    },
+    {
+      "slice_id": "S76",
+      "status": "current",
+      "q7": "pass"
+    }
+  ],
+  "missing_or_not_current": [
+    "S12",
+    "S47",
+    "S69",
+    "S66",
+    "S29",
+    "S79",
+    "S11",
+    "S15",
+    "S18",
+    "S39",
+    "S55",
+    "S38",
+    "S58",
+    "S76",
+    "S9",
+    "S10",
+    "S23",
+    "S2",
+    "S54",
+    "S43",
+    "S68",
+    "S78",
+    "S3",
+    "S22",
+    "S33",
+    "S57",
+    "S67",
+    "S21",
+    "S63",
+    "S35",
+    "S50",
+    "S56",
+    "S61",
+    "S73",
+    "S80",
+    "S20",
+    "S30",
+    "S48",
+    "S59",
+    "S75",
+    "S6",
+    "S8",
+    "S60",
+    "S74",
+    "S40",
+    "S4",
+    "S19",
+    "S24",
+    "S26",
+    "S31",
+    "S34",
+    "S37",
+    "S52",
+    "S65",
+    "S14",
+    "S16",
+    "S17",
+    "S28",
+    "S44",
+    "S49",
+    "S51",
+    "S62",
+    "S1",
+    "S13",
+    "S25",
+    "S32",
+    "S42",
+    "S45",
+    "S64",
+    "S5",
+    "S27",
+    "S46"
+  ],
+  "q8_ready": false,
+  "reason": "only S53 has a current exact-cover predecessor; prior legacy or stale receipts are not re-bound",
+  "q8_input_schema_verified": true,
+  "q8_input_format_check": {
+    "duplicates": false,
+    "invalid_entries": false,
+    "validated_entry_count": 1,
+    "validated_fields": [
+      "slice_id",
+      "run_root",
+      "result_ref",
+      "result_sha256"
+    ]
+  },
+  "q8_last_block_reason": "terminal predecessor set does not match slices",
+  "validated_current_count": 14,
+  "next_missing_count": 59
+}

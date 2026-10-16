@@ -1,0 +1,56 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:0160736a0a2c836f0fc53df7bee259405ce511b63a734a0c5c78a5ba7aba850f"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:aa6d5af002d100294086fe19f90d6fbf4121de5fce513773f62a9bedd9311d8c"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:e12c2969570ca431f4f5902e55b64e2ed65ed323aacdbe8dc25815e36b800fde"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7e888e20e922e45571800f42dfdec3fe947848bbf1b87ff9bd00109974d54f04"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7a5478ebd1d5ab9a9b494eb5852510b9357f6684b0d6bbf8167a6e77e3d9ace6"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "PhaseA.Platform.Tests/Security/RunnerIsolationTests.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:cc0ad79412d49a407958146ffb60e6b8602ab254d99cc77be896e6403f0e9aa7"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

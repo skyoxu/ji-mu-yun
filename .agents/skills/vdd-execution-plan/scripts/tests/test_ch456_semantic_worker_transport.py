@@ -54,6 +54,13 @@ def test_codex_worker_isolation_disables_each_configured_mcp_without_changing_pr
     assert "--ignore-user-config" not in args
 
 
+def test_source_gap_repair_schema_allows_only_active_obligations() -> None:
+    schema = transport._worker_output_schema("v1-source-gap-repair")
+    assert schema is not None
+    status = schema["properties"]["obligations"]["items"]["properties"]["status"]
+    assert status["enum"] == ["active"]
+
+
 def test_schema_repair_transport_uses_bounded_longer_timeout_and_medium_reasoning(tmp_path: Path, monkeypatch) -> None:
     calls: list[dict] = []
 

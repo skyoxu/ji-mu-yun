@@ -1,0 +1,17 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_run": 36859959357,
+  "source_commit": "db3e0443d83c0819e50c3e7f152b9355da3cc3a5",
+  "observed": {
+    "preflight_total": 192,
+    "preflight_passed": 191,
+    "preflight_failed": 1,
+    "preflight_test_seconds": 314
+  },
+  "repair": "Use terminal run readback before asserting final direct-smoke command count. Fixture startup/readback readiness waits are bounded at 30 seconds; production creation/activity timeout values, failure evidence and command-count assertions remain unchanged.",
+  "validation": {
+    "windows": "pending",
+    "csharp": "No local dotnet compiler"
+  },
+  "completion": "Not claimed"
+}

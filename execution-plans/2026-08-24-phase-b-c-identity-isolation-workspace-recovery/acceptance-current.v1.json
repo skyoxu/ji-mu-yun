@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "currentRun": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/acceptance-runs/acceptance-d3222ebfa36478eb",
+  "finalResult": {
+    "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/acceptance-runs/acceptance-d3222ebfa36478eb/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:56b16843ef175b54c76078b980a97b8253014f7d0af14b2c146e72bc3429e6a3"
+  },
+  "finalWrapper": {
+    "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/acceptance-runs/acceptance-d3222ebfa36478eb/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:3a28cab442478fe1fcbcc8fa5775ba3fba8316efffa7774b5245e0888da187cb"
+  },
+  "schemaVersion": "acceptance-current.v1"
+}

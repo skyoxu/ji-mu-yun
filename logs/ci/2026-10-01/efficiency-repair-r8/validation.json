@@ -1,0 +1,25 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_run": 36838664713,
+  "source_commit": "251ef0a85bf17ff3d77eda11d961ec86175d9fc9",
+  "observed": {
+    "pipeline_seconds": 4822,
+    "dotnet_seconds": 4211.52,
+    "test_exit": 124,
+    "godot_seconds": 600.719
+  },
+  "changes": [
+    "Restore/build Debug once; preflight and full covered test suite reuse the same artifact configuration.",
+    "No duplicate Godot solution build; preserve runtime selfcheck and existing retry on .NET success.",
+    "Fail fast on .NET hard failure, recording later gates as not_run and the pipeline as failed.",
+    "Thirty-second secret-safe heartbeats and per-process timing JSON.",
+    "Ten-minute VSTest hang diagnosis with dump type none; preserve all project TRX and hang sequences."
+  ],
+  "validation": {
+    "python_regression_passed": 8,
+    "workflow_yaml": "parsed; reuse/configuration/retained full-suite assertions passed",
+    "windows": "pending; no speedup claim until measured"
+  },
+  "fallback": "FastCtx is not attached; GitHub connector reads/writes and scratch shell checks used.",
+  "completion": "Not claimed"
+}

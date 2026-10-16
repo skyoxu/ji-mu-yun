@@ -110,7 +110,19 @@ prototype_run_dump.txt
 # Local CH456 diagnostic scratch and reviewer instructions
 .tmp-ch456-semantic-quality/
 docs/know110.txt
+docs/know111.txt
+docs/know112.txt
+docs/know113.txt
+docs/know114.txt
+docs/know115.txt
+docs/know116.txt
+
+# VDD compiler caches and staging material (formal plan artifacts stay explicit)
+/execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/.compiler-attempts/
+/execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/.compiler-cache/
+/execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/.compiler-work/
+/execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/.historical/
+/execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/.recompile-current/
 
 # ADR-0060: leased ephemeral Skill-input attempts; persistent generations stay explicit.
 .skill-input-work/
-

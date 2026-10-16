@@ -1,0 +1,21 @@
+{
+  "acceptances": 351,
+  "acyclic_dependencies": true,
+  "authorizes": [],
+  "baseline_commit": "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+  "existing_production_owners": 21,
+  "local_materialization_required": true,
+  "model_called": false,
+  "obligations": 351,
+  "phase_production_modified": false,
+  "phase_tests_executed": false,
+  "public_q1": "not-run: executor unavailable",
+  "python_tests": "not-run: executor unavailable",
+  "recovered_acceptance_blob": "0505082e313f7cc6bb7b9e7ccd57edf32c2b4e1d",
+  "recovered_slice_blob": "d25593cd4a12b381c6477f1c1b09d0a4c1088868",
+  "schema": "phase-b-c.rebuild-publication-check.v1",
+  "slices": 73,
+  "source_references": 56,
+  "source_references_valid": true,
+  "validation_runtime": "JavaScript structural checks over fetched Git blobs"
+}

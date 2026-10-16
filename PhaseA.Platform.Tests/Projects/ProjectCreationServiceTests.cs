@@ -13,6 +13,77 @@ namespace PhaseA.Platform.Tests.Projects;
 public sealed class ProjectCreationServiceTests
 {
     [Fact]
+    public void WorkspaceDeletionService_RejectsFilesystemRoot()
+    {
+        var root = Path.GetPathRoot(AppContext.BaseDirectory)!;
+
+        Action act = () => new WorkspaceTreeDeletionService(root);
+
+        act.Should().Throw<ArgumentException>().Which.Message.Should().Contain("workspace_root_must_not_be_filesystem_root");
+    }
+
+    [Fact]
+    public async Task PurgeProjectsAsync_RejectsWithoutExactConfirmation()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var admin = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(admin, Request("Keep Game"));
+
+        var result = await service.PurgeProjectsAsync(admin, [created.ProjectId!], "delete");
+
+        result.Status.Should().Be("rejected");
+        (await store.GetProjectSnapshotAsync(created.ProjectId!)).Should().NotBeNull();
+        Directory.Exists((await store.GetProjectSnapshotAsync(created.ProjectId!))!.WorkspaceRootPath).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task PurgeProjectsAsync_RemovesProjectRelationsAndWorkspaceForAdministrator()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, Request("Purge Game"));
+        created.Succeeded.Should().BeTrue();
+        var snapshot = await store.GetProjectSnapshotAsync(created.ProjectId!);
+        Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeTrue();
+
+        await using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(database.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "CREATE TABLE custom_project_reference (id INTEGER PRIMARY KEY, project_id TEXT NOT NULL); INSERT INTO custom_project_reference (project_id) VALUES ($project_id);";
+            command.Parameters.AddWithValue("$project_id", created.ProjectId!);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        var result = await service.PurgeProjectsAsync(accountId, [created.ProjectId!], "PURGE-PROJECTS");
+
+        result.Status.Should().Be("succeeded");
+        result.PurgedCount.Should().Be(1);
+        (await store.GetProjectSnapshotAsync(created.ProjectId!)).Should().BeNull();
+        Directory.Exists(snapshot.WorkspaceRootPath).Should().BeFalse();
+        (await store.ListAdminProjectSummariesAsync()).Should().NotContain(item => item.ProjectId == created.ProjectId);
+        (await store.ListAccountsAsync()).Should().Contain(account => account.AccountId == accountId);
+        await using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(database.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM custom_project_reference WHERE project_id = $project_id;";
+            command.Parameters.AddWithValue("$project_id", created.ProjectId!);
+            (Convert.ToInt64(await command.ExecuteScalarAsync())).Should().Be(0);
+        }
+    }
+
+    [Fact]
     public async Task CreateProjectAsync_UsesDefaultRule_AndCreatesOneWorkspace()
     {
         using var database = TempSqliteDatabase.Create();
@@ -594,7 +665,7 @@ public sealed class ProjectCreationServiceTests
     }
 
     [Fact]
-    public async Task DeleteProjectAsync_RequiresTwoDeleteConfirmations_AndDeletesWorkspace()
+    public async Task DeleteProjectAsync_RequiresTwoDeleteConfirmations_AndRetainsWorkspaceForProtectedCleanup()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
@@ -614,7 +685,7 @@ public sealed class ProjectCreationServiceTests
         rejected.FailureCode.Should().Be("delete_confirmation_required");
         deleted.Succeeded.Should().BeTrue();
         (await store.GetProjectSnapshotAsync(created.ProjectId!)).Should().BeNull();
-        Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeFalse();
+        Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeTrue();
     }
 
     [Fact]
@@ -639,7 +710,7 @@ public sealed class ProjectCreationServiceTests
     }
 
     [Fact]
-    public async Task DeleteProjectAsync_AllowsAdminToDeleteOtherAccountProject()
+    public async Task DeleteProjectAsync_AllowsAdminToSoftDeleteOtherAccountProject()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
@@ -658,11 +729,11 @@ public sealed class ProjectCreationServiceTests
         deleted.Succeeded.Should().BeTrue();
         deleted.ProjectId.Should().Be(created.ProjectId);
         (await store.GetProjectSnapshotAsync(created.ProjectId!)).Should().BeNull();
-        Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeFalse();
+        Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeTrue();
     }
 
     [Fact]
-    public async Task DeleteProjectAsync_CascadesProjectRecords_DeletesWorkspace_AndReleasesQuota()
+    public async Task DeleteProjectAsync_RetainsProjectRecordsAndWorkspace_AndReleasesLogicalQuota()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
@@ -734,14 +805,14 @@ public sealed class ProjectCreationServiceTests
         deleted.Succeeded.Should().BeTrue();
         replacement.Succeeded.Should().BeTrue();
         (await store.GetProjectSnapshotAsync(first.ProjectId!)).Should().BeNull();
-        (await store.GetRunSnapshotAsync(runId)).Should().BeNull();
-        (await store.ListArtifactsForRunAsync(runId)).Should().BeEmpty();
-        (await store.ListProjectChatMessagesAsync(accountId, first.ProjectId!, limit: 10)).Should().BeEmpty();
-        (await store.GetProjectChatMemoryAsync(accountId, first.ProjectId!)).Should().BeNull();
-        (await store.GetProjectPrototypeDraftAsync(first.ProjectId!)).Should().BeNull();
-        (await store.GetLatestProjectIterationSessionAsync(first.ProjectId!)).Should().BeNull();
-        (await store.GetProjectRunMemoryAsync(first.ProjectId!, "prototype")).Should().BeNull();
-        Directory.Exists(firstSnapshot.WorkspaceRootPath).Should().BeFalse();
+        (await store.GetRunSnapshotAsync(runId)).Should().NotBeNull();
+        (await store.ListArtifactsForRunAsync(runId)).Should().NotBeEmpty();
+        (await store.ListProjectChatMessagesAsync(accountId, first.ProjectId!, limit: 10)).Should().NotBeEmpty();
+        (await store.GetProjectChatMemoryAsync(accountId, first.ProjectId!)).Should().NotBeNull();
+        (await store.GetProjectPrototypeDraftAsync(first.ProjectId!)).Should().NotBeNull();
+        (await store.GetLatestProjectIterationSessionAsync(first.ProjectId!)).Should().NotBeNull();
+        (await store.GetProjectRunMemoryAsync(first.ProjectId!, "prototype")).Should().NotBeNull();
+        Directory.Exists(firstSnapshot.WorkspaceRootPath).Should().BeTrue();
     }
 
     [Fact]
@@ -806,7 +877,7 @@ public sealed class ProjectCreationServiceTests
     }
 
     [Fact]
-    public async Task DeleteProjectAsync_AllowsFailedProject()
+    public async Task DeleteProjectAsync_AllowsFailedProjectAndRetainsWorkspace()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
@@ -823,7 +894,7 @@ public sealed class ProjectCreationServiceTests
 
         deleted.Succeeded.Should().BeTrue();
         (await store.GetProjectSnapshotAsync(created.ProjectId!)).Should().BeNull();
-        Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeFalse();
+        Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeTrue();
     }
 
     [Fact]

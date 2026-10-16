@@ -7,6 +7,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import semantic_compiler_gate as gate
+import semantic_atomic_recall_result_patch as atomic_result
 
 
 def payload():
@@ -88,3 +89,30 @@ def test_old_repair_success_does_not_override_current_gap(tmp_path, monkeypatch)
           "payload": payload(), "prompt": "judge"}
     assert gate._resolved_atomic_recall_worker(**kw)["source_gap_claims"]
     assert len(calls) == 1
+
+
+def test_exact_source_recheck_can_resolve_a_bulk_invented_verdict(tmp_path, monkeypatch):
+    source_index = {"entries": [{"source_ref": "req#FR-1", "source_text": "Measure P95 below 30 minutes."}]}
+    obligations = [{
+        "obligation_id": "O-1", "status": "active", "source_refs": ["req#FR-1"],
+        "expected_behavior": "Evaluate P95 below 30 minutes.",
+    }]
+    initial = {
+        "valid": False,
+        "findings": ["atomic-recall:invented-obligation:O-1"],
+        "metrics": {"active_obligation_count": 1, "supported_obligation_count": 0,
+                    "invented_obligation_count": 1, "source_gap_count": 0,
+                    "precision": 0.0, "recall": 1.0, "f1": 0.0},
+        "source_gap_claims": [],
+        "worker": {"supported_obligation_ids": [], "invented_obligation_ids": ["O-1"]},
+    }
+    monkeypatch.setattr(gate.sc, "invoke_worker", lambda **kwargs: {
+        "supported_obligation_ids": ["O-1"], "invented_obligation_ids": [], "source_gap_claims": []
+    })
+    result = atomic_result._recheck_invented(
+        root=tmp_path, out_dir=tmp_path / "plan", source_index=source_index,
+        obligations=obligations, result=initial, worker_cache=None,
+    )
+    assert result["valid"]
+    assert result["worker"]["supported_obligation_ids"] == ["O-1"]
+    assert result["worker"]["invented_obligation_ids"] == []

@@ -460,7 +460,7 @@ public sealed class ArtifactReadbackService
         }
 
         var project = await _metadataStore.GetProjectSnapshotAsync(artifact.ProjectId, cancellationToken);
-        return project is null ? null : ReadArtifact(project.RepoPath, artifact);
+        return project is null ? null : ReadArtifact(artifact.RelativePath.StartsWith("exports/", StringComparison.Ordinal) ? ProjectPackageService.GetPackageRepositoryRoot(project) : project.RepoPath, artifact);
     }
 
     public async Task<ArtifactReadResult?> ReadArtifactForAccountAsync(
@@ -480,7 +480,7 @@ public sealed class ArtifactReadbackService
             return null;
         }
 
-        return ReadArtifact(project.RepoPath, artifact);
+        return ReadArtifact(artifact.RelativePath.StartsWith("exports/", StringComparison.Ordinal) ? ProjectPackageService.GetPackageRepositoryRoot(project) : project.RepoPath, artifact);
     }
 
     private static bool IsBrowserReadableArtifact(ArtifactSnapshot artifact)

@@ -140,14 +140,11 @@ E. 缩减普通 scripts/sc review
 
 日常可先使用现有参数做实验：
 
-py -3 scripts/sc/llm_review.py `
-  --delivery-profile fast-ship `
-  --agents code-reviewer `
-  --semantic-gate skip `
-  --diff-mode summary `
-  --prompt-max-chars 18000 `
-  --skip-agent-prompts `
-  --model-reasoning-effort low
+py -3 scripts/sc/run_review_pipeline.py --task-id <id>
+
+Use the unified task-level entrypoint. Reviewer-selection experiments described
+below are design notes; they are not direct bypass commands. Apply supported
+routing through the pipeline owner and the selected delivery profile.
 
 安全边界、认证、文件路径或网络修改时再使用：
 

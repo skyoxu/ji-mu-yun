@@ -93,7 +93,8 @@ def test_runtime_red_repair_reports_conflicting_existing_test_binding(tmp_path):
                           if item['failure_family'] != 'expected-red'
                           and len(item['acceptance_ids']) == 1)
     test = ROOT / 'scripts/sc/tests/tc_d1_cer/test_s4.py'
-    previous = test.read_text(encoding='utf-8') if test.exists() else None
+    # ADR-0058: restoring a fixture must preserve its bound source bytes.
+    previous = test.read_bytes() if test.exists() else None
     try:
         test.parent.mkdir(parents=True, exist_ok=True)
         test.write_text('@pytest.mark.cer_assertion("other-slice")\ndef test_marker(): pass\n', encoding='utf-8')
@@ -110,7 +111,7 @@ def test_runtime_red_repair_reports_conflicting_existing_test_binding(tmp_path):
         if previous is None:
             test.unlink(missing_ok=True)
         else:
-            test.write_text(previous, encoding='utf-8')
+            test.write_bytes(previous)
 
 
 @pytest.mark.parametrize('sid', [f'S{i}' for i in range(1, 46)])

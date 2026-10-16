@@ -10,8 +10,15 @@ using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
 
-public sealed class GameDesignQuestionFormServiceTests
+public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSourceRepositoryFixture>
 {
+    private readonly HostedSourceRepositoryFixture _sourceFixture;
+
+    public GameDesignQuestionFormServiceTests(HostedSourceRepositoryFixture sourceFixture)
+    {
+        _sourceFixture = sourceFixture;
+    }
+
     [Fact]
     public void ParseQuestionFormAnswers_ShouldPreserveMultilineAnswers()
     {
@@ -553,9 +560,9 @@ public sealed class GameDesignQuestionFormServiceTests
         return result.ProjectId!;
     }
 
-    private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
+    private PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
-        var resolvedRepoRoot = ResolveRepositoryRoot(repoRoot);
+        var resolvedRepoRoot = _sourceFixture.RepositoryRoot(ResolveRepositoryRoot(repoRoot));
         return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,

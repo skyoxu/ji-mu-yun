@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "contractHash": "sha256:0be35874b7553f1eaae771cd77b36f0ff95c6fb51e4f7361db8779eb949fa467",
+  "createdUtc": "2026-09-30T11:17:26.284949Z",
+  "knowledgeContextHash": "sha256:87fffd05e1a980668adab3dfab74c19e0cfa595a73b70fa99bfc12af84e65a51",
+  "runId": "acceptance-7870e3932a62083f",
+  "runInputHash": "sha256:3c48304cc6a60cee3e2f60138503e979dc3fbcba57fc988403235b5f56b1cd37",
+  "schemaVersion": "acceptance-execution-run.v1",
+  "skillInputBindingHash": "sha256:31012f9eb81912b76c44293f0a618ab4b9a816c32390effa9918cac5cb573512",
+  "skillInputContextHash": "sha256:d78aaba0931cb2c6894a99474aeb3ddd28672dd0b42fa515106e5b25ed3f9dec",
+  "skillInputContextPath": "skill-input/skill-input-context.v1.json",
+  "skillInputContextSourcePath": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/skill-input-v2/acceptance/skill-input-generations/3d8bcdaa404a2e44d78751f01b26d179f421ec9a26fc6a46ee3fbd96c69b1361/context.json"
+}

@@ -19,3 +19,20 @@
   - `scripts/ci/quality_gate.ps1`
   - `scripts/python/quality_gates.py`
 
+
+## Fixture addendum (2026-10 actual engine observations)
+
+Signal fixtures use shared callback observations and assert the actual event
+count and payload. Reopening a database creates a new node and explicitly binds
+repository readback to that node; the closed source cannot satisfy the check.
+WAL backup fixtures retain the user:// destination, copy real database/WAL
+bytes, and query the destination connection. They close owned connections and
+restore the journal override. UTF-8 roundtrip assertions compare the complete
+stored username. No missing-result tolerance, disabled cases, or lowered
+assertions establish fixture success.
+
+A GdUnit result belongs to the current invocation only when the report was
+written after that invocation started. Missing, empty or failed reports
+cannot satisfy success even when the process exits zero. A process timeout
+remains exit 124; compatibility normalization only uses complete current
+results and retains the explicit strict-exit option.

@@ -78,6 +78,9 @@ public sealed class ProjectWorkflowRouteService
         var runs = await ReadOrDefaultAsync(
             () => _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken),
             Array.Empty<RunSnapshot>());
+        var activation = await _metadataStore.GetLastWorkspaceActivationUtcAsync(accountId, projectId, cancellationToken);
+        if (activation.HasValue)
+            runs = runs.Where(run => !IsPreRestoreValidation(run, activation.Value)).ToArray();
         var progress = await ReadOrDefaultAsync(
             () => _prototypeWorkflow.GetProgressAsync(accountId, project.ProjectId, cancellationToken),
             new PrototypeWorkflowProgress("idle", "", "", "项目进度读取失败。", null, null, "project_progress_read_failed"));
@@ -112,6 +115,11 @@ public sealed class ProjectWorkflowRouteService
             accountId,
             project.ProjectId,
             cancellationToken);
+        var restoreValidationRequired = await _metadataStore.RequiresRestoreValidationAsync(accountId, projectId, cancellationToken);
+        if (restoreValidationRequired)
+            steps = steps.Select(step => step.Id == "prototype-acceptance"
+                ? step with { Status = "pending", Evidence = "Restored files require a new prototype acceptance run." }
+                : step).ToArray();
 
         return new ProjectWorkflowRouteResult(
             project.ProjectId,
@@ -125,7 +133,20 @@ public sealed class ProjectWorkflowRouteService
             StageDefinitions,
             BuildSeverityReview(state, unresolvedDiagnosticBlockerCount),
             workflowRecommendation,
-            routeStateArtifacts);
+            routeStateArtifacts,
+            ProjectBusinessChainStatus.Evaluate(routeStateArtifacts, steps, restoreValidationRequired));
+    }
+
+    private static bool IsPreRestoreValidation(RunSnapshot run, DateTimeOffset activation)
+    {
+        if (run.RunType != "prototype-7day-playable" ||
+            !DateTimeOffset.TryParse(run.CreatedUtc, out var created) || created > activation) return false;
+        try
+        {
+            using var doc = JsonDocument.Parse(run.EvidenceJson ?? "{}");
+            return doc.RootElement.TryGetProperty("validation_only", out var value) && value.ValueKind == JsonValueKind.True;
+        }
+        catch (JsonException) { return true; }
     }
 
     public async Task<ProjectWorkflowIntentResult> ClassifyIntentAsync(

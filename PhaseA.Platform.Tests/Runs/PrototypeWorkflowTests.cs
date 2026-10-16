@@ -15,10 +15,62 @@ namespace PhaseA.Platform.Tests.Runs;
 public sealed class PrototypeWorkflowTests : IDisposable
 {
     private readonly IDisposable routeProfileOverride = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(false);
+    private HeavyRunnerQueueService? _completionQueue;
 
     public void Dispose()
     {
         routeProfileOverride.Dispose();
+    }
+
+    [Fact]
+    public async Task WaitForRunStatusAsync_WaitsForQueuedWritesAfterTerminalMetadata()
+    {
+        await using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
+        var marker = Path.Combine(workspaceRoot.Path, "queued-write.txt");
+        var published = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var allowWrite = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _completionQueue = new HeavyRunnerQueueService(maxConcurrentRuns: 1, estimatedTaskDuration: TimeSpan.FromSeconds(1));
+        var operation = _completionQueue.ExecuteAsync(runId, accountId, projectId, "prototype-7day-playable", async _ =>
+        {
+            await store.CompleteRunAsync(runId, "succeeded", 0, "", "", "{}");
+            published.TrySetResult();
+            await allowWrite.Task;
+            await File.WriteAllTextAsync(marker, "machine-write-complete");
+            return true;
+        });
+
+        try
+        {
+            await published.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            var completion = WaitForRunStatusAsync(store, runId, "succeeded");
+            var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+            while (!completion.IsCompleted &&
+                   _completionQueue.GetReadback(accountId, includeAll: true).QueuedCount == 0 &&
+                   DateTimeOffset.UtcNow < deadline)
+            {
+                await Task.Delay(10);
+            }
+
+            // ADR-0036/0061: metadata alone cannot close the machine-write obligation.
+            completion.IsCompleted.Should().BeFalse();
+            _completionQueue.GetReadback(accountId, includeAll: true).QueuedCount.Should().Be(1);
+            File.Exists(marker).Should().BeFalse();
+            allowWrite.TrySetResult();
+            (await completion).Status.Should().Be("succeeded");
+            File.ReadAllText(marker).Should().Be("machine-write-complete");
+            _completionQueue.GetReadback(accountId, includeAll: true).Running.Should().BeFalse();
+        }
+        finally
+        {
+            allowWrite.TrySetResult();
+            await operation;
+        }
     }
 
     [Fact]
@@ -207,7 +259,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_WritesPrototypeRecord_RunsRouter_AndIndexesPrototypeArtifacts()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -296,7 +348,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_UsesProjectScopedSlug_WhenRequestedSlugWouldFallbackToPrototype()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -330,7 +382,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_AllowsNavigationPassAfterDirectSceneWarning()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -357,7 +409,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_BlocksWhenProjectRunnerLockIsHeld()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -379,7 +431,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_CompletesRunAndReleasesProjectLock_WhenRunnerThrows()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -401,7 +453,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueAsync_RejectsProjectOwnedByAnotherAccount()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -422,7 +474,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueAsync_UsesDedicatedPrototypeCreationQueue()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -461,7 +513,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueFromGddAsync_BlocksUntilGddExists()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -478,7 +530,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueFromGddAsync_UsesCurrentProjectGddAsPrototypeSource()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -527,7 +579,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueFromGddAsync_UsesProjectScopedSlug_WhenProjectNameIsChinese()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -576,7 +628,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueFromGddAsync_WritesPlayableScene_WhenEntrySceneInstancesInnerScene()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -614,7 +666,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueAsync_FailsCompletion_WhenSmokeSceneIsNotProjectSpecificEntryScene()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -646,7 +698,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueAsync_TimesOutInactivePrototypeCreationCodexAndReleasesProjectLock()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -673,7 +725,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueAsync_ConfiguresPrototypeCreationActivityAndTotalTimeouts()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -700,7 +752,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task GetProgressAsync_RejectsProjectOwnedByAnotherAccount()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -718,7 +770,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueAsync_FailsPostCompletionDirectSmoke_WhenGodotReportsError()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -730,14 +782,53 @@ public sealed class PrototypeWorkflowTests : IDisposable
         var service = Service(store, options, runner);
 
         var result = await service.QueueAsync(accountId, projectId, ValidRequest(confirm: true));
-        await WaitForCommandsAsync(runner, 2);
+        result.Status.Should().Be("queued", result.Stderr);
+        // ADR-0005: the terminal readback is the barrier for final smoke-command assertions.
         var run = await WaitForRunStatusAsync(store, result.RunId, "failed", "failed");
 
         run!.Status.Should().Be("failed");
-        run.ExitCode.Should().Be(1);
+        run.ExitCode.Should().Be(1, run.StderrText);
         run.EvidenceJson.Should().Contain("strict_headless_prototype_scene");
+        runner.Commands.Should().HaveCount(2, run.StderrText);
         runner.Commands[1].Arguments.Should().Contain("scripts/python/smoke_headless.py");
         runner.Commands.Should().NotContain(command => command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"));
+    }
+
+    [Fact]
+    public async Task GetProgressAsync_DoesNotRecoverSuccess_WhileFinalSmokeIsRunning()
+    {
+        await using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new DeferredSmokeHostedProcessRunner();
+        var service = Service(store, options, runner);
+        var dispatch = service.QueueAsync(accountId, projectId, ValidRequest(confirm: true));
+        try
+        {
+            var result = await dispatch;
+            result.Status.Should().Be("queued");
+            await runner.SmokeStarted.Task.WaitAsync(TimeSpan.FromSeconds(30));
+            var progress = await service.GetProgressAsync(accountId, projectId);
+            var current = await store.GetRunSnapshotAsync(result.RunId);
+
+            // ADR-0036: generated completion files do not close a still-running final smoke.
+            progress.Status.Should().Be("running");
+            current!.Status.Should().Be("running");
+            current.EvidenceJson.Should().BeNullOrWhiteSpace();
+        }
+        finally
+        {
+            runner.ReleaseSmoke.TrySetResult();
+        }
+
+        var completed = await WaitForRunStatusAsync(store, (await dispatch).RunId, "failed", "failed");
+        completed.ExitCode.Should().Be(1);
+        completed.EvidenceJson.Should().Contain("strict_headless_prototype_scene");
+        completed.EvidenceJson.Should().NotContain("recovered_from_completion_artifacts");
+        (await service.GetProgressAsync(accountId, projectId)).Status.Should().Be("failed");
     }
 
     [Fact]
@@ -772,7 +863,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_SeedsFrozenRpgTemplateBaseline_OnFirstRpgPrototypeRun()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         SeedRepoRpgTemplate(repoRoot.Path);
@@ -795,7 +886,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_DoesNotOverwriteExistingFrozenRpgTemplateBaseline()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         SeedRepoRpgTemplate(repoRoot.Path);
@@ -818,7 +909,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_FailsWhenCompletionStateIsMissing()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -838,7 +929,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_DoesNotMaskWorkflowFailure_WithMissingCompletionStateNoise()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -862,7 +953,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_MapsUnexpectedGreenRedStageToStrictTddFailureMessage()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -884,7 +975,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_AllowsStep03AndStep04SkippedWhenExistingPrototypeCanGoDirectlyToGreen()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -909,7 +1000,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_FailsWhenMainMenuCannotNavigateToPrototypeScene()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -933,7 +1024,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_AllowsStep02SkippedWhenPrototypeScaffoldAlreadyExists()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -953,7 +1044,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_AllowsPrototypeSmokeNonZeroExit_WhenOutputContainsSmokePass()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -976,7 +1067,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_FailsPrototypeSmoke_WhenGodotReportsErrorEvenWithSmokePass()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1000,7 +1091,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_FailsPrototypeSmoke_WhenGodotReportsErrorWithZeroExitCode()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1023,7 +1114,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_FailsWhenResolvedPrototypeSceneIsMissing()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1047,7 +1138,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_FailsWhenStep06Or07ArtifactsAreMissing()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1067,7 +1158,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task GetProgressAsync_ReturnsLatestPrototypeWorkflowProgress()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1108,7 +1199,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task GetProgressAsync_IgnoresFinalValidationFailureThatPredatesCompletedIteration()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1139,19 +1230,30 @@ public sealed class PrototypeWorkflowTests : IDisposable
         progress.Failure.Should().BeNull();
     }
 
-    [Fact]
-    public async Task GetProgressAsync_RecoversRunningRun_WhenCompletionArtifactsExist()
+    [Theory]
+    [InlineData("orphan", "succeeded")]
+    [InlineData("queued", "queued")]
+    [InlineData("active", "running")]
+    public async Task GetProgressAsync_RecoversOnlyInactiveStartedRun_WhenCompletionArtifactsExist(
+        string executionState, string expectedStatus)
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var service = Service(store, options, new FakeHostedProcessRunner());
+        var creationQueue = new HeavyRunnerQueueService();
+        var service = Service(store, options, new FakeHostedProcessRunner(), prototypeCreationQueue: creationQueue);
         var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
-        await store.MarkRunStartedAsync(runId);
+        if (executionState != "queued")
+        {
+            await store.MarkRunStartedAsync(runId);
+        }
+        await using var activeLease = executionState == "active"
+            ? await creationQueue.EnterAsync(runId, accountId, projectId, "prototype-7day-playable")
+            : null;
         await store.UpdateRunProgressAsync(runId, "running_step07_review", "", "任务 07：正在生成最终摘要。");
         var prototypeFile = "docs/prototypes/2026-06-03-demo-prototype.md";
         WriteFile(Path.Combine(project.RepoPath, prototypeFile.Replace('/', Path.DirectorySeparatorChar)), "# Demo prototype\n");
@@ -1201,7 +1303,13 @@ public sealed class PrototypeWorkflowTests : IDisposable
         var progress = await service.GetProgressAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(runId);
 
-        progress.Status.Should().Be("succeeded");
+        progress.Status.Should().Be(expectedStatus);
+        run!.Status.Should().Be(expectedStatus);
+        if (executionState != "orphan")
+        {
+            run.EvidenceJson.Should().BeNullOrWhiteSpace();
+            return;
+        }
         progress.Step.Should().Be("succeeded");
         progress.Label.Should().Be("游戏场景创建已完成。");
         progress.CompletionSummary.Should().Contain("下一步建议");
@@ -1213,7 +1321,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task GetProgressAsync_DoesNotRecoverRepairRun_FromCompletionArtifacts()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1261,7 +1369,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task ValidateSkeletonAsync_RevalidatesExistingPrototypeWithoutRequiringIterationPlan()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1301,7 +1409,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task ValidateSkeletonAsync_FailsWithDotnetBuildDiagnosticsBeforeSmoke()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1337,7 +1445,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task ValidateAsync_BlocksWhenIterationPlanIsMissing()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1359,7 +1467,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task ValidateAsync_BlocksWhenProjectRunnerLockIsHeld()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1383,7 +1491,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task ValidateAsync_CompletesRunAndReleasesProjectLock_WhenRunnerThrows()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1393,6 +1501,8 @@ public sealed class PrototypeWorkflowTests : IDisposable
         var setupService = Service(store, options, setupRunner);
         _ = await setupService.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         await CreateCompletedIterationPlanAsync(store, accountId, projectId);
+        // ADR-0036/0061: an exceptional validation must supersede a prior pass.
+        (await setupService.ValidateAsync(accountId, projectId)).Status.Should().Be("succeeded");
         var service = Service(store, options, new ThrowingHostedProcessRunner());
 
         var result = await service.ValidateAsync(accountId, projectId);
@@ -1401,6 +1511,9 @@ public sealed class PrototypeWorkflowTests : IDisposable
         result.Status.Should().Be("failed");
         result.ExitCode.Should().Be(500);
         run!.Status.Should().Be("failed");
+        run.EvidenceJson.Should().Contain("\"validation_only\":true");
+        run.EvidenceJson.Should().Contain("\"skeleton_validation_only\":false");
+        (await service.GetProgressAsync(accountId, projectId)).AcceptanceStatus.Should().Be("failed");
         (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
         (await store.HasActiveRunAsync(projectId)).Should().BeFalse();
     }
@@ -1408,7 +1521,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task ValidateAsync_ShouldRunRpgAcceptanceAfterCompletedIterationPlanWithoutUiOptimization()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1428,6 +1541,10 @@ public sealed class PrototypeWorkflowTests : IDisposable
         runner.Commands.Should().HaveCount(6);
         runner.Commands[5].Arguments.Should().Contain(["scripts/python/run_gdunit.py", "--add", "tests/Prototype/DemoPrototype"]);
         runner.Commands[5].Arguments.Should().Contain("--prewarm");
+        using var evidence = JsonDocument.Parse(run!.EvidenceJson!);
+        var current = (await store.GetProjectSnapshotAsync(projectId))!;
+        evidence.RootElement.GetProperty("workspace_generation_id").GetString()
+            .Should().Be(WorkspaceGenerationPaths.SourceGenerationId(current));
         run!.EvidenceJson.Should().Contain("\"rpg_gdunit_validation\"");
         run.EvidenceJson.Should().Contain("\"required\":true");
     }
@@ -1435,7 +1552,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task ValidateAsync_ShouldKeepUiOptimizationCurrent_WhenOnlyIterationSessionEvaluationChanged()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1459,7 +1576,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task ValidateAsync_FailsRpgValidation_WhenProjectSpecificGdUnitFails()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1498,7 +1615,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task ValidateAsync_FailsRpgValidation_WhenGdUnitFindsNoTests()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1521,7 +1638,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task ValidateAsync_FailsRpgValidation_WhenGdUnitWrapperReportsFailureInStdout()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1545,7 +1662,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueAsync_BlocksWhenProjectRunnerLockIsHeld()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1567,7 +1684,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueAsync_BlocksWhenPrototypeSkeletonAlreadySucceeded()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1590,7 +1707,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task QueueAsync_UsesLatestDraftToRepairMissingOrCorruptedFields()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1650,7 +1767,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RepairAsync_QueuesRepairFromLatestFailedPrototypeRecord()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1685,7 +1802,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RepairAsync_UsesSlugFromPrototypeRecordContent_WhenPathSlugDiffers()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1719,7 +1836,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RepairAsync_UsesPostValidationRepair_WhenCompletedPrototypeFailedSmoke()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1789,7 +1906,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RepairAsync_UsesOriginalPostValidationFailure_WhenLatestRepairFailed()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1862,7 +1979,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RepairAsync_PrefersPrototypeShellSceneOverBattleSceneWhenManifestFallbackIsNeeded()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1909,6 +2026,8 @@ public sealed class PrototypeWorkflowTests : IDisposable
 
         var result = await service.RepairAsync(accountId, projectId, new PrototypeRepairRequest("gpt-5.4"));
         await WaitForCommandsAsync(runner, 3);
+        // ADR-0061: command capture precedes terminal metadata/audit persistence.
+        await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
 
         result.Status.Should().Be("queued");
         runner.Commands[0].StandardInput.Should().Contain("PreferredPrototypeShellScene: res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn");
@@ -1918,7 +2037,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RepairAsync_WritesRepairStateAndChatProgress_ForNextRepair()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -1970,7 +2089,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RepairAsync_RequiresLatestPrototypeRunToBeFailed()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -2007,7 +2126,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_RequiresLlmBinding_ForCodexScoring()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -2024,7 +2143,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public async Task RunAsync_RecordsLlmAudit_WhenCodexScoringIsBoundAndAllowed()
     {
-        using var database = TempSqliteDatabase.Create();
+        await using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
@@ -2274,7 +2393,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
             "extends Node\n");
     }
 
-    private static PrototypeWorkflowService Service(
+    private PrototypeWorkflowService Service(
         PhaseAMetadataStore store,
         PhaseAPlatformOptions options,
         IHostedProcessRunner runner,
@@ -2286,6 +2405,8 @@ public sealed class PrototypeWorkflowTests : IDisposable
         HostedContextGatePolicy? contextGatePolicy = null,
         IHostedContextManifestValidator? contextManifestValidator = null)
     {
+        heavyRunnerQueue ??= new HeavyRunnerQueueService();
+        _completionQueue = prototypeCreationQueue ?? heavyRunnerQueue;
         return new PrototypeWorkflowService(
             store,
             options,
@@ -2308,7 +2429,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
 
     private static async Task WaitForCommandsAsync(FakeHostedProcessRunner runner, int expectedCount)
     {
-        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         while (runner.Commands.Count < expectedCount && DateTimeOffset.UtcNow < deadline)
         {
             await Task.Delay(50);
@@ -2319,7 +2440,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
 
     private static async Task WaitForAtLeastCommandsAsync(FakeHostedProcessRunner runner, int expectedCount)
     {
-        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         while (runner.Commands.Count < expectedCount && DateTimeOffset.UtcNow < deadline)
         {
             await Task.Delay(50);
@@ -2330,7 +2451,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
 
     private static async Task WaitForInactiveTimeoutRunnerCommandAsync(InactiveTimeoutHostedProcessRunner runner)
     {
-        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         while (runner.Commands.Count == 0 && DateTimeOffset.UtcNow < deadline)
         {
             await Task.Delay(50);
@@ -2339,13 +2460,14 @@ public sealed class PrototypeWorkflowTests : IDisposable
         runner.Commands.Should().NotBeEmpty();
     }
 
-    private static async Task<RunSnapshot> WaitForRunStatusAsync(
+    private async Task<RunSnapshot> WaitForRunStatusAsync(
         PhaseAMetadataStore store,
         string runId,
         string expectedStatus,
         string? expectedProgressStep = null)
     {
-        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        // Readiness under CI load; product creation/activity timeout assertions remain unchanged.
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         RunSnapshot? run = null;
         while (DateTimeOffset.UtcNow < deadline)
         {
@@ -2353,6 +2475,23 @@ public sealed class PrototypeWorkflowTests : IDisposable
             if (run?.Status == expectedStatus &&
                 (expectedProgressStep is null || run.ProgressStep == expectedProgressStep))
             {
+                // ADR-0036/0061: terminal metadata can precede route/audit writes.
+                // A same-project lease is granted only after the queued work exits.
+                if (_completionQueue is not null)
+                {
+                    var project = await store.GetProjectSnapshotAsync(run.ProjectId)
+                        ?? throw new InvalidOperationException("Fixture project was not found.");
+                    var remaining = deadline - DateTimeOffset.UtcNow;
+                    using var readiness = new CancellationTokenSource(
+                        remaining > TimeSpan.Zero ? remaining : TimeSpan.FromMilliseconds(1));
+                    await using var completed = await _completionQueue.EnterAsync(
+                        $"fixture-readback-{Guid.NewGuid():N}", project.AccountId, run.ProjectId,
+                        "fixture-readback", readiness.Token);
+                    run = await store.GetRunSnapshotAsync(runId)
+                        ?? throw new InvalidOperationException("Fixture run was not found after queue completion.");
+                    run.Status.Should().Be(expectedStatus, $"stderr={run.StderrText}; evidence={run.EvidenceJson}");
+                }
+
                 return run;
             }
 
@@ -2360,7 +2499,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         }
 
         run.Should().NotBeNull();
-        run!.Status.Should().Be(expectedStatus);
+        run!.Status.Should().Be(expectedStatus, $"stderr={run.StderrText}; evidence={run.EvidenceJson}");
         if (expectedProgressStep is not null)
         {
             run.ProgressStep.Should().Be(expectedProgressStep);
@@ -2399,6 +2538,27 @@ public sealed class PrototypeWorkflowTests : IDisposable
             Envelope = envelope;
             OperationKey = operationKey;
             return Task.FromResult(true);
+        }
+    }
+
+    private sealed class DeferredSmokeHostedProcessRunner : IHostedProcessRunner
+    {
+        private readonly FakeHostedProcessRunner _inner = new(
+            smokeExitCode: 1,
+            smokeStderrOverride: "ERROR: Cannot instantiate C# script because the associated class could not be found.");
+
+        public TaskCompletionSource SmokeStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource ReleaseSmoke { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            {
+                SmokeStarted.TrySetResult();
+                await ReleaseSmoke.Task.WaitAsync(cancellationToken);
+            }
+
+            return await _inner.RunAsync(command, cancellationToken);
         }
     }
 

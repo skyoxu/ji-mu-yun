@@ -12,8 +12,15 @@ using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
 
-public sealed class GameDesignSceneRouteServiceTests
+public sealed class GameDesignSceneRouteServiceTests : IClassFixture<HostedSourceRepositoryFixture>
 {
+    private readonly HostedSourceRepositoryFixture _sourceFixture;
+
+    public GameDesignSceneRouteServiceTests(HostedSourceRepositoryFixture sourceFixture)
+    {
+        _sourceFixture = sourceFixture;
+    }
+
     [Fact]
     public async Task CreateAsync_ShouldUseAgentSceneRoute_WhenLlmReturnsValidRoute()
     {
@@ -407,13 +414,13 @@ public sealed class GameDesignSceneRouteServiceTests
         }
     }
 
-    private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
+    private PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
         return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
-            ["PHASEA_REPOSITORY_ROOT"] = ResolveRepositoryRoot(repoRoot)
+            ["PHASEA_REPOSITORY_ROOT"] = _sourceFixture.RepositoryRoot(ResolveRepositoryRoot(repoRoot))
         });
     }
 

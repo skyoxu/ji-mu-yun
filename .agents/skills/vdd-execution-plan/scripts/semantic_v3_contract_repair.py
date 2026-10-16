@@ -49,7 +49,7 @@ def load_published_predecessor(predecessor: Path, successor: Path,
     if not valid or not chained:
         raise ValueError("published V3 predecessor semantic contract is invalid")
     alignment = json.loads((predecessor / "semantic-alignment.v1.json").read_text(encoding="utf-8"))
-    recall = json.loads((predecessor / "atomic-recall-alignment.v1.json").read_text(encoding="utf-8"))
+    recall = json.loads(group.sc.published_recall_path(predecessor).read_text(encoding="utf-8"))
     active = {item["obligation_id"] for item in bundle["obligations"] if item.get("status") == "active"}
     if (alignment.get("valid") is not True or recall.get("valid") is not True
             or set(recall.get("worker", {}).get("supported_obligation_ids", [])) != active):
@@ -187,7 +187,7 @@ def install_published_v4_reuse(predecessor: Mapping[str, Any], additions: set[st
     and semantic identities are validated by ``load_published_predecessor``;
     the only new IDs admitted here are the explicitly reviewed V1 additions.
     """
-    recall = json.loads((Path(predecessor["_path"]) / "atomic-recall-alignment.v1.json").read_text(encoding="utf-8"))
+    recall = json.loads(group.sc.published_recall_path(Path(predecessor["_path"])).read_text(encoding="utf-8"))
     prior_supported = set(recall.get("worker", {}).get("supported_obligation_ids", []))
     prior_supported.update(recall.get("supported_obligation_ids", []))
     if not prior_supported:

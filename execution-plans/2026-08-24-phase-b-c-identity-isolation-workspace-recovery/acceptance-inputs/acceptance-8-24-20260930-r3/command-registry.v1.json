@@ -1,0 +1,175 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.IdentityContextTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "dotnet",
+      "id": "s0-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.RunnerIsolationTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "dotnet",
+      "id": "s1-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.SnapshotTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "dotnet",
+      "id": "s2-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.RestoreRecoveryTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "dotnet",
+      "id": "s3-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.MigrationEvidenceTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "dotnet",
+      "id": "s4-green",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.IdentityContextTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "dotnet",
+      "id": "s0-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.RunnerIsolationTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "dotnet",
+      "id": "s1-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.SnapshotTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "dotnet",
+      "id": "s2-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.RestoreRecoveryTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "dotnet",
+      "id": "s3-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--no-restore",
+        "--filter",
+        "FullyQualifiedName~PhaseB.MigrationEvidenceTests"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "dotnet",
+      "id": "s4-terminal",
+      "shell": false,
+      "timeout_seconds": 300
+    }
+  ],
+  "schema_version": "ria.command-registry.v1"
+}

@@ -20,6 +20,8 @@ import threading
 import time
 import xml.etree.ElementTree as ET
 
+from ci_process import run_logged_command
+
 GODOT_LOG_LIMIT_BYTES = 32 * 1024 * 1024
 GODOT_LOG_GROWTH_LIMIT_BYTES = 16 * 1024 * 1024
 
@@ -155,7 +157,7 @@ def _copy_reports_best_effort(src_root: str, dest_root: str) -> list[tuple[str, 
     return failures
 
 
-def _find_latest_results_xml(reports_dir: str):
+def _find_latest_results_xml(reports_dir: str, *, not_before_ns: int | None = None):
     try:
         if not os.path.isdir(reports_dir):
             return None
@@ -167,7 +169,10 @@ def _find_latest_results_xml(reports_dir: str):
             cand = os.path.join(reports_dir, name, "results.xml")
             if not os.path.isfile(cand):
                 continue
-            mtime = os.path.getmtime(cand)
+            stat = os.stat(cand)
+            if not_before_ns is not None and stat.st_mtime_ns < not_before_ns:
+                continue
+            mtime = stat.st_mtime_ns
             if mtime > best_mtime:
                 best_mtime = mtime
                 best_path = cand
@@ -185,21 +190,30 @@ def _parse_results_xml(path: str):
         errors = 0
         for ts in root.findall("testsuite"):
             errors += int(ts.attrib.get("errors", "0"))
-        return {"path": path, "tests": tests, "failures": failures, "errors": errors}
+        return {"path": path, "tests": tests, "failures": failures, "errors": errors, "skipped": int(root.attrib.get("skipped", "0"))}
     except Exception as ex:
         return {"path": path, "error": f"parse_failed:{type(ex).__name__}"}
 
 
-def run_cmd(args, cwd=None, timeout=600_000, env=None):
-    p = subprocess.Popen(args, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         text=True, encoding='utf-8', errors='ignore')
-    try:
-        out, _ = p.communicate(timeout=timeout/1000.0)
-    except subprocess.TimeoutExpired:
-        _terminate_process_tree(p)
-        out, _ = p.communicate()
-        return 124, out
-    return p.returncode, out
+def _result_exit_code(rc: int, parsed: dict, *, strict: bool) -> int:
+    # ADR-0025: current positive case counts and complete results are mandatory.
+    complete = (
+        parsed and not parsed.get("error") and parsed.get("tests", 0) > parsed.get("skipped", 0)
+        and parsed.get("failures") == 0 and parsed.get("errors") == 0
+    )
+    if not complete:
+        return rc if rc != 0 else 1
+    if not strict and rc != 124:
+        return 0
+    return rc
+
+
+def run_cmd(args, cwd=None, timeout=600_000, env=None, log_root=None):
+    # ADR-0005: compiler descendants may retain inherited stdout after Godot exits.
+    rc, output, _ = run_logged_command(
+        args, cwd=cwd, timeout=timeout, env=env, log_root=log_root
+    )
+    return rc, output
 
 
 def _godot_log_files(env: dict[str, str] | None, user_data_dir: str | None = None) -> list[str]:
@@ -479,7 +493,7 @@ def main():
     prewarm_note = None
     if args.prewarm:
         pre_cmd = [args.godot_bin, '--headless', *godot_user_data_args, '--path', proj, '--build-solutions', '--quit']
-        _rcp, _outp = run_cmd(pre_cmd, cwd=proj, timeout=300_000, env=process_env)
+        _rcp, _outp = run_cmd(pre_cmd, cwd=proj, timeout=300_000, env=process_env, log_root=root)
         prewarm_attempts = 1
         prewarm_rc = _rcp
         # Write first attempt
@@ -487,7 +501,7 @@ def main():
         if _rcp != 0:
             # Wait and retry once to mitigate transient C# load issues
             time.sleep(3)
-            _rcp2, _outp2 = run_cmd(pre_cmd, cwd=proj, timeout=360_000, env=process_env)
+            _rcp2, _outp2 = run_cmd(pre_cmd, cwd=proj, timeout=360_000, env=process_env, log_root=root)
             prewarm_attempts = 2
             prewarm_rc = _rcp2
             # Append retry log to same file
@@ -528,6 +542,7 @@ def main():
             # normalize relative tests path to res://
             apath = 'res://' + apath.replace('\\', '/').lstrip('/')
         cmd += ['-a', apath]
+    invocation_started_ns = time.time_ns()
     try:
         rc, out = run_cmd_failfast(cmd, cwd=proj, timeout=args.timeout_sec*1000, env=process_env, godot_user_data_dir=godot_user_data_dir)
     finally:
@@ -541,7 +556,7 @@ def main():
     # the same log storm.
     copy_log_rc = None
     if rc == 0:
-        copy_log_rc, _out2 = run_cmd([args.godot_bin, '--headless', *godot_user_data_args, '--path', proj, '--quiet', '-s', 'res://addons/gdUnit4/bin/GdUnitCopyLog.gd'], cwd=proj, env=process_env)
+        copy_log_rc, _out2 = run_cmd([args.godot_bin, '--headless', *godot_user_data_args, '--path', proj, '--quiet', '-s', 'res://addons/gdUnit4/bin/GdUnitCopyLog.gd'], cwd=proj, env=process_env, log_root=root)
 
     # Archive reports
     reports_dir = os.path.join(proj, 'reports')
@@ -570,14 +585,12 @@ def main():
                     report_copy_failures.append((src, dst, str(ex)))
 
     parsed = {}
-    latest_results = _find_latest_results_xml(reports_dir)
+    latest_results = _find_latest_results_xml(reports_dir, not_before_ns=invocation_started_ns)
     if latest_results:
         parsed = _parse_results_xml(latest_results)
 
     strict_exit = (os.environ.get("GDUNIT_STRICT_EXIT_CODE") or "0").strip() == "1"
-    normalized_rc = rc
-    if not strict_exit and rc != 0 and parsed and parsed.get("failures") == 0 and parsed.get("errors") == 0:
-        normalized_rc = 0
+    normalized_rc = _result_exit_code(rc, parsed, strict=strict_exit)
 
     # Write a small summary json for CI
     summary = {

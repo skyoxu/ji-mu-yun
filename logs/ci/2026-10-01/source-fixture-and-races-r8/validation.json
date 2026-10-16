@@ -1,0 +1,35 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_run": 36849950332,
+  "source_commit": "21af9d129e754cf67011adb2a2eb761a1fcb5075",
+  "observed": {
+    "pipeline_seconds": 2829,
+    "dotnet_seconds": 2821.756,
+    "phase_a": {
+      "total": 1846,
+      "passed": 1844,
+      "failed": 2
+    },
+    "core": {
+      "total": 44,
+      "passed": 44
+    },
+    "preflight": {
+      "total": 36,
+      "passed": 36
+    },
+    "all_tests_executed": true,
+    "gdd_source_fixture_classes_summed_seconds": 2563.1
+  },
+  "changes": [
+    "Reuse a real-source repository projection once per GDD class; exclude generated root godot downloads/.godot caches and existing transient seed directories; preserve custom mutable repository behavior.",
+    "S15: await bounded directory cleanup after child exit; remove unrelated global pool clearing.",
+    "Node browser fixtures: asynchronous exit and simultaneous pipe drains; kill/drain child trees on the bounded fixture timeout; preserve JavaScript assertions."
+  ],
+  "validation": {
+    "python_tests_passed": 10,
+    "yaml": "parsed; full-suite invocation retained",
+    "csharp": "Windows build/preflight/full-suite pending; no local dotnet compiler"
+  },
+  "completion": "Not claimed"
+}

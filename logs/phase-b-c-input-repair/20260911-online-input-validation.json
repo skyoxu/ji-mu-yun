@@ -1,0 +1,30 @@
+{
+  "baseline": "d8219f5a867e2a1bb2ed22c86f0437367617da06",
+  "scope": "implementation-input-only",
+  "checks": {
+    "acceptance_coverage": true,
+    "architecture_coverage": true,
+    "cli_flags": true,
+    "historical_records_untouched": true,
+    "no_ready_publication": true,
+    "piwr_coverage": true,
+    "production_untouched": true,
+    "source_clauses": true,
+    "source_existence": true,
+    "unique_cases": true
+  },
+  "relative_links_checked": 11,
+  "broken_links": 0,
+  "case_count": 53,
+  "piwr_count": 40,
+  "acceptance_count": 18,
+  "architecture_rules": 13,
+  "nfr_count": 7,
+  "compiler_executed": false,
+  "production_tests_executed": false,
+  "windows_verification_executed": false,
+  "model_called": false,
+  "production_files_changed": [],
+  "historical_evidence_changed": [],
+  "limitation": "Canonical VDD compilation and real behavior probes remain local follow-up, not online readiness."
+}

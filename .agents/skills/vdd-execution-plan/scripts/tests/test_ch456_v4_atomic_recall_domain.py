@@ -42,6 +42,17 @@ def test_v4_structured_schema_is_closed_over_frozen_active_ids_and_source_refs()
     assert "uniqueItems" not in schema["properties"]["invented_obligation_ids"]
 
 
+def test_v4_schema_repair_sends_only_the_frozen_semantic_payload() -> None:
+    payload = _payload()
+    repair = {
+        "original_stage": "v4-atomic-recall",
+        "input": payload,
+        "validator_findings": ["worker-output:unsupported"],
+    }
+    assert v4_domain._worker_input_payload("v4-atomic-recall-schema-repair", repair) == payload
+
+
+
 def test_unknown_supported_id_routes_through_existing_single_repair(tmp_path: Path) -> None:
     payload = _payload()
     invalid = {
@@ -299,3 +310,27 @@ def test_chunk_merge_rejects_missing_and_unknown_ids() -> None:
                 "supported_obligation_ids": ids,
                 "invented_obligation_ids": [], "source_gap_claims": [],
             }])
+
+
+
+@pytest.mark.parametrize("empty", [True, False])
+def test_cached_empty_verdict_retries_once_but_invented_verdict_is_reused(tmp_path, monkeypatch, empty):
+    """ADR-0041: compose bounded transport recovery with complete negative verdicts."""
+    payload, prompt = _payload(), "frozen prompt"
+    identity = {"schema": "vdd.resolved-atomic-recall.v1", "stage": "v4-atomic-recall",
+                "input_sha256": gate.sc.sha256_value(payload), "prompt_sha256": gate.sc.sha256_value(prompt)}
+    old = {"supported_obligation_ids": [], "invented_obligation_ids": [] if empty else ["O-1", "O-2"], "source_gap_claims": []}
+    path = tmp_path / ".compiler-work/resolved-atomic-recall" / (gate.sc.sha256_value(identity)[7:] + ".json")
+    gate.sc.atomic_json(path, {**identity, "result": old, "result_sha256": gate.sc.sha256_value(old), "authorizes": []})
+    old_bytes = path.read_bytes()
+    calls = []
+    repaired = {"supported_obligation_ids": ["O-1", "O-2"], "invented_obligation_ids": [], "source_gap_claims": []}
+    def worker(**kwargs):
+        calls.append(kwargs["stage"])
+        return repaired
+    monkeypatch.setattr(gate.sc, "invoke_worker", worker)
+    args = dict(root=tmp_path, out_dir=tmp_path, payload=payload, prompt=prompt, worker_cache=None)
+    assert gate._resolved_atomic_recall_worker(**args) == (repaired if empty else old)
+    assert gate._resolved_atomic_recall_worker(**args) == (repaired if empty else old)
+    assert calls == (["v4-atomic-recall"] if empty else [])
+    assert path.read_bytes() == old_bytes

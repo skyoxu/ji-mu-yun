@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -8,6 +9,7 @@ namespace PhaseA.Platform.Readback;
 public sealed class ProjectAssetPreviewTicketService
 {
     private static readonly TimeSpan TicketLifetime = TimeSpan.FromMinutes(10);
+    private static readonly ConcurrentDictionary<(string AccountId, string ProjectId), long> TicketGenerations = new();
 
     private readonly PhaseAPlatformOptions _options;
 
@@ -24,7 +26,13 @@ public sealed class ProjectAssetPreviewTicketService
 
         var expiresUnix = DateTimeOffset.UtcNow.Add(TicketLifetime).ToUnixTimeSeconds();
         var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(12)).ToLowerInvariant();
-        var payload = JsonSerializer.Serialize(new TicketPayload(accountId, projectId, resourcePath, expiresUnix, nonce));
+        var payload = JsonSerializer.Serialize(new TicketPayload(
+            accountId,
+            projectId,
+            resourcePath,
+            expiresUnix,
+            nonce,
+            CurrentGeneration(accountId, projectId)));
         var signature = SignRequired(payload);
         return $"{Base64UrlEncode(Encoding.UTF8.GetBytes(payload))}.{Base64UrlEncode(signature)}";
     }
@@ -67,15 +75,13 @@ public sealed class ProjectAssetPreviewTicketService
             return false;
         }
 
-        if (parsed is null ||
-            !string.Equals(parsed.AccountId, accountId, StringComparison.Ordinal) ||
-            !string.Equals(parsed.ProjectId, projectId, StringComparison.Ordinal) ||
-            !string.Equals(parsed.ResourcePath, resourcePath, StringComparison.Ordinal))
+        if (parsed is null || !MatchesRequestedResource(parsed, accountId, projectId, resourcePath))
         {
             return false;
         }
 
-        if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > parsed.ExpiresUnix)
+        if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > parsed.ExpiresUnix ||
+            parsed.Generation != CurrentGeneration(accountId, projectId))
         {
             return false;
         }
@@ -113,6 +119,26 @@ public sealed class ProjectAssetPreviewTicketService
         return _options.TicketSigningSecret;
     }
 
+    public static void InvalidateTickets(string accountId, string projectId)
+    {
+        TicketGenerations.AddOrUpdate(
+            (accountId, projectId),
+            1,
+            static (_, generation) => checked(generation + 1));
+    }
+
+    private static long CurrentGeneration(string accountId, string projectId)
+    {
+        return TicketGenerations.GetOrAdd((accountId, projectId), 0);
+    }
+
+    private static bool MatchesRequestedResource(TicketPayload ticket, string accountId, string projectId, string resourcePath)
+    {
+        return string.Equals(ticket.AccountId, accountId, StringComparison.Ordinal) &&
+               string.Equals(ticket.ProjectId, projectId, StringComparison.Ordinal) &&
+               string.Equals(ticket.ResourcePath, resourcePath, StringComparison.Ordinal);
+    }
+
     private static string Base64UrlEncode(byte[] bytes)
     {
         return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
@@ -130,5 +156,6 @@ public sealed class ProjectAssetPreviewTicketService
         string ProjectId,
         string ResourcePath,
         long ExpiresUnix,
-        string Nonce);
+        string Nonce,
+        long Generation);
 }

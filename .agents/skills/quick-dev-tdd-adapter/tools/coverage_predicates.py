@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import subprocess
 import sys
 from typing import Any, Mapping, Sequence
 
@@ -12,6 +13,50 @@ from closure_predicate import validate_runtime_closure
 from runtime_evidence import HASH_RE, current_snapshot, create_json, expected_tuple_keys, load_json, sha256_bytes, sha256_value
 sys.path.insert(0, str(TOOLS.parents[3] / "scripts/quick_dev"))
 from approved_budget_replay import replay_budget_transition, resolve_file
+
+
+def _git_changed_paths(workspace: Path, source_commit: str, root_path: str, *, exclude_transport: bool = True) -> set[str]:
+    """Return tracked and untracked paths changed below one frozen root."""
+    args = ["git", "diff", "--name-only", source_commit, "--", root_path]
+    tracked = subprocess.run(args, cwd=workspace, capture_output=True, text=True, check=False)
+    if tracked.returncode != 0:
+        return set()
+    values = {line.replace("\\", "/") for line in tracked.stdout.splitlines() if line.strip()}
+    untracked = subprocess.run(
+        ["git", "ls-files", "--others", "--exclude-standard", "--", root_path],
+        cwd=workspace, capture_output=True, text=True, check=False,
+    )
+    if untracked.returncode == 0:
+        values.update(line.replace("\\", "/") for line in untracked.stdout.splitlines() if line.strip())
+    if not exclude_transport:
+        return values
+    # Acceptance materializes its own run inputs after the Q8 snapshot was
+    # frozen. Those files are evidence transport, not runtime plan content.
+    values = {
+        item for item in values
+        if "/acceptance-inputs/" not in item
+        and "/.acceptance-snapshots/" not in item
+        and "/acceptance-runs/" not in item
+        and "/skill-input" not in item
+        and not item.endswith("/acceptance-projection-request.v1.json")
+        and "/acceptance-run-request." not in item
+    }
+    return values
+
+
+def _path_allowed(path: str, allowed: set[str]) -> bool:
+    return any(path == item or path.startswith(item.rstrip("/") + "/") for item in allowed)
+
+
+def _snapshot_change_is_outside_slice(workspace: Path, source_commit: str,
+                                      roots: Sequence[str], refs: set[str]) -> bool:
+    """ADR-0041: retain slice reuse without ignoring production-owner changes."""
+    if not refs:
+        return False
+    changed = set()
+    for root in roots:
+        changed.update(_git_changed_paths(workspace, source_commit, root, exclude_transport=False))
+    return bool(changed) and all(not _path_allowed(path, refs) for path in changed)
 
 
 def _semantic_index(bundle: Mapping[str, Any], slice_id: str) -> tuple[Mapping[str, Any], dict[str, set[str]]]:
@@ -186,7 +231,7 @@ def _validate_detached_binding(binding: Mapping[str, Any] | None, profile: str) 
     return dict(binding)
 
 
-def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_input):
+def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_input, allowed_changed_paths=None, *, slice_input_paths=None):
     """Recheck frozen runtime roots; Acceptance's new evidence is not runtime input."""
     from runtime_evidence import ROOT_KINDS, safe_relative
     from approved_budget_replay import hash_path
@@ -232,7 +277,17 @@ def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_inpu
         # replay validates identity and containment here, while the individual
         # predecessor result hashes remain authoritative for content.
         if digest != row["content_sha256"] and row["root_kind"] != "plan_state_transition":
-            raise ValueError("completion runtime root stale: " + row["root_kind"])
+            refs = {safe_relative(item) for item in (slice_input_paths or [])}
+            if row["root_kind"] == "candidate_tree" and _snapshot_change_is_outside_slice(workspace, source_commit, relatives, refs):
+                continue
+            allowed = {safe_relative(item) for item in (allowed_changed_paths or [])}
+            if row["root_kind"] != "plan" or not allowed:
+                raise ValueError("completion runtime root stale: " + row["root_kind"])
+            changed = set()
+            for relative in relatives:
+                changed.update(_git_changed_paths(workspace, source_commit, relative))
+            if not changed or any(not _path_allowed(item, allowed) for item in changed):
+                raise ValueError("completion runtime root stale: " + row["root_kind"])
     return snapshot
 
 
@@ -248,6 +303,7 @@ def publish_implementation_complete(
     detached_promotion_binding: Mapping[str, Any] | None = None,
     profile: str = "standard",
     verify_existing: bool = False,
+    allowed_changed_paths: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     detached_binding = _validate_detached_binding(detached_promotion_binding, profile)
     bundle = load_json(semantic_plan)
@@ -256,7 +312,7 @@ def publish_implementation_complete(
     validate_plan(bundle)
     expected_keys = set() if routed else expected_tuple_keys(bundle)
     frozen_input = load_json(out.with_name("terminal-input.v2.json")) if verify_existing else None
-    before = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input)
+    before = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input, allowed_changed_paths)
               if verify_existing else current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit))
     cover = bundle.get("final_plan_coverage")
     acceptance_by_slice: dict[str, set[str]] = {}
@@ -291,12 +347,21 @@ def publish_implementation_complete(
             slice_roots = ready.get("snapshot_roots")
             if not isinstance(slice_snapshot, Mapping) or not isinstance(slice_roots, list) or len(slice_roots) != 8:
                 raise ValueError("slice-ready snapshot manifest missing")
+            selected_slice, _ = _semantic_index(bundle, sid)
+            terminal_descriptor_for_snapshot = load_json(run_root / "descriptors" / "terminal.json")
+            slice_input_paths = set()
+            for key in ("production_owners", "execution_snapshot_paths", "planned_new_files"):
+                slice_input_paths.update(selected_slice.get(key, []))
+            for key in ("target_refs", "fixture_refs"):
+                slice_input_paths.update(terminal_descriptor_for_snapshot.get(key, []))
             verified_slice_snapshot = _replay_snapshot(
                 workspace,
                 slice_roots,
                 str(ready.get("source_commit") or source_commit),
                 ready.get("base_commit") if ready.get("base_commit") is not None else base_commit,
                 {"snapshot_manifest": slice_snapshot},
+                allowed_changed_paths,
+                slice_input_paths=slice_input_paths,
             )
             if ready.get("current_snapshot_sha256") != verified_slice_snapshot["sha256"]:
                 raise ValueError("slice-ready snapshot stale")
@@ -432,7 +497,7 @@ def publish_implementation_complete(
         "detached_promotion_binding": detached_binding,
     }
 
-    after = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input)
+    after = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input, allowed_changed_paths)
              if verify_existing else current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit))
     if after["sha256"] != before["sha256"]:
         raise ValueError("current snapshot changed during Q8")

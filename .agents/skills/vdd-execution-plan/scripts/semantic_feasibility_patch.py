@@ -28,6 +28,7 @@ import semantic_worker_v3_write_set_projection_patch  # noqa: F401  # owner/writ
 import semantic_worker_v3_group_safety_patch  # noqa: F401  # single-subject groups + rollback owner recovery
 import semantic_worker_v3_explicit_path_contract_patch  # noqa: F401  # explicit frozen source path authority
 import semantic_worker_v3_execution_contract_patch  # noqa: F401  # V3A/V7 facts at worker boundary
+import semantic_worker_v3_path_grounding_patch  # noqa: F401  # finite stale-path grounding before V3 contract checks
 import semantic_worker_contract_patch  # noqa: F401  # stable live worker field contract
 import semantic_worker_relational_patch  # noqa: F401  # stable live V3 relational contract
 import semantic_worker_v3_expected_red_eligibility_patch  # noqa: F401  # runtime marker vs guard role

@@ -95,3 +95,11 @@ UPSTREAM Phase 0-6 + global review + closure + final commit
 - 平台架构、online Data migration、correlation、version、trusted evidence custody/capacity 和 supported-workspace performance 通过分册定义的机械验收。
 - Previous bundle 只在 current DB schema 满足 expand-contract 兼容矩阵时允许回退。
 - 任何下游实施 evidence 都引用 ActiveRegistry 选定的同一 UpstreamHandoffManifest/StateEvent/epoch；没有上游未完成时的并行任务、重复 surface/action/status/diagnostic/schema，或未授权删除 compatibility shim。
+
+## Recovery Metadata Supplement (2026-09-30)
+
+Added for recovery-document schema completeness. Original source text,
+authority notices, paused states, non-goals, and evidence remain unchanged.
+These fields are source locators, not a new implementation status or approval.
+
+- Git Head: n/a - the plan explicitly defers its executable baseline to the finalCommit selected by UpstreamHandoffActiveRegistry after BH-HANDOFF; the authoring baseline is non-authoritative

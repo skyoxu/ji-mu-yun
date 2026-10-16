@@ -2,7 +2,7 @@ using Microsoft.Data.Sqlite;
 
 namespace PhaseA.Platform.Tests.Data;
 
-internal sealed class TempSqliteDatabase : IDisposable
+internal sealed class TempSqliteDatabase : IDisposable, IAsyncDisposable
 {
     private readonly string _path;
 
@@ -39,6 +39,25 @@ internal sealed class TempSqliteDatabase : IDisposable
         }
 
         return tables;
+    }
+
+    // ADR-0061: terminal run readback can precede final background audit writes.
+    // Yield while those connections close; synchronous sleeps block test continuations.
+    public async ValueTask DisposeAsync()
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (File.Exists(_path))
+        {
+            try
+            {
+                File.Delete(_path);
+                return;
+            }
+            catch (IOException) when (DateTimeOffset.UtcNow < deadline)
+            {
+                await Task.Delay(25).ConfigureAwait(false);
+            }
+        }
     }
 
     public void Dispose()

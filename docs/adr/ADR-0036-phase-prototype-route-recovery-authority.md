@@ -41,3 +41,32 @@ Acceptance must be derived from validators, markers, scripts, logs, database row
 - `docs/workflows/phase-b-agf-godogen-absorption.md`
 - `PhaseA.Platform/Runs/PrototypeRouteStateWriter.cs`
 - `PhaseA.Platform/Runs/PrototypeGoalAcceptanceValidator.cs`
+
+## Addendum (2026-10 asynchronous GDD fixture readiness)
+
+- The GDD integration fixture waits for both the expected terminal run status
+  and its completed progress step before inspecting downstream artifacts.
+- Use a monotonic readiness deadline of 30 seconds, consistent with the existing
+  prototype workflow fixtures, instead of counting short polling iterations.
+  This is a test readiness bound, not a product latency guarantee. Failed,
+  blocked, or cancelled runs fail immediately with their current diagnostics.
+- The fake Runner deliberately completes after the former two-second window;
+  the fixture still validates the full GDD, milestone, asset, and package chain.
+  Temporary database cleanup yields while final background writes close.
+- Terminal metadata and progress are not a background-completion fence. Before
+  reading route files, queued prototype fixtures acquire and release a lease
+  on the same project in the production queue. That lease becomes available
+  only after prior queued work, including route and audit writes, exits.
+
+## Addendum (2026-10 completion recovery and active final acceptance)
+
+- Completion-artifact recovery applies only to a started, inactive creation run.
+  Queued runs and active final smoke validation are not promoted to success.
+- Recovery takes a nonblocking same-project lease from the creation queue.
+  It defers when the project is active, capacity is full, or work is already
+  waiting; it never queues a browser read behind a long-running execution.
+- Re-read current metadata under the lease. A current terminal result or
+  execution evidence wins over an older snapshot and completion files.
+- Deterministic tests hold final smoke after completion files are produced,
+  verify that progress remains running, then verify the real smoke failure.
+  Existing orphan-run recovery remains covered alongside queued/active cases.

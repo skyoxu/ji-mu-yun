@@ -15,12 +15,13 @@ func test_emits_request_blocked_signal_on_denied() -> void:
     if c == null:
         return
 
-    var blocked_reason := ""
-    var blocked_url := ""
+    # ADR-0025: dictionaries share callback observations across the closure.
+    var observed := {"reason": "", "url": "", "count": 0}
 
     c.RequestBlocked.connect(func(reason: String, url: String) -> void:
-        blocked_reason = reason
-        blocked_url = url
+        observed["reason"] = reason
+        observed["url"] = url
+        observed["count"] += 1
     )
 
     var ok = c.Validate("GET", "http://example.com", "", 0)
@@ -28,6 +29,7 @@ func test_emits_request_blocked_signal_on_denied() -> void:
 
     await get_tree().process_frame
 
-    assert_str(blocked_reason).is_not_empty()
-    assert_str(blocked_url).starts_with("http://")
+    assert_int(observed["count"]).is_equal(1)
+    assert_str(observed["reason"]).is_equal("not https")
+    assert_str(observed["url"]).is_equal("http://example.com")
 

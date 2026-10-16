@@ -1,0 +1,17 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_run": 36838664713,
+  "source_commit": "251ef0a85bf17ff3d77eda11d961ec86175d9fc9",
+  "change": "Parse VSTest second/minute/hour failure durations and xUnit diagnostic failure prefixes; preserve stable deduplication.",
+  "observed_duration": "11 s",
+  "historical_failure_replay": [
+    "PhaseA.Platform.Tests.Runs.PrototypeWorkflowTests.RepairAsync_UsesSlugFromPrototypeRecordContent_WhenPathSlugDiffers"
+  ],
+  "validation": {
+    "python_regression_passed": 10,
+    "windows": "pending for this follow-up",
+    "command": "python -m unittest discover -s scripts/sc/tests -p 'test_ci_*.py'",
+    "exit_code": 0
+  },
+  "completion": "Not claimed"
+}

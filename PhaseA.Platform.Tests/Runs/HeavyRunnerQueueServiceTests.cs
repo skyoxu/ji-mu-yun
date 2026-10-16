@@ -6,6 +6,37 @@ namespace PhaseA.Platform.Tests.Runs;
 public sealed class HeavyRunnerQueueServiceTests
 {
     [Fact]
+    public async Task TryEnter_RespectsEveryActiveProjectCapacityAndWaitingWork()
+    {
+        // ADR-0036: recovery is nonblocking and uses the same project ownership as execution.
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), maxConcurrentRuns: 3);
+        await using var first = await queue.EnterAsync("first", "account", "project-1", "work");
+        await using var second = await queue.EnterAsync("second", "account", "project-2", "work");
+        Assert.Null(queue.TryEnter("same-second-project", "account", "project-2", "recovery"));
+
+        await using var third = queue.TryEnter("third", "account", "project-3", "recovery");
+        Assert.NotNull(third);
+        Assert.Null(queue.TryEnter("at-capacity", "account", "project-4", "recovery"));
+        await third!.DisposeAsync();
+
+        using var cancellation = new CancellationTokenSource();
+        var waiting = queue.EnterAsync("waiting", "account", "project-1", "work", cancellation.Token);
+        Assert.Equal(1, queue.GetReadback("account", includeAll: true).QueuedCount);
+        Assert.Null(queue.TryEnter("bypass-waiting", "account", "project-4", "recovery"));
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => waiting);
+
+        await using var available = queue.TryEnter("available", "account", "project-4", "recovery");
+        Assert.NotNull(available);
+        Assert.Null(queue.TryEnter("same-available-project", "account", "project-4", "recovery"));
+        await available!.DisposeAsync();
+        Assert.Equal(0, queue.GetReadback("account", includeAll: true).QueuedCount);
+        await second.DisposeAsync();
+        await first.DisposeAsync();
+        Assert.False(queue.GetReadback("account", includeAll: true).Running);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_RunsHeavyWorkOneAtATimeInFifoOrder()
     {
         var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);

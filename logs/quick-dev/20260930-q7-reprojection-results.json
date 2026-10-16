@@ -1,0 +1,513 @@
+[
+  {
+    "slice": "S1",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S1-r2/slice-ready-postcommit.v3.json",
+    "stdout": "atch-S1-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:9bf4ee1b72344e87179d42bd2fbe6d15c58d19763298f78bdbcc143d1ecf531d\", \"slice_id\": \"S1\", \"stage_selectors\": {\"regression\": \"sha256:9bf4ee1b72344e87179d42bd2fbe6d15c58d19763298f78bdbcc143d1ecf531d\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S2",
+    "rc": 0,
+    "out": "logs/quick-dev/20260928-plan-closeout/S2-r4/slice-ready-postcommit.v3.json",
+    "stdout": "d\": \"S2-r4\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:ddc696509813fa43f1b8d34e6249d0383808344ad18955eebc5d5b63175868e5\", \"slice_id\": \"S2\", \"stage_selectors\": {\"regression\": \"sha256:ddc696509813fa43f1b8d34e6249d0383808344ad18955eebc5d5b63175868e5\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S3",
+    "rc": 0,
+    "out": "logs/quick-dev/20260928-plan-closeout/S3-r5/slice-ready-postcommit.v3.json",
+    "stdout": "d\": \"S3-r5\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:204dd8bb29e9295125cd844e97207599bf79b56cc5ed582338c40bf5083be641\", \"slice_id\": \"S3\", \"stage_selectors\": {\"regression\": \"sha256:204dd8bb29e9295125cd844e97207599bf79b56cc5ed582338c40bf5083be641\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S4",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S4/slice-ready-postcommit.v3.json",
+    "stdout": "9-batch-S4\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:5768a5da514c3a3988fa5c56268cf2bb89b8d62db854cd1feb682281293a79a6\", \"slice_id\": \"S4\", \"stage_selectors\": {\"regression\": \"sha256:5768a5da514c3a3988fa5c56268cf2bb89b8d62db854cd1feb682281293a79a6\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S5",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S5-r2/slice-ready-postcommit.v3.json",
+    "stdout": "etry-S5-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:70439d1cb4e231e4bbbfe5e551c5cce2652cbc334d8d4e972840c9df43a830bd\", \"slice_id\": \"S5\", \"stage_selectors\": {\"regression\": \"sha256:70439d1cb4e231e4bbbfe5e551c5cce2652cbc334d8d4e972840c9df43a830bd\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S6",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S6/slice-ready-postcommit.v3.json",
+    "stdout": "9-batch-S6\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:302ceaecec2aac06dac7a2da8073e4a7cb9defa1f923e6d126f1a471eeb3cdae\", \"slice_id\": \"S6\", \"stage_selectors\": {\"regression\": \"sha256:302ceaecec2aac06dac7a2da8073e4a7cb9defa1f923e6d126f1a471eeb3cdae\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S8",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S8/slice-ready-postcommit.v3.json",
+    "stdout": "9-batch-S8\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:02620782ce70a710444a029fa7af9cdd44b607b71255d5ef27c5a010f4734e1a\", \"slice_id\": \"S8\", \"stage_selectors\": {\"regression\": \"sha256:02620782ce70a710444a029fa7af9cdd44b607b71255d5ef27c5a010f4734e1a\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S9",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S9-r1/slice-ready-postcommit.v3.json",
+    "stdout": "etry-S9-r1\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:8377d8f7a6607eed43097134767eacda311031475720f75a6bd39a0d0368c72f\", \"slice_id\": \"S9\", \"stage_selectors\": {\"regression\": \"sha256:8377d8f7a6607eed43097134767eacda311031475720f75a6bd39a0d0368c72f\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S10",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S10-r1/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S10-r1\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:baf2e5da4e2e77557f8c36ac852b1e0f41f016c15e71d5bd42c381099cd34de3\", \"slice_id\": \"S10\", \"stage_selectors\": {\"regression\": \"sha256:baf2e5da4e2e77557f8c36ac852b1e0f41f016c15e71d5bd42c381099cd34de3\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S11",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S11-r1/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S11-r1\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:b523dc6b433d16b02c1770c277c4c0e866823457fe51957de6d175312b7a7cc5\", \"slice_id\": \"S11\", \"stage_selectors\": {\"regression\": \"sha256:b523dc6b433d16b02c1770c277c4c0e866823457fe51957de6d175312b7a7cc5\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S12",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S12-r1/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S12-r1\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:16fc2c82ba8cfe486adfd61b31c6fff4d289f089ee36f96999a776b6df3ff4c5\", \"slice_id\": \"S12\", \"stage_selectors\": {\"regression\": \"sha256:16fc2c82ba8cfe486adfd61b31c6fff4d289f089ee36f96999a776b6df3ff4c5\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S13",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S13-r2/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S13-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:bedc8fe446fd806568ea4c7af6be1f4693a2938257403d04f0041e4fa83fd600\", \"slice_id\": \"S13\", \"stage_selectors\": {\"regression\": \"sha256:bedc8fe446fd806568ea4c7af6be1f4693a2938257403d04f0041e4fa83fd600\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S14",
+    "rc": 0,
+    "out": "logs/quick-dev/20260930-S14-r10/slice-ready-postcommit.v3.json",
+    "stdout": "0-S14-r10\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:57147dc72f6cf47cf5704b870e07a760dc31fd6337a9b2179800b748fc91b559\", \"slice_id\": \"S14\", \"stage_selectors\": {\"regression\": \"sha256:57147dc72f6cf47cf5704b870e07a760dc31fd6337a9b2179800b748fc91b559\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S15",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-recovery2-S15/slice-ready-postcommit.v3.json",
+    "stdout": "very2-S15\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:72a3b7173c40782ba3183787aef793eb921b806eb6c859e16d92154391d947de\", \"slice_id\": \"S15\", \"stage_selectors\": {\"regression\": \"sha256:72a3b7173c40782ba3183787aef793eb921b806eb6c859e16d92154391d947de\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S16",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S16/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S16\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:99b4d75081acaa92c76eae4e0ed5ddadf52e1a81bdad5e4e9373afcd116ccc01\", \"slice_id\": \"S16\", \"stage_selectors\": {\"regression\": \"sha256:99b4d75081acaa92c76eae4e0ed5ddadf52e1a81bdad5e4e9373afcd116ccc01\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S17",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S17/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S17\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:7037d54f7f8c7667d3933eb49377b20ded699cd17ee52bd5d97df6e7c9846e83\", \"slice_id\": \"S17\", \"stage_selectors\": {\"regression\": \"sha256:7037d54f7f8c7667d3933eb49377b20ded699cd17ee52bd5d97df6e7c9846e83\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S18",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-recovery2-S18/slice-ready-postcommit.v3.json",
+    "stdout": "very2-S18\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:ac34d14efb70559be49f6cdcb1cc52dbd2a0f453e187af37428297578152ba85\", \"slice_id\": \"S18\", \"stage_selectors\": {\"regression\": \"sha256:ac34d14efb70559be49f6cdcb1cc52dbd2a0f453e187af37428297578152ba85\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S19",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S19/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S19\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:b74a01b699f3ab77f6521648d2f9df1309aad4e5ef7d30b08ba80e2b2fdb38f5\", \"slice_id\": \"S19\", \"stage_selectors\": {\"regression\": \"sha256:b74a01b699f3ab77f6521648d2f9df1309aad4e5ef7d30b08ba80e2b2fdb38f5\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S20",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S20/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S20\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:5acccdce54528c15d1dae99aa0dae65c67447c9d83c21a1fdfce8a0643ee9fbd\", \"slice_id\": \"S20\", \"stage_selectors\": {\"regression\": \"sha256:5acccdce54528c15d1dae99aa0dae65c67447c9d83c21a1fdfce8a0643ee9fbd\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S21",
+    "rc": 0,
+    "out": "logs/quick-dev/20260928-plan-closeout/S21-r5/slice-ready-postcommit.v3.json",
+    "stdout": ": \"S21-r5\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:6a89afed906a6d89a977ae202adfb47f2b11abdb49313675302dfe845a75d264\", \"slice_id\": \"S21\", \"stage_selectors\": {\"regression\": \"sha256:6a89afed906a6d89a977ae202adfb47f2b11abdb49313675302dfe845a75d264\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S22",
+    "rc": 0,
+    "out": "logs/quick-dev/20260928-plan-closeout/S22-r5/slice-ready-postcommit.v3.json",
+    "stdout": ": \"S22-r5\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:f91ea8a4d7ca4d778b58a9eca45971bca03b06d065574a6c68e723bbc8b5d611\", \"slice_id\": \"S22\", \"stage_selectors\": {\"regression\": \"sha256:f91ea8a4d7ca4d778b58a9eca45971bca03b06d065574a6c68e723bbc8b5d611\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S23",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S23-r3/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S23-r3\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:a6c6e537326cfd8133f0020fdb469306adea7d614ddc58888c2446508c8a17c7\", \"slice_id\": \"S23\", \"stage_selectors\": {\"regression\": \"sha256:a6c6e537326cfd8133f0020fdb469306adea7d614ddc58888c2446508c8a17c7\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S24",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S24/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S24\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:254fc03560cc735434f6223ef1c47c5c5d5269bd3d78d3f1260b6d90d92b5ccd\", \"slice_id\": \"S24\", \"stage_selectors\": {\"regression\": \"sha256:254fc03560cc735434f6223ef1c47c5c5d5269bd3d78d3f1260b6d90d92b5ccd\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S25",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S25/slice-ready-postcommit.v3.json",
+    "stdout": "retry-S25\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:661418ae07ebf9940ef44693db86700dcc8b16acf23a35cc919f8c61da45411c\", \"slice_id\": \"S25\", \"stage_selectors\": {\"regression\": \"sha256:661418ae07ebf9940ef44693db86700dcc8b16acf23a35cc919f8c61da45411c\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S26",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S26/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S26\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:65af69c1399e5df87cc878ee99fc8f888cf4b640760fc80c99e20684c3701c64\", \"slice_id\": \"S26\", \"stage_selectors\": {\"regression\": \"sha256:65af69c1399e5df87cc878ee99fc8f888cf4b640760fc80c99e20684c3701c64\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S27",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S27/slice-ready-postcommit.v3.json",
+    "stdout": "retry-S27\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:bb7d51f8ce2845eebe42ccea327735251ab868777af3d5bf6790007f3db4dd7b\", \"slice_id\": \"S27\", \"stage_selectors\": {\"regression\": \"sha256:bb7d51f8ce2845eebe42ccea327735251ab868777af3d5bf6790007f3db4dd7b\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S28",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S28/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S28\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:8518b5ec2b4d360ace29c0ca09493abbe4ecb3c81615033e8f8a6ace7c563c0c\", \"slice_id\": \"S28\", \"stage_selectors\": {\"regression\": \"sha256:8518b5ec2b4d360ace29c0ca09493abbe4ecb3c81615033e8f8a6ace7c563c0c\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S29",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S29-r3/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S29-r3\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:7bfb976590cc11fb68e18ec6769e6dc397e8b384b5d6bfc242bf43f59780c668\", \"slice_id\": \"S29\", \"stage_selectors\": {\"regression\": \"sha256:7bfb976590cc11fb68e18ec6769e6dc397e8b384b5d6bfc242bf43f59780c668\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S30",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S30/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S30\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:9266384ebe9193dfc32ebac55d762206ab566ec0383ca340e9acef697ba141dd\", \"slice_id\": \"S30\", \"stage_selectors\": {\"regression\": \"sha256:9266384ebe9193dfc32ebac55d762206ab566ec0383ca340e9acef697ba141dd\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S31",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S31/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S31\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:af05b7bff3c3a8cb62f76e42e6a2830beccca77f0cd25e7655c7bd4f0b97a111\", \"slice_id\": \"S31\", \"stage_selectors\": {\"regression\": \"sha256:af05b7bff3c3a8cb62f76e42e6a2830beccca77f0cd25e7655c7bd4f0b97a111\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S32",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S32/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S32\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:fdb2aa009c4c443d48047af3624cc6eabcf39b058fa749b54657e1de63b7db1d\", \"slice_id\": \"S32\", \"stage_selectors\": {\"regression\": \"sha256:fdb2aa009c4c443d48047af3624cc6eabcf39b058fa749b54657e1de63b7db1d\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S33",
+    "rc": 0,
+    "out": "logs/quick-dev/20260928-plan-closeout/S33-r5/slice-ready-postcommit.v3.json",
+    "stdout": ": \"S33-r5\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:0e2f2b119be946d11205715843dd2f44ba71bb2bcd5fa4b44dfdfb1440baecae\", \"slice_id\": \"S33\", \"stage_selectors\": {\"regression\": \"sha256:0e2f2b119be946d11205715843dd2f44ba71bb2bcd5fa4b44dfdfb1440baecae\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S34",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S34-r2/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S34-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:bce47a2fde580bda65b8e51533450b756ab036be8f6fddca3412cea7960771f1\", \"slice_id\": \"S34\", \"stage_selectors\": {\"regression\": \"sha256:bce47a2fde580bda65b8e51533450b756ab036be8f6fddca3412cea7960771f1\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S35",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S35/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S35\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:c86dea0ae22ef26397250f9c527c6963bb55765c2f2c0876197dc1aa79f1aa58\", \"slice_id\": \"S35\", \"stage_selectors\": {\"regression\": \"sha256:c86dea0ae22ef26397250f9c527c6963bb55765c2f2c0876197dc1aa79f1aa58\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S37",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S37/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S37\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:50a20ef1b6d2bbcf7c1a264e2b8251d745d5a309b9a6d18b01df4fd80c33316c\", \"slice_id\": \"S37\", \"stage_selectors\": {\"regression\": \"sha256:50a20ef1b6d2bbcf7c1a264e2b8251d745d5a309b9a6d18b01df4fd80c33316c\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S38",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S38-r3/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S38-r3\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:6b539ff2eb9714f04d7444dc52364ed9dc3f9bc9df72c1a9144371019d96559b\", \"slice_id\": \"S38\", \"stage_selectors\": {\"regression\": \"sha256:6b539ff2eb9714f04d7444dc52364ed9dc3f9bc9df72c1a9144371019d96559b\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S39",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-recovery2-S39/slice-ready-postcommit.v3.json",
+    "stdout": "very2-S39\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:0f62063dce6b3d8e4aaf2e6aac4de8c3c93d97bc1fe3cb13633ad9de527997e8\", \"slice_id\": \"S39\", \"stage_selectors\": {\"regression\": \"sha256:0f62063dce6b3d8e4aaf2e6aac4de8c3c93d97bc1fe3cb13633ad9de527997e8\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S40",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S40-r1/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S40-r1\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:7d835edbb81d2124e5e4848c074f4e473464a5c8f2f3598bde5439de3457277d\", \"slice_id\": \"S40\", \"stage_selectors\": {\"regression\": \"sha256:7d835edbb81d2124e5e4848c074f4e473464a5c8f2f3598bde5439de3457277d\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S42",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S42-r2/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S42-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:eac29755015118b21a96c78e65b045f3d5991953fecf9c3c59440ee9606482b5\", \"slice_id\": \"S42\", \"stage_selectors\": {\"regression\": \"sha256:eac29755015118b21a96c78e65b045f3d5991953fecf9c3c59440ee9606482b5\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S43",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-s43-fe73-run/slice-ready-postcommit.v3.json",
+    "stdout": "-fe73-run\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:3c0ae22f797517a4d2a583b09b1bd3729e463390e05f17d616eb561a05ad0aac\", \"slice_id\": \"S43\", \"stage_selectors\": {\"regression\": \"sha256:3c0ae22f797517a4d2a583b09b1bd3729e463390e05f17d616eb561a05ad0aac\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S44",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S44/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S44\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:18e9e336583530affc3934243ef0f1ffb5c0dc28d77072af813b1e5bf15f9e43\", \"slice_id\": \"S44\", \"stage_selectors\": {\"regression\": \"sha256:18e9e336583530affc3934243ef0f1ffb5c0dc28d77072af813b1e5bf15f9e43\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S45",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S45-r2/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S45-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:b9f36887a1b17b45ab72b8595eb04b1552d4c19e733a527b5af8878ded472112\", \"slice_id\": \"S45\", \"stage_selectors\": {\"regression\": \"sha256:b9f36887a1b17b45ab72b8595eb04b1552d4c19e733a527b5af8878ded472112\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S46",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S46-r2/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S46-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:b3e99c6997fd3666386419516563c4cb3045d1de111c418984b972a91a8fbfd7\", \"slice_id\": \"S46\", \"stage_selectors\": {\"regression\": \"sha256:b3e99c6997fd3666386419516563c4cb3045d1de111c418984b972a91a8fbfd7\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S47",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S47-r5/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S47-r5\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:129493b1fdd085493044b2b2f52445bcf0d6fab6422af5ab33ad1a9611cd9a12\", \"slice_id\": \"S47\", \"stage_selectors\": {\"regression\": \"sha256:129493b1fdd085493044b2b2f52445bcf0d6fab6422af5ab33ad1a9611cd9a12\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S48",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S48/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S48\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:dab187d1a85bb48de7834a16dd265be82b4ff73ce303adb8b48be3497630c5e8\", \"slice_id\": \"S48\", \"stage_selectors\": {\"regression\": \"sha256:dab187d1a85bb48de7834a16dd265be82b4ff73ce303adb8b48be3497630c5e8\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S49",
+    "rc": 0,
+    "out": "logs/quick-dev/20260930-S49-r5/slice-ready-postcommit.v3.json",
+    "stdout": "30-S49-r5\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:cc93c2084e5ab6a8369eb23cc78e92473cb1e775a73e644be9b127caead70c3b\", \"slice_id\": \"S49\", \"stage_selectors\": {\"regression\": \"sha256:cc93c2084e5ab6a8369eb23cc78e92473cb1e775a73e644be9b127caead70c3b\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S50",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S50/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S50\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:676bff6f7a46413ed705f601fe021c086a661895fd7b04a1552715cb0bf8509a\", \"slice_id\": \"S50\", \"stage_selectors\": {\"regression\": \"sha256:676bff6f7a46413ed705f601fe021c086a661895fd7b04a1552715cb0bf8509a\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S51",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S51/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S51\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:2498dd808161c82abe386bb564bb559920eb730ce9e90111f613e239ea385924\", \"slice_id\": \"S51\", \"stage_selectors\": {\"regression\": \"sha256:2498dd808161c82abe386bb564bb559920eb730ce9e90111f613e239ea385924\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S52",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S52/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S52\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:39e6e0fd563688ea10d72f2aba2710638bc0b4cd007aa045f10b9e16e6d76c9d\", \"slice_id\": \"S52\", \"stage_selectors\": {\"regression\": \"sha256:39e6e0fd563688ea10d72f2aba2710638bc0b4cd007aa045f10b9e16e6d76c9d\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S53",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S53-r3/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S53-r3\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:13ca1518b6d07620571b0cdf455a8c7e57d3d82c3067cf5c3f6eafdd830aede6\", \"slice_id\": \"S53\", \"stage_selectors\": {\"regression\": \"sha256:13ca1518b6d07620571b0cdf455a8c7e57d3d82c3067cf5c3f6eafdd830aede6\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S54",
+    "rc": 0,
+    "out": "logs/quick-dev/20260928-plan-closeout/S54-r6/slice-ready-postcommit.v3.json",
+    "stdout": ": \"S54-r6\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:90f7465aa9436d0a1a556fc5db82703a74b3d102393478516e98b170a8edf920\", \"slice_id\": \"S54\", \"stage_selectors\": {\"regression\": \"sha256:90f7465aa9436d0a1a556fc5db82703a74b3d102393478516e98b170a8edf920\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S55",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S55-r2/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S55-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:6a8aafd7de7dd84c60c0cd02a2f9a918273c8cf0a18999c4fe1322ad65a90b08\", \"slice_id\": \"S55\", \"stage_selectors\": {\"regression\": \"sha256:6a8aafd7de7dd84c60c0cd02a2f9a918273c8cf0a18999c4fe1322ad65a90b08\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S56",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S56/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S56\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:4c2deb5150a24a59486a01f27fee5831012e79562bfd04f3dd5ad911355d948e\", \"slice_id\": \"S56\", \"stage_selectors\": {\"regression\": \"sha256:4c2deb5150a24a59486a01f27fee5831012e79562bfd04f3dd5ad911355d948e\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S57",
+    "rc": 0,
+    "out": "logs/quick-dev/20260928-plan-closeout/S57-r5/slice-ready-postcommit.v3.json",
+    "stdout": ": \"S57-r5\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:7368f74b2d73ad6ab0fa25cc20f1bef64b7c2d7291f939dd2bcec32cd7f4e812\", \"slice_id\": \"S57\", \"stage_selectors\": {\"regression\": \"sha256:7368f74b2d73ad6ab0fa25cc20f1bef64b7c2d7291f939dd2bcec32cd7f4e812\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S58",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-recovery-S58/slice-ready-postcommit.v3.json",
+    "stdout": "overy-S58\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:04742b68313bc2292f80aabca478ca0aaec9293c2a982a31c4d3af7ae3ce4ebc\", \"slice_id\": \"S58\", \"stage_selectors\": {\"regression\": \"sha256:04742b68313bc2292f80aabca478ca0aaec9293c2a982a31c4d3af7ae3ce4ebc\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S59",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S59/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S59\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:68a73da765cc1f00b7c55a663de4570879c923bc815044c36b3893a987fe2264\", \"slice_id\": \"S59\", \"stage_selectors\": {\"regression\": \"sha256:68a73da765cc1f00b7c55a663de4570879c923bc815044c36b3893a987fe2264\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S60",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S60/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S60\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:5de3d6a982805b5650774a0a2287fbcba97defc70e85a592a2b68f3e5dad1472\", \"slice_id\": \"S60\", \"stage_selectors\": {\"regression\": \"sha256:5de3d6a982805b5650774a0a2287fbcba97defc70e85a592a2b68f3e5dad1472\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S61",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S61/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S61\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:ef09c01af398d700e3ac683f41487dccc71c0fbe94e0c6fcce17faa8d6a87360\", \"slice_id\": \"S61\", \"stage_selectors\": {\"regression\": \"sha256:ef09c01af398d700e3ac683f41487dccc71c0fbe94e0c6fcce17faa8d6a87360\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S62",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S62-r3/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S62-r3\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:904a4bacc179c7d987eee59c23dafd2875b766499c5558b595d7fe0b56a3bef3\", \"slice_id\": \"S62\", \"stage_selectors\": {\"regression\": \"sha256:904a4bacc179c7d987eee59c23dafd2875b766499c5558b595d7fe0b56a3bef3\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S63",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S63/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S63\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:307fd4f367450452d4c4fccf911dcb11c63b20ca2d0937ac51280a41d216e83c\", \"slice_id\": \"S63\", \"stage_selectors\": {\"regression\": \"sha256:307fd4f367450452d4c4fccf911dcb11c63b20ca2d0937ac51280a41d216e83c\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S64",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S64/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S64\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:88dc6ff88ccdac19de2f44106050f834d2364bf07655b0e6a93c17bb7e3ee1b7\", \"slice_id\": \"S64\", \"stage_selectors\": {\"regression\": \"sha256:88dc6ff88ccdac19de2f44106050f834d2364bf07655b0e6a93c17bb7e3ee1b7\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S65",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S65/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S65\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:64cfb6107b59905aaed0425b79809fbe243a762151e4bb063d906afb9b60c32a\", \"slice_id\": \"S65\", \"stage_selectors\": {\"regression\": \"sha256:64cfb6107b59905aaed0425b79809fbe243a762151e4bb063d906afb9b60c32a\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S66",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S66-r2/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S66-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:2cbcbaa6fd3f796c5e317357e0623297bf5c08a9e2dce665de035d87eba4abfc\", \"slice_id\": \"S66\", \"stage_selectors\": {\"regression\": \"sha256:2cbcbaa6fd3f796c5e317357e0623297bf5c08a9e2dce665de035d87eba4abfc\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S67",
+    "rc": 0,
+    "out": "logs/quick-dev/20260928-plan-closeout/S67-r5/slice-ready-postcommit.v3.json",
+    "stdout": ": \"S67-r5\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:f4299506ea7d0390c298715e3b943110435e54705d421b1faa25e3b2275c1765\", \"slice_id\": \"S67\", \"stage_selectors\": {\"regression\": \"sha256:f4299506ea7d0390c298715e3b943110435e54705d421b1faa25e3b2275c1765\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S68",
+    "rc": 0,
+    "out": "logs/quick-dev/20260928-plan-closeout/S68-r4/slice-ready-postcommit.v3.json",
+    "stdout": ": \"S68-r4\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:cf6664d161cc333942940c852004646cedc01b6c414a0a5b2bee0c9804b9a885\", \"slice_id\": \"S68\", \"stage_selectors\": {\"regression\": \"sha256:cf6664d161cc333942940c852004646cedc01b6c414a0a5b2bee0c9804b9a885\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S69",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S69-r2/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S69-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:e5a4e528e0a5755bb769c3d0a751585b6ec046dc8eab1f6abe50039008ba1c78\", \"slice_id\": \"S69\", \"stage_selectors\": {\"regression\": \"sha256:e5a4e528e0a5755bb769c3d0a751585b6ec046dc8eab1f6abe50039008ba1c78\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S73",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-batch-S73/slice-ready-postcommit.v3.json",
+    "stdout": "batch-S73\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:1868af3813bce016591ad4fd11d834b5214cfadc71a450d79ec6bcc44ab5fc3a\", \"slice_id\": \"S73\", \"stage_selectors\": {\"regression\": \"sha256:1868af3813bce016591ad4fd11d834b5214cfadc71a450d79ec6bcc44ab5fc3a\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S74",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S74-r3/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S74-r3\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:9dba175695c18d4e215c713255f9e5a1b94652d4088512bdd227ce03b919fcad\", \"slice_id\": \"S74\", \"stage_selectors\": {\"regression\": \"sha256:9dba175695c18d4e215c713255f9e5a1b94652d4088512bdd227ce03b919fcad\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S75",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S75-r3/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S75-r3\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:5d235252aa79817327a13adf47849ddc7e228cc9a41c16afdc0e01003f07ace3\", \"slice_id\": \"S75\", \"stage_selectors\": {\"regression\": \"sha256:5d235252aa79817327a13adf47849ddc7e228cc9a41c16afdc0e01003f07ace3\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S76",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S76-r2/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S76-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:88330e9b2b90b3ea351adc9ea58fb5d1415f17f0e102ca81c3b02081c721f15b\", \"slice_id\": \"S76\", \"stage_selectors\": {\"regression\": \"sha256:88330e9b2b90b3ea351adc9ea58fb5d1415f17f0e102ca81c3b02081c721f15b\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S78",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S78-r3/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S78-r3\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:892498fde74d36f2fdaab3fdfae7f8c2585901f9f5669333722978dffcad6152\", \"slice_id\": \"S78\", \"stage_selectors\": {\"regression\": \"sha256:892498fde74d36f2fdaab3fdfae7f8c2585901f9f5669333722978dffcad6152\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S79",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S79-r2/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S79-r2\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:4ba3b50ae2f16bf61362277890fb20ec7f92ed2844998d39c893f619c5633a02\", \"slice_id\": \"S79\", \"stage_selectors\": {\"regression\": \"sha256:4ba3b50ae2f16bf61362277890fb20ec7f92ed2844998d39c893f619c5633a02\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  },
+  {
+    "slice": "S80",
+    "rc": 0,
+    "out": "logs/quick-dev/20260929-retry-S80-r3/slice-ready-postcommit.v3.json",
+    "stdout": "ry-S80-r3\", \"schema\": \"quick-dev.slice-ready-result.v2\", \"selector_identity\": \"sha256:6e898c53ab2b5b0653647761056b61aa187a818e0082db00d03c2fc1118b1704\", \"slice_id\": \"S80\", \"stage_selectors\": {\"regression\": \"sha256:6e898c53ab2b5b0653647761056b61aa187a818e0082db00d03c2fc1118b1704\"}, \"status\": \"pass\"}\n",
+    "stderr": ""
+  }
+]

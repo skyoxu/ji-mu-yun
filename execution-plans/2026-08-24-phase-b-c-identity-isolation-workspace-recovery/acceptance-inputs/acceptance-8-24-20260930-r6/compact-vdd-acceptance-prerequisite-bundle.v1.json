@@ -1,0 +1,115 @@
+{
+  "actionDag": {
+    "path": "acceptance-inputs/acceptance-8-24-20260930-r6/action-dag.v1.json",
+    "sha256": "sha256:b38b355486975dab6803684ed616a82f09686844193a27191b456f8e04a81cd2"
+  },
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "acceptance-inputs/acceptance-8-24-20260930-r6/baseline-content-manifest.v1.json",
+    "sha256": "sha256:01f6a486196e4ce1f427920377c7584a5df11a19564f8760531f70aacdcb5c09"
+  },
+  "bundleHash": "sha256:55fb92c5c15cb3f1a8e757b88edce31be7aafc81814d5b1d624c58296a0e28b1",
+  "candidateManifest": {
+    "path": "acceptance-inputs/acceptance-8-24-20260930-r6/candidate-content-manifest.v1.json",
+    "sha256": "sha256:2dd07b3a1b4569696ce86dd14d9ea13524f9ad040749d47c63549477cfa4c597"
+  },
+  "candidateSnapshotPath": ".acceptance-snapshots/acceptance-8-24-20260930-r6",
+  "commandRegistry": {
+    "path": "acceptance-inputs/acceptance-8-24-20260930-r6/command-registry.v1.json",
+    "sha256": "sha256:bf658efa705e1a93de6601c581f4189a3b708a0c503d5081895c7baa67d7bb55"
+  },
+  "currentQuickDev": {
+    "baseCommit": "295ebda8c974a541eb48fb90670b7f27d9303ee7",
+    "receipt": {
+      "path": "logs/acceptance/8-24-r6/implementation-complete-successor.v2.json",
+      "sha256": "sha256:498ede0d3d6bc6c04c8299a679914106563468204d3bec1072132e311df99b58"
+    },
+    "semanticPlan": {
+      "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:ac9467055efc34e3312044386666f226ded19f8643bcad8d0a0cb71d4d909132"
+    },
+    "snapshotRoots": [
+      {
+        "content_sha256": "sha256:4f53496adf1adef358fd6290a4b0c8f5a7f35ea24159a983beb1972db4b532f9",
+        "inclusion_reason": "current candidate test tree",
+        "repository_relative_posix_path": "PhaseA.Platform.Tests",
+        "root_kind": "candidate_tree",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:38843003c85a6bf4985841acd89a8bd66eb4bc531000255ef484f7e5ddc2f0f0",
+        "inclusion_reason": "current execution plan tree",
+        "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+        "root_kind": "plan",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:206e7c33c9df9aa2cc59d7373a07e1e19104c4e578805c503ca3f7e4ebe5da15",
+        "inclusion_reason": "current execution contract",
+        "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/implementation-contract.v1.json",
+        "root_kind": "contract",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:e7f1a7c2b021c395549a5aa4b12affc60eb5cbfdb214f8633fd0d987d0a4e2ea",
+        "inclusion_reason": "all current execution descriptors",
+        "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/agent-context",
+        "root_kind": "descriptor",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:e42a96702da27bb04d8534feaa321f8f1e0109cc9e2d94af142376d8a1dea8b2",
+        "inclusion_reason": "current fixture tree",
+        "repository_relative_posix_path": "tests/phase_b_c_identity_isolation/current",
+        "root_kind": "fixture",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:0848a7ca357bc0203a0660de33ef29302bcb1eb9b407d3996545522e2f7ef3c0",
+        "inclusion_reason": "declared production source tree",
+        "repository_relative_posix_path": "PhaseA.Platform",
+        "root_kind": "source",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:7c2f654dede96cb178f8d4c09aabf249d4fdd1d304440aa3573ccf715859e718",
+        "inclusion_reason": "current observation judge",
+        "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+        "root_kind": "validator_judge",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      },
+      {
+        "content_sha256": "sha256:38843003c85a6bf4985841acd89a8bd66eb4bc531000255ef484f7e5ddc2f0f0",
+        "inclusion_reason": "current plan state transition tree",
+        "repository_relative_posix_path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+        "root_kind": "plan_state_transition",
+        "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+      }
+    ],
+    "sourceCommit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899"
+  },
+  "implementationReceipt": {
+    "path": "logs/acceptance/8-24-r6/implementation-complete-successor.v2.json",
+    "sha256": "sha256:498ede0d3d6bc6c04c8299a679914106563468204d3bec1072132e311df99b58",
+    "terminalCommandId": "terminal-full"
+  },
+  "knowledgeContext": {
+    "path": "knowledge-context.refactor-acceptance.v2.json",
+    "sha256": "sha256:87fffd05e1a980668adab3dfab74c19e0cfa595a73b70fa99bfc12af84e65a51"
+  },
+  "policy": {
+    "path": "acceptance-inputs/acceptance-8-24-20260930-r6/toolchain-code-review.v1.json",
+    "sha256": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4"
+  },
+  "runId": "acceptance-8-24-20260930-r6",
+  "runRequest": {
+    "path": "acceptance-run-request.acceptance-8-24-20260930-r6.v1.json",
+    "sha256": "sha256:52d589a006a69b1140aa253d28339570ec0e89ad6906af4410c03cc7746d3cac"
+  },
+  "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+  "targetPlan": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "terminalRunner": {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+    "sha256": "sha256:bd72d29deaf87ffb960d0d1513963a5a42593a76b9e30c5a1e6d3591807761bd"
+  }
+}

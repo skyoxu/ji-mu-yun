@@ -1,0 +1,21 @@
+{
+  "base_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+  "evidence_closure_ref": "logs/quick-dev/20260930-evidence-closure-v1.json",
+  "evidence_closure_sha256": "sha256:8d21e9b0c32d0a503bb74aba77491bd7feb795804e332769eac704527b4f2413",
+  "mode": "read-only-replay",
+  "predecessor_count": 73,
+  "predecessor_input_ref": "logs/quick-dev/20260930-q8-input-v5.json",
+  "predecessor_input_sha256": "sha256:fbd82b051665a902b3103c0d53ae51573b853e5378a4916868f57024e20ac5ab",
+  "predicate": "implementation-complete",
+  "process_execution": false,
+  "q8_result_ref": "logs/quick-dev/20260930-plan-q8-r7/implementation-complete.v2.json",
+  "q8_result_sha256": "sha256:1f7ae234952dc78717fcbdeabf381d71ebd429cda964fb91eb56a40046a45810",
+  "runtime_closure_sha256": "sha256:becfd406c19be7e72309a1a70c2e139dbc047d848a4ab88ef6350cb9fe09e065",
+  "schema": "quick-dev.implementation-complete-replay.v1",
+  "source_commit": "454c54a7bb5ae32032d1ded2d93104be7fd2b899",
+  "status": "pass",
+  "terminal_input_content_sha256": "sha256:5e875ffd5da8174937f55d61edf324288bd11be11c9b3dd5f15b73a1512b4266",
+  "terminal_input_ref": "logs/quick-dev/20260930-plan-q8-r7/terminal-input.v2.json",
+  "terminal_input_sha256": "sha256:5e875ffd5da8174937f55d61edf324288bd11be11c9b3dd5f15b73a1512b4266",
+  "writer": "quick-dev-terminal-predicate.v2"
+}

@@ -1,0 +1,64 @@
+{
+  "base_commit": "9319e4faab2770f3409bb0274fa37bdbe3d79864",
+  "scope": [
+    "R3",
+    "R4",
+    "R8"
+  ],
+  "csharp_syntax": {
+    "parser": "tree-sitter-c-sharp",
+    "files": 43,
+    "errors": []
+  },
+  "production_sql_checks": {
+    "passed": 6,
+    "cases": [
+      "no_active_session_is_not_applicable",
+      "missing_current_goal_blocks",
+      "valid_current_goal_passes",
+      "needs_fix_without_diagnostic_blocks",
+      "current_diagnostic_satisfies_repair_source",
+      "empty_diagnostic_blocks"
+    ]
+  },
+  "dotnet_build": "not_run_sdk_unavailable",
+  "windows_runtime_tests": "not_run_windows_unavailable",
+  "implementation_complete": false,
+  "modified_fixture_diff_check": {
+    "passed": 22,
+    "allowed_change": "RestoreService.Restore -> RestorePrepared fixture setup"
+  },
+  "source_sha256": {
+    "PhaseA.Platform/Readback/IndependentEvidenceReader.cs": "0ddbf08c8d6d9203ed86abf6908b00169aa5b7d1f8f9aa2e6822e76111ad9316",
+    "PhaseA.Platform/Security/RunnerIsolationPolicy.cs": "a9ae60bbd4e13955e4bf3e04856869eed0b208e7593ffad344c069efd70b47ab",
+    "PhaseA.Platform/Workspaces/RestoreService.cs": "0ccf16d4e95e8e9eac73a6e0875002d01946ad14f311c0e80a7d99822362ba3f",
+    "PhaseA.Platform/Workspaces/RouteRecoveryAuthorityResolver.cs": "3355faeea4c0aef1a97568ae203d604c6c8b3dd50fbe10b1a2c6cfdb0e0f1f26",
+    "PhaseA.Platform.Tests/PhaseB/Repair/RecoveryAuthorityRegressionTests.cs": "464a0340046307186492a3daed8199098789139d373d8b3585d85347c76edbf6",
+    "PhaseA.Platform.Tests/PhaseB/Repair/RestoreFixtureIsolation.cs": "551776739ce7074d6ca5a1bd04be49e9e00a1e3af7e6cb0c71c1ca8c24315891",
+    "PhaseA.Platform.Tests/PhaseB/Repair/RestoreTreeSecurityRegressionTests.cs": "98eea2e75feb06a13346ec1c8bd01af91041bbaa9c19553eea447003cf108faf",
+    "PhaseA.Platform.Tests/PhaseB/Repair/RouteAuthorityFixture.cs": "ab7c0e691b415dc3bf8a5ef880cc1ca87aad68f1e15b21ad3121d5675db19b12",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S11BoundaryTests.cs": "8e883fa6da4ab9246d1347f39b72cdd3c72f85216c13bfc9900975101e2e1b6d",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S13BoundaryTests.cs": "8a5530e9e4f6179a85af6ac8afa74363232adfbeb541d1476e9ac14ed16670e8",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S16BoundaryTests.cs": "993c72b031ab5833634f82ba3d4915fac0261930d62b7517b15a3512f6e8cd32",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S17BoundaryTests.cs": "ef8f8418dc7715234d2e99bc8f82a5b6ccae11651ae0018e516b3dbde00a32eb",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S19BoundaryTests.cs": "aee1e1c377ff1b3c475bdbd91a0c2b1d6b076743908f42041271dca758e56343",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S24BoundaryTests.cs": "226dcc6eef30e35349d54a847ebb71c37f2fff7b638125de7d1a1c6b9eea8414",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S25BoundaryTests.cs": "246e400ddea7dc25f99849f57cfd254960fea5033e90167496210caf0ebac165",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S27BoundaryTests.cs": "0f4254d956bec4f899a2b8616a5cc24467dcd0822d36d78aa2bb1ac18d74f6a7",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S28BoundaryTests.cs": "00d8f391fc7ffbb897a79e744be6e209d7e411192013221e4c6048d8b4c24544",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S31BoundaryTests.cs": "4ff6b4b25a19c144a3bd22fb0dfded450d37470f93a529830217e428bab0bd26",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S32BoundaryTests.cs": "d4f9f50fa8072af6fa113a67808f0c873553faa29071231411a4c6c8ae9d665c",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S40BoundaryTests.cs": "85b0b92dfbaee63bc130bc92c21115374e4ae414d80070e1310ca862bb32e680",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S44BoundaryTests.cs": "2414cbd8f38d6f1d37e44aacdb413ab206d742f419e48bace8ddacf9a1c1387e",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S46BoundaryTests.cs": "d82e74f864f90e37a245a22829279472b40fce1ba6709e16703c89fec11cac7c",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S48BoundaryTests.cs": "c502624e865a6db7c1aa967125f0708f1d3e32610d6499a35eac7f532cd15f32",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S4BoundaryTests.cs": "5123a3199a623f3cebfaa766a2ae3baa06aefbccf8dc7a0d2b94d324df55407a",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S51BoundaryTests.cs": "f56602e3f1d034d964dfcafc83b71c179fda68e351e18bd41f9912b4f02214cc",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S52BoundaryTests.cs": "12bbd7efd4fc215c4419e24714810153766de7bb146c874c552be77fbb0e23df",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S53BoundaryTests.cs": "7e4abba80dafbcc32a2e2283d5a5c84a9c301fcbf145802643443100d90789a3",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S59BoundaryTests.cs": "cca5ea8a5a3d2031b5a7cdb0b4cac346a0eb6b5042f669f811ec080b8dbccc68",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S62BoundaryTests.cs": "045620e3b6ee306e65ccc8dc78b5fa31628b32a6d7d2768e126363948e3020bd",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S6BoundaryTests.cs": "7ff301f198cf0d0bcc5048f8286c3b5fd0a01b23d8639d751c71dc85dce884ec",
+    "PhaseA.Platform.Tests/PhaseB/Repair/S73BoundaryTests.cs": "964022e64f35faf42a39b774fa7c22392c98cecb2685c20951da4b25162d231f"
+  }
+}

@@ -324,7 +324,7 @@ public sealed class BrowserUiRenderer
         const string notesPlaceholder = "__PROTOTYPE_SKELETON_RUN_NOTES__";
         return """
               <script>
-                document.body.classList.add("v2-detail");
+                document.body.classList.remove("v2-detail");
                 const PrototypeSkeletonRunNotes = __PROTOTYPE_SKELETON_RUN_NOTES__;
                 const v2Steps = [
                   ["new-project", "游戏项目概述", "panel"],
@@ -1563,6 +1563,11 @@ public sealed class BrowserUiRenderer
                     status: goal.status || ""
                   }));
                 }
+                window.addEventListener("message", event => {
+                  if (event.origin === location.origin && event.source === $("v2DownloadsFrame")?.contentWindow &&
+                      event.data?.type === "phase-project-restored" && event.data.projectId === state.projectId)
+                    location.reload();
+                });
                 function workflowRenderRouteReadback(route) {
                   if (!route) return "";
                   const stages = workflowStageTimelineModel(route);
@@ -1574,6 +1579,12 @@ public sealed class BrowserUiRenderer
                   const contract = workflowArtifactByRoute(route, "prototype-contract");
                   return `
                     <section class="v2-workflow-readback" data-workflow-route-readback="true">
+                      ${route.businessChain ? `<div class="v2-workflow-business-chain" data-business-chain-status="${escapeHtml(route.businessChain.status)}">
+                        <strong>整体交付检查：${route.businessChain.status === "passed" ? "通过" : "尚未完成"}</strong>
+                        <p>${(route.businessChain.blockingReasons || []).includes("workspace:restore_revalidation_required")
+                          ? "项目已恢复，请检查当前模块计划并重新进行原型项目验收。"
+                          : route.businessChain.status === "passed" ? "当前各阶段成果与验收证据完整且有效。" : "请根据下方阶段状态完成剩余工作；已有验收按钮继续使用。"}</p>
+                      </div>` : ""}
                       <div class="v2-workflow-stage-timeline" data-workflow-stage-timeline="true">
                         ${stages.map(stage => `
                           <div class="v2-workflow-stage ${escapeHtml(stage.status)}" data-workflow-stage="${escapeHtml(stage.id)}" data-stage-status="${escapeHtml(stage.status)}">
@@ -1981,11 +1992,14 @@ public sealed class BrowserUiRenderer
                 }
                 .top-actions {
                   display: flex;
-                  flex-wrap: wrap;
+                  flex-wrap: nowrap;
                   justify-content: flex-end;
                   align-items: end;
                   gap: 0.5rem;
-                  max-width: min(100%, 42rem);
+                  max-width: 100%;
+                  min-width: 0;
+                  overflow-x: auto;
+                  scrollbar-width: thin;
                 }
                 .top-actions label {
                   min-width: 8rem;
@@ -1995,6 +2009,7 @@ public sealed class BrowserUiRenderer
                 }
                 .top-actions button {
                   width: auto;
+                  flex: 0 0 auto;
                   min-width: 6.5rem;
                   white-space: nowrap;
                 }
@@ -2380,8 +2395,8 @@ public sealed class BrowserUiRenderer
                 }
                 @media (max-width: 920px) {
                   .header-row, main, .grid, .health-grid { grid-template-columns: 1fr; }
-                  .top-actions { justify-content: stretch; }
-                  .top-actions button, .top-actions label, .top-actions select { width: 100%; }
+                  .top-actions { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; }
+                  .top-actions button, .top-actions label, .top-actions select { width: auto; flex: 0 0 auto; }
                 }
               </style>
             </head>
@@ -2398,6 +2413,7 @@ public sealed class BrowserUiRenderer
                     <button id="openProjectListModal" class="ghost user-only-action">项目列表</button>
                     <button id="openAdminRunDurationMetrics" class="ghost admin-only-action hidden">普通用户Run耗时</button>
                     <button id="openAdminChatAverageMetrics" class="ghost admin-only-action hidden">聊天平均响应</button>
+                    <button id="openAdminProjectPurge" class="ghost admin-only-action hidden">Project deletion</button>
                     <button id="openAdminGameTypeMatchFailures" class="ghost admin-only-action hidden">类型匹配记录</button>
                     <button id="logout" class="danger-button">退出登录</button>
                   </div>
@@ -4439,6 +4455,7 @@ public sealed class BrowserUiRenderer
                 function showAdminShell(role = state.role || "user") {
                   state.authenticated = true;
                   state.role = role;
+                  document.body.classList.remove("v2-detail");
                   const isAdmin = role === "admin";
                   document.title = isAdmin ? "Game Ren Admin" : "Game Ren";
                   $("sessionPanel").classList.add("hidden");
@@ -4484,6 +4501,7 @@ public sealed class BrowserUiRenderer
 
                 function showProjectDetail() {
                   showAdminShell();
+                  document.body.classList.add("v2-detail");
                   $("initStatusPanel").classList.add("hidden");
                   $("projectDetailPanel").classList.remove("hidden");
                 }
@@ -5857,6 +5875,11 @@ public sealed class BrowserUiRenderer
                   location.href = "/admin/chat-average-metrics";
                 }
 
+                function openAdminProjectPurge() {
+                  if (state.role !== "admin") return;
+                  location.href = "/admin/project-purge";
+                }
+
                 function openAdminGameTypeMatchFailures() {
                   if (state.role !== "admin") return;
                   location.href = "/admin/game-type-match-records";
@@ -6833,7 +6856,7 @@ public sealed class BrowserUiRenderer
                 async function createProject() {
                   if (!validateCreateProjectForm(true)) return;
                   if (!guardGlobalAction()) return;
-                  setLocalBusy(true, "创建项目中，请等待当前任务执行完毕。");
+                  setLocalBusy(true, "正在创建项目；服务器繁忙时会等待执行资源。");
                   $("createProject").disabled = true;
                   $("createProject").textContent = "创建中...";
                   const creationAttemptStartedAt = Date.now();
@@ -9614,6 +9637,7 @@ public sealed class BrowserUiRenderer
                 $("loadAdminRunMetrics").onclick = loadAdminRunMetrics;
                 $("openAdminRunDurationMetrics").onclick = openAdminRunDurationMetrics;
                 $("openAdminChatAverageMetrics").onclick = openAdminChatAverageMetrics;
+                $("openAdminProjectPurge").onclick = openAdminProjectPurge;
                 $("openAdminGameTypeMatchFailures").onclick = openAdminGameTypeMatchFailures;
                 $("loadAccountAudit").onclick = loadAccountAudit;
                 $("downloadAccountAuditCsv").onclick = downloadAccountAuditCsv;
@@ -10661,6 +10685,7 @@ public sealed class BrowserUiRenderer
                   <p>按版本号/时间戳从近到远列出所有已打包的项目文件。压缩包只包含项目相关文件，不包含平台工程代码。</p>
                 </header>
                 <section id="status" class="card muted">正在读取项目文件包列表...</section>
+                <section id="restoreStatus" class="card muted" hidden></section>
                 <section class="card toolbar">
                   <button id="createPackage" disabled>打包项目文件</button>
                   <span id="createPackageHint" class="muted">正在检查是否可以打包。</span>
@@ -10704,6 +10729,8 @@ public sealed class BrowserUiRenderer
                       <span class="muted">${escapeHtml(item.createdUtc || "未知时间")} · ${escapeHtml(item.fileName)} · ${item.sizeBytes} bytes</span>
                       <div class="package-actions">
                         <button data-download-url="${escapeHtml(item.downloadUrl)}" data-file-name="${escapeHtml(item.fileName)}">下载此版本</button>
+                        <button data-restore-file="${escapeHtml(item.fileName)}" data-restore-version="${escapeHtml(item.version)}" ${item.canRestore ? "" : "disabled"}>恢复此版本</button>
+                        ${item.canRestore ? "" : `<span class="muted">${escapeHtml(disabledText(item.restoreDisabledReason || "package_snapshot_unavailable"))}</span>`}
                       </div>
                       ${renderWebPreviewAction(item)}
                     </article>
@@ -10714,7 +10741,84 @@ public sealed class BrowserUiRenderer
                   document.querySelectorAll("[data-web-preview-file]").forEach(button => {
                     button.onclick = () => handleWebPreviewBackground(button, button.dataset.webPreviewFile, button.dataset.webPreviewUrl);
                   });
+                  document.querySelectorAll("[data-restore-file]").forEach(button => {
+                    button.onclick = () => restorePackage(button.dataset.restoreFile, button.dataset.restoreVersion);
+                    if (restoreInProgress) button.disabled = true;
+                  });
                   await loadGddDownload();
+                }
+                const restoreStorageKey = `phasePackageRestore:${projectId}`;
+                let restoreInProgress = false;
+                async function restorePackage(fileName, version) {
+                  if (restoreInProgress || !confirm(`恢复 ${version} 会替换当前项目文件。恢复后需要检查模块计划并重新验收。是否继续？`)) return;
+                  restoreInProgress = true;
+                  $("restoreStatus").hidden = false;
+                  document.querySelectorAll("[data-restore-file], #createPackage").forEach(button => button.disabled = true);
+                  const auth = token();
+                  const pending = { operationKey: crypto.randomUUID(), fileName, version };
+                  sessionStorage.setItem(restoreStorageKey, JSON.stringify(pending));
+                  try {
+                    await admitPackageRestore(pending, auth);
+                  } catch (error) {
+                    $("restoreStatus").textContent = error.message || "恢复请求失败，请刷新查看后台任务状态。";
+                  } finally {
+                    restoreInProgress = false;
+                    await loadPackages();
+                  }
+                }
+                async function admitPackageRestore(pending, auth) {
+                  const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/packages/${encodeURIComponent(pending.fileName)}/restore`, {
+                    method: "POST", headers: { "Authorization": `Bearer ${auth}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ operationKey: pending.operationKey }), cache: "no-store"
+                  });
+                  const payload = await response.json();
+                  if (!response.ok || !payload.operationId) {
+                    sessionStorage.removeItem(restoreStorageKey);
+                    throw new Error(disabledText(payload.code || "package_restore_failed"));
+                  }
+                  pending.operationId = payload.operationId;
+                  sessionStorage.setItem(restoreStorageKey, JSON.stringify(pending));
+                  await waitForPackageRestore(pending, auth);
+                }
+                async function waitForPackageRestore(pending, auth) {
+                  for (let attempt = 0; attempt < 600; attempt += 1) {
+                    if (token() !== auth) throw new Error("登录状态已变化，请重新登录后刷新查看恢复结果。");
+                    const response = await fetch(`/api/runs/${encodeURIComponent(pending.operationId)}`, {
+                      headers: { "Authorization": `Bearer ${auth}` }, cache: "no-store"
+                    });
+                    if (!response.ok) throw new Error("无法读取恢复任务，请刷新后继续查看。");
+                    const payload = await response.json();
+                    const run = payload.run || {};
+                    if (run.status === "succeeded") {
+                      let evidence = {};
+                      try { evidence = JSON.parse(run.evidenceJson || "{}"); } catch {}
+                      if (evidence.activated !== true) throw new Error("恢复任务没有活动版本确认，请查看运行记录。");
+                      sessionStorage.removeItem(restoreStorageKey);
+                      $("restoreStatus").textContent = `已恢复 ${pending.version}。请返回项目，检查模块计划并重新验收。`;
+                      if (window.parent !== window) window.parent.postMessage({ type: "phase-project-restored", projectId }, location.origin);
+                      return;
+                    }
+                    if (["failed", "blocked", "cancel", "cancelled"].includes(run.status)) {
+                      sessionStorage.removeItem(restoreStorageKey);
+                      throw new Error("恢复未完成，原活动项目未切换。请查看运行记录后重试。");
+                    }
+                    $("restoreStatus").textContent = run.status === "queued" ? `恢复 ${pending.version} 正在等待服务器执行资源。` : `正在恢复 ${pending.version}…`;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                  }
+                  throw new Error("恢复仍在后台执行；刷新页面后可继续查看结果。");
+                }
+                async function resumePackageRestore() {
+                  let pending;
+                  try { pending = JSON.parse(sessionStorage.getItem(restoreStorageKey) || "null"); } catch {}
+                  if ((!pending?.operationId && !pending?.operationKey) || !token()) return;
+                  restoreInProgress = true;
+                  $("restoreStatus").hidden = false;
+                  try {
+                    if (pending.operationId) await waitForPackageRestore(pending, token());
+                    else await admitPackageRestore(pending, token());
+                  }
+                  catch (error) { $("restoreStatus").textContent = error.message; }
+                  finally { restoreInProgress = false; await loadPackages(); }
                 }
                 function renderWebPreviewAction(item) {
                   const preview = item.webPreview || {};
@@ -10823,6 +10927,10 @@ public sealed class BrowserUiRenderer
                   $("downloadGddDocument").onclick = () => downloadGddDocument($("downloadGddDocument"));
                 }
                 function disabledText(reason) {
+                  if (reason === "restore_revalidation_required") return "恢复后需要重新通过原型项目验收，才能生成新包。";
+                  if (reason === "package_snapshot_unavailable") return "此版本没有可用快照或快照已过期。";
+                  if (reason === "workspace_isolation_unavailable") return "项目执行身份尚未就绪，暂不能恢复。";
+                  if (reason === "package_restore_failed") return "版本恢复失败，请查看运行记录。";
                   if (reason === "prototype_not_created") return "尚未成功运行原型创建，或没有创建有效的godot场景文件，暂不能打包项目文件。";
                   if (reason === "m1_not_completed") return "M1 游戏场景完成后才可以打包项目文件。";
                   if (reason === "project_busy") return "项目有后台任务正在执行。";
@@ -11000,7 +11108,7 @@ public sealed class BrowserUiRenderer
                   }
                 }
                 $("createPackage").onclick = createPackage;
-                loadPackages();
+                loadPackages().then(resumePackageRestore);
               </script>
             </body>
             </html>
@@ -11850,6 +11958,123 @@ public sealed class BrowserUiRenderer
             "chat",
             "普通用户聊天平均响应时长",
             "按普通用户聚合聊天 run，查看平均排队时长和平均响应时长。");
+    }
+
+    public string RenderAdminProjectPurge()
+    {
+        return """
+            <!doctype html>
+            <html lang="zh-CN">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>管理员项目删除</title>
+              <style>
+                :root { --ink:#17211b; --muted:#66736b; --paper:#f7f2e8; --panel:#fffdf8; --line:#ded4c4; --accent:#0f6b57; --danger:#a2342f; }
+                * { box-sizing:border-box; }
+                body { margin:0; color:var(--ink); font-family:Georgia,"Times New Roman",serif; background:linear-gradient(135deg,#fbf7ef,#efe5d3); }
+                main { max-width:78rem; margin:0 auto; padding:2rem 1rem 4rem; display:grid; gap:1rem; }
+                header { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+                h1 { margin:0; font-size:clamp(2rem,5vw,4rem); letter-spacing:-.04em; }
+                .card { background:var(--panel); border:1px solid var(--line); border-radius:1rem; padding:1rem; box-shadow:0 1rem 2.4rem rgba(57,43,24,.1); }
+                .toolbar { display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; }
+                button { border:0; border-radius:.75rem; padding:.75rem 1rem; background:var(--accent); color:white; font:inherit; font-weight:700; cursor:pointer; }
+                button.secondary { background:#445049; }
+                button.danger { background:var(--danger); }
+                button:disabled { opacity:.55; cursor:not-allowed; }
+                .muted { color:var(--muted); }
+                .danger-text { color:var(--danger); }
+                .project-list { display:grid; gap:.75rem; }
+                label.project { display:block; cursor:pointer; }
+                label.project input { margin-right:.5rem; }
+                code { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.9em; overflow-wrap:anywhere; }
+                @media (max-width:700px) { main { padding:1rem .75rem 3rem; } header { align-items:flex-start; } }
+              </style>
+            </head>
+            <body>
+              <main>
+                <header>
+                  <div>
+                    <h1>管理员项目删除</h1>
+                    <p class="muted">查看所有用户项目。删除会移除项目数据、管理关系和 hosted workspace，但不会删除用户账号。</p>
+                  </div>
+                  <button id="back" type="button" class="secondary">返回控制台</button>
+                </header>
+                <section class="card toolbar">
+                  <button id="refresh" type="button">刷新所有项目</button>
+                  <button id="purge" type="button" class="danger" disabled>永久删除选中项目</button>
+                </section>
+                <section id="status" class="card muted">尚未加载项目。</section>
+                <section id="projects" class="project-list"></section>
+              </main>
+              <script>
+                const $ = id => document.getElementById(id);
+                const readBrowserCookie = name => {
+                  const prefix = `${encodeURIComponent(name)}=`;
+                  return document.cookie.split(";").map(part => part.trim()).find(part => part.startsWith(prefix))?.slice(prefix.length) || "";
+                };
+                const token = () => localStorage.getItem("phaseAAccessToken") || decodeURIComponent(readBrowserCookie("phaseAAccessToken") || "") || localStorage.getItem("phaseAAdminToken") || "";
+                const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#039;" }[ch]));
+                async function api(path, options = {}) {
+                  const accessToken = token();
+                  if (!accessToken) throw new Error("missing_token");
+                  const response = await fetch(path, { method: options.method || "GET", headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: options.body, cache: "no-store" });
+                  const payload = await response.json().catch(() => ({}));
+                  if (!response.ok) { const error = new Error(payload.error || payload.failureCode || "request_failed"); error.payload = payload; throw error; }
+                  return payload;
+                }
+                function selectedIds() { return Array.from(document.querySelectorAll("[data-project-id]:checked")).map(item => item.dataset.projectId).filter(Boolean); }
+                function updatePurgeButton() { $("purge").disabled = selectedIds().length === 0; }
+                function render(projects) {
+                  $("projects").innerHTML = projects.map(project => `
+                    <label class="card project">
+                      <span><input type="checkbox" data-project-id="${escapeHtml(project.projectId)}"> <strong>${escapeHtml(project.name || project.projectId)}</strong>${project.softDeleted ? " · logically deleted" : ""}</span>
+                      <p class="muted">用户：${escapeHtml(project.username || project.accountId)} · 游戏：${escapeHtml(project.gameName || "")}</p>
+                      <p class="muted">状态：${escapeHtml(project.bootstrapStatus || "")} · 创建：${escapeHtml(project.createdUtc || "")}</p>
+                      <code>${escapeHtml(project.projectId)}</code>
+                    </label>`).join("") || "<p class='muted'>没有项目。</p>";
+                  document.querySelectorAll("[data-project-id]").forEach(input => input.addEventListener("change", updatePurgeButton));
+                  updatePurgeButton();
+                }
+                async function load() {
+                  try {
+                    $("status").className = "card muted";
+                    $("status").textContent = "加载中…";
+                    const result = await api("/api/admin/projects");
+                    render(result.projects || []);
+                    $("status").textContent = `${(result.projects || []).length} 个项目已加载。`;
+                  } catch (error) {
+                    $("status").className = "card danger-text";
+                    $("status").textContent = error.message === "missing_token" ? "当前浏览器没有管理员 token，请先返回控制台登录。" : (error.payload?.error || error.message);
+                    $("projects").innerHTML = "";
+                    updatePurgeButton();
+                  }
+                }
+                async function purge() {
+                  const ids = selectedIds();
+                  if (!ids.length) return;
+                  const confirmation = window.prompt(`将永久删除 ${ids.length} 个项目及其全部项目数据。请输入 PURGE-PROJECTS 以确认。`, "");
+                  if (confirmation !== "PURGE-PROJECTS") { $("status").textContent = "已取消项目删除。"; return; }
+                  $("purge").disabled = true;
+                  try {
+                    const result = await api("/api/admin/projects/purge", { method: "POST", body: JSON.stringify({ projectIds: ids, confirm: confirmation }) });
+                    $("status").className = "card";
+                    $("status").textContent = `删除完成：${result.purgedCount || 0} 个成功，${result.failedCount || 0} 个失败。`;
+                    await load();
+                  } catch (error) {
+                    $("status").className = "card danger-text";
+                    $("status").textContent = error.payload?.error || "项目删除失败。";
+                    updatePurgeButton();
+                  }
+                }
+                $("back").onclick = () => { location.href = "/"; };
+                $("refresh").onclick = load;
+                $("purge").onclick = purge;
+                load();
+              </script>
+            </body>
+            </html>
+            """;
     }
 
     public string RenderAdminGameTypeMatchFailures()

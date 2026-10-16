@@ -1,0 +1,73 @@
+{
+  "actionReceipts": [
+    {
+      "path": "actions/s0-green/attempt-001/result.json",
+      "sha256": "sha256:af8b643f48c0f53fbf73b2cc5d9a015185422f21526184d4ae7127acdcb98782"
+    },
+    {
+      "path": "actions/s0-terminal/attempt-001/result.json",
+      "sha256": "sha256:f7a7f0d0729d5a40606f002c402d8cde29e9c901c3a6bcd25c1b223ba29fce11"
+    },
+    {
+      "path": "actions/s1-green/attempt-001/result.json",
+      "sha256": "sha256:10151b8406939bac1e791a8d3efd8b4f03a15e7dd20251442daa3101853aa9c7"
+    },
+    {
+      "path": "actions/s1-terminal/attempt-001/result.json",
+      "sha256": "sha256:bf2c67abf03e7b2c32cce70dc2cf0923843328fc0f54d111c40657d8e6b82b9a"
+    },
+    {
+      "path": "actions/s2-green/attempt-001/result.json",
+      "sha256": "sha256:b777369b37d3fb7609efbde7692a59c557d646d44fc4ea9ed3ff4d75506a2493"
+    },
+    {
+      "path": "actions/s2-terminal/attempt-001/result.json",
+      "sha256": "sha256:cd8c15bd18714b8a6f096ef1e94b0df1ebb5ccfae23da53ae6403cc6ce3233a0"
+    },
+    {
+      "path": "actions/s3-green/attempt-001/result.json",
+      "sha256": "sha256:03841aec1d472bc37711ea3aa3affdb5abc1c850092ba30a0e0950f7c6b15730"
+    },
+    {
+      "path": "actions/s3-terminal/attempt-001/result.json",
+      "sha256": "sha256:58b0c3c189c04990637675becd96c9fad57fe90b96296beb01ebd36070d31536"
+    },
+    {
+      "path": "actions/s4-green/attempt-001/result.json",
+      "sha256": "sha256:a32c666afd1f4356d6d8c61f1e495c682bc9e1564eeef8660a10c74b58ec1dad"
+    },
+    {
+      "path": "actions/s4-terminal/attempt-001/result.json",
+      "sha256": "sha256:c7122150ffaaf8099f4a0592a9c015121526b21416b7f7dc4901637a64b04eab"
+    }
+  ],
+  "authorizes": [],
+  "candidateCustodyHash": "sha256:eca917d969671c3cafec3b1d88718f11a3880ce77a9742521df34644d23f5074",
+  "implementationReceiptBinding": {
+    "path": "logs/acceptance/8-24-r6/implementation-complete-successor.v2.json",
+    "sha256": "sha256:498ede0d3d6bc6c04c8299a679914106563468204d3bec1072132e311df99b58",
+    "terminalCommandId": "terminal-full"
+  },
+  "inputBindings": {
+    "candidateCustodyHash": "sha256:eca917d969671c3cafec3b1d88718f11a3880ce77a9742521df34644d23f5074",
+    "contractHash": "sha256:ec41131cb3d843388a629b2721b5bfc555aff029a778bbf99386dc9d452f5122",
+    "knowledgeContextHash": "sha256:87fffd05e1a980668adab3dfab74c19e0cfa595a73b70fa99bfc12af84e65a51",
+    "runInputHash": "sha256:06204d0de39a93faceb9e3739619ab0a77866ffdc34b6ac6bd19414d4a7df0fa",
+    "skillInputBindingHash": "sha256:673aad4ab1a95bc6bdaa14bcd1f4c42263446820cd23774f2af662d34789b8e9",
+    "skillInputContextHash": "sha256:d78aaba0931cb2c6894a99474aeb3ddd28672dd0b42fa515106e5b25ed3f9dec"
+  },
+  "prerequisiteBundle": {
+    "bundleHash": "sha256:55fb92c5c15cb3f1a8e757b88edce31be7aafc81814d5b1d624c58296a0e28b1",
+    "implementationReceipt": {
+      "path": "logs/acceptance/8-24-r6/implementation-complete-successor.v2.json",
+      "sha256": "sha256:498ede0d3d6bc6c04c8299a679914106563468204d3bec1072132e311df99b58",
+      "terminalCommandId": "terminal-full"
+    },
+    "path": "acceptance-inputs/acceptance-8-24-20260930-r6/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+    "sha256": "sha256:1244647c9c08d806e4ba23965c4c1695dd5b3bc9f7c2c414dc2c8fc6adf7cf68"
+  },
+  "route": "deterministic_only",
+  "schemaVersion": "acceptance-deterministic-evaluation.v1",
+  "status": "passed",
+  "terminalResultHash": "sha256:45a1f6f54729affa065faa2da69134d9a015fd23d5699e7aad2b80a65e1979b3"
+}

@@ -1,0 +1,1 @@
+{"reason": "probe descriptor missing", "recommended_action": "repair-vdd", "status": "blocked"}

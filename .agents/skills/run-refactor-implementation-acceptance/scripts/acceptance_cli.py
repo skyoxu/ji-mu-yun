@@ -365,7 +365,7 @@ def prepare_run(input_path: str, output_path: str, knowledge_context_path: str |
             receipt_path.relative_to(REPOSITORY_ROOT.resolve())
             if bundle["currentQuickDev"].get("receipt") != {"path": implementation_receipt["path"], "sha256": implementation_receipt["sha256"]}:
                 raise InputError("current Quick Dev receipt binding mismatch")
-            verify_current_handoff(REPOSITORY_ROOT, bundle["currentQuickDev"])
+            verify_current_handoff(REPOSITORY_ROOT, bundle["currentQuickDev"], allowed_changed_paths=value.get("changed_paths", []))
         if not receipt_path.is_file() or _file_hash(receipt_path) != implementation_receipt["sha256"]:
             raise InputError("prerequisite bundle implementation receipt is stale")
         prerequisite_binding = {
@@ -1139,8 +1139,17 @@ def _load_current_coordinator_inputs(request_path: Path, request: object) -> dic
         relative_context = context_path.relative_to(REPOSITORY_ROOT.resolve()).as_posix()
     except (ValueError, OSError) as exc:
         raise InputError("coordinator Skill input is invalid: " + str(exc)) from exc
-    if request["targetPlan"] not in receipt["inputs"]["inputs"].get("implementation_target", []):
-        raise InputError("coordinator Skill input target mismatch")
+    implementation_targets = receipt["inputs"]["inputs"].get("implementation_target", [])
+    target_plan = request["targetPlan"].rstrip("/")
+    if target_plan not in implementation_targets:
+        bounded_projection = any(
+            isinstance(value, str)
+            and value.startswith(target_plan + "/")
+            and value != target_plan + "/"
+            for value in implementation_targets
+        )
+        if not bounded_projection:
+            raise InputError("coordinator Skill input target mismatch")
     run_input = prepared.get("input")
     validate_run_input(run_input)
     if {"semantic_review_required", "actions", "deterministicSourceSufficient"} & set(run_input):

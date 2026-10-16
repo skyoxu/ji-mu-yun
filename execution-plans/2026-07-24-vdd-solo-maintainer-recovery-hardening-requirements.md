@@ -96,3 +96,28 @@ Do not introduce:
 ## 7. Delivery Boundary
 
 Implement this as a small self-hosted Quick Dev change. Targeted tests shall stabilize routing and clarification-state behavior before one final package validation and full VDD unit-test discovery. Do not run Bootstrap Review unless the maintainer separately requests it.
+
+## Recovery Metadata Supplement (2026-09-30)
+
+Added for recovery-document schema completeness. Original source text,
+authority notices, paused states, non-goals, and evidence remain unchanged.
+These fields are source locators, not a new implementation status or approval.
+
+- Title: VDD Solo-Maintainer Recovery Hardening Requirements
+- Branch: n/a - the original source did not capture an authoring branch
+- Git Head: n/a - the original source did not capture an authoring commit; no historical binding is inferred
+- Goal: Define bounded recovery and validation improvements for the solo-maintainer VDD route.
+- Scope: Repository routing and the VDD Skill; direct BMAD Quick Dev input, without creating a VDD plan directory.
+- Current step: Source-document recovery only; this supplement does not assert current implementation or lifecycle state.
+- Last completed step: The original source document was recorded; implementation progress is owned by separate consumer evidence.
+- Stop-loss: Preserve original authority and non-goals; do not infer acceptance, activate a paused plan, or rewrite historical evidence.
+- Next action: Use the approved direct Quick Dev route described above when explicitly authorized; consult its separate evidence for implementation state.
+- Recovery command: py -3 -c "from pathlib import Path; print(Path('execution-plans/2026-07-24-vdd-solo-maintainer-recovery-hardening-requirements.md').read_text(encoding='utf-8'))"
+- Open questions: Consult the original body and its authority notice for unresolved decisions; this supplement resolves none.
+- Exit criteria: The original requirements and acceptance conditions remain unchanged; any completion claim requires separate current consumer evidence.
+- Related ADRs: n/a - no explicit Accepted ADR binding is added by this source metadata supplement
+- Related decision logs: n/a - no decision-log binding was captured in the original source metadata
+- Related task id(s): n/a - this source document does not bind a stable implementation task identifier
+- Related run id: n/a - this source document does not bind a canonical current execution run
+- Related latest.json: n/a - this source document does not bind a canonical current latest.json pointer
+- Related pipeline artifacts: n/a - this supplement produces no implementation or acceptance artifacts; retain any original evidence references in the body

@@ -26,6 +26,13 @@ Caddy, and public recovery live in `../runtime/phase-a/README.md`.
 | `Readback/` | Artifacts, assets, packages, previews, and safe browser readback |
 | `Workflow/` | Code projections of route and Godot workflow contracts |
 
+`Readback/ProjectPackageRestoreService.cs` admits durable version recovery and
+activates an immutable workspace generation through
+`Data/PhaseAMetadataStore.WorkspaceRecovery.cs`. Package ZIPs and snapshots share
+captured source bytes; `Workspaces/WorkspaceGenerationPaths.cs` keeps historical
+exports under the registered storage root. `Runs/ProjectBusinessChainStatus.cs`
+checks current stored evidence without dispatching another acceptance workflow.
+
 ## Runtime Flow
 
 ```text

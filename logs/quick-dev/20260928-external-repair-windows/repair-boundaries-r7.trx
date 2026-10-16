@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="32c86983-4f4c-477a-9b46-1200e0023907" name="Administrator@IZ3H5BJSZD44YHZ 2026-09-28 17:55:37" runUser="IZ3H5BJSZD44YHZ\Administrator" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-09-28T17:55:37.6530861+08:00" queuing="2026-09-28T17:55:37.6530864+08:00" start="2026-09-28T17:55:36.3795047+08:00" finish="2026-09-28T17:55:47.6732741+08:00" />
+  <TestSettings name="default" id="60ceabd6-7ec8-471c-bc27-be5824df1f71">
+    <Deployment runDeploymentRoot="Administrator_IZ3H5BJSZD44YHZ_2026-09-28_17_55_37" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="8406554b-065c-4675-b837-83a2eeabadc8" testId="a187c4f6-f8fd-ba4d-154d-5478eb6b5150" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_6BE8DC802311" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9339610" startTime="2026-09-28T17:55:47.6177824+08:00" endTime="2026-09-28T17:55:47.6177827+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8406554b-065c-4675-b837-83a2eeabadc8">
+      <Output>
+        <StdOut>S53-OBSERVATION O_6BE8DC802311;accepted=true;reason=accepted;processId=0;artifacts=fault,migration,permission,redaction,snapshot</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="1ceeea86-ca87-41c3-930d-8acc152f6d6c" testId="cb4f3aa9-6d0c-28e4-b04e-15b1fdb3f248" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_AD7298625129" computerName="IZ3H5BJSZD44YHZ" duration="00:00:01.2152279" startTime="2026-09-28T17:55:38.2234070+08:00" endTime="2026-09-28T17:55:38.2234072+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1ceeea86-ca87-41c3-930d-8acc152f6d6c">
+      <Output>
+        <StdOut>S53-OBSERVATION O_AD7298625129;accepted=true;reason=accepted;processId=0;artifacts=fault,migration,permission,redaction,snapshot</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="6710fb0e-d225-4be5-98a5-006cdd60fffc" testId="b0d19b03-dd13-fef7-3f53-5facc8fe1ba3" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_A18_REJECTS_REHASHED_NON_BEHAVIOR" computerName="IZ3H5BJSZD44YHZ" duration="00:00:01.0669507" startTime="2026-09-28T17:55:46.6836165+08:00" endTime="2026-09-28T17:55:46.6836167+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6710fb0e-d225-4be5-98a5-006cdd60fffc">
+      <Output>
+        <StdOut>S53-OBSERVATION O_A18_REJECTS_REHASHED_NON_BEHAVIOR;accepted=false;reason=behavior_evidence_invalid;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="31c9a702-81da-44fe-ae17-eeb747359a4e" testId="313ba094-0c83-941f-73a9-1bee357e72ad" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_1758D7FA26D7" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9349286" startTime="2026-09-28T17:55:43.7665371+08:00" endTime="2026-09-28T17:55:43.7665373+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="31c9a702-81da-44fe-ae17-eeb747359a4e">
+      <Output>
+        <StdOut>S53-OBSERVATION O_1758D7FA26D7;accepted=false;reason=missing_required_evidence;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b1bf3ff4-bce5-4896-b2ef-acc473b30e0e" testId="0263ebd4-6691-7838-43e5-21be345943a0" testName="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.ChangedPersistedPrompt_Blocks" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0740538" startTime="2026-09-28T17:55:37.7688971+08:00" endTime="2026-09-28T17:55:37.7688973+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b1bf3ff4-bce5-4896-b2ef-acc473b30e0e" />
+    <UnitTestResult executionId="6b95840b-0e34-45f5-9ee6-baf69508bc51" testId="2ed39aea-cd00-5b8e-97bc-a55c24a57614" testName="PhaseA.Platform.Tests.PhaseB.Repair.RestoreTreeSecurityRegressionTests.ChildAclDrift_IsDetectedWhileWorkspaceRootIsUnchanged" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.1515968" startTime="2026-09-28T17:55:37.1619653+08:00" endTime="2026-09-28T17:55:37.1619824+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6b95840b-0e34-45f5-9ee6-baf69508bc51" />
+    <UnitTestResult executionId="48a5c503-9865-4dfe-b17a-3582cf84033d" testId="bc5e213c-3400-8013-cecb-2c336da2693f" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_8A188783399E" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9483561" startTime="2026-09-28T17:55:39.1717000+08:00" endTime="2026-09-28T17:55:39.1717003+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="48a5c503-9865-4dfe-b17a-3582cf84033d">
+      <Output>
+        <StdOut>S53-OBSERVATION O_8A188783399E;accepted=false;reason=missing_required_evidence;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="577a72eb-88cb-4912-8044-5f838345c924" testId="e93d7c61-405c-8f50-97a5-cd1aa6573675" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_184C7201648B" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9252684" startTime="2026-09-28T17:55:44.6920458+08:00" endTime="2026-09-28T17:55:44.6920460+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="577a72eb-88cb-4912-8044-5f838345c924">
+      <Output>
+        <StdOut>S53-OBSERVATION O_184C7201648B;accepted=false;reason=stale_evidence;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="4f95eb6b-9967-4668-a0d3-16b61e5246d3" testId="0b2241cd-0729-88cf-9e56-c44c3d1fe95d" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_DAA21E146840" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.8430009" startTime="2026-09-28T17:55:41.9115530+08:00" endTime="2026-09-28T17:55:41.9115536+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4f95eb6b-9967-4668-a0d3-16b61e5246d3">
+      <Output>
+        <StdOut>S53-OBSERVATION O_DAA21E146840;accepted=false;reason=verification_not_executed;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="8f9dfa37-0b50-41f0-ae2d-3219f06c64fb" testId="eec7c2e9-8f21-246f-26d8-e1e7923ea136" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_8FF9DCF91EDE" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9286548" startTime="2026-09-28T17:55:41.0683494+08:00" endTime="2026-09-28T17:55:41.0683498+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8f9dfa37-0b50-41f0-ae2d-3219f06c64fb">
+      <Output>
+        <StdOut>S53-OBSERVATION O_8FF9DCF91EDE;accepted=false;reason=integrity_failure;processId=0;artifacts=</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="fdb4feb3-47d6-4146-85d5-92fe01bbffe9" testId="abd2a3b6-766e-7d66-b574-9b335bf818e3" testName="PhaseA.Platform.Tests.PhaseB.Repair.RestoreTreeSecurityRegressionTests.MissingDescriptor_QuarantinesInsteadOfPublishing" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0276539" startTime="2026-09-28T17:55:37.1890568+08:00" endTime="2026-09-28T17:55:37.1890570+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fdb4feb3-47d6-4146-85d5-92fe01bbffe9" />
+    <UnitTestResult executionId="07054b86-cd0c-4de7-976a-756cada8f93a" testId="fce775ca-b7fd-ab6e-18f1-7267861ca559" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_A18_PERSISTED_PLATFORM_RUN_BINDING" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9241093" startTime="2026-09-28T17:55:45.6163980+08:00" endTime="2026-09-28T17:55:45.6163982+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="07054b86-cd0c-4de7-976a-756cada8f93a">
+      <Output>
+        <StdOut>S53-OBSERVATION O_A18_PERSISTED_PLATFORM_RUN_BINDING;accepted=true;reason=accepted;processId=0;artifacts=fault,migration,permission,redaction,snapshot</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="6a2b55a8-f85b-4a52-8d53-ac42f733e7ab" testId="e11e4e0e-f145-a4f1-6b1c-b3fcdbb91147" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_C1832CCFAB00" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9676437" startTime="2026-09-28T17:55:40.1394848+08:00" endTime="2026-09-28T17:55:40.1394850+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6a2b55a8-f85b-4a52-8d53-ac42f733e7ab">
+      <Output>
+        <StdOut>S53-OBSERVATION O_C1832CCFAB00;accepted=true;reason=accepted;processId=0;artifacts=fault,migration,permission,redaction,snapshot</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="4332acd8-503c-4d3d-9e01-319a4734ce5f" testId="f4a51fb4-c627-cdcc-11df-5b815b65bc25" testName="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.InvalidContract_Blocks(content: &quot;not-json&quot;)" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0716184" startTime="2026-09-28T17:55:37.5213571+08:00" endTime="2026-09-28T17:55:37.5213573+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4332acd8-503c-4d3d-9e01-319a4734ce5f" />
+    <UnitTestResult executionId="fb25b0a1-b108-49cc-ae7c-61c72f72b3b8" testId="891c0705-dece-83db-0b7a-574049299824" testName="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.InvalidContract_Blocks(content: &quot;&quot;)" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0753836" startTime="2026-09-28T17:55:37.3771714+08:00" endTime="2026-09-28T17:55:37.3771716+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fb25b0a1-b108-49cc-ae7c-61c72f72b3b8" />
+    <UnitTestResult executionId="4a3432a6-2de5-4259-8d0e-db0246b813cc" testId="48754ad5-f7b2-33f0-70eb-8781cf138dc0" testName="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.ActiveSessionWithoutCurrentGoal_Blocks" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.2183911" startTime="2026-09-28T17:55:37.2240004+08:00" endTime="2026-09-28T17:55:37.2240006+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4a3432a6-2de5-4259-8d0e-db0246b813cc" />
+    <UnitTestResult executionId="7036d57b-adad-40ca-8c7e-b7f795de7131" testId="e1da3e43-40a0-4f60-8164-89cb0a73d31d" testName="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.NoActiveSessionOrRepair_IsNotApplicable" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0808777" startTime="2026-09-28T17:55:37.8499669+08:00" endTime="2026-09-28T17:55:37.8499672+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7036d57b-adad-40ca-8c7e-b7f795de7131" />
+    <UnitTestResult executionId="23c27b4e-d8ba-4a36-82f5-5c2d82ab453e" testId="fb963479-770a-e921-d03a-07e8d979dfc7" testName="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.InvalidContract_Blocks(content: &quot;{}&quot;)" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0720901" startTime="2026-09-28T17:55:37.4499543+08:00" endTime="2026-09-28T17:55:37.4499546+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="23c27b4e-d8ba-4a36-82f5-5c2d82ab453e" />
+    <UnitTestResult executionId="ff2e56b4-7987-45f2-85f4-9eeccee2bc9f" testId="05ed07ba-5b86-2ff4-0395-1e3b148171dc" testName="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.ValidActiveGoal_PermitsContinuation" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0922313" startTime="2026-09-28T17:55:37.6946951+08:00" endTime="2026-09-28T17:55:37.6946953+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ff2e56b4-7987-45f2-85f4-9eeccee2bc9f" />
+    <UnitTestResult executionId="40a5d79d-3ef3-4501-a6c4-642ca489475d" testId="0dc2e509-248c-45ab-e186-35627788d8e8" testName="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.ChangedGdd_InvalidatesFrozenContract" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0775264" startTime="2026-09-28T17:55:37.3016466+08:00" endTime="2026-09-28T17:55:37.3016468+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="40a5d79d-3ef3-4501-a6c4-642ca489475d" />
+    <UnitTestResult executionId="663d1d97-4683-46bd-a0c7-00279e770f8e" testId="9e513b4b-0a90-6c06-9ae8-32673f146b9e" testName="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_B2296F39A759" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.9193498" startTime="2026-09-28T17:55:42.8311605+08:00" endTime="2026-09-28T17:55:42.8311609+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="663d1d97-4683-46bd-a0c7-00279e770f8e">
+      <Output>
+        <StdOut>S53-OBSERVATION O_B2296F39A759;accepted=true;reason=accepted;processId=0;artifacts=fault,migration,permission,redaction,snapshot</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="037c73e0-e062-4cb7-951c-02aef4a31c77" testId="5d4fd943-2c01-3723-ca62-296dc07283a5" testName="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.NeedsFixWithoutDiagnostic_Blocks" computerName="IZ3H5BJSZD44YHZ" duration="00:00:00.0809569" startTime="2026-09-28T17:55:37.6022965+08:00" endTime="2026-09-28T17:55:37.6022967+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="037c73e0-e062-4cb7-951c-02aef4a31c77" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_184C7201648B" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="e93d7c61-405c-8f50-97a5-cd1aa6573675">
+      <Execution id="577a72eb-88cb-4912-8044-5f838345c924" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_184C7201648B" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.InvalidContract_Blocks(content: &quot;{}&quot;)" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="fb963479-770a-e921-d03a-07e8d979dfc7">
+      <Execution id="23c27b4e-d8ba-4a36-82f5-5c2d82ab453e" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests" name="InvalidContract_Blocks" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_AD7298625129" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="cb4f3aa9-6d0c-28e4-b04e-15b1fdb3f248">
+      <Execution id="1ceeea86-ca87-41c3-930d-8acc152f6d6c" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_AD7298625129" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.NoActiveSessionOrRepair_IsNotApplicable" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="e1da3e43-40a0-4f60-8164-89cb0a73d31d">
+      <Execution id="7036d57b-adad-40ca-8c7e-b7f795de7131" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests" name="NoActiveSessionOrRepair_IsNotApplicable" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.RestoreTreeSecurityRegressionTests.ChildAclDrift_IsDetectedWhileWorkspaceRootIsUnchanged" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="2ed39aea-cd00-5b8e-97bc-a55c24a57614">
+      <Execution id="6b95840b-0e34-45f5-9ee6-baf69508bc51" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.RestoreTreeSecurityRegressionTests" name="ChildAclDrift_IsDetectedWhileWorkspaceRootIsUnchanged" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.ValidActiveGoal_PermitsContinuation" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="05ed07ba-5b86-2ff4-0395-1e3b148171dc">
+      <Execution id="ff2e56b4-7987-45f2-85f4-9eeccee2bc9f" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests" name="ValidActiveGoal_PermitsContinuation" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_6BE8DC802311" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="a187c4f6-f8fd-ba4d-154d-5478eb6b5150">
+      <Execution id="8406554b-065c-4675-b837-83a2eeabadc8" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_6BE8DC802311" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.InvalidContract_Blocks(content: &quot;&quot;)" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="891c0705-dece-83db-0b7a-574049299824">
+      <Execution id="fb25b0a1-b108-49cc-ae7c-61c72f72b3b8" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests" name="InvalidContract_Blocks" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.InvalidContract_Blocks(content: &quot;not-json&quot;)" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="f4a51fb4-c627-cdcc-11df-5b815b65bc25">
+      <Execution id="4332acd8-503c-4d3d-9e01-319a4734ce5f" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests" name="InvalidContract_Blocks" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.ChangedPersistedPrompt_Blocks" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="0263ebd4-6691-7838-43e5-21be345943a0">
+      <Execution id="b1bf3ff4-bce5-4896-b2ef-acc473b30e0e" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests" name="ChangedPersistedPrompt_Blocks" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_8A188783399E" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="bc5e213c-3400-8013-cecb-2c336da2693f">
+      <Execution id="48a5c503-9865-4dfe-b17a-3582cf84033d" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_8A188783399E" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_DAA21E146840" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="0b2241cd-0729-88cf-9e56-c44c3d1fe95d">
+      <Execution id="4f95eb6b-9967-4668-a0d3-16b61e5246d3" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_DAA21E146840" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_B2296F39A759" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="9e513b4b-0a90-6c06-9ae8-32673f146b9e">
+      <Execution id="663d1d97-4683-46bd-a0c7-00279e770f8e" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_B2296F39A759" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_A18_PERSISTED_PLATFORM_RUN_BINDING" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="fce775ca-b7fd-ab6e-18f1-7267861ca559">
+      <Execution id="07054b86-cd0c-4de7-976a-756cada8f93a" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_A18_PERSISTED_PLATFORM_RUN_BINDING" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.RestoreTreeSecurityRegressionTests.MissingDescriptor_QuarantinesInsteadOfPublishing" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="abd2a3b6-766e-7d66-b574-9b335bf818e3">
+      <Execution id="fdb4feb3-47d6-4146-85d5-92fe01bbffe9" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.RestoreTreeSecurityRegressionTests" name="MissingDescriptor_QuarantinesInsteadOfPublishing" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_A18_REJECTS_REHASHED_NON_BEHAVIOR" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="b0d19b03-dd13-fef7-3f53-5facc8fe1ba3">
+      <Execution id="6710fb0e-d225-4be5-98a5-006cdd60fffc" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_A18_REJECTS_REHASHED_NON_BEHAVIOR" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_C1832CCFAB00" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="e11e4e0e-f145-a4f1-6b1c-b3fcdbb91147">
+      <Execution id="6a2b55a8-f85b-4a52-8d53-ac42f733e7ab" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_C1832CCFAB00" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_1758D7FA26D7" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="313ba094-0c83-941f-73a9-1bee357e72ad">
+      <Execution id="31c9a702-81da-44fe-ae17-eeb747359a4e" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_1758D7FA26D7" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.ChangedGdd_InvalidatesFrozenContract" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="0dc2e509-248c-45ab-e186-35627788d8e8">
+      <Execution id="40a5d79d-3ef3-4501-a6c4-642ca489475d" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests" name="ChangedGdd_InvalidatesFrozenContract" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests.O_8FF9DCF91EDE" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="eec7c2e9-8f21-246f-26d8-e1e7923ea136">
+      <Execution id="8f9dfa37-0b50-41f0-ae2d-3219f06c64fb" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S53BoundaryTests" name="O_8FF9DCF91EDE" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.ActiveSessionWithoutCurrentGoal_Blocks" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="48754ad5-f7b2-33f0-70eb-8781cf138dc0">
+      <Execution id="4a3432a6-2de5-4259-8d0e-db0246b813cc" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests" name="ActiveSessionWithoutCurrentGoal_Blocks" />
+    </UnitTest>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests.NeedsFixWithoutDiagnostic_Blocks" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="5d4fd943-2c01-3723-ca62-296dc07283a5">
+      <Execution id="037c73e0-e062-4cb7-951c-02aef4a31c77" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.RecoveryAuthorityRegressionTests" name="NeedsFixWithoutDiagnostic_Blocks" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="a187c4f6-f8fd-ba4d-154d-5478eb6b5150" executionId="8406554b-065c-4675-b837-83a2eeabadc8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cb4f3aa9-6d0c-28e4-b04e-15b1fdb3f248" executionId="1ceeea86-ca87-41c3-930d-8acc152f6d6c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b0d19b03-dd13-fef7-3f53-5facc8fe1ba3" executionId="6710fb0e-d225-4be5-98a5-006cdd60fffc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="313ba094-0c83-941f-73a9-1bee357e72ad" executionId="31c9a702-81da-44fe-ae17-eeb747359a4e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0263ebd4-6691-7838-43e5-21be345943a0" executionId="b1bf3ff4-bce5-4896-b2ef-acc473b30e0e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2ed39aea-cd00-5b8e-97bc-a55c24a57614" executionId="6b95840b-0e34-45f5-9ee6-baf69508bc51" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bc5e213c-3400-8013-cecb-2c336da2693f" executionId="48a5c503-9865-4dfe-b17a-3582cf84033d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e93d7c61-405c-8f50-97a5-cd1aa6573675" executionId="577a72eb-88cb-4912-8044-5f838345c924" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0b2241cd-0729-88cf-9e56-c44c3d1fe95d" executionId="4f95eb6b-9967-4668-a0d3-16b61e5246d3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="eec7c2e9-8f21-246f-26d8-e1e7923ea136" executionId="8f9dfa37-0b50-41f0-ae2d-3219f06c64fb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="abd2a3b6-766e-7d66-b574-9b335bf818e3" executionId="fdb4feb3-47d6-4146-85d5-92fe01bbffe9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fce775ca-b7fd-ab6e-18f1-7267861ca559" executionId="07054b86-cd0c-4de7-976a-756cada8f93a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e11e4e0e-f145-a4f1-6b1c-b3fcdbb91147" executionId="6a2b55a8-f85b-4a52-8d53-ac42f733e7ab" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f4a51fb4-c627-cdcc-11df-5b815b65bc25" executionId="4332acd8-503c-4d3d-9e01-319a4734ce5f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="891c0705-dece-83db-0b7a-574049299824" executionId="fb25b0a1-b108-49cc-ae7c-61c72f72b3b8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="48754ad5-f7b2-33f0-70eb-8781cf138dc0" executionId="4a3432a6-2de5-4259-8d0e-db0246b813cc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e1da3e43-40a0-4f60-8164-89cb0a73d31d" executionId="7036d57b-adad-40ca-8c7e-b7f795de7131" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fb963479-770a-e921-d03a-07e8d979dfc7" executionId="23c27b4e-d8ba-4a36-82f5-5c2d82ab453e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="05ed07ba-5b86-2ff4-0395-1e3b148171dc" executionId="ff2e56b4-7987-45f2-85f4-9eeccee2bc9f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0dc2e509-248c-45ab-e186-35627788d8e8" executionId="40a5d79d-3ef3-4501-a6c4-642ca489475d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9e513b4b-0a90-6c06-9ae8-32673f146b9e" executionId="663d1d97-4683-46bd-a0c7-00279e770f8e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5d4fd943-2c01-3723-ca62-296dc07283a5" executionId="037c73e0-e062-4cb7-951c-02aef4a31c77" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="列表中未列出的结果" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="所有已加载的结果" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="22" executed="22" passed="22" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.7+8f2703126a (64-bit .NET 8.0.21)&#xD;
+[xUnit.net 00:00:00.11]   Discovering: PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.25]   Discovered:  PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.25]   Starting:    PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:10.90]   Finished:    PhaseA.Platform.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

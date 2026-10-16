@@ -1,0 +1,28 @@
+{
+  "schema": "quick-dev.q8-preflight-blocker.v1",
+  "source_commit": "c050f3d429299e6469e57ae43466b27723c69f5e",
+  "q7_reprojected": 73,
+  "q7_failures": 0,
+  "terminal_blockers": [
+    {
+      "slice_id": "S15",
+      "failure_family": "semantic-contract-gap",
+      "failure_id": "QD-SEMANTIC-CONTRACT-GAP-6C66A598B6E3B433",
+      "terminal_result_ref": "logs/quick-dev/20260929-recovery2-S15/canonical-evidence/terminal/stage-result.v2.json"
+    },
+    {
+      "slice_id": "S28",
+      "failure_family": "repo-noise",
+      "failure_id": "QD-REPO-NOISE-C7B100CF4C0C80B3",
+      "terminal_result_ref": "logs/quick-dev/20260929-batch-S28/canonical-evidence/terminal/stage-result.v2.json"
+    },
+    {
+      "slice_id": "S59",
+      "failure_family": "repo-noise",
+      "failure_id": "QD-REPO-NOISE-6F7E777374799575",
+      "terminal_result_ref": "logs/quick-dev/20260929-batch-S59/canonical-evidence/terminal/stage-result.v2.json"
+    }
+  ],
+  "q8_status": "blocked",
+  "reason": "terminal stage not current process pass"
+}

@@ -1,22 +1,22 @@
-# Phase B/C Identity Isolation and Workspace Recovery
+# 8-24 Phase B/C Identity Isolation and Workspace Recovery
 
-- Title: Phase B/C Identity Isolation and Workspace Recovery
-- Status: implementation-authorized
-- Profile: `resumable` — dependent identity, Runner, Snapshot, Restore, and API slices cross sessions but do not modify the VDD/Quick Dev/Acceptance control plane.
-- Branch: main
-- Git Head: dcd3cc04051cdb57bde3d40313ba88100ba63b47
-- Goal: Implement the accepted Phase B/C identity, execution isolation, Workspace Snapshot, Restore Attempt, and recovery contracts on the current single-node Phase service without expanding into multi-node or frontend rebuild work.
-- Scope: Canonical Spec Package `SPEC-phase-b-c-identity-isolation-workspace-recovery` and all six declared companions; PhaseA.Platform plus targeted tests, additive migrations, and required contract docs only.
-- Current step: External semantic review is rebound to the current candidate, successor exact-cover is conformant, and maintainer authorization is published; ready for S0 RED.
-- Last completed step: Skill-input, knowledge preflight, source-freeze, and repair-round exact-cover projection.
-- Stop-loss: Stop on any protected auth/runner/storage boundary conflict, missing required authority, unsafe ownership inference, or failing targeted validation; do not mutate live metadata.
-- Next action: Run Quick Dev TDD S0 RED. Authorization does not imply implementation completion, Acceptance, or release.
-- Recovery command: Read `00-index.md`, `requirements.v1.json`, `repair/round-1/requirements-acceptance.v1.json`, `repair/round-1/source-freeze.v1.json`, `implementation-slices.md`, `plan-state.v1.json`, `resume-state.v1.json`, and the latest indexed `95-*.md`; resolve semantic review before authorization.
-- Open questions: None that change scope. OIDC provider/session mechanics, exact Windows API composition, manifest serialization, storage tables, and migration layout remain implementation-owned seeds constrained by AD-1..AD-13.
-- Exit criteria: All active PIWR obligations and PIWR-A01..A18 have an observable acceptance path; targeted tests and one terminal full validation pass; lifecycle remains distinct through acceptance.
-- Related ADRs: `docs/adr/ADR-0033-phase-metadata-sqlite-local-disk.md`, `docs/adr/ADR-0034-phase-account-scoped-token-auth.md`, `docs/adr/ADR-0035-phase-controlled-runner-workspace-execution.md`, `docs/adr/ADR-0036-phase-prototype-route-recovery-authority.md`, `docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md`, `docs/adr/ADR-0038-phase-evidence-sidecars-readback.md`, `docs/adr/ADR-0039-phase-runtime-caddy-recovery.md`, `docs/adr/ADR-0061-phase-b-c-identity-isolation-workspace-recovery-spine.md`
-- Related decision logs: `_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/.memlog.md`
-- Related task id(s): n/a (no Taskmaster task id linked yet)
-- Related run id: n/a (no pipeline run id linked yet)
-- Related latest.json: n/a (no task-scoped latest.json pointer resolved yet)
-- Related pipeline artifacts: `_bmad-output/specs/spec-phase-b-c-identity-isolation-workspace-recovery/`; `_bmad-output/planning-artifacts/architecture/architecture-phase-b-c-identity-isolation-workspace-recovery-2026-08-23/`
+Current next action: **Quick Dev TDD directly, starting at S12**.
+The maintainer requested online input repair and no further VDD Skill run.
+This directory contains implementation intent, not product completion proof.
+
+| Read | Purpose |
+| --- | --- |
+| [Local handoff](LOCAL-HANDOFF.md) | Direct entry, Q2 pytest/.NET bridge, runtime boundaries |
+| [Implementation input](implementation-repair-input.md) | Source-grounded behavior matrix and non-goals |
+| [Semantic bundle](semantic-plan-bundle.v1.json) | Current Quick Dev input; 351 obligations, 73 slices |
+| [Slice order](implementation-order.v1.json) | Dependencies and first slice |
+| [Case map](implementation-case-map.v1.json) | Atomic assertion and intended test identities |
+| [Repair dispositions](input-repair-dispositions.v1.json) | Workflow instructions moved out of product scope |
+| [Failure-intent mapping](input-repair-failure-intents.v1.json) | Prior IDs and conditional product RED intents |
+| [Current source manifest](input-repair-source-index.v1.json) | Exact input/source hashes for this revision |
+
+The seven canonical upstream documents remain unchanged. Governance is off;
+Bootstrap is not requested. Historical compiler, Round-3, v1 contract, source
+freeze and terminal records remain available at their paths and in Git history,
+but cannot authorize or prove this repaired candidate. Follow the current
+handoff instead of old S0 or compiler-first navigation.

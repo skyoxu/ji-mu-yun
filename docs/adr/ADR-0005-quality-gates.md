@@ -100,3 +100,50 @@ CI 侧应能在 `logs/**` 中找到对应摘要与日志文件；失败时可直
 - `scripts/sc/llm_review.py`, `scripts/sc/llm_extract_task_obligations.py`, `scripts/sc/llm_check_subtasks_coverage.py`, and `scripts/sc/llm_semantic_gate_all.py` are advisory/diagnostic by default.
 - CI must expose one explicit line in Step Summary: `SecurityProfile: <host-safe|strict>`.
 - Default profile stays `host-safe`; `strict` is opt-in per project phase.
+
+## Addendum (2026-10 CI regression consolidation)
+
+- The Windows quality workflow executes the complete `Game.sln` test suite once
+  with coverage and hang diagnostics, including all Runner and Phase fixtures.
+- Filtered Runner/Phase regressions must not repeat serially before that same
+  covered suite. The independent Phase entry workflow remains a quick focused
+  signal and does not replace the complete quality gate.
+- Test failures remain blocking. Test coverage, profiles, required check names,
+  and production execution timeouts remain unchanged.
+- Superseded pull-request quality runs share a concurrency group and are
+  cancelled when a newer commit arrives. Main and manual runs are not actively
+  cancelled; cancelled runs retain their GitHub history.
+
+## Addendum (2026-10 failure details in CI console)
+
+On a .NET hard failure, the CI driver prints up to five failed-test context blocks
+from the current invocation output, each bounded to 40 following lines and 4,000
+characters. It preserves the original log artifacts, summary, tails and exit code.
+Later successful tests cannot hide an earlier failure message behind the final
+console tail. This changes diagnostics only; it does not rerun or skip tests.
+
+## Addendum (2026-10 tracked source and raw evidence encoding)
+
+The CI encoding report scans all Git-tracked text rather than selecting files
+by today's commit date. Shallow checkouts and commits from an earlier day must
+not yield an empty scan. Binary .bin probes are binary evidence.
+
+Historical UTF-16 terminal captures retain their original bytes. A capture can
+be classified separately from UTF-8 source only through
+scripts/python/encoding_raw_evidence.json: the original SHA-256, UTF-16 BOM,
+and exact LF-normalized UTF-8 sidecar bytes under logs/ must all validate. Modified raw
+bytes, stale sidecars, invalid manifests, and active-source declarations fail
+validation. Explicit file scans still report the original capture's encoding.
+Current source is not exempted, and the encoding gate's severity is unchanged.
+
+GdUnit prewarm and report-copy commands use the shared file-backed CI process
+runner. They preserve the supplied runtime environment, actual exit code,
+timeout and process-tree cancellation. Process working directory and evidence
+root can differ so test-project commands still archive under repository
+logs/. A completed parent must not wait for compiler descendants to close
+inherited stdout pipes.
+
+The unused ADR-0005 command-whitelist exception is retired after verifying no
+forbidden executable command examples remain in this document. Other live
+legacy-document exceptions retain their dates and warning horizon; this
+repair does not renew them.

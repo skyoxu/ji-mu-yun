@@ -37,6 +37,9 @@ def observe_candidate(root, authority_path, storage):
         generated.update({
             f'{target_plan}/acceptance-runs/',
             f'{target_plan}/acceptance-inputs/',
+            f'{target_plan}/.acceptance-snapshots/',
+            f'{target_plan}/acceptance-coordinator-request.*',
+            f'{target_plan}/acceptance-projection-request.v1.json',
             f'{target_plan}/acceptance-run-request.*.json',
             f'{target_plan}/compact-vdd-projection-request.*.json',
             f'{target_plan}/knowledge-context.refactor-acceptance-*.json',
@@ -54,7 +57,7 @@ def observe_candidate(root, authority_path, storage):
     for path in sorted(changed):
         relative(path)
         # Runtime evidence and adapter-owned storage are not candidate authority.
-        if path.startswith('logs/') or is_generated(path):
+        if path.startswith('logs/') or path == storage or is_generated(path):
             continue
         file = contained(root, path)
         if file.exists() and not file.is_file():

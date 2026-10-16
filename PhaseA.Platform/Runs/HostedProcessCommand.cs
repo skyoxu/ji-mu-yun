@@ -10,7 +10,8 @@ public sealed record HostedProcessCommand(
     TimeSpan? TotalTimeout = null,
     TimeSpan? InactivityTimeout = null,
     IReadOnlyList<string>? ActivityWatchPaths = null,
-    TimeSpan? ActivityWatchPollInterval = null)
+    TimeSpan? ActivityWatchPollInterval = null,
+    bool RequireIsolation = false)
 {
     public HostedProcessCommand WithRunId(string runId)
     {

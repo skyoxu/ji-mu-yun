@@ -26,6 +26,12 @@ No history scan or latest-run inference is performed; absent history does not
 claim knowledge of other runs. Two matching prior failures block the third
 attempt before execution. Refactor reentry checks precede its model worker.
 
+When an author worker exits before descriptor materialization, the stable runner
+writes its hash-only, non-authoritative `worker-result.v1.json` under that
+explicit run directory. Reentry of that run is blocked and must use explicit
+recovery or a fresh run; the worker result is diagnostic only and never RED,
+GREEN, regression, or completion evidence.
+
 For the bounded 8-17 closeout, run the test files listed in
 `logs/quick-dev-stage-recovery-closeout-23cf4937/validation.json`, including
 `test_stage_reentry.py`, `test_ch456_recovery_mutations.py` and

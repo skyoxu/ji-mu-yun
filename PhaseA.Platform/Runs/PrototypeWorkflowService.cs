@@ -661,6 +661,15 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
 
+        // ADR-0035/0061: the project may have changed between preflight and lock acquisition.
+        if (!await _metadataStore.IsCurrentWorkspaceGenerationAsync(project, runId, cancellationToken))
+        {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "Project version changed. Retry validation.",
+                FailureEvidenceJson(prototypeRecordPath, validationOnly: true, skeletonValidationOnly: SkeletonValidationOnly), CancellationToken.None);
+            return new PrototypeWorkflowResult(runId, "project_busy", 423, prototypeRecordPath, "",
+                "Project version changed. Retry validation.", [], []);
+        }
+
         var dotnetBuild = await RunPrototypeDotnetBuildValidationAsync(project, cancellationToken);
         var validation = dotnetBuild.Passed
             ? ValidateCompletedPrototypeState(project.RepoPath, slug)
@@ -696,6 +705,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             run_type = RunType,
             validation_only = true,
             skeleton_validation_only = SkeletonValidationOnly,
+            workspace_generation_id = WorkspaceGenerationPaths.SourceGenerationId(project),
             prototype_record = prototypeRecordPath,
             prototype_contract = contract.RelativePath,
             slug,
@@ -723,7 +733,8 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         }
         catch (Exception ex)
         {
-            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), FailureEvidenceJson(prototypeRecordPath), CancellationToken.None);
+            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(),
+                FailureEvidenceJson(prototypeRecordPath, validationOnly: true, skeletonValidationOnly: SkeletonValidationOnly), CancellationToken.None);
             await SetProgressAsync(
                 runId,
                 "failed",
@@ -836,7 +847,10 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             throw new InvalidOperationException("Project not found.");
         }
 
-        return await GetProgressForProjectAsync(project, cancellationToken);
+        var progress = await GetProgressForProjectAsync(project, cancellationToken);
+        return await _metadataStore.RequiresRestoreValidationAsync(accountId, projectId, cancellationToken)
+            ? progress with { AcceptanceStatus = "stale", AcceptanceFailure = "restore_revalidation_required", AcceptanceRunId = null }
+            : progress;
     }
 
     private async Task<PrototypeWorkflowProgress> GetProgressForProjectAsync(ProjectSnapshot project, CancellationToken cancellationToken)
@@ -1014,7 +1028,23 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
 
     private async Task<RunSnapshot> RecoverCompletedPrototypeRunIfNeededAsync(ProjectSnapshot project, RunSnapshot run, CancellationToken cancellationToken)
     {
-        if (!IsUnfinishedRunStatus(run.Status) ||
+        if (!string.Equals(run.Status, "running", StringComparison.OrdinalIgnoreCase) ||
+            !string.IsNullOrWhiteSpace(run.EvidenceJson) ||
+            IsNonCreationPrototypeProgress(run))
+        {
+            return run;
+        }
+
+        // ADR-0036: completion files cannot override an active final acceptance or a newer failure.
+        await using var recoveryLease = _prototypeCreationQueue.TryEnter(
+            $"prototype-recovery-{Guid.NewGuid():N}", project.AccountId, project.ProjectId, "prototype-recovery");
+        if (recoveryLease is null)
+        {
+            return run;
+        }
+
+        run = await _metadataStore.GetRunSnapshotAsync(run.RunId, cancellationToken) ?? run;
+        if (!string.Equals(run.Status, "running", StringComparison.OrdinalIgnoreCase) ||
             !string.IsNullOrWhiteSpace(run.EvidenceJson) ||
             IsNonCreationPrototypeProgress(run))
         {
@@ -2179,12 +2209,15 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             ?? PrototypeRecordWriter.SanitizeSlug(fallbackSlug);
     }
 
-    private static string FailureEvidenceJson(string prototypeRecordPath, bool repair = false)
+    private static string FailureEvidenceJson(string prototypeRecordPath, bool repair = false,
+        bool validationOnly = false, bool skeletonValidationOnly = false)
     {
         return JsonSerializer.Serialize(new
         {
             run_type = RunType,
             repair,
+            validation_only = validationOnly,
+            skeleton_validation_only = skeletonValidationOnly,
             prototype_record = prototypeRecordPath,
             slug = ExtractSlugFromPrototypeRecordPath(prototypeRecordPath)
         });

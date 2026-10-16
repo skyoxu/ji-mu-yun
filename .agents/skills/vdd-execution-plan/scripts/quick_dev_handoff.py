@@ -464,7 +464,9 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
     if requirements.resolve() not in sources:
         raise ValueError('handoff requirements not in predecessor source identity')
     source['sha256'] = sc.sha256_value(source['entries'])
-    alignment, recall = read('semantic-alignment.v1.json'), read('atomic-recall-alignment.v1.json')
+    recall_path = sc.published_recall_path(predecessor)
+    alignment = read('semantic-alignment.v1.json')
+    recall = json.loads(recall_path.read_text(encoding='utf-8'))
     active = {o['obligation_id'] for o in original['obligations'] if o.get('status') == 'active'}
     if alignment.get('valid') is not True or recall.get('valid') is not True or set(recall['worker']['supported_obligation_ids']) != active:
         raise ValueError('handoff predecessor lacks complete independent semantic review')
@@ -501,7 +503,7 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
         'source_byte_rebindings': source_rebindings,
         'reused_stages': ['V1', 'V4'], 'repartitioned': False, 'model_called': False,
         'predecessor_review_sha256': {name: sc.sha256_bytes((predecessor / name).read_bytes()) for name in
-            ['source-index.v1.json', 'semantic-alignment.v1.json', 'atomic-recall-alignment.v1.json']},
+            ['source-index.v1.json', 'semantic-alignment.v1.json', recall_path.relative_to(predecessor).as_posix()]},
         'checks': checks, **delta,
     }
     projections = {'obligations': 'obligations', 'acceptances': 'acceptances', 'failure-intents': 'failure_intents',

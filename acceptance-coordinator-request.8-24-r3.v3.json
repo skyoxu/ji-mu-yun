@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "jimuyun.acceptance-coordinator-request.v3",
+  "targetPlan": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery",
+  "preparedRunInput": {
+    "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/acceptance-inputs/acceptance-8-24-20260930-r3/prepared-run-input.v1.json",
+    "sha256": "sha256:c81b8a20457b003a304302ca5151f136814225c25673ed8a17f0a0a2f0f006cb"
+  },
+  "skillInputReceipt": {
+    "path": "execution-plans/2026-08-24-phase-b-c-identity-isolation-workspace-recovery/skill-input-v2/acceptance/current.v1.json",
+    "sha256": "sha256:31012f9eb81912b76c44293f0a618ab4b9a816c32390effa9918cac5cb573512"
+  },
+  "skillInputContract": {
+    "path": ".agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json",
+    "sha256": "sha256:6e531f0ba91dcdff3ed7ada5f76d4b57e2cc544e24856896581837411598eed0"
+  },
+  "authorizes": []
+}

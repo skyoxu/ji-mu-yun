@@ -6,6 +6,20 @@ namespace PhaseA.Platform.Tests.Runs;
 
 public sealed class HostedProcessRunnerTests
 {
+    // ADR-0035/0061: a tool failure does not imply cleanup failure.
+    [Fact]
+    public async Task RunAsync_AllowsNextDispatchAfterNormalNonzeroExit()
+    {
+        using var temp = TempDirectory.Create("phase-a-nonzero-retry");
+        var runner = new HostedProcessRunner();
+        var command = new HostedProcessCommand("cmd.exe", ["/d", "/c", "exit 7"], temp.Path, new Dictionary<string, string>());
+        var failed = await runner.RunAsync(command);
+        var next = await runner.RunAsync(command with { Arguments = ["/d", "/c", "echo RETRY_STARTED"] });
+        failed.ExitCode.Should().Be(7);
+        next.ExitCode.Should().Be(0, next.Stderr);
+        next.Stdout.Should().Contain("RETRY_STARTED");
+    }
+
     [Fact]
     public async Task RunAsync_WritesStandardInputAsUtf8()
     {
@@ -60,6 +74,8 @@ time.sleep(30)
         var act = async () => await runTask;
         await act.Should().ThrowAsync<OperationCanceledException>();
         File.Exists(marker).Should().BeTrue();
+        var retry = await runner.RunAsync(command with { Arguments = ["-3", "-c", "print('retry-after-cancel')"] });
+        retry.ExitCode.Should().Be(0, retry.Stderr);
     }
 
     [Fact]
@@ -83,6 +99,8 @@ time.sleep(30)
 
         result.ExitCode.Should().Be(408);
         result.Stderr.Should().Contain("no stdout, stderr, or watched file activity");
+        var retry = await runner.RunAsync(command with { FileName = "cmd.exe", Arguments = ["/d", "/c", "exit 0"], InactivityTimeout = null });
+        retry.ExitCode.Should().Be(0, retry.Stderr);
     }
 
     [Fact]
@@ -90,60 +108,75 @@ time.sleep(30)
     {
         using var temp = TempDirectory.Create("phase-a-file-activity");
         var marker = Path.Combine(temp.Path, "activity", "marker.txt");
-        var script = Path.Combine(temp.Path, "touch-marker.py");
+        Directory.CreateDirectory(Path.GetDirectoryName(marker)!);
+        var script = Path.Combine(temp.Path, "silent-wait.cmd");
+        // ADR-0061: let the measured child produce its own watched activity.
+        // The same silent script must time out without watching and finish with
+        // watching; a delayed test continuation cannot create a false timeout.
         await File.WriteAllTextAsync(script, $"""
-import pathlib
-import time
-path = pathlib.Path(r"{marker}")
-path.parent.mkdir(parents=True, exist_ok=True)
-for index in range(12):
-    path.write_text("x" * (index + 1), encoding="utf-8")
-    time.sleep(0.05)
+@echo off
+for /l %%i in (1,1,8) do (
+    echo %%i >"{marker}"
+    ping.exe -n 2 127.0.0.1 >nul
+)
 """);
         var runner = new HostedProcessRunner();
         var command = new HostedProcessCommand(
-            "py",
-            ["-3", script],
+            "cmd.exe",
+            ["/d", "/c", script],
             temp.Path,
             new Dictionary<string, string>())
             .WithTimeouts(
-                totalTimeout: TimeSpan.FromSeconds(5),
-                inactivityTimeout: TimeSpan.FromMilliseconds(500))
-            .WithActivityWatchPaths(["activity"], pollInterval: TimeSpan.FromMilliseconds(25));
+                totalTimeout: TimeSpan.FromSeconds(60),
+                inactivityTimeout: TimeSpan.FromSeconds(5));
 
-        var result = await runner.RunAsync(command);
+        var unwatched = await runner.RunAsync(command);
+        unwatched.ExitCode.Should().Be(408, unwatched.Stderr);
+        unwatched.Stdout.Should().BeEmpty();
+        unwatched.Stderr.Should().Contain("no stdout, stderr, or watched file activity");
+        File.Delete(marker);
+
+        var result = await runner.RunAsync(command.WithActivityWatchPaths(
+            ["activity"], pollInterval: TimeSpan.FromMilliseconds(100)));
 
         result.ExitCode.Should().Be(0, result.Stderr);
-        File.ReadAllText(marker).Should().Be(new string('x', 12));
+        result.Stdout.Should().BeEmpty();
+        File.ReadAllText(marker).Trim().Should().Be("8");
     }
 
     [Fact]
     public async Task RunAsync_ReturnsTimeout_WhenTotalRuntimeExceedsLimitEvenWithOutput()
     {
         using var temp = TempDirectory.Create("phase-a-total-timeout");
-        var script = Path.Combine(temp.Path, "noisy-sleep.py");
+        // ADR-0061: exercise a real deadline while allowing Windows CI startup.
+        // Emit once per second rather than flooding redirected output. Activity
+        // must not extend the total deadline or turn it into an inactivity exit.
+        var script = Path.Combine(temp.Path, "noisy-loop.cmd");
         await File.WriteAllTextAsync(script, """
-import sys
-import time
-while True:
-    print("tick", flush=True)
-    time.sleep(0.03)
+@echo off
+:repeat
+echo tick
+ping.exe -n 2 127.0.0.1 >nul
+goto repeat
 """);
         var runner = new HostedProcessRunner();
         var command = new HostedProcessCommand(
-            "py",
-            ["-3", script],
+            "cmd.exe",
+            ["/d", "/c", script],
             temp.Path,
             new Dictionary<string, string>())
             .WithTimeouts(
-                totalTimeout: TimeSpan.FromMilliseconds(120),
-                inactivityTimeout: TimeSpan.FromSeconds(5));
+                totalTimeout: TimeSpan.FromSeconds(5),
+                inactivityTimeout: TimeSpan.FromSeconds(15))
+            .WithActivityWatchPaths([], pollInterval: TimeSpan.FromMilliseconds(100));
 
         var result = await runner.RunAsync(command);
 
         result.ExitCode.Should().Be(408);
         result.Stdout.Should().Contain("tick");
         result.Stderr.Should().Contain("total timeout");
+        var retry = await runner.RunAsync(command with { Arguments = ["/d", "/c", "exit 0"], TotalTimeout = null });
+        retry.ExitCode.Should().Be(0, retry.Stderr);
     }
 
     private static async Task WaitForFileAsync(string path)

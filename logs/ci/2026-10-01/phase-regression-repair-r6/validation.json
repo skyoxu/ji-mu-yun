@@ -1,0 +1,44 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_run": 36812595894,
+  "source_commit": "9519f68631512ff7eb0d21f22601f9fd48bd0901",
+  "actual": {
+    "passed": 1832,
+    "failed": 13,
+    "skipped": 0,
+    "total": 1845
+  },
+  "failed_test_names": [
+    "PhaseA.Platform.Tests.Browser.BrowserUiRendererTests.RenderShellV2_GddQuestionFormStartRouteBehaviorSmoke",
+    "PhaseA.Platform.Tests.Data.SqliteMetadataSchemaTests.DiagnosticSpool_WritesOutsideWorkspace_AndSupportsAdminTriageWithoutRewritingHistory",
+    "PhaseA.Platform.Tests.PhaseB.Repair.S15BoundaryTests.O_9FDA0B49E011",
+    "PhaseA.Platform.Tests.PhaseB.Repair.S28BoundaryTests.O_5277C4B77BBF",
+    "PhaseA.Platform.Tests.PhaseB.Repair.S63BoundaryTests.O_AB9EF0D40F90",
+    "PhaseA.Platform.Tests.PhaseB.WorkspaceRecoveryBehaviorTests.SnapshotAndRestore_RoundTripWithQuotaAndSoftDelete",
+    "PhaseA.Platform.Tests.Readback.ProjectWebPreviewServiceTests.GenerateQueuedPreviewAsync_WaitsForDedicatedWebPreviewQueue",
+    "PhaseA.Platform.Tests.Runs.GameDesignQuestionFormServiceTests.CreateAsync_ShouldBoundLastWaiterCleanup_WhenLlmIgnoresCancellation",
+    "PhaseA.Platform.Tests.Runs.HeavyRunnerQueueServiceTests.ExecuteAsync_RemovesCancelledWaitingItemFromQueue",
+    "PhaseA.Platform.Tests.Runs.HeavyRunnerQueueServiceTests.ExecuteAsync_RunsHeavyWorkOneAtATimeInFifoOrder",
+    "PhaseA.Platform.Tests.Runs.HeavyRunnerQueueServiceTests.ExecuteAsync_UsesConfiguredOtherRunConcurrency",
+    "PhaseA.Platform.Tests.Runs.PrototypeWorkflowTests.QueueAsync_ConfiguresPrototypeCreationActivityAndTotalTimeouts",
+    "PhaseA.Platform.Tests.Runs.PrototypeWorkflowTests.QueueAsync_FailsPostCompletionDirectSmoke_WhenGodotReportsError"
+  ],
+  "changes": [
+    "Use xUnit 2.8.1 core/adapter and conservative scheduling with two parallel collections; retain test-internal concurrency, all selectors and business deadlines. Task-system starvation remains a hypothesis until Windows replay.",
+    "S28 writes current PID and release files inside the authorized restored workspace; .NET-only sleep/file checks, bounded readiness and final task draining.",
+    "Positive restore uses the existing RestorePrepared fixture; security-negative cases still call production Restore directly.",
+    "Diagnostic spool fixture explicitly configures its temporary hosted root.",
+    "S15 parent schema initialization does not pool the fixture database connection.",
+    "Web-preview queue fixture configures a deterministic failed engine export, asserts the exact godot3_export_failed outcome and one export invocation, and preserves queued/running/released assertions.",
+    "Windows preflight now includes all 13 previously failing selectors before the unchanged full CI pipeline."
+  ],
+  "source_refs": [
+    "https://xunit.net/docs/running-tests-in-parallel",
+    "https://xunit.net/releases/v2/2.8.1"
+  ],
+  "validation": {
+    "local": "Workflow YAML, project XML and runner JSON parse; no local dotnet available.",
+    "windows": "Pending successor run.",
+    "completion": "Not claimed"
+  }
+}

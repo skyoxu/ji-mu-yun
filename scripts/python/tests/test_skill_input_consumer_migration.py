@@ -125,6 +125,19 @@ def test_acceptance_owned_artifacts_do_not_change_candidate_but_target_files_do(
     after_outputs = observe_candidate(tmp_path, authority_path, request['storage'])
     assert after_outputs == before
 
+    # ADR-0060: main's transport exclusions apply only to this target plan.
+    for relative in ['.acceptance-snapshots/input.json', 'acceptance-coordinator-request.v3.json',
+                     'acceptance-projection-request.v1.json']:
+        generated = tmp_path / target / relative
+        generated.parent.mkdir(parents=True, exist_ok=True)
+        generated.write_text('{}', encoding='utf-8')
+    assert observe_candidate(tmp_path, authority_path, request['storage']) == before
+    foreign = tmp_path / 'execution-plans/feature-b/acceptance-coordinator-request.v3.json'
+    foreign.parent.mkdir(parents=True)
+    foreign.write_text('{}', encoding='utf-8')
+    assert foreign.relative_to(tmp_path).as_posix() in observe_candidate(
+        tmp_path, authority_path, request['storage'])['changed_paths']
+
     authoritative = tmp_path / target / 'requirements.md'
     authoritative.parent.mkdir(parents=True, exist_ok=True)
     authoritative.write_text('changed candidate requirement', encoding='utf-8')

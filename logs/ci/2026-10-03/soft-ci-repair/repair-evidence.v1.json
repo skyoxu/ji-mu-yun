@@ -1,0 +1,74 @@
+{
+  "schema": "jimuyun.soft-ci-repair-evidence.v1",
+  "baseline_main": "00ab62d993fbe041fca6b5f8e0a75d66dc866d5a",
+  "baseline_tree": "d19e95c57ee71f6bb3d31016432b0e571add3250",
+  "original_run": 37063659774,
+  "original_artifacts": {
+    "gdunit": 11253636306,
+    "ci": 11253185809,
+    "selfcheck": 11253136860
+  },
+  "command_plane": "FastCtx is unavailable; Linux shell for local checks, Windows Actions for engine authority.",
+  "changes": [
+    "Explicit database-node readback",
+    "Shared signal observations",
+    "Real WAL backup destination query",
+    "File-backed Godot prewarm output",
+    "Fresh nonempty engine-result requirement",
+    "Tracked-source UTF-8 scan and hash-bound raw evidence sidecars",
+    "Retire unused command-whitelist exception; single maintainer ownership"
+  ],
+  "local_validations": {
+    "ci_process_and_encoding_regressions": {
+      "passed": 33,
+      "failed": 0,
+      "log": "python-ci-regressions-final.txt"
+    },
+    "tracked_encoding": {
+      "scanned": 22602,
+      "bad": 0,
+      "raw_captures": 2,
+      "raw_errors": 0
+    },
+    "command_guard": {
+      "hits": 0,
+      "metadata_errors": 0
+    },
+    "gdunit_python_suite": {
+      "passed": 26,
+      "linux_platform_mismatch": 1,
+      "requires_windows_confirmation": "test_run_gdunit_msbuild_isolation_should_override_godot_temp_paths"
+    },
+    "parent_exit_regression_before_fix": {
+      "rc": 124,
+      "expected_rc": 0,
+      "elapsed_seconds": 6.041
+    }
+  },
+  "windows_first_engine_validation": {
+    "run": 37094383397,
+    "job": 111121196171,
+    "tests": 74,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "raw_rc": 0,
+    "scope": "Godot fixture repairs before process-runner follow-up"
+  },
+  "original_capture_hashes": {
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/terminal-results.raw.txt": "1461e1d4f66eb77e98700ed29f810d57050d04ba3ffefc11893c67d987d96904",
+    "logs/quick-dev/20260930-plan-q8-r8-replay.txt": "3758b56936e4258c335bd70a28b12f3a95c5b7c971e70c627829fcd99faefe79"
+  },
+  "remaining_notices": {
+    "kind": "valid whitelist expiry notice",
+    "entries": 4,
+    "owner": "skyoxu",
+    "expiry": "2026-12-31",
+    "warn_days": 90,
+    "renewed": false
+  },
+  "pending": [
+    "Windows validation of the final runner/encoding changes",
+    "Final PR and actual main full quality results"
+  ]
+}

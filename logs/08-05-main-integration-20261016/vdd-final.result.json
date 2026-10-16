@@ -1,0 +1,22 @@
+{
+  "command": [
+    "/workspace/scratch/1ecf047ec2b0/merge-805-main-analysis/test-venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    ".agents/skills/vdd-execution-plan/scripts/tests",
+    "-q",
+    "--tb=short",
+    "--junitxml",
+    "/workspace/scratch/1ecf047ec2b0/ji-mu-yun-merge-805-main/logs/08-05-main-integration-20261016/vdd-final.junit.xml"
+  ],
+  "exit_code": 0,
+  "duration_seconds": 15.66,
+  "timed_out": false,
+  "platform": "linux",
+  "workspace": "/workspace/scratch/1ecf047ec2b0/ji-mu-yun-merge-805-main",
+  "environment": "Linux Python 3; py -3 compatibility launcher; no live model calls",
+  "testcases": 424,
+  "failed": [],
+  "skipped": 0
+}

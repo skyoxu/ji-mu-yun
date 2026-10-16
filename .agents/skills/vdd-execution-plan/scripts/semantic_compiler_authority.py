@@ -191,6 +191,31 @@ def _archive_stale_publication(out_dir: Path, name: str) -> None:
     path.rename(sidecar)
 
 
+def _publish_atomic_recall(out_dir: Path, recall: Mapping[str, Any]) -> Mapping[str, str]:
+    """Publish current V4 output without letting an old canonical file authorize it.
+
+    Failed runs are immutable evidence.  If an earlier run already published a
+    different root-level alignment, preserve that file and publish the current
+    validated value under its content address instead.  The returned binding is
+    included in the current compiler result, so consumers never discover an
+    alignment by filename ordering or mistake the historical root artifact for
+    current authority.
+    """
+    canonical = out_dir / "atomic-recall-alignment.v1.json"
+    payload = gate.sc.canonical_bytes(dict(recall))
+    digest = gate.sc.sha256_value(recall)
+    if not canonical.exists() or canonical.read_bytes() == payload:
+        gate.sc.atomic_json(canonical, dict(recall))
+        path = canonical
+    else:
+        path = out_dir / ".compiler-attempts" / f"v4-atomic-recall-alignment-{digest[7:31]}.json"
+        gate.sc.atomic_json(path, dict(recall))
+    return {
+        "path": path.relative_to(out_dir).as_posix(),
+        "sha256": digest,
+    }
+
+
 def _explicit_fixture_cache_wins(out_dir: Path, worker_cache: Mapping[str, Any] | None) -> None:
     """An explicitly supplied deterministic worker fixture supersedes old cache.
 
@@ -230,8 +255,8 @@ def _published_recall_matches_obligations(out_dir: Path) -> bool:
     """Require the published V4 witness to cover the actual published V1 set."""
     try:
         obligations = json.loads((out_dir / "obligations.v1.json").read_text(encoding="utf-8"))
-        recall = json.loads((out_dir / "atomic-recall-alignment.v1.json").read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError):
+        recall = json.loads(gate.sc.published_recall_path(out_dir).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError, ValueError):
         return False
     if not isinstance(obligations, list) or not isinstance(recall, Mapping) or recall.get("valid") is not True:
         return False
@@ -265,9 +290,17 @@ def compile_plan(
         raise ValueError("unsupported VDD resume mode")
     if recommendation_only and resume_from is not None:
         raise ValueError("recommendation-only cannot be combined with resume")
+    root = gate.sc.repository_root(requirements.parent)
+    source_index = gate.sc.build_source_index(root, requirements, companions)
 
     if resume_from == "first-failed-stage":
-        completed = gate._completed_resume(out_dir)
+        completed = gate._completed_resume(
+            out_dir,
+            source_index_sha256=source_index["sha256"],
+            profile=profile,
+        )
+        if completed is not None and completed.get("status") != "plan-ready":
+            return completed
         if completed is not None and _published_recall_matches_obligations(out_dir):
             from quick_dev_handoff import handoff_findings
             handoff_errors = handoff_findings(json.loads((out_dir / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8")), workspace=root)
@@ -277,8 +310,6 @@ def compile_plan(
             return {**completed, "semantic_chain_metrics": audit["metrics"]}
         if completed is not None:
             _archive_repair_publications(out_dir)
-        elif not _published_recall_matches_obligations(out_dir):
-            _archive_stale_publication(out_dir, "atomic-recall-alignment.v1.json")
 
     if recommendation_only:
         return gate._ORIGINAL_COMPILE_PLAN(
@@ -291,8 +322,6 @@ def compile_plan(
         )
 
     _explicit_fixture_cache_wins(out_dir, worker_cache)
-    root = gate.sc.repository_root(requirements.parent)
-    source_index = stage_call(out_dir, "V0", gate.sc.build_source_index, root, requirements, companions)
     preflight = stage_call(out_dir, "V0A", gate.sc.source_preflight, root, source_index)
     if not preflight["valid"]:
         result = {"status": "repair-vdd", "stage": "V0A", "source_index": source_index, "preflight": preflight}
@@ -353,6 +382,11 @@ def compile_plan(
         _attempt(out_dir, "v4-atomic-recall", {**result, "alignment": recall})
         return result
 
+    # Canonical recall exists only after the gate is valid. A distinct old
+    # alignment remains immutable historical evidence; the current output gets
+    # an explicit content-addressed binding instead of overwriting it.
+    recall_binding = _publish_atomic_recall(out_dir, recall)
+
     result = dict(
         gate._ORIGINAL_COMPILE_PLAN(
             requirements=requirements,
@@ -363,6 +397,8 @@ def compile_plan(
             recommendation_only=False,
         )
     )
+    result["atomic_quality_metrics"] = recall["metrics"]
+    result["atomic_recall_alignment"] = recall_binding
     if result.get("status") != "plan-ready":
         pending_ref = result.get("semantic_handoff_pending")
         if result.get("stage") == "quick-dev-handoff" and isinstance(pending_ref, str):
@@ -428,9 +464,18 @@ def compile_plan(
                   "source_gap_claims": final_recall.get("source_gap_claims", [])}
         _attempt(out_dir, "v4-published-obligations", result)
         return result
-    _archive_stale_publication(out_dir, "atomic-recall-alignment.v1.json")
-    gate.sc.atomic_json(out_dir / "atomic-recall-alignment.v1.json", final_recall)
+    final_binding = _publish_atomic_recall(out_dir, final_recall)
+    state = json.loads((out_dir / "compiler-state.v1.json").read_text(encoding="utf-8"))
+    plan_hash = state["semantic_plan_sha256"]
+    gate.sc.atomic_json(out_dir / ".compiler-attempts" / f"v4-published-recall-{plan_hash[7:]}.json", {
+        "semantic_plan_sha256": plan_hash,
+        "obligations_sha256": gate.sc.sha256_value(published_obligations),
+        "source_index_sha256": source_index["sha256"],
+        "alignment": final_binding,
+        "authorizes": [],
+    })
     result["atomic_quality_metrics"] = final_recall["metrics"]
+    result["atomic_recall_alignment"] = final_binding
     audit = _plan_chain_audit(out_dir)
     result["semantic_chain_metrics"] = audit["metrics"]
     if resume_from is not None:

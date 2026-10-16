@@ -1,0 +1,39 @@
+{
+  "schema": "ci-repair-validation.v1",
+  "source_commit": "264a4d99cc0da25db9bc78643a0d4226ee5d4a19",
+  "source_run": 36742449247,
+  "failed_job": 109980043618,
+  "observed": {
+    "manual_example": "docs/know6.txt:143",
+    "dotnet_rc": 124,
+    "dotnet_summary": null,
+    "godot_summary": "no-summary",
+    "raw_logs_bytes": 0,
+    "cleanup": "orphan dotnet, testhost, Godot processes present at job cleanup"
+  },
+  "adr": "ADR-0005",
+  "changes": [
+    "Honor the workflow's existing .NET total stage budget and add bounded wrapper cleanup margin",
+    "Give Godot wrapper enough time for its existing build/run/prewarm/retry bounds",
+    "Persist raw subprocess output while running; terminate descendants before returning timeout",
+    "Replace the old manual review command with the unified pipeline entrypoint",
+    "Run process cleanup/budget regression on Windows and archive unit diagnostics"
+  ],
+  "validation": {
+    "environment": "Linux Python; fetched subset, no live backend",
+    "new_tests": 5,
+    "existing_tests": 2,
+    "passed": 7,
+    "manual_example_scan": {
+      "scope": "fetched subset, including repaired docs/know6.txt",
+      "hits": 0,
+      "whitelist_metadata_errors": 0
+    },
+    "syntax": "Python AST and workflow YAML passed"
+  },
+  "limitations": [
+    "Windows process regression and full test pipeline pending on new candidate",
+    "Encoding soft-gate historical captures left intact"
+  ],
+  "thresholds": "No coverage or acceptance thresholds changed; no tests skipped"
+}

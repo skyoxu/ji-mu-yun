@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-10-02T03:32:50.657823+00:00",
+  "scanned_files": 2,
+  "targets": [
+    "PhaseA.Platform.Tests/PhaseB/Repair/S43BoundaryTests.cs",
+    ".github/workflows/windows-quality-gate.yml"
+  ],
+  "allowlist_paths": [
+    "docs/architecture/base/ZZZ-encoding-fixture-bad.md"
+  ],
+  "violations": 0,
+  "status": "ok"
+}

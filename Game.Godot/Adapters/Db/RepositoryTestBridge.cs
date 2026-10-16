@@ -9,11 +9,14 @@ namespace Game.Godot.Adapters.Db;
 
 public partial class RepositoryTestBridge : Node
 {
+    // ADR-0025: each restart fixture binds readback to its actual database node.
+    [Export] public NodePath DatabasePath { get; set; } = new("/root/SqlDb");
+
     private ISqlDatabase GetDb()
     {
-        var db = GetNodeOrNull<SqliteDataStore>("/root/SqlDb");
+        var db = GetNodeOrNull<SqliteDataStore>(DatabasePath);
         if (db == null)
-            throw new InvalidOperationException("SqlDb autoload not found");
+            throw new InvalidOperationException($"Test database not found at {DatabasePath}");
         return db;
     }
 

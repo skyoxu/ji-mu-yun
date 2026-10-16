@@ -54,6 +54,13 @@ If a new change intentionally breaks these standards, record the decision in an 
 - Collection routes use plural nouns: `/api/projects`, `/api/projects/{projectId}/runs`, `/api/admin/users`.
 - Admin-only routes use `/api/admin/...`; current-account user routes use `/api/account/...`; project-scoped routes stay under `/api/projects/{projectId}/...`.
 
+### Administrator Project Purge
+
+- `GET /api/admin/projects` is an administrator-only cross-account project inventory. It returns project identity, owning account, lifecycle status, and timestamps; it does not return host filesystem paths.
+- `POST /api/admin/projects/purge` is an administrator-only destructive action. The request must contain selected `projectIds` and the exact confirmation string `PURGE-PROJECTS`.
+- Purge rejects queued/running projects and runner-locked projects. For each accepted project it removes project-scoped metadata, historical management relations, and the hosted workspace using a root-checked, no-follow reparse-point deletion path. The account itself is not deleted.
+- Purge is per-project idempotent: retrying an already removed ID returns `project_not_found`; a workspace failure rolls back that project's metadata transaction and returns a per-item failure. The administrator audit records only aggregate counts, not deleted project identifiers or names.
+
 ### Action Routes
 
 Action routes are allowed only when the backend starts a command, workflow, ticket, export, validation, or recovery action rather than directly exposing a durable REST resource.
@@ -291,3 +298,21 @@ Minimum evidence commands or files by change type:
 - New architecture rationale belongs under `docs/architecture/phase-service/**` unless it is a full arc42 overlay slice.
 - New Phase architecture docs must update `docs/architecture/phase-service/_index.md`.
 - New workflow evidence or operational runbooks belong under `docs/workflows/**` or `runtime/phase-a/**` as appropriate.
+
+## Ordinary Runner Entry And Business Acceptance
+
+- The production Project creation composition must provide the Windows Runner
+  provisioner; success requires registered identity, persistent vault credential
+  and verified ACLs. Passwords never enter argv, environment, files or logs.
+- Native tests use disposable Projects and remove only their own registrations.
+  Fresh-process verification reloads persisted registration without fixture setup.
+- Final UI readback projects actual source hashes, is no-store, and fails closed
+  for an incomplete full-target ledger or missing/changed current sources.
+- `scripts/python/phase_a_business_chain_acceptance.py` reads authenticated GET
+  evidence and emits passed/blocked/unavailable under logs. No credential means
+  unavailable, never a default pass. It neither runs a model nor mutates a project.
+- Test the native entry with `ProjectRunnerProvisioningTests`, source/readiness
+  consumers with `ProjectRouteStateArtifactServiceTests`, and the Python acceptance
+  command with `scripts.python.tests.test_phase_a_business_chain_acceptance`.
+- Public behavior: `docs/workflows/phase-service-runner-and-business-acceptance.md`.
+  CI fixture success does not prove production deployment or live project acceptance.

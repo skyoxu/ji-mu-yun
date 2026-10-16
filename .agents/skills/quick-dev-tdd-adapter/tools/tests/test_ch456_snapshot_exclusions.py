@@ -9,6 +9,8 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from runtime_evidence import current_snapshot
+from coverage_predicates import _replay_snapshot
+import pytest
 
 
 def _init(root: Path) -> tuple[str, list[dict[str, str]]]:
@@ -69,3 +71,33 @@ def test_governance_provenance_change_is_excluded_when_not_explicitly_bound(tmp_
     path.write_text("provenance only\n", encoding="utf-8")
     snap = current_snapshot(tmp_path, roots, source_commit=base, base_commit=base)
     assert snap["git_delta"] == {"base_commit": base, "additions": [], "deletions": [], "renames": []}
+
+
+
+def test_multi_path_plan_replay_allows_only_declared_append(tmp_path: Path) -> None:
+    """ADR-0058: Acceptance delta allowance composes with frozen multi-path roots."""
+    base, roots = _init(tmp_path)
+    plan = next(row for row in roots if row["root_kind"] == "plan")
+    plan.pop("repository_relative_posix_path")
+    plan["repository_relative_posix_paths"] = ["plan/semantic.json", "plan/evidence"]
+    (tmp_path / "plan/evidence").mkdir()
+    frozen = {"snapshot_manifest": current_snapshot(tmp_path, roots, source_commit=base)}
+    (tmp_path / "plan/evidence/result.json").write_text("{}", encoding="utf-8")
+    assert _replay_snapshot(tmp_path, roots, base, None, frozen, ["plan/evidence"]) == frozen["snapshot_manifest"]
+    (tmp_path / "plan/semantic.json").write_text('{"changed":true}', encoding="utf-8")
+    with pytest.raises(ValueError, match="root stale: plan"):
+        _replay_snapshot(tmp_path, roots, base, None, frozen, ["plan/evidence"])
+
+
+def test_slice_snapshot_reuse_keeps_production_inputs_bound(tmp_path: Path) -> None:
+    """ADR-0041: unrelated slice edits may reuse proof; owner drift cannot."""
+    base, roots = _init(tmp_path)
+    frozen = {"snapshot_manifest": current_snapshot(tmp_path, roots, source_commit=base)}
+    (tmp_path / "src/other.py").write_text("OTHER=2\n", encoding="utf-8")
+    inputs = ["src/value.py", "tests/fixture.txt"]
+    assert _replay_snapshot(tmp_path, roots, base, None, frozen, slice_input_paths=inputs) == frozen["snapshot_manifest"]
+    with pytest.raises(ValueError, match="root stale: candidate_tree"):
+        _replay_snapshot(tmp_path, roots, base, None, frozen)
+    (tmp_path / "src/value.py").write_text("VALUE=2\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="root stale: candidate_tree"):
+        _replay_snapshot(tmp_path, roots, base, None, frozen, slice_input_paths=inputs)

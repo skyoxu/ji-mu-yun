@@ -17,6 +17,8 @@ Use generated sidecars, database rows, artifacts, logs, and sanitized readback a
 - Readback must be account-scoped unless explicitly admin-only.
 - Browser/API readback exposes logical artifact IDs, tickets, summaries, or sanitized workspace-relative paths rather than raw host paths.
 - New readiness or acceptance status must use bounded status enums and evidence references.
+- Final UI closure consumes current source validation issues as blockers. Its iteration source must be ready or succeeded, fresh, and pass the existing plan integrity and source-boundary checks; its validation source must be succeeded, fresh, and structurally valid. Equal declared hashes alone cannot discharge those checks.
+- Nested full-target ledger validation and phase-exit review references resolve through the same project-contained, no-reparse evidence policy as top-level evidence references. Missing, unreadable, or out-of-project files cannot support final closure, including reviewed not-applicable and explicitly deferred rows.
 - Phase B browser/API evidence readback, indexes, and catalogs must not expose new raw evidence until B0-01 Redaction Schema And Rules and B0-02 Redaction Fixture Validator pass.
 - Evidence bundles must have B0-03 Evidence Bundle Schema And Validator before any readiness catalog or route status marks a route green from that bundle.
 - Failure evidence is preserved; new sidecar evidence is added rather than rewriting generated history.

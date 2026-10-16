@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="c86cfcb2-55f7-4e49-a303-1d24ca0f0107" name="Administrator@IZ3H5BJSZD44YHZ 2026-09-29 23:53:25" runUser="IZ3H5BJSZD44YHZ\Administrator" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-09-29T23:53:25.0802045+08:00" queuing="2026-09-29T23:53:25.0802047+08:00" start="2026-09-29T23:52:30.6937304+08:00" finish="2026-09-29T23:53:25.0858007+08:00" />
+  <TestSettings name="default" id="e4b95a11-c007-4e3d-a776-92db193b06f3">
+    <Deployment runDeploymentRoot="Administrator_IZ3H5BJSZD44YHZ_2026-09-29_23_53_25" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="3b61eb73-0c90-4a35-ab9a-a20ba60ba8bc" testId="75ccefc0-9131-f8a1-f3a7-09396ca192e4" testName="PhaseA.Platform.Tests.PhaseB.Repair.S14BoundaryTests.O_11DDC0AAE540" computerName="IZ3H5BJSZD44YHZ" duration="00:00:53.5879171" startTime="2026-09-29T23:53:25.0046888+08:00" endTime="2026-09-29T23:53:25.0047015+08:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3b61eb73-0c90-4a35-ab9a-a20ba60ba8bc">
+      <Output>
+        <StdOut>S14-AUTHORITY canContinue=False count=8 blockers=selected_route_skill_prompt_block_missing,prototype_contract_missing,current_route_state_missing sources=parsed game-type route profile:True|selected route skill prompt block:False|meta/project-execution-guide.md:True|routes/prototype-contract/latest.json:False|current route latest state:False|current goal/step/session state when applicable:True|repair ledger and failing acceptance/Godot diagnostic evidence when applicable:True|latest live platform acceptance blocker:True&#xD;
+S14-SNAPSHOT status=succeeded progress=snapshot-created exit=0 stderr=&#xD;
+S14-OBSERVATION durable-operation-state-survives-application-restart&#xD;
+S14-RESTORE status=failed progress=restore-started exit=409 failure= detail= stderr=</StdOut>
+        <ErrorInfo>
+          <Message>FAILURE-O-11DDC0AAE540: Restore did not publish the selected Snapshot to the alternate root.</Message>
+          <StackTrace>   at PhaseA.Platform.Tests.PhaseB.Repair.S14BoundaryTests.Require(Boolean condition, String failureId, String message) in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S14BoundaryTests.cs:line 368&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S14BoundaryTests.O_11DDC0AAE540() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S14BoundaryTests.cs:line 153&#xD;
+   at PhaseA.Platform.Tests.PhaseB.Repair.S14BoundaryTests.O_11DDC0AAE540() in C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S14BoundaryTests.cs:line 179&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="PhaseA.Platform.Tests.PhaseB.Repair.S14BoundaryTests.O_11DDC0AAE540" storage="c:\jimuyun\phasea.platform.tests\bin\debug\net8.0\phasea.platform.tests.dll" id="75ccefc0-9131-f8a1-f3a7-09396ca192e4">
+      <Execution id="3b61eb73-0c90-4a35-ab9a-a20ba60ba8bc" />
+      <TestMethod codeBase="C:\jimuyun\PhaseA.Platform.Tests\bin\Debug\net8.0\PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.PhaseB.Repair.S14BoundaryTests" name="O_11DDC0AAE540" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="75ccefc0-9131-f8a1-f3a7-09396ca192e4" executionId="3b61eb73-0c90-4a35-ab9a-a20ba60ba8bc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="列表中未列出的结果" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="所有已加载的结果" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.7+8f2703126a (64-bit .NET 8.0.21)&#xD;
+[xUnit.net 00:00:00.24]   Discovering: PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.38]   Discovered:  PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:00.38]   Starting:    PhaseA.Platform.Tests&#xD;
+[xUnit.net 00:00:54.01]       FAILURE-O-11DDC0AAE540: Restore did not publish the selected Snapshot to the alternate root.&#xD;
+[xUnit.net 00:00:54.01]       Stack Trace:&#xD;
+[xUnit.net 00:00:54.01]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S14BoundaryTests.cs(368,0): at PhaseA.Platform.Tests.PhaseB.Repair.S14BoundaryTests.Require(Boolean condition, String failureId, String message)&#xD;
+[xUnit.net 00:00:54.01]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S14BoundaryTests.cs(153,0): at PhaseA.Platform.Tests.PhaseB.Repair.S14BoundaryTests.O_11DDC0AAE540()&#xD;
+[xUnit.net 00:00:54.01]         C:\jimuyun\PhaseA.Platform.Tests\PhaseB\Repair\S14BoundaryTests.cs(179,0): at PhaseA.Platform.Tests.PhaseB.Repair.S14BoundaryTests.O_11DDC0AAE540()&#xD;
+[xUnit.net 00:00:54.01]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:54.01]       Output:&#xD;
+[xUnit.net 00:00:54.01]         S14-AUTHORITY canContinue=False count=8 blockers=selected_route_skill_prompt_block_missing,prototype_contract_missing,current_route_state_missing sources=parsed game-type route profile:True|selected route skill prompt block:False|meta/project-execution-guide.md:True|routes/prototype-contract/latest.json:False|current route latest state:False|current goal/step/session state when applicable:True|repair ledger and failing acceptance/Godot diagnostic evidence when applicable:True|latest live platform acceptance blocker:True&#xD;
+[xUnit.net 00:00:54.01]         S14-SNAPSHOT status=succeeded progress=snapshot-created exit=0 stderr=&#xD;
+[xUnit.net 00:00:54.01]         S14-OBSERVATION durable-operation-state-survives-application-restart&#xD;
+[xUnit.net 00:00:54.01]         S14-RESTORE status=failed progress=restore-started exit=409 failure= detail= stderr=&#xD;
+[xUnit.net 00:00:54.01]   Finished:    PhaseA.Platform.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="IZ3H5BJSZD44YHZ" outcome="Error" timestamp="2026-09-29T23:53:25.0030619+08:00">
+        <Text>[xUnit.net 00:00:54.01]     PhaseA.Platform.Tests.PhaseB.Repair.S14BoundaryTests.O_11DDC0AAE540 [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

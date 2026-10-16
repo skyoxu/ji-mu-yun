@@ -57,6 +57,13 @@ For an unchanged frozen input, resume the original failed output directory with 
 
 ## Explicit V3 candidate correction
 
+Successful publication binds atomic recall to the final published obligations.
+An older root-level `atomic-recall-alignment.v1.json` remains immutable when
+its value differs. The current compiler result names the validated alignment;
+the plan-hash-keyed binding under `.compiler-attempts/` lets resume and explicit
+predecessor repair resolve the same witness without scanning for a latest file.
+Legacy plans without this binding retain their canonical witness validation.
+
 When V4 finds a wrong executable binding that cannot be repaired as Acceptance
 wording, the canonical compiler accepts `--v3-contract-repair <json>` for a
 failed or unpublished output directory. This is reviewed authoring input, not

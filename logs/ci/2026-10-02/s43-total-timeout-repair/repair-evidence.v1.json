@@ -1,0 +1,56 @@
+{
+  "schema_version": "ci-repair-evidence.v1",
+  "source_run_url": "https://github.com/skyoxu/ji-mu-yun/actions/runs/36899813137",
+  "source_commit": "5d3913b31220162e5cd3d81237d4c693c2b573fa",
+  "accepted_adr": "docs/adr/ADR-0035-phase-controlled-runner-workspace-execution.md",
+  "failed_test": "PhaseA.Platform.Tests.PhaseB.Repair.S43BoundaryTests.O_FE73E295BC86",
+  "failure_id": "FAILURE-O-FE73E295BC86",
+  "observed_failure": {
+    "failed_test_duration_ms": 327,
+    "platform_tests": 1847,
+    "passed": 1846,
+    "failed": 1,
+    "artifact_id": 11182394304
+  },
+  "diagnosis": {
+    "source_fact": "HostedProcessRunner starts TotalTimeout immediately after process creation, before the interpreter executes its command.",
+    "test_defect": "The test required a PowerShell-written marker before a 200 ms total timeout. A correctly terminated process may never reach that write.",
+    "log_limit": "The original compound assertion does not record its individual values; the 327 ms failure is consistent with the startup-marker race.",
+    "original_failure_preserved": true
+  },
+  "changes": [
+    "Retain the 200 ms production total timeout and 25 ms polling interval.",
+    "Exercise both immediate script execution and an explicit 1000 ms initialization delay through the real Runner.",
+    "Keep exit code 408 and the total-timeout diagnostic mandatory; make the interpreter marker diagnostic-only.",
+    "Require elapsed time at least the configured timeout and below a 10 second cancellation watchdog.",
+    "Emit delay, marker state, exit code, elapsed time, and timeout reason in xUnit output.",
+    "Run this timeout test and HostedProcessRunnerTests in the early Windows Runner lifecycle regression step."
+  ],
+  "local_validation": {
+    "python_ci_regression": {
+      "command": "python -m unittest discover -s scripts/sc/tests -p 'test_ci_*.py' -v",
+      "tests": 20,
+      "status": "passed",
+      "evidence": "python-ci-regression.txt"
+    },
+    "encoding": {
+      "status": "passed",
+      "scope": [
+        "PhaseA.Platform.Tests/PhaseB/Repair/S43BoundaryTests.cs",
+        ".github/workflows/windows-quality-gate.yml"
+      ],
+      "evidence": "encoding/summary.json"
+    },
+    "diff_check": {
+      "status": "passed"
+    },
+    "windows_dotnet": {
+      "status": "pending_remote_ci",
+      "reason": "The local execution environment is Linux with no .NET SDK or Windows interpreter."
+    },
+    "execution_plane": {
+      "fastctx_attached": false,
+      "fallback": "Available executor for local read/static checks; GitHub Actions for Windows runtime validation."
+    }
+  }
+}

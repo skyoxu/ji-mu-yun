@@ -11,6 +11,9 @@ public enum RestoreAttemptStatus
 
 public sealed record RestoreAttempt(string AttemptId, string SnapshotId, string WorkspaceId, RestoreAttemptStatus Status)
 {
+    public string? FailureCategory { get; init; }
+    public string? FailureDetail { get; init; }
+
     public RestoreAttempt Advance(RestoreAttemptStatus next)
     {
         if (next < Status || (Status == RestoreAttemptStatus.Published && next != Status))
@@ -19,5 +22,17 @@ public sealed record RestoreAttempt(string AttemptId, string SnapshotId, string 
         }
 
         return this with { Status = next };
+    }
+
+    public bool IsRetryable => Status is RestoreAttemptStatus.Quarantined or RestoreAttemptStatus.Failed;
+
+    public RestoreAttempt Retry()
+    {
+        if (!IsRetryable)
+        {
+            throw new InvalidOperationException("only failed or quarantined restore attempts can be retried");
+        }
+
+        return this with { Status = RestoreAttemptStatus.Staging };
     }
 }

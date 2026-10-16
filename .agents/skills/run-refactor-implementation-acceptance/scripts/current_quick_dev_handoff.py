@@ -26,7 +26,7 @@ def _file(root: Path, value: str) -> Path:
     return path
 
 
-def verify_current_handoff(root: Path, binding: dict[str, Any]) -> dict[str, Any]:
+def verify_current_handoff(root: Path, binding: dict[str, Any], *, allowed_changed_paths: list[str] | None = None) -> dict[str, Any]:
     required = {"semanticPlan", "receipt", "snapshotRoots", "sourceCommit", "baseCommit"}
     if not isinstance(binding, dict) or set(binding) != required:
         raise InputError("current Quick Dev handoff binding is incomplete")
@@ -55,7 +55,7 @@ def verify_current_handoff(root: Path, binding: dict[str, Any]) -> dict[str, Any
             snapshot_roots=binding["snapshotRoots"], source_commit=binding["sourceCommit"],
             base_commit=binding["baseCommit"], out=receipt_path,
             profile=receipt["profile"], detached_promotion_binding=receipt.get("detached_promotion_binding"),
-            verify_existing=True,
+            verify_existing=True, allowed_changed_paths=allowed_changed_paths,
         )
     except (ValueError, KeyError, TypeError, OSError) as exc:
         raise InputError("current Quick Dev proof cannot be replayed: " + str(exc)) from exc

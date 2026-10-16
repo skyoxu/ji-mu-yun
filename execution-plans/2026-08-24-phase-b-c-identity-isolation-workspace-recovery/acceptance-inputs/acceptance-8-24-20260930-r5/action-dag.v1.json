@@ -1,0 +1,72 @@
+[
+  {
+    "actionId": "s0-green",
+    "activation": true,
+    "commandId": "s0-green",
+    "dependsOn": [],
+    "order": 1
+  },
+  {
+    "actionId": "s1-green",
+    "activation": true,
+    "commandId": "s1-green",
+    "dependsOn": [],
+    "order": 2
+  },
+  {
+    "actionId": "s2-green",
+    "activation": true,
+    "commandId": "s2-green",
+    "dependsOn": [],
+    "order": 3
+  },
+  {
+    "actionId": "s3-green",
+    "activation": true,
+    "commandId": "s3-green",
+    "dependsOn": [],
+    "order": 4
+  },
+  {
+    "actionId": "s4-green",
+    "activation": true,
+    "commandId": "s4-green",
+    "dependsOn": [],
+    "order": 5
+  },
+  {
+    "actionId": "s0-terminal",
+    "activation": true,
+    "commandId": "s0-terminal",
+    "dependsOn": [],
+    "order": 6
+  },
+  {
+    "actionId": "s1-terminal",
+    "activation": true,
+    "commandId": "s1-terminal",
+    "dependsOn": [],
+    "order": 7
+  },
+  {
+    "actionId": "s2-terminal",
+    "activation": true,
+    "commandId": "s2-terminal",
+    "dependsOn": [],
+    "order": 8
+  },
+  {
+    "actionId": "s3-terminal",
+    "activation": true,
+    "commandId": "s3-terminal",
+    "dependsOn": [],
+    "order": 9
+  },
+  {
+    "actionId": "s4-terminal",
+    "activation": true,
+    "commandId": "s4-terminal",
+    "dependsOn": [],
+    "order": 10
+  }
+]

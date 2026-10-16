@@ -1,0 +1,10 @@
+{
+  "schema": "quick-dev.q8-blocker.v1",
+  "plan_id": "PLAN-E24BDCAA6457",
+  "attempt_run_dir": "logs/quick-dev/20260930-plan-q8-r3",
+  "source_commit": "dbe0567c08fd3cac36a6c0f3ae3931edafa23532",
+  "status": "blocked",
+  "reason": "slice-ready snapshot stale",
+  "detail": "The plan tree changed when predecessor aggregation was updated; existing 72 predecessor slice-ready artifacts are bound to the prior snapshot. S49 r6 chain is current and passed. Q8 must not reuse stale predecessors.",
+  "q8_executed": false
+}

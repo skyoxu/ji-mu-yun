@@ -57,8 +57,9 @@ def validate_routing_intent(bundle):
     if contract.get("intents") != expected:
         return ["behavior-routing:intent-universe-or-binding"]
     findings = []
+    deferred_ids = {oid for item in bundle["obligations"] if item.get("status") == "deferred" for oid in [item["obligation_id"]]}
     for row in expected:
-        if any(not row.get(key) for key in ("acceptance_ids", "assertion_ids", "production_owners", "selector_intents", "observable", "expected_result")):
+        if row["obligation_id"] not in deferred_ids and any(not row.get(key) for key in ("acceptance_ids", "assertion_ids", "production_owners", "selector_intents", "observable", "expected_result")):
             findings.append("behavior-routing:unverifiable-intent:" + row["obligation_id"])
         # Each Acceptance must retain one atomic obligation; no mixed disposition cloning.
         for aid in row["acceptance_ids"]:

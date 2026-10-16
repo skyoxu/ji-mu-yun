@@ -21,13 +21,42 @@ PROTECTED_PHASEA_DATA = {
 DATE_DIR_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 HEX32_RE = re.compile(r"^[0-9a-fA-F]{32}$")
 MIN_CLEANUP_REPORT_DAYS = 7
+DELETION_GATE_ERROR = "deletion_gate_rejected"
 
 
 class CleanupConfigError(RuntimeError):
     pass
 
 
+def deletion_gate(path: Path, allowed_root: Path, operation: str) -> tuple[bool, str]:
+    """Fail closed for every destructive route, including malformed CLI paths."""
+    try:
+        raw = Path(path)
+        allowed = allowed_root.resolve(strict=True)
+        candidate = raw.resolve(strict=False)
+        drive_root = Path(candidate.anchor)
+        if not candidate.is_absolute() or candidate == drive_root:
+            return False, f"{DELETION_GATE_ERROR}: drive-root target is forbidden ({candidate})"
+        if candidate == allowed:
+            return False, f"{DELETION_GATE_ERROR}: allowed root itself is forbidden ({candidate})"
+        if allowed not in candidate.parents:
+            return False, f"{DELETION_GATE_ERROR}: target is outside allowed root ({candidate})"
+        if candidate.anchor.casefold() != allowed.anchor.casefold():
+            return False, f"{DELETION_GATE_ERROR}: target is on another volume ({candidate})"
+        return True, ""
+    except (OSError, ValueError) as exc:
+        return False, f"{DELETION_GATE_ERROR}: cannot validate {operation} target: {exc}"
+
+
+def require_deletion_gate(path: Path, allowed_root: Path, operation: str) -> None:
+    ok, error = deletion_gate(path, allowed_root, operation)
+    if not ok:
+        raise CleanupConfigError(error)
+
+
 def validate_repo_root(repo_root: Path) -> None:
+    if not repo_root.is_absolute() or repo_root == Path(repo_root.anchor):
+        raise CleanupConfigError(f"Refusing to use a drive root as repository root: {repo_root}")
     required = [
         repo_root / "AGENTS.md",
         repo_root / "PhaseA.Platform",
@@ -564,8 +593,9 @@ def remove_tree_no_follow(path: str) -> None:
     os.rmdir(path)
 
 
-def safe_remove_tree_contents(path: Path) -> tuple[bool, str]:
+def safe_remove_tree_contents(path: Path, allowed_root: Path, operation: str) -> tuple[bool, str]:
     try:
+        require_deletion_gate(path, allowed_root, operation)
         if not path.exists():
             return True, ""
         remove_tree_no_follow(windows_long_path(path))
@@ -606,7 +636,7 @@ def safe_remove_workspace_tree(repo_root: Path, path: Path) -> tuple[bool, str]:
             return False, f"refusing to delete non-project workspace path: {resolved_path}"
         if not HEX32_RE.match(relative.parts[0]) or not HEX32_RE.match(relative.parts[1]):
             return False, f"refusing to delete nonstandard workspace path: {resolved_path}"
-        return safe_remove_tree_contents(path)
+        return safe_remove_tree_contents(path, workspaces_root, "workspace-delete")
     except Exception as exc:
         return False, f"{type(exc).__name__}: {exc}"
 
@@ -762,7 +792,7 @@ def run_external_workspace_delete(
     blocked_by_failures = bool(failures)
     if apply and not blocked_by_failures:
         for item in selected:
-            ok, error = safe_remove_tree_contents(Path(item["path"]))
+            ok, error = safe_remove_tree_contents(Path(item["path"]), root, "external-workspace-delete")
             if ok:
                 deleted.append(item)
             else:
@@ -865,7 +895,8 @@ def run_workspace_delete(
 
 def remove_path(repo_root: Path, path: Path) -> tuple[bool, str]:
     try:
-        resolved_root = repo_root.resolve()
+        resolved_root = repo_root.resolve(strict=True)
+        require_deletion_gate(path, resolved_root, "standard-cleanup")
         resolved_path = path.resolve()
         if resolved_path == resolved_root or resolved_root not in resolved_path.parents:
             return False, f"refusing to delete outside repo root: {resolved_path}"
@@ -1025,6 +1056,9 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
+    if repo_root == Path(repo_root.anchor):
+        print(f"PHASEA_DAILY_CLEANUP error={DELETION_GATE_ERROR} repository_root_is_drive_root")
+        return 2
     if (
         args.keep_log_days < 0
         or args.keep_tmp_days < 0
