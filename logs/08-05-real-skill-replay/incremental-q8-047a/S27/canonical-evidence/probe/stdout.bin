@@ -1,0 +1,64 @@
+E.E.                                                                     [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of test_repair_evidence_keeps_frozen_target_identity_unchanged _
+
+fixturedef = <FixtureDef argname='native_skill_replay_matrix' scope='session' baseid='scripts/sc/tests/tc_d1_cer'>
+request = <SubRequest 'native_skill_replay_matrix' for <Function test_repair_evidence_keeps_frozen_target_identity_unchanged>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+C:\Users\weiruan\AppData\Local\Programs\Python\Python313\Lib\site-packages\pytest_asyncio\plugin.py:733: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    @pytest.fixture(scope="session")
+    def native_skill_replay_matrix():
+        from scripts.sc import skill_package_replay as replay
+        root = Path(__file__).resolve().parents[4]
+        (root / "logs").mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=root / "logs", prefix="cer-native-matrix-") as directory:
+            path = Path(directory) / "matrix.json"
+            matrix = replay.runtime.prepare_matrix(root, replay.PRIMARY_TARGET, replay.PRIMARY_CAPABILITY,
+                                                   replay.runtime.TRUST_BASELINE, path.relative_to(root).as_posix())
+            result = runtime.capture_process([sys.executable, "-X", "utf8", "-B", str(root / "scripts/sc/skill_package_replay.py"),
+                                     "replay-matrix", "--matrix", path.relative_to(root).as_posix()],
+                                    root, timeout=450)
+>           assert result.returncode == 0, result.stdout + result.stderr
+E           AssertionError: {"aggregate_status": "invalid", "aggregate_valid": false, "authorizes": [], "budget_observation": {"aggregate_time_limit_seconds": 360, "elapsed_seconds": 15.088536700000986, "excludes_input_generation": "prepare_matrix runs before this replay entrypoint", "includes_preparation": "fixture validation, trust checks, Stable materialization, and native executions", "native_process_ceiling_seconds": 180, "output_limit_bytes": 8388608}, "case_results": [{"case_id": "case-positive", "category": "positive", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}, {"case_id": "case-negative", "category": "negative", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}, {"case_id": "case-historical_compatibility", "category": "historical_compatibility", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}, {"case_id": "case-dirty_baseline", "category": "dirty_baseline", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}, {"case_id": "case-knowledge_read_set", "category": "knowledge_read_set", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}, {"case_id": "case-closed_policy", "category": "closed_policy", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}], "completed_case_results": [], "exit_code": 1, "invalid_reasons": ["subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n"], "matrix_path": "logs/cer-native-matrix-8z2zjs1r/matrix.json", "matrix_sha256": "sha256:4a3fe00d0018599932f901f9282d996fa44a84501371f81f998d8d72a878e95f", "missing_cases": [], "runner_entrypoint": "scripts/sc/skill_package_replay.py", "status": "invalid"}
+E             
+E           assert 1 == 0
+E            +  where 1 = CompletedProcess(args=['C:\\Users\\weiruan\\AppData\\Local\\Programs\\Python\\Python313\\python.exe', '-X', 'utf8', '-..., "missing_cases": [], "runner_entrypoint": "scripts/sc/skill_package_replay.py", "status": "invalid"}\r\n', stderr='').returncode
+
+scripts\sc\tests\tc_d1_cer\conftest.py:27: AssertionError
+_ ERROR at setup of test_all_matrix_cases_record_stable_and_candidate_attribution _
+
+    @pytest.fixture(scope="session")
+    def native_skill_replay_matrix():
+        from scripts.sc import skill_package_replay as replay
+        root = Path(__file__).resolve().parents[4]
+        (root / "logs").mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=root / "logs", prefix="cer-native-matrix-") as directory:
+            path = Path(directory) / "matrix.json"
+            matrix = replay.runtime.prepare_matrix(root, replay.PRIMARY_TARGET, replay.PRIMARY_CAPABILITY,
+                                                   replay.runtime.TRUST_BASELINE, path.relative_to(root).as_posix())
+            result = runtime.capture_process([sys.executable, "-X", "utf8", "-B", str(root / "scripts/sc/skill_package_replay.py"),
+                                     "replay-matrix", "--matrix", path.relative_to(root).as_posix()],
+                                    root, timeout=450)
+>           assert result.returncode == 0, result.stdout + result.stderr
+E           AssertionError: {"aggregate_status": "invalid", "aggregate_valid": false, "authorizes": [], "budget_observation": {"aggregate_time_limit_seconds": 360, "elapsed_seconds": 15.088536700000986, "excludes_input_generation": "prepare_matrix runs before this replay entrypoint", "includes_preparation": "fixture validation, trust checks, Stable materialization, and native executions", "native_process_ceiling_seconds": 180, "output_limit_bytes": 8388608}, "case_results": [{"case_id": "case-positive", "category": "positive", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}, {"case_id": "case-negative", "category": "negative", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}, {"case_id": "case-historical_compatibility", "category": "historical_compatibility", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}, {"case_id": "case-dirty_baseline", "category": "dirty_baseline", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}, {"case_id": "case-knowledge_read_set", "category": "knowledge_read_set", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}, {"case_id": "case-closed_policy", "category": "closed_policy", "elapsed_ms": 15088.505699997768, "executed": false, "rejection_reason": "subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n", "status": "fail", "terminal_state": "contract-rejected"}], "completed_case_results": [], "exit_code": 1, "invalid_reasons": ["subject's own package replay rejected its positive fixture: {\"authorizes\": [], \"diagnostic\": \"validator identity drift\", \"exit_code\": 1, \"status\": \"execution-failed\"}\r\nvalidator identity drift\r\n"], "matrix_path": "logs/cer-native-matrix-8z2zjs1r/matrix.json", "matrix_sha256": "sha256:4a3fe00d0018599932f901f9282d996fa44a84501371f81f998d8d72a878e95f", "missing_cases": [], "runner_entrypoint": "scripts/sc/skill_package_replay.py", "status": "invalid"}
+E             
+E           assert 1 == 0
+E            +  where 1 = CompletedProcess(args=['C:\\Users\\weiruan\\AppData\\Local\\Programs\\Python\\Python313\\python.exe', '-X', 'utf8', '-..., "missing_cases": [], "runner_entrypoint": "scripts/sc/skill_package_replay.py", "status": "invalid"}\r\n', stderr='').returncode
+
+scripts\sc\tests\tc_d1_cer\conftest.py:27: AssertionError
+=========================== short test summary info ===========================
+ERROR scripts/sc/tests/tc_d1_cer/test_s27.py::test_repair_evidence_keeps_frozen_target_identity_unchanged
+ERROR scripts/sc/tests/tc_d1_cer/test_s27.py::test_all_matrix_cases_record_stable_and_candidate_attribution
+2 passed, 2 errors in 25.66s

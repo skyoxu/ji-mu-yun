@@ -50,4 +50,7 @@ scripts/sc/tests/tc_d1_cer/test_s4.py -text -eol
 scripts/sc/tests/tc_d1_cer/test_s21.py -text -eol
 # Preserve native byte-bound Acceptance recovery transport and owner receipts.
 logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/** -text -eol
+# Preserve the raw bytes of the published incremental Q8 proof and its owner run.
+logs/08-05-real-skill-replay/incremental-q8-047a/** -text -eol
+logs/08-05-real-skill-replay/acceptance-815c032b/owner-recovery/S3-current-815c/** -text -eol
 logs/budget-compatibility-validation/** -text -eol
