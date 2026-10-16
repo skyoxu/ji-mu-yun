@@ -1,0 +1,29 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:27fff0541306d5f4567e50157c81685976e8a2c5313c8fa3a65e685bf8a28ca8",
+  "canonical_context_sha256": "sha256:1e2196cca495e65f096223b903ea09fcdfd55a364e555216cded9df0a430ad96",
+  "request_sha256": "sha256:0fe028b5e622901db5c7b2559fe799f0d6282980b406dc5875430adc94f2a02c",
+  "result_sha256": "sha256:69e99cc1dd6a7d27133d37b1482f5515f24c7c48ab2687291d8299f7baa24ff5",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "bdb9df4bd61def6f048cf4ad7cc427565228cb07"
+  },
+  "source_snapshot_id": "sha256:f3aaf8025b9b4179103a22a00d6ad17f6f484470d0ccd8eb425bee92c61d6f3b",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "source_sha256": "26bf8bf7cc09f3a35f40271175de0651c2e4c3fe5f8ab21a5f34ebf84bfe56ef",
+      "satisfies": [
+        "governance.vdd-execution-plan"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:277a0805a39a16fe21f05efc520031c8eea937d9762d8f4e350fd9e8519d0491",
+    "freeze_receipt_path": "knowledge-context.freeze.history/277a0805a39a16fe21f05efc520031c8eea937d9762d8f4e350fd9e8519d0491.v1.json",
+    "reason": "catalog-published-current-main"
+  }
+}

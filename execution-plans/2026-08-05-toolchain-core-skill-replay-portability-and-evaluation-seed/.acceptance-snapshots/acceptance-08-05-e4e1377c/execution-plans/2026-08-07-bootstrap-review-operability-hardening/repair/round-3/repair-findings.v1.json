@@ -1,0 +1,36 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.repair-findings.v1",
+  "plan_id": "bootstrap-review-operability-hardening",
+  "round": 3,
+  "trigger": "novel_p0_p1",
+  "lineageFamilyId": "ria-1dd445581b0a69b5a1432c671bd99844",
+  "predecessor": {
+    "commit": "e796a6ee63cf8f14ae3c15c1882a481833459604",
+    "repair_closure": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-2/repair-closure.json",
+    "report": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/95-implementation-evolution-and-completion-report.md"
+  },
+  "findings": [
+    {
+      "id": "BROH-R3-01",
+      "source": "know12",
+      "severity": "P0",
+      "requirement_ids": ["BROH-A13", "BROH-A15", "BROH-A22", "BROH-A23", "BROH-A40", "BROH-A41"],
+      "statement": "load_current_candidate_identity rewrites repository-relative candidate manifest paths under the physical acceptance target, allowing execution-plans low-risk classification to hide real workflow-control-plane changes."
+    },
+    {
+      "id": "BROH-R3-02",
+      "source": "know12",
+      "severity": "P1",
+      "requirement_ids": ["BROH-A16", "BROH-A17", "BROH-A22"],
+      "statement": "Repository governance and authority documents AGENTS.md, docs/adr/**, and docs/standards/** are currently classified as known low risk although the repair-completeness authority model treats them as authority or high-risk paths."
+    },
+    {
+      "id": "BROH-R3-03",
+      "source": "know12",
+      "severity": "P1",
+      "requirement_ids": ["BROH-A13", "BROH-A22", "BROH-A23"],
+      "statement": "The current skill-route decision test mocks load_current_candidate_identity and does not prove the real candidate manifest producer-to-decision composition."
+    }
+  ],
+  "authorizes": []
+}

@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "acceptance-semantic-review-trigger-policy.v1",
+  "policyId": "acceptance-semantic-review-trigger-policy",
+  "policyVersion": "v1",
+  "workflowControlPlanePrefixes": [
+    ".agents/skills/",
+    "scripts/sc/"
+  ],
+  "protectedHighRiskPrefixes": [
+    "AGENTS.md",
+    "docs/adr/",
+    "docs/standards/",
+    "PhaseA.Platform/Security/",
+    "PhaseA.Platform/Data/",
+    "runtime/phase-a/",
+    "PhaseA.Platform/Runs/",
+    "scripts/sc/_llm_backend.py"
+  ],
+  "typedRiskPrefixes": {
+    "public_api_contract_changed": [
+      "PhaseA.Platform/Program.cs",
+      "PhaseA.Platform/Browser/",
+      "PhaseA.Platform/Workflow/"
+    ],
+    "database_schema_or_migration_changed": [
+      "PhaseA.Platform/Data/"
+    ],
+    "runtime_or_deployment_boundary_changed": [
+      "runtime/phase-a/"
+    ],
+    "shared_execution_entrypoint_changed": [
+      "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+      "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs",
+      "scripts/sc/_llm_backend.py"
+    ]
+  },
+  "knownLowRiskPrefixes": [
+    "docs/",
+    "execution-plans/",
+    "decision-logs/",
+    "README.md"
+  ],
+  "hardTriggers": [
+    "workflow_control_plane_changed",
+    "protected_high_risk_boundary_changed",
+    "public_api_contract_changed",
+    "database_schema_or_migration_changed",
+    "runtime_or_deployment_boundary_changed",
+    "shared_execution_entrypoint_changed",
+    "explicit_maintainer_review_request",
+    "deterministic_evidence_incomplete",
+    "risk_classification_unknown"
+  ],
+  "authorizes": []
+}

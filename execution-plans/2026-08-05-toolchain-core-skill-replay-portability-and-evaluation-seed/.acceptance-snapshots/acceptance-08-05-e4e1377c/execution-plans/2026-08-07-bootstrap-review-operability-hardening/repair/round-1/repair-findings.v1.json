@@ -1,0 +1,16 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.repair-findings.v1",
+  "plan_id": "bootstrap-review-operability-hardening",
+  "round": 1,
+  "predecessor": {
+    "commit": "d9bec07def3f19e6da3d4672d671819954a9c470",
+    "report": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/95-implementation-evolution-and-completion-report.md"
+  },
+  "findings": [
+    {"id": "BROH-R1", "source": "know10", "requirement_ids": ["BROH-008", "BROH-009", "BROH-021"], "statement": "Current decision publication accepts caller-authored requirements and semantic risk facts."},
+    {"id": "BROH-R2", "source": "know10", "requirement_ids": ["BROH-009", "BROH-021"], "statement": "Decision schema and producer revision disagree, and incomplete deterministic evidence is not blocked before routing."},
+    {"id": "BROH-R3", "source": "know10", "requirement_ids": ["BROH-012"], "statement": "Required profile selection is not risk-specific and decision provenance is incomplete."},
+    {"id": "BROH-R4", "source": "know10", "requirement_ids": ["BROH-A24"], "statement": "Implementation evidence and plan lifecycle projection are not synchronized."}
+  ],
+  "authorizes": []
+}

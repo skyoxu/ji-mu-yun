@@ -1,0 +1,44 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.repair-plan.v1",
+  "plan_id": "bootstrap-review-operability-hardening",
+  "round": 2,
+  "profile": "self-hosted",
+  "slices": [
+    {
+      "id": "BROH-R2-01",
+      "depends_on": [],
+      "scope": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py"
+      ],
+      "red": "A skill-route decision is accepted with implementation-conformance scope or mismatched Bootstrap profile identity.",
+      "green": "Profile-specific scope classes are built from the decision profile and route/binding reject profile drift.",
+      "regression": "Run Acceptance Bootstrap integration tests."
+    },
+    {
+      "id": "BROH-R2-02",
+      "depends_on": ["BROH-R2-01"],
+      "scope": [
+        ".agents/skills/run-refactor-implementation-acceptance/policies/semantic-review-trigger-policy.v1.json",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/review_requirement.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py"
+      ],
+      "red": "Execution-plan metadata triggers workflow review and an unclassified implementation path is treated as deterministic low risk.",
+      "green": "Plan metadata is known low risk, typed repository boundaries produce typed triggers, and unclassified paths block.",
+      "regression": "Run Acceptance review-requirement and schema tests."
+    },
+    {
+      "id": "BROH-R2-03",
+      "depends_on": ["BROH-R2-02"],
+      "scope": [
+        "execution-plans/2026-08-07-bootstrap-review-operability-hardening/resume-state.v1.json",
+        "execution-plans/2026-08-07-bootstrap-review-operability-hardening/95-implementation-evolution-and-completion-report.md"
+      ],
+      "red": "Resume continuity claims current knowledge while terminal evidence is stale.",
+      "green": "Resume recovery names the stale-context blocker and preserves implementation-authorized without completion authority.",
+      "regression": "Run validate_plan.py and inspect the non-authorizing lifecycle fields."
+    }
+  ],
+  "authorizes": []
+}
