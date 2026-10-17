@@ -1,0 +1,30 @@
+{
+  "authorizes": [],
+  "schema": "08-05-real-worktree-claim-release.v1",
+  "steps": [
+    {
+      "exists": true,
+      "step": "created"
+    },
+    {
+      "exists": true,
+      "step": "after-first-git-read"
+    },
+    {
+      "exists": false,
+      "step": "after-owner-release"
+    },
+    {
+      "stdout": "False",
+      "step": "child-visible-after-release"
+    },
+    {
+      "exists": false,
+      "step": "after-child-read"
+    },
+    {
+      "exists": false,
+      "step": "after-second-git-read"
+    }
+  ]
+}
