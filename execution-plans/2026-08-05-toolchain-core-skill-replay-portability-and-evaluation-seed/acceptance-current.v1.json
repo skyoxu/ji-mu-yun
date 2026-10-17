@@ -1,13 +1,13 @@
 {
   "authorizes": [],
-  "currentRun": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-685ab0649074a499",
+  "currentRun": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-48fde39085aa32b1",
   "finalResult": {
-    "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-685ab0649074a499/finalization/acceptance-passed.v1.json",
-    "sha256": "sha256:b621b4cc96d0a3d6b8b198a6038ae5f5f41ce28dc358eb32e85901bd0507bfc5"
+    "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-48fde39085aa32b1/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:b6805a8c297da68b8fc35edb028477a02aa64458018fccd17295bb9f601c10ba"
   },
   "finalWrapper": {
-    "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-685ab0649074a499/finalization/acceptance-result-final.v1.json",
-    "sha256": "sha256:3ccd20ea347410da12051266ba82da7309c43ac76c1970a5f039199333dcfd3a"
+    "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-48fde39085aa32b1/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:a79412dc8362c4a7f9401f272b0a3271f5475f038ec0c2d4555d86558f35de55"
   },
   "schemaVersion": "acceptance-current.v1"
 }

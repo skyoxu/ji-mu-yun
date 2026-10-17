@@ -1,0 +1,540 @@
+{
+  "candidate_source_root": "sha256:aa53d4a2b08c9b79acf33fd47db2e0c930d590d7e71ab284e062d7c4a15b3b3c",
+  "entries": [
+    {
+      "path": ".agents/skills/authorization/scripts/conformance_preflight.py",
+      "role": "implementation",
+      "sha256": "sha256:d17e94cd6754deb9f30dfc57a3b846983b5df950c2149e477e4cadeabb0eb02c",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/execution-operation.md",
+      "role": "implementation",
+      "sha256": "sha256:8f0c9c69cad6079ae7d02eed534c78512670033314075949d5d87725d726b80b",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/recovery-operation.md",
+      "role": "implementation",
+      "sha256": "sha256:edb3e3f491c17fcc8e0f14615342d21336a2de562d31d01721749acb2fe9872c",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/behavior_routing.py",
+      "role": "implementation",
+      "sha256": "sha256:c5e6d9402e456866299c51be9f21d17c9f1a20c93dcdeb67459342994638750f",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py",
+      "role": "implementation",
+      "sha256": "sha256:af4fea97db5c691c3153606590fc0f6d4783111a3b7509f59663901a4a1fcce2",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py",
+      "role": "implementation",
+      "sha256": "sha256:bdb5e4e02e66cdffe974018cf88d786d82493a8bc429365b790c38ff09796b82",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+      "role": "implementation",
+      "sha256": "sha256:e65422e73fad02f98a2cf00ba6401d4920f9c20cfd38a43dbeda818fd2993d9c",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/current_router.py",
+      "role": "implementation",
+      "sha256": "sha256:4308da5017dd27ff0bcaafc9f2f211e4870ef3099b9724549e150f26ce7541a2",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/dotnet_production_entry.py",
+      "role": "implementation",
+      "sha256": "sha256:a78073abe52aedb0c3a8d8b6d74d7f931e852c67dffde65e3554df9f17c6a1d5",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py",
+      "role": "implementation",
+      "sha256": "sha256:9d39e4c999dc9b97c21bd9ff4f4f62b8bce1279d63ff3006196e61a16ec58495",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+      "role": "implementation",
+      "sha256": "sha256:95373d68543c4a70d67e692aea294defc4ed4ce87e1386f6025a1b971da5afa6",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py",
+      "role": "implementation",
+      "sha256": "sha256:d8a30da5d112c999b05d789ff93876fd676f58cde31547bcd37e8b064aec09c6",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "role": "implementation",
+      "sha256": "sha256:cf8e4b04c32093a05c6ff9578d3052d069c25e37299fb92b470386d5fee715a8",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py",
+      "role": "implementation",
+      "sha256": "sha256:1fb336890dc2a58508697a25c47783188022dd9283ee111797156acd5285b2a2",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+      "role": "implementation",
+      "sha256": "sha256:cfa506998b6c28ac5793e052b73535709e81646cb8349ae28b967514d2e2b32b",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py",
+      "role": "implementation",
+      "sha256": "sha256:b69f9bcb64d5d4b32440b6e7e61d0d8b07357844320af8accb7335d752b03b94",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py",
+      "role": "implementation",
+      "sha256": "sha256:f11d83cf8ac31ca6060f45c54d9606e38a9892b46e42479410364fdf2d8cd9df",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py",
+      "role": "implementation",
+      "sha256": "sha256:b1eefb6d976e5f16c878166853575134372b1d5b2de065a31ca8f58f4d27f8ae",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_snapshot_outputs.py",
+      "role": "implementation",
+      "sha256": "sha256:f5f72feb1b73d1258ed94333475189435ecea0edb9c4ab8d94161b892ab4ed84",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/worker_orchestrator.py",
+      "role": "implementation",
+      "sha256": "sha256:45a4854e6ee6473bbb79e37e51fe0d28dd82b00e902b7eddba59e4cab01381a7",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "role": "implementation",
+      "sha256": "sha256:3b8eb7632246a7bceec7d8053500bc7f4b67aa4a816d74c31c6ffb13af8370fe",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md",
+      "role": "implementation",
+      "sha256": "sha256:7151b44fadb56804ebba256fb18bf0656aa5d252f5d37309f9bf0f7810e0ed48",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "role": "implementation",
+      "sha256": "sha256:62dc3c99d5c269066323a5fcdd1f18e58e670ccd2594cab3f6c7eae90ae3e131",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "role": "implementation",
+      "sha256": "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py",
+      "role": "implementation",
+      "sha256": "sha256:d39375b2a2dc9d9f2e3dc9884231fd17badc185da9941e02d97a00cc3a3bd846",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+      "role": "implementation",
+      "sha256": "sha256:bd8742ee5a9d0c66d0a9115452d31c69de7a45977c87ced98af8714b0f81ca6b",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "role": "implementation",
+      "sha256": "sha256:eb8da80aae384a8fa21b7b3865b7c07d13f655c88681287d9d87593e78f02df1",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+      "role": "implementation",
+      "sha256": "sha256:88d00b35127fcd532961975653a0f04aa8cdc158d95b17898a532b4be4ee0dd4",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+      "role": "implementation",
+      "sha256": "sha256:d8be19caa84b4f972218a499e45fdc3a395820d1153dbe34b4a48487c3cda184",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+      "role": "implementation",
+      "sha256": "sha256:b837db57cfea371b4e09e8744d99f8fc780c3def1f2220a641902f2f3d341408",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_operator_support.py",
+      "role": "implementation",
+      "sha256": "sha256:1daa0700270452ae4ee3829be6041a355044d4836d56be44f4628b8ba2e62490",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+      "role": "implementation",
+      "sha256": "sha256:8f65d59a46f4f9ddb6c4701860d930057097c69752d2a7beb022582ec3c3a972",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
+      "role": "implementation",
+      "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+      "role": "implementation",
+      "sha256": "sha256:aa12f8a166b352349d1777879356e3fc25b1a9a5624764a093034ea3404f5f2b",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+      "role": "implementation",
+      "sha256": "sha256:bb48be45c906d67151f2e48e62aa3f1b99b076fac0c41d208c0aa9333ea40087",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "role": "implementation",
+      "sha256": "sha256:14ba8816af7f39feebfbb7b806f87f8c52f37f85ca50e11b6d2a7788a9b508ac",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/planning-operation.md",
+      "role": "implementation",
+      "sha256": "sha256:87432447ab71e3295d439aa5d8f3f2871196b35da402d2d8619e4a8e69e67961",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+      "role": "implementation",
+      "sha256": "sha256:29946632a846cbd30b244922832fd402404ee94ccff16258cd38d59111ebf2bf",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_atomic_recall_result_patch.py",
+      "role": "implementation",
+      "sha256": "sha256:191a7622b88ab496a4964c83f8e0106b19c7f383c0c12e57bc0fdfaafc8004f4",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_behavior_contract.py",
+      "role": "implementation",
+      "sha256": "sha256:75d647788d63c0263e1ac1e74a66842a825df1362213c9deaaba3b4fa47cd222",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler.py",
+      "role": "implementation",
+      "sha256": "sha256:e40a78c19f0b50cafee5838d87e17b97996adb7859c5ffce9f5076d65251813c",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_authority.py",
+      "role": "implementation",
+      "sha256": "sha256:40919cfeab560beda900a013788fb0909edb4e515a82ed9dc178df44c2e68dff",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_gate.py",
+      "role": "implementation",
+      "sha256": "sha256:3980f535e0f263599882ca69dd381790099c6865f1b468a82c56da7168223c34",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_feasibility_patch.py",
+      "role": "implementation",
+      "sha256": "sha256:7c60bdd46a95fec291e4b90c6fe24e1e953d85832d5e4864dbefa24facfee400",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_obligation_gap_repair_patch.py",
+      "role": "implementation",
+      "sha256": "sha256:6483407ecc4fa2186312386f7e985f48c573cc8e4d77dfe855164acfe7b85156",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+      "role": "implementation",
+      "sha256": "sha256:af42d85071cb0a55cef3e8d6b6cb188ab8825262a7f40818721747384c203444",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_transport_patch.py",
+      "role": "implementation",
+      "sha256": "sha256:f4aeec97129876f71895b033ccf413dafc40c250a49679738c1fbacf65570563",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_execution_contract_patch.py",
+      "role": "implementation",
+      "sha256": "sha256:12a2de6d2ab9f6719fed2ee03b89c7aac295e9ed65bd3f4482bf09dbbf0b7343",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_prompt_patch.py",
+      "role": "implementation",
+      "sha256": "sha256:8f15a463da20f1703979c89e0169e3facbcc9e2fc3acd23f77e5d28109f35b8e",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_repair_patch.py",
+      "role": "implementation",
+      "sha256": "sha256:78434e53aeb18237e1c6b8149defc38c642ab392967d8beb1d6b181d6cd76639",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_path_grounding_patch.py",
+      "role": "implementation",
+      "sha256": "sha256:177f5d9643769b11a83389c48e97070b1497748763ee9500714e6c1cbb2d9372",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v4_domain_patch.py",
+      "role": "implementation",
+      "sha256": "sha256:4463da03ebfd04997161983dfaf619724ac2a46465f85551f5de136620bfe02f",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py",
+      "role": "implementation",
+      "sha256": "sha256:595e8ed66a708391c1a52df36599e2e0bb86bf08fdee22957208344d9e12195e",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_failed_resume.py",
+      "role": "implementation",
+      "sha256": "sha256:dcb42a2d58e004c1937d638b3a579fba31e9929d4f14313ab430c21eeb3ffa2b",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_resolved_atomic_recall.py",
+      "role": "implementation",
+      "sha256": "sha256:cd834265ce298991a5fa382808b7202cd70d489ab85f7be589524ac79cedb88c",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_semantic_worker_transport.py",
+      "role": "implementation",
+      "sha256": "sha256:728d0ca389416bd6818a45acd938d48d4d95b34508d5288149105ba04d2a1842",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_source_role_transport.py",
+      "role": "implementation",
+      "sha256": "sha256:cf2dbd308e9557676f089d8df079cf6ef86e403b6c918feb9ba617ce8dca0eff",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_execution_contract.py",
+      "role": "implementation",
+      "sha256": "sha256:a4b2d23b15cd1f582c636dae164a9992d75ba5e2de150a79b5eec8287d1a35a9",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_inline_context_repair.py",
+      "role": "implementation",
+      "sha256": "sha256:980e857933af979165f1c5ba2b603bf930db92282dc78a055c037617ad8fcadf",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_active_alignment_scope.py",
+      "role": "implementation",
+      "sha256": "sha256:72faa8382bce25b1a00fbee0de89223b7717668f1e5995925f6930be3550ad9a",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_atomic_recall_domain.py",
+      "role": "implementation",
+      "sha256": "sha256:1104d633bdd203cc297594ecca68bc95c1f0d908e09862d01444ecb5cfb2260b",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+      "role": "implementation",
+      "sha256": "sha256:76bf252c7fa289e109ee6aaf3e3fe48ae854f5f8bb6743034539d804dc9cdb63",
+      "slice_ids": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py",
+      "role": "implementation",
+      "sha256": "sha256:e8a220a7cbc6dc0bc58d530e6770ee4b3fbd384e052baa5c081f8363b4d22b08",
+      "slice_ids": []
+    },
+    {
+      "path": ".gitattributes",
+      "role": "implementation",
+      "sha256": "sha256:c0208888cbcd1292ff62dc9446ecce79187bf5c914ed744c97d36f490e6adaeb",
+      "slice_ids": []
+    },
+    {
+      "path": "docs/adr/ADR-0058-acceptance-coordinator-persisted-evidence-ownership.md",
+      "role": "implementation",
+      "sha256": "sha256:118fd00538df47cd04ca2d63142db80d8b3cc9594b2d17cfddd114b4523b0776",
+      "slice_ids": []
+    },
+    {
+      "path": "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md",
+      "role": "implementation",
+      "sha256": "sha256:ec8e23b87687dc692723c99e77e614962605e71028c7d0e3801b2c247a7233cf",
+      "slice_ids": []
+    },
+    {
+      "path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+      "role": "implementation",
+      "sha256": "sha256:2ce6f4b51571be0fa65d3e40a1eba60b6fbd06984d5b157a8ee7bea215f94fd5",
+      "slice_ids": []
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py",
+      "role": "implementation",
+      "sha256": "sha256:ab1c91a14034a531b7ae514d37abb2d778965e56c41c3a7436b23bdcfae9cadf",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/ci/verify_base_clean.ps1",
+      "role": "implementation",
+      "sha256": "sha256:616dc5608dff02cc89809a85a939b3ee1cb213d334097854b101af38dc925e11",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/python/skill_input_candidate.py",
+      "role": "implementation",
+      "sha256": "sha256:4c0120980da903cf560dae2108c1e3ea786d5496939cf5d2cdfd0e63cae989af",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/python/tests/test_skill_input_consumer_migration.py",
+      "role": "implementation",
+      "sha256": "sha256:acb1380804c7a8284489e5fbb325b9f62f456cfff970c828a61399169b0ef083",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/quick_dev/approved_budget_replay.py",
+      "role": "implementation",
+      "sha256": "sha256:106fac2a365e7a452415f54642b549a55e6db484b050085095b39378f42d7d60",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/quick_dev/run_candidate_bound_metric.py",
+      "role": "implementation",
+      "sha256": "sha256:087b08ce73f6a44882cd86305417a842b5624edbebd1c3ebee7e0ef7e8b26bb4",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/quick_dev/tests/test_approved_budget_replay.py",
+      "role": "implementation",
+      "sha256": "sha256:a4de4aacdb548630c368b00547751115461ea1e4c93876e82dff207411fc6fca",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/quick_dev/tests/test_public_budget_transfer.py",
+      "role": "implementation",
+      "sha256": "sha256:36e75260af6d48841b90e80d75f8e50fd01d9c8d71b532f90eba2e7708fe262d",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/config/skill-package-validator-capability.v1.json",
+      "role": "implementation",
+      "sha256": "sha256:ce0d53ea517b459caf619151e8d7d60c86aa77e9f48ccd99e0e09cf14f5462d0",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/config/skill-package-validator-source.v1.json",
+      "role": "implementation",
+      "sha256": "sha256:7592aea543791084d619bf17b0a20d80321381f0ca78eb8276eea9fe3d6c03b0",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",
+      "role": "implementation",
+      "sha256": "sha256:801d47691f94ae462d52718ab4b3b5e25ec2b456f9cfe918b343f220c80ae98f",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/skill_package_replay.py",
+      "role": "implementation",
+      "sha256": "sha256:e2bf482e79cf8064bb656b6f9011f9b2e9ec0d6393946f6537209d88c152623c",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/skill_replay_runtime.py",
+      "role": "implementation",
+      "sha256": "sha256:59b78931bba52c1a7bb22de1d9d5ca511ac3872477ac035a9fc4c1a162c67e91",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/conftest.py",
+      "role": "implementation",
+      "sha256": "sha256:d6c138d63ac497a41f61484e4abb62da6ac0487df8afd24ed2cc87c94279982a",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s26.py",
+      "role": "implementation",
+      "sha256": "sha256:b5d19a8815914d025a8fdb62f8eff01b47e6dc0691daca2fd86f3038858456e3",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s28.py",
+      "role": "implementation",
+      "sha256": "sha256:15c11fcf1f8d03b6333ea2628f6b6aae45f7a923174678b0f9a0495233b4383e",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s30.py",
+      "role": "implementation",
+      "sha256": "sha256:d0eeea36f249885e4e9e21bb6519ee21ffc185284c5003f497c81f4467ad04a1",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s41.py",
+      "role": "implementation",
+      "sha256": "sha256:07220f0384b56de5aa502a9457fb80976f4ee5138fe0f68fc1adc4632c6999d7",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s44.py",
+      "role": "implementation",
+      "sha256": "sha256:e846e14ad5a804d984a8862c2c6a3273a7093a6eeb0452e80931af0e422c5128",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/tests/test_skill_replay_budget_regressions.py",
+      "role": "implementation",
+      "sha256": "sha256:35cd8096184cfafb77326300e20b41b1feb72a2d96fb3dee4c1bab82bf7d7be7",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/sc/tests/test_skill_replay_review2_regressions.py",
+      "role": "implementation",
+      "sha256": "sha256:06a6433ee4de26ac229d531c634c7169513fc17446dfb4ba2d23e8980ab24865",
+      "slice_ids": []
+    },
+    {
+      "path": "scripts/vdd/probe_real_worker.py",
+      "role": "implementation",
+      "sha256": "sha256:d12f5e5be76eeb97d77fb1ff4e62eca615c23f698c64839c5faee1a0e5a87356",
+      "slice_ids": []
+    }
+  ],
+  "schema_version": "jimuyun.candidate-source-manifest.v1"
+}

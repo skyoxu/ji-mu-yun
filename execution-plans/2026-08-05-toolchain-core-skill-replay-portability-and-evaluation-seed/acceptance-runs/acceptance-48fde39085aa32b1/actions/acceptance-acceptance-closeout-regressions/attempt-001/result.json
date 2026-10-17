@@ -1,0 +1,75 @@
+{
+  "authorizes": [],
+  "commandId": "acceptance-closeout-regressions",
+  "commandRegistryHash": "sha256:9a815c845a37d3d583c6554f61b2a536eed0ff1217c19d5a07cfd29358e1c662",
+  "environmentIdentity": {
+    "hash": "sha256:c722e93949e144d3d3f717c276ade642b857575c8358fbcd964a050f8848e159",
+    "names": [
+      "HOME",
+      "PATH"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-B",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py",
+      "scripts/python/tests/test_skill_input_consumer_migration.py::test_acceptance_final_pointer_preserves_current_generation",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py::ExecutionControlTests::test_persisted_read_only_action_tolerates_stale_claim_listing",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py::ExecutionControlTests::test_persisted_read_only_action_rejects_claim_tampering_with_stale_listing"
+    ],
+    "commandId": "acceptance-closeout-regressions",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+    "shell": false,
+    "timeoutSeconds": 900
+  },
+  "invocationHash": "sha256:501fc34b0032503099b63e8e2edb308eccc59341b93ddba20674656860169ebc",
+  "processResult": {
+    "commandId": "acceptance-closeout-regressions",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": ".........................                                                [100%]\n25 passed in 37.95s\n",
+    "stdoutSha256": "sha256:7095f066d94a43e1194ae585d0df639c2043eb133e9c65ac45b5754028e2a10d"
+  },
+  "processResultHash": "sha256:2937c671dd95e109040aa0145fae9478c1ecef74e75ffc9c84584b33ebe6be80",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

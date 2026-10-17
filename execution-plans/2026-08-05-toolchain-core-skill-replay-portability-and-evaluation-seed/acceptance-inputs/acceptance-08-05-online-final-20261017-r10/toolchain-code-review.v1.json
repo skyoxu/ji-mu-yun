@@ -1,0 +1,59 @@
+{
+  "authorityRefs": [
+    "AGENTS.md",
+    "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md"
+  ],
+  "checks": [
+    {
+      "evaluationMode": "deterministic",
+      "policyCheckId": "TOOLCHAIN-CR-AUTH-001"
+    },
+    {
+      "evaluationMode": "deterministic",
+      "policyCheckId": "TOOLCHAIN-CR-SCOPE-001"
+    },
+    {
+      "evaluationMode": "hybrid",
+      "policyCheckId": "TOOLCHAIN-CR-COMPAT-001"
+    },
+    {
+      "evaluationMode": "deterministic",
+      "policyCheckId": "TOOLCHAIN-CR-TEST-001"
+    },
+    {
+      "evaluationMode": "review_gate",
+      "policyCheckId": "TOOLCHAIN-CR-EVIDENCE-001"
+    }
+  ],
+  "pathRules": {
+    "crossDomainPaths": [
+      "scripts/sc/_llm_backend.py"
+    ],
+    "ownedPrefixes": [
+      ".gitignore",
+      ".agents/skills/",
+      "scripts/sc/",
+      "execution-plans/",
+      "decision-logs/",
+      "docs/PROJECT_DOCUMENTATION_INDEX.md",
+      "docs/adr/",
+      "docs/standards/",
+      "docs/architecture/",
+      ".gitattributes",
+      "scripts/ci/verify_base_clean.ps1",
+      "scripts/quick_dev/approved_budget_replay.py",
+      "scripts/quick_dev/run_candidate_bound_metric.py",
+      "scripts/quick_dev/tests/test_approved_budget_replay.py",
+      "scripts/quick_dev/tests/test_public_budget_transfer.py",
+      "scripts/vdd/probe_real_worker.py",
+      "scripts/python/skill_input_candidate.py",
+      "scripts/python/tests/test_skill_input_consumer_migration.py"
+    ]
+  },
+  "policyId": "toolchain-code-review",
+  "policyRevision": "sha256:7373ad244932290e268849ad46baa414f99f5a847cbe35277326afef6f530f32",
+  "schemaVersion": "code-review-policy-pack.v1",
+  "targetDomain": "toolchain"
+}
